@@ -23,6 +23,11 @@
     "./styles/*": "./styles/*",
     "./tokens/*": "./tokens/*",
     "./package.json": "./package.json",
+    "./rich-text": {
+      "types": "./dist/rich-text/index.d.ts",
+      "source": "./src/rich-text/index.ts",
+      "import": "./dist/rich-text/index.js"
+    },
     "./*": {
       "types": "./dist/*/index.d.ts",
       "source": "./src/*/index.ts",

@@ -6,12 +6,15 @@ export interface SettingsRowProps extends Omit<ComponentPropsWithoutRef<"div">, 
   description?: ReactNode;
   /** Control on the right: a switch, a button, etc. */
   control?: ReactNode;
+  /** Id for the title element, so the control can reference it with `aria-labelledby`. */
+  titleId?: string;
 }
 
 export function SettingsRow({
   title,
   description,
   control,
+  titleId,
   className,
   ...props
 }: SettingsRowProps) {
@@ -24,7 +27,9 @@ export function SettingsRow({
       {...props}
     >
       <div className="min-w-0 flex-[1_1_14rem] break-words">
-        <p className="font-semibold text-[13px]">{title}</p>
+        <p id={titleId} className="font-semibold text-[13px]">
+          {title}
+        </p>
         {description ? <p className="max-w-[60ch] text-[12px] text-ink-3">{description}</p> : null}
       </div>
       {control ? <div className="flex max-w-full shrink-0 items-center">{control}</div> : null}
