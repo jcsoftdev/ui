@@ -365,3 +365,85 @@ export function SparklineDemo({ density, height }: SheetControls) {
     />
   );
 }
+
+// ---- fill handle -----------------------------------------------------------------------------
+
+export interface Reserva {
+  id: string;
+  silla: CellValue;
+  turno: CellValue;
+  dia: CellValue;
+  precio: CellValue;
+  doble: CellValue;
+}
+
+const reservaSeeds: Array<Omit<Reserva, "id" | "doble">> = [
+  { silla: "Silla 1", turno: 10, dia: new Date(2026, 9, 1, 12), precio: 25 },
+  { silla: null, turno: 20, dia: new Date(2026, 10, 1, 12), precio: 25 },
+  { silla: null, turno: 30, dia: new Date(2026, 11, 1, 12), precio: 30 },
+];
+
+export const reservas: Reserva[] = Array.from({ length: 14 }, (_unused, index) => {
+  const seed = reservaSeeds[index];
+  const row = index + 1;
+  return {
+    id: `R-${row}`,
+    silla: seed?.silla ?? null,
+    turno: seed?.turno ?? null,
+    dia: seed?.dia ?? null,
+    precio: seed?.precio ?? null,
+    doble: index === 0 ? `=D${row}*2` : null,
+  };
+});
+
+export const reservaColumns: DataGridColumn<Reserva>[] = [
+  { id: "silla", header: "Silla", accessor: "silla", width: 130, ...editable },
+  { id: "turno", header: "Turno", accessor: "turno", type: "number", width: 96, ...editable },
+  { id: "dia", header: "Día", accessor: "dia", type: "date", width: 130, ...editable },
+  { id: "precio", header: "Precio", accessor: "precio", type: "currency", width: 112, ...editable },
+  { id: "doble", header: "Doble", accessor: "doble", type: "currency", width: 112, ...editable },
+];
+
+/** Range selection with the fill handle: series, dates, text with a number and formulas. */
+export function FillHandleDemo({ density, height }: SheetControls) {
+  const [rows, setRows] = useState<Reserva[]>(reservas);
+  const [last, setLast] = useState("");
+  const idOf = useCallback((row: Reserva) => row.id, []);
+  const apply = useCallback(
+    (changes: readonly CellChange<Reserva>[]) => {
+      setRows((previous) => applyCellChanges(previous, changes, idOf));
+      const sources = new Set(changes.map((change) => change.source));
+      setLast(
+        `${changes.length} ${changes.length === 1 ? "cambio" : "cambios"} (${[...sources].join(", ")})`,
+      );
+    },
+    [idOf],
+  );
+  return (
+    <Stack>
+      <DataGrid
+        density={density}
+        height={height}
+        aria-label="Reservas por silla"
+        data={rows}
+        columns={reservaColumns}
+        getRowId={idOf}
+        formulas
+        history
+        rangeSelection
+        hideToolbar={false}
+        onCellChange={(change) => apply([change])}
+        onCellsChange={apply}
+      />
+      <p className={note}>
+        Selecciona celdas con datos y arrastra el cuadro del borde inferior derecho hacia abajo o a
+        la derecha: 10, 20 sigue 30, 40; «Silla 1» sigue «Silla 2»; las fechas mensuales siguen mes
+        a mes y las fórmulas ajustan sus referencias. Ctrl al soltar solo copia. Una sola operación
+        en el historial: Ctrl + Z la deshace.
+      </p>
+      <p className={note} aria-live="polite">
+        Último relleno: {last || "ninguno"}
+      </p>
+    </Stack>
+  );
+}

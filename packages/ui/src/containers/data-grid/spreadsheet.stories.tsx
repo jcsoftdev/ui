@@ -7,6 +7,7 @@ import {
   diagnosticoColumns,
   diagnosticos,
   ExportXlsxDemo,
+  FillHandleDemo,
   FormulasDemo,
   lineaColumns,
   lineas,
@@ -184,4 +185,21 @@ export const SparklineColumnNarrow: Story = {
   name: "Sparkline column (320 px)",
   decorators: [narrow],
   render: (args) => <SparklineDemo {...controls(args)} />,
+};
+
+export const FillHandle: Story = {
+  name: "Fill handle",
+  render: (args) => <FillHandleDemo {...controls(args)} />,
+};
+
+export const FillHandleNarrow: Story = {
+  name: "Fill handle (320 px)",
+  decorators: [narrow],
+  render: (args) => <FillHandleDemo {...controls(args)} />,
+};
+
+export const FillHandlePreset: Story = {
+  name: "Fill handle (bordered preset)",
+  decorators: [preset],
+  render: (args) => <FillHandleDemo {...controls(args)} />,
 };

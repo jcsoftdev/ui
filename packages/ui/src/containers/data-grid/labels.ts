@@ -150,6 +150,8 @@ export interface DataGridLabels {
   redone: (count: number) => string;
   pasted: (count: number) => string;
   filled: (count: number) => string;
+  /** Tooltip of the fill handle at the corner of a range. */
+  fillHandle: string;
 }
 
 const integer = { format: (value: number) => formatNumber(value) };
@@ -309,4 +311,5 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   redone: (count) => (count === 1 ? "1 cambio rehecho" : `${count} cambios rehechos`),
   pasted: (count) => (count === 1 ? "1 celda pegada" : `${count} celdas pegadas`),
   filled: (count) => (count === 1 ? "1 celda rellenada" : `${count} celdas rellenadas`),
+  fillHandle: "Arrastra para rellenar (Ctrl al soltar solo copia)",
 };

@@ -48,6 +48,14 @@ import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
 import { ColumnMenu } from "./column-menu.js";
 import type { DataSource } from "./data-source.js";
 import {
+  copyFill,
+  type FillBounds,
+  fillLanes,
+  type HandleExtent,
+  handleExtent,
+  seriesFill,
+} from "./fill-series.js";
+import {
   applyAdvancedFilter,
   countConditions,
   emptyGroup,
@@ -593,6 +601,9 @@ export function DataGrid<T>({
   );
   const [dropRow, setDropRow] = useState<{ key: string; place: "before" | "after" } | null>(null);
   const [cellRange, setCellRange] = useState<CellRange | null>(null);
+  /** Range a drag of the fill handle would reach, drawn while the pointer is down. */
+  const rangeB = cellRange ? rangeBounds(cellRange) : null;
+  const [fillPreview, setFillPreview] = useState<FillBounds | null>(null);
   const [panelOpen, setPanelOpen] = useState(defaultToolPanelOpen);
   const [announcement, setAnnouncement] = useState("");
   const editingRef = useRef(editing);
@@ -1453,6 +1464,106 @@ export function DataGrid<T>({
     commitChanges(items, "paste");
     if (items.length > 0) setAnnouncement(labels.pasted(items.length));
   };
+  /** Edit that writes `source` into `to`; formulas shift their relative references when copied from `from`. */
+  const fillItem = (
+    from: { row: T; column: DataGridColumn<T> },
+    to: { row: T; column: DataGridColumn<T> },
+    source: CellValue,
+    shift: boolean,
+  ): CellEdit<T> | null => {
+    let value = source;
+    if (shift && sourceIndex && isFormulaText(value)) {
+      const dr = (sourceIndex.rows.get(to.row) ?? 0) - (sourceIndex.rows.get(from.row) ?? 0);
+      const dc =
+        (sourceIndex.cols.get(to.column.id) ?? 0) - (sourceIndex.cols.get(from.column.id) ?? 0);
+      value = shiftFormula(value, dr, dc);
+    }
+    const result =
+      typeof value === "string" ? coerceDraft(to.column, to.row, value, true) : { value };
+    const previous = rawValue(to.row, to.column);
+    if ("error" in result || sameCellValue(result.value, previous)) return null;
+    return {
+      row: to.row,
+      rowId: keyOf(to.row),
+      column: to.column,
+      value: result.value,
+      previous,
+    };
+  };
+  /** Fills what the handle dragged over: series continue, everything else is copied (one history entry). */
+  const fillByHandle = (base: FillBounds, extent: HandleExtent, copyOnly: boolean) => {
+    const items: CellEdit<T>[] = [];
+    for (const lane of fillLanes(base, extent)) {
+      const sources = lane.source.map((pos) => cellAt(pos.r, pos.c));
+      if (sources.some((cell) => !cell)) continue;
+      const values = sources.map((cell) => {
+        const known = cell as { row: T; column: DataGridColumn<T> };
+        return rawValue(known.row, known.column);
+      });
+      const plan = copyOnly
+        ? copyFill(lane.targets.length, values.length)
+        : seriesFill(values, lane.targets.length);
+      lane.targets.forEach((pos, i) => {
+        const to = cellAt(pos.r, pos.c);
+        const step = plan[i];
+        if (!to || !step || !canEdit(to.column, to.row)) return;
+        const item =
+          "from" in step
+            ? fillItem(
+                sources[step.from] as { row: T; column: DataGridColumn<T> },
+                to,
+                values[step.from] as CellValue,
+                true,
+              )
+            : fillItem(to, to, step.value, false);
+        if (item) items.push(item);
+      });
+    }
+    commitChanges(items, "fill");
+    setCellRange({
+      anchor: { r: base.r0, c: base.c0 },
+      focus: { r: extent.bounds.r1, c: extent.bounds.c1 },
+    });
+    if (items.length > 0) setAnnouncement(labels.filled(items.length));
+  };
+  const onFillHandleDown = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.button !== 0 || !cellRange || !canWrite) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const base = rangeBounds(cellRange);
+    let extent: HandleExtent | null = null;
+    let cancelled = false;
+    const update = (clientX: number, clientY: number) => {
+      const cell = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>("td[data-r]");
+      if (!cell || !gridRef.current?.contains(cell)) return;
+      extent = handleExtent(
+        base,
+        { r: Number(cell.dataset.r), c: Number(cell.dataset.c) },
+        { maxR, maxC },
+      );
+      setFillPreview(extent?.bounds ?? null);
+    };
+    const move = (moveEvent: PointerEvent) => update(moveEvent.clientX, moveEvent.clientY);
+    const key = (keyEvent: globalThis.KeyboardEvent) => {
+      if (keyEvent.key !== "Escape") return;
+      cancelled = true;
+      finish(false);
+    };
+    const finish = (apply: boolean, copyOnly = false) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("keydown", key);
+      setFillPreview(null);
+      if (apply && !cancelled && extent) fillByHandle(base, extent, copyOnly);
+    };
+    const up = (upEvent: PointerEvent) => finish(true, upEvent.ctrlKey || upEvent.metaKey);
+    const cancel = () => finish(false);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+    window.addEventListener("keydown", key);
+  };
   const fillRange = (direction: FillDirection) => {
     if (!canWrite) return;
     const bounds = cellRange
@@ -1466,26 +1577,8 @@ export function DataGrid<T>({
       const from = cellAt(step.from.r, step.from.c);
       const to = cellAt(step.r, step.c);
       if (!from || !to || !canEdit(to.column, to.row)) continue;
-      let source = rawValue(from.row, from.column);
-      if (sourceIndex && isFormulaText(source)) {
-        const dr = (sourceIndex.rows.get(to.row) ?? 0) - (sourceIndex.rows.get(from.row) ?? 0);
-        const dc =
-          (sourceIndex.cols.get(to.column.id) ?? 0) - (sourceIndex.cols.get(from.column.id) ?? 0);
-        source = shiftFormula(source, dr, dc);
-      }
-      const result =
-        typeof source === "string"
-          ? coerceDraft(to.column, to.row, source, true)
-          : { value: source };
-      const previous = rawValue(to.row, to.column);
-      if ("error" in result || sameCellValue(result.value, previous)) continue;
-      items.push({
-        row: to.row,
-        rowId: keyOf(to.row),
-        column: to.column,
-        value: result.value,
-        previous,
-      });
+      const item = fillItem(from, to, rawValue(from.row, from.column), true);
+      if (item) items.push(item);
     }
     commitChanges(items, "fill");
     if (items.length > 0) setAnnouncement(labels.filled(items.length));
@@ -2433,6 +2526,15 @@ export function DataGrid<T>({
       const value = getCellValue(row.row, column);
       const invalid = column.validate ? column.validate(value, row.row) : null;
       const inSelection = rangeSelection && inRange(cellRange, r, c);
+      const inFill =
+        !!fillPreview &&
+        !inSelection &&
+        r >= fillPreview.r0 &&
+        r <= fillPreview.r1 &&
+        c >= fillPreview.c0 &&
+        c <= fillPreview.c1;
+      const showHandle =
+        canWrite && rangeSelection && !isEditing && !!rangeB && r === rangeB.r1 && c === rangeB.c1;
       const isTreeCell = !!tree && structured && c === firstDataIndex;
       const parentAggregate =
         row.tree?.hasChildren && column.aggregate ? (row.tree.aggregates[column.id] ?? null) : null;
@@ -2504,8 +2606,19 @@ export function DataGrid<T>({
             editable && "cursor-text",
             invalid && "bg-danger-soft",
             inSelection && "bg-accent-soft",
+            inFill && "bg-accent-soft/60",
+            showHandle && !sticky && "relative",
           )}
         >
+          {showHandle ? (
+            <span
+              data-fill-handle=""
+              role="presentation"
+              title={labels.fillHandle}
+              onPointerDown={onFillHandleDown}
+              className="absolute right-0 bottom-0 z-4 size-2.5 cursor-crosshair touch-none rounded-xs border border-surface bg-accent"
+            />
+          ) : null}
           {isEditing ? (
             renderEditor(column, r, c)
           ) : invalid ? (
