@@ -1,0 +1,60 @@
+---
+import Default from "@astrojs/starlight/components/ThemeSelect.astro";
+const styles = ["soft", "bordered", "elevated", "flat", "glass", "brutal"];
+---
+
+<div class="look">
+  <label class="look__label">
+    <span class="sr-only">Style preset</span>
+    <select id="look-style" class="look__select" data-look="style" aria-label="Style preset">
+      {styles.map((s) => (
+        <option value={s}>{s}</option>
+      ))}
+    </select>
+  </label>
+  <Default />
+</div>
+
+<script>
+  import { PRESET_STORAGE_KEY } from "../../lib/preset-script.mjs";
+
+  const select = document.querySelector<HTMLSelectElement>("#look-style");
+  if (select) {
+    select.value = document.documentElement.dataset.style ?? "soft";
+    select.addEventListener("change", () => {
+      document.documentElement.dataset.style = select.value;
+      try {
+        const prev = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || "{}");
+        localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify({ ...prev, style: select.value }));
+      } catch {
+        /* storage blocked: the choice just does not persist */
+      }
+    });
+  }
+</script>
+
+<style>
+  .look {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .look__select {
+    height: 2rem;
+    padding: 0 0.6rem;
+    border-radius: var(--radius-button, 999px);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.8125rem;
+    text-transform: capitalize;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+</style>

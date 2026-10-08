@@ -22,6 +22,7 @@
     "@astrojs/react": "^7.0.1",
     "@astrojs/starlight": "^0.42.5",
     "@astrojs/starlight-tailwind": "^5.0.0",
+    "@fontsource-variable/figtree": "^5.3.0",
     "@jcsoftdev/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.8",

@@ -1,0 +1,22 @@
+/* One stylesheet for the landing and the docs. Layer order follows Starlight's Tailwind guide. */
+@layer base, starlight, theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "@jcsoftdev/ui/styles/tokens.css";
+@import "@jcsoftdev/ui/styles/theme.css";
+@import "@jcsoftdev/ui/styles/base.css" layer(base);
+@import "@fontsource-variable/figtree";
+
+/* Utilities used by the built components (landing) and by the stories (docs examples). */
+@source "../../../packages/ui/src";
+@source "../../../packages/ui/dist";
+
+:root {
+  --font-sans:
+    "Figtree Variable", "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}

@@ -1,0 +1,74 @@
+---
+import Default from "@astrojs/starlight/components/PageTitle.astro";
+
+const path = Astro.url.pathname.replace(/\/$/, "") || "/docs";
+const mdUrl = `${path === "/docs" ? "/docs/index" : path}.md`;
+---
+
+<Default>
+  <slot />
+</Default>
+<div class="page-actions" data-md-url={mdUrl}>
+  <button type="button" class="page-actions__btn" data-copy-md>
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+      <path
+        d="M5 2.5h6.5A1.5 1.5 0 0 1 13 4v8M3 5.5A1.5 1.5 0 0 1 4.5 4H9a1.5 1.5 0 0 1 1.5 1.5v7A1.5 1.5 0 0 1 9 14H4.5A1.5 1.5 0 0 1 3 12.5z"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.3"
+        stroke-linecap="round"
+      ></path>
+    </svg>
+    <span data-label>Copy page as Markdown</span>
+  </button>
+  <a class="page-actions__btn" href={mdUrl} data-md-link>
+    Open .md
+  </a>
+</div>
+
+<script>
+  const bar = document.querySelector<HTMLElement>(".page-actions");
+  const button = bar?.querySelector<HTMLButtonElement>("[data-copy-md]");
+  const label = button?.querySelector<HTMLElement>("[data-label]");
+  button?.addEventListener("click", async () => {
+    if (!bar || !label) return;
+    try {
+      const res = await fetch(bar.dataset.mdUrl ?? "");
+      if (!res.ok) throw new Error(String(res.status));
+      await navigator.clipboard.writeText(await res.text());
+      label.textContent = "Copied";
+    } catch {
+      label.textContent = "Copy failed";
+    }
+    setTimeout(() => (label.textContent = "Copy page as Markdown"), 1800);
+  });
+</script>
+
+<style>
+  .page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+  .page-actions__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 1.9rem;
+    padding: 0 0.75rem;
+    border-radius: var(--radius-button, 999px);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .page-actions__btn:hover {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+</style>

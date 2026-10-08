@@ -1,0 +1,120 @@
+/*
+ * Starlight wearing the library's own tokens. Unlayered on purpose: it beats Starlight's layered
+ * defaults, and because it only reads CSS variables the docs follow data-theme, data-style,
+ * data-accent, data-density and data-radius exactly like any other consumer of @jcsoftdev/ui.
+ */
+:root,
+::backdrop {
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+
+  --sl-color-white: var(--ink);
+  --sl-color-gray-1: var(--ink);
+  --sl-color-gray-2: var(--ink-2);
+  --sl-color-gray-3: var(--ink-3);
+  --sl-color-gray-4: var(--ink-3);
+  --sl-color-gray-5: var(--line-strong);
+  --sl-color-gray-6: var(--surface);
+  --sl-color-gray-7: var(--surface-2);
+  --sl-color-black: var(--bg);
+
+  --sl-color-accent-low: var(--accent-soft);
+  --sl-color-accent: var(--accent);
+  --sl-color-accent-high: var(--accent-ink);
+
+  --sl-color-text: var(--ink-2);
+  --sl-color-text-accent: var(--accent-ink);
+  --sl-color-text-invert: var(--on-accent);
+  --sl-color-bg: var(--bg);
+  --sl-color-bg-nav: color-mix(in oklab, var(--surface) 82%, transparent);
+  --sl-color-bg-sidebar: var(--bg);
+  --sl-color-bg-inline-code: var(--sunken);
+  --sl-color-bg-accent: var(--accent);
+  --sl-color-hairline-light: var(--line-strong);
+  --sl-color-hairline: var(--line);
+  --sl-color-hairline-shade: var(--line);
+
+  --sl-content-width: 50rem;
+  --sl-text-body: 0.9375rem;
+  --sl-line-height: 1.7;
+}
+
+body {
+  background: var(--bg);
+  background-image: var(--page-backdrop, none);
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* Glass header that matches the landing navigation. */
+.header {
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+h1#_top {
+  letter-spacing: -0.02em;
+  font-weight: 750;
+}
+
+.sl-markdown-content table {
+  border-radius: var(--radius-card, 12px);
+  overflow: hidden;
+  font-size: 0.8125rem;
+}
+.sl-markdown-content th {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.sl-markdown-content code {
+  border-radius: var(--radius-chip, 6px);
+}
+
+/* Prop tables are wide: scroll inside their own box instead of the page. */
+.sl-markdown-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ---- live example (component pages) ---- */
+.ui-example {
+  margin-block: 1.25rem 2rem;
+  border-radius: var(--radius-card, 14px);
+  background: var(--surface-card, var(--surface));
+  box-shadow: var(--shadow-card, 0 0 0 1px var(--line));
+  border: var(--border-width-card, 0) solid var(--border-color-card, var(--line));
+  overflow: hidden;
+}
+.ui-example__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}
+.ui-example__stage {
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0 / 18px 18px,
+    var(--bg);
+  overflow: auto;
+  max-height: 34rem;
+}
+.ui-example__canvas {
+  margin-inline: auto;
+  max-width: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  transition: width 0.25s var(--ease-style, ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-example__canvas {
+    transition: none;
+  }
+}

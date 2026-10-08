@@ -6,3 +6,4 @@ src/content/docs/docs/reference
 src/content/docs/docs/theming/tokens.md
 test/fixtures
 pnpm-lock.yaml
+src/content/docs/docs/subpaths.md

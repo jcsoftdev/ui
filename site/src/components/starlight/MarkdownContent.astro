@@ -1,0 +1,21 @@
+---
+import Default from "@astrojs/starlight/components/MarkdownContent.astro";
+import LiveExample from "../docs/LiveExample.tsx";
+
+const { entry } = Astro.locals.starlightRoute;
+const example = entry.data.example;
+const storybookUrl = import.meta.env.PUBLIC_STORYBOOK_URL || "/storybook";
+---
+
+{example && (
+  <LiveExample
+    client:visible
+    file={example.file}
+    story={example.story}
+    name={entry.data.title}
+    storybookUrl={storybookUrl}
+  />
+)}
+<Default>
+  <slot />
+</Default>
