@@ -282,12 +282,29 @@ export const FillParent: Story = {
 
 /** The root in the centre, one ring per level; chips replace the cards. */
 export const Radial: Story = {
-  args: { layout: "radial", edgeStyle: "curved", height: 620 },
+  args: {
+    layout: "radial",
+    edgeStyle: "curved",
+    height: 620,
+    nodeWidth: 132,
+    nodeHeight: 28,
+    siblingGap: 10,
+    levelGap: 112,
+  },
 };
 
 /** Every leaf on the last level, so the grouping of the team reads like a dendrogram. */
 export const Dendrogram: Story = {
-  args: { layout: "dendrogram", direction: "left", edgeStyle: "step", height: 520 },
+  args: {
+    layout: "dendrogram",
+    direction: "left",
+    edgeStyle: "step",
+    height: 520,
+    nodeWidth: 132,
+    nodeHeight: 28,
+    siblingGap: 8,
+    levelGap: 76,
+  },
 };
 
 /** Type a name or a role: matches are ringed, Enter steps through them and pans to each, opening closed branches. */
@@ -366,7 +383,16 @@ export const DynamicDirection: Story = {
           {pick("Layout", ["tidy", "radial", "dendrogram"], layout, setLayout)}
           {pick("Direction", ["top", "bottom", "left", "right"], direction, setDirection)}
         </div>
-        <TreeChart {...args} layout={layout} direction={direction} height={560} />
+        <TreeChart
+          {...args}
+          layout={layout}
+          direction={direction}
+          height={560}
+          nodeWidth={layout === "tidy" ? 196 : 132}
+          nodeHeight={layout === "tidy" ? 64 : 28}
+          siblingGap={layout === "tidy" ? 20 : 10}
+          levelGap={layout === "radial" ? 112 : layout === "dendrogram" ? 76 : 56}
+        />
       </div>
     );
   },
@@ -379,7 +405,15 @@ export const Dark: Story = {
 };
 
 export const RadialNarrow: Story = {
-  args: { layout: "radial", height: 420, searchable: true },
+  args: {
+    layout: "radial",
+    height: 420,
+    searchable: true,
+    nodeWidth: 132,
+    nodeHeight: 28,
+    siblingGap: 10,
+    levelGap: 112,
+  },
   decorators: [
     (Story) => (
       <div style={{ width: 320 }}>

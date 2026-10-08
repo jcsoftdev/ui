@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ChordChart } from "../chord-chart/chord-chart.js";
 import type { SankeyLinkInput, SankeyNodeInput } from "../core/sankey.js";
 import { AlluvialChart } from "./alluvial-chart.js";
 import { SankeyChart, type SankeyLabels } from "./sankey-chart.js";
@@ -303,4 +304,22 @@ export const Particles: Story = {
 /** The SVG and PNG buttons download the drawing as it is on screen. */
 export const Export: Story = {
   args: { exportable: true, compare: septiembre },
+};
+
+/** The same idea as a circle: who switches barber with whom (see ChordChart). */
+export const Chord: Story = {
+  render: () => (
+    <ChordChart
+      title="Clientes que cambian de barbero"
+      groups={["Kevin", "Diego", "Andrea", "Luis"].map((name) => ({ id: name, name }))}
+      matrix={[
+        [0, 14, 6, 3],
+        [9, 0, 4, 11],
+        [5, 3, 0, 2],
+        [2, 12, 3, 0],
+      ]}
+      valueFormat="integer"
+      height={420}
+    />
+  ),
 };

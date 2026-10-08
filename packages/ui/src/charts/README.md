@@ -280,7 +280,7 @@ Every chart adapts to its exact parent, width and height, from the container and
   the chart reports them and shows the dragged draft until `tasks` changes. Late links (successor starts before the
   predecessor ends) use the danger token. Default height follows the rows (220-560 px); `"fill"` scrolls rows inside.
 - Gantt extras: `showCriticalPath` runs `criticalPath(tasks)` (forward/backward pass over finish-to-start
-  dependencies; a task cannot start before its own date or before its predecessors end; a dependency on a parent
+  dependencies; tasks without predecessors start at their own date, the rest when their predecessors end, so waiting gaps are ignored; a dependency on a parent
   means all its leaves; cycles are left out) and draws zero-slack tasks and their tight links in the danger tone,
   with the slack of the others in the tooltip. `showBaselines` draws `task.baseline` as a thin bar under the
   actual one and adds baseline and variance to the tooltip. `annotations` are dated lines or bands (`to`) with a
