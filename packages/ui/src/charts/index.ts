@@ -10,6 +10,7 @@ export * from "./donut-chart/index.js";
 export * from "./dumbbell-chart/index.js";
 export * from "./fill-gauge-chart/index.js";
 export * from "./funnel-chart/index.js";
+export * from "./gantt-chart/index.js";
 export * from "./gauge-chart/index.js";
 export * from "./heatmap-chart/index.js";
 export * from "./histogram/index.js";
