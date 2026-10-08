@@ -6,7 +6,7 @@ Run: `pnpm --filter @jcsoftdev/ui storybook` (dev, port 6006) or `build-storyboo
 
 - Lives next to the component: `src/<category>/<component>/<component>.stories.tsx`.
 - CSF3, typed with `import type { Meta, StoryObj } from "@storybook/react-vite"`; use `satisfies Meta<typeof Component>`.
-- `title: "<Category>/<ComponentName>"`. Categories: Foundations, Atoms, Forms, Navigation, Containers, Overlays, Shell, Palette, Calendar, States, Charts.
+- `title: "<Category>/<ComponentName>"`. Categories: Foundations, Atoms, Forms, Navigation, Containers, Overlays, Shell, Palette, Calendar, States, Charts, AI.
 - `tags: ["autodocs"]` and `component` set.
 - `args` + `argTypes` so Controls work (`inline-radio` for unions, `boolean`, `text`). Use `control: false` for non-serializable props.
 - A `Default` story first, then one story per meaningful variant or state (sizes, disabled, loading, empty, error).
@@ -82,6 +82,18 @@ A card edge is `border-card shadow-card`: `soft` puts the hairline in the shadow
 `shadow-pop`, `shadow-hero`, `radius-*`, `control-height`) are remapped by the presets too,
 so unrefactored components follow along partially. The `Foundations/StylePresets` story shows
 every preset side by side; check it with the Estilo, Densidad and Radio toolbars.
+
+## AI set (`@jcsoftdev/ui/ai`)
+
+Chat building blocks live in `src/ai` and are exposed only through the subpath export
+`@jcsoftdev/ui/ai` (the `./*` export maps to `dist/ai/index.js`; they are not re-exported from
+other folders). Everything is dependency-free: `Markdown` builds React elements from its own AST
+(raw HTML is shown as text, links allow only http, https and mailto) and `CodeBlock` ships a tiny
+tokenizer for ts, js, json, bash, go and sql. Keyframes (dots, caret, shimmer) are injected once
+through a hoisted `<style href precedence>`; all of them honor `prefers-reduced-motion`.
+`Conversation` is a `role="log"` scroller that follows new content until the user scrolls up and
+then offers a "jump to latest" button. The `AI/Asistente` story composes the whole set with a
+simulated streaming reply.
 
 ## Files
 
