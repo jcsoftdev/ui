@@ -31,6 +31,7 @@ export * from "./stack.js";
 export * from "./time-range.js";
 export * from "./tooltip.js";
 export * from "./tree-layout.js";
+export * from "./tree-radial.js";
 export * from "./types.js";
 export * from "./unit-glyph.js";
 export * from "./unit-icons.js";

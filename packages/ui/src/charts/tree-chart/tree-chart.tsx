@@ -24,14 +24,26 @@ import {
   treeNeighbor,
   treePathToRoot,
 } from "../core/tree-layout.js";
+import {
+  dendrogramLayout,
+  radialEdgePath,
+  radialTreeLayout,
+  type TreeLayoutKind,
+} from "../core/tree-radial.js";
 import { type ChartLabels, DEFAULT_LABELS } from "../core/types.js";
 import { usePanZoom } from "../core/use-pan-zoom.js";
-import { TreeCard, type TreeNodeState } from "./tree-card.js";
+import { TreeCard, TreeChip, type TreeNodeState } from "./tree-card.js";
 import {
+  ancestorIds,
   buildTreeModel,
+  edgeColorOf,
+  groupLeaves,
   initialCollapsed,
+  searchTree,
+  subtreeSize,
   type TreeChartDatum,
   type TreeChartNode,
+  type TreeEdgeColor,
   type TreeModel,
   visibleTree,
 } from "./tree-model.js";
@@ -57,6 +69,17 @@ export interface TreeLabels extends ChartLabels {
   collapsed: string;
   /** Spoken position among siblings, e.g. "2 of 4". */
   of: string;
+  /** Search box name and placeholder. */
+  search: string;
+  searchPrevious: string;
+  searchNext: string;
+  noMatches: string;
+  /** Word after the count in a group of leaves: "5 more". */
+  groupWord: string;
+  /** Data table header and spoken text: every node below. */
+  descendants: string;
+  /** Spoken when children could not be loaded. */
+  loadFailed: string;
 }
 
 export const DEFAULT_TREE_LABELS: TreeLabels = {
@@ -75,6 +98,13 @@ export const DEFAULT_TREE_LABELS: TreeLabels = {
   children: "Direct reports",
   collapsed: "collapsed",
   of: "of",
+  search: "Search",
+  searchPrevious: "Previous match",
+  searchNext: "Next match",
+  noMatches: "No matches",
+  groupWord: "more",
+  descendants: "Total below",
+  loadFailed: "Could not load. Try again.",
 };
 
 export interface TreeChartProps {
@@ -82,7 +112,12 @@ export interface TreeChartProps {
   title: string;
   /** Root of the tree; `null` shows the empty state. */
   data: TreeChartDatum | null;
-  /** Where the root sits: `top` (default), `bottom`, `left` or `right`. */
+  /**
+   * `tidy` (default) is the org-chart layout; `radial` puts the root in the centre with one ring per
+   * level; `dendrogram` aligns every leaf on the last level. The last two default to compact chips.
+   */
+  layout?: TreeLayoutKind;
+  /** Where the root sits: `top` (default), `bottom`, `left` or `right`. Ignored by `radial`. */
   direction?: TreeDirection;
   edgeStyle?: TreeEdgeStyle;
   /** Drawing height in pixels, or `"fill"` to take the parent's height. */
@@ -102,6 +137,26 @@ export interface TreeChartProps {
   collapsible?: boolean;
   /** Highlight the path to the root of the hovered or keyboard-active node. */
   highlightPath?: boolean;
+  /** Edge colors: `neutral` (default), by `depth` or by top-level `branch`. */
+  edgeColor?: TreeEdgeColor;
+  /** Search box over the drawing: matches are ringed, Enter steps through them and pans to each. */
+  searchable?: boolean;
+  /** Clicking a node selects it and keeps its path to the root lit. */
+  selectable?: boolean;
+  /** Controlled selection (a node id), `null` for none. */
+  selectedId?: string | null;
+  defaultSelectedId?: string | null;
+  onSelect?: (node: TreeChartNode | null) => void;
+  /** Show how many nodes hang below each one. */
+  showCounts?: boolean;
+  /** Fold nodes with at least this many leaf children into one expandable group node. */
+  groupLeaves?: number;
+  /**
+   * Fetches the children of a `lazy` node the first time it is expanded; a spinner shows meanwhile.
+   * Resolve with the child data (an empty array makes the node a leaf).
+   */
+  loadChildren?: (node: TreeChartNode) => Promise<readonly TreeChartDatum[]>;
+  onLoadError?: (node: TreeChartNode, error: unknown) => void;
   /**
    * Initial view. `auto` (default) shows the whole tree and, when that would shrink the cards
    * below a readable size (narrow containers), centres the root at a readable scale so you pan
@@ -145,7 +200,27 @@ export function TreeChart({
     () => (labelsProp ? { ...DEFAULT_TREE_LABELS, ...labelsProp } : DEFAULT_TREE_LABELS),
     [labelsProp],
   );
-  const model = useMemo(() => (data ? buildTreeModel(data) : null), [data]);
+  const { groupLeaves: groupMin, ...plotProps } = rest;
+  const grouped = useMemo(
+    () =>
+      data && groupMin
+        ? groupLeaves(data, groupMin, (count) => `${count} ${labels.groupWord}`)
+        : data,
+    [data, groupMin, labels.groupWord],
+  );
+  const [loaded, setLoaded] = useState<ReadonlyMap<string, readonly TreeChartDatum[]>>(
+    () => new Map(),
+  );
+  // New data forgets what was fetched for the old one.
+  const [seenData, setSeenData] = useState(data);
+  if (seenData !== data) {
+    setSeenData(data);
+    setLoaded(new Map());
+  }
+  const model = useMemo(
+    () => (grouped ? buildTreeModel(grouped, loaded) : null),
+    [grouped, loaded],
+  );
   return (
     <ChartFrame
       height={height}
@@ -160,7 +235,9 @@ export function TreeChart({
       {(width, drawingHeight) =>
         model ? (
           <TreePlot
-            {...rest}
+            {...plotProps}
+            dataKey={data}
+            onLoaded={(id, children) => setLoaded((current) => new Map(current).set(id, children))}
             title={title}
             model={model}
             width={width}
@@ -174,8 +251,14 @@ export function TreeChart({
 }
 
 interface TreePlotProps
-  extends Omit<TreeChartProps, "data" | "height" | "aspectRatio" | "loading" | "labels"> {
+  extends Omit<
+    TreeChartProps,
+    "data" | "height" | "aspectRatio" | "loading" | "labels" | "groupLeaves"
+  > {
   model: TreeModel;
+  /** The caller's data: a new one resets the collapsed state and the selection. */
+  dataKey: unknown;
+  onLoaded: (id: string, children: readonly TreeChartDatum[]) => void;
   width: number;
   height: number;
   labels: TreeLabels;
@@ -185,7 +268,20 @@ const ZOOM_STEP = 1.25;
 const TOOLBAR_BAND = 36;
 
 /** Point of a node box that faces its children, where the toggle button sits. */
-function toggleAnchor(pose: TreeLayoutNode, direction: TreeDirection): [number, number] {
+function toggleAnchor(
+  pose: TreeLayoutNode,
+  direction: TreeDirection,
+  radial: boolean,
+): [number, number] {
+  if (radial && pose.angle != null) {
+    const dx = Math.sin(pose.angle);
+    const dy = -Math.cos(pose.angle);
+    const reach = Math.min(
+      pose.width / 2 / Math.max(1e-6, Math.abs(dx)),
+      pose.height / 2 / Math.max(1e-6, Math.abs(dy)),
+    );
+    return [pose.x + dx * reach, pose.y + dy * reach];
+  }
   switch (direction) {
     case "top":
       return [pose.x, pose.y + pose.height / 2];
@@ -204,15 +300,27 @@ function TreePlot({
   width,
   height,
   labels,
+  dataKey,
+  onLoaded,
+  layout: layoutKind = "tidy",
   direction = "top",
   edgeStyle = "curved",
-  nodeWidth = 196,
-  nodeHeight = 64,
+  nodeWidth: nodeWidthProp,
+  nodeHeight: nodeHeightProp,
   siblingGap = 20,
-  levelGap = 56,
+  levelGap: levelGapProp,
   initialDepth = Number.POSITIVE_INFINITY,
   collapsible = true,
   highlightPath = true,
+  edgeColor = "neutral",
+  searchable = false,
+  selectable = false,
+  selectedId: selectedProp,
+  defaultSelectedId = null,
+  onSelect,
+  showCounts = false,
+  loadChildren,
+  onLoadError,
   fit: fitProp = "auto",
   controls = true,
   wheelZoom = "modifier",
@@ -223,44 +331,70 @@ function TreePlot({
   onNodeClick,
   onToggle,
 }: TreePlotProps) {
+  const compact = layoutKind !== "tidy";
+  const radial = layoutKind === "radial";
+  const nodeWidth = nodeWidthProp ?? (compact ? 132 : 196);
+  const nodeHeight = nodeHeightProp ?? (compact ? 28 : 64);
+  const levelGap = levelGapProp ?? (radial ? 112 : compact ? 76 : 56);
   const [collapsed, setCollapsed] = useState(() => initialCollapsed(model, initialDepth));
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [selectedState, setSelectedState] = useState<string | null>(defaultSelectedId);
+  const selectedId = selectedProp !== undefined ? selectedProp : selectedState;
+  const [query, setQuery] = useState("");
+  const [matchIndex, setMatchIndex] = useState(0);
+  const [busy, setBusy] = useState<ReadonlySet<string>>(() => new Set());
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
   // New data: start again from its own collapsed flags.
-  const [seenModel, setSeenModel] = useState(model);
-  if (seenModel !== model) {
-    setSeenModel(model);
+  const [seenData, setSeenData] = useState(dataKey);
+  if (seenData !== dataKey) {
+    setSeenData(dataKey);
     setCollapsed(initialCollapsed(model, initialDepth));
     setActiveId(null);
+    setSelectedState(defaultSelectedId);
+    setQuery("");
   }
 
-  const layout = useMemo(
-    () =>
-      treeLayout(
-        visibleTree(model.root, collapsed, () => ({ width: nodeWidth, height: nodeHeight })),
-        { direction, siblingGap, levelGap },
-      ),
-    [model, collapsed, direction, nodeWidth, nodeHeight, siblingGap, levelGap],
-  );
+  const layout = useMemo(() => {
+    const input = visibleTree(model.root, collapsed, () => ({
+      width: nodeWidth,
+      height: nodeHeight,
+    }));
+    if (radial) return radialTreeLayout(input, { levelGap, siblingGap });
+    if (layoutKind === "dendrogram") {
+      return dendrogramLayout(input, { direction, siblingGap, levelGap });
+    }
+    return treeLayout(input, { direction, siblingGap, levelGap });
+  }, [
+    model,
+    collapsed,
+    layoutKind,
+    radial,
+    direction,
+    nodeWidth,
+    nodeHeight,
+    siblingGap,
+    levelGap,
+  ]);
   const parentOf = useCallback((id: string) => model.byId.get(id)?.parent?.id ?? null, [model]);
   const poses = useTreeTransition(layout, parentOf, { disabled: !animate });
 
   const panZoom = usePanZoom<HTMLDivElement>({ minZoom, maxZoom, wheel: wheelZoom });
   const { view, setView, userMoved } = panZoom;
   // The zoom toolbar keeps a band at the top, so a fitted tree never sits under it.
-  const toolbarBand = controls ? TOOLBAR_BAND : 0;
+  const toolbarBand = controls || searchable ? TOOLBAR_BAND : 0;
   // The fit button flips between the whole tree and the readable view; `null` follows `fit`.
   const [fitChoice, setFitChoice] = useState<TreeFitMode | null>(null);
   const appliedFit = useRef<TreeFitMode>("contain");
   const fit = useCallback(() => {
-    const next = treeFitView(layout, width, height, direction, {
+    const next = treeFitView(layout, width, height, radial ? "left" : direction, {
       inset: toolbarBand,
-      mode: fitChoice ?? fitProp,
+      mode: radial ? "contain" : (fitChoice ?? fitProp),
       minZoom,
     });
     appliedFit.current = next.mode;
     setView(next.view, { user: false });
-  }, [layout, width, height, direction, toolbarBand, minZoom, fitChoice, fitProp, setView]);
+  }, [layout, width, height, direction, radial, toolbarBand, minZoom, fitChoice, fitProp, setView]);
   // Follow the container and the expanding tree until the user pans or zooms.
   useEffect(() => {
     if (!userMoved.current) fit();
@@ -273,7 +407,35 @@ function TreePlot({
     else setFitChoice(appliedFit.current === "contain" ? "readable" : "contain");
   };
 
+  const load = async (node: TreeChartNode) => {
+    if (!loadChildren || busy.has(node.id)) return;
+    setBusy((current) => new Set(current).add(node.id));
+    setFailed((current) => {
+      const next = new Set(current);
+      next.delete(node.id);
+      return next;
+    });
+    try {
+      const children = await loadChildren(node);
+      onLoaded(node.id, children);
+      onToggle?.(node, true);
+    } catch (error) {
+      setFailed((current) => new Set(current).add(node.id));
+      onLoadError?.(node, error);
+    } finally {
+      setBusy((current) => {
+        const next = new Set(current);
+        next.delete(node.id);
+        return next;
+      });
+    }
+  };
+
   const toggle = (node: TreeChartNode) => {
+    if (node.lazy) {
+      void load(node);
+      return;
+    }
     if (node.children.length === 0) return;
     const expanding = collapsed.has(node.id);
     setCollapsed((current) => {
@@ -285,7 +447,74 @@ function TreePlot({
     onToggle?.(node, expanding);
   };
 
-  const highlightId = highlightPath ? (hoverId ?? activeId) : null;
+  const select = (id: string | null) => {
+    if (selectedProp === undefined) setSelectedState(id);
+    onSelect?.(id ? (model.byId.get(id) ?? null) : null);
+  };
+
+  const matches = useMemo(() => searchTree(model, query), [model, query]);
+  const matchSet = useMemo(() => new Set(matches.map((node) => node.id)), [matches]);
+
+  // Pans the view so a node sits in the middle, once the layout includes it.
+  const pending = useRef<string | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the layout changes after a reveal request.
+  useEffect(() => {
+    const id = pending.current;
+    const node = id ? layout.nodes.find((candidate) => candidate.id === id) : undefined;
+    if (!node) return;
+    pending.current = null;
+    const k = Math.min(1.4, Math.max(0.8, panZoom.view.k));
+    setView({
+      k,
+      x: width / 2 - node.x * k,
+      y: toolbarBand + (height - toolbarBand) / 2 - node.y * k,
+    });
+  }, [layout]);
+
+  /** Opens the ancestors of a node, selects it and brings it to the middle of the view. */
+  const focusNode = (node: TreeChartNode) => {
+    const hidden = ancestorIds(node).filter((id) => collapsed.has(id));
+    if (hidden.length > 0) {
+      setCollapsed((current) => {
+        const next = new Set(current);
+        for (const id of hidden) next.delete(id);
+        return next;
+      });
+    }
+    pending.current = node.id;
+    select(node.id);
+    setActiveId(node.id);
+    // Already visible: the layout will not change, so center now.
+    if (hidden.length === 0) {
+      const placed = layout.nodes.find((candidate) => candidate.id === node.id);
+      if (placed) {
+        pending.current = null;
+        const k = Math.min(1.4, Math.max(0.8, panZoom.view.k));
+        setView({
+          k,
+          x: width / 2 - placed.x * k,
+          y: toolbarBand + (height - toolbarBand) / 2 - placed.y * k,
+        });
+      }
+    }
+  };
+
+  const onSearch = (value: string) => {
+    setQuery(value);
+    setMatchIndex(0);
+    const first = searchTree(model, value)[0];
+    if (first) focusNode(first);
+  };
+  const stepMatch = (delta: number) => {
+    if (matches.length === 0) return;
+    const next = (matchIndex + delta + matches.length) % matches.length;
+    setMatchIndex(next);
+    const node = matches[next];
+    if (node) focusNode(node);
+  };
+
+  const highlightId =
+    hoverId && highlightPath ? hoverId : (selectedId ?? (highlightPath ? activeId : null));
   const path = useMemo(
     () => new Set(highlightId ? treePathToRoot(layout.nodes, highlightId) : []),
     [layout.nodes, highlightId],
@@ -318,6 +547,10 @@ function TreePlot({
   );
 
   const byPose = useMemo(() => new Map(poses.map((pose) => [pose.id, pose])), [poses]);
+  const descendants = useMemo(
+    () => (showCounts ? new Map(model.nodes.map((node) => [node.id, subtreeSize(node)])) : null),
+    [showCounts, model],
+  );
   const activeNode = activeId ? model.byId.get(activeId) : undefined;
 
   /** Pans just enough to bring a node fully into the viewport. */
@@ -404,6 +637,8 @@ function TreePlot({
               path={path}
               direction={direction}
               edgeStyle={edgeStyle}
+              edgeColor={edgeColor}
+              center={radial ? layout.center : undefined}
               model={model}
             />
           </svg>
@@ -411,15 +646,21 @@ function TreePlot({
             {poses.map((pose) => {
               const node = model.byId.get(pose.id);
               if (!node) return null;
-              const hasChildren = node.children.length > 0;
+              const hasChildren = node.children.length > 0 || node.lazy;
+              const loading = busy.has(node.id);
               const state: TreeNodeState = {
                 highlighted: path.has(node.id),
                 dimmed: path.size > 0 && !path.has(node.id),
                 active: activeId === node.id,
-                collapsed: collapsed.has(node.id),
+                collapsed: node.lazy || collapsed.has(node.id),
                 hasChildren,
+                descendants: descendants?.get(node.id) ?? 0,
+                showCount: showCounts,
+                loading,
+                matched: matchSet.has(node.id),
+                selected: selectedId === node.id,
               };
-              const [tx, ty] = toggleAnchor(pose, direction);
+              const [tx, ty] = toggleAnchor(pose, direction, radial);
               return (
                 <div key={node.id}>
                   {/* biome-ignore lint/a11y/noStaticElementInteractions: pointer shortcut; the keyboard uses the focusable explorer below. */}
@@ -445,13 +686,22 @@ function TreePlot({
                     onClick={() => {
                       if (panZoom.wasDrag()) return;
                       setActiveId(node.id);
+                      if (selectable) select(selectedId === node.id ? null : node.id);
                       if (onNodeClick) onNodeClick(node);
                       else toggle(node);
                     }}
                   >
-                    {renderNode ? renderNode(node, state) : <TreeCard node={node} state={state} />}
+                    {renderNode ? (
+                      renderNode(node, state)
+                    ) : compact ? (
+                      <TreeChip node={node} state={state} />
+                    ) : (
+                      <TreeCard node={node} state={state} />
+                    )}
                     {state.active ? (
                       <span className="pointer-events-none absolute -inset-1 rounded-[calc(var(--radius-tile)+4px)] border-2 border-ink" />
+                    ) : state.matched ? (
+                      <span className="pointer-events-none absolute -inset-1 rounded-[calc(var(--radius-tile)+4px)] border-2 border-accent-word" />
                     ) : null}
                   </div>
                   {collapsible && hasChildren ? (
@@ -469,7 +719,29 @@ function TreePlot({
                         borderColor: state.highlighted ? node.color : undefined,
                       }}
                     >
-                      {state.collapsed ? node.children.length : "−"}
+                      {loading ? (
+                        <svg
+                          aria-hidden="true"
+                          viewBox="0 0 24 24"
+                          width="12"
+                          height="12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          className="motion-safe:animate-spin"
+                        >
+                          <path d="M12 3a9 9 0 1 0 9 9" />
+                        </svg>
+                      ) : failed.has(node.id) ? (
+                        <span title={labels.loadFailed}>!</span>
+                      ) : node.lazy ? (
+                        (node.data.childCount ?? "+")
+                      ) : state.collapsed ? (
+                        node.children.length
+                      ) : (
+                        "−"
+                      )}
                     </button>
                   ) : null}
                 </div>
@@ -487,6 +759,7 @@ function TreePlot({
         aria-valuemax={Math.max(1, layout.nodes.length)}
         aria-valuenow={Math.max(1, layout.nodes.findIndex((node) => node.id === activeId) + 1)}
         aria-valuetext={valueText}
+        aria-busy={busy.size > 0}
         onKeyDown={onKeyDown}
         onFocus={(event) => {
           if (event.currentTarget.matches(":focus-visible")) {
@@ -497,6 +770,98 @@ function TreePlot({
         className="pointer-events-none absolute inset-0 rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:-outline-offset-2"
       />
 
+      <p role="status" className="sr-only">
+        {busy.size > 0 ? labels.loading : failed.size > 0 ? labels.loadFailed : ""}
+      </p>
+      {searchable ? (
+        <search
+          className="absolute top-2 left-2 flex items-center gap-0.5 rounded-control border border-line bg-surface p-0.5 shadow-flat"
+          style={{ width: "min(17rem, calc(100% - 9.5rem))" }}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            className="ml-1.5 shrink-0 text-ink-3"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            placeholder={labels.search}
+            aria-label={labels.search}
+            onChange={(event) => onSearch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                stepMatch(event.shiftKey ? -1 : 1);
+              } else if (event.key === "Escape") onSearch("");
+            }}
+            className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1.5 text-[12px] text-ink outline-none placeholder:text-ink-3"
+          />
+          {query ? (
+            <>
+              <span
+                aria-live="polite"
+                className="hidden shrink-0 px-1 text-[11px] text-ink-3 tabular-nums @sm/chart:inline"
+              >
+                {matches.length > 0
+                  ? `${matchIndex + 1} ${labels.of} ${matches.length}`
+                  : labels.noMatches}
+              </span>
+              <button
+                type="button"
+                aria-label={labels.searchPrevious}
+                disabled={matches.length === 0}
+                onClick={() => stepMatch(-1)}
+                className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-xs border-0 bg-transparent text-ink-2 hover:bg-surface-2 disabled:opacity-40"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m6 15 6-6 6 6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                aria-label={labels.searchNext}
+                disabled={matches.length === 0}
+                onClick={() => stepMatch(1)}
+                className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-xs border-0 bg-transparent text-ink-2 hover:bg-surface-2 disabled:opacity-40"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  width="12"
+                  height="12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+            </>
+          ) : null}
+        </search>
+      ) : null}
       {controls ? (
         <div
           role="toolbar"
@@ -566,11 +931,23 @@ interface TreeEdgesProps {
   path: ReadonlySet<string>;
   direction: TreeDirection;
   edgeStyle: TreeEdgeStyle;
+  edgeColor: TreeEdgeColor;
+  /** Radial layouts: where the rings are centred. */
+  center?: { x: number; y: number };
   model: TreeModel;
 }
 
 /** Parent-child links; the highlighted path is drawn last, on top, in the branch color. */
-function TreeEdges({ poses, byPose, path, direction, edgeStyle, model }: TreeEdgesProps) {
+function TreeEdges({
+  poses,
+  byPose,
+  path,
+  direction,
+  edgeStyle,
+  edgeColor,
+  center,
+  model,
+}: TreeEdgesProps) {
   const edges = poses.flatMap((pose) => {
     const parent = pose.parentId ? byPose.get(pose.parentId) : undefined;
     if (!parent) return [];
@@ -580,21 +957,32 @@ function TreeEdges({ poses, byPose, path, direction, edgeStyle, model }: TreeEdg
   edges.sort((a, b) => Number(a.on) - Number(b.on));
   return (
     <g fill="none">
-      {edges.map(({ pose, parent, on }) => (
-        <path
-          key={pose.id}
-          d={treeEdgePath(parent, pose, direction, edgeStyle)}
-          strokeWidth={on ? 2.5 : 1.5}
-          strokeLinecap="round"
-          className="motion-safe:transition-[stroke-width] motion-safe:duration-150"
-          style={{
-            stroke: on
-              ? (model.byId.get(pose.id)?.color ?? "var(--accent-word)")
-              : "var(--line-strong)",
-            opacity: Math.min(pose.opacity, parent.opacity),
-          }}
-        />
-      ))}
+      {edges.map(({ pose, parent, on }) => {
+        const node = model.byId.get(pose.id);
+        const colored = edgeColor !== "neutral" && node;
+        const stroke = colored
+          ? edgeColorOf(node, edgeColor)
+          : on
+            ? (node?.color ?? "var(--accent-word)")
+            : "var(--line-strong)";
+        return (
+          <path
+            key={pose.id}
+            d={
+              center
+                ? radialEdgePath(parent, pose, center, edgeStyle)
+                : treeEdgePath(parent, pose, direction, edgeStyle)
+            }
+            strokeWidth={on ? 2.5 : 1.5}
+            strokeLinecap="round"
+            className="motion-safe:transition-[stroke-width,opacity] motion-safe:duration-150"
+            style={{
+              stroke,
+              opacity: Math.min(pose.opacity, parent.opacity) * (path.size > 0 && !on ? 0.35 : 1),
+            }}
+          />
+        );
+      })}
     </g>
   );
 }
@@ -610,7 +998,8 @@ function describe(node: TreeChartNode, collapsed: ReadonlySet<string>, labels: T
   if (node.children.length > 0) {
     const state = collapsed.has(node.id) ? `, ${labels.collapsed}` : "";
     parts.push(`${labels.children}: ${node.children.length}${state}`);
-  }
+    parts.push(`${labels.descendants}: ${subtreeSize(node)}`);
+  } else if (node.lazy) parts.push(labels.collapsed);
   return parts.join(". ");
 }
 
@@ -637,6 +1026,11 @@ function TreeTable({
           id: "children",
           name: labels.children,
           values: nodes.map((node) => `${node.children.length}`),
+        },
+        {
+          id: "descendants",
+          name: labels.descendants,
+          values: nodes.map((node) => `${subtreeSize(node)}`),
         },
       ]}
     />

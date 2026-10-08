@@ -41,6 +41,8 @@ export interface TreeLayoutNode {
   y: number;
   width: number;
   height: number;
+  /** Radial layouts: angle in radians, 0 at twelve o'clock, clockwise. */
+  angle?: number;
 }
 
 export interface TreeLayout {
@@ -49,6 +51,8 @@ export interface TreeLayout {
   /** Size of the whole drawing. */
   width: number;
   height: number;
+  /** Radial layouts: the root's centre, where the rings are centred. */
+  center?: { x: number; y: number };
 }
 
 interface Placed {
