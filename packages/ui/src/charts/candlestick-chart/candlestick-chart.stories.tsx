@@ -113,6 +113,17 @@ export const BrushZoom: Story = { args: { brush: true } };
 
 export const Hollow: Story = { args: { candleStyle: "hollow", brush: true } };
 
+/** Volume pane under the price: bars follow the candle direction and share the crosshair and tooltip. */
+export const WithVolume: Story = {
+  args: {
+    title: "Precio del producto estrella y unidades vendidas",
+    volume: true,
+    volumeFormat: "integer",
+    brush: true,
+    texts: { ...spanishTexts, volume: "Unidades vendidas" },
+  },
+};
+
 export const PriceOnly: Story = { args: { volume: false } };
 
 export const DailyCash: Story = {
