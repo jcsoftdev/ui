@@ -5,6 +5,7 @@ export * from "./box-plot/index.js";
 export * from "./bubble-chart/index.js";
 export * from "./bubble-map/index.js";
 export * from "./candlestick-chart/index.js";
+export * from "./chord-chart/index.js";
 export * from "./choropleth-map/index.js";
 export * from "./combo-chart/index.js";
 export * from "./core/index.js";
