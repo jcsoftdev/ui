@@ -2046,7 +2046,7 @@ export function DataGrid<T>({
             <span className="flex min-w-0 items-center gap-1.5">
               <CircleAlert aria-hidden="true" className="size-3.5 shrink-0 text-danger" />
               <span className="sr-only">
-                {labels.invalidCell}: {invalid}.{" "}
+                {labels.invalidCell}: {invalid.replace(/\.$/, "")}.{" "}
               </span>
               <span className="min-w-0 flex-1">{body}</span>
             </span>
@@ -2189,6 +2189,10 @@ export function DataGrid<T>({
 
   const renderGroupHeaderRow = (level: number) => {
     const top = level * GROUP_HEADER_HEIGHT;
+    // Labels of scrolling groups stay readable: they stick next to the pinned-left zone.
+    const labelInset = renderColumns
+      .slice(0, leadingCount + pinned.left.length)
+      .reduce((sum, entry) => sum + widthOf(entry), 0);
     const out: ReactNode[] = [];
     let fillerDone = false;
     const filler = () => {
@@ -2228,13 +2232,20 @@ export function DataGrid<T>({
           role={cell.label ? "columnheader" : "presentation"}
           colSpan={cell.span}
           className={cn(
-            "sticky overflow-hidden border-line border-b bg-surface px-3 text-center font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
+            "sticky overflow-clip border-line border-b bg-surface px-3 text-center font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
             zone === "center" ? "z-2" : "z-3",
             cell.label && "border-x",
           )}
           style={style}
         >
-          <span className="block truncate" title={cell.label}>
+          <span
+            className={cn(
+              "block w-fit max-w-full truncate",
+              zone === "center" && "sticky mx-auto @max-sm/grid:mx-0",
+            )}
+            style={zone === "center" ? { left: labelInset + 8 } : undefined}
+            title={cell.label}
+          >
             {cell.label}
           </span>
         </th>,
