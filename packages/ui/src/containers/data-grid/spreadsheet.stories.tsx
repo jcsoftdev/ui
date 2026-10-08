@@ -2,7 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { type Venta, ventaColumns, ventas } from "./data-grid.fixtures.js";
 import { DataGrid } from "./data-grid.js";
-import { type SheetControls, UndoRedoDemo } from "./spreadsheet.demos.js";
+import {
+  diagnosticoColumns,
+  diagnosticos,
+  FormulasDemo,
+  lineaColumns,
+  lineas,
+  type SheetControls,
+  UndoRedoDemo,
+} from "./spreadsheet.demos.js";
 
 type ControlArgs = SheetControls;
 
@@ -65,4 +73,55 @@ export const UndoRedoPreset: Story = {
   name: "Undo / redo (bordered preset)",
   decorators: [preset],
   render: (args) => <UndoRedoDemo {...controls(args)} />,
+};
+
+const formulaHint =
+  "Las columnas llevan letra (A, B, C…) y las filas siguen el orden de los datos. Selecciona una celda para ver su fórmula en la barra; escribe = para empezar una; Ctrl + D copia hacia abajo ajustando las referencias.";
+
+function Formulas(args: ControlArgs) {
+  return (
+    <FormulasDemo
+      {...controls(args)}
+      rows={lineas}
+      columns={lineaColumns}
+      label="Presupuesto de servicios con fórmulas"
+      hint={formulaHint}
+    />
+  );
+}
+
+export const FormulasPresupuesto: Story = {
+  name: "Formulas",
+  render: (args) => <Formulas {...args} />,
+};
+
+export const FormulasNarrow: Story = {
+  name: "Formulas (320 px)",
+  decorators: [narrow],
+  render: (args) => <Formulas {...args} />,
+};
+
+export const FormulasPreset: Story = {
+  name: "Formulas (elevated preset)",
+  decorators: [
+    (Story) => (
+      <section data-style="elevated">
+        <Story />
+      </section>
+    ),
+  ],
+  render: (args) => <Formulas {...args} />,
+};
+
+export const FormulaErrors: Story = {
+  name: "Formula errors",
+  render: (args) => (
+    <FormulasDemo
+      {...controls(args)}
+      rows={diagnosticos}
+      columns={diagnosticoColumns}
+      label="Errores de fórmula"
+      hint="#DIV/0!, #NAME?, #REF!, #VALUE! y #CYCLE! se muestran en rojo; un error se propaga a las fórmulas que lo leen."
+    />
+  ),
 };

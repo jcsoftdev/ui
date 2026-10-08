@@ -124,6 +124,11 @@ export interface DataGridLabels {
   noneOption: string;
   // export
   exportSelection: string;
+  // formulas
+  formulaBar: string;
+  formulaCell: string;
+  formulaEmpty: string;
+  formulaError: string;
   // history and row tools
   history: string;
   undo: string;
@@ -191,7 +196,7 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   nextPage: "Página siguiente",
   lastPage: "Última página",
   keyboardHelp:
-    "Flechas para moverte entre celdas; Inicio y Fin, Re Pág y Av Pág para saltar. En un encabezado: Enter ordena (Mayús + Enter agrega un orden), Alt + Flecha abajo abre sus opciones, Mayús + Flechas cambia el ancho y Ctrl + Mayús + Flechas la mueve. En una fila: Espacio la selecciona, Enter o F2 edita la celda, Alt + Flecha derecha o izquierda la expande o contrae, Alt + Flecha arriba o abajo la reordena y Alt + Mayús + Flecha arriba o abajo la fija. Con selección de celdas: Mayús + Flechas amplía el rango y Ctrl + C lo copia. Con historial activo: Ctrl + Z deshace y Mayús + Ctrl + Z o Ctrl + Y rehace; Ctrl + V pega y Ctrl + D o Ctrl + R rellenan hacia abajo o a la derecha.",
+    "Flechas para moverte entre celdas; Inicio y Fin, Re Pág y Av Pág para saltar. En un encabezado: Enter ordena (Mayús + Enter agrega un orden), Alt + Flecha abajo abre sus opciones, Mayús + Flechas cambia el ancho y Ctrl + Mayús + Flechas la mueve. En una fila: Espacio la selecciona, Enter o F2 edita la celda, Alt + Flecha derecha o izquierda la expande o contrae, Alt + Flecha arriba o abajo la reordena y Alt + Mayús + Flecha arriba o abajo la fija. Con selección de celdas: Mayús + Flechas amplía el rango y Ctrl + C lo copia. Con historial activo: Ctrl + Z deshace y Mayús + Ctrl + Z o Ctrl + Y rehace; Ctrl + V pega y Ctrl + D o Ctrl + R rellenan hacia abajo o a la derecha. Con fórmulas, escribir = en una celda editable empieza una fórmula.",
   aggregate: { sum: "Suma", avg: "Promedio", count: "Cantidad", min: "Mínimo", max: "Máximo" },
 
   searchValues: "Buscar valores…",
@@ -270,6 +275,10 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   pivotIncomplete: "Elige al menos un campo de fila, la columna y el valor.",
   noneOption: "Ninguna",
   exportSelection: "Exportar selección",
+  formulaBar: "Barra de fórmulas",
+  formulaCell: "Celda",
+  formulaEmpty: "Selecciona una celda",
+  formulaError: "Error de fórmula",
   history: "Historial de cambios",
   undo: "Deshacer",
   redo: "Rehacer",

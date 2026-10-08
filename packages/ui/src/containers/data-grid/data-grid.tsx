@@ -49,6 +49,9 @@ import {
   type FilterGroup,
 } from "./filter-builder.js";
 import { FilterBuilder } from "./filter-builder-editor.js";
+import { cellAddress, columnLabel, isFormulaText, shiftFormula } from "./formula.js";
+import { FormulaBar } from "./formula-bar.js";
+import { buildSheet, displayValue, isErrorText, type ParseCache } from "./formula-sheet.js";
 import {
   type FillDirection,
   parseLooseNumber,
@@ -224,6 +227,13 @@ export interface DataGridProps<T> {
   /** Commands kept for undo (and for redo). 100 by default. */
   historyDepth?: number;
   onHistoryChange?: (history: HistorySummary) => void;
+  /**
+   * Spreadsheet formulas: a cell whose text starts with `=` is evaluated (`=B2*C2`, `=SUM(D2:D9)`,
+   * `=IF(E2>100,"alto","bajo")`). Columns are lettered in the order of `columns` and rows are
+   * numbered in the order of `data`; a formula bar shows the raw content of the focused cell.
+   * Off with `dataSource` and `pivot`.
+   */
+  formulas?: boolean;
   /** Adds the "add row" button: the new row is appended through `onRowsChange`. */
   createRow?: () => T;
   /** Rows added (`createRow`), removed (the toolbar button removes the selected rows) or restored by undo. */
@@ -437,6 +447,7 @@ export function DataGrid<T>({
   onSelectionChange,
   onCellChange,
   onCellsChange,
+  formulas = false,
   history: historyEnabled = false,
   historyDepth = DEFAULT_HISTORY_DEPTH,
   onHistoryChange,
@@ -533,6 +544,8 @@ export function DataGrid<T>({
     columnId: string;
     draft: string;
     error?: string;
+    /** Place the caret at the end instead of selecting the text (typing `=` to start a formula). */
+    caretEnd?: boolean;
   } | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [scrolled, setScrolled] = useState({ start: false, end: false });
@@ -564,13 +577,49 @@ export function DataGrid<T>({
   );
   const pivotActive = pivotResult !== null;
   const structured = !sourceActive && !pivotActive;
-  const columns = useMemo(
+  const formulasOn = formulas && structured;
+  const formulaCache = useRef<ParseCache>(new Map());
+  const sheet = useMemo(
     () =>
-      (pivotResult
-        ? pivotColumns(columnsProp, pivotConfig, pivotResult, labels.total)
-        : columnsProp) as readonly DataGridColumn<T>[],
-    [pivotResult, columnsProp, pivotConfig, labels.total],
+      formulasOn && columnsProp.length > 0
+        ? buildSheet({
+            rows: dataProp.length,
+            cols: columnsProp.length,
+            read: (r, c) => getCellValue(dataProp[r] as T, columnsProp[c] as DataGridColumn<T>),
+            cache: formulaCache.current,
+          })
+        : null,
+    [formulasOn, dataProp, columnsProp],
   );
+  const sourceIndex = useMemo(() => {
+    if (!sheet) return null;
+    const rows = new Map<T, number>();
+    dataProp.forEach((row, index) => {
+      rows.set(row, index);
+    });
+    const cols = new Map(columnsProp.map((column, index) => [column.id, index]));
+    return { rows, cols };
+  }, [sheet, dataProp, columnsProp]);
+  const columns = useMemo(() => {
+    if (pivotResult) {
+      return pivotColumns(
+        columnsProp,
+        pivotConfig,
+        pivotResult,
+        labels.total,
+      ) as readonly DataGridColumn<T>[];
+    }
+    if (!sheet || !sourceIndex) return columnsProp;
+    // Formula cells read as their result everywhere (sort, filter, totals, CSV); editing reads the raw text.
+    return columnsProp.map((column, c) => ({
+      ...column,
+      accessor: (row: T): CellValue => {
+        const r = sourceIndex.rows.get(row);
+        const shown = r === undefined ? undefined : displayValue(sheet, r, c);
+        return shown === undefined ? getCellValue(row, column) : shown;
+      },
+    })) as readonly DataGridColumn<T>[];
+  }, [pivotResult, columnsProp, pivotConfig, labels.total, sheet, sourceIndex]);
   const data = useMemo(
     () => (pivotResult ? pivotResult.rows : dataProp) as readonly T[],
     [pivotResult, dataProp],
@@ -1134,7 +1183,8 @@ export function DataGrid<T>({
   };
 
   // ---- editing -----------------------------------------------------------------------------
-  const rawValue = (row: T, column: DataGridColumn<T>): CellValue => getCellValue(row, column);
+  const rawValue = (row: T, column: DataGridColumn<T>): CellValue =>
+    getCellValue(row, columnsProp.find((x) => x.id === column.id) ?? column);
   /** Text typed (or pasted) into a cell to the value to store, or the reason it is refused. */
   const coerceDraft = (
     column: DataGridColumn<T>,
@@ -1143,6 +1193,7 @@ export function DataGrid<T>({
     loose = false,
   ): { value: CellValue } | { error: string } => {
     let value: CellValue = draft;
+    if (formulasOn && isFormulaText(draft)) return { value: draft.trim() };
     if (editorOf(column) === "number") {
       const number = loose ? parseLooseNumber(draft) : Number.parseFloat(draft.replace(",", "."));
       if (number !== null && Number.isFinite(number)) value = number;
@@ -1314,7 +1365,13 @@ export function DataGrid<T>({
       const from = cellAt(step.from.r, step.from.c);
       const to = cellAt(step.r, step.c);
       if (!from || !to || !canEdit(to.column, to.row)) continue;
-      const source = rawValue(from.row, from.column);
+      let source = rawValue(from.row, from.column);
+      if (sourceIndex && isFormulaText(source)) {
+        const dr = (sourceIndex.rows.get(to.row) ?? 0) - (sourceIndex.rows.get(from.row) ?? 0);
+        const dc =
+          (sourceIndex.cols.get(to.column.id) ?? 0) - (sourceIndex.cols.get(from.column.id) ?? 0);
+        source = shiftFormula(source, dr, dc);
+      }
       const result =
         typeof source === "string"
           ? coerceDraft(to.column, to.row, source, true)
@@ -1333,14 +1390,15 @@ export function DataGrid<T>({
     if (items.length > 0) setAnnouncement(labels.filled(items.length));
   };
 
-  const startEdit = (key: string, column: DataGridColumn<T>) => {
+  const startEdit = (key: string, column: DataGridColumn<T>, typed?: string) => {
     const row = rowByKey.get(key);
     if (!row || !canEdit(column, row)) return false;
-    const value = getCellValue(row, column);
+    const value = rawValue(row, column);
     setEditing({
       key,
       columnId: column.id,
-      draft: value === null || value === undefined ? "" : String(value),
+      draft: typed ?? (value === null || value === undefined ? "" : String(value)),
+      caretEnd: typed !== undefined,
     });
     return true;
   };
@@ -1611,6 +1669,10 @@ export function DataGrid<T>({
       toggleRow(row.key, event.shiftKey);
       return;
     }
+    if (formulasOn && event.key === "=" && !mod && !inner && entry?.kind === "data") {
+      if (startEdit(row.key, entry.column, "=")) handled();
+      return;
+    }
     if ((event.key === "Enter" || event.key === "F2") && entry?.kind === "data") {
       if (startEdit(row.key, entry.column)) handled();
       else if (event.key === "Enter" && selectable && entry.kind === "data") return;
@@ -1739,6 +1801,7 @@ export function DataGrid<T>({
   const tabIndexOf = (r: number, c: number) => (tabbable.r === r && tabbable.c === c ? 0 : -1);
   const firstDataIndex = renderColumns.findIndex((entry) => entry.kind === "data");
 
+  const cellLetter = (id: string) => columnLabel(sourceIndex?.cols.get(id) ?? 0);
   const sortOf = (id: string) => {
     const index = sort.findIndex((rule) => rule.id === id);
     return index === -1 ? null : { index, direction: (sort[index] as SortRule).direction };
@@ -1818,6 +1881,14 @@ export function DataGrid<T>({
           className={cn("flex min-w-0 items-center gap-1", align === "end" && "flex-row-reverse")}
         >
           <span className={cn("flex min-w-0 flex-1 items-center gap-1", justifyClass[align])}>
+            {formulasOn ? (
+              <span
+                aria-hidden="true"
+                className="shrink-0 rounded-xs bg-surface-2 px-1 font-[650] text-[10px] text-ink-3 normal-case tracking-normal"
+              >
+                {cellLetter(column.id)}
+              </span>
+            ) : null}
             <span className="truncate" title={column.header}>
               {column.header}
             </span>
@@ -1889,6 +1960,16 @@ export function DataGrid<T>({
     const value = getCellValue(row, column);
     const formatted = formatCellValue(value, column);
     if (column.cell) return column.cell({ row, rowId: key, value, formatted });
+    if (formulasOn && isErrorText(value) && isFormulaText(rawValue(row, column))) {
+      return (
+        <span
+          className="block truncate font-[650] text-danger"
+          title={`${labels.formulaError}: ${value}`}
+        >
+          {value}
+        </span>
+      );
+    }
     if (column.type === "status" && formatted) {
       return (
         <Chip tone={column.statusTones?.[String(value)] ?? "neutral"} className="h-5.5">
@@ -1945,7 +2026,11 @@ export function DataGrid<T>({
           {...common}
           type="text"
           inputMode={editorOf(column) === "number" ? "decimal" : undefined}
-          onFocus={(event) => event.currentTarget.select()}
+          onFocus={(event) => {
+            const input = event.currentTarget;
+            if (editing.caretEnd) input.setSelectionRange(input.value.length, input.value.length);
+            else input.select();
+          }}
           onChange={(event) => change(event.target.value)}
           className={cn(editorClass, columnAlign(column) === "end" && "text-right")}
         />
@@ -2575,6 +2660,38 @@ export function DataGrid<T>({
   const formatStat = (value: number | null) =>
     value === null ? "" : rangeIsCurrency ? formatCurrency(value) : formatNumber(value);
 
+  const barCell = formulasOn ? cellAt(activeR, activeC) : null;
+  const [barError, setBarError] = useState<string | undefined>();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: moving to another cell clears the message.
+  useEffect(() => {
+    setBarError(undefined);
+  }, [activeR, activeC]);
+  const barRaw = barCell ? rawValue(barCell.row, barCell.column) : null;
+  const commitBar = (text: string) => {
+    if (!barCell || !canEdit(barCell.column, barCell.row)) return;
+    const result = coerceDraft(barCell.column, barCell.row, text);
+    if ("error" in result) {
+      setBarError(result.error);
+      return;
+    }
+    setBarError(undefined);
+    if (!sameCellValue(result.value, barRaw)) {
+      commitChanges(
+        [
+          {
+            row: barCell.row,
+            rowId: keyOf(barCell.row),
+            column: barCell.column,
+            value: result.value,
+            previous: barRaw,
+          },
+        ],
+        "edit",
+      );
+    }
+    focusCell(activeR, activeC);
+  };
+
   const emptyFiltered = activeFilters > 0 || search !== "" || advancedCount > 0;
 
   return (
@@ -2658,6 +2775,24 @@ export function DataGrid<T>({
           onClearAdvancedFilter={() => setAdvanced(emptyGroup("and", "root"))}
         />
       )}
+      {formulasOn ? (
+        <FormulaBar
+          address={
+            barCell && sourceIndex
+              ? cellAddress(
+                  sourceIndex.rows.get(barCell.row) ?? 0,
+                  sourceIndex.cols.get(barCell.column.id) ?? 0,
+                )
+              : ""
+          }
+          value={barRaw === null || barRaw === undefined ? "" : String(barRaw)}
+          editable={!!barCell && canWrite && canEdit(barCell.column, barCell.row)}
+          error={barError}
+          labels={{ bar: labels.formulaBar, cell: labels.formulaCell, empty: labels.formulaEmpty }}
+          onCommit={commitBar}
+          onDiscard={() => focusCell(activeR, activeC)}
+        />
+      ) : null}
       {sourceActive && remote.failed && remote.total !== null ? (
         <div
           role="alert"

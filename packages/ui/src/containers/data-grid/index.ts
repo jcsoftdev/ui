@@ -3,6 +3,8 @@ export * from "./data-grid.js";
 export * from "./data-source.js";
 export * from "./filter-builder.js";
 export * from "./filter-builder-editor.js";
+export * from "./formula.js";
+export * from "./formula-sheet.js";
 export * from "./grid-edit.js";
 export * from "./history.js";
 export * from "./labels.js";
