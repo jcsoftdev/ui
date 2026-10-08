@@ -1122,7 +1122,10 @@ function GanttBody({
       {tooltip && tipSource && tipAnchor ? (
         <ChartTooltip
           x={tipAnchor.x}
-          y={tipAnchor.y}
+          y={Math.min(
+            Math.max(tipAnchor.y, Math.min(96, height / 2)),
+            Math.max(height - 96, height / 2),
+          )}
           containerWidth={width}
           title={tipSource.task.name}
           rows={tipRows(tipSource)}
