@@ -1,14 +1,21 @@
 "use client";
 
-import { memo, useMemo, useRef } from "react";
+import { type KeyboardEvent, memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { cn } from "../../utils/cn.js";
 import { DECORATIVE } from "../core/a11y.js";
+import { ChartBreadcrumb } from "../core/breadcrumb.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
 import { formatPercent, resolveFormat, type ValueFormat } from "../core/format.js";
 import { ChartLegend, type LegendItem } from "../core/legend.js";
-import { EASE_OUT, fadeIn, useEntryAnimation } from "../core/motion.js";
-import { seriesColor } from "../core/palette.js";
+import {
+  EASE_OUT,
+  easeOutCubic,
+  fadeIn,
+  useEntryAnimation,
+  useReducedMotion,
+} from "../core/motion.js";
+import { monochromeByValue, seriesColor } from "../core/palette.js";
 import { arcPath, degToRad, polarPoint, sliceAngles, spreadLabels, TAU } from "../core/polar.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels } from "../core/types.js";
@@ -24,7 +31,12 @@ export interface DonutDatum {
   color?: string;
   /** Overrides the chart `valueFormat` for this slice. */
   format?: ValueFormat;
+  /** Sub-slices. Clicking the slice opens them in the same ring (see `drilldown`). */
+  children?: readonly DonutDatum[];
 }
+
+/** How slices are painted: flat color, a radial gradient, or a texture over the color. */
+export type DonutFill = "solid" | "gradient" | "pattern";
 
 export type DonutOutsideLabels = boolean | "name" | "percent" | "both";
 
@@ -47,6 +59,16 @@ export interface DonutChartProps {
   explode?: number;
   /** Where the first slice starts, in degrees from 12 o'clock (full circle only). */
   startAngle?: number;
+  /** One hue in shades, darkest on the largest slice. `true` uses the accent; a string sets the base color. */
+  monochrome?: boolean | string;
+  /** `gradient` fades each slice towards the hole; `pattern` adds a texture per slice, so color is not the only cue. */
+  fill?: DonutFill;
+  /** Slices with `children` open on click (or Enter) with a breadcrumb to go back. */
+  drilldown?: boolean;
+  /** First breadcrumb item; defaults to the chart title. */
+  rootLabel?: string;
+  /** Accessible name of the breadcrumb. */
+  breadcrumbLabel?: string;
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
   aspectRatio?: number;
@@ -101,6 +123,11 @@ export function DonutChart({
   gap = 3,
   explode = 8,
   startAngle = 0,
+  monochrome = false,
+  fill = "solid",
+  drilldown = true,
+  rootLabel,
+  breadcrumbLabel = "Drill-down path",
   height = 300,
   aspectRatio,
   valueFormat,
@@ -118,15 +145,48 @@ export function DonutChart({
 }: DonutChartProps) {
   const labels = resolveLabels(labelsProp);
   const state = useSeriesState(initialHidden);
-  const resolved = useMemo<Resolved[]>(
-    () =>
-      data.map((datum, index) => ({
-        datum,
-        color: seriesColor(index, datum.color),
-        format: resolveFormat(datum.format ?? valueFormat),
-      })),
-    [data, valueFormat],
-  );
+  const [trail, setTrail] = useState<readonly string[]>([]);
+  const drillable = drilldown && data.some((datum) => datum.children?.length);
+  const level = useMemo(() => {
+    const crumbs = [{ id: "", name: rootLabel ?? title }];
+    let current: readonly DonutDatum[] = data;
+    let base: string | undefined;
+    if (drillable) {
+      for (const id of trail) {
+        const index = current.findIndex((datum) => datum.id === id);
+        const next = current[index];
+        if (!next?.children?.length) break;
+        crumbs.push({ id, name: next.name });
+        base = seriesColor(index, next.color);
+        current = next.children;
+      }
+    }
+    return { data: current, crumbs, base };
+  }, [data, trail, drillable, rootLabel, title]);
+  const resolved = useMemo<Resolved[]>(() => {
+    const hue = typeof monochrome === "string" ? monochrome : level.base;
+    const shades =
+      monochrome || level.base
+        ? monochromeByValue(
+            level.data.map((datum) => Math.max(0, datum.value || 0)),
+            hue,
+          )
+        : null;
+    return level.data.map((datum, index) => ({
+      datum,
+      color: datum.color ?? shades?.[index] ?? seriesColor(index),
+      format: resolveFormat(datum.format ?? valueFormat),
+    }));
+  }, [level, valueFormat, monochrome]);
+  const openSlice = (datum: DonutDatum) => {
+    if (drillable && datum.children?.length)
+      setTrail([...level.crumbs.slice(1).map((c) => c.id), datum.id]);
+    onSliceClick?.(datum);
+  };
+  const goTo = (id: string) => {
+    const at = level.crumbs.findIndex((crumb) => crumb.id === id);
+    setTrail(level.crumbs.slice(1, at + 1).map((crumb) => crumb.id));
+  };
   const empty = resolved.every((item) => !(item.datum.value > 0));
   const legendPlacement =
     legend === false ? null : legend === true || legend == null ? "bottom" : legend;
@@ -161,7 +221,7 @@ export function DonutChart({
     />
   );
 
-  return (
+  const frame = (
     <ChartFrame
       height={height}
       aspectRatio={aspectRatio}
@@ -182,7 +242,7 @@ export function DonutChart({
       }
       legendPosition={legendPlacement ?? "bottom"}
       table={table}
-      className={className}
+      className={drillable ? undefined : className}
     >
       {(width, measuredHeight) => (
         <DonutPlot
@@ -198,17 +258,30 @@ export function DonutChart({
           gap={gap}
           explode={explode}
           startAngle={startAngle}
+          fill={fill}
           centerLabel={centerLabel ?? labels.total}
           centerValue={centerValue}
           outside={labelMode(outsideLabels)}
           tooltip={tooltip}
           animate={animate}
           labels={labels}
-          onSliceClick={onSliceClick}
+          onSliceClick={drillable || onSliceClick ? openSlice : undefined}
+          onUp={
+            drillable && level.crumbs.length > 1
+              ? () => goTo(level.crumbs[level.crumbs.length - 2]?.id ?? "")
+              : undefined
+          }
           valueFormat={valueFormat}
         />
       )}
     </ChartFrame>
+  );
+  if (!drillable) return frame;
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-2", height === "fill" && "h-full")}>
+      <ChartBreadcrumb items={level.crumbs} onSelect={goTo} label={breadcrumbLabel} />
+      <div className={cn("min-w-0", height === "fill" && "min-h-0 flex-1")}>{frame}</div>
+    </div>
   );
 }
 
@@ -225,7 +298,9 @@ interface PlotProps {
   gap: number;
   explode: number;
   startAngle: number;
+  fill: DonutFill;
   centerLabel: string;
+  onUp?: () => void;
   centerValue?: string;
   outside: "name" | "percent" | "both" | null;
   tooltip: boolean;
@@ -263,6 +338,7 @@ function DonutPlot({
   gap,
   explode,
   startAngle,
+  fill,
   centerLabel,
   centerValue,
   outside: outsideProp,
@@ -270,8 +346,11 @@ function DonutPlot({
   animate,
   labels,
   onSliceClick,
+  onUp,
   valueFormat,
 }: PlotProps) {
+  const uid = useId().replace(/:/g, "");
+  const shown = useTweenedValues(items, !animate);
   // Narrow containers drop the outside labels: the legend carries the names.
   const outside = width < 440 ? null : outsideProp;
   const svgRef = useRef<SVGSVGElement>(null);
@@ -281,8 +360,8 @@ function DonutPlot({
   const geometry = useMemo(() => {
     const visible = items
       .map((item, index) => ({ item, index }))
-      .filter(({ item }) => !state.isHidden(item.datum.id) && item.datum.value > 0);
-    const sum = visible.reduce((acc, { item }) => acc + item.datum.value, 0);
+      .filter(({ item, index }) => !state.isHidden(item.datum.id) && (shown[index] ?? 0) > 0);
+    const sum = visible.reduce((acc, { index }) => acc + (shown[index] ?? 0), 0);
     const edge = explode + 6;
     const labelSpace = outside ? Math.min(170, Math.max(96, width * 0.28)) : 0;
     const fitWidth = width / 2 - labelSpace - edge;
@@ -295,13 +374,26 @@ function DonutPlot({
     const to = semi ? Math.PI / 2 : from + TAU;
     const pad = gap / Math.max(1, (inner + radius) / (variant === "pie" ? 1.6 : 2));
     const slices = sliceAngles(
-      items.map((item, index) =>
-        visible.some((entry) => entry.index === index) ? item.datum.value : 0,
+      items.map((_, index) =>
+        visible.some((entry) => entry.index === index) ? (shown[index] ?? 0) : 0,
       ),
       { startAngle: from, endAngle: to, padAngle: pad },
     );
     return { visible: visible.map((entry) => entry.index), sum, radius, inner, cx, cy, slices };
-  }, [items, state, width, height, semi, outside, explode, variant, innerRatio, gap, startAngle]);
+  }, [
+    items,
+    shown,
+    state,
+    width,
+    height,
+    semi,
+    outside,
+    explode,
+    variant,
+    innerRatio,
+    gap,
+    startAngle,
+  ]);
 
   const { visible, sum, radius, inner, cx, cy, slices } = geometry;
   const nav = useIndexNavigation(visible.length, { wrap: true });
@@ -386,7 +478,7 @@ function DonutPlot({
         fadeIn(node, 420, 420);
       });
     },
-    { disabled: !animate, replayKey: items.length },
+    { disabled: !animate },
   );
 
   // Centre text ---------------------------------------------------------------
@@ -453,6 +545,35 @@ function DonutPlot({
         height={height}
         className="block overflow-visible"
       >
+        {fill !== "solid" ? (
+          <defs>
+            {items.map((item, index) =>
+              fill === "gradient" ? (
+                <radialGradient
+                  key={item.datum.id}
+                  id={`${uid}-${index}`}
+                  gradientUnits="userSpaceOnUse"
+                  cx={cx}
+                  cy={cy}
+                  r={Math.max(1, radius)}
+                >
+                  <stop
+                    offset={Math.min(0.95, inner / Math.max(1, radius))}
+                    style={{ stopColor: `color-mix(in oklab, ${item.color} 42%, var(--surface))` }}
+                  />
+                  <stop offset={1} style={{ stopColor: item.color }} />
+                </radialGradient>
+              ) : (
+                <SlicePattern
+                  key={item.datum.id}
+                  id={`${uid}-${index}`}
+                  kind={index}
+                  color={item.color}
+                />
+              ),
+            )}
+          </defs>
+        ) : null}
         {slices.map((slice, index) => {
           const item = items[index];
           const path = paths[index];
@@ -465,7 +586,7 @@ function DonutPlot({
             <SliceMark
               key={item.datum.id}
               d={path}
-              color={item.color}
+              paint={fill === "solid" ? item.color : `url(#${uid}-${index})`}
               dimmed={dimmed}
               dx={shift.x}
               dy={shift.y}
@@ -561,6 +682,17 @@ function DonutPlot({
         aria-valuetext={valueText}
         tabIndex={0}
         {...nav.sliderProps}
+        onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+          const picked = nav.active != null ? visible[nav.active] : undefined;
+          const datum = picked != null ? items[picked]?.datum : undefined;
+          if ((event.key === "Enter" || event.key === " ") && datum && onSliceClick) {
+            event.preventDefault();
+            onSliceClick(datum);
+          } else if ((event.key === "Escape" || event.key === "Backspace") && onUp) {
+            event.preventDefault();
+            onUp();
+          } else nav.sliderProps.onKeyDown(event);
+        }}
         className="pointer-events-none absolute inset-0 rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
       />
 
@@ -573,7 +705,8 @@ function DonutPlot({
 
 interface SliceMarkProps {
   d: string;
-  color: string;
+  /** CSS color or `url(#pattern)` reference. */
+  paint: string;
   dimmed: boolean;
   dx: number;
   dy: number;
@@ -587,7 +720,7 @@ interface SliceMarkProps {
 
 const SliceMark = memo(function SliceMark({
   d,
-  color,
+  paint,
   dimmed,
   dx,
   dy,
@@ -612,7 +745,7 @@ const SliceMark = memo(function SliceMark({
         clickable && "cursor-pointer",
       )}
       style={{
-        fill: color,
+        fill: paint,
         opacity: dimmed ? 0.4 : 1,
         transform: `translate(${Math.round(dx * 100) / 100}px, ${Math.round(dy * 100) / 100}px)`,
         transformOrigin: `${originX}px ${originY}px`,
@@ -620,3 +753,75 @@ const SliceMark = memo(function SliceMark({
     />
   );
 });
+
+const PATTERN_KINDS = 5;
+
+/** Texture swatch for one slice: the slice color with a surface-colored motif on top. */
+function SlicePattern({ id, kind, color }: { id: string; kind: number; color: string }) {
+  const motif = { fill: "var(--surface)", fillOpacity: 0.5 };
+  const line = { stroke: "var(--surface)", strokeOpacity: 0.5 };
+  const which = kind % PATTERN_KINDS;
+  return (
+    <pattern
+      id={id}
+      patternUnits="userSpaceOnUse"
+      width={8}
+      height={8}
+      patternTransform={which === 0 || which === 3 ? "rotate(45)" : undefined}
+    >
+      <rect width={8} height={8} style={{ fill: color }} />
+      {which === 0 ? <rect width={8} height={3} style={motif} /> : null}
+      {which === 1 ? <circle cx={4} cy={4} r={1.6} style={motif} /> : null}
+      {which === 2 ? <path d="M0 0H8M0 0V8" strokeWidth={1.4} fill="none" style={line} /> : null}
+      {which === 3 ? <rect width={8} height={1.4} y={3.3} style={motif} /> : null}
+      {which === 4 ? (
+        <>
+          <rect width={4} height={4} style={motif} />
+          <rect x={4} y={4} width={4} height={4} style={motif} />
+        </>
+      ) : null}
+    </pattern>
+  );
+}
+
+/**
+ * Eases each slice value towards its target when the data changes: slices
+ * grow, shrink, appear from zero. The first render and reduced motion jump
+ * straight to the values.
+ */
+function useTweenedValues(items: readonly Resolved[], disabled: boolean): number[] {
+  const reduced = useReducedMotion();
+  const key = items.map((item) => `${item.datum.id}:${item.datum.value}`).join("|");
+  const [shown, setShown] = useState<Record<string, number>>(() =>
+    Object.fromEntries(items.map((item) => [item.datum.id, item.datum.value])),
+  );
+  const current = useRef(shown);
+  current.current = shown;
+  const mounted = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `key` stands for the item values.
+  useEffect(() => {
+    const target = Object.fromEntries(items.map((item) => [item.datum.id, item.datum.value]));
+    const first = !mounted.current;
+    mounted.current = true;
+    if (disabled || reduced || first || typeof requestAnimationFrame !== "function") {
+      setShown(target);
+      return;
+    }
+    const from = current.current;
+    const started = performance.now();
+    let frame = 0;
+    const step = (now: number) => {
+      const t = easeOutCubic(Math.min(1, (now - started) / 700));
+      const next: Record<string, number> = {};
+      for (const id of Object.keys(target)) {
+        const start = from[id] ?? 0;
+        next[id] = start + ((target[id] as number) - start) * t;
+      }
+      setShown(next);
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [key, disabled, reduced]);
+  return items.map((item) => shown[item.datum.id] ?? (mounted.current ? 0 : item.datum.value));
+}

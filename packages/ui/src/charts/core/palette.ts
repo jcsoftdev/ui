@@ -45,3 +45,32 @@ export const TONE_COLORS: Record<ChartTone, { ink: string; soft: string }> = {
   warning: { ink: "var(--warning)", soft: "var(--warning-soft)" },
   success: { ink: "var(--success)", soft: "var(--success-soft)" },
 };
+
+/** Base hue of a monochrome chart: the active brand accent. */
+export const MONOCHROME_BASE = "var(--accent-word)";
+
+/**
+ * Shade `step` of `count` in one hue: step 0 is the full color, the last
+ * step the palest tint (40%), mixed towards the surface so it works in both
+ * themes. `count` of 1 gives the full color.
+ */
+export function monochromeShade(step: number, count: number, base = MONOCHROME_BASE): string {
+  const last = Math.max(1, count - 1);
+  const share = Math.round(100 - (Math.min(Math.max(step, 0), last) / last) * 60);
+  return share >= 100 ? base : `color-mix(in oklab, ${base} ${share}%, var(--surface))`;
+}
+
+/**
+ * Shades for `values`, darkest on the largest value, so rank reads as
+ * intensity. Returns one color per input, in input order.
+ */
+export function monochromeByValue(values: readonly number[], base = MONOCHROME_BASE): string[] {
+  const order = values
+    .map((value, index) => ({ value, index }))
+    .sort((a, b) => b.value - a.value || a.index - b.index);
+  const out: string[] = new Array(values.length);
+  order.forEach((entry, rank) => {
+    out[entry.index] = monochromeShade(rank, values.length, base);
+  });
+  return out;
+}
