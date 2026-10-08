@@ -66,3 +66,14 @@ export const BrutalPreset: Story = {
   ],
   args: WithUnit.args,
 };
+
+/** A shrink-wrapped flex parent gives the stepper its intrinsic width without a caller width. */
+export const InShrinkWrapRow: Story = {
+  render: (args) => (
+    <div className="flex w-fit items-center gap-3 rounded-card border-card p-3">
+      <span className="text-body text-ink">Productos</span>
+      <NumberStepper {...args} />
+    </div>
+  ),
+  args: WithUnit.args,
+};
