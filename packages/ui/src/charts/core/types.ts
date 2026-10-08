@@ -31,6 +31,10 @@ export interface ChartLabels {
   brush: string;
   /** Header of the category column in the hidden data table. */
   category: string;
+  /** Header of the value column in the hidden data table (single-series charts). */
+  value: string;
+  /** Header and tooltip label of a share of the total. */
+  share: string;
 }
 
 export const DEFAULT_LABELS: ChartLabels = {
@@ -41,6 +45,8 @@ export const DEFAULT_LABELS: ChartLabels = {
   explore: "Data points. Use the arrow keys to move between them.",
   brush: "Visible range",
   category: "Category",
+  value: "Value",
+  share: "Share",
 };
 
 export function resolveLabels(labels?: Partial<ChartLabels>): ChartLabels {

@@ -13,6 +13,12 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `AreaChart` | `area-chart/` | `CartesianChart` (`kind: "area"`) |
 | `BarChart` | `bar-chart/` | `CartesianChart` (`kind: "column"`) |
 | `ComboChart` | `combo-chart/` | `CartesianChart` (mixed kinds, right axis) |
+| `DonutChart` / `PieChart` | `donut-chart/`, `pie-chart/` | `ChartFrame` + `polar.ts` (rounded arcs, gaps, explode, outside labels, semi variant) |
+| `RadialBarChart` | `radial-bar-chart/` | stroked `arcLine` rings, track, gradient, ring labels |
+| `GaugeChart` | `gauge-chart/` | `arcLine` bands + progress or needle, `useAnimatedNumber` |
+| `RadarChart` | `radar-chart/` | polygon/circle grid, angular hit-testing with `slotAt` |
+| `PolarAreaChart` | `polar-area-chart/` | `arcPath` sectors, radius or area scale |
+| `FunnelChart` | `funnel-chart/` | `funnelStages` geometry (funnel / pyramid, vertical / horizontal) |
 | `Sparkline` | `sparkline/` | scales + paths directly (no frame) |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
@@ -50,6 +56,10 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `palette.ts` | `CHART_PALETTE`, `seriesColor(i, override?)`, `TONE_COLORS` (neutral/accent/danger/warning/success ink + soft). |
 | `use-chart-size.ts` | `useChartWidth()` (ResizeObserver, SSR fallback width 640), `useIsomorphicLayoutEffect`. |
 | `motion.ts` | `useReducedMotion`, `useEntryAnimation(ref, play, { disabled, replayKey })`, `revealClip`, `fadeIn`, `EASE_OUT`. Web Animations API, skipped under `prefers-reduced-motion`. |
+| `polar.ts` | Angles are radians, 0 at 12 o'clock, clockwise. `polarPoint`, `angleOf`, `normalizeAngle`, `slotAt` (equal slots), `sliceAngles` (proportional slices with a gap), `arcPath` (annular sector, rounded corners clamped to fit), `arcLine` (stroked centre-line arc), `spreadLabels` (vertical label collision avoidance), `funnelStages` (stage geometry and conversion). Unit tested in `test/charts-polar.test.mjs`. |
+| `use-index-navigation.ts` | `useIndexNavigation(count, { wrap })`: hover and keyboard (arrows, Home/End, Escape) share one `active` index, plus the pointer position for the tooltip. Spread `sliderProps` on a `role="slider"` overlay (`pointer-events-none` is fine for polar charts). |
+| `a11y.ts` | `DECORATIVE` (`aria-hidden`) spread for visual-only SVG text and groups. |
+| `motion.ts` (extra) | `useAnimatedNumber(target, { from, duration, disabled })` eases a displayed value; instant under reduced motion. |
 | `use-series-state.ts` | `useSeriesState(initialHidden)`: hidden set, legend highlight, `toggle`. |
 | `chart-frame.tsx` | `ChartFrame`: measures width, swaps in loading/empty states, places legend / drawing / footer / hidden table. Render prop `children(width)`. |
 | `chart-states.tsx` | `ChartSkeleton` (`shape: "bars" \| "line" \| "ring"`), `ChartEmpty`. |
@@ -113,3 +123,10 @@ category (dates by time). `yAxis: "right"` measures against the secondary axis.
    `aria-valuetext` for keyboard exploration.
 7. Animate with `useEntryAnimation`; respect `animate={false}`.
 8. Pure helpers get a case in `test/charts-core.test.mjs`.
+
+## Polar charts and narrow containers
+
+Polar charts measure the container through `ChartFrame` and degrade by width, with no viewport queries:
+outside labels (donut/pie) and rim labels (polar area) give way to the legend below 420-440 px, radial ring labels
+hide below 360 px, radar axis names shorten, funnel label columns shrink and truncate, and the tooltip flips inside
+the frame. Every polar chart ships a `Narrow` story rendered in a 320 px container.
