@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../../atoms/button/button.js";
-import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "./popover.js";
+import { Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger } from "./popover.js";
 
 function ClientCard() {
   return (
@@ -67,6 +67,28 @@ export const TopEnd: Story = {
       <PopoverTrigger asChild>
         <Button variant="secondary">Ver cliente</Button>
       </PopoverTrigger>
+      <PopoverContent {...args}>
+        <ClientCard />
+      </PopoverContent>
+    </Popover>
+  ),
+};
+
+/** `PopoverAnchor` positions the panel against another element than the trigger. */
+export const AnchoredToElement: Story = {
+  args: { side: "bottom", align: "start" },
+  render: (args) => (
+    <Popover>
+      <PopoverAnchor asChild>
+        <div className="flex items-center gap-3 rounded-tile border border-line bg-surface p-3">
+          <span className="font-semibold text-[13px]">Luis Ramírez</span>
+          <PopoverTrigger asChild>
+            <Button size="sm" variant="secondary">
+              Ver ficha
+            </Button>
+          </PopoverTrigger>
+        </div>
+      </PopoverAnchor>
       <PopoverContent {...args}>
         <ClientCard />
       </PopoverContent>
