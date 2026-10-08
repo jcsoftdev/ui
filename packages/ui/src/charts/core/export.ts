@@ -27,6 +27,8 @@ const PAINT_PROPERTIES = [
   "letter-spacing",
   "text-anchor",
   "dominant-baseline",
+  "stop-color",
+  "stop-opacity",
   "visibility",
   "shape-rendering",
 ] as const;
@@ -118,6 +120,7 @@ export function serializeSvg(
   sources.forEach((source, i) => {
     const clone = source.cloneNode(true) as SVGSVGElement;
     inlinePaint(source, clone);
+    for (const skip of clone.querySelectorAll("[data-export-skip]")) skip.remove();
     const position = layout.positions[i] ?? { x: 0, y: 0 };
     const size = sizes[i] ?? { width: 0, height: 0 };
     clone.setAttribute("x", String(position.x));

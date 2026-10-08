@@ -49,6 +49,8 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `IsotypeRows` | `isotype-rows/` | unit charts core (`unitFractions`, `UnitGlyph`) |
 | `ProgressUnits` | `progress-units/` | unit charts core (`progressFractions`, `UnitGlyph`) |
 | `TreeChart` | `tree-chart/` | `tree-layout.ts` (tidy tree, 4 directions, edge paths), `tree-radial.ts` (radial, dendrogram) + `use-pan-zoom.ts`; HTML card templates, search, lazy children |
+| `ChordChart` | `chord-chart/` | `chord.ts` (groups, ribbons) + `polar.ts` `arcPath`, `useIndexNavigation`, export buttons |
+| `AlluvialChart` | `sankey-chart/` | `SankeyChart` with fixed stage columns (`alluvialGraph`) |
 | `SankeyChart` | `sankey-chart/` | `sankey.ts` (columns by longest path, relaxation, link ordering, cycle breaking) |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
@@ -118,6 +120,8 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `sankey.ts` | Pure, tested in `test/charts-graph.test.mjs`: `sankeyLayout(nodes, links, { width, height, nodeWidth, nodePadding, iterations, align })` (columns by longest path, `justify` sinks, shared scale `ky`, relaxation sweeps with collision resolution, links ordered by the other end), `breakCycles` (weighted Eades–Lin–Smyth order; backward links are reported in `removed` with a reason), `sankeyLinkPath`, `sankeyFlowOf` (everything upstream and downstream of a node). |
 | `tree-radial.ts` | `radialTreeLayout`, `dendrogramLayout`, `radialEdgePath`, `toPolar`: extra layouts returning the same `TreeLayout` (radial nodes carry `angle`, the layout a `center`). Tested in `test/graph-flow-parity.test.mjs`. |
 | `export.ts` / `export-menu.tsx` | `serializeSvg(svg \| svg[])` clones the drawing(s), bakes computed paint (CSS variables, Tailwind classes) into inline style and stacks them vertically; `downloadSvg`, `downloadPng` (canvas, 2x), `exportFileName`, `stackLayout`; `ExportMenu` is the two-button group used by Gantt and Sankey. Browser only, no dependencies. |
+| `chord.ts` | `chordLayout(matrix, { padAngle, startAngle, sortGroups, sortSubgroups })` (groups + chords), `ribbonPath`, `chordsOf`, `groupAt`. Angles follow `polar.ts`. |
+| `sankey.ts` (extra) | `sankeyTraceOf(link)` (whole path through a link), `sankeyDiff(before, after)`, `alluvialGraph({ stages, categories, flows })`; layout options `relax: false` and per-node `column`. |
 | `use-pan-zoom.ts` | `usePanZoom({ minZoom, maxZoom, wheel })`: drag to pan (capture starts after a few pixels so clicks still work), two-pointer pinch, wheel zoom with Ctrl/⌘ by default, `zoomBy`, `wasDrag()`; pure `zoomAround` and `fitView`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
@@ -195,6 +199,19 @@ Every chart must keep these, so all families behave the same:
   gives the value, share of its source and share of the total. Keyboard: up/down within a column, left/right to
   the nearest node of the next column, Enter steps through the node's flows. Links that close a cycle are left
   out, reported through `onRemovedLinks`, and logged with `console.warn` outside production.
+- Sankey extras: `compare={previousLinks}` turns it into a diff view (`sankeyDiff` merges the periods by pair; the
+  layout reserves the larger width, the band is drawn at the current width colored by `--chart-up` /
+  `--chart-down`, the previous width stays as a grey ghost, a flow that disappeared is dashed; tooltip and table
+  give before, after and change). `pathTracing` makes a link light everything upstream of its source and
+  downstream of its target (`sankeyTraceOf`) and lets a click pin the path. `particles` animates dots along the
+  bands with SMIL (`animateMotion`), off under `prefers-reduced-motion` and marked `data-export-skip` so exports
+  stay static. `exportable` adds SVG / PNG buttons. `relax={false}` and `SankeyNodeInput.column` pin nodes to
+  fixed columns in input order, which is what `AlluvialChart` (`stages`, `categories`, `flows[s]` from stage `s`
+  to `s + 1`; `alluvialGraph` is the pure conversion) uses.
+- `ChordChart`: `chordLayout(matrix)` (`matrix[i][j]` = flow from `i` to `j`, a group's arc is its row sum, a
+  ribbon is `matrix[i][j]` wide at `i` and `matrix[j][i]` at `j`), `ribbonPath`, `chordsOf`, `groupAt`. Hover a
+  group to light its ribbons, a ribbon to isolate it; arrows walk the groups (`PlotOverlay`-style hidden slider).
+  Names sit around the ring from 420 px, the legend carries them below.
 - Narrow containers: the tree is fitted (and can be zoomed); sankey labels shorten, then hide when the gap
   between columns is under 40 px, and a node legend shows below the drawing until `@lg/chart`.
 

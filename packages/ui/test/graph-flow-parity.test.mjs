@@ -16,6 +16,8 @@ const bundle = await build({
       "core/tree-layout.ts",
       "core/tree-radial.ts",
       "tree-chart/tree-model.ts",
+      "core/sankey.ts",
+      "core/chord.ts",
     ]
       .map((file) => `export * from ${JSON.stringify(join(charts, file))};`)
       .join("\n"),
@@ -258,4 +260,154 @@ test("edgeColorOf: branch uses the node color, depth cycles the palette, neutral
   assert.equal(lib.edgeColorOf(kevin, "branch"), kevin.color);
   assert.equal(lib.edgeColorOf(kevin, "neutral"), "var(--line-strong)");
   assert.notEqual(lib.edgeColorOf(kevin, "depth"), lib.edgeColorOf(model.byId.get("o/m"), "depth"));
+});
+
+const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+
+test("chordLayout: arcs are proportional to the row sums and ribbons pair the two ends", () => {
+  const matrix = [
+    [0, 10, 5],
+    [4, 0, 6],
+    [2, 3, 0],
+  ];
+  const pad = 0.1;
+  const layout = lib.chordLayout(matrix, { padAngle: pad });
+  const total = 15 + 10 + 5;
+  const k = (2 * Math.PI - pad * 3) / total;
+  layout.groups.forEach((group, i) => {
+    assert.ok(near(group.endAngle - group.startAngle, [15, 10, 5][i] * k));
+  });
+  assert.ok(near(layout.groups[1].startAngle - layout.groups[0].endAngle, pad));
+  assert.equal(layout.chords.length, 3);
+  const pair = layout.chords.find((c) => c.source.index + c.target.index === 1);
+  assert.equal(pair.source.value, 10);
+  assert.equal(pair.target.value, 4);
+  assert.ok(near(pair.source.endAngle - pair.source.startAngle, 10 * k));
+  for (const chord of layout.chords) {
+    for (const end of [chord.source, chord.target]) {
+      const group = layout.groups[end.index];
+      assert.ok(end.startAngle >= group.startAngle - 1e-9 && end.endAngle <= group.endAngle + 1e-9);
+    }
+  }
+});
+
+test("chordLayout sorts groups, ignores bad numbers and handles empty input", () => {
+  const sorted = lib.chordLayout(
+    [
+      [0, 1],
+      [5, 0],
+    ],
+    { sortGroups: "descending", padAngle: 0 },
+  );
+  assert.ok(sorted.groups[1].startAngle < sorted.groups[0].startAngle);
+  assert.deepEqual(lib.chordLayout([]), { groups: [], chords: [] });
+  assert.deepEqual(
+    lib.chordLayout([
+      [0, -1],
+      [Number.NaN, 0],
+    ]),
+    { groups: [], chords: [] },
+  );
+  const loop = lib.chordLayout([[4]], { padAngle: 0 });
+  assert.equal(loop.chords.length, 1);
+  assert.equal(loop.chords[0].source.index, loop.chords[0].target.index);
+});
+
+test("ribbonPath closes and groupAt finds the arc under an angle", () => {
+  const layout = lib.chordLayout(
+    [
+      [0, 3],
+      [2, 0],
+    ],
+    { padAngle: 0.2 },
+  );
+  const d = lib.ribbonPath(layout.chords[0], 100);
+  assert.ok(d.startsWith("M") && d.endsWith("Z"));
+  assert.equal((d.match(/A100,100/g) ?? []).length, 2);
+  const g0 = layout.groups[0];
+  assert.equal(lib.groupAt(layout, (g0.startAngle + g0.endAngle) / 2), 0);
+  assert.equal(lib.groupAt(layout, g0.endAngle + 0.1), -1);
+  assert.equal(lib.chordsOf(layout, 0).length, 1);
+});
+
+const sankeyNodes = ["a", "b", "c", "d", "e"].map((id) => ({ id, name: id }));
+const sankeyLinks = [
+  { source: "a", target: "c", value: 4 },
+  { source: "b", target: "c", value: 2 },
+  { source: "c", target: "d", value: 4 },
+  { source: "c", target: "e", value: 2 },
+];
+
+test("sankeyTraceOf lights everything upstream of the source and downstream of the target", () => {
+  const graph = lib.sankeyLayout(sankeyNodes, sankeyLinks, { width: 400, height: 200 });
+  const link = graph.links.find((l) => l.id === "a->c");
+  const trace = lib.sankeyTraceOf(link);
+  assert.deepEqual([...trace.nodes].sort(), ["a", "c", "d", "e"]);
+  assert.deepEqual([...trace.links].sort(), ["a->c", "c->d", "c->e"]);
+  const tail = lib.sankeyTraceOf(graph.links.find((l) => l.id === "c->d"));
+  assert.deepEqual([...tail.nodes].sort(), ["a", "b", "c", "d"]);
+  assert.ok(tail.links.has("b->c") && !tail.links.has("c->e"));
+});
+
+test("sankeyDiff merges two periods, summing repeated pairs and reserving the larger width", () => {
+  const diff = lib.sankeyDiff(
+    [
+      { source: "a", target: "c", value: 5 },
+      { source: "a", target: "c", value: 1 },
+      { source: "b", target: "c", value: 3 },
+    ],
+    [
+      { source: "a", target: "c", value: 4 },
+      { source: "c", target: "d", value: 2 },
+      { source: "x", target: "y", value: -3 },
+    ],
+  );
+  const by = Object.fromEntries(diff.map((d) => [`${d.source}>${d.target}`, d]));
+  assert.equal(diff.length, 3);
+  const ac = by["a>c"];
+  assert.deepEqual([ac.before, ac.after, ac.delta, ac.value], [6, 4, -2, 6]);
+  const bc = by["b>c"];
+  assert.deepEqual([bc.before, bc.after, bc.delta], [3, 0, -3]);
+  const cd = by["c>d"];
+  assert.deepEqual([cd.before, cd.after, cd.value], [0, 2, 2]);
+});
+
+test("alluvial: nodes are pinned to their stage, in category order, with a stable color", () => {
+  const input = {
+    stages: ["Jul", "Ago", "Sep"],
+    categories: [
+      { id: "vip", name: "VIP", color: "red" },
+      { id: "nuevo", name: "Nuevos", color: "blue" },
+    ],
+    flows: [
+      [
+        { from: "vip", to: "vip", value: 5 },
+        { from: "nuevo", to: "vip", value: 2 },
+      ],
+      [{ from: "vip", to: "vip", value: 7 }],
+    ],
+  };
+  const { nodes, links } = lib.alluvialGraph(input);
+  assert.deepEqual(
+    nodes.map((n) => [n.id, n.column]),
+    [
+      ["0:vip", 0],
+      ["0:nuevo", 0],
+      ["1:vip", 1],
+      ["2:vip", 2],
+    ],
+  );
+  assert.ok(nodes.every((n) => (n.id.endsWith("vip") ? n.color === "red" : n.color === "blue")));
+  assert.equal(links.length, 3);
+  const graph = lib.sankeyLayout(nodes, links, {
+    width: 300,
+    height: 200,
+    align: "left",
+    relax: false,
+  });
+  const col = (id) => graph.nodes.find((n) => n.id === id).column;
+  assert.deepEqual(["0:nuevo", "1:vip", "2:vip"].map(col), [0, 1, 2]);
+  const first = graph.nodes.find((n) => n.id === "0:vip");
+  const second = graph.nodes.find((n) => n.id === "0:nuevo");
+  assert.ok(first.y1 <= second.y0);
 });

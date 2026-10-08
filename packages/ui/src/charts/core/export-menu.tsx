@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { cn } from "../../utils/cn.js";
 import { downloadPng, downloadSvg, exportFileName } from "./export.js";
 
@@ -23,12 +24,14 @@ export function ExportMenu({
   className,
 }: {
   title: string;
-  getSvgs: () => SVGSVGElement[];
+  /** Receives the menu's own element, to find the chart around it. */
+  getSvgs: (root: HTMLElement) => SVGSVGElement[];
   texts?: ExportTexts;
   className?: string;
 }) {
+  const rootRef = useRef<HTMLFieldSetElement>(null);
   const run = (kind: "svg" | "png") => {
-    const svgs = getSvgs();
+    const svgs = rootRef.current ? getSvgs(rootRef.current) : [];
     if (svgs.length === 0) return;
     const fileName = exportFileName(title, kind);
     if (kind === "svg") downloadSvg(svgs, { fileName });
@@ -36,6 +39,7 @@ export function ExportMenu({
   };
   return (
     <fieldset
+      ref={rootRef}
       className={cn(
         "m-0 flex shrink-0 items-center gap-0.5 rounded-pill border-0 bg-surface-2 p-0.5",
         className,
