@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, type ReactNode, useCallback, useMemo, useRef } from "react";
+import { memo, type ReactNode, useCallback, useId, useMemo, useRef } from "react";
 import { cn } from "../../utils/cn.js";
 import { DECORATIVE } from "../core/a11y.js";
 import { ChartFrame } from "../core/chart-frame.js";
@@ -12,6 +12,7 @@ import { arcLine, degToRad, polarPoint, radToDeg } from "../core/polar.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels } from "../core/types.js";
 import { useIndexNavigation } from "../core/use-index-navigation.js";
+import { layoutGauge, showEndLabels } from "./gauge-layout.js";
 
 export interface GaugeRange {
   from: number;
@@ -238,18 +239,22 @@ function GaugePlot({
   const a1 = degToRad(half);
   const span = a1 - a0;
   const needle = mode === "needle";
-  const reserve = variant === "semi" ? (needle ? 52 : 30) : needle ? 40 : 16;
-  const pad = 12;
-  const tail = variant === "semi" ? 0 : Math.sin(degToRad(45));
-  const radius = Math.max(
-    40,
-    Math.min(width / 2 - pad - (minMaxLabels ? 6 : 0), (height - pad - reserve) / (1 + tail)),
-  );
-  const band = Math.min(thickness, radius * 0.4);
-  const extent = radius * (1 + tail) + reserve;
-  const cx = width / 2;
-  const cy = Math.max(pad + radius, (height - extent) / 2 + radius);
-  const mid = radius - band / 2;
+  const endLabels = showEndLabels(minMaxLabels, ticks);
+  const uid = useId();
+  const valueChars = Math.max(format(min).length, format(max).length, format(value).length);
+  const layout = layoutGauge({
+    width,
+    height,
+    variant,
+    mode,
+    thickness,
+    endLabels,
+    customCenter: Boolean(centerContent),
+    caption: Boolean(caption),
+    bandLabel: bands.length > 0,
+    valueChars,
+  });
+  const { radius, band, cx, cy, mid, valueSize } = layout;
 
   const toFraction = (v: number) => Math.min(1, Math.max(0, (v - min) / (max - min)));
   const angleFor = useCallback(
@@ -317,14 +322,10 @@ function GaugePlot({
   );
 
   // Value text ---------------------------------------------------------------
-  const valueSize = Math.round(Math.min(40, Math.max(20, radius * 0.34)));
   const captionSize = 12;
-  const valueY = needle
-    ? cy + 22 + valueSize * 0.8
-    : variant === "semi"
-      ? cy - 6
-      : cy + valueSize * 0.3;
-  const captionY = needle ? valueY + 6 + captionSize : valueY + 8 + captionSize;
+  const valueY = cy + layout.valueDy;
+  const captionY = cy + layout.captionDy;
+  const labelY = cy + layout.labelDy;
 
   // Tooltip -----------------------------------------------------------------
   const focused = nav.active != null ? nav.active : null;
@@ -376,6 +377,27 @@ function GaugePlot({
         height={height}
         className="block overflow-visible"
       >
+        {roundedCaps && bands.length > 0 ? (
+          <defs>
+            <mask
+              id={`${uid}-track`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={width}
+              height={height}
+            >
+              <path
+                d={arcLine(cx, cy, mid, a0 + capAngle, a1 - capAngle)}
+                fill="none"
+                stroke="white"
+                strokeWidth={band}
+                strokeLinecap="round"
+              />
+            </mask>
+          </defs>
+        ) : null}
+
         {bands.length === 0 ? (
           <path
             d={arcLine(cx, cy, mid, a0 + capAngle, a1 - capAngle)}
@@ -385,23 +407,25 @@ function GaugePlot({
             style={{ stroke: "var(--chart-grid)" }}
           />
         ) : (
-          bandPaths.map((path, index) => {
-            const item = bands[index];
-            if (!item || !path) return null;
-            return (
-              <BandMark
-                // biome-ignore lint/suspicious/noArrayIndexKey: bands are positional and static.
-                key={index}
-                d={path}
-                width={band}
-                color={rangeColor(item)}
-                opacity={needle ? 0.92 : 0.26}
-                dimmed={focused != null && focused !== index}
-                onEnter={(event) => nav.hover(index, event)}
-                onLeave={nav.leave}
-              />
-            );
-          })
+          <g mask={roundedCaps ? `url(#${uid}-track)` : undefined}>
+            {bandPaths.map((path, index) => {
+              const item = bands[index];
+              if (!item || !path) return null;
+              return (
+                <BandMark
+                  // biome-ignore lint/suspicious/noArrayIndexKey: bands are positional and static.
+                  key={index}
+                  d={path}
+                  width={band}
+                  color={rangeColor(item)}
+                  opacity={needle ? 0.92 : 0.26}
+                  dimmed={focused != null && focused !== index}
+                  onEnter={(event) => nav.hover(index, event)}
+                  onLeave={nav.leave}
+                />
+              );
+            })}
+          </g>
         )}
 
         {!needle && fraction > 0 ? (
@@ -451,7 +475,7 @@ function GaugePlot({
             }}
           >
             <path
-              d={`M${cx - 4} ${cy} L${cx} ${cy - (mid + band * 0.3)} L${cx + 4} ${cy} Z`}
+              d={`M${cx - 4} ${cy} L${cx} ${cy - layout.needleLength} L${cx + 4} ${cy} Z`}
               style={{ fill: "var(--ink)" }}
             />
             <circle cx={cx} cy={cy} r={8} style={{ fill: "var(--ink)" }} />
@@ -459,7 +483,7 @@ function GaugePlot({
           </g>
         ) : null}
 
-        {minMaxLabels ? (
+        {endLabels ? (
           <g {...DECORATIVE} className="pointer-events-none">
             <text
               x={minPoint.x}
@@ -503,7 +527,7 @@ function GaugePlot({
             {active?.label && bands.length > 0 ? (
               <text
                 x={cx}
-                y={caption ? captionY + 16 : captionY}
+                y={labelY}
                 className="font-bold text-[11px]"
                 style={{ fill: valueColor }}
               >
@@ -519,13 +543,14 @@ function GaugePlot({
           className="pointer-events-none absolute flex flex-col items-center text-center"
           style={{
             left: cx,
-            top: needle ? cy + 22 : variant === "semi" ? cy - 6 : cy,
-            width: Math.max(40, radius * 1.5),
-            transform: needle
-              ? "translate(-50%, 0)"
-              : variant === "semi"
+            top: cy + layout.customDy,
+            width: layout.customWidth,
+            transform:
+              layout.customAnchor === "above"
                 ? "translate(-50%, -100%)"
-                : "translate(-50%, -50%)",
+                : layout.customAnchor === "middle"
+                  ? "translate(-50%, -50%)"
+                  : "translate(-50%, 0)",
           }}
         >
           {centerContent({
