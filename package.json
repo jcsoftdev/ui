@@ -1,0 +1,16 @@
+{
+  "name": "ui-root",
+  "private": true,
+  "packageManager": "pnpm@9.12.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm --filter @jcsoftdev/ui build",
+    "build:site": "pnpm --filter @jcsoftdev/ui-site build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "check:treeshake": "pnpm --filter @jcsoftdev/ui check:treeshake"
+  }
+}

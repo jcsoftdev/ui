@@ -1,0 +1,10 @@
+node_modules/
+dist/
+storybook-static/
+.astro/
+*.tsbuildinfo
+*.tgz
+.DS_Store
+.idea/
+.vscode/
+.env*
