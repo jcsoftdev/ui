@@ -8,3 +8,4 @@ export * from "./label/index.js";
 export * from "./pin-input/index.js";
 export * from "./select/index.js";
 export * from "./textarea/index.js";
+export * from "./time-input/index.js";
