@@ -2385,6 +2385,7 @@ export function DataGrid<T>({
           <GridToolPanel
             labels={labels}
             columns={columnsProp}
+            shownColumns={columns}
             order={layout.order}
             hidden={layout.hidden}
             onHidden={grid.setHidden}

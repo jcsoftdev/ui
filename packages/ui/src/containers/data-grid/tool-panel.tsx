@@ -20,6 +20,8 @@ export const EMPTY_PIVOT: PivotConfig = {
 export interface GridToolPanelProps<T> {
   labels: DataGridLabels;
   columns: readonly DataGridColumn<T>[];
+  /** Columns the grid shows now (a pivot replaces them); `columns` when absent. */
+  shownColumns?: readonly DataGridColumn<T>[];
   /** Every column id in layout order. */
   order: readonly string[];
   hidden: readonly string[];
@@ -86,6 +88,7 @@ function Check({
 export function GridToolPanel<T>({
   labels,
   columns,
+  shownColumns,
   order,
   hidden,
   onHidden,
@@ -101,7 +104,7 @@ export function GridToolPanel<T>({
   className,
 }: GridToolPanelProps<T>) {
   const id = useId();
-  const byId = new Map(columns.map((column) => [column.id, column]));
+  const byId = new Map((shownColumns ?? columns).map((column) => [column.id, column]));
   const ordered = order.map((key) => byId.get(key)).filter((c): c is DataGridColumn<T> => !!c);
   const visibleCount = ordered.length - hidden.length;
   const groupable = columns.filter((column) => column.groupable === true);
