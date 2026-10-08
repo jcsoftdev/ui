@@ -25,8 +25,8 @@ function clamp(value: number, min: number, max: number): number {
 /**
  * Initial view of a laid out tree in a `width` x `height` viewport. `contain` scales the whole
  * tree to fit (never past 1). `readable` ignores the width: it fits by height within
- * `[readableMin, readableMax]` and puts the root at its edge (centred across), so the rest is a
- * pan away. `auto` picks `contain` unless it would drop below `minReadable`.
+ * `[readableMin, readableMax]` and puts the root at its edge (centred across, never above the `inset` band), so the
+ * rest is a pan away. `auto` picks `contain` unless it would drop below `minReadable`.
  */
 export function treeFitView(
   layout: Pick<TreeLayout, "nodes" | "width" | "height">,
@@ -73,7 +73,13 @@ export function treeFitView(
   let y = inset + areaHeight / 2 - root.y * k;
   if (direction === "top") y = inset + padding - (root.y - root.height / 2) * k;
   else if (direction === "bottom") y = height - padding - (root.y + root.height / 2) * k;
-  else if (direction === "left") x = padding - (root.x - root.width / 2) * k;
-  else x = width - padding - (root.x + root.width / 2) * k;
+  else {
+    x =
+      direction === "left"
+        ? padding - (root.x - root.width / 2) * k
+        : width - padding - (root.x + root.width / 2) * k;
+    const top = Math.min(...layout.nodes.map((node) => node.y - node.height / 2));
+    y = Math.max(y, inset + padding - top * k);
+  }
   return { mode: "readable", view: { k, x, y } };
 }

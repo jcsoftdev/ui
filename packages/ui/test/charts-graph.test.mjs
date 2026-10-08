@@ -240,4 +240,11 @@ test("treeFitView contains when legible, else centres the root at a readable sca
   const left = lib.treeLayout(team(), { direction: "left" });
   const view = lib.treeFitView(left, 320, 420, "left", { mode: "readable" }).view;
   close(view.x + (left.nodes[0].x - left.nodes[0].width / 2) * view.k, 16, "root on the left edge");
+
+  for (const direction of ["left", "right"]) {
+    const side = lib.treeLayout(team(), { direction });
+    const fit = lib.treeFitView(side, 320, 420, direction, { mode: "readable", inset: 36 }).view;
+    const topEdge = Math.min(...side.nodes.map((node) => node.y - node.height / 2));
+    assert.ok(fit.y + topEdge * fit.k >= 36, `${direction}: no card under the toolbar band`);
+  }
 });
