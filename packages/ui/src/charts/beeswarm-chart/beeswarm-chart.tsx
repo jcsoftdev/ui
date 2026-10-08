@@ -54,7 +54,9 @@ export interface BeeswarmChartProps {
   /** Space between points (pixels). */
   gap?: number;
   /** Height of the drawing; grows with the number of rows by default. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   legend?: boolean | "top" | "bottom";
   grid?: boolean;
   tooltip?: boolean;
@@ -91,6 +93,7 @@ export function BeeswarmChart({
   sizeFormat,
   gap = 1.25,
   height: heightProp,
+  aspectRatio,
   legend,
   grid = true,
   tooltip = true,
@@ -126,6 +129,7 @@ export function BeeswarmChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -168,10 +172,10 @@ export function BeeswarmChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <BeeswarmPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           categories={categories}
           visible={legendState.visible}

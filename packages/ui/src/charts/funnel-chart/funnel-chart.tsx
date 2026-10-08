@@ -40,7 +40,9 @@ export interface FunnelChartProps {
   tone?: "categorical" | "accent";
   /** Space between stages, in pixels. */
   gap?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   tooltip?: boolean;
   loading?: boolean;
@@ -72,6 +74,7 @@ export function FunnelChart({
   tone = "categorical",
   gap = 4,
   height,
+  aspectRatio,
   valueFormat,
   tooltip = true,
   loading = false,
@@ -115,6 +118,7 @@ export function FunnelChart({
   return (
     <ChartFrame
       height={frameHeight}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -122,10 +126,10 @@ export function FunnelChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <FunnelPlot
           width={width}
-          height={frameHeight}
+          height={measuredHeight}
           title={title}
           stages={stages}
           variant={variant}

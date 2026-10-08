@@ -38,7 +38,9 @@ export interface IcicleChartProps {
   /** Root of the tree; it fills the first band. */
   data: HierarchyDatum;
   /** Height of the drawing in pixels. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   /** "horizontal": levels run left to right; "vertical": top to bottom. */
   orientation?: "horizontal" | "vertical";
   valueFormat?: ValueFormat;
@@ -72,6 +74,7 @@ export function IcicleChart({
   title,
   data,
   height = 340,
+  aspectRatio,
   orientation = "horizontal",
   valueFormat,
   levels = 3,
@@ -95,6 +98,7 @@ export function IcicleChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={drill.root.value <= 0}
@@ -108,10 +112,10 @@ export function IcicleChart({
       footer={legend ? <HierarchyLegend focus={drill.focus} /> : null}
       table={<HierarchyTable root={drill.root} caption={title} format={format} labels={labels} />}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <IciclePlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           drill={drill}
           format={format}

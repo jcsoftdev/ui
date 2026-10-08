@@ -43,6 +43,10 @@ export interface DumbbellChartProps {
   sort?: DumbbellSort;
   /** Height of every row in pixels (default 38). */
   rowHeight?: number;
+  /** `"fill"` stretches the rows to the height of the parent. */
+  height?: "fill";
+  /** Width / height ratio; stretches the rows to fit it. */
+  aspectRatio?: number;
   /** Change printed at the end of each row. `false` hides it. */
   delta?: "absolute" | "percent" | false;
   /** Writes both values next to the dots (default true). */
@@ -191,6 +195,8 @@ export function DumbbellChart({
   valueFormat,
   sort = "none",
   rowHeight = 38,
+  height: heightMode,
+  aspectRatio,
   delta = "absolute",
   valueLabels = true,
   lowerIsBetter = false,
@@ -209,11 +215,13 @@ export function DumbbellChart({
   const rows = useMemo(() => sortItems(items, sort), [items, sort]);
   const fromColor = fromOverride ?? seriesColor(6);
   const toColor = toOverride ?? seriesColor(0);
+  const stretch = heightMode === "fill" || aspectRatio != null;
   const plotHeight = rows.length * rowHeight + MARGIN.top + MARGIN.bottom;
 
   return (
     <ChartFrame
-      height={Math.max(plotHeight, 120)}
+      height={heightMode === "fill" ? "fill" : Math.max(plotHeight, 120)}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={rows.length === 0}
@@ -246,10 +254,10 @@ export function DumbbellChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <DumbbellPlot
           width={width}
-          height={plotHeight}
+          height={stretch ? measuredHeight : plotHeight}
           rows={rows}
           fromLabel={fromLabel}
           toLabel={toLabel}
@@ -257,7 +265,11 @@ export function DumbbellChart({
           toColor={toColor}
           fmt={fmt}
           valueFormat={valueFormat}
-          rowHeight={rowHeight}
+          rowHeight={
+            stretch
+              ? Math.max(20, (measuredHeight - MARGIN.top - MARGIN.bottom) / rows.length)
+              : rowHeight
+          }
           delta={delta}
           valueLabels={valueLabels}
           lowerIsBetter={lowerIsBetter}

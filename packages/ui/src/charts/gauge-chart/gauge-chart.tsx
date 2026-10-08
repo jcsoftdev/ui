@@ -36,7 +36,9 @@ export interface GaugeChartProps {
   mode?: "progress" | "needle";
   /** Colored bands. With `progress` they sit behind the arc and the arc takes the color of the band it is in. */
   ranges?: readonly GaugeRange[];
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   /** Arc thickness in pixels. */
   thickness?: number;
   roundedCaps?: boolean;
@@ -75,6 +77,7 @@ export function GaugeChart({
   mode = "progress",
   ranges,
   height,
+  aspectRatio,
   thickness = 18,
   roundedCaps = true,
   ticks = 0,
@@ -117,6 +120,7 @@ export function GaugeChart({
   return (
     <ChartFrame
       height={frameHeight}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -124,10 +128,10 @@ export function GaugeChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <GaugePlot
           width={width}
-          height={frameHeight}
+          height={measuredHeight}
           title={title}
           value={value}
           min={min}

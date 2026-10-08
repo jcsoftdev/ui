@@ -68,7 +68,17 @@ export interface HeatmapGridProps {
   valueName?: string;
 }
 
-const TOP = 22;
+/** Height of the column-label header above the cells. */
+export const HEATMAP_TOP = 22;
+
+/** Width of the row-label gutter, from the measured labels (capped on narrow containers). */
+export function rowGutter(width: number, rowLabels: readonly string[]): number {
+  return Math.min(
+    width < 420 ? 52 : 120,
+    Math.max(0, ...rowLabels.map((label) => estimateTextWidth(label, 11))) + 10,
+  );
+}
+const TOP = HEATMAP_TOP;
 
 /**
  * Rows × columns of colored cells. Hover (or keyboard focus) lights its row and
@@ -97,10 +107,7 @@ export function HeatmapGrid({
 }: HeatmapGridProps) {
   const rows = rowLabels.length;
   const columns = columnLabels.length;
-  const rowLabelWidth = Math.min(
-    width < 420 ? 52 : 120,
-    Math.max(0, ...rowLabels.map((label) => estimateTextWidth(label, 11))) + 10,
-  );
+  const rowLabelWidth = rowGutter(width, rowLabels);
   const left = rowLabelWidth;
   const availableWidth = Math.max(0, width - left);
   const availableHeight = Math.max(0, height - TOP);

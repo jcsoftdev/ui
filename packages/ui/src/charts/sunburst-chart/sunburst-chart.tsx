@@ -38,7 +38,9 @@ export interface SunburstChartProps {
   /** Root of the tree; its name and total sit in the center. */
   data: HierarchyDatum;
   /** Height of the drawing; the disc takes the smaller of width and height. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   /** Rings shown around the open node. */
   levels?: number;
@@ -73,6 +75,7 @@ export function SunburstChart({
   title,
   data,
   height = 360,
+  aspectRatio,
   valueFormat,
   levels = 3,
   drillDown = true,
@@ -96,6 +99,7 @@ export function SunburstChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={drill.root.value <= 0}
@@ -109,10 +113,10 @@ export function SunburstChart({
       footer={legend ? <HierarchyLegend focus={drill.focus} /> : null}
       table={<HierarchyTable root={drill.root} caption={title} format={format} labels={labels} />}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <SunburstPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           drill={drill}
           format={format}

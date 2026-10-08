@@ -62,6 +62,7 @@ export function CartesianChart({
   title,
   description,
   height = 300,
+  aspectRatio,
   orientation = "vertical",
   stack = "none",
   curve = "linear",
@@ -115,6 +116,8 @@ export function CartesianChart({
   const showLegend = legendPlacement != null && (legend != null || series.length > 1);
   const brushOn = brush && count > 2 && orientation === "vertical";
 
+  const brushExtra = BRUSH_HEIGHT + BRUSH_GAP;
+
   const legendItems: LegendItem[] = resolved.map((item) => ({
     id: item.id,
     name: item.name,
@@ -138,7 +141,8 @@ export function CartesianChart({
 
   return (
     <ChartFrame
-      height={brushOn ? height + BRUSH_HEIGHT + BRUSH_GAP : height}
+      height={height === "fill" || !brushOn ? height : height + brushExtra}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -156,10 +160,10 @@ export function CartesianChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, drawingHeight) => (
         <CartesianPlot
           width={width}
-          height={height}
+          height={brushOn ? drawingHeight - brushExtra : drawingHeight}
           categories={categories}
           resolved={resolved}
           hidden={state.hidden}

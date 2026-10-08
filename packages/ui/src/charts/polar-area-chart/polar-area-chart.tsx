@@ -47,7 +47,9 @@ export interface PolarAreaChartProps {
   showLabels?: boolean;
   /** Rotation of the first sector, in degrees from 12 o'clock. */
   startAngle?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   legend?: boolean | "top" | "bottom";
   tooltip?: boolean;
@@ -86,6 +88,7 @@ export function PolarAreaChart({
   showLabels = true,
   startAngle = 0,
   height = 340,
+  aspectRatio,
   valueFormat,
   legend,
   tooltip = true,
@@ -142,6 +145,8 @@ export function PolarAreaChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
+      legendAside
       labels={labels}
       loading={loading}
       empty={empty}
@@ -160,10 +165,10 @@ export function PolarAreaChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <RosePlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           items={resolved}
           state={state}

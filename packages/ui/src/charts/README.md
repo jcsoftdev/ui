@@ -78,14 +78,14 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `path.ts` | `linePath`, `areaPath` (variable baseline), `curveCommands` (`"linear" \| "smooth"` = monotone cubic, never overshoots), `monotoneTangents`, `roundedRectPath`, `barPath` (rounded at the value end only), `segments`. |
 | `stack.ts` | `stackLayers(series, "normal" \| "percent")`: positives up, negatives down, percent normalised to 0-1. |
 | `palette.ts` | `CHART_PALETTE`, `seriesColor(i, override?)`, `TONE_COLORS` (neutral/accent/danger/warning/success ink + soft). |
-| `use-chart-size.ts` | `useChartWidth()` (ResizeObserver, SSR fallback width 640), `useIsomorphicLayoutEffect`. |
+| `use-chart-size.ts` | `useChartSize()` / `useChartWidth()` (ResizeObserver, SSR fallback 640 x 300), `resolveDrawingHeight`, `useIsomorphicLayoutEffect`. |
 | `motion.ts` | `useReducedMotion`, `useEntryAnimation(ref, play, { disabled, replayKey })`, `revealClip`, `fadeIn`, `EASE_OUT`. Web Animations API, skipped under `prefers-reduced-motion`. |
 | `polar.ts` | Angles are radians, 0 at 12 o'clock, clockwise. `polarPoint`, `angleOf`, `normalizeAngle`, `slotAt` (equal slots), `sliceAngles` (proportional slices with a gap), `arcPath` (annular sector, rounded corners clamped to fit), `arcLine` (stroked centre-line arc), `spreadLabels` (vertical label collision avoidance), `funnelStages` (stage geometry and conversion). Unit tested in `test/charts-polar.test.mjs`. |
 | `use-index-navigation.ts` | `useIndexNavigation(count, { wrap })`: hover and keyboard (arrows, Home/End, Escape) share one `active` index, plus the pointer position for the tooltip. Spread `sliderProps` on a `role="slider"` overlay (`pointer-events-none` is fine for polar charts). |
 | `a11y.ts` | `DECORATIVE` (`aria-hidden`) spread for visual-only SVG text and groups. |
 | `motion.ts` (extra) | `useAnimatedNumber(target, { from, duration, disabled })` eases a displayed value; instant under reduced motion. |
 | `use-series-state.ts` | `useSeriesState(initialHidden)`: hidden set, legend highlight, `toggle`. |
-| `chart-frame.tsx` | `ChartFrame`: measures width, swaps in loading/empty states, places legend / drawing / footer / hidden table. Render prop `children(width)`. |
+| `chart-frame.tsx` | `ChartFrame`: measures its slot (width and, with `height="fill"`, height), swaps in loading/empty states, places legend / drawing / footer / hidden table (`legendAside` for polar). Render prop `children(width, height)`. |
 | `chart-states.tsx` | `ChartSkeleton` (`shape: "bars" \| "line" \| "ring"`), `ChartEmpty`. |
 | `legend.tsx` | `ChartLegend`: toggle buttons with `aria-pressed`, hover/focus highlight, swatch shapes `line \| dashed \| square \| dot`. The last visible series cannot be hidden. |
 | `tooltip.tsx` | `ChartTooltip`: positioned card with rows (color, name, value, note, emphasis); measures itself and stays inside the container (prefers the left side past 60%, clamps to the edges when neither side fits); moves with a transform. `tooltipLeft` is the pure placement. |
@@ -158,6 +158,33 @@ from `@md/chart`. Inside the SVG: labels only render where they fit, column labe
 icicle drop outer levels before they get too thin, the calendar keeps only the most recent weeks that fit,
 and the tooltip never leaves the frame. Every chart has a `Narrow` story at 320 px.
 
+## Fitting the parent: `height="fill"` and `aspectRatio`
+
+Every chart adapts to its exact parent, width and height, from the container and never the viewport.
+
+```tsx
+<div style={{ width: 560, height: 360 }}>
+  <LineChart height="fill" ... />      {/* takes the whole box, legend and brush included */}
+</div>
+<DonutChart aspectRatio={16 / 9} ... /> {/* height follows the measured width */}
+```
+
+- `height`: a number (pixels, the default of each chart), `"fill"` (the frame measures its slot with a
+  `ResizeObserver` and the legend, footer and brush are subtracted by the layout, so the drawing gets what is left),
+  or, inside `ChartFrame`, a function of the width (`CalendarHeatmap` uses it: square cells decide the height).
+- `aspectRatio` (width / height) wins over a pixel `height` and is ignored with `"fill"`.
+- `"fill"` needs a parent with a definite height (fixed, flex or grid sized). With none, the drawing falls back to a
+  120 px minimum instead of collapsing.
+- `ChartFrame` is `@container/chart` with no padding or margin; `children(width, height)` gets the drawing size
+  (the second argument is optional, older charts keep working). The pure rules live in `core/drawing-height.ts`.
+- Row-based charts (`TimelineChart`, `DumbbellChart`, `IsotypeRows`) accept `height="fill"` only: rows stretch to the
+  box. `ProgressUnits` is a single row and keeps its `size`.
+- No chart has outer padding: the plot touches the container edges except for axis gutters measured from the actual
+  tick labels (plus half of the last x label). Polar charts take `min(width, height)` for the radius; with
+  `legendAside` the legend moves beside the drawing from `@lg/chart` (512 px) and sits under it when narrower.
+- Only container variants (`@lg/chart:`, `@md/chart:`, `@sm/units:`) are used in charts. Geometry thresholds in JS
+  (`width < 440`, ...) read the measured width. Check the `FillParent` stories (resizable box) and `Narrow` ones.
+
 ## Annotations (cartesian)
 
 ```ts
@@ -213,7 +240,7 @@ Charts only know the width `ChartFrame` measures, never the viewport:
 1. Create `src/charts/<name>/<name>.tsx`, `index.ts` and `<name>.stories.tsx`; add the folder to `src/charts/index.ts`.
 2. Wrap the output in `ChartFrame` with `labels={resolveLabels(props.labels)}`, `loading`, `empty`, a `ChartLegend`
    fed by `useSeriesState`, and a `ChartDataTable`. Pick a skeleton shape (`"ring"` exists for polar charts).
-3. Inside `children(width)`, render a separate plot component so `useMemo` can hold the geometry; keep hover state in
+3. Inside `children(width, height)` (accept `height: number | "fill"` and `aspectRatio` and pass them to the frame), render a separate plot component so `useMemo` can hold the geometry; keep hover state in
    that component and `memo` the marks.
 4. Use `seriesColor(i)` for categorical colors (slices, cells legend) and `TONE_COLORS` for status colors; apply them via
    `style`. Use `resolveFormat` for values and `formatDate` for dates.

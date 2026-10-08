@@ -34,7 +34,9 @@ export interface WaffleChartProps {
   order?: GridOrder;
   /** Gap between cells, as a fraction of the cell size. */
   gap?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   legend?: boolean | "top" | "bottom";
   tooltip?: boolean;
@@ -62,6 +64,7 @@ export function WaffleChart({
   order = "row",
   gap = 0.14,
   height = 260,
+  aspectRatio,
   valueFormat = "integer",
   legend = true,
   tooltip = true,
@@ -101,6 +104,7 @@ export function WaffleChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -133,10 +137,10 @@ export function WaffleChart({
       }
       className={cn(UNIT_FRAME_CLASS, className)}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <WafflePlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           data={data}
           colors={colors}

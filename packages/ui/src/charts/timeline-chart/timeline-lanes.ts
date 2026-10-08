@@ -84,3 +84,33 @@ export function clockTicks(start: number, end: number, count = 8): ClockTick[] {
   }
   return out;
 }
+
+export interface FitLaneInput {
+  /** Lanes per row. */
+  counts: readonly number[];
+  /** Height available for all the rows together (axis margins already removed). */
+  available: number;
+  gap: number;
+  rowPad: number;
+  min?: number;
+  max?: number;
+}
+
+/**
+ * Lane height that makes the rows fill `available` exactly:
+ * `sum(count * (lane + gap) - gap + 2 * rowPad) = available`, clamped to
+ * `[min, max]`.
+ */
+export function fitLaneHeight({
+  counts,
+  available,
+  gap,
+  rowPad,
+  min = 14,
+  max = 72,
+}: FitLaneInput): number {
+  const lanes = counts.reduce((sum, count) => sum + count, 0);
+  if (lanes <= 0) return min;
+  const fixed = counts.length * (2 * rowPad - gap) + lanes * gap;
+  return Math.min(max, Math.max(min, (available - fixed) / lanes));
+}

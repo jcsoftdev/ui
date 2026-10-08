@@ -42,7 +42,9 @@ export interface BoxPlotProps {
   /** Dots for values outside the whiskers. */
   showOutliers?: boolean;
   /** Height of the drawing in pixels. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   /** Shown automatically with more than one series. */
   legend?: boolean | "top" | "bottom";
   grid?: boolean;
@@ -78,6 +80,7 @@ export function BoxPlot({
   showMean = true,
   showOutliers = true,
   height = 320,
+  aspectRatio,
   legend,
   grid = true,
   tooltip = true,
@@ -98,6 +101,7 @@ export function BoxPlot({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -118,10 +122,10 @@ export function BoxPlot({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <BoxPlotPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           categories={categories}
           visible={legendState.visible}

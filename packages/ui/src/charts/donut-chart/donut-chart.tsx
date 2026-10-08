@@ -47,7 +47,9 @@ export interface DonutChartProps {
   explode?: number;
   /** Where the first slice starts, in degrees from 12 o'clock (full circle only). */
   startAngle?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   /** Caption under the centre value when nothing is hovered. Defaults to the "Total" label. */
   centerLabel?: string;
@@ -100,6 +102,7 @@ export function DonutChart({
   explode = 8,
   startAngle = 0,
   height = 300,
+  aspectRatio,
   valueFormat,
   centerLabel,
   centerValue,
@@ -161,6 +164,8 @@ export function DonutChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
+      legendAside
       labels={labels}
       loading={loading}
       empty={empty}
@@ -179,10 +184,10 @@ export function DonutChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <DonutPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           items={resolved}
           state={state}

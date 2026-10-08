@@ -28,7 +28,9 @@ export interface StreamGraphProps {
   /** Accessible name of the chart. */
   title: string;
   description?: string;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   /** Baseline: "wiggle" (default), "silhouette", "zero" (plain stack) or "expand" (100%). */
   offset?: StreamOffset;
   /** Stacking order; "inside-out" keeps the biggest streams in the middle. */
@@ -99,6 +101,7 @@ export function StreamGraph({
   title,
   description,
   height = 340,
+  aspectRatio,
   offset = "wiggle",
   order = "inside-out",
   curve = "smooth",
@@ -139,6 +142,7 @@ export function StreamGraph({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={!hasData}
@@ -161,10 +165,10 @@ export function StreamGraph({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <StreamPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           categories={categories}
           series={series}
           colors={colors}

@@ -15,6 +15,7 @@ import { linearScale } from "../core/scales/linear.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels, type ValueAxisOptions } from "../core/types.js";
 import {
+  pickLabels,
   type WaterfallBar,
   type WaterfallKind,
   type WaterfallStep,
@@ -26,7 +27,9 @@ export interface WaterfallChartProps {
   /** Accessible name of the chart. */
   title: string;
   description?: string;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   yAxis?: ValueAxisOptions;
   /** Dashed line from each bar to the next (default true). */
@@ -97,6 +100,7 @@ export function WaterfallChart({
   title,
   description,
   height = 320,
+  aspectRatio,
   valueFormat,
   yAxis,
   connectors = true,
@@ -124,6 +128,7 @@ export function WaterfallChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={steps.length === 0}
@@ -156,10 +161,10 @@ export function WaterfallChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <WaterfallPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           bars={layout.bars}
           min={layout.min}
           max={layout.max}
@@ -291,6 +296,13 @@ function WaterfallPlot({
     ? `${current.label}. ${kindName(current.kind)} ${signed(current)}. ${runningLabel} ${fmt(current.to)}`
     : labels.explore;
   const zero = y.map(0);
+  const shownLabels = pickLabels(
+    shapes.map((shape) => ({
+      center: shape.x + x.bandwidth / 2,
+      width: estimateTextWidth(signed(shape.bar), 11),
+      y: shape.top - 6,
+    })),
+  );
 
   return (
     <div className="relative" style={{ width }}>
@@ -339,7 +351,7 @@ function WaterfallPlot({
           ))}
           {dataLabels
             ? shapes.map((shape, i) =>
-                estimateTextWidth(signed(shape.bar), 11) > x.step ? null : (
+                !shownLabels[i] ? null : (
                   <text
                     key={shape.bar.id}
                     data-fade=""

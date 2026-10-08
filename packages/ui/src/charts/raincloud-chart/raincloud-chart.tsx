@@ -50,7 +50,9 @@ export interface RaincloudChartProps {
   /** Seed of the vertical jitter, so the rain is stable between renders. */
   seed?: number;
   /** Height of the drawing; grows with the number of rows by default. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   legend?: boolean | "top" | "bottom";
   grid?: boolean;
   tooltip?: boolean;
@@ -90,6 +92,7 @@ export function RaincloudChart({
   showMean = true,
   seed = 7,
   height: heightProp,
+  aspectRatio,
   legend,
   grid = true,
   tooltip = true,
@@ -124,6 +127,7 @@ export function RaincloudChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -145,10 +149,10 @@ export function RaincloudChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <RaincloudPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           categories={categories}
           visible={legendState.visible}

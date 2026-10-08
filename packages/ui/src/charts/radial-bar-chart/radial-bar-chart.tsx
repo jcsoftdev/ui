@@ -32,7 +32,9 @@ export interface RadialBarChartProps {
   data: readonly RadialBarDatum[];
   /** Default full-ring value, 100 unless set (a datum can bring its own). */
   max?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   /** Where the rings start and stop, in degrees from 12 o'clock. 0 -> 270 leaves room for ring labels. */
   startAngle?: number;
   endAngle?: number;
@@ -83,6 +85,7 @@ export function RadialBarChart({
   data,
   max = 100,
   height = 320,
+  aspectRatio,
   startAngle = 0,
   endAngle = 270,
   thickness,
@@ -152,6 +155,8 @@ export function RadialBarChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
+      legendAside
       labels={labels}
       loading={loading}
       empty={empty}
@@ -170,10 +175,10 @@ export function RadialBarChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <RadialPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           items={resolved}
           state={state}
@@ -257,7 +262,7 @@ function RadialPlot({
 
   const cx = width / 2;
   const cy = height / 2;
-  const outer = Math.max(30, Math.min(width, height) / 2 - 8);
+  const outer = Math.max(30, Math.min(width, height) / 2 - 4);
   const count = Math.max(1, visible.length);
   const hole = outer * 0.26;
   const band = thickness ?? Math.max(8, Math.min(28, (outer - hole - gap * (count - 1)) / count));

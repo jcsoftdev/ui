@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import type { ColorRange, ScaleColors } from "../core/color-scale.js";
 import { ChartDataTable } from "../core/data-table.js";
@@ -40,8 +39,10 @@ export interface HeatmapChartProps {
   /** Gap between cells in pixels. */
   gap?: number;
   radius?: number;
-  /** Height of the drawing; 34 px per row plus the column header by default. */
-  height?: number;
+  /** Height of the drawing in px or "fill"; 34 px per row plus the column header by default. */
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width. */
+  aspectRatio?: number;
   /** Color key (gradient bar or range swatches). */
   legend?: boolean;
   tooltip?: boolean;
@@ -73,6 +74,7 @@ export function HeatmapChart({
   gap = 3,
   radius = 4,
   height,
+  aspectRatio,
   legend = true,
   tooltip = true,
   animate = true,
@@ -98,11 +100,12 @@ export function HeatmapChart({
   return (
     <ChartFrame
       height={drawingHeight}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={finite.length === 0 || rows.length === 0 || columns.length === 0}
       skeleton="bars"
-      className={cn("@container/chart", className)}
+      className={className}
       footer={
         legend ? (
           <HeatmapLegend
@@ -131,10 +134,10 @@ export function HeatmapChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <HeatmapGrid
           width={width}
-          height={drawingHeight}
+          height={measuredHeight}
           title={title}
           rowLabels={rows}
           columnLabels={columns}

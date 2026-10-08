@@ -71,7 +71,9 @@ export interface XYPointChartProps {
   showLabels?: boolean;
   /** Reference circles explaining the bubble sizes, under the plot. */
   sizeLegend?: boolean;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   legend?: boolean | "top" | "bottom";
   grid?: boolean;
   tooltip?: boolean;
@@ -115,6 +117,7 @@ export function XYPointChart({
   showLabels = false,
   sizeLegend = sized,
   height = 340,
+  aspectRatio,
   legend,
   grid = true,
   tooltip = true,
@@ -144,6 +147,7 @@ export function XYPointChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -185,10 +189,10 @@ export function XYPointChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <XYPointPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           visible={legendState.visible}
           xFormat={xFormat}

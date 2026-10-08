@@ -32,7 +32,9 @@ export interface TreemapChartProps {
   /** Root of the tree; its name is the first breadcrumb item. */
   data: HierarchyDatum;
   /** Height of the drawing in pixels. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   /** Levels drawn at once below the open node; deeper ones appear after drilling. */
   depth?: number;
@@ -69,6 +71,7 @@ export function TreemapChart({
   title,
   data,
   height = 360,
+  aspectRatio,
   valueFormat,
   depth = 2,
   drillDown = true,
@@ -91,6 +94,7 @@ export function TreemapChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={drill.root.value <= 0}
@@ -104,10 +108,10 @@ export function TreemapChart({
       footer={legend ? <HierarchyLegend focus={drill.focus} /> : null}
       table={<HierarchyTable root={drill.root} caption={title} format={format} labels={labels} />}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <TreemapPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           drill={drill}
           format={format}
