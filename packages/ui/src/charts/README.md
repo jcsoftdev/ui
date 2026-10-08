@@ -26,6 +26,8 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `DumbbellChart` | `dumbbell-chart/` | two values per row, sortable, change column |
 | `TimelineChart` | `timeline-chart/` | Gantt rows, `assignLanes` stacks overlapping bars, now marker, clock ticks |
 | `CandlestickChart` | `candlestick-chart/` | OHLC candles + volume panel + `ChartBrush` zoom |
+| `StockChart` | `stock-chart/` | candle / OHLC / line / area, range presets (`time-range.ts`), `ChartBrush` navigator, `indicators.ts` overlays and RSI/MACD pane, % comparisons, flags |
+| `GanttChart` | `gantt-chart/` | `gantt.ts` (zoom scale, two-tier header, rows with rollups, orthogonal dependency routes), task tree + timeline in one sticky scroller |
 | `SlopeChart` | `slope-chart/` | two columns, `spreadSlopeLabels` collision avoidance on both sides |
 | `HeatmapChart`, `CalendarHeatmap` | `heatmap-chart/` | `color-scale.ts` + an internal `HeatmapGrid` |
 | `TreemapChart` | `treemap-chart/` | `hierarchy.ts` (`treemapLayout`, squarified) + `hierarchy-chart.tsx` |
@@ -105,6 +107,9 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `unit-icons.ts` | `UNIT_ICONS` (person, scissors, chair, star, calendar, bottle, battery, droplet, target, shield; 24 x 24 solid silhouettes), `UnitIcon` (a name, a raw path or a `UnitShape` with its own box), `resolveUnitShape`, `UnitCategory`. |
 | `unit-glyph.tsx` | `UnitGlyph` (one icon in a square cell, partial fill clipped, track behind), `popUnits` (staggered entry), `UNIT_FRAME_CLASS` / `UNIT_LEGEND_CLASS` (frame as `@container/units`, legend below under `@sm`). |
 | `category-explorer.tsx` | `useCategoryExplorer` + `CategorySlider`: hover finds the category through `[data-category]`, a pointer-transparent `role="slider"` overlay moves between categories with the keyboard. |
+| `indicators.ts` | Pure, aligned with the input (`null` while warming up), tested in `test/charts-gantt-stock.test.mjs`: `sma`, `ema` (seeded with the SMA, skips leading nulls), `bollinger` (population deviation), `vwap(bars, from)` (anchored), `rsi` (Wilder), `macd` (line, signal, histogram), `rebase` (% change from a base point). |
+| `time-range.ts` | `TimeRangePreset` (`unit: "day" \| "week" \| "month" \| "year" \| "all"`, `count`), `rangeWindow(dates, preset)` (inclusive index window ending at the last date), `shiftDate` (months clamp to the month end). |
+| `gantt.ts` | `GANTT_ZOOMS` (hour / day / week / month / quarter: px per day, header units, snap), `startOf` / `addUnits` (local calendar, weeks start Monday), `ganttDomain`, `ganttScale(domain, zoom, minWidth)` (stretches to fill the pane), `ganttHeader` / `headerCells`, `nonWorkingSpans(domain, workingDays, holidays)`, `snapTime`, `routeDependency` (finish-to-start, right angles, wraps back through the row gutter when the successor starts too early), `roundedPolyline`, `ganttRows(tasks, collapsed)` (depth-first rows, parents roll up dates and duration-weighted progress). Tested in `test/charts-gantt-stock.test.mjs`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
 ## Theming
@@ -184,6 +189,40 @@ Every chart adapts to its exact parent, width and height, from the container and
   `legendAside` the legend moves beside the drawing from `@lg/chart` (512 px) and sits under it when narrower.
 - Only container variants (`@lg/chart:`, `@md/chart:`, `@sm/units:`) are used in charts. Geometry thresholds in JS
   (`width < 440`, ...) read the measured width. Check the `FillParent` stories (resizable box) and `Narrow` ones.
+
+## Gantt and stock charts
+
+```tsx
+<GanttChart
+  title="Remodelación de la sede San Isidro"
+  tasks={[{ id, name, start, end, progress, parentId, milestone, dependencies: ["id"], color, assignee }]}
+  defaultZoom="day"            // or zoom + onZoomChange
+  today={new Date()}           // "auto" (default) or false
+  editable onTaskChange={(change) => update(change)} // { id, start, end, progress, source }
+  holidays={[new Date(2026, 9, 8)]}
+/>
+<StockChart
+  title="Precio de la caja de navajas (S/)"
+  data={[{ date, open, high, low, close, volume }]}
+  ranges={presets} defaultRange="6m"
+  overlays={[{ type: "sma", period: 20 }, { type: "bollinger" }, { type: "vwap" }]}
+  oscillator={{ type: "rsi" }} // or { type: "macd", fast, slow, signal }
+  comparisons={[{ id, name, values }]} flags={[{ date, label: "P", text, tone }]}
+/>
+```
+
+- Gantt: the task tree (`role="tree"`, roving focus) and the timeline share one scroller, so vertical scroll is always in
+  sync; the header row and the list are `position: sticky` (the Table pinning idea). The divider between them is a
+  focusable `role="separator"` (drag or arrows). Ends are instants: a task from Monday to Friday ends on Saturday 00:00
+  and is shown ending on Friday. Keyboard: Up/Down rows, Left/Right collapse/expand, Enter toggles; when `editable`,
+  Alt+arrows move by the zoom snap, Shift+arrows change the end, `+`/`-` change progress by 10%. Edits are controlled:
+  the chart reports them and shows the dragged draft until `tasks` changes. Late links (successor starts before the
+  predecessor ends) use the danger token. Default height follows the rows (220-560 px); `"fill"` scrolls rows inside.
+- Stock: indicators run on the whole series and are sliced to the window, so the warm-up never shows inside the view;
+  VWAP is anchored at the first visible bar. Visible comparisons switch the chart to % change from the first visible
+  bar (the main series becomes a line, overlays hide, the type switch is disabled). The price and oscillator panes
+  share one crosshair and one keyboard slider; the navigator is `ChartBrush`. `height` covers price and oscillator; the
+  navigator is extra, as with the candlestick brush (`"fill"` includes it).
 
 ## Annotations (cartesian)
 
