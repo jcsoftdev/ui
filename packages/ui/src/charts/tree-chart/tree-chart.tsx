@@ -13,6 +13,7 @@ import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
 import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
+import { type TreeFitMode, treeFitView } from "../core/tree-fit.js";
 import {
   type TreeDirection,
   type TreeEdgeStyle,
@@ -24,7 +25,7 @@ import {
   treePathToRoot,
 } from "../core/tree-layout.js";
 import { type ChartLabels, DEFAULT_LABELS } from "../core/types.js";
-import { fitView, usePanZoom } from "../core/use-pan-zoom.js";
+import { usePanZoom } from "../core/use-pan-zoom.js";
 import { TreeCard, type TreeNodeState } from "./tree-card.js";
 import {
   buildTreeModel,
@@ -101,6 +102,13 @@ export interface TreeChartProps {
   collapsible?: boolean;
   /** Highlight the path to the root of the hovered or keyboard-active node. */
   highlightPath?: boolean;
+  /**
+   * Initial view. `auto` (default) shows the whole tree and, when that would shrink the cards
+   * below a readable size (narrow containers), centres the root at a readable scale so you pan
+   * to the rest. `contain` always fits the whole tree; `readable` always keeps cards legible.
+   * The fit button toggles between the two views.
+   */
+  fit?: "auto" | "contain" | "readable";
   /** Zoom buttons over the drawing. */
   controls?: boolean;
   /** See `usePanZoom`: wheel zoom only with Ctrl/⌘ (default), always, or off. */
@@ -205,6 +213,7 @@ function TreePlot({
   initialDepth = Number.POSITIVE_INFINITY,
   collapsible = true,
   highlightPath = true,
+  fit: fitProp = "auto",
   controls = true,
   wheelZoom = "modifier",
   minZoom = 0.1,
@@ -240,17 +249,28 @@ function TreePlot({
   const { view, setView, userMoved } = panZoom;
   // The zoom toolbar keeps a band at the top, so a fitted tree never sits under it.
   const toolbarBand = controls ? TOOLBAR_BAND : 0;
+  // The fit button flips between the whole tree and the readable view; `null` follows `fit`.
+  const [fitChoice, setFitChoice] = useState<TreeFitMode | null>(null);
+  const appliedFit = useRef<TreeFitMode>("contain");
   const fit = useCallback(() => {
-    const next = fitView(layout.width, layout.height, width, height - toolbarBand, { minZoom });
-    setView({ ...next, y: next.y + toolbarBand }, { user: false });
-  }, [layout.width, layout.height, width, height, toolbarBand, minZoom, setView]);
+    const next = treeFitView(layout, width, height, direction, {
+      inset: toolbarBand,
+      mode: fitChoice ?? fitProp,
+      minZoom,
+    });
+    appliedFit.current = next.mode;
+    setView(next.view, { user: false });
+  }, [layout, width, height, direction, toolbarBand, minZoom, fitChoice, fitProp, setView]);
   // Follow the container and the expanding tree until the user pans or zooms.
   useEffect(() => {
     if (!userMoved.current) fit();
   }, [fit, userMoved]);
   const refit = () => {
+    const moved = userMoved.current;
     userMoved.current = false;
-    fit();
+    // After panning or zooming, the button restores the current fit; on a fitted view it switches.
+    if (moved) fit();
+    else setFitChoice(appliedFit.current === "contain" ? "readable" : "contain");
   };
 
   const toggle = (node: TreeChartNode) => {

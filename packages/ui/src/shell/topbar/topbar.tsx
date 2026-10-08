@@ -14,7 +14,7 @@ export interface TopbarProps {
   breadcrumbs: string[];
   /** Accessible name of the breadcrumb landmark. */
   breadcrumbsLabel: string;
-  /** Menu button (shown at <=900px viewport width, matching the Sidebar drawer) that opens the sidebar drawer. Omitted when not set. */
+  /** Menu button (shown when the `AppShell` container is under 900 px, matching the Sidebar drawer) that opens the sidebar drawer. Needs an `@container/app` ancestor, which `AppShell` provides. Omitted when not set. */
   onOpenMenu?: () => void;
   menuLabel?: string;
   /** Ref to the menu button so the opener can restore focus when the drawer closes. */
@@ -76,7 +76,7 @@ export function Topbar({
             type="button"
             aria-label={menuLabel}
             onClick={onOpenMenu}
-            className="hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink max-[900px]:inline-flex"
+            className="hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink @max-[900px]/app:inline-flex"
           >
             <Menu className="size-5" aria-hidden="true" />
           </button>

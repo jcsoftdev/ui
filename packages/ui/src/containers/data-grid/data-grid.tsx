@@ -40,6 +40,7 @@ import {
   columnAlign,
   countActiveFilters,
   distinctValues,
+  fillColumnWidths,
   filterRows,
   formatAggregate,
   formatCellValue,
@@ -321,16 +322,30 @@ export function DataGrid<T>({
     [selectable, dataColumns],
   );
   const fillerIndex = renderColumns.length - pinned.right.length;
+  const [containerWidth, setContainerWidth] = useState(0);
+  // Columns narrower than their container grow to fill it; user-resized ones keep their width.
+  const shownWidths = useMemo(
+    () =>
+      containerWidth > 0
+        ? fillColumnWidths(
+            dataColumns,
+            layout.widths,
+            containerWidth,
+            selectable ? SELECT_WIDTH : 0,
+          )
+        : layout.widths,
+    [containerWidth, dataColumns, layout.widths, selectable],
+  );
   const widthOf = useCallback(
     (entry: RenderColumn<T>) =>
-      entry.kind === "select" ? SELECT_WIDTH : (layout.widths[entry.column.id] ?? 160),
-    [layout.widths],
+      entry.kind === "select" ? SELECT_WIDTH : (shownWidths[entry.column.id] ?? 160),
+    [shownWidths],
   );
   const positions = useMemo(() => {
-    const widths: Record<string, number> = { [SELECT_ID]: SELECT_WIDTH, ...layout.widths };
+    const widths: Record<string, number> = { [SELECT_ID]: SELECT_WIDTH, ...shownWidths };
     const left = selectable ? [SELECT_ID, ...pinned.left] : pinned.left;
     return computePinOffsets(widths, { left, right: pinned.right });
-  }, [layout.widths, pinned, selectable]);
+  }, [shownWidths, pinned, selectable]);
   const totalWidth = renderColumns.reduce((sum, entry) => sum + widthOf(entry), 0);
 
   // ---- rows --------------------------------------------------------------------------------
@@ -408,10 +423,14 @@ export function DataGrid<T>({
   }, [rowHeight]);
 
   useLayoutEffect(() => {
-    syncScroll();
     const scroller = scrollerRef.current;
+    const measure = () => {
+      syncScroll();
+      if (scroller) setContainerWidth(scroller.clientWidth);
+    };
+    measure();
     if (!scroller || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(syncScroll);
+    const observer = new ResizeObserver(measure);
     observer.observe(scroller);
     return () => observer.disconnect();
   }, [syncScroll]);
@@ -643,7 +662,7 @@ export function DataGrid<T>({
         if (mod) {
           if (entry.column.reorderable !== false && moveColumn(id, delta)) focusCell(0, c + delta);
         } else if (entry.column.resizable !== false) {
-          grid.setWidth(id, (layout.widths[id] ?? 160) + delta * 16);
+          grid.setWidth(id, (shownWidths[id] ?? 160) + delta * 16);
         }
         return;
       }
@@ -747,7 +766,7 @@ export function DataGrid<T>({
     resizing.current = true;
     const handle = event.currentTarget;
     const startX = event.clientX;
-    const startWidth = layout.widths[column.id] ?? 160;
+    const startWidth = shownWidths[column.id] ?? 160;
     const direction = zoneOf.get(column.id) === "right" ? -1 : 1;
     handle.setPointerCapture(event.pointerId);
     const move = (moveEvent: PointerEvent) =>
@@ -928,7 +947,7 @@ export function DataGrid<T>({
             onResize={(delta) =>
               delta === null
                 ? grid.resetWidth(column.id)
-                : grid.setWidth(column.id, (layout.widths[column.id] ?? 160) + delta)
+                : grid.setWidth(column.id, (shownWidths[column.id] ?? 160) + delta)
             }
             onHide={() => {
               setMenuColumn(null);
