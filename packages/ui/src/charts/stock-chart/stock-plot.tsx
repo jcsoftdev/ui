@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useId, useMemo, useRef, useState } from "react";
+import { cn } from "../../utils/cn.js";
 import { DECORATIVE } from "../core/a11y.js";
 import { AxisBottom, AxisRight, estimateTextWidth, GridLines } from "../core/axes.js";
 import { ChartBrush, type IndexRange } from "../core/cartesian/brush.js";
@@ -19,6 +20,14 @@ import { PlotOverlay } from "../core/plot-overlay.js";
 import { linearScale } from "../core/scales/linear.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import type { ChartLabels } from "../core/types.js";
+import {
+  type DrawingGeometry,
+  DrawingInput,
+  DrawingShape,
+  hitDrawing,
+  MeasureShape,
+} from "./stock-drawing-layer.js";
+import type { StockAnchor, StockDrawing, StockTool } from "./stock-drawings.js";
 import {
   type OscillatorModel,
   type OverlayLine,
@@ -47,7 +56,19 @@ export interface StockTexts {
   histogram: string;
   /** Header of the events column in the data table. */
   events: string;
+  /** Accessible name of the drawing tool group and of each tool. */
+  tools: string;
+  toolNames: Record<StockTool, string>;
+  deleteDrawing: string;
+  /** Units in the measure label: "12 bars · 17 d". */
+  bars: string;
+  days: string;
+  /** Name of the drawing layer for assistive tech. */
+  drawingLayer: string;
 }
+
+/** What the plot draws; heikin-ashi and renko are candles over transformed data. */
+export type StockPlotType = "candle" | "ohlc" | "line" | "area" | "column";
 
 export const MARGIN = { top: 12, bottom: 28, left: 0 };
 export const NAVIGATOR_HEIGHT = 44;
@@ -66,8 +87,19 @@ export interface StockPlotProps {
   data: readonly StockBar[];
   range: IndexRange;
   onRangeChange: (range: IndexRange) => void;
-  seriesType: StockSeriesType;
+  seriesType: StockPlotType;
   showVolume: boolean;
+  tool: StockTool;
+  onToolChange: (tool: StockTool) => void;
+  drawings: readonly StockDrawing[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  onCreate: (drawing: StockDrawing) => void;
+  onDelete: (id: string) => void;
+  /** Times (ms) of the pinned tooltips. */
+  pins: readonly number[];
+  pinnable: boolean;
+  onTogglePin: (time: number) => void;
   overlays: readonly OverlayLine[];
   middles: ReadonlyMap<string, IndicatorSeries>;
   comparisons: readonly StockComparison[];
@@ -184,6 +216,16 @@ export function StockPlot({
   onRangeChange,
   seriesType,
   showVolume,
+  tool,
+  onToolChange,
+  drawings,
+  selectedId,
+  onSelect,
+  onCreate,
+  onDelete,
+  pins,
+  pinnable,
+  onTogglePin,
   overlays,
   middles,
   comparisons,
@@ -204,6 +246,11 @@ export function StockPlot({
   const svgRef = useRef<SVGSVGElement>(null);
   const [active, setActive] = useState<number | null>(null);
   const [pointerY, setPointerY] = useState<number | null>(null);
+  const [draft, setDraft] = useState<{ tool: StockTool; a: StockAnchor; b: StockAnchor } | null>(
+    null,
+  );
+  const [measured, setMeasured] = useState<{ a: StockAnchor; b: StockAnchor } | null>(null);
+  const clipId = useId();
   const [from, to] = range;
   const view = useMemo(() => data.slice(from, to + 1), [data, from, to]);
   const percent = comparisons.length > 0;
@@ -402,8 +449,11 @@ export function StockPlot({
     return parts.join(". ");
   })();
 
-  const tooltipRows = (): TooltipRow[] => {
-    if (!current || active == null) return [];
+  const rowsAt = (at: number): TooltipRow[] => {
+    const active = at;
+    const current = view[at];
+    const previous = at > 0 ? view[at - 1] : data[from - 1];
+    if (!current) return [];
     const rows: TooltipRow[] = [];
     if (percent) {
       rows.push({
@@ -554,6 +604,28 @@ export function StockPlot({
     return [{ id: "close", color: MAIN_COLOR, data: data.map((bar) => bar.close - floor) }];
   }, [data]);
   const crossX = active != null ? (positions[active] as number) : null;
+  const drawable = !percent;
+  const geometry: DrawingGeometry = useMemo(
+    () => ({
+      times: data.map((bar) => +bar.date),
+      from,
+      x0: positions[0] ?? 0,
+      step:
+        positions.length > 1
+          ? ((positions[positions.length - 1] as number) - (positions[0] as number)) /
+            (positions.length - 1)
+          : innerWidth,
+      innerWidth,
+      priceHeight,
+      y: y.map,
+      invert: y.invert,
+    }),
+    [data, from, positions, innerWidth, priceHeight, y],
+  );
+  const pinned = pins.flatMap((time) => {
+    const index = view.findIndex((bar) => +bar.date === time);
+    return index < 0 ? [] : [index];
+  });
   const lastValue = last ? (percent ? (main?.[view.length - 1] ?? 0) : last.close) : null;
   const tagColor = percent ? MAIN_COLOR : lastUp ? UP : DOWN;
   const hoverValue =
@@ -571,6 +643,11 @@ export function StockPlot({
         className="block overflow-visible"
       >
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          <defs>
+            <clipPath id={clipId}>
+              <rect x={0} y={0} width={innerWidth} height={priceHeight} />
+            </clipPath>
+          </defs>
           {grid ? <GridLines ticks={yTicks} direction="horizontal" length={innerWidth} /> : null}
           <AxisRight ticks={yTicks} offset={innerWidth} />
           <AxisBottom ticks={xTicks} offset={innerHeight} />
@@ -641,6 +718,38 @@ export function StockPlot({
               />
             ) : null}
           </g>
+          {!percent && seriesType === "column" ? (
+            <g
+              {...DECORATIVE}
+              data-reveal=""
+              style={{ transformBox: "fill-box", transformOrigin: "left" }}
+            >
+              {view.map((bar, i) => {
+                const before =
+                  i > 0 ? (view[i - 1] as StockBar).close : (data[from - 1]?.close ?? bar.open);
+                const top = y.map(bar.close);
+                const base = y.map(y.domain[0]);
+                return (
+                  <rect
+                    // biome-ignore lint/suspicious/noArrayIndexKey: bars follow the data order.
+                    key={i}
+                    data-bar=""
+                    x={(positions[i] as number) - barWidth / 2}
+                    y={top}
+                    width={barWidth}
+                    height={Math.max(1, base - top)}
+                    rx={Math.min(2, barWidth / 3)}
+                    style={{
+                      fill: bar.close >= before ? UP : DOWN,
+                      fillOpacity: active === i ? 1 : 0.8,
+                      transformBox: "fill-box",
+                      transformOrigin: "bottom",
+                    }}
+                  />
+                );
+              })}
+            </g>
+          ) : null}
           {mainPath ? (
             <path
               data-reveal=""
@@ -781,6 +890,55 @@ export function StockPlot({
               ) : null}
             </g>
           ) : null}
+          {drawable && (drawings.length > 0 || draft || measured) ? (
+            <g clipPath={`url(#${clipId})`} className="pointer-events-none">
+              {drawings.map((drawing) => (
+                <DrawingShape
+                  key={drawing.id}
+                  drawing={drawing}
+                  geometry={geometry}
+                  selected={drawing.id === selectedId}
+                  fmt={fmt}
+                />
+              ))}
+              {draft &&
+              draft.tool !== "measure" &&
+              draft.tool !== "cursor" &&
+              draft.tool !== "horizontal" ? (
+                <DrawingShape
+                  drawing={{ id: "draft", type: draft.tool, a: draft.a, b: draft.b }}
+                  geometry={geometry}
+                  selected={false}
+                  fmt={fmt}
+                  draft
+                />
+              ) : null}
+              {draft?.tool === "measure" ? (
+                <MeasureShape a={draft.a} b={draft.b} geometry={geometry} texts={texts} />
+              ) : measured && tool === "measure" ? (
+                <MeasureShape a={measured.a} b={measured.b} geometry={geometry} texts={texts} />
+              ) : null}
+            </g>
+          ) : null}
+          {pinned.map((index) => (
+            <g key={`pin-${index}`} {...DECORATIVE} className="pointer-events-none">
+              <line
+                x1={positions[index] as number}
+                x2={positions[index] as number}
+                y1={0}
+                y2={priceHeight}
+                style={{ stroke: "var(--ink-3)", strokeOpacity: 0.6 }}
+                strokeDasharray="2 3"
+              />
+              <circle
+                cx={positions[index] as number}
+                cy={y.map((view[index] as StockBar).close)}
+                r={4}
+                strokeWidth={2}
+                style={{ fill: "var(--surface)", stroke: "var(--ink)" }}
+              />
+            </g>
+          ))}
           {crossX != null ? (
             <g {...DECORATIVE} className="pointer-events-none">
               <line
@@ -840,31 +998,87 @@ export function StockPlot({
           ) : null}
         </g>
       </svg>
-      <PlotOverlay
-        left={MARGIN.left}
-        top={MARGIN.top}
-        width={innerWidth}
-        height={innerHeight}
-        label={labels.explore}
-        count={view.length}
-        active={active}
-        valueText={valueText}
-        onActiveChange={(index) => {
-          setActive(index);
-          if (index == null) setPointerY(null);
+      <div
+        style={{ display: "contents" }}
+        onPointerDownCapture={(event) => {
+          if (tool !== "cursor" || !drawable) return;
+          const rect = (event.target as HTMLElement).getBoundingClientRect();
+          const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+          const hit = point.y <= priceHeight ? hitDrawing(drawings, geometry, point) : null;
+          onSelect(hit);
+          if (hit || !pinnable || !view.length) return;
+          const bar = view[axis.indexAt(point.x)];
+          if (bar) onTogglePin(+bar.date);
         }}
-        indexAt={({ x, y: py }) => {
-          setPointerY(py);
-          return view.length ? axis.indexAt(x) : null;
-        }}
-      />
+      >
+        <PlotOverlay
+          left={MARGIN.left}
+          top={MARGIN.top}
+          width={innerWidth}
+          height={innerHeight}
+          label={labels.explore}
+          count={view.length}
+          active={active}
+          valueText={valueText}
+          onActiveChange={(index) => {
+            setActive(index);
+            if (index == null) setPointerY(null);
+          }}
+          indexAt={({ x, y: py }) => {
+            setPointerY(py);
+            return view.length ? axis.indexAt(x) : null;
+          }}
+          onKey={(event) => {
+            if (selectedId && (event.key === "Delete" || event.key === "Backspace")) {
+              onDelete(selectedId);
+              return true;
+            }
+            if (pinnable && active != null && (event.key === "Enter" || event.key === " ")) {
+              const bar = view[active];
+              if (bar) onTogglePin(+bar.date);
+              return true;
+            }
+            if (event.key === "Escape") onSelect(null);
+            return false;
+          }}
+        />
+      </div>
+      {drawable && tool !== "cursor" ? (
+        <DrawingInput
+          tool={tool}
+          geometry={geometry}
+          left={MARGIN.left}
+          top={MARGIN.top}
+          label={texts.drawingLayer}
+          onCreate={(drawing) => {
+            onCreate(drawing);
+            onSelect(drawing.id);
+          }}
+          onDone={() => onToolChange("cursor")}
+          onDraft={setDraft}
+          onMeasure={setMeasured}
+        />
+      ) : null}
+      {pinnable
+        ? pinned.map((index) => (
+            <ChartTooltip
+              key={`pin-${index}`}
+              x={MARGIN.left + (positions[index] as number)}
+              y={MARGIN.top + y.map((view[index] as StockBar).close)}
+              containerWidth={width - axisRoom}
+              title={fullCategoryLabel((view[index] as StockBar).date)}
+              rows={rowsAt(index)}
+              className={cn("max-w-[50cqw] opacity-95", !narrow && "max-w-[260px]")}
+            />
+          ))
+        : null}
       {tooltip && current && crossX != null ? (
         <ChartTooltip
           x={MARGIN.left + crossX}
           y={MARGIN.top + (pointerY ?? y.map(current.close))}
           containerWidth={width - axisRoom}
           title={fullCategoryLabel(current.date)}
-          rows={tooltipRows()}
+          rows={active != null ? rowsAt(active) : []}
           className={narrow ? "max-w-[50cqw]" : undefined}
         />
       ) : null}

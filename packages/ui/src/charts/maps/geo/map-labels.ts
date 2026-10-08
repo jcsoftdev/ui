@@ -19,6 +19,16 @@ export interface MapLabels extends ChartLabels {
   cluster: (count: number) => string;
   /** Spoken hint appended to the explore label. */
   zoomHint: string;
+  /** Route table headers (BubbleMap routes). */
+  origin: string;
+  destination: string;
+  /** Name of the routes layer, e.g. "Routes". */
+  routes: string;
+  /** Visible data table: the toggle buttons and the "Share" bar column. */
+  showTable: string;
+  showMap: string;
+  /** Accessible name of the sortable column buttons: receives the column name. */
+  sortBy: (column: string) => string;
 }
 
 export const DEFAULT_MAP_LABELS: MapLabels = {
@@ -37,6 +47,12 @@ export const DEFAULT_MAP_LABELS: MapLabels = {
   latitude: "Latitude",
   cluster: (count) => `Group of ${count}`,
   zoomHint: "Plus and minus zoom, zero fits the map.",
+  origin: "Origin",
+  destination: "Destination",
+  routes: "Routes",
+  showTable: "View as table",
+  showMap: "View as map",
+  sortBy: (column) => `Sort by ${column}`,
 };
 
 export function resolveMapLabels(labels?: Partial<MapLabels>): MapLabels {

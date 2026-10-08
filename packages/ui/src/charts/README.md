@@ -45,6 +45,7 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `BubbleChart` | `bubble-chart/` | `XYPointChart` (`sized`, area-proportional radius, `shading="shaded"` spheres) |
 | `ChoroplethMap` | `choropleth-map/` | `maps/geo/` (`MapViewport`, `useMapGeometry`, `useMapView`) + `heatmapScale` (sequential / diverging / thresholds) |
 | `BubbleMap` | `bubble-map/` | same stage + `clusterPoints`; bubbles and clusters are drawn in screen space |
+| `HexTileMap` | `hex-tile-map/` | own SVG grid (`hex-layout.ts`) + `heatmapScale`, `MapLegend`; no geometry needed |
 | `PictogramChart` | `pictogram-chart/` | unit charts core (`units.ts`, `UnitGlyph`, `useCategoryExplorer`) |
 | `WaffleChart` | `waffle-chart/` | unit charts core (`waffleCounts`, `gridCell`) |
 | `ParliamentChart` | `parliament-chart/` | unit charts core (`parliamentLayout`) |
@@ -268,6 +269,20 @@ Every chart adapts to its exact parent, width and height, from the container and
   bar (the main series becomes a line, overlays hide, the type switch is disabled). The price and oscillator panes
   share one crosshair and one keyboard slider; the navigator is `ChartBrush`. `height` covers price and oscillator; the
   navigator is extra, as with the candlestick brush (`"fill"` includes it).
+- Stock types: `seriesType` also takes `"column"`, `"heikin-ashi"` and `"renko"`. The last two transform the data
+  (`heikinAshi(data)`, `renko(data, brickSize)` in `stock-transforms.ts`, `renkoBrickSize` defaults to the ATR(14));
+  overlays and the oscillator then run on the transformed bars, the hidden data table keeps the raw prices.
+- Streaming: `useStockStream(initial, { maxBars })` returns `{ data, appendData }`; `appendBars` replaces a bar with the
+  same date (the forming candle) and appends newer ones. A window that ends at the last bar follows new bars, any other
+  window keeps its dates; a different series type or an unrelated dataset resets to `defaultRange`.
+- Drawing tools: `drawingTools={DEFAULT_STOCK_TOOLS}` shows select, trend line, horizontal line, range box, Fibonacci and
+  measure. Drawings are `{ id, type, a, b }` with `{ time, price }` anchors, so they survive zoom and new data; the list is
+  controlled with `drawings` or `defaultDrawings` and every change reaches `onDrawingsChange(all)`. Select one by clicking it
+  and delete it with Supr or the toolbar button. Measure is transient: it shows % change, bars and days between two points.
+  Drawings are hidden in % comparison mode.
+- `pinnable` pins a bar's tooltip on click or Enter (several at once, `defaultPinned` / `onPinnedChange` carry times in ms).
+- `stockStats(bars)` is headless: returns, annualized volatility, high/low, best/worst day and maximum drawdown; pair it
+  with `onWindowChange({ from, to })` to summarize the visible window.
 
 ## Annotations (cartesian)
 
@@ -440,5 +455,18 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
   `zoomable={false}`.
 - Region labels (`regionLabels`) sit at a point inside each region, only where they fit and do not collide. Bubble and
   cluster sizes are in screen pixels, area proportional between `minRadius` and `maxRadius`.
+- Data table: `dataTable="visible"` swaps the map for a sortable table (name, value, a magnitude bar) and `"toggle"`
+  adds a button to switch; the default keeps the table for screen readers only. `MapDataTable` is exported for reuse.
+- Drilldown: `ChoroplethDrilldown` takes a `root` level (`{ id, name, map, data }`) and `resolve(region, path)` returning
+  the level to open (or nothing); a breadcrumb goes back up. Only Peru and the world ship geometry, and Peru has
+  departments but no provinces, so the story drills world -> Peru.
+- `HexTileMap`: every region is one equal hexagon (`tiles` = `{ id, name, code, row, col }` on an odd-r grid; Peru's 25
+  regions are `PERU_HEX_TILES`). Same data joins, scales, legend, tooltip, keyboard and table as `ChoroplethMap`;
+  labels show the code and the value where the tile is big enough. The layout math is in `hex-tile-map/hex-layout.ts`.
+- Routes: `BubbleMap routes={[{ id, from, to, value }]}` (`from` / `to` are point ids or `{ lon, lat }`) draws arcs under
+  the bubbles; `routeStyle="curve"` is a quadratic arch in screen space (`routeBend`), `"great-circle"` follows the
+  shortest path on the globe and splits at the antimeridian (`maps/geo/routes.ts`). Width follows `value`, the dashes
+  march from origin to destination unless `animateRoutes={false}` or the user prefers reduced motion, and routes get
+  their own hidden table.
 - Pure helpers (`projection.ts`, `topojson.ts`, `simplify.ts`, `build-topology.ts`, `cluster.ts`, `view.ts`) are tested
   in `test/charts-maps.test.mjs`; `check:treeshake` asserts that a chart or one dataset never pulls in the other dataset.

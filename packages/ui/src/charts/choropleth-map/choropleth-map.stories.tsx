@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { peruMap } from "../maps/data/peru/index.js";
 import { worldMap } from "../maps/data/world/index.js";
 import type { MapLabels } from "../maps/geo/map-labels.js";
+import { ChoroplethDrilldown, type DrilldownLevel } from "./choropleth-drilldown.js";
 import { type ChoroplethDatum, ChoroplethMap } from "./choropleth-map.js";
 
 /** Clientes registrados por departamento: Lima concentra casi todo, el resto sigue la costa y los Andes. */
@@ -82,6 +83,10 @@ const spanishLabels: Partial<MapLabels> = {
   fit: "Ver todo el mapa",
   controls: "Zoom del mapa",
   noData: "Sin datos",
+  showTable: "Ver como tabla",
+  showMap: "Ver como mapa",
+  sortBy: (column) => `Ordenar por ${column}`,
+  share: "Proporción",
 };
 
 const meta = {
@@ -96,6 +101,7 @@ const meta = {
     valueFormat: "integer",
     scale: "sequential",
     regionLabels: "none",
+    dataTable: "hidden",
     legend: true,
     tooltip: true,
     zoomable: true,
@@ -108,6 +114,7 @@ const meta = {
   argTypes: {
     scale: { control: "inline-radio", options: ["sequential", "diverging"] },
     regionLabels: { control: "inline-radio", options: ["none", "name", "value"] },
+    dataTable: { control: "inline-radio", options: ["hidden", "visible", "toggle"] },
     wheelZoom: { control: "inline-radio", options: ["always", "modifier"] },
     projection: {
       control: "select",
@@ -194,6 +201,66 @@ export const World: Story = {
 export const WorldMercator: Story = {
   ...World,
   args: { ...World.args, projection: "mercator" },
+};
+
+const worldLevel: DrilldownLevel = {
+  id: "mundo",
+  name: "Mundo",
+  map: worldMap,
+  data: visits,
+  valueName: "Visitas (miles)",
+};
+
+const peruLevel: DrilldownLevel = {
+  id: "peru",
+  name: "Perú",
+  map: peruMap,
+  data: customers,
+  valueName: "Clientes",
+};
+
+/**
+ * Haz clic en Perú para abrir sus departamentos; la miga de pan vuelve al mundo. Solo hay
+ * geometría de detalle para Perú, así que el resto de países no se abre.
+ */
+export const Drilldown: Story = {
+  args: { title: "Marca por territorio", height: 460, wheelZoom: "modifier" },
+  render: ({ map: _map, data: _data, ...args }) => (
+    <ChoroplethDrilldown
+      {...args}
+      root={worldLevel}
+      breadcrumbLabel="Nivel del mapa"
+      resolve={(region) => (region.id === "PER" ? peruLevel : null)}
+    />
+  ),
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 760, padding: 16 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** Accessible alternative to color: the same numbers as a sortable table, with a bar for the magnitude. */
+export const DataTable: Story = {
+  args: { dataTable: "visible", height: 480 },
+};
+
+/** A button switches between the map and its table; keyboard and screen reader users get the table either way. */
+export const DataTableToggle: Story = {
+  args: { dataTable: "toggle", height: 480 },
+};
+
+export const DataTableNarrow: Story = {
+  args: { dataTable: "visible", height: 420 },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export const Loading: Story = {

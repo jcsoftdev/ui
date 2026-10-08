@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { type PointerEvent, useCallback, useMemo, useRef, useState } from "react";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
 import { resolveFormat, type ValueFormat } from "../core/format.js";
 import { ChartLegend, type LegendItem } from "../core/legend.js";
+import { useReducedMotion } from "../core/motion.js";
 import { seriesColor } from "../core/palette.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { useIndexNavigation } from "../core/use-index-navigation.js";
@@ -12,7 +13,8 @@ import { useSeriesState } from "../core/use-series-state.js";
 import { type Cluster, clusterPoints } from "../maps/geo/cluster.js";
 import { type MapLabels, resolveMapLabels } from "../maps/geo/map-labels.js";
 import { MapViewport, type MapViewportContext } from "../maps/geo/map-viewport.js";
-import type { GeoMap, ProjectionKind } from "../maps/geo/types.js";
+import { greatCircle, routeArcPath, routePolylinePath } from "../maps/geo/routes.js";
+import type { GeoMap, Position, ProjectionKind } from "../maps/geo/types.js";
 import { defaultMapHeight, useMapGeometry } from "../maps/geo/use-map-geometry.js";
 import { useMapView } from "../maps/geo/use-map-view.js";
 
@@ -25,6 +27,59 @@ export interface MapPoint {
   value?: number;
   /** Colors the marker and groups it in the legend. */
   category?: string;
+}
+
+/** A place a route starts or ends at: a point id, or a coordinate. */
+export type MapRouteEnd = string | { lon: number; lat: number; name?: string };
+
+/** A flow between two places, drawn as an animated arc under the bubbles. */
+export interface MapRoute {
+  id: string;
+  from: MapRouteEnd;
+  to: MapRouteEnd;
+  /** Drives the line width, e.g. boxes shipped. */
+  value?: number;
+  /** Tooltip title and table row; "Origin → Destination" by default. */
+  name?: string;
+  /** CSS color; the accent by default. */
+  color?: string;
+}
+
+interface ResolvedRoute {
+  route: MapRoute;
+  name: string;
+  fromName: string;
+  toName: string;
+  from: Position;
+  to: Position;
+}
+
+function resolveRoutes(routes: readonly MapRoute[], points: readonly MapPoint[]): ResolvedRoute[] {
+  const place = (end: MapRouteEnd): { position: Position; name: string } | null => {
+    if (typeof end !== "string") {
+      return {
+        position: [end.lon, end.lat],
+        name: end.name ?? `${end.lat.toFixed(2)}, ${end.lon.toFixed(2)}`,
+      };
+    }
+    const point = points.find((candidate) => candidate.id === end);
+    return point ? { position: [point.lon, point.lat], name: point.name } : null;
+  };
+  return routes.flatMap((route) => {
+    const from = place(route.from);
+    const to = place(route.to);
+    if (!from || !to) return [];
+    return [
+      {
+        route,
+        name: route.name ?? `${from.name} → ${to.name}`,
+        fromName: from.name,
+        toName: to.name,
+        from: from.position,
+        to: to.position,
+      },
+    ];
+  });
 }
 
 export interface BubbleMapCategory {
@@ -53,6 +108,14 @@ export interface BubbleMapProps {
   clusterDistance?: number;
   /** Write the region names on the base map where they fit. */
   regionLabels?: boolean;
+  /** Flows between places, drawn as arcs under the bubbles with animated dashes. */
+  routes?: readonly MapRoute[];
+  /** "curve": a soft arch in screen space (regions); "great-circle": the shortest path on the globe (world). */
+  routeStyle?: "curve" | "great-circle";
+  /** Arch height of a "curve" as a fraction of the distance (0 straight, default 0.25). */
+  routeBend?: number;
+  /** Marching dashes along the routes; off under `prefers-reduced-motion`. */
+  animateRoutes?: boolean;
   height?: number | "fill";
   aspectRatio?: number;
   legend?: boolean;
@@ -94,6 +157,10 @@ export function BubbleMap({
   cluster = false,
   clusterDistance = 36,
   regionLabels = false,
+  routes = [],
+  routeStyle = "curve",
+  routeBend = 0.25,
+  animateRoutes = true,
   height,
   aspectRatio,
   legend = true,
@@ -138,6 +205,7 @@ export function BubbleMap({
     hidden: legendState.hidden.has(category.id),
   }));
   const name = valueName ?? labels.value;
+  const resolvedRoutes = useMemo(() => resolveRoutes(routes, points), [routes, points]);
 
   return (
     <ChartFrame
@@ -158,27 +226,50 @@ export function BubbleMap({
         ) : null
       }
       table={
-        <ChartDataTable
-          caption={title}
-          categoryHeader={labels.region}
-          categories={points.map((point) => point.name)}
-          columns={[
-            {
-              id: "value",
-              name,
-              values: points.map((point) => (point.value == null ? "" : format(point.value))),
-            },
-            {
-              id: "category",
-              name: labels.category,
-              values: points.map(
-                (point) => categoryList.find((c) => c.id === (point.category ?? ""))?.name ?? "",
-              ),
-            },
-            { id: "lon", name: labels.longitude, values: points.map((p) => p.lon.toFixed(4)) },
-            { id: "lat", name: labels.latitude, values: points.map((p) => p.lat.toFixed(4)) },
-          ]}
-        />
+        <>
+          <ChartDataTable
+            caption={title}
+            categoryHeader={labels.region}
+            categories={points.map((point) => point.name)}
+            columns={[
+              {
+                id: "value",
+                name,
+                values: points.map((point) => (point.value == null ? "" : format(point.value))),
+              },
+              {
+                id: "category",
+                name: labels.category,
+                values: points.map(
+                  (point) => categoryList.find((c) => c.id === (point.category ?? ""))?.name ?? "",
+                ),
+              },
+              { id: "lon", name: labels.longitude, values: points.map((p) => p.lon.toFixed(4)) },
+              { id: "lat", name: labels.latitude, values: points.map((p) => p.lat.toFixed(4)) },
+            ]}
+          />
+          {resolvedRoutes.length > 0 ? (
+            <ChartDataTable
+              caption={`${title}. ${labels.routes}`}
+              categoryHeader={labels.origin}
+              categories={resolvedRoutes.map((route) => route.fromName)}
+              columns={[
+                {
+                  id: "destination",
+                  name: labels.destination,
+                  values: resolvedRoutes.map((route) => route.toName),
+                },
+                {
+                  id: "value",
+                  name,
+                  values: resolvedRoutes.map((route) =>
+                    route.route.value == null ? "" : format(route.route.value),
+                  ),
+                },
+              ]}
+            />
+          ) : null}
+        </>
       }
     >
       {(width, drawingHeight) => (
@@ -198,6 +289,10 @@ export function BubbleMap({
           cluster={cluster}
           clusterDistance={clusterDistance}
           regionLabels={regionLabels}
+          routes={resolvedRoutes}
+          routeStyle={routeStyle}
+          routeBend={routeBend}
+          animateRoutes={animateRoutes}
           tooltip={tooltip}
           zoomable={zoomable}
           wheelZoom={wheelZoom}
@@ -230,6 +325,10 @@ function BubblePlot({
   cluster,
   clusterDistance,
   regionLabels,
+  routes,
+  routeStyle,
+  routeBend,
+  animateRoutes,
   tooltip,
   zoomable,
   wheelZoom,
@@ -254,6 +353,10 @@ function BubblePlot({
   cluster: boolean;
   clusterDistance: number;
   regionLabels: boolean;
+  routes: readonly ResolvedRoute[];
+  routeStyle: "curve" | "great-circle";
+  routeBend: number;
+  animateRoutes: boolean;
   tooltip: boolean;
   zoomable: boolean;
   wheelZoom: "always" | "modifier";
@@ -320,6 +423,45 @@ function BubblePlot({
         : minRadius;
   }, [items, minRadius, maxRadius]);
 
+  const reducedMotion = useReducedMotion();
+  const [routeHover, setRouteHover] = useState<{ index: number; x: number; y: number } | null>(
+    null,
+  );
+  const shapes = useMemo(() => {
+    const project = geometry.projection.project;
+    const top = Math.max(0, ...routes.map((entry) => entry.route.value ?? 0));
+    return routes.map((entry) => ({
+      entry,
+      width: top > 0 && entry.route.value ? 1.5 + 3.5 * Math.sqrt(entry.route.value / top) : 2,
+      a: project(entry.from[0], entry.from[1]),
+      b: project(entry.to[0], entry.to[1]),
+      pieces:
+        routeStyle === "great-circle"
+          ? greatCircle(entry.from, entry.to, 40).map((piece) =>
+              piece.map(([lon, lat]) => project(lon, lat)),
+            )
+          : null,
+    }));
+  }, [routes, routeStyle, geometry.projection]);
+  const stopDash = useRef<(() => void) | null>(null);
+  const attachRoutes = useCallback(
+    (node: SVGGElement | null) => {
+      stopDash.current?.();
+      stopDash.current = null;
+      if (!node || !animateRoutes || reducedMotion) return;
+      const running = [...node.querySelectorAll("[data-route-dash]")].map((path) =>
+        path.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -14 }], {
+          duration: 1100,
+          iterations: Number.POSITIVE_INFINITY,
+        }),
+      );
+      stopDash.current = () => {
+        for (const animation of running) animation.cancel();
+      };
+    },
+    [animateRoutes, reducedMotion],
+  );
+
   const nav = useIndexNavigation<HTMLDivElement>(items.length);
   const active = nav.active;
   const current = active == null ? null : (items[active] ?? null);
@@ -379,6 +521,54 @@ function BubblePlot({
       }}
       overlay={(context) => (
         <g>
+          {shapes.length > 0 ? (
+            <g
+              key={shapes.map((shape) => shape.entry.route.id).join("|")}
+              ref={attachRoutes}
+              fill="none"
+              strokeLinecap="round"
+            >
+              {shapes.map((shape, index) => {
+                const d = shape.pieces
+                  ? routePolylinePath(
+                      shape.pieces.map((piece) => piece.map(([x, y]) => context.toScreen(x, y))),
+                    )
+                  : routeArcPath(
+                      context.toScreen(shape.a[0], shape.a[1]),
+                      context.toScreen(shape.b[0], shape.b[1]),
+                      routeBend,
+                    );
+                const color = shape.entry.route.color ?? "var(--accent-word)";
+                const hover = (event: PointerEvent<SVGPathElement>) => {
+                  const box = nav.ref.current?.getBoundingClientRect();
+                  if (!box || context.dragging || event.buttons !== 0) return;
+                  setRouteHover({ index, x: event.clientX - box.left, y: event.clientY - box.top });
+                };
+                return (
+                  <g key={shape.entry.route.id}>
+                    <path d={d} strokeWidth={shape.width} style={{ stroke: color }} opacity={0.3} />
+                    <path
+                      data-route-dash=""
+                      d={d}
+                      strokeWidth={shape.width}
+                      strokeDasharray="6 8"
+                      pointerEvents="none"
+                      style={{ stroke: color }}
+                    />
+                    <path
+                      d={d}
+                      strokeWidth={Math.max(14, shape.width + 8)}
+                      pointerEvents="stroke"
+                      style={{ stroke: "transparent" }}
+                      onPointerEnter={hover}
+                      onPointerMove={hover}
+                      onPointerLeave={() => setRouteHover(null)}
+                    />
+                  </g>
+                );
+              })}
+            </g>
+          ) : null}
           {items
             .map((item, index) => ({ item, index, r: radius(item) }))
             .sort((a, b) => b.r - a.r)
@@ -433,6 +623,30 @@ function BubblePlot({
       )}
       onLeave={nav.leave}
       floating={({ toScreen }) => {
+        const hovered = routeHover ? shapes[routeHover.index] : undefined;
+        if (tooltip && hovered && routeHover && !current) {
+          return (
+            <ChartTooltip
+              x={routeHover.x}
+              y={routeHover.y}
+              containerWidth={width}
+              title={hovered.entry.name}
+              rows={
+                hovered.entry.route.value == null
+                  ? []
+                  : [
+                      {
+                        id: "value",
+                        name: valueName,
+                        value: format(hovered.entry.route.value),
+                        color: hovered.entry.route.color ?? "var(--accent-word)",
+                        shape: "line",
+                      },
+                    ]
+              }
+            />
+          );
+        }
         if (!tooltip || !current) return null;
         const [ax, ay] = toScreen(current.cluster.x, current.cluster.y);
         const anchor = nav.pointer ?? { x: ax, y: ay - radius(current) };

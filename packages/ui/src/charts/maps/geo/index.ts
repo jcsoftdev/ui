@@ -1,3 +1,4 @@
+export * from "./map-data-table.js";
 export * from "./map-labels.js";
 export * from "./map-legend.js";
 export * from "./map-viewport.js";
