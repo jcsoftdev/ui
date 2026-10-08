@@ -175,6 +175,30 @@ function truncate(text: string, maxWidth: number, fontSize: number): string {
   return `${text.slice(0, chars)}…`;
 }
 
+/** The hole in the middle: a full disc, or a half disc sitting on the baseline of a fan. */
+function holePath(cx: number, cy: number, r: number, half: boolean): string {
+  if (!half) return `M${cx - r},${cy}a${r},${r} 0 1 0 ${2 * r},0a${r},${r} 0 1 0 ${-2 * r},0z`;
+  return `M${cx - r},${cy}A${r},${r} 0 0 1 ${cx + r},${cy}z`;
+}
+
+/** Width of a text line whose top edge sits `top` above the baseline of the hole. */
+function labelRoom(radius: number, top: number, half: boolean): number {
+  if (!half) return radius * 1.7;
+  return Math.max(0, 2 * Math.sqrt(Math.max(0, radius * radius - top * top)) - 6);
+}
+
+/** Shrinks the font down to `minSize` before cutting the text. */
+function fitLabel(
+  text: string,
+  maxWidth: number,
+  size: number,
+  minSize: number,
+): { text: string; size: number } {
+  let fontSize = size;
+  while (fontSize > minSize && estimateTextWidth(text, fontSize) > maxWidth) fontSize -= 0.5;
+  return { text: truncate(text, maxWidth, fontSize), size: fontSize };
+}
+
 function SunburstPlot({
   width,
   height,
@@ -209,10 +233,10 @@ function SunburstPlot({
   const cx = width / 2;
   const outer = Math.max(0, size - 4);
   const cy = half ? (height + outer) / 2 : height / 2;
-  const shift = half ? -18 : 0;
   // Small discs drop the outer rings before they get too thin to read.
   const visibleLevels = Math.max(1, Math.min(levels, Math.floor((outer * 0.72) / MIN_RING)));
-  const center = outer * (visibleLevels > 2 ? 0.26 : 0.32);
+  const center =
+    outer * (half ? (visibleLevels > 2 ? 0.36 : 0.4) : visibleLevels > 2 ? 0.26 : 0.32);
   const ring = (outer - center) / visibleLevels;
   const arcs = useMemo(() => {
     const radius = (level: number) =>
@@ -252,11 +276,22 @@ function SunburstPlot({
     { disabled: !animate },
   );
 
+  const hole = Math.max(0, center - gap - 2);
+  const nameY = half ? cy - 26 : cy - 4;
+  const valueY = half ? cy - 8 : cy + 16;
+  const nameFit = fitLabel(focus.name, labelRoom(hole, cy - nameY + 10, half), 12, half ? 9 : 12);
+  const valueFit = fitLabel(
+    format(focus.value),
+    labelRoom(hole, cy - valueY + 14, half),
+    17,
+    half ? 11 : 17,
+  );
   const children = focus.children;
   const hit = (x: number, y: number): Arc | "center" | null => {
     const dx = x - cx;
     const dy = y - cy;
     const r = Math.hypot(dx, dy);
+    if (half && dy > 0) return null;
     if (r <= center) return "center";
     const raw = Math.atan2(dx, -dy);
     const angle = half ? raw : (raw + TAU) % TAU;
@@ -386,10 +421,8 @@ function SunburstPlot({
             style={{ fill: "none", stroke: "var(--ink)" }}
           />
         ) : null}
-        <circle
-          cx={cx}
-          cy={cy}
-          r={Math.max(0, center - gap - 2)}
+        <path
+          d={holePath(cx, cy, Math.max(0, center - gap - 2), half)}
           style={{
             fill: hoverCenter && focus.parent && drillDown ? "var(--surface-2)" : "var(--surface)",
             transition: "fill 150ms ease-out",
@@ -399,7 +432,7 @@ function SunburstPlot({
           <g className="pointer-events-none select-none" textAnchor="middle">
             {focus.parent && drillDown ? (
               <path
-                d={`M${cx - 5},${cy - 22 + shift}l5,-5l5,5`}
+                d={`M${cx - 5},${half ? cy - 42 : cy - 22}l5,-5l5,5`}
                 fill="none"
                 strokeWidth={1.8}
                 strokeLinecap="round"
@@ -409,19 +442,21 @@ function SunburstPlot({
             ) : null}
             <text
               x={cx}
-              y={cy - 4 + shift}
-              className="font-semibold text-[12px]"
+              y={nameY}
+              fontSize={nameFit.size}
+              className="font-semibold"
               style={{ fill: "var(--ink-3)" }}
             >
-              {truncate(focus.name, center * 1.7, 12)}
+              {nameFit.text}
             </text>
             <text
               x={cx}
-              y={cy + 16 + shift}
-              className="font-bold text-[17px] tabular-nums"
+              y={valueY}
+              fontSize={valueFit.size}
+              className="font-bold tabular-nums"
               style={{ fill: "var(--ink)" }}
             >
-              {truncate(format(focus.value), center * 1.8, 17)}
+              {valueFit.text}
             </text>
           </g>
         ) : null}
