@@ -166,3 +166,79 @@ test("xyLayout with xTime falls back to clock ticks inside one day", () => {
   assert.ok(layout.xTicks.length >= 2);
   assert.match(layout.xTicks[0].label, /\d/);
 });
+
+const hex = await load("../src/charts/heatmap-chart/hex-layout.ts");
+const datetime = await load("../src/charts/heatmap-chart/datetime-columns.ts");
+
+test("hexLayout fits the area and hit-tests every cell centre", () => {
+  const layout = hex.hexLayout({ rows: 7, columns: 12, width: 520, height: 260 });
+  assert.ok(layout.radius > 0);
+  const right = layout.originX + layout.stepX * 12.5;
+  const bottom = layout.originY + layout.stepY * 6 + 2 * layout.radius;
+  assert.ok(right <= 520 + 1e-6);
+  assert.ok(bottom <= 260 + 1e-6);
+  for (let row = 0; row < 7; row += 1) {
+    for (let column = 0; column < 12; column += 1) {
+      const c = layout.center(row, column);
+      assert.deepEqual(layout.cellAt(c.x, c.y), { row, column });
+    }
+  }
+});
+
+test("hexLayout hit-testing is nearest-centre and null outside", () => {
+  const layout = hex.hexLayout({ rows: 5, columns: 8, width: 400, height: 240 });
+  let state = 9;
+  const random = () => {
+    state = (state * 1_664_525 + 1_013_904_223) >>> 0;
+    return state / 4_294_967_296;
+  };
+  for (let i = 0; i < 300; i += 1) {
+    const x = random() * 400;
+    const y = random() * 240;
+    const hit = layout.cellAt(x, y);
+    let best = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (let row = 0; row < 5; row += 1) {
+      for (let column = 0; column < 8; column += 1) {
+        const c = layout.center(row, column);
+        const d = Math.hypot(c.x - x, c.y - y);
+        if (d < bestDistance) {
+          best = { row, column };
+          bestDistance = d;
+        }
+      }
+    }
+    if (hit) {
+      const c = layout.center(hit.row, hit.column);
+      assert.ok(
+        Math.hypot(c.x - x, c.y - y) <= bestDistance + 1e-6,
+        JSON.stringify({ x, y, hit, best }),
+      );
+    }
+  }
+  assert.equal(layout.cellAt(-50, -50), null);
+  assert.equal(layout.cellAt(5000, 5000), null);
+});
+
+test("hexPath draws six vertices", () => {
+  const path = hex.hexPath(10, 10, 5);
+  assert.equal(path.split("L").length, 6);
+  assert.ok(path.startsWith("M") && path.endsWith("Z"));
+});
+
+test("datetimeColumnLabels labels calendar boundaries only", () => {
+  const dates = Array.from({ length: 60 }, (_, i) => new Date(2026, 8, 1 + i));
+  const labels = datetime.datetimeColumnLabels(dates);
+  const shown = labels.filter(Boolean);
+  assert.ok(shown.length >= 2 && shown.length <= 12);
+  labels.forEach((label, index) => {
+    if (label) assert.ok(dates[index].getDay() === 1 || dates[index].getDate() === 1);
+  });
+});
+
+test("datetimeColumnLabels falls back to clock times inside a day", () => {
+  const dates = Array.from({ length: 6 }, (_, i) => new Date(2026, 9, 1, 9 + i));
+  const labels = datetime.datetimeColumnLabels(dates);
+  assert.equal(labels.length, 6);
+  assert.ok(labels.every((label) => /\d/.test(label)));
+});

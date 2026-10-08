@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CalendarHeatmap } from "./calendar-heatmap.js";
 import type { CalendarDay } from "./calendar-layout.js";
+import { DrilldownHeatmap, type HeatmapLevel } from "./drilldown-heatmap.js";
 import { HeatmapChart } from "./heatmap-chart.js";
 
 const days = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
@@ -100,6 +101,8 @@ const meta = {
     columns: { control: false },
     values: { control: false },
     valueFormat: { control: false },
+    shape: { control: "inline-radio", options: ["rect", "hex"] },
+    renderer: { control: "inline-radio", options: ["svg", "canvas"] },
     ranges: { control: false },
     colors: { control: false },
     onCellClick: { control: false },
@@ -186,6 +189,177 @@ export const CalendarRanges: Story = {
       labels={{ ...spanishLabels, category: "Fecha" }}
     />
   ),
+};
+
+export const Rounded: Story = {
+  args: {
+    title: "Ocupación en celdas redondeadas",
+    gap: 5,
+    radius: 12,
+    cellLabels: true,
+    height: 320,
+  },
+};
+
+/** Pointy-top hexagons; odd rows sit half a cell to the right. */
+export const Honeycomb: Story = {
+  args: {
+    title: "Ocupación de sillas en panal",
+    shape: "hex",
+    gap: 3,
+    cellLabels: true,
+    height: 360,
+  },
+};
+
+const stamps = Array.from({ length: 112 }, (_, index) => new Date(2026, 5, 15 + index));
+const barberNames = ["Kevin", "Renzo", "Abel", "Diego"];
+const dailyCuts = barberNames.map((_, barber) =>
+  stamps.map((date, index) => {
+    const weekday = (date.getDay() + 6) % 7;
+    const base = weekday === 5 ? 16 : weekday === 6 ? 4 : 9;
+    return Math.round(base + seeded(index * 4 + barber) * 6);
+  }),
+);
+
+/** Columns are real dates: only Mondays and month starts get a label, like a time axis. */
+export const ContinuousDatetime: Story = {
+  args: {
+    title: "Cortes por barbero y día",
+    rows: barberNames,
+    columns: stamps,
+    values: dailyCuts,
+    domain: [0, 24],
+    valueFormat: (value: number) => String(Math.round(value)),
+    gap: 1,
+    radius: 2,
+    height: 190,
+    labels: { ...spanishLabels, category: "Barbero" },
+  },
+};
+
+const denseRows = Array.from({ length: 48 }, (_, index) => `Silla ${index + 1}`);
+const denseColumns = Array.from({ length: 366 }, (_, index) => new Date(2026, 0, 1 + index));
+const denseValues = denseRows.map((_, row) =>
+  denseColumns.map((date, column) => {
+    const weekday = (date.getDay() + 6) % 7;
+    const season = 40 + 25 * Math.sin((column / 366) * Math.PI * 2 - 1);
+    return Math.round(
+      Math.max(
+        0,
+        Math.min(
+          100,
+          season +
+            (weekday === 5 ? 18 : weekday === 6 ? -25 : 0) +
+            seeded(row * 400 + column) * 24 -
+            12,
+        ),
+      ),
+    );
+  }),
+);
+
+/** 17 568 celdas pintadas en un canvas; el cursor y el teclado siguen funcionando. */
+export const CanvasDense: Story = {
+  args: {
+    title: "Ocupación por silla y día del año",
+    rows: denseRows,
+    columns: denseColumns,
+    values: denseValues,
+    renderer: "canvas",
+    domain: [0, 100],
+    gap: 0,
+    radius: 0,
+    height: 420,
+    animate: false,
+  },
+};
+
+const months = ["abr", "may", "jun", "jul", "ago", "sep", "oct"];
+const weekdays = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+function dayLevel(
+  barber: string,
+  barberIndex: number,
+  month: string,
+  monthIndex: number,
+): HeatmapLevel {
+  const weeks = ["Semana 1", "Semana 2", "Semana 3", "Semana 4"];
+  return {
+    name: `${barber} · ${month}`,
+    title: `Cortes de ${barber} en ${month}, por semana y día`,
+    rows: weeks,
+    columns: weekdays,
+    values: weeks.map((_, week) =>
+      weekdays.map((_, day) =>
+        Math.round(
+          (day === 5 ? 14 : day === 6 ? 4 : 9) +
+            seeded(barberIndex * 997 + monthIndex * 31 + week * 7 + day) * 6,
+        ),
+      ),
+    ),
+    domain: [0, 22],
+    valueFormat: "integer",
+    drill: ({ row, column }) => ({
+      name: `${weeks[row]} · ${weekdays[column]}`,
+      title: `Cortes de ${barber} por hora`,
+      rows: [barber],
+      columns: hours,
+      values: [
+        hours.map((_, hour) =>
+          Math.round(
+            1 +
+              (hour >= 3 && hour <= 4 ? 2 : 0) +
+              (hour >= 8 ? 2 : 0) +
+              seeded(row * 53 + column * 17 + hour) * 2,
+          ),
+        ),
+      ],
+      domain: [0, 6],
+      valueFormat: "integer",
+    }),
+  };
+}
+
+const drillRoot: HeatmapLevel = {
+  name: "Todo el año",
+  rows: barberNames,
+  columns: months,
+  values: barberNames.map((_, barber) =>
+    months.map((_, month) => Math.round(160 + seeded(barber * 17 + month) * 120)),
+  ),
+  domain: [140, 300],
+  valueFormat: "integer",
+  drill: ({ row, column }) =>
+    dayLevel(barberNames[row] as string, row, months[column] as string, column),
+};
+
+/** Click a cell to open its detail; the breadcrumb climbs back. */
+export const Drilldown: Story = {
+  render: (args) => (
+    <DrilldownHeatmap
+      title="Cortes por barbero y mes"
+      root={drillRoot}
+      breadcrumbLabel="Ruta del mapa de calor"
+      cellLabels
+      gap={args.gap}
+      radius={args.radius}
+      animate={args.animate}
+      tooltip={args.tooltip}
+      labels={{ ...spanishLabels, category: "Barbero" }}
+    />
+  ),
+};
+
+export const NarrowDrilldown: Story = {
+  ...Drilldown,
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export const Loading: Story = {

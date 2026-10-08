@@ -5,6 +5,8 @@ import { ChartFrame } from "../core/chart-frame.js";
 import type { ColorRange, ScaleColors } from "../core/color-scale.js";
 import { ChartDataTable } from "../core/data-table.js";
 import { resolveFormat, type ValueFormat } from "../core/format.js";
+import { formatDate } from "../core/scales/time.js";
+import { datetimeColumnLabels } from "./datetime-columns.js";
 import {
   type HeatmapCellInfo,
   HeatmapGrid,
@@ -19,8 +21,12 @@ export interface HeatmapChartProps {
   title: string;
   /** Row names, top to bottom. */
   rows: readonly string[];
-  /** Column names, left to right. */
-  columns: readonly string[];
+  /**
+   * Column names, left to right. When every column is a `Date` the columns are
+   * consecutive points in time: the header is labelled only at calendar
+   * boundaries (weeks, months, years), like a continuous time axis.
+   */
+  columns: ReadonlyArray<string | Date>;
   /** `values[row][column]`; `null` is a cell without data. */
   values: ReadonlyArray<ReadonlyArray<number | null>>;
   /** "sequential" (empty to brand) or "diverging" (low hue, neutral at `center`, brand). */
@@ -39,6 +45,13 @@ export interface HeatmapChartProps {
   /** Gap between cells in pixels. */
   gap?: number;
   radius?: number;
+  /** "hex" draws a honeycomb: pointy-top hexagons with odd rows shifted half a cell. */
+  shape?: "rect" | "hex";
+  /**
+   * "canvas" paints the cells on a canvas, for matrices with tens of thousands
+   * of cells. Labels, tooltip, focus ring and keyboard stay SVG/HTML.
+   */
+  renderer?: "svg" | "canvas";
   /** Height of the drawing in px or "fill"; 34 px per row plus the column header by default. */
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width. */
@@ -73,6 +86,8 @@ export function HeatmapChart({
   cellLabels = false,
   gap = 3,
   radius = 4,
+  shape = "rect",
+  renderer = "svg",
   height,
   aspectRatio,
   legend = true,
@@ -96,6 +111,14 @@ export function HeatmapChart({
     () => heatmapScale(finite, { scale, domain, center, colors, ranges }),
     [finite, scale, domain, center, colors, ranges],
   );
+  const dated = columns.length > 0 && columns.every((column) => column instanceof Date);
+  const columnText = useMemo(
+    () => columns.map((column) => (column instanceof Date ? formatDate(column) : column)),
+    [columns],
+  );
+  // A table with every cell of a dense canvas matrix would defeat the canvas.
+  const tableRows = renderer === "canvas" ? rows.slice(0, 60) : rows;
+  const tableColumns = renderer === "canvas" ? columnText.slice(0, 40) : columnText;
   const drawingHeight = height ?? Math.max(120, rows.length * 34 + 22);
   return (
     <ChartFrame
@@ -122,11 +145,11 @@ export function HeatmapChart({
         <ChartDataTable
           caption={title}
           categoryHeader={labels.category}
-          categories={rows}
-          columns={columns.map((column, index) => ({
+          categories={tableRows}
+          columns={tableColumns.map((column, index) => ({
             id: `${index}`,
             name: column,
-            values: rows.map((_, row) => {
+            values: tableRows.map((_, row) => {
               const value = values[row]?.[index];
               return value == null ? labels.noData : format(value);
             }),
@@ -140,16 +163,22 @@ export function HeatmapChart({
           height={measuredHeight}
           title={title}
           rowLabels={rows}
-          columnLabels={columns}
+          columnLabels={
+            dated
+              ? datetimeColumnLabels(columns as Date[], Math.max(2, Math.floor(width / 72)))
+              : columnText
+          }
           values={values}
           colorScale={colorScale}
           format={format}
-          cellTitle={(row, column) => `${rows[row] ?? ""} · ${columns[column] ?? ""}`}
+          cellTitle={(row, column) => `${rows[row] ?? ""} · ${columnText[column] ?? ""}`}
           labels={labels}
           cellLabels={cellLabels}
           gap={gap}
           radius={radius}
           square={false}
+          shape={shape}
+          renderer={renderer}
           tooltip={tooltip}
           animate={animate}
           onCellClick={onCellClick}
