@@ -58,7 +58,6 @@ const meta = {
     clipId: { control: false },
     direction: { control: "inline-radio", options: ["right", "up"] },
   },
-  parameters: { layout: "centered" },
 } satisfies Meta<typeof UnitGlyph>;
 
 export default meta;

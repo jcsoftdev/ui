@@ -33,7 +33,6 @@ const meta = {
       </div>
     ),
   ],
-  parameters: { layout: "centered" },
 } satisfies Meta<typeof TreeCard>;
 
 export default meta;

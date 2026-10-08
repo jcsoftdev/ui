@@ -65,7 +65,6 @@ const meta = {
       </svg>
     ),
   ],
-  parameters: { layout: "centered" },
 } satisfies Meta<typeof BoxGlyph>;
 
 export default meta;
