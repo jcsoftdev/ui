@@ -242,3 +242,31 @@ test("datetimeColumnLabels falls back to clock times inside a day", () => {
   assert.equal(labels.length, 6);
   assert.ok(labels.every((label) => /\d/.test(label)));
 });
+
+const grid = await load("../src/charts/chart-grid/grid-math.ts");
+
+test("gridColumns follows the container width", () => {
+  const options = { minPanelWidth: 220, maxColumns: 4, gap: 16 };
+  assert.equal(grid.gridColumns(320, 6, options), 1);
+  assert.equal(grid.gridColumns(480, 6, options), 2);
+  assert.equal(grid.gridColumns(760, 6, options), 3);
+  assert.equal(grid.gridColumns(2000, 6, options), 4);
+  assert.equal(grid.gridColumns(2000, 2, options), 2);
+  assert.equal(grid.gridColumns(100, 0, options), 1);
+});
+
+test("panelWidth subtracts the gaps", () => {
+  assert.equal(grid.panelWidth(748, 3, 16), 238.66666666666666);
+  assert.equal(grid.panelWidth(300, 1, 16), 300);
+});
+
+test("sharedDomain unions extents and rounds to ticks", () => {
+  assert.deepEqual(grid.unionExtent([[3, 9], null, [1, 4], [Number.NaN, 2]]), [1, 9]);
+  assert.equal(grid.unionExtent([null, undefined]), null);
+  const domain = grid.sharedDomain([
+    [123, 480],
+    [90, 310],
+  ]);
+  assert.ok(domain[0] <= 90 && domain[1] >= 480);
+  assert.deepEqual(grid.sharedDomain([[12, 40]], { includeZero: true, nice: false }), [0, 40]);
+});
