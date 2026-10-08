@@ -12,7 +12,7 @@ export function GenericRow({ className, ...props }: GenericRowProps) {
   return (
     <div
       className={cn(
-        "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-line border-t px-4 py-[11px] first:border-t-0",
+        "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-t-divider px-4 py-[11px] first:border-t-0",
         className,
       )}
       {...props}

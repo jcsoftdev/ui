@@ -18,7 +18,7 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-line border-t px-4 py-[13px] first:border-t-0",
+        "flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-t-divider px-4 py-[13px] first:border-t-0",
         className,
       )}
       {...props}
