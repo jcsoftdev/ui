@@ -4,7 +4,35 @@ Token-driven React 19 component library: Radix primitives, Tailwind CSS v4, no r
 The whole look (colors for light/dark themes, brand palettes, type, radius, shadows, font) comes from
 **one tokens JSON file**. Change the file, rebuild the theme, and every component follows.
 
-It has no dependency on any app and is designed to be moved to its own repository.
+## Install
+
+```bash
+pnpm add @jcsoftdev/ui
+# peers: react ^19, react-dom ^19; styling needs tailwindcss ^4
+```
+
+Documentation, live Storybook and an LLM-readable index: https://ui.jcsoftdev.com
+
+### Presets (data attributes)
+
+Set these on `<html>` (or any element to restyle only its subtree); no rebuild is needed:
+
+| Attribute | Purpose |
+| --- | --- |
+| `data-theme="light\|dark"` | Color scheme (omit to follow the OS). |
+| `data-accent="<palette-id>"` | Brand palette. |
+| `data-style="<preset>"` | Style preset (radii, borders, shadows, glass, ...). See https://ui.jcsoftdev.com/docs/theming/. |
+| `data-density="<level>"` | Control and spacing density. |
+| `data-radius="<level>"` | Global corner radius scale. |
+
+### Subpath exports
+
+- Component groups: `@jcsoftdev/ui/atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `dashboards`, `utils`, each also per component (`@jcsoftdev/ui/atoms/button`).
+- `@jcsoftdev/ui/ai`: chat, prompt input, markdown and code block building blocks for AI interfaces.
+- `@jcsoftdev/ui/rich-text`: rich text editor with a sanitizer.
+- `@jcsoftdev/ui/xlsx`: dependency-free `.xlsx` writer.
+- `@jcsoftdev/ui/brand`: logo mark and logo forge utilities.
+- `@jcsoftdev/ui/styles/*` and `@jcsoftdev/ui/tokens/*`: CSS and token JSON.
 
 ## Quickstart (5 lines)
 

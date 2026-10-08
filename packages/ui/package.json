@@ -4,6 +4,29 @@
   "description": "Token-driven React component library: React 19, Radix, Tailwind v4.",
   "author": "jcsoftdev",
   "license": "MIT",
+  "homepage": "https://ui.jcsoftdev.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcsoftdev/ui.git",
+    "directory": "packages/ui"
+  },
+  "bugs": {
+    "url": "https://github.com/jcsoftdev/ui/issues"
+  },
+  "keywords": [
+    "react",
+    "react-19",
+    "ui",
+    "component-library",
+    "design-system",
+    "design-tokens",
+    "radix-ui",
+    "tailwindcss",
+    "tailwind-v4",
+    "charts",
+    "data-grid",
+    "typescript"
+  ],
   "type": "module",
   "sideEffects": [
     "**/*.css"
@@ -14,10 +37,14 @@
   "files": [
     "dist",
     "src",
+    "!src/**/*.stories.*",
+    "!src/**/*.test.*",
     "styles",
     "tokens",
     "bin",
-    "scripts/build-theme.mjs"
+    "scripts/build-theme.mjs",
+    "README.md",
+    "LICENSE"
   ],
   "exports": {
     "./styles/*": "./styles/*",
@@ -84,5 +111,9 @@
     "tsup": "^8.5.0",
     "typescript": "^5.5.4",
     "vite": "7.3.6"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }
