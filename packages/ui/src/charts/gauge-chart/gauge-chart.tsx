@@ -264,7 +264,9 @@ function GaugePlot({
   const capAngle = roundedCaps ? band / 2 / mid : 0;
 
   const fraction = toFraction(shown);
-  const active = bands.find((item) => shown >= item.from && shown <= item.to);
+  // Colour and label follow the target value, so they do not flip band by band
+  // while the arc or needle sweeps towards it.
+  const active = bands.find((item) => value >= item.from && value <= item.to);
   const valueColor = active ? rangeColor(active) : "var(--accent-word)";
   const progressEnd = a0 + capAngle + (span - 2 * capAngle) * fraction;
 
