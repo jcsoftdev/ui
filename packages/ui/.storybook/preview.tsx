@@ -34,7 +34,7 @@ const withTheme: Decorator = (Story, context) => {
   return (
     <div lang="es-PE" className="min-h-screen bg-bg p-6 text-ink">
       <div
-        className="@container max-w-full"
+        className="@container/page max-w-full"
         style={
           width
             ? {

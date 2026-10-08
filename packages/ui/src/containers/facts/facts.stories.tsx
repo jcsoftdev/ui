@@ -34,7 +34,7 @@ export const Default: Story = {};
 export const Narrow: Story = {
   decorators: [
     (Story) => (
-      <div className="max-w-[420px]">
+      <div className="@container/page w-[320px] max-w-full">
         <Story />
       </div>
     ),

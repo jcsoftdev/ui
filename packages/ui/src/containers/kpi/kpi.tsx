@@ -25,11 +25,16 @@ export function Kpi({
   className,
 }: KpiProps) {
   return (
-    <div className={cn("flex min-w-0 flex-col gap-0.5 bg-surface px-[18px] py-3.5", className)}>
-      <span className="font-semibold text-[12px] text-ink-2">{label}</span>
+    <div
+      className={cn(
+        "@container/kpi flex min-w-0 flex-col gap-0.5 bg-surface px-[18px] py-3.5",
+        className,
+      )}
+    >
+      <span className="break-words font-semibold text-[12px] text-ink-2">{label}</span>
       <span
         className={cn(
-          "text-kpi-number tabular-nums",
+          "break-words text-kpi-number tabular-nums @max-[9rem]/kpi:text-[22px]",
           variant === "danger" ? "text-danger" : "text-ink",
         )}
       >
@@ -40,7 +45,9 @@ export function Kpi({
           </small>
         ) : null}
       </span>
-      {description ? <span className="text-[12px] text-ink-3">{description}</span> : null}
+      {description ? (
+        <span className="break-words text-[12px] text-ink-3">{description}</span>
+      ) : null}
     </div>
   );
 }

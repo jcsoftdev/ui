@@ -20,7 +20,11 @@ import type { CalendarEvent, CalendarMarker } from "../internal/types.js";
 const PX_PER_HOUR = 48;
 const INITIAL_SCROLL_HOUR = 8;
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
-const COLUMNS = "grid-cols-[58px_repeat(7,minmax(96px,1fr))]";
+const COLUMNS = cn(
+  "grid-cols-[58px_repeat(7,minmax(96px,1fr))]",
+  "@max-[40rem]/week:grid-cols-[52px_repeat(7,minmax(112px,1fr))]",
+);
+const GUTTER = "sticky left-0 z-10 bg-surface";
 
 export interface WeekViewProps {
   /** Any "YYYY-MM-DD" date inside the week to show. */
@@ -73,129 +77,138 @@ export function WeekView({
   }, []);
 
   return (
-    <div className={cn("flex min-w-[820px] flex-col", className)}>
-      <div className={cn("grid", COLUMNS)}>
-        <div />
-        {days.map((date) => (
-          <div
-            key={date}
-            data-date={date}
-            data-today={date === today || undefined}
-            className={cn(
-              "border-line border-b px-2 py-2.5 text-meta text-ink-3",
-              date === today && "text-accent-ink",
-            )}
-          >
-            {formatWeekdayAndDay(date, locale)}
-          </div>
-        ))}
-      </div>
-
-      <div data-all-day-row className={cn("grid", COLUMNS)}>
-        <div className="border-line border-b px-1.5 pt-2.5 text-right text-meta text-ink-3">
-          {allDayLabel}
-        </div>
-        {days.map((date) => (
-          <div
-            key={date}
-            className="flex min-h-10 flex-col gap-1 border-line border-b border-l p-1"
-          >
-            {markers
-              .filter((marker) => marker.date === date)
-              .map((marker) => (
-                <DayChip key={marker.id} marker={marker} onOpen={onOpenMarker} />
-              ))}
-            {events
-              .filter((event) => event.date === date && event.allDay)
-              .map((event) => (
-                <div key={event.id} data-event={event.id}>
-                  <EventBlock event={event} variant="compact" onOpen={onOpenEvent} />
-                </div>
-              ))}
-          </div>
-        ))}
-      </div>
-
-      <div ref={scrollRef} data-hours-scroll className="max-h-150 overflow-y-auto">
-        <div className={cn("grid", COLUMNS)} style={{ height: HOURS.length * PX_PER_HOUR }}>
-          <div className="relative">
-            {HOURS.map((hour) => (
-              <span
-                key={hour}
-                className="-translate-y-1/2 absolute right-2 font-mono text-meta text-ink-3"
-                style={{ top: hour * PX_PER_HOUR }}
-              >
-                {formatHour(hour, locale)}
-              </span>
-            ))}
-          </div>
-
-          {days.map((date) => {
-            const isToday = date === today;
-            const positioned = layoutDayEvents(
-              events.filter((event) => event.date === date && !event.allDay),
-            );
-            const nowMinutes =
-              isToday && currentTime ? minutesSinceMidnight(currentTime) : undefined;
-
-            return (
+    <div className={cn("@container/week min-w-0", className)}>
+      <div ref={scrollRef} data-hours-scroll className="max-h-150 overflow-auto">
+        <div className="flex min-w-[820px] flex-col @max-[40rem]/week:min-w-[836px]">
+          <div className={cn("sticky top-0 z-20 grid bg-surface", COLUMNS)}>
+            <div className={GUTTER} />
+            {days.map((date) => (
               <div
                 key={date}
                 data-date={date}
-                data-hours-column
-                data-shaded={shaded.has(date) || undefined}
+                data-today={date === today || undefined}
                 className={cn(
-                  "relative border-line border-l bg-[linear-gradient(to_bottom,var(--line)_1px,transparent_1px)] bg-size-[100%_48px]",
-                  isToday && "bg-accent-soft/40",
-                  shaded.has(date) && SHADED_DAY_CLASS,
+                  "flex h-10 min-w-0 items-center truncate whitespace-nowrap border-line border-b px-2 text-meta text-ink-3",
+                  date === today && "text-accent-ink",
                 )}
               >
-                {workingHours ? (
-                  <div
-                    data-working-hours
-                    className="pointer-events-none absolute inset-x-0 bg-accent-soft/30"
-                    style={{
-                      top: workingHours[0] * PX_PER_HOUR,
-                      height: (workingHours[1] - workingHours[0]) * PX_PER_HOUR,
-                    }}
-                  />
-                ) : null}
-
-                {positioned.map(({ event, start, end, column, columns }) => {
-                  const short = end - start <= 30;
-                  const width = 100 / columns;
-                  return (
-                    <div
-                      key={event.id}
-                      data-event={event.id}
-                      className="absolute px-px"
-                      style={{
-                        top: (start / 60) * PX_PER_HOUR,
-                        height: Math.max(((end - start) / 60) * PX_PER_HOUR - 2, 18),
-                        left: `${column * width}%`,
-                        width: `${width}%`,
-                      }}
-                    >
-                      <EventBlock
-                        event={event}
-                        variant={short ? "compact" : "detailed"}
-                        onOpen={onOpenEvent}
-                        className="h-full"
-                      />
-                    </div>
-                  );
-                })}
-
-                {nowMinutes !== undefined ? (
-                  <div
-                    data-now-line
-                    className="pointer-events-none absolute inset-x-0 h-0.5 bg-danger"
-                    style={{ top: (nowMinutes / 60) * PX_PER_HOUR }}
-                  />
-                ) : null}
+                {formatWeekdayAndDay(date, locale)}
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          <div data-all-day-row className={cn("sticky top-10 z-20 grid bg-surface", COLUMNS)}>
+            <div
+              className={cn(
+                GUTTER,
+                "whitespace-nowrap border-line border-b px-1.5 pt-2.5 text-right text-meta text-ink-3",
+              )}
+            >
+              {allDayLabel}
+            </div>
+            {days.map((date) => (
+              <div
+                key={date}
+                className="flex min-h-10 flex-col gap-1 border-line border-b border-l p-1"
+              >
+                {markers
+                  .filter((marker) => marker.date === date)
+                  .map((marker) => (
+                    <DayChip key={marker.id} marker={marker} onOpen={onOpenMarker} />
+                  ))}
+                {events
+                  .filter((event) => event.date === date && event.allDay)
+                  .map((event) => (
+                    <div key={event.id} data-event={event.id}>
+                      <EventBlock event={event} variant="compact" onOpen={onOpenEvent} />
+                    </div>
+                  ))}
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <div className={cn("grid", COLUMNS)} style={{ height: HOURS.length * PX_PER_HOUR }}>
+              <div className={GUTTER}>
+                {HOURS.map((hour) => (
+                  <span
+                    key={hour}
+                    className="-translate-y-1/2 absolute right-2 whitespace-nowrap font-mono text-meta text-ink-3"
+                    style={{ top: hour * PX_PER_HOUR }}
+                  >
+                    {formatHour(hour, locale)}
+                  </span>
+                ))}
+              </div>
+
+              {days.map((date) => {
+                const isToday = date === today;
+                const positioned = layoutDayEvents(
+                  events.filter((event) => event.date === date && !event.allDay),
+                );
+                const nowMinutes =
+                  isToday && currentTime ? minutesSinceMidnight(currentTime) : undefined;
+
+                return (
+                  <div
+                    key={date}
+                    data-date={date}
+                    data-hours-column
+                    data-shaded={shaded.has(date) || undefined}
+                    className={cn(
+                      "relative border-line border-l bg-[linear-gradient(to_bottom,var(--line)_1px,transparent_1px)] bg-size-[100%_48px]",
+                      isToday && "bg-accent-soft/40",
+                      shaded.has(date) && SHADED_DAY_CLASS,
+                    )}
+                  >
+                    {workingHours ? (
+                      <div
+                        data-working-hours
+                        className="pointer-events-none absolute inset-x-0 bg-accent-soft/30"
+                        style={{
+                          top: workingHours[0] * PX_PER_HOUR,
+                          height: (workingHours[1] - workingHours[0]) * PX_PER_HOUR,
+                        }}
+                      />
+                    ) : null}
+
+                    {positioned.map(({ event, start, end, column, columns }) => {
+                      const short = end - start <= 30;
+                      const width = 100 / columns;
+                      return (
+                        <div
+                          key={event.id}
+                          data-event={event.id}
+                          className="absolute px-px"
+                          style={{
+                            top: (start / 60) * PX_PER_HOUR,
+                            height: Math.max(((end - start) / 60) * PX_PER_HOUR - 2, 18),
+                            left: `${column * width}%`,
+                            width: `${width}%`,
+                          }}
+                        >
+                          <EventBlock
+                            event={event}
+                            variant={short ? "compact" : "detailed"}
+                            onOpen={onOpenEvent}
+                            className="h-full"
+                          />
+                        </div>
+                      );
+                    })}
+
+                    {nowMinutes !== undefined ? (
+                      <div
+                        data-now-line
+                        className="pointer-events-none absolute inset-x-0 h-0.5 bg-danger"
+                        style={{ top: (nowMinutes / 60) * PX_PER_HOUR }}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

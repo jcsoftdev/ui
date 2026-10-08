@@ -6,10 +6,7 @@ export type CardProps = ComponentPropsWithoutRef<"div">;
 export function Card({ className, ...props }: CardProps) {
   return (
     <div
-      className={cn(
-        "min-w-0 rounded-card bg-surface shadow-flat [container-type:inline-size]",
-        className,
-      )}
+      className={cn("min-w-0 rounded-card bg-surface shadow-flat @container/card", className)}
       {...props}
     />
   );

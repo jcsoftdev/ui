@@ -10,13 +10,13 @@ export type FactsProps = ComponentPropsWithoutRef<"dl">;
  */
 export function Facts({ className, ...props }: FactsProps) {
   return (
-    <div className="@container">
+    <div className="@container/facts min-w-0">
       <dl
         className={cn(
           "mt-3.5 grid grid-cols-3 gap-3.5 border-line border-t border-dashed pt-3.5",
           "[&_dt]:font-semibold [&_dt]:text-[11.5px] [&_dt]:text-ink-3",
           "[&_dd]:mt-0.5 [&_dd]:font-[620] [&_dd]:text-[13px]",
-          "@max-[560px]:grid-cols-1",
+          "[&_dt]:break-words [&_dd]:break-words @max-[560px]/facts:grid-cols-1",
           className,
         )}
         {...props}

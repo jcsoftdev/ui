@@ -30,12 +30,12 @@ export function GenericRowContent({ className, ...props }: GenericRowContentProp
 export type GenericRowTitleProps = ComponentPropsWithoutRef<"div">;
 
 export function GenericRowTitle({ className, ...props }: GenericRowTitleProps) {
-  return <div className={cn("font-[650] text-[13px]", className)} {...props} />;
+  return <div className={cn("break-words font-[650] text-[13px]", className)} {...props} />;
 }
 
 export type GenericRowMetaProps = ComponentPropsWithoutRef<"div">;
 
 /** Secondary metadata under the title. */
 export function GenericRowMeta({ className, ...props }: GenericRowMetaProps) {
-  return <div className={cn("text-[12px] text-ink-3", className)} {...props} />;
+  return <div className={cn("break-words text-[12px] text-ink-3", className)} {...props} />;
 }

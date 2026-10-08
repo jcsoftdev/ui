@@ -48,7 +48,7 @@ export function Banner({
     <div
       role={toneRole[tone]}
       className={cn(
-        "flex items-start gap-3 rounded-banner px-3.5 py-3 text-[13px] text-ink",
+        "flex flex-wrap items-start gap-x-3 gap-y-2 rounded-banner px-3.5 py-3 text-[13px] text-ink",
         toneClasses[tone],
         className,
       )}
@@ -59,8 +59,10 @@ export function Banner({
           {icon}
         </span>
       ) : null}
-      <div className="min-w-0 flex-1">{children}</div>
-      {action ? <div className="ml-auto flex shrink-0 items-center gap-1.5">{action}</div> : null}
+      <div className="min-w-0 flex-[1_1_14rem] break-words">{children}</div>
+      {action ? (
+        <div className="ml-auto flex shrink-0 flex-wrap items-center gap-1.5">{action}</div>
+      ) : null}
     </div>
   );
 }

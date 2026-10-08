@@ -75,3 +75,14 @@ export const NarrowPage: Story = {
     ),
   ],
 };
+
+/** 320 px container: use it to check the narrow layout without resizing the viewport. */
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="@container/page w-[320px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};

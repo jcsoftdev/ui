@@ -107,3 +107,14 @@ export const SundayStart: Story = { args: { weekStartsOn: 0 } };
 export const Empty: Story = { args: { events: [], markers: [], shadedDates: [] } };
 
 export const NextMonth: Story = { args: { month: "2026-11-15", today: "2026-10-08" } };
+
+/** 320 px container: use it to check the narrow layout without resizing the viewport. */
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="@container/page w-[320px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};

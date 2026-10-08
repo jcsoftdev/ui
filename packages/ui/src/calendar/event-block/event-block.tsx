@@ -45,20 +45,30 @@ export function EventBlock({ event, variant = "detailed", onOpen, className }: E
       type="button"
       onClick={handleClick}
       className={cn(
-        "grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-2.5 rounded-event border px-2.5 py-2 text-left max-[760px]:grid-cols-[70px_minmax(0,1fr)]",
+        "@container/event block w-full min-w-0 overflow-hidden rounded-event border px-2.5 py-2 text-left",
         tone,
         className,
       )}
     >
       {srLabel}
-      <span className="font-mono text-meta text-ink-2">{range}</span>
-      <span className="min-w-0">
-        <span className="block truncate text-row-title text-ink">{event.title}</span>
-        {event.subtitle ? (
-          <span className="block truncate text-meta text-ink-3">{event.subtitle}</span>
+      <span
+        className={cn(
+          "grid h-full grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-x-2.5",
+          "@max-[28rem]/event:grid-cols-[70px_minmax(0,1fr)]",
+          "@max-[9rem]/event:grid-cols-[minmax(0,1fr)] @max-[9rem]/event:gap-y-0.5",
+        )}
+      >
+        <span className="whitespace-nowrap font-mono text-meta text-ink-2">{range}</span>
+        <span className="min-w-0">
+          <span className="block truncate text-row-title text-ink">{event.title}</span>
+          {event.subtitle ? (
+            <span className="block truncate text-meta text-ink-3">{event.subtitle}</span>
+          ) : null}
+        </span>
+        {event.trailing ? (
+          <span className="@max-[28rem]/event:hidden">{event.trailing}</span>
         ) : null}
       </span>
-      {event.trailing ? <span className="max-[760px]:hidden">{event.trailing}</span> : null}
     </button>
   );
 }
