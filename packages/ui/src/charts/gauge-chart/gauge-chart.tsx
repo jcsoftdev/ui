@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, type ReactNode, useCallback, useMemo, useRef } from "react";
 import { cn } from "../../utils/cn.js";
 import { DECORATIVE } from "../core/a11y.js";
 import { ChartFrame } from "../core/chart-frame.js";
@@ -44,6 +44,12 @@ export interface GaugeChartProps {
   roundedCaps?: boolean;
   /** Value labels along the inside of the arc (count of divisions, 0 = none). */
   ticks?: number;
+  /** Draws a tick line at every division (and at each minor step), like a dial. */
+  tickMarks?: boolean;
+  /** Minor tick lines between two divisions; only with `tickMarks`. */
+  minorTicks?: number;
+  /** Replaces the value and caption in the middle with your own content (HTML, sized to the arc). */
+  centerContent?: (context: GaugeCenterContext) => ReactNode;
   /** Min and max under the ends of the arc. */
   minMaxLabels?: boolean;
   /** Caption under the value, e.g. "Ocupación de sillas". */
@@ -54,6 +60,21 @@ export interface GaugeChartProps {
   animate?: boolean;
   labels?: Partial<ChartLabels>;
   className?: string;
+}
+
+export interface GaugeCenterContext {
+  /** Latest value. */
+  value: number;
+  /** Value being displayed while it animates. */
+  shown: number;
+  /** Formatted `shown`. */
+  text: string;
+  /** Color of the band the value is in. */
+  color: string;
+  /** Name of the band the value is in, if it has one. */
+  band?: string;
+  /** Caption passed as `label`. */
+  caption?: string;
 }
 
 const BASE_TONE: ChartTone = "accent";
@@ -81,6 +102,9 @@ export function GaugeChart({
   thickness = 18,
   roundedCaps = true,
   ticks = 0,
+  tickMarks = false,
+  minorTicks = 4,
+  centerContent,
   minMaxLabels = true,
   label,
   valueFormat,
@@ -142,6 +166,9 @@ export function GaugeChart({
           thickness={thickness}
           roundedCaps={roundedCaps}
           ticks={ticks}
+          tickMarks={tickMarks}
+          minorTicks={Math.max(0, Math.round(minorTicks))}
+          centerContent={centerContent}
           minMaxLabels={minMaxLabels}
           caption={label}
           format={format}
@@ -167,6 +194,9 @@ interface PlotProps {
   thickness: number;
   roundedCaps: boolean;
   ticks: number;
+  tickMarks: boolean;
+  minorTicks: number;
+  centerContent?: (context: GaugeCenterContext) => ReactNode;
   minMaxLabels: boolean;
   caption?: string;
   format: (value: number) => string;
@@ -188,6 +218,9 @@ function GaugePlot({
   thickness,
   roundedCaps,
   ticks,
+  tickMarks,
+  minorTicks,
+  centerContent,
   minMaxLabels,
   caption,
   format,
@@ -240,14 +273,30 @@ function GaugePlot({
     [bands, cx, cy, mid, angleFor],
   );
 
-  const tickMarks = useMemo(() => {
+  const tickLabels = useMemo(() => {
     if (ticks < 1) return [];
     return Array.from({ length: ticks + 1 }, (_, i) => {
       const v = min + ((max - min) * i) / ticks;
-      const point = polarPoint(cx, cy, radius - band - 12, angleFor(v));
+      const point = polarPoint(cx, cy, radius - band - (tickMarks ? 20 : 12), angleFor(v));
       return { v, ...point };
     });
-  }, [ticks, min, max, cx, cy, radius, band, angleFor]);
+  }, [ticks, tickMarks, min, max, cx, cy, radius, band, angleFor]);
+
+  const tickLines = useMemo(() => {
+    if (!tickMarks) return "";
+    const divisions = Math.max(1, ticks);
+    const steps = divisions * (minorTicks + 1);
+    const inner = radius - band - 3;
+    let d = "";
+    for (let i = 0; i <= steps; i++) {
+      const major = i % (minorTicks + 1) === 0;
+      const angle = angleFor(min + ((max - min) * i) / steps);
+      const from = polarPoint(cx, cy, inner, angle);
+      const to = polarPoint(cx, cy, inner - (major ? 8 : 4), angle);
+      d += `M${from.x.toFixed(2)} ${from.y.toFixed(2)}L${to.x.toFixed(2)} ${to.y.toFixed(2)}`;
+    }
+    return d;
+  }, [tickMarks, ticks, minorTicks, min, max, cx, cy, radius, band, angleFor]);
 
   useEntryAnimation(
     svgRef,
@@ -366,7 +415,19 @@ function GaugePlot({
           />
         ) : null}
 
-        {tickMarks.map((tick) => (
+        {tickLines ? (
+          <path
+            d={tickLines}
+            fill="none"
+            strokeWidth={1.4}
+            strokeLinecap="round"
+            {...DECORATIVE}
+            className="pointer-events-none"
+            style={{ stroke: "var(--ink-3)", strokeOpacity: 0.7 }}
+          />
+        ) : null}
+
+        {tickLabels.map((tick) => (
           <text
             key={tick.v}
             data-fade=""
@@ -419,37 +480,64 @@ function GaugePlot({
           </g>
         ) : null}
 
-        <g data-fade="" {...DECORATIVE} textAnchor="middle" className="pointer-events-none">
-          <text
-            x={cx}
-            y={valueY}
-            className="fill-ink font-bold tabular-nums"
-            style={{ fontSize: valueSize }}
-          >
-            {format(shown)}
-          </text>
-          {caption ? (
+        {centerContent ? null : (
+          <g data-fade="" {...DECORATIVE} textAnchor="middle" className="pointer-events-none">
             <text
               x={cx}
-              y={captionY}
-              className="fill-ink-3 font-semibold"
-              style={{ fontSize: captionSize }}
+              y={valueY}
+              className="fill-ink font-bold tabular-nums"
+              style={{ fontSize: valueSize }}
             >
-              {caption}
+              {format(shown)}
             </text>
-          ) : null}
-          {active?.label && bands.length > 0 ? (
-            <text
-              x={cx}
-              y={caption ? captionY + 16 : captionY}
-              className="font-bold text-[11px]"
-              style={{ fill: valueColor }}
-            >
-              {active.label}
-            </text>
-          ) : null}
-        </g>
+            {caption ? (
+              <text
+                x={cx}
+                y={captionY}
+                className="fill-ink-3 font-semibold"
+                style={{ fontSize: captionSize }}
+              >
+                {caption}
+              </text>
+            ) : null}
+            {active?.label && bands.length > 0 ? (
+              <text
+                x={cx}
+                y={caption ? captionY + 16 : captionY}
+                className="font-bold text-[11px]"
+                style={{ fill: valueColor }}
+              >
+                {active.label}
+              </text>
+            ) : null}
+          </g>
+        )}
       </svg>
+
+      {centerContent ? (
+        <div
+          className="pointer-events-none absolute flex flex-col items-center text-center"
+          style={{
+            left: cx,
+            top: needle ? cy + 22 : variant === "semi" ? cy - 6 : cy,
+            width: Math.max(40, radius * 1.5),
+            transform: needle
+              ? "translate(-50%, 0)"
+              : variant === "semi"
+                ? "translate(-50%, -100%)"
+                : "translate(-50%, -50%)",
+          }}
+        >
+          {centerContent({
+            value,
+            shown,
+            text: format(shown),
+            color: valueColor,
+            band: active?.label,
+            caption,
+          })}
+        </div>
+      ) : null}
 
       <div
         role="slider"
