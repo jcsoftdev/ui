@@ -141,19 +141,13 @@ const SIZE = 56;
 
 function Gallery({ names }: { names: readonly (keyof typeof UNIT_ICONS)[] }) {
   return (
-    <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-3 p-0">
+    <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-3 p-0">
       {names.map((name) => (
         <li
           key={name}
           className="flex flex-col items-center gap-1 rounded-md border border-line p-2"
         >
-          <svg
-            width={SIZE * 2 + 8}
-            height={SIZE}
-            role="img"
-            aria-label={name}
-            className="max-w-full"
-          >
+          <svg width={SIZE * 2 + 8} height={SIZE} role="img" aria-label={name} className="shrink-0">
             <UnitGlyph
               shape={resolveUnitShape(name)}
               x={0}
