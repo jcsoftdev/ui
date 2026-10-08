@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { type Venta, ventaColumns, ventas } from "./data-grid.fixtures.js";
 import { DataGrid } from "./data-grid.js";
 import {
+  ChartsDemo,
   diagnosticoColumns,
   diagnosticos,
   ExportXlsxDemo,
@@ -10,6 +11,7 @@ import {
   lineaColumns,
   lineas,
   type SheetControls,
+  SparklineDemo,
   UndoRedoDemo,
 } from "./spreadsheet.demos.js";
 
@@ -148,4 +150,38 @@ export const ExportXlsxPreset: Story = {
     ),
   ],
   render: (args) => <ExportXlsxDemo {...controls(args)} />,
+};
+
+export const IntegratedCharts: Story = {
+  name: "Integrated charts",
+  render: (args) => <ChartsDemo {...controls(args)} />,
+};
+
+export const IntegratedChartsNarrow: Story = {
+  name: "Integrated charts (320 px)",
+  decorators: [narrow],
+  render: (args) => <ChartsDemo {...controls(args)} />,
+};
+
+export const IntegratedChartsPreset: Story = {
+  name: "Integrated charts (flat preset)",
+  decorators: [
+    (Story) => (
+      <section data-style="flat">
+        <Story />
+      </section>
+    ),
+  ],
+  render: (args) => <ChartsDemo {...controls(args)} />,
+};
+
+export const SparklineColumn: Story = {
+  name: "Sparkline column",
+  render: (args) => <SparklineDemo {...controls(args)} />,
+};
+
+export const SparklineColumnNarrow: Story = {
+  name: "Sparkline column (320 px)",
+  decorators: [narrow],
+  render: (args) => <SparklineDemo {...controls(args)} />,
 };

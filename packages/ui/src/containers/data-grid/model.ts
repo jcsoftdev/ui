@@ -64,6 +64,7 @@ export function filterKindOf<T>(column: DataGridColumn<T>): FilterKind {
   switch (column.type) {
     case "number":
     case "currency":
+    case "sparkline":
       return "range";
     case "date":
       return "dateRange";
@@ -489,6 +490,7 @@ const DEFAULT_WIDTH: Record<string, number> = {
   currency: 120,
   date: 130,
   status: 140,
+  sparkline: 150,
 };
 
 export const MIN_COLUMN_WIDTH = 60;

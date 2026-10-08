@@ -18,6 +18,8 @@ Pure logic lives in plain modules (tested in `test/data-grid*.test.mjs`); `data-
 | Undo / redo | `history`, `historyDepth`, `onHistoryChange`, `onCellsChange`, `createRow`, `onRowsChange` | `history.ts` |
 | Formulas | `formulas` | `formula.ts` (parser, evaluator), `formula-sheet.ts` (dependency graph, cycles) |
 | XLSX export | `exportXlsx`, `onExportXlsx` | `xlsx-export.ts` + `src/xlsx` (`@jcsoftdev/ui/xlsx`: OOXML and ZIP writers, lazy loaded) |
+| Integrated charts | `charts` (button in the range status bar) | `chart-range.ts`, `chart-panel.tsx` (lazy) |
+| Sparkline column | `type: "sparkline"`, `sparkline` | `data-grid.tsx` (`Sparkline`) |
 | Paste, fill | Ctrl + V, Ctrl + D / R (needs `onCellChange` or `onCellsChange`) | `grid-edit.ts` |
 
 The grid never mutates `data`: edits, paste, fill, undo and redo are reported through

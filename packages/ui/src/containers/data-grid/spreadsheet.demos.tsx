@@ -1,6 +1,6 @@
 // Stateful demos behind the spreadsheet stories of DataGrid: history, formulas, XLSX and charts.
 import { type ReactNode, useCallback, useState } from "react";
-import { type Venta, ventaColumns, ventas } from "./data-grid.fixtures.js";
+import { BARBEROS, seeded, type Venta, ventaColumns, ventas } from "./data-grid.fixtures.js";
 import {
   type CellChange,
   DataGrid,
@@ -273,5 +273,95 @@ export function ExportXlsxDemo({ density, height }: SheetControls) {
           : "Exportar XLSX usa las filas filtradas y ordenadas y las columnas visibles; con filas seleccionadas exporta solo la selección. Números como números, fechas como fechas."}
       </p>
     </Stack>
+  );
+}
+
+// ---- integrated charts ----------------------------------------------------------------------
+
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun"] as const;
+
+export interface Ingreso {
+  id: string;
+  barbero: string;
+  ene: number;
+  feb: number;
+  mar: number;
+  abr: number;
+  may: number;
+  jun: number;
+}
+
+const randomIngreso = seeded(11);
+export const ingresos: Ingreso[] = BARBEROS.map((barbero, index) => {
+  const base = 1100 + index * 140;
+  const [ene, feb, mar, abr, may, jun] = MESES.map((_, month) =>
+    Math.round(base + month * (40 + index * 15) + (randomIngreso() - 0.5) * 360),
+  ) as [number, number, number, number, number, number];
+  return { id: `B-${index + 1}`, barbero, ene, feb, mar, abr, may, jun };
+});
+
+const mes = (id: (typeof MESES)[number], header: string): DataGridColumn<Ingreso> => ({
+  id,
+  header,
+  accessor: id,
+  type: "currency",
+  width: 104,
+  aggregate: "sum",
+});
+
+export const ingresoColumns: DataGridColumn<Ingreso>[] = [
+  { id: "barbero", header: "Barbero", accessor: "barbero", width: 140 },
+  mes("ene", "Ene"),
+  mes("feb", "Feb"),
+  mes("mar", "Mar"),
+  mes("abr", "Abr"),
+  mes("may", "May"),
+  mes("jun", "Jun"),
+  {
+    id: "tendencia",
+    header: "Tendencia",
+    accessor: "jun",
+    type: "sparkline",
+    width: 160,
+    filterable: false,
+    sparkline: {
+      values: (row) => MESES.map((month) => row[month]),
+      kind: "area",
+      label: (row) => `Ingresos de ${row.barbero} de enero a junio`,
+    },
+  },
+];
+
+export function ChartsDemo({ density, height }: SheetControls) {
+  return (
+    <Stack>
+      <DataGrid
+        density={density}
+        height={height}
+        aria-label="Ingresos por barbero y mes"
+        data={ingresos}
+        columns={ingresoColumns}
+        getRowId={(row) => row.id}
+        charts
+        showFooter
+      />
+      <p className={note}>
+        Arrastra sobre las celdas (por ejemplo Barbero hasta Jun) o usa Mayús + flechas y pulsa
+        Graficar: la columna de texto da las categorías y cada columna numérica es una serie.
+      </p>
+    </Stack>
+  );
+}
+
+export function SparklineDemo({ density, height }: SheetControls) {
+  return (
+    <DataGrid
+      density={density}
+      height={height}
+      aria-label="Ingresos con minigráficos"
+      data={ingresos}
+      columns={ingresoColumns}
+      getRowId={(row) => row.id}
+    />
   );
 }

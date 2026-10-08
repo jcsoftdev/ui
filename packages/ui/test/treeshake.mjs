@@ -111,4 +111,10 @@ assert.ok(
   ),
   "the XLSX writer is emitted as its own lazy chunk",
 );
-console.log("xlsx tree-shaking OK");
+for (const banned of ["bar-chart/", "pie-chart/", "line-chart/", "area-chart/"]) {
+  assert.ok(
+    !Object.keys(mainChunk[1].inputs).some((f) => f.includes(banned)),
+    `the DataGrid entry chunk must not contain "${banned}" (integrated charts load on demand)`,
+  );
+}
+console.log("xlsx and integrated charts tree-shaking OK");

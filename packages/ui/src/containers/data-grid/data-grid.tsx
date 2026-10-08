@@ -9,6 +9,7 @@ import {
   ArrowDownToLine,
   ArrowUp,
   ArrowUpToLine,
+  BarChart3,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -25,8 +26,10 @@ import {
   type DragEvent,
   type FocusEvent,
   type KeyboardEvent,
+  lazy,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
+  Suspense,
   useCallback,
   useEffect,
   useId,
@@ -37,8 +40,10 @@ import {
 } from "react";
 import { Chip } from "../../atoms/chip/chip.js";
 import { formatCurrency, formatNumber } from "../../charts/core/format.js";
+import { Sparkline } from "../../charts/sparkline/sparkline.js";
 import { cn } from "../../utils/cn.js";
 import { computePinOffsets, type PinPosition, sanitizePinned } from "../table/pin.js";
+import { type GridChartKind, type RangeChartData, rangeToChart } from "./chart-range.js";
 import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
 import { ColumnMenu } from "./column-menu.js";
 import type { DataSource } from "./data-source.js";
@@ -179,6 +184,10 @@ export interface ExportPayload {
   rowCount: number;
 }
 
+const ChartPanel = lazy(() =>
+  import("./chart-panel.js").then((module) => ({ default: module.ChartPanel })),
+);
+
 export interface XlsxExportPayload {
   /** The .xlsx file. */
   bytes: Uint8Array;
@@ -279,6 +288,12 @@ export interface DataGridProps<T> {
 
   /** Rectangular cell selection by drag, Shift + click or Shift + arrows, with Ctrl + C as TSV. */
   rangeSelection?: boolean;
+  /**
+   * Adds a "Graficar" button to the range status bar (turns `rangeSelection` on): the selected cells
+   * open a bar, line, area or pie chart under the grid. The text column of the range names the
+   * categories and each numeric column is a series. The chart code is loaded when first used.
+   */
+  charts?: boolean;
 
   /** Advanced filter (AND / OR groups of conditions) applied after the column filters. */
   advancedFilter?: FilterGroup;
@@ -488,7 +503,8 @@ export function DataGrid<T>({
   onPinnedRowsChange,
   rowReorder = false,
   onRowReorder,
-  rangeSelection = false,
+  rangeSelection: rangeSelectionProp = false,
+  charts = false,
   advancedFilter: advancedFilterProp,
   defaultAdvancedFilter = EMPTY_ADVANCED,
   onAdvancedFilterChange,
@@ -587,6 +603,13 @@ export function DataGrid<T>({
   const dragId = useRef<string | null>(null);
   const rowDrag = useRef<string | null>(null);
 
+  const rangeSelection = rangeSelectionProp || charts;
+  const [chart, setChart] = useState<{
+    data: RangeChartData | null;
+    kind: GridChartKind;
+    cells: number;
+    currency: boolean;
+  } | null>(null);
   const paged = pageSizeProp !== undefined;
   const sourceActive = dataSource !== undefined;
 
@@ -1180,6 +1203,45 @@ export function DataGrid<T>({
     writeClipboard(text);
     const cells = (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1);
     setAnnouncement(labels.rangeCopied(cells));
+  };
+  const openChart = () => {
+    if (!cellRange) return;
+    const bounds = rangeBounds(cellRange);
+    const headers: string[] = [];
+    const columnIds: string[] = [];
+    for (let c = bounds.c0; c <= bounds.c1; c += 1) {
+      const entry = renderColumns[c];
+      headers.push(entry?.kind === "data" ? entry.column.header : "");
+      columnIds.push(entry ? idOfColumn(entry) : String(c));
+    }
+    const cells = [];
+    for (let r = bounds.r0; r <= bounds.r1; r += 1) {
+      const line = [];
+      for (let c = bounds.c0; c <= bounds.c1; c += 1) {
+        const cell = cellAt(r, c);
+        line.push(
+          cell
+            ? {
+                value: getCellValue(cell.row, cell.column),
+                text: formatCellValue(getCellValue(cell.row, cell.column), cell.column),
+              }
+            : null,
+        );
+      }
+      cells.push(line);
+    }
+    const data = rangeToChart({ headers, columnIds, cells, rowLabel: labels.chartRow });
+    const currency =
+      !!data &&
+      data.series.length > 0 &&
+      data.series.every((series) => byId.get(series.id)?.type === "currency");
+    setChart({
+      data,
+      kind: "bar",
+      cells: (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1),
+      currency,
+    });
+    setAnnouncement(data ? labels.chartTitle(rangeCellCount) : labels.chartNoData);
   };
   const onCellPointerDown = (event: ReactPointerEvent<HTMLElement>, r: number, c: number) => {
     if (
@@ -2014,6 +2076,22 @@ export function DataGrid<T>({
         <Chip tone={column.statusTones?.[String(value)] ?? "neutral"} className="h-5.5">
           {formatted}
         </Chip>
+      );
+    }
+    if (column.type === "sparkline" && column.sparkline) {
+      const { values, kind, color, label } = column.sparkline;
+      const description = typeof label === "function" ? label(row) : (label ?? column.header);
+      return (
+        <div className="min-w-0 py-1">
+          <Sparkline
+            data={values(row)}
+            label={description}
+            type={kind}
+            color={color}
+            height={24}
+            animate={false}
+          />
+        </div>
       );
     }
     if (column.type === "boolean" && formatted) {
@@ -3020,10 +3098,23 @@ export function DataGrid<T>({
                   </span>
                 </>
               ) : null}
+              {charts ? (
+                <button
+                  type="button"
+                  onClick={openChart}
+                  className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+                >
+                  <BarChart3 aria-hidden="true" />
+                  {labels.chart}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={copyRange}
-                className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+                className={cn(
+                  "inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5",
+                  !charts && "ml-auto",
+                )}
               >
                 <Copy aria-hidden="true" />
                 {labels.copyRange}
@@ -3033,6 +3124,25 @@ export function DataGrid<T>({
             <span className="text-ink-3">{labels.rangeHint}</span>
           )}
         </div>
+      ) : null}
+      {charts && chart ? (
+        <Suspense fallback={<div aria-hidden="true" className="h-72 border-t-divider" />}>
+          <ChartPanel
+            data={chart.data}
+            kind={chart.kind}
+            onKind={(kind) => setChart({ ...chart, kind })}
+            onClose={() => setChart(null)}
+            valueFormat={chart.currency ? "currency" : "number"}
+            labels={{
+              title: labels.chartTitle(chart.cells),
+              kinds: labels.chartKinds,
+              kindGroup: labels.chartKindGroup,
+              close: labels.chartClose,
+              noData: labels.chartNoData,
+              other: labels.chartOther,
+            }}
+          />
+        </Suspense>
       ) : null}
       <p id={helpId} className="sr-only">
         {labels.keyboardHelp}
