@@ -6,10 +6,11 @@ export type { PinSide };
 
 export type CellValue = string | number | boolean | Date | null | undefined;
 
-export type ColumnType = "text" | "number" | "currency" | "date" | "status";
+export type ColumnType = "text" | "number" | "currency" | "date" | "status" | "boolean";
 export type ColumnAlign = "start" | "center" | "end";
 export type AggregateKind = "sum" | "avg" | "count" | "min" | "max";
-export type FilterKind = "text" | "range" | "dateRange" | "select";
+/** `set` is `select` with a searchable checkbox list and a select-all control. */
+export type FilterKind = "text" | "range" | "dateRange" | "select" | "set";
 export type EditorKind = "text" | "number" | "select";
 export type SortDirection = "asc" | "desc";
 export type Density = "compact" | "normal" | "comfortable";
@@ -75,6 +76,13 @@ export interface DataGridColumn<T> {
   editor?: EditorKind;
   /** Values offered by the `select` editor. */
   options?: readonly string[];
+  /**
+   * Returns an error message when `value` is not acceptable, nothing otherwise. A failing edit stays
+   * open with the message instead of being committed; already invalid cells are flagged.
+   */
+  validate?: (value: CellValue, row: T) => string | null | undefined;
+  /** Header group path from the outermost level down; adjacent columns sharing it share a header. */
+  group?: string | readonly string[];
 }
 
 export interface GroupDisplayRow {
@@ -88,14 +96,44 @@ export interface GroupDisplayRow {
   aggregates: Record<string, number | null>;
 }
 
+/** Tree metadata of a data row (`tree` mode). */
+export interface TreeInfo {
+  hasChildren: boolean;
+  expanded: boolean;
+  /** Aggregates over all descendant leaves; only for rows with children. */
+  aggregates: Record<string, number | null>;
+}
+
 export interface DataDisplayRow<T> {
   kind: "data";
   key: string;
   depth: number;
   row: T;
+  tree?: TreeInfo;
 }
 
-export type DisplayRow<T> = GroupDisplayRow | DataDisplayRow<T>;
+/** Detail panel shown under an expanded data row (master / detail). */
+export interface DetailDisplayRow<T> {
+  kind: "detail";
+  key: string;
+  depth: number;
+  row: T;
+  rowKey: string;
+  height: number;
+}
+
+/** A row of a remote data source whose block is not loaded yet. */
+export interface PlaceholderDisplayRow {
+  kind: "placeholder";
+  key: string;
+  index: number;
+}
+
+export type DisplayRow<T> =
+  | GroupDisplayRow
+  | DataDisplayRow<T>
+  | DetailDisplayRow<T>
+  | PlaceholderDisplayRow;
 
 /** Column layout the user can change; it is what `storageKey` persists. */
 export interface GridLayout {
