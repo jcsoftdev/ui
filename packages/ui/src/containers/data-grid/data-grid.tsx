@@ -1552,8 +1552,11 @@ export function DataGrid<T>({
       const scroller = scrollerRef.current;
       if (!scroller) return null;
       const box = scroller.getBoundingClientRect();
-      const head = scroller.querySelector("thead")?.getBoundingClientRect().bottom ?? box.top;
-      return { left: box.left, right: box.right, top: Math.max(box.top, head), bottom: box.bottom };
+      let head = box.top;
+      for (const th of scroller.querySelectorAll("thead th")) {
+        head = Math.max(head, th.getBoundingClientRect().bottom);
+      }
+      return { left: box.left, right: box.right, top: head, bottom: box.bottom };
     };
     const update = () => {
       const view = viewport();
