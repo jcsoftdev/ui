@@ -17,6 +17,7 @@ import { ChartFrame } from "../chart-frame.js";
 import { ChartDataTable } from "../data-table.js";
 import { sharedSampleIndices } from "../downsample.js";
 import { formatPercent, resolveFormat } from "../format.js";
+import { createAxisMap } from "../ink.js";
 import { ChartLegend, type LegendItem, type LegendShape } from "../legend.js";
 import { EASE_OUT, fadeIn, revealClip, useEntryAnimation } from "../motion.js";
 import { seriesColor } from "../palette.js";
@@ -38,7 +39,7 @@ import {
 } from "./layout.js";
 import { BarMark, DataLabels, LineAreaMark } from "./marks.js";
 import { syncKeyOf, useChartSync } from "./sync.js";
-import type { CartesianChartProps, MarkKind } from "./types.js";
+import type { CartesianChartProps, CartesianPlotInfo, MarkKind } from "./types.js";
 
 const DEFAULT_MAX_POINTS = 2000;
 
@@ -114,6 +115,7 @@ export function CartesianChart({
   onCategoryClick,
   brush = false,
   rangeSelect,
+  overlay,
   loading = false,
   animate = true,
   initialHidden,
@@ -283,6 +285,7 @@ export function CartesianChart({
           categoryLabelRotation={categoryLabelRotation}
           onCategoryClick={onCategoryClick}
           rangeSelect={rangeSelect}
+          overlay={overlay}
           animate={animate}
         />
       )}
@@ -317,6 +320,7 @@ interface CartesianPlotProps
     | "categoryLabelRotation"
     | "onCategoryClick"
     | "rangeSelect"
+    | "overlay"
     | "animate"
   > {
   width: number;
@@ -377,6 +381,7 @@ function CartesianPlot({
   categoryLabelRotation,
   onCategoryClick,
   rangeSelect,
+  overlay,
   animate = true,
 }: CartesianPlotProps) {
   const uid = safeId(useId());
@@ -586,6 +591,50 @@ function CartesianPlot({
     },
     { disabled: !animate },
   );
+
+  const plotInfo = useMemo<CartesianPlotInfo | null>(() => {
+    if (!overlay || horizontal || count === 0) return null;
+    const time = layout.mode === "time";
+    const values = sampled.categories.map((category, index) =>
+      time
+        ? new Date(category as Date | number | string).getTime()
+        : start + (sampled.indices ? (sampled.indices[index] as number) : index),
+    );
+    const xMap = createAxisMap(layout.positions, values);
+    const format = resolveFormat(valueFormat);
+    return {
+      left: margin.left,
+      top: margin.top,
+      width: innerWidth,
+      height: innerHeight,
+      xKind: time ? "time" : "index",
+      toX: xMap.toPixel,
+      fromX: xMap.fromPixel,
+      toY: layout.valueScale.map,
+      fromY: layout.valueScale.invert,
+      formatX: (value) => {
+        if (time) return formatDate(new Date(value));
+        const at = Math.min(total - 1, Math.max(0, Math.round(value)));
+        return titleOf(categories[at] as XValue, xLabel, customXLabel);
+      },
+      formatY: (value) => format(value),
+    };
+  }, [
+    overlay,
+    horizontal,
+    count,
+    layout,
+    sampled,
+    start,
+    margin,
+    innerWidth,
+    innerHeight,
+    valueFormat,
+    total,
+    categories,
+    xLabel,
+    customXLabel,
+  ]);
 
   const valueDomain = layout.valueScale.domain;
   const baseline =
@@ -1084,6 +1133,7 @@ function CartesianPlot({
               style={{ fill: "var(--accent)", fillOpacity: 0.12, stroke: "var(--accent-word)" }}
             />
           ) : null}
+          {plotInfo ? overlay?.svg?.(plotInfo) : null}
           {selection ? (
             <rect
               x={selection.from}
@@ -1125,6 +1175,8 @@ function CartesianPlot({
         )}
         style={{ left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
       />
+
+      {plotInfo ? overlay?.html?.(plotInfo) : null}
 
       {note && (note.kind === "point" || note.kind === "text") ? (
         <ChartTooltip
