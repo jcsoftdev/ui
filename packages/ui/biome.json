@@ -2,7 +2,14 @@
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "root": true,
   "files": {
-    "includes": ["src/**", "bin/**", "scripts/**", "test/*.mjs", "tsup.config.ts"]
+    "includes": [
+      "src/**",
+      "!src/charts/maps/data/*/index.ts",
+      "bin/**",
+      "scripts/**",
+      "test/*.mjs",
+      "tsup.config.ts"
+    ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "linter": { "enabled": true },
