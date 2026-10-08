@@ -1,0 +1,78 @@
+"use client";
+
+import { cn } from "../../utils/cn.js";
+import { tint } from "../core/color-scale.js";
+import { initials, type TreeChartNode } from "./tree-model.js";
+
+/** State of a node passed to the card template. */
+export interface TreeNodeState {
+  /** On the highlighted path (hover or keyboard) from the root. */
+  highlighted: boolean;
+  /** Something else is highlighted: the card may fade back. */
+  dimmed: boolean;
+  /** Keyboard cursor. */
+  active: boolean;
+  /** Children are hidden. */
+  collapsed: boolean;
+  hasChildren: boolean;
+}
+
+export interface TreeCardProps {
+  node: TreeChartNode;
+  state: TreeNodeState;
+}
+
+/**
+ * Default node template: a card with a color rail, an avatar (image or
+ * initials), the name, a subtitle and an optional badge. Fills its box.
+ */
+export function TreeCard({ node, state }: TreeCardProps) {
+  return (
+    <div
+      className={cn(
+        "relative flex h-full w-full items-center gap-2.5 overflow-hidden rounded-tile border bg-surface pr-2.5 pl-3.5 text-left shadow-flat",
+        "motion-safe:transition-[border-color,box-shadow] motion-safe:duration-150",
+        state.highlighted ? "shadow-pop" : "border-line",
+      )}
+      style={state.highlighted ? { borderColor: node.color } : undefined}
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 left-0 w-1"
+        style={{ background: node.color }}
+      />
+      <span
+        className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-pill font-bold text-[12px] text-ink"
+        style={{ background: tint(node.color, 24) }}
+      >
+        {node.image ? (
+          <img src={node.image} alt="" className="size-full object-cover" draggable={false} />
+        ) : (
+          initials(node.name)
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate font-semibold text-[13px] text-ink leading-tight">
+          {node.name}
+        </span>
+        {node.subtitle || node.badge ? (
+          <span className="flex min-w-0 items-center gap-1.5">
+            {node.subtitle ? (
+              <span className="min-w-0 flex-1 truncate text-[11px] text-ink-3 leading-tight">
+                {node.subtitle}
+              </span>
+            ) : null}
+            {node.badge ? (
+              <span
+                className="max-w-[60%] shrink-0 truncate rounded-pill px-1.5 font-bold text-[10px] text-ink-2 leading-[16px]"
+                style={{ background: tint(node.color, 16) }}
+              >
+                {node.badge}
+              </span>
+            ) : null}
+          </span>
+        ) : null}
+      </span>
+    </div>
+  );
+}
