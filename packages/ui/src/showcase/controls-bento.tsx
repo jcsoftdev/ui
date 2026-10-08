@@ -29,6 +29,7 @@ import {
 } from "../overlays/dialog/index.js";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../overlays/hover-card/index.js";
 import { BentoGrid, Tile, useOverlayContainer } from "./bento.js";
+import { AssistantTile, BookingTile, NoteTile, TuningTile } from "./kit-tiles.js";
 
 const acentos = [
   { value: "coral", label: "Coral", swatch: "var(--pal-coral-fill, #faa2a2)" },
@@ -303,6 +304,10 @@ export function ControlsBento() {
           </HoverCard>
         </div>
       </Tile>
+      <BookingTile index={10} />
+      <TuningTile index={11} />
+      <AssistantTile index={12} />
+      <NoteTile index={13} />
     </BentoGrid>
   );
 }
