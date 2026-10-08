@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { cn } from "../../utils/cn.js";
 import { tint } from "../core/color-scale.js";
 import { TreeChart, type TreeLabels } from "./tree-chart.js";
@@ -80,6 +81,67 @@ const spanishLabels: Partial<TreeLabels> = {
   children: "A cargo",
   collapsed: "cerrado",
   of: "de",
+  search: "Buscar persona",
+  searchPrevious: "Coincidencia anterior",
+  searchNext: "Coincidencia siguiente",
+  noMatches: "Sin resultados",
+  groupWord: "personas más",
+  descendants: "Equipo total",
+  loadFailed: "No se pudo cargar. Inténtalo otra vez.",
+};
+
+/** A fourth branch whose team is fetched when you open it. */
+const withLazyBranch: TreeChartDatum = {
+  ...team,
+  children: [
+    ...(team.children ?? []),
+    {
+      id: "san-borja",
+      name: "Rosa Camacho",
+      subtitle: "Encargada de sede",
+      badge: "San Borja",
+      lazy: true,
+      childCount: 4,
+    },
+  ],
+};
+
+const sanBorjaTeam: TreeChartDatum[] = [
+  { id: "hector", name: "Héctor Medina", subtitle: "Barbero senior", badge: "Fade" },
+  { id: "ivan", name: "Iván Soto", subtitle: "Barbero" },
+  { id: "pamela", name: "Pamela Ortiz", subtitle: "Colorista", badge: "Color" },
+  { id: "tomas", name: "Tomás Bravo", subtitle: "Recepción" },
+];
+
+/** A branch with many apprentices, to show leaf grouping. */
+const bigBranch: TreeChartDatum = {
+  ...team,
+  children: [
+    {
+      id: "academia",
+      name: "Marco Villanueva",
+      subtitle: "Director de la academia",
+      badge: "Academia",
+      children: [
+        {
+          id: "inst",
+          name: "Elena Ruiz",
+          subtitle: "Instructora",
+          children: [
+            { id: "a1", name: "Aprendiz Paola" },
+            { id: "a2", name: "Aprendiz Joel" },
+          ],
+        },
+        { id: "b1", name: "Aprendiz Mauricio", subtitle: "Cohorte 1" },
+        { id: "b2", name: "Aprendiz Fabiola", subtitle: "Cohorte 1" },
+        { id: "b3", name: "Aprendiz Ramiro", subtitle: "Cohorte 1" },
+        { id: "b4", name: "Aprendiz Alexia", subtitle: "Cohorte 2" },
+        { id: "b5", name: "Aprendiz Gonzalo", subtitle: "Cohorte 2" },
+        { id: "b6", name: "Aprendiz Brenda", subtitle: "Cohorte 2" },
+      ],
+    },
+    ...(team.children ?? []),
+  ],
 };
 
 const meta = {
@@ -212,6 +274,149 @@ export const FillParent: Story = {
           outline: "1px dashed var(--line-strong)",
         }}
       >
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** The root in the centre, one ring per level; chips replace the cards. */
+export const Radial: Story = {
+  args: {
+    layout: "radial",
+    edgeStyle: "curved",
+    height: 620,
+    nodeWidth: 132,
+    nodeHeight: 28,
+    siblingGap: 10,
+    levelGap: 112,
+  },
+};
+
+/** Every leaf on the last level, so the grouping of the team reads like a dendrogram. */
+export const Dendrogram: Story = {
+  args: {
+    layout: "dendrogram",
+    direction: "left",
+    edgeStyle: "step",
+    height: 520,
+    nodeWidth: 132,
+    nodeHeight: 28,
+    siblingGap: 8,
+    levelGap: 76,
+  },
+};
+
+/** Type a name or a role: matches are ringed, Enter steps through them and pans to each, opening closed branches. */
+export const Search: Story = {
+  args: { searchable: true, selectable: true, initialDepth: 1, height: 520, edgeStyle: "step" },
+};
+
+/** Counters with everyone who hangs below each person. */
+export const Badges: Story = {
+  args: { showCounts: true, edgeStyle: "step" },
+};
+
+/** More than three apprentices under one person fold into a dashed group node. */
+export const GroupedLeaves: Story = {
+  args: { data: bigBranch, groupLeaves: 3, showCounts: true, initialDepth: 2, height: 560 },
+};
+
+/** Open the San Borja branch: its team loads asynchronously (1 s) and a spinner shows meanwhile. */
+export const LazyChildren: Story = {
+  args: { data: withLazyBranch, edgeStyle: "step", showCounts: true },
+  render: function Render(args) {
+    return (
+      <TreeChart
+        {...args}
+        loadChildren={() =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve(sanBorjaTeam), 1000);
+          })
+        }
+      />
+    );
+  },
+};
+
+/** Edges colored by branch; hover a person to light the way back to the owner. */
+export const EdgeColors: Story = {
+  args: { edgeColor: "branch", edgeStyle: "step" },
+};
+
+export const EdgeColorsByDepth: Story = {
+  args: { edgeColor: "depth", edgeStyle: "curved" },
+};
+
+/** Switch the layout and direction live: the cards glide to their new places. */
+export const DynamicDirection: Story = {
+  render: function Render(args) {
+    const [layout, setLayout] = useState<"tidy" | "radial" | "dendrogram">("tidy");
+    const [direction, setDirection] = useState<"top" | "bottom" | "left" | "right">("top");
+    const pick = (
+      name: string,
+      options: readonly string[],
+      value: string,
+      set: (v: never) => void,
+    ) => (
+      <fieldset className="m-0 flex items-center gap-0.5 rounded-pill border-0 bg-surface-2 p-0.5">
+        <legend className="sr-only">{name}</legend>
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={value === option}
+            onClick={() => set(option as never)}
+            className={cn(
+              "cursor-pointer rounded-pill px-3 py-1 font-semibold text-[12px]",
+              value === option ? "bg-surface text-ink shadow-xs" : "text-ink-3 hover:text-ink",
+            )}
+          >
+            {option}
+          </button>
+        ))}
+      </fieldset>
+    );
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap gap-3">
+          {pick("Layout", ["tidy", "radial", "dendrogram"], layout, setLayout)}
+          {pick("Direction", ["top", "bottom", "left", "right"], direction, setDirection)}
+        </div>
+        <TreeChart
+          {...args}
+          layout={layout}
+          direction={direction}
+          height={560}
+          nodeWidth={layout === "tidy" ? 196 : 132}
+          nodeHeight={layout === "tidy" ? 64 : 28}
+          siblingGap={layout === "tidy" ? 20 : 10}
+          levelGap={layout === "radial" ? 112 : layout === "dendrogram" ? 76 : 56}
+        />
+      </div>
+    );
+  },
+};
+
+/** Dark theme, with search, counters and colored edges. */
+export const Dark: Story = {
+  globals: { theme: "dark" },
+  args: { searchable: true, showCounts: true, edgeColor: "branch", edgeStyle: "step" },
+};
+
+export const RadialNarrow: Story = {
+  args: {
+    layout: "radial",
+    height: 420,
+    searchable: true,
+    nodeWidth: 132,
+    nodeHeight: 28,
+    siblingGap: 10,
+    levelGap: 112,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
         <Story />
       </div>
     ),

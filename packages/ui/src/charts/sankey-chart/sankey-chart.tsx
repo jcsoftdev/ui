@@ -15,20 +15,24 @@ import { estimateTextWidth } from "../core/axes.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { tint } from "../core/color-scale.js";
 import { ChartDataTable } from "../core/data-table.js";
+import { DEFAULT_EXPORT_TEXTS, ExportMenu, type ExportTexts } from "../core/export-menu.js";
 import { resolveFormat, type ValueFormat, type ValueFormatter } from "../core/format.js";
 import { fitLabel } from "../core/hierarchy-chart.js";
 import { ChartLegend } from "../core/legend.js";
-import { EASE_OUT, revealClip, useEntryAnimation } from "../core/motion.js";
+import { EASE_OUT, revealClip, useEntryAnimation, useReducedMotion } from "../core/motion.js";
 import { seriesColor } from "../core/palette.js";
 import {
+  type SankeyDiffLink,
   type SankeyGraph,
   type SankeyLink,
   type SankeyLinkInput,
   type SankeyNode,
   type SankeyNodeInput,
+  sankeyDiff,
   sankeyFlowOf,
   sankeyLayout,
   sankeyLinkPath,
+  sankeyTraceOf,
 } from "../core/sankey.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, DEFAULT_LABELS } from "../core/types.js";
@@ -45,6 +49,16 @@ export interface SankeyLabels extends ChartLabels {
   ofTotal: string;
   incoming: string;
   outgoing: string;
+  /** Diff view: the two periods and the change between them. */
+  before: string;
+  after: string;
+  change: string;
+  increase: string;
+  decrease: string;
+  /** Legend entry of the previous period's width in the diff view. */
+  previous: string;
+  /** Export buttons. */
+  exportTexts: ExportTexts;
 }
 
 export const DEFAULT_SANKEY_LABELS: SankeyLabels = {
@@ -58,6 +72,13 @@ export const DEFAULT_SANKEY_LABELS: SankeyLabels = {
   ofTotal: "Share of total",
   incoming: "In",
   outgoing: "Out",
+  before: "Before",
+  after: "After",
+  change: "Change",
+  increase: "Increase",
+  decrease: "Decrease",
+  previous: "Previous period",
+  exportTexts: DEFAULT_EXPORT_TEXTS,
 };
 
 export interface SankeyChartProps {
@@ -66,6 +87,21 @@ export interface SankeyChartProps {
   nodes: readonly SankeyNodeInput[];
   /** Flows between node ids. Links that close a cycle are left out (with a dev warning). */
   links: readonly SankeyLinkInput[];
+  /**
+   * Diff view: the flows of a previous period. `links` is then the current period; every band is
+   * colored by its change (`--chart-up` / `--chart-down`) with the previous width as a ghost behind it.
+   */
+  compare?: readonly SankeyLinkInput[];
+  /** Hover or click traces a whole path: a link lights everything upstream of its source and downstream of its target; a click pins it. */
+  pathTracing?: boolean;
+  /** Dots travel along the bands (off under `prefers-reduced-motion`). */
+  particles?: boolean;
+  /** Show SVG and PNG export buttons above the drawing. */
+  exportable?: boolean;
+  /** Legend entries below the drawing; the nodes by default (an alluvial lists its categories). */
+  legendItems?: ReadonlyArray<{ id: string; name: string; color: string }>;
+  /** `false` keeps nodes in input order inside their column (see `AlluvialChart`). */
+  relax?: boolean;
   /** Titles drawn above the columns, left to right, e.g. ["Origen", "Servicio", "Pago"]. */
   columns?: readonly string[];
   height?: number | "fill";
@@ -107,7 +143,10 @@ export interface SankeyChartProps {
 export function SankeyChart({
   title,
   nodes,
-  links,
+  links: currentLinks,
+  compare,
+  exportable = false,
+  legendItems,
   height = 380,
   aspectRatio,
   valueFormat,
@@ -121,10 +160,19 @@ export function SankeyChart({
     [labelsProp],
   );
   const format = useMemo(() => resolveFormat(valueFormat), [valueFormat]);
+  const diff = useMemo(
+    () => (compare ? sankeyDiff(compare, currentLinks) : null),
+    [compare, currentLinks],
+  );
+  const links: readonly SankeyLinkInput[] = diff ?? currentLinks;
   // Unit-size layout just for colors, the legend, the table and the empty state.
   const shape = useMemo(() => sankeyLayout(nodes, links, { width: 1, height: 1 }), [nodes, links]);
   const colors = useMemo(() => nodeColors(nodes), [nodes]);
   const total = sourceTotal(shape);
+  const diffById = useMemo(
+    () => new Map((diff ?? []).map((entry) => [`${entry.source}->${entry.target}`, entry])),
+    [diff],
+  );
 
   const { onRemovedLinks } = rest;
   useEffect(() => {
@@ -148,14 +196,37 @@ export function SankeyChart({
       empty={shape.nodes.length === 0}
       skeleton="bars"
       className={className}
+      legend={
+        diff || exportable ? (
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            {diff ? <DiffLegend labels={labels} /> : <span />}
+            {exportable ? (
+              <ExportMenu
+                title={title}
+                texts={labels.exportTexts}
+                getSvgs={(root) =>
+                  Array.from(
+                    root
+                      .closest('[class~="@container/chart"]')
+                      ?.querySelectorAll<SVGSVGElement>("svg[data-export-part]") ?? [],
+                  )
+                }
+              />
+            ) : null}
+          </div>
+        ) : undefined
+      }
       footer={
         <ChartLegend
           className="@lg/chart:hidden"
-          items={shape.nodes.map((node) => ({
-            id: node.id,
-            name: node.name,
-            color: colors.get(node.id) as string,
-          }))}
+          items={
+            legendItems ??
+            shape.nodes.map((node) => ({
+              id: node.id,
+              name: node.name,
+              color: colors.get(node.id) as string,
+            }))
+          }
         />
       }
       table={
@@ -164,11 +235,31 @@ export function SankeyChart({
           categoryHeader={labels.category}
           categories={shape.links.map((link) => `${link.source.name} → ${link.target.name}`)}
           columns={[
-            {
-              id: "value",
-              name: labels.value,
-              values: shape.links.map((link) => format(link.value)),
-            },
+            ...(diff
+              ? [
+                  {
+                    id: "before",
+                    name: labels.before,
+                    values: shape.links.map((link) => format(diffById.get(link.id)?.before ?? 0)),
+                  },
+                  {
+                    id: "after",
+                    name: labels.after,
+                    values: shape.links.map((link) => format(diffById.get(link.id)?.after ?? 0)),
+                  },
+                  {
+                    id: "change",
+                    name: labels.change,
+                    values: shape.links.map((link) => signed(diffById.get(link.id), format)),
+                  },
+                ]
+              : [
+                  {
+                    id: "value",
+                    name: labels.value,
+                    values: shape.links.map((link) => format(link.value)),
+                  },
+                ]),
             {
               id: "source",
               name: `${labels.ofSource} ${labels.source.toLowerCase()}`,
@@ -192,6 +283,7 @@ export function SankeyChart({
           colors={colors}
           format={format}
           labels={labels}
+          diffById={diff ? diffById : null}
           width={width}
           height={drawingHeight}
         />
@@ -215,6 +307,38 @@ function sourceTotal(graph: SankeyGraph): number {
     .reduce((sum, node) => sum + node.value, 0);
 }
 
+/** "+12 (+8.5%)" for a diff link, "new" / "removed" when one period is empty. */
+function signed(entry: SankeyDiffLink | undefined, format: ValueFormatter): string {
+  if (!entry) return "";
+  const sign = entry.delta > 0 ? "+" : entry.delta < 0 ? "-" : "";
+  const amount = `${sign}${format(Math.abs(entry.delta))}`;
+  if (entry.before <= 0) return amount;
+  const ratio = Math.abs(entry.delta) / entry.before;
+  return `${amount} (${sign}${(ratio * 100).toFixed(ratio < 0.1 ? 1 : 0)}%)`;
+}
+
+function DiffLegend({ labels }: { labels: SankeyLabels }) {
+  const items: Array<[string, string, string]> = [
+    [labels.increase, "var(--chart-up)", "1"],
+    [labels.decrease, "var(--chart-down)", "1"],
+    [labels.previous, "var(--ink-3)", "0.3"],
+  ];
+  return (
+    <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-0.5 p-0 text-[12px] text-ink-2">
+      {items.map(([name, color, opacity]) => (
+        <li key={name} className="flex items-center gap-1.5">
+          <span
+            aria-hidden="true"
+            className="h-2 w-4 rounded-[3px]"
+            style={{ background: color, opacity }}
+          />
+          {name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function percent(value: number): string {
   return `${(value * 100).toFixed(value < 0.1 ? 1 : 0)}%`;
 }
@@ -222,11 +346,20 @@ function percent(value: number): string {
 interface SankeyPlotProps
   extends Omit<
     SankeyChartProps,
-    "height" | "aspectRatio" | "valueFormat" | "loading" | "labels" | "className"
+    | "height"
+    | "aspectRatio"
+    | "valueFormat"
+    | "loading"
+    | "labels"
+    | "className"
+    | "compare"
+    | "exportable"
   > {
   colors: Map<string, string>;
   format: ValueFormatter;
   labels: SankeyLabels;
+  /** Diff view: the two periods of every link, by link id. */
+  diffById: ReadonlyMap<string, SankeyDiffLink> | null;
   width: number;
   height: number;
 }
@@ -244,8 +377,12 @@ function SankeyPlot({
   colors,
   format,
   labels,
+  diffById,
   width,
   height,
+  pathTracing = false,
+  particles = false,
+  relax = true,
   nodeWidth: nodeWidthProp,
   nodePadding = 14,
   align = "justify",
@@ -273,8 +410,9 @@ function SankeyPlot({
         nodePadding,
         iterations,
         align,
+        relax,
       }),
-    [nodes, links, width, plotHeight, nodeWidth, nodePadding, iterations, align],
+    [nodes, links, width, plotHeight, nodeWidth, nodePadding, iterations, align, relax],
   );
   const total = sourceTotal(graph);
   const lastColumn = graph.columns - 1;
@@ -284,6 +422,8 @@ function SankeyPlot({
 
   const [hover, setHover] = useState<{ focus: Focus; x: number; y: number } | null>(null);
   const [active, setActive] = useState<Focus | null>(null);
+  const [pinned, setPinned] = useState<Focus | null>(null);
+  const reducedMotion = useReducedMotion();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -305,7 +445,7 @@ function SankeyPlot({
     { disabled: !animate, replayKey: graph.nodes.length * 1000 + graph.links.length },
   );
 
-  const focus = hover?.focus ?? active;
+  const focus = hover?.focus ?? active ?? (pathTracing ? pinned : null);
   const lit = useMemo(() => {
     if (!focus) return null;
     if (focus.kind === "node") {
@@ -313,10 +453,13 @@ function SankeyPlot({
       return node ? sankeyFlowOf(node) : null;
     }
     const link = graph.links.find((candidate) => candidate.id === focus.id);
-    return link
-      ? { nodes: new Set([link.source.id, link.target.id]), links: new Set([link.id]) }
-      : null;
-  }, [focus, graph]);
+    if (!link) return null;
+    return pathTracing
+      ? sankeyTraceOf(link)
+      : { nodes: new Set([link.source.id, link.target.id]), links: new Set([link.id]) };
+  }, [focus, graph, pathTracing]);
+  const pin = (next: Focus) =>
+    setPinned((current) => (current?.kind === next.kind && current.id === next.id ? null : next));
 
   const pointer = (event: PointerEvent<Element>) => {
     const box = containerRef.current?.getBoundingClientRect();
@@ -424,7 +567,9 @@ function SankeyPlot({
           : null
       : null;
 
-  const tip = shown ? tooltipContent(shown.focus, graph, colors, format, labels, total) : null;
+  const tip = shown
+    ? tooltipContent(shown.focus, graph, colors, format, labels, total, diffById)
+    : null;
   const valueText = activeLink
     ? linkText(activeLink, format, labels, total)
     : activeNode
@@ -437,6 +582,7 @@ function SankeyPlot({
         ref={svgRef}
         role="img"
         aria-label={title}
+        data-export-part=""
         width={width}
         height={height}
         className="block overflow-visible"
@@ -499,12 +645,19 @@ function SankeyPlot({
               linkColor={linkColor}
               opacity={linkOpacity}
               lit={lit?.links ?? null}
+              diffById={diffById}
               onEnter={(link, event) =>
                 setHover({ focus: { kind: "link", id: link.id }, ...pointer(event) })
               }
               onLeave={() => setHover(null)}
-              onClick={onLinkClick}
+              onClick={(link) => {
+                if (pathTracing) pin({ kind: "link", id: link.id });
+                onLinkClick?.(link);
+              }}
             />
+            {particles && !reducedMotion ? (
+              <SankeyParticles graph={graph} lit={lit?.links ?? null} diffById={diffById} />
+            ) : null}
           </g>
           <SankeyNodes
             graph={graph}
@@ -516,7 +669,10 @@ function SankeyPlot({
               setHover({ focus: { kind: "node", id: node.id }, ...pointer(event) })
             }
             onLeave={() => setHover(null)}
-            onClick={onNodeClick}
+            onClick={(node) => {
+              if (pathTracing) pin({ kind: "node", id: node.id });
+              onNodeClick?.(node);
+            }}
           />
           <SankeyNodeLabels
             graph={graph}
@@ -568,10 +724,39 @@ function tooltipContent(
   format: ValueFormatter,
   labels: SankeyLabels,
   total: number,
+  diffById: ReadonlyMap<string, SankeyDiffLink> | null,
 ): { title: string; rows: TooltipRow[] } | null {
   if (focus.kind === "link") {
     const link = graph.links.find((candidate) => candidate.id === focus.id);
     if (!link) return null;
+    const entry = diffById?.get(link.id);
+    if (entry) {
+      const tone =
+        entry.delta > 0
+          ? "var(--chart-up)"
+          : entry.delta < 0
+            ? "var(--chart-down)"
+            : "var(--ink-3)";
+      return {
+        title: `${link.source.name} → ${link.target.name}`,
+        rows: [
+          {
+            id: "before",
+            name: labels.before,
+            value: format(entry.before),
+            color: "var(--ink-3)",
+          },
+          { id: "after", name: labels.after, value: format(entry.after), color: tone },
+          {
+            id: "change",
+            name: labels.change,
+            value: signed(entry, format) || "0",
+            color: "transparent",
+            emphasis: true,
+          },
+        ],
+      };
+    }
     return {
       title: `${link.source.name} → ${link.target.name}`,
       rows: [
@@ -599,6 +784,28 @@ function tooltipContent(
   const node = graph.nodes.find((candidate) => candidate.id === focus.id);
   if (!node) return null;
   const color = colors.get(node.id) as string;
+  if (diffById) {
+    const flows = node.outgoing.length > 0 ? node.outgoing : node.incoming;
+    const sum = (pick: (entry: SankeyDiffLink) => number) =>
+      flows.reduce((acc, link) => acc + pick(diffById.get(link.id) as SankeyDiffLink), 0);
+    const before = sum((entry) => entry.before);
+    const after = sum((entry) => entry.after);
+    const delta = after - before;
+    return {
+      title: node.name,
+      rows: [
+        { id: "before", name: labels.before, value: format(before), color: "var(--ink-3)" },
+        { id: "after", name: labels.after, value: format(after), color },
+        {
+          id: "change",
+          name: labels.change,
+          value: signed({ source: "", target: "", value: 0, before, after, delta }, format) || "0",
+          color: "transparent",
+          emphasis: true,
+        },
+      ],
+    };
+  }
   const rows: TooltipRow[] = [
     {
       id: "value",
@@ -662,6 +869,7 @@ interface SankeyLinksProps {
   linkColor: NonNullable<SankeyChartProps["linkColor"]>;
   opacity: number;
   lit: ReadonlySet<string> | null;
+  diffById: ReadonlyMap<string, SankeyDiffLink> | null;
   onEnter: (link: SankeyLink, event: PointerEvent<SVGPathElement>) => void;
   onLeave: () => void;
   onClick?: (link: SankeyLink) => void;
@@ -674,12 +882,52 @@ const SankeyLinks = memo(function SankeyLinks({
   linkColor,
   opacity,
   lit,
+  diffById,
   onEnter,
   onLeave,
   onClick,
 }: SankeyLinksProps) {
   return (
     <g fill="none">
+      {diffById
+        ? graph.links.map((link) => {
+            const entry = diffById.get(link.id);
+            if (!entry) return null;
+            const on = lit ? lit.has(link.id) : null;
+            const fade = on === null ? 1 : on ? 1 : 0.2;
+            const color =
+              entry.delta > 0
+                ? "var(--chart-up)"
+                : entry.delta < 0
+                  ? "var(--chart-down)"
+                  : "var(--ink-3)";
+            const d = sankeyLinkPath(link);
+            return (
+              <g key={`diff-${link.id}`} className="pointer-events-none">
+                <path
+                  d={d}
+                  strokeWidth={Math.max(1, entry.before * graph.ky)}
+                  style={{ stroke: "var(--ink-3)", strokeOpacity: 0.2 * fade }}
+                />
+                {entry.after > 0 ? (
+                  <path
+                    d={d}
+                    strokeWidth={Math.max(1, entry.after * graph.ky)}
+                    className="motion-safe:transition-[stroke-opacity] motion-safe:duration-150"
+                    style={{ stroke: color, strokeOpacity: (on ? 0.8 : 0.58) * fade }}
+                  />
+                ) : (
+                  <path
+                    d={d}
+                    strokeWidth={Math.max(1, entry.before * graph.ky)}
+                    strokeDasharray="5 4"
+                    style={{ stroke: color, strokeOpacity: 0.7 * fade }}
+                  />
+                )}
+              </g>
+            );
+          })
+        : null}
       {graph.links.map((link, index) => {
         const stroke =
           linkColor === "gradient"
@@ -698,8 +946,15 @@ const SankeyLinks = memo(function SankeyLinks({
             strokeWidth={Math.max(1, link.width)}
             className="cursor-pointer motion-safe:transition-[stroke-opacity] motion-safe:duration-150"
             style={{
-              stroke,
-              strokeOpacity: on === null ? opacity : on ? Math.min(1, opacity + 0.3) : 0.07,
+              stroke: diffById ? "transparent" : stroke,
+              strokeOpacity: diffById
+                ? 0
+                : on === null
+                  ? opacity
+                  : on
+                    ? Math.min(1, opacity + 0.3)
+                    : 0.07,
+              pointerEvents: "stroke",
             }}
             onPointerEnter={(event) => onEnter(link, event)}
             onPointerMove={(event) => onEnter(link, event)}
@@ -831,3 +1086,54 @@ function SankeyNodeLabels({ graph, format, inside, showValues, room, lit }: Sank
     </g>
   );
 }
+
+interface SankeyParticlesProps {
+  graph: SankeyGraph;
+  lit: ReadonlySet<string> | null;
+  diffById: ReadonlyMap<string, SankeyDiffLink> | null;
+}
+
+/** Dots that travel along the bands; slower and fewer on thin bands. Skipped by the SVG export. */
+const SankeyParticles = memo(function SankeyParticles({
+  graph,
+  lit,
+  diffById,
+}: SankeyParticlesProps) {
+  return (
+    <g {...DECORATIVE} data-export-skip="" className="pointer-events-none">
+      {graph.links.map((link) => {
+        if (lit && !lit.has(link.id)) return null;
+        const width = diffById ? (diffById.get(link.id)?.after ?? 0) * graph.ky : link.width;
+        if (width < 3) return null;
+        const d = sankeyLinkPath(link);
+        const length = Math.hypot(link.target.x0 - link.source.x1, link.y1 - link.y0) * 1.1;
+        const duration = Math.min(14, Math.max(3.5, length / 42));
+        const count = Math.min(5, Math.max(1, Math.round(width / 6)));
+        const radius = Math.min(2.6, Math.max(1.3, width * 0.16));
+        return Array.from({ length: count }, (_, i) => (
+          <circle
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed particle slots per link.
+            key={`${link.id}-${i}`}
+            r={radius}
+            style={{ fill: "var(--surface)", fillOpacity: 0.92 }}
+          >
+            <animateMotion
+              dur={`${duration}s`}
+              begin={`-${((i / count) * duration).toFixed(2)}s`}
+              repeatCount="indefinite"
+              path={d}
+            />
+            <animate
+              attributeName="opacity"
+              values="0;1;1;0"
+              keyTimes="0;0.12;0.88;1"
+              dur={`${duration}s`}
+              begin={`-${((i / count) * duration).toFixed(2)}s`}
+              repeatCount="indefinite"
+            />
+          </circle>
+        ));
+      })}
+    </g>
+  );
+});

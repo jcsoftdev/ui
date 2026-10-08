@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ChordChart } from "../chord-chart/chord-chart.js";
 import type { SankeyLinkInput, SankeyNodeInput } from "../core/sankey.js";
+import { AlluvialChart } from "./alluvial-chart.js";
 import { SankeyChart, type SankeyLabels } from "./sankey-chart.js";
 
 /** Clientes de octubre: cómo llegaron, qué servicio tomaron y cómo pagaron. */
@@ -53,6 +55,83 @@ const spanishLabels: Partial<SankeyLabels> = {
   ofTotal: "Parte del total",
   incoming: "Entran",
   outgoing: "Salen",
+  before: "Antes",
+  after: "Después",
+  change: "Cambio",
+  increase: "Sube",
+  decrease: "Baja",
+  previous: "Periodo anterior",
+  exportTexts: { export: "Exportar", svg: "SVG", png: "PNG" },
+};
+
+/** Septiembre: el mismo recorrido, con menos Instagram y sin color en el pago por tarjeta. */
+const septiembre: SankeyLinkInput[] = [
+  { source: "instagram", target: "corte", value: 118 },
+  { source: "instagram", target: "combo", value: 39 },
+  { source: "instagram", target: "color", value: 31 },
+  { source: "referidos", target: "corte", value: 95 },
+  { source: "referidos", target: "barba", value: 33 },
+  { source: "referidos", target: "combo", value: 29 },
+  { source: "google", target: "corte", value: 61 },
+  { source: "google", target: "barba", value: 22 },
+  { source: "paso", target: "corte", value: 52 },
+  { source: "paso", target: "barba", value: 36 },
+  { source: "paso", target: "color", value: 14 },
+  { source: "corte", target: "yape", value: 174 },
+  { source: "corte", target: "tarjeta", value: 71 },
+  { source: "corte", target: "efectivo", value: 81 },
+  { source: "barba", target: "yape", value: 44 },
+  { source: "barba", target: "efectivo", value: 47 },
+  { source: "combo", target: "tarjeta", value: 40 },
+  { source: "combo", target: "yape", value: 28 },
+  { source: "color", target: "tarjeta", value: 33 },
+  { source: "color", target: "efectivo", value: 12 },
+];
+
+/** Segmentos de clientes mes a mes: quién pasa de nuevo a regular, de regular a VIP o se pierde. */
+const segmentos = {
+  stages: ["Jul", "Ago", "Sep", "Oct"],
+  categories: [
+    { id: "vip", name: "VIP", color: "var(--chart-cat-3)" },
+    { id: "regular", name: "Regulares" },
+    { id: "nuevo", name: "Nuevos", color: "var(--chart-cat-2)" },
+    { id: "inactivo", name: "Inactivos", color: "var(--ink-3)" },
+  ],
+  flows: [
+    [
+      { from: "vip", to: "vip", value: 42 },
+      { from: "vip", to: "regular", value: 6 },
+      { from: "regular", to: "vip", value: 14 },
+      { from: "regular", to: "regular", value: 118 },
+      { from: "regular", to: "inactivo", value: 22 },
+      { from: "nuevo", to: "regular", value: 31 },
+      { from: "nuevo", to: "inactivo", value: 17 },
+      { from: "inactivo", to: "regular", value: 9 },
+      { from: "inactivo", to: "inactivo", value: 40 },
+    ],
+    [
+      { from: "vip", to: "vip", value: 51 },
+      { from: "vip", to: "regular", value: 5 },
+      { from: "regular", to: "vip", value: 18 },
+      { from: "regular", to: "regular", value: 124 },
+      { from: "regular", to: "inactivo", value: 20 },
+      { from: "nuevo", to: "regular", value: 36 },
+      { from: "nuevo", to: "inactivo", value: 14 },
+      { from: "inactivo", to: "regular", value: 12 },
+      { from: "inactivo", to: "inactivo", value: 47 },
+    ],
+    [
+      { from: "vip", to: "vip", value: 62 },
+      { from: "vip", to: "regular", value: 7 },
+      { from: "regular", to: "vip", value: 16 },
+      { from: "regular", to: "regular", value: 139 },
+      { from: "regular", to: "inactivo", value: 18 },
+      { from: "nuevo", to: "regular", value: 44 },
+      { from: "nuevo", to: "inactivo", value: 12 },
+      { from: "inactivo", to: "regular", value: 15 },
+      { from: "inactivo", to: "inactivo", value: 50 },
+    ],
+  ],
 };
 
 const meta = {
@@ -187,4 +266,60 @@ export const FillParent: Story = {
       </div>
     ),
   ],
+};
+
+/** Clients keep their segment color and their row from month to month. */
+export const Alluvial: Story = {
+  render: () => (
+    <AlluvialChart
+      title="Segmentos de clientes, de julio a octubre"
+      {...segmentos}
+      valueFormat="integer"
+      height={420}
+      labels={spanishLabels}
+    />
+  ),
+};
+
+/** October against September: bands colored by change, the grey ghost behind is the previous width. */
+export const Diff: Story = {
+  args: {
+    title: "Octubre frente a septiembre",
+    compare: septiembre,
+    linkColor: "gradient",
+    height: 440,
+  },
+};
+
+/** Hover a band or a bar to light every path through it; click to pin it, click again to release. */
+export const PathTracing: Story = {
+  args: { pathTracing: true, linkColor: "source", linkOpacity: 0.28 },
+};
+
+/** Dots travel along the bands. They stop under `prefers-reduced-motion` and are left out of the SVG export. */
+export const Particles: Story = {
+  args: { particles: true, linkColor: "source", linkOpacity: 0.3, pathTracing: true },
+};
+
+/** The SVG and PNG buttons download the drawing as it is on screen. */
+export const Export: Story = {
+  args: { exportable: true, compare: septiembre },
+};
+
+/** The same idea as a circle: who switches barber with whom (see ChordChart). */
+export const Chord: Story = {
+  render: () => (
+    <ChordChart
+      title="Clientes que cambian de barbero"
+      groups={["Kevin", "Diego", "Andrea", "Luis"].map((name) => ({ id: name, name }))}
+      matrix={[
+        [0, 14, 6, 3],
+        [9, 0, 4, 11],
+        [5, 3, 0, 2],
+        [2, 12, 3, 0],
+      ]}
+      valueFormat="integer"
+      height={420}
+    />
+  ),
 };

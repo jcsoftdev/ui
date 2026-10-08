@@ -213,13 +213,128 @@ const spanishTexts = {
     week: "Semanas",
     month: "Meses",
     quarter: "Trimestres",
+    year: "Año",
   },
-  zoomShort: { hour: "H", day: "D", week: "S", month: "M", quarter: "T" },
+  zoomShort: { hour: "H", day: "D", week: "S", month: "M", quarter: "T", year: "A" },
+  baseline: "Plan original",
+  variance: "Desvío",
+  criticalPath: "Ruta crítica",
+  critical: "Crítica",
+  slack: "Holgura",
+  annotations: "Anotaciones",
+  exportTexts: { export: "Exportar", svg: "SVG", png: "PNG" },
   divider: "Ancho de la lista de tareas",
   keyboardHint:
     "Flechas arriba y abajo recorren las tareas; izquierda y derecha pliegan o despliegan fases. Si es editable: Alt y flechas mueven, Mayús y flechas cambian el fin, más y menos cambian el avance.",
   quarter: (quarter: number) => `T${quarter}`,
 };
+
+/** The original plan: the same tasks a few days earlier or shorter, so the actuals show slippage. */
+const planOriginal: Record<string, { start: Date; end: Date }> = {
+  brief: { start: day(9, 14), end: day(9, 16) },
+  diseno: { start: day(9, 16), end: day(9, 21) },
+  presupuesto: { start: day(9, 21), end: day(9, 25) },
+  demolicion: { start: day(9, 28), end: day(10, 2) },
+  electrico: { start: day(10, 5), end: day(10, 10) },
+  gasfiteria: { start: day(10, 5), end: day(10, 9) },
+  pisos: { start: day(10, 9), end: day(10, 16) },
+  pintura: { start: day(10, 16), end: day(10, 20) },
+  sillones: { start: day(10, 20), end: day(10, 24) },
+  caja: { start: day(10, 21), end: day(10, 27) },
+  capacitacion: { start: day(10, 27), end: day(10, 31) },
+};
+
+const conBaseline: GanttTask[] = remodelacion.map((task) => ({
+  ...task,
+  baseline: planOriginal[task.id],
+}));
+
+/** Release dates and a closure that the plan has to respect. */
+const hitosDeNegocio = [
+  { id: "feriado", at: day(10, 8), label: "Feriado: sin obra" },
+  {
+    id: "proveedor",
+    at: day(10, 14),
+    to: day(10, 17),
+    label: "Corte de luz programado",
+    color: "var(--danger)",
+  },
+  { id: "cita", at: day(11, 5), label: "Apertura al público", color: "var(--success)" },
+];
+
+/** Only milestones: the key dates of the opening. */
+const soloHitos: GanttTask[] = [
+  { id: "contrato", name: "Contrato firmado", start: day(9, 14), end: day(9, 14), milestone: true },
+  {
+    id: "permiso",
+    name: "Licencia municipal",
+    start: day(9, 25),
+    end: day(9, 25),
+    milestone: true,
+    color: "var(--chart-cat-2)",
+  },
+  {
+    id: "entrega",
+    name: "Entrega de la obra",
+    start: day(10, 24),
+    end: day(10, 24),
+    milestone: true,
+    color: "var(--chart-cat-4)",
+  },
+  {
+    id: "equipos",
+    name: "Equipos instalados",
+    start: day(10, 29),
+    end: day(10, 29),
+    milestone: true,
+    color: "var(--chart-cat-4)",
+  },
+  {
+    id: "apertura",
+    name: "Apertura",
+    start: day(11, 5),
+    end: day(11, 5),
+    milestone: true,
+    color: "var(--accent-word)",
+  },
+];
+
+/** Progress from not started to done, with a parent that rolls it up. */
+const avances: GanttTask[] = [
+  { id: "campana", name: "Campaña de reapertura", start: day(10, 1), end: day(10, 31) },
+  {
+    id: "fotos",
+    name: "Sesión de fotos",
+    parentId: "campana",
+    start: day(10, 1),
+    end: day(10, 8),
+    progress: 1,
+  },
+  {
+    id: "web",
+    name: "Landing de reservas",
+    parentId: "campana",
+    start: day(10, 5),
+    end: day(10, 18),
+    progress: 0.65,
+  },
+  {
+    id: "redes",
+    name: "Anuncios en redes",
+    parentId: "campana",
+    start: day(10, 12),
+    end: day(10, 26),
+    progress: 0.25,
+  },
+  {
+    id: "sorteo",
+    name: "Sorteo de cortes gratis",
+    parentId: "campana",
+    start: day(10, 22),
+    end: day(10, 31),
+    progress: 0,
+  },
+];
 
 const meta = {
   title: "Charts/GanttChart",
@@ -339,4 +454,51 @@ export const FillParent: Story = {
       </div>
     ),
   ],
+};
+
+/** Tasks with no slack are red, with the links that chain them; the others show their slack in the tooltip. */
+export const CriticalPath: Story = {
+  args: { showCriticalPath: true },
+};
+
+/** Thin grey bars under each task are the original plan; the tooltip shows the variance. */
+export const Baselines: Story = {
+  args: { tasks: conBaseline, showBaselines: true, showCriticalPath: false },
+};
+
+/** Dated lines and bands for closures, deadlines and the opening. */
+export const Annotations: Story = {
+  args: { annotations: hitosDeNegocio, holidays: [day(10, 8)] },
+};
+
+/** The whole project on one screen: years above, quarters below. */
+export const YearView: Story = {
+  args: { defaultZoom: "year", rowHeight: 30 },
+};
+
+/** Diamonds only: the key dates of the opening. */
+export const Milestones: Story = {
+  args: {
+    title: "Hitos de la apertura",
+    tasks: soloHitos,
+    dependencies: false,
+    defaultZoom: "week",
+    today: day(10, 8),
+  },
+};
+
+/** Not started, partly done and finished; the campaign rolls up the weighted progress of its tasks. */
+export const Progress: Story = {
+  args: { title: "Campaña de reapertura", tasks: avances, today: day(10, 14), defaultZoom: "week" },
+};
+
+/** The SVG and PNG buttons download the timeline, header included. */
+export const Export: Story = {
+  args: {
+    tasks: conBaseline,
+    showBaselines: true,
+    showCriticalPath: true,
+    annotations: hitosDeNegocio,
+    exportable: true,
+  },
 };

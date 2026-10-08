@@ -52,7 +52,9 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `FillGaugeChart` | `fill-gauge-chart/` | `UNIT_ICONS` shapes as clip paths |
 | `IsotypeRows` | `isotype-rows/` | unit charts core (`unitFractions`, `UnitGlyph`) |
 | `ProgressUnits` | `progress-units/` | unit charts core (`progressFractions`, `UnitGlyph`) |
-| `TreeChart` | `tree-chart/` | `tree-layout.ts` (tidy tree, 4 directions, edge paths) + `use-pan-zoom.ts`; HTML card templates |
+| `TreeChart` | `tree-chart/` | `tree-layout.ts` (tidy tree, 4 directions, edge paths), `tree-radial.ts` (radial, dendrogram) + `use-pan-zoom.ts`; HTML card templates, search, lazy children |
+| `ChordChart` | `chord-chart/` | `chord.ts` (groups, ribbons) + `polar.ts` `arcPath`, `useIndexNavigation`, export buttons |
+| `AlluvialChart` | `sankey-chart/` | `SankeyChart` with fixed stage columns (`alluvialGraph`) |
 | `SankeyChart` | `sankey-chart/` | `sankey.ts` (columns by longest path, relaxation, link ordering, cycle breaking) |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
@@ -121,6 +123,10 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `gantt.ts` | `GANTT_ZOOMS` (hour / day / week / month / quarter: px per day, header units, snap), `startOf` / `addUnits` (local calendar, weeks start Monday), `ganttDomain`, `ganttScale(domain, zoom, minWidth)` (stretches to fill the pane), `ganttHeader` / `headerCells`, `nonWorkingSpans(domain, workingDays, holidays)`, `snapTime`, `routeDependency` (finish-to-start, right angles, wraps back through the row gutter when the successor starts too early), `roundedPolyline`, `ganttRows(tasks, collapsed)` (depth-first rows, parents roll up dates and duration-weighted progress). Tested in `test/charts-gantt-stock.test.mjs`. |
 | `tree-layout.ts` | Pure, tested in `test/charts-graph.test.mjs`: `treeLayout(root, { direction, siblingGap, levelGap })` (contour packing in the Reingold–Tilford / Walker family: parents centred over children, siblings packed from both ends and averaged so small subtrees spread evenly, one depth band per level), `treeEdgePath` (`curved` / `step` with rounded elbows / `straight`), `treePathToRoot`, `treeKeyMove` (arrow key to parent/child/sibling for each direction), `treeNeighbor`. |
 | `sankey.ts` | Pure, tested in `test/charts-graph.test.mjs`: `sankeyLayout(nodes, links, { width, height, nodeWidth, nodePadding, iterations, align })` (columns by longest path, `justify` sinks, shared scale `ky`, relaxation sweeps with collision resolution, links ordered by the other end), `breakCycles` (weighted Eades–Lin–Smyth order; backward links are reported in `removed` with a reason), `sankeyLinkPath`, `sankeyFlowOf` (everything upstream and downstream of a node). |
+| `tree-radial.ts` | `radialTreeLayout`, `dendrogramLayout`, `radialEdgePath`, `toPolar`: extra layouts returning the same `TreeLayout` (radial nodes carry `angle`, the layout a `center`). Tested in `test/graph-flow-parity.test.mjs`. |
+| `export.ts` / `export-menu.tsx` | `serializeSvg(svg \| svg[])` clones the drawing(s), bakes computed paint (CSS variables, Tailwind classes) into inline style and stacks them vertically; `downloadSvg`, `downloadPng` (canvas, 2x), `exportFileName`, `stackLayout`; `ExportMenu` is the two-button group used by Gantt and Sankey. Browser only, no dependencies. |
+| `chord.ts` | `chordLayout(matrix, { padAngle, startAngle, sortGroups, sortSubgroups })` (groups + chords), `ribbonPath`, `chordsOf`, `groupAt`. Angles follow `polar.ts`. |
+| `sankey.ts` (extra) | `sankeyTraceOf(link)` (whole path through a link), `sankeyDiff(before, after)`, `alluvialGraph({ stages, categories, flows })`; layout options `relax: false` and per-node `column`. |
 | `use-pan-zoom.ts` | `usePanZoom({ minZoom, maxZoom, wheel })`: drag to pan (capture starts after a few pixels so clicks still work), two-pointer pinch, wheel zoom with Ctrl/⌘ by default, `zoomBy`, `wasDrag()`; pure `zoomAround` and `fitView`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
@@ -193,10 +199,34 @@ Every chart must keep these, so all families behave the same:
   container until the user pans or zooms; the fit button (or `0`) returns to following. Keyboard: the explorer
   slider moves by arrows relative to the direction (towards the leaves = first child, across = siblings), Enter
   toggles, `+`/`-` zoom, Home goes to the root; the active node is panned into view.
+- Tree extras: `layout="radial"` (`radialTreeLayout`: root in the centre, one ring per level, leaves share the
+  angle, rings pushed out until a ring's boxes fit; edges via `radialEdgePath`) and `layout="dendrogram"`
+  (`dendrogramLayout`: every leaf on the last level, parents centred over their first and last child, honours
+  `direction`); both default to compact `TreeChip` nodes and the same transitions. `searchable` adds a search box
+  (`searchTree` folds accents, every word must match name, subtitle or badge): matches are ringed, Enter / Shift+Enter
+  or the arrows step through them, opening closed ancestors, selecting the node and centring it. `selectable` /
+  `selectedId` keep the path to the root lit. `showCounts` shows descendants (`TreeNodeState.descendants` for custom
+  templates). `groupLeaves={n}` folds runs of `n`+ leaf siblings into a dashed group node (`groupLeaves()` is
+  pure). `lazy: true` data plus `loadChildren(node)` fetches children on first expand with a spinner on the toggle
+  (`buildTreeModel(data, loaded)`); a rejected promise marks the node and calls `onLoadError`. `edgeColor` is
+  `neutral | depth | branch`; with a lit path the other edges fade.
 - `SankeyChart`: hover a node to light its whole flow upstream and downstream, a link to isolate it; the tooltip
   gives the value, share of its source and share of the total. Keyboard: up/down within a column, left/right to
   the nearest node of the next column, Enter steps through the node's flows. Links that close a cycle are left
   out, reported through `onRemovedLinks`, and logged with `console.warn` outside production.
+- Sankey extras: `compare={previousLinks}` turns it into a diff view (`sankeyDiff` merges the periods by pair; the
+  layout reserves the larger width, the band is drawn at the current width colored by `--chart-up` /
+  `--chart-down`, the previous width stays as a grey ghost, a flow that disappeared is dashed; tooltip and table
+  give before, after and change). `pathTracing` makes a link light everything upstream of its source and
+  downstream of its target (`sankeyTraceOf`) and lets a click pin the path. `particles` animates dots along the
+  bands with SMIL (`animateMotion`), off under `prefers-reduced-motion` and marked `data-export-skip` so exports
+  stay static. `exportable` adds SVG / PNG buttons. `relax={false}` and `SankeyNodeInput.column` pin nodes to
+  fixed columns in input order, which is what `AlluvialChart` (`stages`, `categories`, `flows[s]` from stage `s`
+  to `s + 1`; `alluvialGraph` is the pure conversion) uses.
+- `ChordChart`: `chordLayout(matrix)` (`matrix[i][j]` = flow from `i` to `j`, a group's arc is its row sum, a
+  ribbon is `matrix[i][j]` wide at `i` and `matrix[j][i]` at `j`), `ribbonPath`, `chordsOf`, `groupAt`. Hover a
+  group to light its ribbons, a ribbon to isolate it; arrows walk the groups (`PlotOverlay`-style hidden slider).
+  Names sit around the ring from 420 px, the legend carries them below.
 - Narrow containers: the tree is fitted (and can be zoomed); sankey labels shorten, then hide when the gap
   between columns is under 40 px, and a node legend shows below the drawing until `@lg/chart`.
 
@@ -264,6 +294,13 @@ Every chart adapts to its exact parent, width and height, from the container and
   Alt+arrows move by the zoom snap, Shift+arrows change the end, `+`/`-` change progress by 10%. Edits are controlled:
   the chart reports them and shows the dragged draft until `tasks` changes. Late links (successor starts before the
   predecessor ends) use the danger token. Default height follows the rows (220-560 px); `"fill"` scrolls rows inside.
+- Gantt extras: `showCriticalPath` runs `criticalPath(tasks)` (forward/backward pass over finish-to-start
+  dependencies; tasks without predecessors start at their own date, the rest when their predecessors end, so waiting gaps are ignored; a dependency on a parent
+  means all its leaves; cycles are left out) and draws zero-slack tasks and their tight links in the danger tone,
+  with the slack of the others in the tooltip. `showBaselines` draws `task.baseline` as a thin bar under the
+  actual one and adds baseline and variance to the tooltip. `annotations` are dated lines or bands (`to`) with a
+  label, stacked into lanes so labels never overlap. `zoom="year"` shows a whole year (quarters in the header).
+  `exportable` adds SVG and PNG buttons that export the header and the timeline (`core/export.ts`).
 - Stock: indicators run on the whole series and are sliced to the window, so the warm-up never shows inside the view;
   VWAP is anchored at the first visible bar. Visible comparisons switch the chart to % change from the first visible
   bar (the main series becomes a line, overlays hide, the type switch is disabled). The price and oscillator panes

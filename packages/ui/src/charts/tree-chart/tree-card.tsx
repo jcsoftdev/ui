@@ -15,6 +15,16 @@ export interface TreeNodeState {
   /** Children are hidden. */
   collapsed: boolean;
   hasChildren: boolean;
+  /** Nodes below this one, at any depth. */
+  descendants: number;
+  /** `showCounts` is on: the template should display `descendants`. */
+  showCount: boolean;
+  /** Children are being fetched. */
+  loading: boolean;
+  /** Matches the search box. */
+  matched: boolean;
+  /** Chosen with a click or the search box; its path to the root stays lit. */
+  selected: boolean;
 }
 
 export interface TreeCardProps {
@@ -31,6 +41,7 @@ export function TreeCard({ node, state }: TreeCardProps) {
     <div
       className={cn(
         "relative flex h-full w-full items-center gap-2.5 overflow-hidden rounded-tile border bg-surface pr-2.5 pl-3.5 text-left shadow-flat",
+        node.group && "border-dashed",
         "motion-safe:transition-[border-color,box-shadow] motion-safe:duration-150",
         state.highlighted ? "shadow-pop" : "border-line",
       )}
@@ -73,6 +84,49 @@ export function TreeCard({ node, state }: TreeCardProps) {
           </span>
         ) : null}
       </span>
+      <CountBadge state={state} color={node.color} />
+    </div>
+  );
+}
+
+/** Descendant count pill, shared by the card and the chip. */
+function CountBadge({ state, color }: { state: TreeNodeState; color: string }) {
+  if (!state.showCount || state.descendants === 0) return null;
+  return (
+    <span
+      className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-pill px-1 font-bold text-[10px] text-ink tabular-nums"
+      style={{ background: tint(color, 22) }}
+      title={`+${state.descendants}`}
+    >
+      {state.descendants}
+    </span>
+  );
+}
+
+/**
+ * Compact node template for the radial and dendrogram layouts: a pill with a
+ * color dot, the name and, optionally, the descendant count.
+ */
+export function TreeChip({ node, state }: TreeCardProps) {
+  return (
+    <div
+      className={cn(
+        "flex h-full w-full items-center gap-1.5 overflow-hidden rounded-pill border bg-surface px-2 text-left shadow-flat",
+        "motion-safe:transition-[border-color,box-shadow] motion-safe:duration-150",
+        node.group && "border-dashed",
+        state.highlighted ? "shadow-pop" : "border-line",
+      )}
+      style={state.highlighted ? { borderColor: node.color } : undefined}
+    >
+      <span
+        aria-hidden="true"
+        className="size-2 shrink-0 rounded-pill"
+        style={{ background: node.color }}
+      />
+      <span className="min-w-0 flex-1 truncate font-semibold text-[11px] text-ink leading-none">
+        {node.name}
+      </span>
+      <CountBadge state={state} color={node.color} />
     </div>
   );
 }

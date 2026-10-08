@@ -12,8 +12,11 @@ import {
 import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
+import { DEFAULT_EXPORT_TEXTS, ExportMenu, type ExportTexts } from "../core/export-menu.js";
 import { formatPercent } from "../core/format.js";
 import {
+  type CriticalPath,
+  criticalPath,
   DAY_MS,
   GANTT_ZOOM_ORDER,
   GANTT_ZOOMS,
@@ -32,19 +35,22 @@ import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels } from "../core/types.js";
 import { useIsomorphicLayoutEffect } from "../core/use-chart-size.js";
 import {
+  AnnotationLayer,
   type BarDraft,
   barBox,
   DependencyLayer,
   dependencyLinks,
+  type GanttAnnotation,
   type GanttTask,
   HEADER_HEIGHT,
+  placeAnnotations,
   type Row,
   TimelineBackdrop,
   TimelineBars,
   TimelineHeader,
 } from "./gantt-marks.js";
 
-export type { GanttTask } from "./gantt-marks.js";
+export type { GanttAnnotation, GanttTask } from "./gantt-marks.js";
 
 export interface GanttTaskChange {
   id: string;
@@ -75,6 +81,15 @@ export interface GanttTexts {
   zoomLevels: Record<GanttZoom, string>;
   /** One or two letters for narrow containers. */
   zoomShort: Record<GanttZoom, string>;
+  /** Baseline (plan) and critical path wording. */
+  baseline: string;
+  variance: string;
+  criticalPath: string;
+  critical: string;
+  slack: string;
+  annotations: string;
+  /** Export buttons. */
+  exportTexts: ExportTexts;
   /** Accessible name of the divider between the task list and the timeline. */
   divider: string;
   /** Read after a row: how to move, collapse and edit with the keyboard. */
@@ -82,6 +97,14 @@ export interface GanttTexts {
   /** Quarter label in the header, "T3" by default. */
   quarter: (quarter: number) => string;
 }
+
+/** Texts the caller may override; per-zoom words can be given for some levels only. */
+export type GanttTextsInput = Partial<
+  Omit<GanttTexts, "zoomLevels" | "zoomShort"> & {
+    zoomLevels: Partial<GanttTexts["zoomLevels"]>;
+    zoomShort: Partial<GanttTexts["zoomShort"]>;
+  }
+>;
 
 const DEFAULT_TEXTS: GanttTexts = {
   tasks: "Tasks",
@@ -97,8 +120,22 @@ const DEFAULT_TEXTS: GanttTexts = {
   hours: "h",
   today: "Today",
   zoom: "Zoom",
-  zoomLevels: { hour: "Hours", day: "Days", week: "Weeks", month: "Months", quarter: "Quarters" },
-  zoomShort: { hour: "H", day: "D", week: "W", month: "M", quarter: "Q" },
+  zoomLevels: {
+    hour: "Hours",
+    day: "Days",
+    week: "Weeks",
+    month: "Months",
+    quarter: "Quarters",
+    year: "Year",
+  },
+  zoomShort: { hour: "H", day: "D", week: "W", month: "M", quarter: "Q", year: "Y" },
+  baseline: "Baseline",
+  variance: "Variance",
+  criticalPath: "Critical path",
+  critical: "Critical",
+  slack: "Slack",
+  annotations: "Annotations",
+  exportTexts: DEFAULT_EXPORT_TEXTS,
   divider: "Resize the task list",
   keyboardHint:
     "Up and down move between tasks, left and right collapse or expand. Editable tasks: Alt plus arrows move, Shift plus arrows change the end, plus and minus change the progress.",
@@ -144,10 +181,21 @@ export interface GanttChartProps {
   defaultCollapsed?: readonly string[];
   /** Finish-to-start arrows (default true). */
   dependencies?: boolean;
+  /**
+   * Highlight the critical path: the chain of tasks and links with no slack,
+   * computed from the dependencies (`criticalPath`). Others show their slack in the tooltip.
+   */
+  showCriticalPath?: boolean;
+  /** Draw each task's `baseline` as a thin bar under the actual one, with the variance in the tooltip. */
+  showBaselines?: boolean;
+  /** Dated lines and bands (releases, deadlines, closures) over the timeline. */
+  annotations?: readonly GanttAnnotation[];
+  /** Show SVG and PNG export buttons in the toolbar. */
+  exportable?: boolean;
   tooltip?: boolean;
   loading?: boolean;
   animate?: boolean;
-  texts?: Partial<GanttTexts>;
+  texts?: GanttTextsInput;
   labels?: Partial<ChartLabels>;
   className?: string;
 }
@@ -185,6 +233,10 @@ export function GanttChart({
   holidays,
   defaultCollapsed,
   dependencies = true,
+  showCriticalPath = false,
+  showBaselines = false,
+  annotations,
+  exportable = false,
   tooltip = true,
   loading,
   animate = true,
@@ -193,7 +245,12 @@ export function GanttChart({
   className,
 }: GanttChartProps) {
   const labels = resolveLabels(labelOverrides);
-  const texts = { ...DEFAULT_TEXTS, ...textOverrides };
+  const texts: GanttTexts = {
+    ...DEFAULT_TEXTS,
+    ...textOverrides,
+    zoomLevels: { ...DEFAULT_TEXTS.zoomLevels, ...textOverrides?.zoomLevels },
+    zoomShort: { ...DEFAULT_TEXTS.zoomShort, ...textOverrides?.zoomShort },
+  };
   const [zoomState, setZoomState] = useState<GanttZoom>(defaultZoom);
   const zoom = zoomProp ?? zoomState;
   const setZoom = (next: GanttZoom) => {
@@ -208,6 +265,11 @@ export function GanttChart({
   const chrome = TOOLBAR_HEIGHT + TOOLBAR_GAP + HEADER_HEIGHT + BORDER + 12;
   const autoHeight = Math.min(560, Math.max(220, chrome + rows.length * rowHeight));
   const names = useMemo(() => new Map(tasks.map((task) => [task.id, task.name])), [tasks]);
+  const critical = useMemo(
+    () => (showCriticalPath ? criticalPath(tasks) : null),
+    [showCriticalPath, tasks],
+  );
+  const hasBaselines = showBaselines && tasks.some((task) => task.baseline);
 
   return (
     <ChartFrame
@@ -253,6 +315,30 @@ export function GanttChart({
                 (row.task.dependencies ?? []).map((id) => names.get(id) ?? id).join(", "),
               ),
             },
+            ...(hasBaselines
+              ? [
+                  {
+                    id: "baseline",
+                    name: texts.baseline,
+                    values: allRows.map((row) =>
+                      row.task.baseline
+                        ? `${formatDate(+row.task.baseline.start)} - ${formatDate(+row.task.baseline.end)}`
+                        : "",
+                    ),
+                  },
+                ]
+              : []),
+            ...(critical
+              ? [
+                  {
+                    id: "critical",
+                    name: texts.criticalPath,
+                    values: allRows.map((row) =>
+                      critical.tasks.has(row.task.id) ? texts.critical : "",
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       }
@@ -276,6 +362,10 @@ export function GanttChart({
           workingDays={workingDays}
           holidays={holidays}
           dependencies={dependencies}
+          critical={critical}
+          baselines={hasBaselines}
+          annotations={annotations}
+          exportable={exportable}
           tooltip={tooltip}
           animate={animate}
           texts={texts}
@@ -351,6 +441,10 @@ interface BodyProps {
   workingDays: readonly number[];
   holidays?: ReadonlyArray<Date | number>;
   dependencies: boolean;
+  critical: CriticalPath | null;
+  baselines: boolean;
+  annotations?: readonly GanttAnnotation[];
+  exportable: boolean;
   tooltip: boolean;
   animate: boolean;
   texts: GanttTexts;
@@ -375,6 +469,10 @@ function GanttBody({
   workingDays,
   holidays,
   dependencies,
+  critical,
+  baselines,
+  annotations,
+  exportable,
   tooltip,
   animate,
   texts,
@@ -427,9 +525,15 @@ function GanttBody({
   // biome-ignore lint/correctness/useExhaustiveDependencies: the key captures every date that matters.
   const domain = useMemo(() => {
     const times = rows.flatMap((row) => [row.start, row.end]);
+    if (baselines) {
+      for (const row of rows) {
+        if (row.task.baseline) times.push(+row.task.baseline.start, +row.task.baseline.end);
+      }
+    }
+    for (const a of annotations ?? []) times.push(+a.at, +(a.to ?? a.at));
     if (todayTime != null) times.push(todayTime);
     return ganttDomain(times.length ? times : [Date.now()], zoom);
-  }, [domainKey, zoom, todayTime != null ? startOfDay(todayTime) : null]);
+  }, [domainKey, zoom, baselines, annotations, todayTime != null ? startOfDay(todayTime) : null]);
   const scale = useMemo(() => ganttScale(domain, zoom, viewport), [domain, zoom, viewport]);
   const header = useMemo(
     () => ganttHeader(scale, zoom, { quarter: texts.quarter }),
@@ -443,6 +547,7 @@ function GanttBody({
     () => (dependencies ? dependencyLinks(rows, scale, rowHeight) : []),
     [dependencies, rows, scale, rowHeight],
   );
+  const placed = useMemo(() => placeAnnotations(annotations ?? [], scale), [annotations, scale]);
   const todayX =
     todayTime != null && todayTime >= domain[0] && todayTime <= domain[1]
       ? scale.x(todayTime)
@@ -809,6 +914,36 @@ function GanttBody({
         color: "transparent",
       });
     }
+    const plan = row.task.baseline;
+    if (baselines && plan && !row.parent) {
+      const slip = row.end - +plan.end;
+      out.push({
+        id: "baseline",
+        name: texts.baseline,
+        value: `${shortDate(+plan.start, false)} - ${shortDate(+plan.end, false)}`,
+        color: "var(--ink-3)",
+        shape: "dot",
+      });
+      out.push({
+        id: "variance",
+        name: texts.variance,
+        value: `${slip > 0 ? "+" : slip < 0 ? "-" : ""}${durationText(Math.abs(slip), texts)}`,
+        color: slip > 0 ? "var(--danger)" : "var(--chart-up)",
+        shape: "dot",
+        emphasis: slip !== 0,
+      });
+    }
+    if (critical && !row.parent) {
+      const isCritical = critical.tasks.has(row.task.id);
+      const slack = critical.slack.get(row.task.id);
+      out.push({
+        id: "critical",
+        name: isCritical ? texts.criticalPath : texts.slack,
+        value: isCritical ? texts.critical : slack == null ? "" : durationText(slack, texts),
+        color: isCritical ? "var(--danger)" : "var(--ink-3)",
+        shape: "dot",
+      });
+    }
     const deps = (row.task.dependencies ?? []).map((id) => names.get(id) ?? id);
     if (deps.length) {
       out.push({
@@ -860,15 +995,53 @@ function GanttBody({
             </button>
           ))}
         </fieldset>
-        {todayX != null && todayTime != null ? (
-          <button
-            type="button"
-            onClick={() => scrollToTime(todayTime, true)}
-            className="shrink-0 cursor-pointer rounded-pill border border-line bg-surface px-3 py-1 font-semibold text-[11.5px] text-ink-2 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent-ink"
-          >
-            {texts.today}
-          </button>
+        {critical || baselines ? (
+          <ul className="m-0 hidden min-w-0 list-none items-center gap-3 p-0 text-[11.5px] text-ink-3 @xl/chart:flex">
+            {critical ? (
+              <li className="flex items-center gap-1.5 whitespace-nowrap">
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-4 rounded-pill"
+                  style={{ background: "var(--danger)" }}
+                />
+                {texts.criticalPath}
+              </li>
+            ) : null}
+            {baselines ? (
+              <li className="flex items-center gap-1.5 whitespace-nowrap">
+                <span
+                  aria-hidden="true"
+                  className="h-1 w-4 rounded-pill"
+                  style={{ background: "var(--ink-3)", opacity: 0.55 }}
+                />
+                {texts.baseline}
+              </li>
+            ) : null}
+          </ul>
         ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {exportable ? (
+            <ExportMenu
+              title={title}
+              texts={texts.exportTexts}
+              getSvgs={() =>
+                Array.from(
+                  scrollerRef.current?.querySelectorAll<SVGSVGElement>("svg[data-export-part]") ??
+                    [],
+                )
+              }
+            />
+          ) : null}
+          {todayX != null && todayTime != null ? (
+            <button
+              type="button"
+              onClick={() => scrollToTime(todayTime, true)}
+              className="shrink-0 cursor-pointer rounded-pill border border-line bg-surface px-3 py-1 font-semibold text-[11.5px] text-ink-2 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent-ink"
+            >
+              {texts.today}
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="relative min-h-0 flex-1">
         <div
@@ -1045,6 +1218,7 @@ function GanttBody({
                 aria-label={title}
                 width={scale.width}
                 height={bodyHeight}
+                data-export-part=""
                 className={cn("block touch-pan-y select-none", draft && "cursor-grabbing")}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
@@ -1072,7 +1246,9 @@ function GanttBody({
                     style={{ fill: "var(--chart-grid)" }}
                   />
                 ) : null}
+                <AnnotationLayer items={placed} height={bodyHeight} />
                 <DependencyLayer
+                  critical={critical?.links}
                   links={links}
                   activeId={activeRow?.task.id ?? null}
                   markerId={`${uid}-arrow`}
@@ -1083,6 +1259,8 @@ function GanttBody({
                   rowHeight={rowHeight}
                   editable={editable}
                   draft={draft}
+                  critical={critical?.tasks}
+                  baselines={baselines}
                 />
               </svg>
             </div>
@@ -1119,6 +1297,16 @@ function GanttBody({
       <p id={hintId} className="sr-only">
         {texts.keyboardHint}
       </p>
+      {annotations?.length ? (
+        <ul className="sr-only" aria-label={texts.annotations}>
+          {annotations.map((a) => (
+            <li key={a.id}>
+              {a.label}: {formatDate(+a.at)}
+              {a.to != null ? ` - ${formatDate(+a.to)}` : ""}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {tooltip && tipSource && tipAnchor ? (
         <ChartTooltip
           x={tipAnchor.x}

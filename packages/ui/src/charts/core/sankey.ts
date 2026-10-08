@@ -19,6 +19,11 @@ export interface SankeyNodeInput {
   name: string;
   /** CSS color, e.g. `var(--chart-cat-2)`; defaults to a palette slot. */
   color?: string;
+  /**
+   * Fixed column (0-based) instead of the longest path from a source. Used by the
+   * alluvial layout, where a column is a moment in time. Links should point to a later column.
+   */
+  column?: number;
 }
 
 export interface SankeyLinkInput {
@@ -38,6 +43,11 @@ export interface SankeyOptions {
   iterations?: number;
   /** `justify` pushes the sinks to the last column; `left` keeps each node at its depth. */
   align?: "justify" | "left";
+  /**
+   * `false` skips the relaxation sweeps: nodes stay in input order inside their column
+   * (alluvial diagrams, where the order of the categories must not change between stages).
+   */
+  relax?: boolean;
 }
 
 export interface SankeyNode {
@@ -271,10 +281,17 @@ export function sankeyLayout(
       if (left === 0) queue.push(link.target);
     }
   }
+  const fixed = new Map(nodesInput.map((input) => [input.id, input.column]));
+  for (const node of nodes) {
+    const column = fixed.get(node.id);
+    if (column != null && column >= 0) node.column = Math.floor(column);
+  }
   let last = 0;
   for (const node of nodes) last = Math.max(last, node.column);
   if (align === "justify") {
-    for (const node of nodes) if (node.outgoing.length === 0) node.column = last;
+    for (const node of nodes) {
+      if (node.outgoing.length === 0 && fixed.get(node.id) == null) node.column = last;
+    }
   }
   const columns: SankeyNode[][] = Array.from({ length: last + 1 }, () => []);
   for (const node of nodes) columns[node.column]?.push(node);
@@ -312,7 +329,7 @@ export function sankeyLayout(
     }
   }
 
-  for (let i = 0; i < iterations; i++) {
+  for (let i = 0; i < (options.relax === false ? 0 : iterations); i++) {
     const alpha = 0.99 ** i;
     const strength = Math.max(1 - alpha, 0.5);
     for (let c = columns.length - 2; c >= 0; c--) {
@@ -397,4 +414,131 @@ export function sankeyFlowOf(node: SankeyNode): { nodes: Set<string>; links: Set
   walk(node, true);
   walk(node, false);
   return { nodes, links: linkIds };
+}
+
+/**
+ * The path through a link: the link itself, everything that feeds its source
+ * (upstream) and everything its target feeds (downstream).
+ */
+export function sankeyTraceOf(link: SankeyLink): { nodes: Set<string>; links: Set<string> } {
+  const nodes = new Set<string>([link.source.id, link.target.id]);
+  const linkIds = new Set<string>([link.id]);
+  const walk = (start: SankeyNode, forward: boolean) => {
+    const stack = [start];
+    const seen = new Set<string>([start.id]);
+    while (stack.length > 0) {
+      const current = stack.pop() as SankeyNode;
+      for (const next of forward ? current.outgoing : current.incoming) {
+        linkIds.add(next.id);
+        const node = forward ? next.target : next.source;
+        nodes.add(node.id);
+        if (!seen.has(node.id)) {
+          seen.add(node.id);
+          stack.push(node);
+        }
+      }
+    }
+  };
+  walk(link.source, false);
+  walk(link.target, true);
+  return { nodes, links: linkIds };
+}
+
+/** One flow in two periods. */
+export interface SankeyDiffLink extends SankeyLinkInput {
+  /** The layout value: the larger of the two periods, so both fit. */
+  value: number;
+  before: number;
+  after: number;
+  /** `after - before`. */
+  delta: number;
+}
+
+/**
+ * Merges the flows of two periods by `source -> target` (repeated pairs are
+ * summed). A flow missing in a period counts as 0 there. The merged `value` is
+ * the larger one, which is what the layout reserves; `before`/`after` are
+ * what is drawn on top of it.
+ */
+export function sankeyDiff(
+  before: readonly SankeyLinkInput[],
+  after: readonly SankeyLinkInput[],
+): SankeyDiffLink[] {
+  const merged = new Map<string, SankeyDiffLink>();
+  const add = (links: readonly SankeyLinkInput[], period: "before" | "after") => {
+    for (const link of links) {
+      if (!(Number.isFinite(link.value) && link.value > 0)) continue;
+      const key = `${link.source}->${link.target}`;
+      const entry = merged.get(key) ?? {
+        source: link.source,
+        target: link.target,
+        value: 0,
+        before: 0,
+        after: 0,
+        delta: 0,
+      };
+      entry[period] += link.value;
+      merged.set(key, entry);
+    }
+  };
+  add(before, "before");
+  add(after, "after");
+  for (const entry of merged.values()) {
+    entry.value = Math.max(entry.before, entry.after);
+    entry.delta = entry.after - entry.before;
+  }
+  return [...merged.values()];
+}
+
+export interface AlluvialInput {
+  /** Moments in time, left to right: "Jun", "Jul", ... */
+  stages: readonly string[];
+  /** The categories that flow; their order is the order top to bottom in every stage. */
+  categories: ReadonlyArray<{ id: string; name: string; color?: string }>;
+  /**
+   * `flows[s]` moves people from stage `s` to stage `s + 1`:
+   * `{ from: categoryId, to: categoryId, value }`.
+   */
+  flows: ReadonlyArray<ReadonlyArray<{ from: string; to: string; value: number }>>;
+}
+
+/** Node id of a category at a stage: `"2:vip"`. */
+export function alluvialNodeId(stage: number, category: string): string {
+  return `${stage}:${category}`;
+}
+
+/**
+ * Turns stage-by-stage category flows into sankey nodes and links: one node per
+ * category per stage (pinned to its column), the same color across stages, in
+ * category order. Categories with no flow at a stage are left out. Draw with
+ * `relax: false` and `align: "left"` to keep the order.
+ */
+export function alluvialGraph(input: AlluvialInput): {
+  nodes: SankeyNodeInput[];
+  links: SankeyLinkInput[];
+} {
+  const used = new Set<string>();
+  const links: SankeyLinkInput[] = [];
+  input.flows.forEach((stage, s) => {
+    for (const flow of stage) {
+      if (!(flow.value > 0)) continue;
+      used.add(alluvialNodeId(s, flow.from));
+      used.add(alluvialNodeId(s + 1, flow.to));
+      links.push({
+        source: alluvialNodeId(s, flow.from),
+        target: alluvialNodeId(s + 1, flow.to),
+        value: flow.value,
+      });
+    }
+  });
+  const nodes: SankeyNodeInput[] = [];
+  input.stages.forEach((_, s) => {
+    for (const category of input.categories) {
+      const id = alluvialNodeId(s, category.id);
+      if (used.has(id)) {
+        nodes.push({ id, name: category.name, color: category.color, column: s });
+      }
+    }
+  });
+  return { nodes, links };
 }
