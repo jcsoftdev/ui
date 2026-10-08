@@ -7,6 +7,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuLabel,
+  type ContextMenuProps,
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
@@ -23,12 +24,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function Area({ container }: { container?: HTMLElement | null }) {
+function Area({
+  container,
+  menu,
+}: {
+  container?: HTMLElement | null;
+  menu?: Pick<ContextMenuProps, "defaultOpen" | "position">;
+}) {
   const [confirmada, setConfirmada] = useState(true);
   const [last, setLast] = useState("ninguna");
   const pick = (action: string) => () => setLast(action);
   return (
-    <ContextMenu>
+    <ContextMenu {...menu}>
       <ContextMenuTrigger
         tabIndex={0}
         aria-label="Cita de Luis Ramírez. Clic derecho o tecla Menú para ver acciones"
@@ -93,4 +100,13 @@ export const BrutalPreset: Story = {
       </div>
     );
   },
+};
+
+/** Open on load at a fixed point: label, items, shortcuts, checkbox, separator and danger item are all visible. */
+export const OpenByDefault: Story = {
+  render: () => (
+    <div className="h-96 w-full max-w-md">
+      <Area menu={{ defaultOpen: true, position: { x: 120, y: 140 } }} />
+    </div>
+  ),
 };

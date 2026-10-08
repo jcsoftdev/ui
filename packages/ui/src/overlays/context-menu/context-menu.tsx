@@ -29,6 +29,10 @@ const LONG_PRESS_MS = 600;
 export interface ContextMenuProps {
   children: ReactNode;
   onOpenChange?: (open: boolean) => void;
+  /** Starts open, anchored at `position` (viewport pixels). Useful for docs and visual tests. */
+  defaultOpen?: boolean;
+  /** Initial anchor point in viewport pixels. Defaults to the origin until the first right-click. */
+  position?: { x: number; y: number };
 }
 
 /**
@@ -36,9 +40,14 @@ export interface ContextMenuProps {
  * area. It reuses the dropdown-menu primitive anchored to the pointer, so roving focus,
  * typeahead, submenu keys, Escape and collision handling come for free.
  */
-export function ContextMenu({ children, onOpenChange }: ContextMenuProps) {
-  const [open, setOpen] = useState(false);
-  const [point, setPoint] = useState({ x: 0, y: 0 });
+export function ContextMenu({
+  children,
+  onOpenChange,
+  defaultOpen = false,
+  position,
+}: ContextMenuProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [point, setPoint] = useState(position ?? { x: 0, y: 0 });
   const returnFocus = useRef<HTMLElement | null>(null);
 
   const change = useCallback(
