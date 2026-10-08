@@ -1,0 +1,42 @@
+{
+  "name": "@jcsoftdev/ui-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Landing page and documentation (people and LLMs) for @jcsoftdev/ui.",
+  "author": "jcsoftdev",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "docs": "node scripts/build-docs.mjs",
+    "predev": "node scripts/build-docs.mjs",
+    "dev": "astro dev --port ${SITE_PORT:-4321}",
+    "prebuild": "node scripts/build-docs.mjs",
+    "build": "astro build",
+    "start": "astro preview --host 127.0.0.1 --port ${SITE_PORT:-4321}",
+    "typecheck": "astro check",
+    "lint": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.0.1",
+    "@astrojs/starlight": "^0.42.5",
+    "@astrojs/starlight-tailwind": "^5.0.0",
+    "@jcsoftdev/ui": "workspace:*",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.8",
+    "lucide-react": "^1.47.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "prettier": "^3.9.9",
+    "prettier-plugin-astro": "^1.1.0",
+    "typescript": "^5.9.0"
+  }
+}
