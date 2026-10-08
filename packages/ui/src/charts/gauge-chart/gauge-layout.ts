@@ -57,8 +57,19 @@ function clamp(value: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, value));
 }
 
-function valueSizeFor(radius: number): number {
-  return Math.round(clamp(radius * 0.34, 20, 52));
+/** Width of one tabular glyph as a share of the font size. */
+const GLYPH_WIDTH = 0.6;
+
+/**
+ * Value font size: scales with the radius, but long values (currency) shrink
+ * so the text stays inside the inner edge of the arc.
+ */
+function valueSizeFor(input: GaugeLayoutInput, radius: number, band: number): number {
+  const bySize = clamp(radius * 0.34, 20, 52);
+  if (input.customCenter || input.valueChars <= 0) return Math.round(bySize);
+  const inner = input.mode === "needle" ? radius * 2 : (radius - band) * 2 - 16;
+  const byWidth = inner / (input.valueChars * GLYPH_WIDTH);
+  return Math.max(12, Math.min(Math.round(bySize), Math.floor(byWidth)));
 }
 
 interface Block {
@@ -72,7 +83,7 @@ interface Block {
 
 function blockFor(input: GaugeLayoutInput, radius: number, valueSize: number): Block {
   const { variant, mode, customCenter } = input;
-  const halfWidth = customCenter ? radius * 0.35 : (input.valueChars * 0.6 * valueSize) / 2;
+  const halfWidth = customCenter ? radius * 0.35 : (input.valueChars * GLYPH_WIDTH * valueSize) / 2;
   const needle = mode === "needle";
   let top: number;
   if (needle) {
@@ -97,7 +108,7 @@ function blockFor(input: GaugeLayoutInput, radius: number, valueSize: number): B
 
 /** Distance from the centre to the lowest thing drawn. */
 function below(input: GaugeLayoutInput, radius: number, band: number): number {
-  const valueSize = valueSizeFor(radius);
+  const valueSize = valueSizeFor(input, radius, band);
   const mid = radius - band / 2;
   const arcBottom = input.variant === "semi" ? band / 2 : mid * SIN_45 + band / 2;
   const withLabels = arcBottom + (input.endLabels ? 19 : 2);
@@ -136,7 +147,7 @@ export function layoutGauge(input: GaugeLayoutInput): GaugeLayout {
 
   const band = Math.min(thickness, radius * 0.4);
   const mid = radius - band / 2;
-  const valueSize = valueSizeFor(radius);
+  const valueSize = valueSizeFor(input, radius, band);
   const block = blockFor(input, radius, valueSize);
   const extent = radius + below(input, radius, band);
   const cx = width / 2;

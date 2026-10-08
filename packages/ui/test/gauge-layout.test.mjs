@@ -76,3 +76,13 @@ test("semicircle needle keeps the value under the hub", () => {
   assert.ok(l.blockTop > 8);
   assert.ok(l.valueDy > l.blockTop);
 });
+
+test("long values shrink to stay inside the arc", () => {
+  for (const variant of ["semi", "three-quarter"]) {
+    const layout = layoutGauge({ ...base, variant, valueChars: 11 });
+    const textWidth = 11 * 0.6 * layout.valueSize;
+    assert.ok(textWidth <= (layout.radius - layout.band) * 2 - 16, `${variant}: ${textWidth}`);
+  }
+  const narrow = { ...base, width: 320 };
+  assert.ok(layoutGauge(narrow).valueSize > layoutGauge({ ...narrow, valueChars: 11 }).valueSize);
+});
