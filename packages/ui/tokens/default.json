@@ -1136,5 +1136,656 @@
    "orquidea": "chart-cat-5",
    "grafito": "chart-cat-6"
   }
+ },
+ "styles": {
+  "default": "soft",
+  "tokens": [
+   {
+    "name": "radius-button",
+    "value": "999px",
+    "usage": "Botones. Píldora en el estilo suave."
+   },
+   {
+    "name": "radius-input",
+    "value": "12px",
+    "usage": "Campos de texto, selects y casillas de hora."
+   },
+   {
+    "name": "radius-badge",
+    "value": "999px",
+    "usage": "Chips y pastillas de estado."
+   },
+   {
+    "name": "radius-avatar",
+    "value": "999px",
+    "usage": "Avatares. data-radius no lo cambia: un avatar sigue siendo redondo salvo que el estilo diga otra cosa."
+   },
+   {
+    "name": "radius-popover",
+    "value": "14px",
+    "usage": "Menús, popovers y tooltips."
+   },
+   {
+    "name": "border-width-card",
+    "value": "0px",
+    "usage": "Grosor del borde de tarjetas. En suave es 0: el filete va en shadow-card."
+   },
+   {
+    "name": "border-color-card",
+    "value": "var(--hair)",
+    "usage": "Color del borde de tarjetas."
+   },
+   {
+    "name": "border-width-control",
+    "value": "1px",
+    "usage": "Grosor del borde de campos y controles."
+   },
+   {
+    "name": "border-color-control",
+    "value": "var(--line-control)",
+    "usage": "Color del borde de campos y controles."
+   },
+   {
+    "name": "border-width-divider",
+    "value": "1px",
+    "usage": "Grosor de las líneas divisorias."
+   },
+   {
+    "name": "border-color-divider",
+    "value": "var(--line)",
+    "usage": "Color de las líneas divisorias."
+   },
+   {
+    "name": "shadow-card",
+    "value": "var(--shadow-flat)",
+    "usage": "Sombra de tarjeta. Va junto a border-card: en suave es el filete de shadow-flat."
+   },
+   {
+    "name": "shadow-raised",
+    "value": "var(--shadow-hero)",
+    "usage": "Tarjeta elevada. Incluye su propio filete."
+   },
+   {
+    "name": "shadow-overlay",
+    "value": "var(--shadow-pop)",
+    "usage": "Diálogos, hojas, menús y popovers. Incluye su propio filete."
+   },
+   {
+    "name": "shadow-control",
+    "value": "var(--shadow-flat)",
+    "usage": "Botón secundario y controles sin borde."
+   },
+   {
+    "name": "shadow-selected",
+    "value": "var(--shadow-sel)",
+    "usage": "Opción elegida de un control segmentado, día u hora."
+   },
+   {
+    "name": "shadow-inset",
+    "value": {
+     "light": "inset 0 1px 2px rgba(0,0,0,.06)",
+     "dark": "inset 0 0 0 1px rgba(255,255,255,.05)"
+    },
+    "usage": "Zona hundida: pista, bandeja."
+   },
+   {
+    "name": "shadow-inset-accent",
+    "value": "inset 0 0 0 1px var(--accent-line)",
+    "usage": "Filete interior de marca: chip o día destacado."
+   },
+   {
+    "name": "shadow-pinned-start",
+    "value": {
+     "light": "6px 0 8px -6px rgba(0,0,0,.28)",
+     "dark": "1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9)"
+    },
+    "usage": "Borde de una columna fijada al inicio de una tabla cuando hay desplazamiento."
+   },
+   {
+    "name": "shadow-pinned-end",
+    "value": {
+     "light": "-6px 0 8px -6px rgba(0,0,0,.28)",
+     "dark": "-1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9)"
+    },
+    "usage": "Borde de una columna fijada al final de una tabla cuando hay desplazamiento."
+   },
+   {
+    "name": "surface-alpha",
+    "value": "1",
+    "usage": "Opacidad de las superficies (0 a 1). Solo baja en el estilo vidrio."
+   },
+   {
+    "name": "surface-blur",
+    "value": "0px",
+    "usage": "Desenfoque detrás de superficies translúcidas."
+   },
+   {
+    "name": "surface-filter",
+    "value": "none",
+    "usage": "backdrop-filter de tarjetas y overlays. none salvo en vidrio: un filtro activo crea un bloque contenedor."
+   },
+   {
+    "name": "surface-card",
+    "value": "var(--surface)",
+    "usage": "Fondo de tarjetas."
+   },
+   {
+    "name": "surface-control",
+    "value": "var(--surface)",
+    "usage": "Fondo de campos y botones secundarios."
+   },
+   {
+    "name": "surface-overlay",
+    "value": "var(--float)",
+    "usage": "Fondo de diálogos, hojas, menús y popovers."
+   },
+   {
+    "name": "surface-sunken",
+    "value": "var(--sunken)",
+    "usage": "Fondo hundido: pistas, zonas de arrastre."
+   },
+   {
+    "name": "surface-backdrop",
+    "value": "var(--scrim)",
+    "usage": "Velo detrás de diálogos y hojas."
+   },
+   {
+    "name": "page-backdrop",
+    "value": "none",
+    "usage": "Imagen de fondo de la página. Solo el estilo vidrio la usa, para que la translucidez se note."
+   },
+   {
+    "name": "focus-ring-width",
+    "value": "2px",
+    "usage": "Grosor del anillo de foco."
+   },
+   {
+    "name": "focus-ring-offset",
+    "value": "2px",
+    "usage": "Separación del anillo de foco."
+   },
+   {
+    "name": "focus-ring-color",
+    "value": "var(--accent-ink)",
+    "usage": "Color del anillo de foco."
+   },
+   {
+    "name": "motion-duration",
+    "value": "180ms",
+    "usage": "Duración de transiciones de estado."
+   },
+   {
+    "name": "motion-ease",
+    "value": "cubic-bezier(.2,.8,.2,1)",
+    "usage": "Curva de las transiciones."
+   },
+   {
+    "name": "press-scale",
+    "value": ".97",
+    "usage": "Escala de un control al presionarlo."
+   },
+   {
+    "name": "font-scale",
+    "value": "1",
+    "usage": "Factor opcional para escalar texto. Ningún token de texto lo usa todavía."
+   }
+  ],
+  "presets": [
+   {
+    "id": "soft",
+    "name": "Suave",
+    "usage": "El estilo por defecto: filetes finos en vez de bordes, sombras mínimas, botones píldora.",
+    "values": {}
+   },
+   {
+    "id": "bordered",
+    "name": "Con bordes",
+    "usage": "Bordes nítidos de 1 px y ninguna sombra. Radios más cerrados.",
+    "values": {
+     "radius-xs": "3px",
+     "radius-chip": "4px",
+     "radius-event": "6px",
+     "radius-control": "8px",
+     "radius-tile": "8px",
+     "radius-banner": "10px",
+     "radius-card": "10px",
+     "radius-dialog": "14px",
+     "radius-sheet": "24px",
+     "radius-pill": "999px",
+     "radius-button": "8px",
+     "radius-input": "8px",
+     "radius-badge": "6px",
+     "radius-popover": "10px",
+     "border-width-card": "1px",
+     "border-color-card": "var(--line-strong)",
+     "shadow-flat": "0 0 0 1px var(--line-strong)",
+     "shadow-hero": "0 0 0 1px var(--line-strong)",
+     "shadow-cta": "0 0 #0000",
+     "shadow-sel": "0 0 0 1px var(--line-control)",
+     "shadow-pop": "0 0 0 1px var(--line-strong)",
+     "shadow-card": "0 0 #0000",
+     "shadow-raised": "0 0 0 1px var(--line-strong)",
+     "shadow-overlay": "0 0 0 1px var(--line-strong)",
+     "shadow-control": "0 0 0 1px var(--line-strong)",
+     "shadow-selected": "0 0 0 1px var(--line-control)",
+     "shadow-inset": "0 0 #0000"
+    }
+   },
+   {
+    "id": "elevated",
+    "name": "Elevado",
+    "usage": "Sombras en capas y ningún borde. En oscuro las superficies se aclaran por nivel.",
+    "values": {
+     "shadow-flat": {
+      "light": "0 1px 2px rgba(17,17,26,.06),0 2px 6px rgba(17,17,26,.06)",
+      "dark": "0 0 0 1px rgba(255,255,255,.06),0 2px 8px rgba(0,0,0,.7)"
+     },
+     "shadow-hero": {
+      "light": "0 2px 4px rgba(17,17,26,.06),0 12px 24px -4px rgba(17,17,26,.10),0 32px 64px -24px rgba(17,17,26,.22)",
+      "dark": "0 0 0 1px rgba(255,255,255,.09),0 16px 40px rgba(0,0,0,.8)"
+     },
+     "shadow-cta": {
+      "light": "0 10px 30px -8px rgba(17,17,26,.25)",
+      "dark": "0 0 #0000"
+     },
+     "shadow-sel": {
+      "light": "0 2px 8px rgba(17,17,26,.14)",
+      "dark": "0 0 0 1px rgba(255,255,255,.14)"
+     },
+     "shadow-pop": {
+      "light": "0 4px 8px rgba(17,17,26,.06),0 24px 56px -12px rgba(17,17,26,.30)",
+      "dark": "0 0 0 1px rgba(255,255,255,.11),0 24px 56px rgba(0,0,0,.85)"
+     },
+     "shadow-card": {
+      "light": "0 1px 2px rgba(17,17,26,.05),0 4px 12px rgba(17,17,26,.06),0 16px 32px -12px rgba(17,17,26,.12)",
+      "dark": "0 0 0 1px rgba(255,255,255,.07),0 8px 24px rgba(0,0,0,.75)"
+     },
+     "shadow-control": {
+      "light": "0 1px 2px rgba(17,17,26,.08),0 2px 4px rgba(17,17,26,.04)",
+      "dark": "0 0 0 1px rgba(255,255,255,.08)"
+     },
+     "surface-card": {
+      "light": "var(--surface)",
+      "dark": "#141417"
+     },
+     "surface-overlay": {
+      "light": "var(--float)",
+      "dark": "#1c1c20"
+     }
+    }
+   },
+   {
+    "id": "flat",
+    "name": "Plano",
+    "usage": "Sin bordes ni sombras: las tarjetas se separan por un relleno teñido. Los overlays conservan un filete para despegarse de la página.",
+    "values": {
+     "shadow-flat": "0 0 #0000",
+     "shadow-hero": "0 0 #0000",
+     "shadow-cta": "0 0 #0000",
+     "shadow-sel": "0 0 #0000",
+     "shadow-pop": "0 0 0 1px var(--line)",
+     "shadow-card": "0 0 #0000",
+     "shadow-raised": "0 0 #0000",
+     "shadow-overlay": "0 0 0 1px var(--line)",
+     "shadow-control": "0 0 #0000",
+     "shadow-selected": "0 0 #0000",
+     "shadow-inset": "0 0 #0000",
+     "surface-card": {
+      "light": "#ebebf0",
+      "dark": "#141417"
+     },
+     "surface-control": {
+      "light": "#ffffff",
+      "dark": "#1a1a1d"
+     },
+     "surface-overlay": {
+      "light": "#ffffff",
+      "dark": "#1f1f23"
+     },
+     "press-scale": ".98"
+    }
+   },
+   {
+    "id": "glass",
+    "name": "Vidrio",
+    "usage": "Superficies translúcidas con desenfoque y filetes claros, sobre un fondo de página degradado.",
+    "values": {
+     "radius-xs": "6px",
+     "radius-chip": "8px",
+     "radius-event": "12px",
+     "radius-control": "12px",
+     "radius-tile": "14px",
+     "radius-banner": "16px",
+     "radius-card": "20px",
+     "radius-dialog": "24px",
+     "radius-sheet": "36px",
+     "radius-pill": "999px",
+     "radius-button": "999px",
+     "radius-input": "12px",
+     "radius-badge": "999px",
+     "radius-popover": "18px",
+     "surface-alpha": {
+      "light": ".62",
+      "dark": ".5"
+     },
+     "surface-blur": "18px",
+     "surface-filter": "blur(var(--surface-blur)) saturate(1.6)",
+     "surface-card": "color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100%), transparent)",
+     "surface-control": "color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100% + 20%), transparent)",
+     "surface-overlay": "color-mix(in srgb, var(--float) calc(var(--surface-alpha) * 100% + 20%), transparent)",
+     "surface-backdrop": {
+      "light": "rgba(20,20,30,.16)",
+      "dark": "rgba(0,0,0,.5)"
+     },
+     "page-backdrop": {
+      "light": "radial-gradient(60% 55% at 12% 8%, var(--accent-soft), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 45%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 18%, transparent), transparent)",
+      "dark": "radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent)"
+     },
+     "border-width-card": "1px",
+     "border-color-card": {
+      "light": "rgba(255,255,255,.75)",
+      "dark": "rgba(255,255,255,.12)"
+     },
+     "shadow-flat": {
+      "light": "0 0 0 1px rgba(255,255,255,.7),0 4px 16px -4px rgba(17,17,26,.10)",
+      "dark": "0 0 0 1px rgba(255,255,255,.10),0 4px 16px rgba(0,0,0,.5)"
+     },
+     "shadow-hero": {
+      "light": "0 0 0 1px rgba(255,255,255,.75),0 16px 40px -12px rgba(17,17,26,.22)",
+      "dark": "0 0 0 1px rgba(255,255,255,.12),0 16px 40px rgba(0,0,0,.6)"
+     },
+     "shadow-pop": {
+      "light": "0 0 0 1px rgba(255,255,255,.6),0 24px 48px -12px rgba(17,17,26,.28)",
+      "dark": "0 0 0 1px rgba(255,255,255,.14),0 24px 48px rgba(0,0,0,.7)"
+     },
+     "shadow-card": {
+      "light": "inset 0 1px 0 rgba(255,255,255,.6),0 8px 24px -8px rgba(17,17,26,.16)",
+      "dark": "inset 0 1px 0 rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.6)"
+     },
+     "shadow-raised": "var(--shadow-hero)",
+     "shadow-overlay": "var(--shadow-pop)"
+    }
+   },
+   {
+    "id": "brutal",
+    "name": "Brutal",
+    "usage": "Bordes gruesos de tinta, sombras duras desplazadas y esquinas rectas.",
+    "values": {
+     "radius-xs": "0px",
+     "radius-chip": "0px",
+     "radius-event": "0px",
+     "radius-control": "0px",
+     "radius-tile": "0px",
+     "radius-banner": "0px",
+     "radius-card": "0px",
+     "radius-dialog": "0px",
+     "radius-sheet": "0px",
+     "radius-pill": "0px",
+     "radius-button": "0px",
+     "radius-input": "0px",
+     "radius-badge": "0px",
+     "radius-popover": "0px",
+     "radius-avatar": "0px",
+     "border-width-card": "2px",
+     "border-color-card": "var(--ink)",
+     "border-width-control": "2px",
+     "border-color-control": "var(--ink)",
+     "border-width-divider": "2px",
+     "border-color-divider": "var(--ink)",
+     "shadow-flat": "0 0 0 2px var(--ink),5px 5px 0 0 var(--ink)",
+     "shadow-hero": "0 0 0 2px var(--ink),8px 8px 0 0 var(--ink)",
+     "shadow-cta": "4px 4px 0 0 var(--ink)",
+     "shadow-sel": "0 0 0 2px var(--ink)",
+     "shadow-pop": "0 0 0 2px var(--ink),6px 6px 0 0 var(--ink)",
+     "shadow-card": "4px 4px 0 0 var(--ink)",
+     "shadow-raised": "0 0 0 2px var(--ink),8px 8px 0 0 var(--ink)",
+     "shadow-overlay": "0 0 0 2px var(--ink),6px 6px 0 0 var(--ink)",
+     "shadow-control": "0 0 0 2px var(--ink),3px 3px 0 0 var(--ink)",
+     "shadow-selected": "0 0 0 2px var(--ink)",
+     "shadow-inset": "0 0 #0000",
+     "shadow-inset-accent": "inset 0 0 0 2px var(--accent-ink)",
+     "focus-ring-width": "3px",
+     "focus-ring-color": "var(--ink)",
+     "motion-duration": "60ms",
+     "motion-ease": "linear"
+    }
+   }
+  ],
+  "density": {
+   "tokens": [
+    {
+     "name": "density",
+     "value": "1",
+     "usage": "Factor de densidad sin unidad. Lo fija data-density; los altos y rellenos de abajo se multiplican por él."
+    },
+    {
+     "name": "pad-control-x",
+     "value": "16px",
+     "usage": "Relleno horizontal de botones y campos."
+    },
+    {
+     "name": "pad-card",
+     "value": "16px",
+     "usage": "Relleno de tarjetas."
+    },
+    {
+     "name": "gap-density-sm",
+     "value": "8px",
+     "usage": "Separación corta entre elementos de un grupo."
+    },
+    {
+     "name": "gap-density",
+     "value": "12px",
+     "usage": "Separación entre elementos de una lista o formulario."
+    },
+    {
+     "name": "gap-density-lg",
+     "value": "18px",
+     "usage": "Separación entre bloques de una vista."
+    }
+   ],
+   "scaled": [
+    "control-height",
+    "control-height-sm",
+    "input-height",
+    "pad-control-x",
+    "pad-card",
+    "gap-density-sm",
+    "gap-density",
+    "gap-density-lg"
+   ],
+   "levels": [
+    {
+     "id": "compact",
+     "name": "Compacta",
+     "density": 0.875
+    },
+    {
+     "id": "normal",
+     "name": "Normal",
+     "density": 1
+    },
+    {
+     "id": "comfortable",
+     "name": "Cómoda",
+     "density": 1.125
+    }
+   ]
+  },
+  "radius": {
+   "levels": [
+    {
+     "id": "none",
+     "name": "Sin radio",
+     "values": {
+      "radius-xs": "0px",
+      "radius-chip": "0px",
+      "radius-event": "0px",
+      "radius-control": "0px",
+      "radius-tile": "0px",
+      "radius-banner": "0px",
+      "radius-card": "0px",
+      "radius-dialog": "0px",
+      "radius-sheet": "0px",
+      "radius-pill": "0px",
+      "radius-button": "0px",
+      "radius-input": "0px",
+      "radius-badge": "0px",
+      "radius-popover": "0px"
+     }
+    },
+    {
+     "id": "sm",
+     "name": "Pequeño",
+     "values": {
+      "radius-xs": "2px",
+      "radius-chip": "3px",
+      "radius-event": "4px",
+      "radius-control": "6px",
+      "radius-tile": "6px",
+      "radius-banner": "6px",
+      "radius-card": "8px",
+      "radius-dialog": "10px",
+      "radius-sheet": "16px",
+      "radius-pill": "999px",
+      "radius-button": "6px",
+      "radius-input": "6px",
+      "radius-badge": "4px",
+      "radius-popover": "8px"
+     }
+    },
+    {
+     "id": "md",
+     "name": "Medio",
+     "values": {
+      "radius-xs": "4px",
+      "radius-chip": "6px",
+      "radius-event": "8px",
+      "radius-control": "10px",
+      "radius-tile": "10px",
+      "radius-banner": "12px",
+      "radius-card": "12px",
+      "radius-dialog": "16px",
+      "radius-sheet": "24px",
+      "radius-pill": "999px",
+      "radius-button": "10px",
+      "radius-input": "10px",
+      "radius-badge": "6px",
+      "radius-popover": "12px"
+     }
+    },
+    {
+     "id": "lg",
+     "name": "Grande",
+     "values": {
+      "radius-xs": "6px",
+      "radius-chip": "8px",
+      "radius-event": "12px",
+      "radius-control": "14px",
+      "radius-tile": "14px",
+      "radius-banner": "18px",
+      "radius-card": "20px",
+      "radius-dialog": "24px",
+      "radius-sheet": "36px",
+      "radius-pill": "999px",
+      "radius-button": "999px",
+      "radius-input": "14px",
+      "radius-badge": "999px",
+      "radius-popover": "16px"
+     }
+    },
+    {
+     "id": "full",
+     "name": "Completo",
+     "values": {
+      "radius-xs": "8px",
+      "radius-chip": "999px",
+      "radius-event": "16px",
+      "radius-control": "999px",
+      "radius-tile": "20px",
+      "radius-banner": "24px",
+      "radius-card": "28px",
+      "radius-dialog": "32px",
+      "radius-sheet": "40px",
+      "radius-pill": "999px",
+      "radius-button": "999px",
+      "radius-input": "999px",
+      "radius-badge": "999px",
+      "radius-popover": "20px"
+     }
+    }
+   ]
+  },
+  "tailwind": {
+   "--radius-button": "radius-button",
+   "--radius-input": "radius-input",
+   "--radius-badge": "radius-badge",
+   "--radius-avatar": "radius-avatar",
+   "--radius-popover": "radius-popover",
+   "--shadow-card": "shadow-card",
+   "--shadow-raised": "shadow-raised",
+   "--shadow-overlay": "shadow-overlay",
+   "--shadow-control": "shadow-control",
+   "--shadow-selected": "shadow-selected",
+   "--shadow-inset": "shadow-inset",
+   "--shadow-inset-accent": "shadow-inset-accent",
+   "--shadow-pinned-start": "shadow-pinned-start",
+   "--shadow-pinned-end": "shadow-pinned-end",
+   "--color-surface-card": "surface-card",
+   "--color-surface-control": "surface-control",
+   "--color-surface-overlay": "surface-overlay",
+   "--color-surface-sunken": "surface-sunken",
+   "--color-surface-backdrop": "surface-backdrop",
+   "--color-divider": "border-color-divider",
+   "--color-focus-ring": "focus-ring-color",
+   "--blur-surface": "surface-blur",
+   "--ease-style": "motion-ease",
+   "--spacing-control": "control-height",
+   "--spacing-control-sm": "control-height-sm",
+   "--spacing-input": "input-height",
+   "--spacing-control-x": "pad-control-x",
+   "--spacing-card": "pad-card",
+   "--spacing-density-sm": "gap-density-sm",
+   "--spacing-density": "gap-density",
+   "--spacing-density-lg": "gap-density-lg"
+  },
+  "utilities": {
+   "border-card": {
+    "border-width": "var(--border-width-card)",
+    "border-style": "solid",
+    "border-color": "var(--border-color-card)"
+   },
+   "border-control": {
+    "border-width": "var(--border-width-control)",
+    "border-style": "solid",
+    "border-color": "var(--border-color-control)"
+   },
+   "border-t-divider": {
+    "border-top": "var(--border-width-divider) solid var(--border-color-divider)"
+   },
+   "border-b-divider": {
+    "border-bottom": "var(--border-width-divider) solid var(--border-color-divider)"
+   },
+   "surface-card": {
+    "background-color": "var(--surface-card)",
+    "-webkit-backdrop-filter": "var(--surface-filter)",
+    "backdrop-filter": "var(--surface-filter)"
+   },
+   "surface-overlay": {
+    "background-color": "var(--surface-overlay)",
+    "-webkit-backdrop-filter": "var(--surface-filter)",
+    "backdrop-filter": "var(--surface-filter)"
+   },
+   "focus-ring": {
+    "outline": "var(--focus-ring-width) solid var(--focus-ring-color)",
+    "outline-offset": "var(--focus-ring-offset)"
+   },
+   "pressable": {
+    "transition": "scale var(--motion-duration) var(--motion-ease)",
+    "&:active:not(:disabled)": {
+     "scale": "var(--press-scale)"
+    }
+   }
+  }
  }
 }

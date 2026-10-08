@@ -29,6 +29,8 @@ const allTokens = (tokens) => [
   ...(tokens.radius?.tokens ?? []),
   ...(tokens.spacing?.tokens ?? []),
   ...(tokens.size?.tokens ?? []),
+  ...(tokens.styles?.tokens ?? []),
+  ...(tokens.styles?.density?.tokens ?? []),
 ];
 
 const typeStyles = (tokens) =>
@@ -49,6 +51,153 @@ export function palettesOf(tokens) {
 }
 
 const decls = (list) => list.map(([k, v]) => `  --${k}: ${v};`).join("\n");
+
+// ---------------------------------------------------------------- Styles
+//
+// Three orthogonal attributes remap custom properties: data-style (preset), data-density and
+// data-radius. Each block declares every property its group governs, because a custom property
+// that references another one is resolved where it is declared: a nested [data-style] must
+// re-declare the whole set instead of relying on :root's already-computed values.
+//
+// Precedence on one element follows source order at equal specificity (:root[x] on the root,
+// [x] on a nested element): themes < accents < presets < density < radius. A preset's dark
+// values use :root[data-theme] in front of the attribute, so they outrank the theme block.
+// data-radius also wins over a preset declared on a descendant: radius blocks set
+// --<token>-override, and presets read their radius through var(--<token>-override, <own>).
+
+const attrSelector = (attr, id) => `:root[${attr}="${id}"],\n[${attr}="${id}"]`;
+
+const indent = (text) =>
+  text
+    .split("\n")
+    .map((l) => (l ? `  ${l}` : l))
+    .join("\n");
+
+function variantBlocks(attr, id, entries, { base, others }) {
+  const flat = entries.map(([name, v]) => [
+    name,
+    isThemed(v) ? (v[base] ?? Object.values(v)[0]) : v,
+  ]);
+  const out = [`${attrSelector(attr, id)} {\n${decls(flat)}\n}`];
+  for (const theme of others) {
+    const themed = entries
+      .filter(([, v]) => isThemed(v) && theme in v)
+      .map(([n, v]) => [n, v[theme]]);
+    if (!themed.length) continue;
+    const at = (root) => `${root}[${attr}="${id}"],\n${root} [${attr}="${id}"]`;
+    if (theme === "dark") {
+      const sel = at(`:root:not([data-theme="${base}"])`);
+      out.push(
+        `@media (prefers-color-scheme: dark) {\n${indent(`${sel} {\n${decls(themed)}\n}`)}\n}`,
+      );
+    }
+    out.push(`${at(`:root[data-theme="${theme}"]`)} {\n${decls(themed)}\n}`);
+  }
+  return out;
+}
+
+/** Resolved style groups; throws on inconsistent definitions. Empty when the theme has none. */
+export function stylesOf(tokens) {
+  const styles = tokens.styles;
+  if (!styles) return null;
+  const byName = new Map(allTokens(tokens).map((t) => [t.name, t]));
+  const known = (name, where) => {
+    if (!byName.has(name)) throw new Error(`styles: unknown token "${name}" in ${where}`);
+    return name;
+  };
+
+  const density = styles.density ?? { levels: [] };
+  const densityGoverned = new Set(
+    density.levels.length ? ["density", ...(density.scaled ?? [])] : [],
+  );
+  for (const name of densityGoverned) {
+    known(name, "density");
+    if (isThemed(byName.get(name).value))
+      throw new Error(`styles: density token "${name}" is themed`);
+  }
+
+  const radiusLevels = styles.radius?.levels ?? [];
+  const radiusGoverned = new Set(radiusLevels.flatMap((l) => Object.keys(l.values ?? {})));
+  for (const name of radiusGoverned) known(name, "radius levels");
+
+  const presets = styles.presets ?? [];
+  const def = presets.find((p) => p.id === styles.default);
+  if (presets.length && !def) throw new Error(`styles: default preset "${styles.default}" missing`);
+  if (def && Object.keys(def.values ?? {}).length)
+    throw new Error("styles: the default preset is the base tokens and must not override values");
+
+  const presetGoverned = new Set([
+    ...(styles.tokens ?? []).map((t) => t.name),
+    ...(tokens.radius?.tokens ?? []).map((t) => t.name),
+    ...(tokens.shadow?.tokens ?? []).map((t) => t.name),
+  ]);
+  for (const p of presets) {
+    for (const [name, v] of Object.entries(p.values ?? {})) {
+      known(name, `preset "${p.id}"`);
+      if (densityGoverned.has(name))
+        throw new Error(`styles: preset "${p.id}" sets "${name}", which belongs to data-density`);
+      if (radiusGoverned.has(name) && isThemed(v))
+        throw new Error(`styles: preset "${p.id}" themes radius "${name}"`);
+      presetGoverned.add(name);
+    }
+  }
+  const order = [...byName.keys()];
+  const sorted = (set) => order.filter((n) => set.has(n));
+  return {
+    byName,
+    presets,
+    density,
+    radiusLevels,
+    presetGoverned: sorted(presetGoverned),
+    densityGoverned: sorted(densityGoverned),
+    radiusGoverned: sorted(radiusGoverned),
+  };
+}
+
+function buildStyleBlocks(tokens) {
+  const s = stylesOf(tokens);
+  if (!s) return [];
+  const themes = themeOf(tokens);
+  const blocks = [];
+  const radius = new Set(s.radiusGoverned);
+
+  for (const p of s.presets) {
+    const entries = s.presetGoverned.map((name) => {
+      const v = p.values?.[name] ?? s.byName.get(name).value;
+      return [name, radius.has(name) ? `var(--${name}-override, ${v})` : v];
+    });
+    blocks.push(...variantBlocks("data-style", p.id, entries, themes));
+  }
+
+  for (const level of s.density.levels) {
+    const entries = s.densityGoverned.map((name) =>
+      name === "density"
+        ? [name, String(level.density)]
+        : [name, `calc(${s.byName.get(name).value} * var(--density))`],
+    );
+    blocks.push(...variantBlocks("data-density", level.id, entries, themes));
+  }
+
+  for (const level of s.radiusLevels) {
+    const entries = s.radiusGoverned.flatMap((name) => {
+      const v = level.values?.[name] ?? s.byName.get(name).value;
+      return [
+        [`${name}-override`, v],
+        [name, v],
+      ];
+    });
+    blocks.push(...variantBlocks("data-radius", level.id, entries, themes));
+  }
+  return blocks;
+}
+
+const cssRule = (selector, body, depth = 1) => {
+  const pad = "  ".repeat(depth);
+  const lines = Object.entries(body).map(([k, v]) =>
+    typeof v === "object" ? cssRule(k, v, depth + 1) : `${pad}${k}: ${v};`,
+  );
+  return `${"  ".repeat(depth - 1)}${selector} {\n${lines.join("\n")}\n${"  ".repeat(depth - 1)}}`;
+};
 
 export function buildTokensCss(tokens) {
   const { base, others } = themeOf(tokens);
@@ -92,6 +241,8 @@ export function buildTokensCss(tokens) {
     blocks.push(`:root[data-accent="${id}"] {\n${decls(pairs)}\n}`);
   }
 
+  blocks.push(...buildStyleBlocks(tokens));
+
   return `/* Generated by ui-theme from "${tokens.name}". Do not edit. */\n${blocks.join("\n\n")}\n`;
 }
 
@@ -127,7 +278,16 @@ export function buildThemeCss(tokens) {
       lines.push(`  --text-${s.name}--letter-spacing: ${s.letterSpacing};`);
     }
   }
-  return `/* Generated by ui-theme from "${tokens.name}". Do not edit. */\n@theme inline {\n${lines.join("\n")}\n}\n`;
+  const styles = stylesOf(tokens);
+  for (const [themeVar, name] of Object.entries(tokens.styles?.tailwind ?? {})) {
+    if (!styles.byName.has(name)) throw new Error(`styles.tailwind: unknown token "${name}"`);
+    lines.push(`  ${themeVar}: var(--${name});`);
+  }
+  const utilities = Object.entries(tokens.styles?.utilities ?? {}).map(([name, body]) =>
+    cssRule(`@utility ${name}`, body),
+  );
+  const tail = utilities.length ? `\n${utilities.join("\n\n")}\n` : "";
+  return `/* Generated by ui-theme from "${tokens.name}". Do not edit. */\n@theme inline {\n${lines.join("\n")}\n}\n${tail}`;
 }
 
 export function buildFontsCss(tokens) {

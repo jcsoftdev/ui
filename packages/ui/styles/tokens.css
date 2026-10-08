@@ -124,6 +124,48 @@
   --m-tray: 52px;
   --m-chip: 60px;
   --m-hour: 78px;
+  --radius-button: 999px;
+  --radius-input: 12px;
+  --radius-badge: 999px;
+  --radius-avatar: 999px;
+  --radius-popover: 14px;
+  --border-width-card: 0px;
+  --border-color-card: var(--hair);
+  --border-width-control: 1px;
+  --border-color-control: var(--line-control);
+  --border-width-divider: 1px;
+  --border-color-divider: var(--line);
+  --shadow-card: var(--shadow-flat);
+  --shadow-raised: var(--shadow-hero);
+  --shadow-overlay: var(--shadow-pop);
+  --shadow-control: var(--shadow-flat);
+  --shadow-selected: var(--shadow-sel);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,.06);
+  --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: 1;
+  --surface-blur: 0px;
+  --surface-filter: none;
+  --surface-card: var(--surface);
+  --surface-control: var(--surface);
+  --surface-overlay: var(--float);
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: var(--scrim);
+  --page-backdrop: none;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--accent-ink);
+  --motion-duration: 180ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+  --press-scale: .97;
+  --font-scale: 1;
+  --density: 1;
+  --pad-control-x: 16px;
+  --pad-card: 16px;
+  --gap-density-sm: 8px;
+  --gap-density: 12px;
+  --gap-density-lg: 18px;
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -222,6 +264,9 @@
     --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
     --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
     --shadow-pop: 0 0 0 1px rgba(255,255,255,.12);
+    --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
   }
 }
 
@@ -319,6 +364,9 @@
   --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
   --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
   --shadow-pop: 0 0 0 1px rgba(255,255,255,.12);
+  --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
 }
 
 :root[data-accent="durazno"] {
@@ -385,4 +433,677 @@
   --accent-soft: var(--pal-grafito-soft);
   --accent-line: var(--pal-grafito-line);
   --chart-cat-6: var(--chart-cat-reserve);
+}
+
+:root[data-style="soft"],
+[data-style="soft"] {
+  --shadow-flat: 0 0 0 .67px rgba(0,0,0,.11),0 1px 2px rgba(0,0,0,.04);
+  --shadow-hero: 0 0 0 .67px rgba(0,0,0,.11),0 4px 18px rgba(0,0,0,.10);
+  --shadow-cta: 0 8px 36px rgba(0,0,0,.065);
+  --shadow-sel: 0 2px 8px rgba(0,0,0,.10);
+  --shadow-pop: 0 0 0 .67px rgba(0,0,0,.11),0 18px 48px -12px rgba(0,0,0,.22);
+  --radius-xs: var(--radius-xs-override, 4px);
+  --radius-chip: var(--radius-chip-override, 6px);
+  --radius-event: var(--radius-event-override, 10px);
+  --radius-control: var(--radius-control-override, 12px);
+  --radius-tile: var(--radius-tile-override, 12px);
+  --radius-banner: var(--radius-banner-override, 14px);
+  --radius-card: var(--radius-card-override, 16px);
+  --radius-dialog: var(--radius-dialog-override, 20px);
+  --radius-sheet: var(--radius-sheet-override, 36px);
+  --radius-pill: var(--radius-pill-override, 999px);
+  --radius-button: var(--radius-button-override, 999px);
+  --radius-input: var(--radius-input-override, 12px);
+  --radius-badge: var(--radius-badge-override, 999px);
+  --radius-avatar: 999px;
+  --radius-popover: var(--radius-popover-override, 14px);
+  --border-width-card: 0px;
+  --border-color-card: var(--hair);
+  --border-width-control: 1px;
+  --border-color-control: var(--line-control);
+  --border-width-divider: 1px;
+  --border-color-divider: var(--line);
+  --shadow-card: var(--shadow-flat);
+  --shadow-raised: var(--shadow-hero);
+  --shadow-overlay: var(--shadow-pop);
+  --shadow-control: var(--shadow-flat);
+  --shadow-selected: var(--shadow-sel);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,.06);
+  --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: 1;
+  --surface-blur: 0px;
+  --surface-filter: none;
+  --surface-card: var(--surface);
+  --surface-control: var(--surface);
+  --surface-overlay: var(--float);
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: var(--scrim);
+  --page-backdrop: none;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--accent-ink);
+  --motion-duration: 180ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+  --press-scale: .97;
+  --font-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-style="soft"],
+  :root:not([data-theme="light"]) [data-style="soft"] {
+    --shadow-flat: 0 0 0 1px rgba(255,255,255,.09);
+    --shadow-hero: 0 0 0 1px rgba(255,255,255,.10);
+    --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
+    --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
+    --shadow-pop: 0 0 0 1px rgba(255,255,255,.12);
+    --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  }
+}
+
+:root[data-theme="dark"][data-style="soft"],
+:root[data-theme="dark"] [data-style="soft"] {
+  --shadow-flat: 0 0 0 1px rgba(255,255,255,.09);
+  --shadow-hero: 0 0 0 1px rgba(255,255,255,.10);
+  --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
+  --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
+  --shadow-pop: 0 0 0 1px rgba(255,255,255,.12);
+  --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+}
+
+:root[data-style="bordered"],
+[data-style="bordered"] {
+  --shadow-flat: 0 0 0 1px var(--line-strong);
+  --shadow-hero: 0 0 0 1px var(--line-strong);
+  --shadow-cta: 0 0 #0000;
+  --shadow-sel: 0 0 0 1px var(--line-control);
+  --shadow-pop: 0 0 0 1px var(--line-strong);
+  --radius-xs: var(--radius-xs-override, 3px);
+  --radius-chip: var(--radius-chip-override, 4px);
+  --radius-event: var(--radius-event-override, 6px);
+  --radius-control: var(--radius-control-override, 8px);
+  --radius-tile: var(--radius-tile-override, 8px);
+  --radius-banner: var(--radius-banner-override, 10px);
+  --radius-card: var(--radius-card-override, 10px);
+  --radius-dialog: var(--radius-dialog-override, 14px);
+  --radius-sheet: var(--radius-sheet-override, 24px);
+  --radius-pill: var(--radius-pill-override, 999px);
+  --radius-button: var(--radius-button-override, 8px);
+  --radius-input: var(--radius-input-override, 8px);
+  --radius-badge: var(--radius-badge-override, 6px);
+  --radius-avatar: 999px;
+  --radius-popover: var(--radius-popover-override, 10px);
+  --border-width-card: 1px;
+  --border-color-card: var(--line-strong);
+  --border-width-control: 1px;
+  --border-color-control: var(--line-control);
+  --border-width-divider: 1px;
+  --border-color-divider: var(--line);
+  --shadow-card: 0 0 #0000;
+  --shadow-raised: 0 0 0 1px var(--line-strong);
+  --shadow-overlay: 0 0 0 1px var(--line-strong);
+  --shadow-control: 0 0 0 1px var(--line-strong);
+  --shadow-selected: 0 0 0 1px var(--line-control);
+  --shadow-inset: 0 0 #0000;
+  --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: 1;
+  --surface-blur: 0px;
+  --surface-filter: none;
+  --surface-card: var(--surface);
+  --surface-control: var(--surface);
+  --surface-overlay: var(--float);
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: var(--scrim);
+  --page-backdrop: none;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--accent-ink);
+  --motion-duration: 180ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+  --press-scale: .97;
+  --font-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-style="bordered"],
+  :root:not([data-theme="light"]) [data-style="bordered"] {
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  }
+}
+
+:root[data-theme="dark"][data-style="bordered"],
+:root[data-theme="dark"] [data-style="bordered"] {
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+}
+
+:root[data-style="elevated"],
+[data-style="elevated"] {
+  --shadow-flat: 0 1px 2px rgba(17,17,26,.06),0 2px 6px rgba(17,17,26,.06);
+  --shadow-hero: 0 2px 4px rgba(17,17,26,.06),0 12px 24px -4px rgba(17,17,26,.10),0 32px 64px -24px rgba(17,17,26,.22);
+  --shadow-cta: 0 10px 30px -8px rgba(17,17,26,.25);
+  --shadow-sel: 0 2px 8px rgba(17,17,26,.14);
+  --shadow-pop: 0 4px 8px rgba(17,17,26,.06),0 24px 56px -12px rgba(17,17,26,.30);
+  --radius-xs: var(--radius-xs-override, 4px);
+  --radius-chip: var(--radius-chip-override, 6px);
+  --radius-event: var(--radius-event-override, 10px);
+  --radius-control: var(--radius-control-override, 12px);
+  --radius-tile: var(--radius-tile-override, 12px);
+  --radius-banner: var(--radius-banner-override, 14px);
+  --radius-card: var(--radius-card-override, 16px);
+  --radius-dialog: var(--radius-dialog-override, 20px);
+  --radius-sheet: var(--radius-sheet-override, 36px);
+  --radius-pill: var(--radius-pill-override, 999px);
+  --radius-button: var(--radius-button-override, 999px);
+  --radius-input: var(--radius-input-override, 12px);
+  --radius-badge: var(--radius-badge-override, 999px);
+  --radius-avatar: 999px;
+  --radius-popover: var(--radius-popover-override, 14px);
+  --border-width-card: 0px;
+  --border-color-card: var(--hair);
+  --border-width-control: 1px;
+  --border-color-control: var(--line-control);
+  --border-width-divider: 1px;
+  --border-color-divider: var(--line);
+  --shadow-card: 0 1px 2px rgba(17,17,26,.05),0 4px 12px rgba(17,17,26,.06),0 16px 32px -12px rgba(17,17,26,.12);
+  --shadow-raised: var(--shadow-hero);
+  --shadow-overlay: var(--shadow-pop);
+  --shadow-control: 0 1px 2px rgba(17,17,26,.08),0 2px 4px rgba(17,17,26,.04);
+  --shadow-selected: var(--shadow-sel);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,.06);
+  --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: 1;
+  --surface-blur: 0px;
+  --surface-filter: none;
+  --surface-card: var(--surface);
+  --surface-control: var(--surface);
+  --surface-overlay: var(--float);
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: var(--scrim);
+  --page-backdrop: none;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--accent-ink);
+  --motion-duration: 180ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+  --press-scale: .97;
+  --font-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-style="elevated"],
+  :root:not([data-theme="light"]) [data-style="elevated"] {
+    --shadow-flat: 0 0 0 1px rgba(255,255,255,.06),0 2px 8px rgba(0,0,0,.7);
+    --shadow-hero: 0 0 0 1px rgba(255,255,255,.09),0 16px 40px rgba(0,0,0,.8);
+    --shadow-cta: 0 0 #0000;
+    --shadow-sel: 0 0 0 1px rgba(255,255,255,.14);
+    --shadow-pop: 0 0 0 1px rgba(255,255,255,.11),0 24px 56px rgba(0,0,0,.85);
+    --shadow-card: 0 0 0 1px rgba(255,255,255,.07),0 8px 24px rgba(0,0,0,.75);
+    --shadow-control: 0 0 0 1px rgba(255,255,255,.08);
+    --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --surface-card: #141417;
+    --surface-overlay: #1c1c20;
+  }
+}
+
+:root[data-theme="dark"][data-style="elevated"],
+:root[data-theme="dark"] [data-style="elevated"] {
+  --shadow-flat: 0 0 0 1px rgba(255,255,255,.06),0 2px 8px rgba(0,0,0,.7);
+  --shadow-hero: 0 0 0 1px rgba(255,255,255,.09),0 16px 40px rgba(0,0,0,.8);
+  --shadow-cta: 0 0 #0000;
+  --shadow-sel: 0 0 0 1px rgba(255,255,255,.14);
+  --shadow-pop: 0 0 0 1px rgba(255,255,255,.11),0 24px 56px rgba(0,0,0,.85);
+  --shadow-card: 0 0 0 1px rgba(255,255,255,.07),0 8px 24px rgba(0,0,0,.75);
+  --shadow-control: 0 0 0 1px rgba(255,255,255,.08);
+  --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --surface-card: #141417;
+  --surface-overlay: #1c1c20;
+}
+
+:root[data-style="flat"],
+[data-style="flat"] {
+  --shadow-flat: 0 0 #0000;
+  --shadow-hero: 0 0 #0000;
+  --shadow-cta: 0 0 #0000;
+  --shadow-sel: 0 0 #0000;
+  --shadow-pop: 0 0 0 1px var(--line);
+  --radius-xs: var(--radius-xs-override, 4px);
+  --radius-chip: var(--radius-chip-override, 6px);
+  --radius-event: var(--radius-event-override, 10px);
+  --radius-control: var(--radius-control-override, 12px);
+  --radius-tile: var(--radius-tile-override, 12px);
+  --radius-banner: var(--radius-banner-override, 14px);
+  --radius-card: var(--radius-card-override, 16px);
+  --radius-dialog: var(--radius-dialog-override, 20px);
+  --radius-sheet: var(--radius-sheet-override, 36px);
+  --radius-pill: var(--radius-pill-override, 999px);
+  --radius-button: var(--radius-button-override, 999px);
+  --radius-input: var(--radius-input-override, 12px);
+  --radius-badge: var(--radius-badge-override, 999px);
+  --radius-avatar: 999px;
+  --radius-popover: var(--radius-popover-override, 14px);
+  --border-width-card: 0px;
+  --border-color-card: var(--hair);
+  --border-width-control: 1px;
+  --border-color-control: var(--line-control);
+  --border-width-divider: 1px;
+  --border-color-divider: var(--line);
+  --shadow-card: 0 0 #0000;
+  --shadow-raised: 0 0 #0000;
+  --shadow-overlay: 0 0 0 1px var(--line);
+  --shadow-control: 0 0 #0000;
+  --shadow-selected: 0 0 #0000;
+  --shadow-inset: 0 0 #0000;
+  --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: 1;
+  --surface-blur: 0px;
+  --surface-filter: none;
+  --surface-card: #ebebf0;
+  --surface-control: #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: var(--scrim);
+  --page-backdrop: none;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--accent-ink);
+  --motion-duration: 180ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+  --press-scale: .98;
+  --font-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-style="flat"],
+  :root:not([data-theme="light"]) [data-style="flat"] {
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --surface-card: #141417;
+    --surface-control: #1a1a1d;
+    --surface-overlay: #1f1f23;
+  }
+}
+
+:root[data-theme="dark"][data-style="flat"],
+:root[data-theme="dark"] [data-style="flat"] {
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --surface-card: #141417;
+  --surface-control: #1a1a1d;
+  --surface-overlay: #1f1f23;
+}
+
+:root[data-style="glass"],
+[data-style="glass"] {
+  --shadow-flat: 0 0 0 1px rgba(255,255,255,.7),0 4px 16px -4px rgba(17,17,26,.10);
+  --shadow-hero: 0 0 0 1px rgba(255,255,255,.75),0 16px 40px -12px rgba(17,17,26,.22);
+  --shadow-cta: 0 8px 36px rgba(0,0,0,.065);
+  --shadow-sel: 0 2px 8px rgba(0,0,0,.10);
+  --shadow-pop: 0 0 0 1px rgba(255,255,255,.6),0 24px 48px -12px rgba(17,17,26,.28);
+  --radius-xs: var(--radius-xs-override, 6px);
+  --radius-chip: var(--radius-chip-override, 8px);
+  --radius-event: var(--radius-event-override, 12px);
+  --radius-control: var(--radius-control-override, 12px);
+  --radius-tile: var(--radius-tile-override, 14px);
+  --radius-banner: var(--radius-banner-override, 16px);
+  --radius-card: var(--radius-card-override, 20px);
+  --radius-dialog: var(--radius-dialog-override, 24px);
+  --radius-sheet: var(--radius-sheet-override, 36px);
+  --radius-pill: var(--radius-pill-override, 999px);
+  --radius-button: var(--radius-button-override, 999px);
+  --radius-input: var(--radius-input-override, 12px);
+  --radius-badge: var(--radius-badge-override, 999px);
+  --radius-avatar: 999px;
+  --radius-popover: var(--radius-popover-override, 18px);
+  --border-width-card: 1px;
+  --border-color-card: rgba(255,255,255,.75);
+  --border-width-control: 1px;
+  --border-color-control: var(--line-control);
+  --border-width-divider: 1px;
+  --border-color-divider: var(--line);
+  --shadow-card: inset 0 1px 0 rgba(255,255,255,.6),0 8px 24px -8px rgba(17,17,26,.16);
+  --shadow-raised: var(--shadow-hero);
+  --shadow-overlay: var(--shadow-pop);
+  --shadow-control: var(--shadow-flat);
+  --shadow-selected: var(--shadow-sel);
+  --shadow-inset: inset 0 1px 2px rgba(0,0,0,.06);
+  --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: .62;
+  --surface-blur: 18px;
+  --surface-filter: blur(var(--surface-blur)) saturate(1.6);
+  --surface-card: color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100%), transparent);
+  --surface-control: color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100% + 20%), transparent);
+  --surface-overlay: color-mix(in srgb, var(--float) calc(var(--surface-alpha) * 100% + 20%), transparent);
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: rgba(20,20,30,.16);
+  --page-backdrop: radial-gradient(60% 55% at 12% 8%, var(--accent-soft), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 45%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 18%, transparent), transparent);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--accent-ink);
+  --motion-duration: 180ms;
+  --motion-ease: cubic-bezier(.2,.8,.2,1);
+  --press-scale: .97;
+  --font-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-style="glass"],
+  :root:not([data-theme="light"]) [data-style="glass"] {
+    --shadow-flat: 0 0 0 1px rgba(255,255,255,.10),0 4px 16px rgba(0,0,0,.5);
+    --shadow-hero: 0 0 0 1px rgba(255,255,255,.12),0 16px 40px rgba(0,0,0,.6);
+    --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
+    --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
+    --shadow-pop: 0 0 0 1px rgba(255,255,255,.14),0 24px 48px rgba(0,0,0,.7);
+    --border-color-card: rgba(255,255,255,.12);
+    --shadow-card: inset 0 1px 0 rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.6);
+    --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --surface-alpha: .5;
+    --surface-backdrop: rgba(0,0,0,.5);
+    --page-backdrop: radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent);
+  }
+}
+
+:root[data-theme="dark"][data-style="glass"],
+:root[data-theme="dark"] [data-style="glass"] {
+  --shadow-flat: 0 0 0 1px rgba(255,255,255,.10),0 4px 16px rgba(0,0,0,.5);
+  --shadow-hero: 0 0 0 1px rgba(255,255,255,.12),0 16px 40px rgba(0,0,0,.6);
+  --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
+  --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
+  --shadow-pop: 0 0 0 1px rgba(255,255,255,.14),0 24px 48px rgba(0,0,0,.7);
+  --border-color-card: rgba(255,255,255,.12);
+  --shadow-card: inset 0 1px 0 rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.6);
+  --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --surface-alpha: .5;
+  --surface-backdrop: rgba(0,0,0,.5);
+  --page-backdrop: radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent);
+}
+
+:root[data-style="brutal"],
+[data-style="brutal"] {
+  --shadow-flat: 0 0 0 2px var(--ink),5px 5px 0 0 var(--ink);
+  --shadow-hero: 0 0 0 2px var(--ink),8px 8px 0 0 var(--ink);
+  --shadow-cta: 4px 4px 0 0 var(--ink);
+  --shadow-sel: 0 0 0 2px var(--ink);
+  --shadow-pop: 0 0 0 2px var(--ink),6px 6px 0 0 var(--ink);
+  --radius-xs: var(--radius-xs-override, 0px);
+  --radius-chip: var(--radius-chip-override, 0px);
+  --radius-event: var(--radius-event-override, 0px);
+  --radius-control: var(--radius-control-override, 0px);
+  --radius-tile: var(--radius-tile-override, 0px);
+  --radius-banner: var(--radius-banner-override, 0px);
+  --radius-card: var(--radius-card-override, 0px);
+  --radius-dialog: var(--radius-dialog-override, 0px);
+  --radius-sheet: var(--radius-sheet-override, 0px);
+  --radius-pill: var(--radius-pill-override, 0px);
+  --radius-button: var(--radius-button-override, 0px);
+  --radius-input: var(--radius-input-override, 0px);
+  --radius-badge: var(--radius-badge-override, 0px);
+  --radius-avatar: 0px;
+  --radius-popover: var(--radius-popover-override, 0px);
+  --border-width-card: 2px;
+  --border-color-card: var(--ink);
+  --border-width-control: 2px;
+  --border-color-control: var(--ink);
+  --border-width-divider: 2px;
+  --border-color-divider: var(--ink);
+  --shadow-card: 4px 4px 0 0 var(--ink);
+  --shadow-raised: 0 0 0 2px var(--ink),8px 8px 0 0 var(--ink);
+  --shadow-overlay: 0 0 0 2px var(--ink),6px 6px 0 0 var(--ink);
+  --shadow-control: 0 0 0 2px var(--ink),3px 3px 0 0 var(--ink);
+  --shadow-selected: 0 0 0 2px var(--ink);
+  --shadow-inset: 0 0 #0000;
+  --shadow-inset-accent: inset 0 0 0 2px var(--accent-ink);
+  --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
+  --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
+  --surface-alpha: 1;
+  --surface-blur: 0px;
+  --surface-filter: none;
+  --surface-card: var(--surface);
+  --surface-control: var(--surface);
+  --surface-overlay: var(--float);
+  --surface-sunken: var(--sunken);
+  --surface-backdrop: var(--scrim);
+  --page-backdrop: none;
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+  --focus-ring-color: var(--ink);
+  --motion-duration: 60ms;
+  --motion-ease: linear;
+  --press-scale: .97;
+  --font-scale: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-style="brutal"],
+  :root:not([data-theme="light"]) [data-style="brutal"] {
+    --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+    --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  }
+}
+
+:root[data-theme="dark"][data-style="brutal"],
+:root[data-theme="dark"] [data-style="brutal"] {
+  --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
+  --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+}
+
+:root[data-density="compact"],
+[data-density="compact"] {
+  --control-height: calc(36px * var(--density));
+  --control-height-sm: calc(30px * var(--density));
+  --input-height: calc(38px * var(--density));
+  --density: 0.875;
+  --pad-control-x: calc(16px * var(--density));
+  --pad-card: calc(16px * var(--density));
+  --gap-density-sm: calc(8px * var(--density));
+  --gap-density: calc(12px * var(--density));
+  --gap-density-lg: calc(18px * var(--density));
+}
+
+:root[data-density="normal"],
+[data-density="normal"] {
+  --control-height: calc(36px * var(--density));
+  --control-height-sm: calc(30px * var(--density));
+  --input-height: calc(38px * var(--density));
+  --density: 1;
+  --pad-control-x: calc(16px * var(--density));
+  --pad-card: calc(16px * var(--density));
+  --gap-density-sm: calc(8px * var(--density));
+  --gap-density: calc(12px * var(--density));
+  --gap-density-lg: calc(18px * var(--density));
+}
+
+:root[data-density="comfortable"],
+[data-density="comfortable"] {
+  --control-height: calc(36px * var(--density));
+  --control-height-sm: calc(30px * var(--density));
+  --input-height: calc(38px * var(--density));
+  --density: 1.125;
+  --pad-control-x: calc(16px * var(--density));
+  --pad-card: calc(16px * var(--density));
+  --gap-density-sm: calc(8px * var(--density));
+  --gap-density: calc(12px * var(--density));
+  --gap-density-lg: calc(18px * var(--density));
+}
+
+:root[data-radius="none"],
+[data-radius="none"] {
+  --radius-xs-override: 0px;
+  --radius-xs: 0px;
+  --radius-chip-override: 0px;
+  --radius-chip: 0px;
+  --radius-event-override: 0px;
+  --radius-event: 0px;
+  --radius-control-override: 0px;
+  --radius-control: 0px;
+  --radius-tile-override: 0px;
+  --radius-tile: 0px;
+  --radius-banner-override: 0px;
+  --radius-banner: 0px;
+  --radius-card-override: 0px;
+  --radius-card: 0px;
+  --radius-dialog-override: 0px;
+  --radius-dialog: 0px;
+  --radius-sheet-override: 0px;
+  --radius-sheet: 0px;
+  --radius-pill-override: 0px;
+  --radius-pill: 0px;
+  --radius-button-override: 0px;
+  --radius-button: 0px;
+  --radius-input-override: 0px;
+  --radius-input: 0px;
+  --radius-badge-override: 0px;
+  --radius-badge: 0px;
+  --radius-popover-override: 0px;
+  --radius-popover: 0px;
+}
+
+:root[data-radius="sm"],
+[data-radius="sm"] {
+  --radius-xs-override: 2px;
+  --radius-xs: 2px;
+  --radius-chip-override: 3px;
+  --radius-chip: 3px;
+  --radius-event-override: 4px;
+  --radius-event: 4px;
+  --radius-control-override: 6px;
+  --radius-control: 6px;
+  --radius-tile-override: 6px;
+  --radius-tile: 6px;
+  --radius-banner-override: 6px;
+  --radius-banner: 6px;
+  --radius-card-override: 8px;
+  --radius-card: 8px;
+  --radius-dialog-override: 10px;
+  --radius-dialog: 10px;
+  --radius-sheet-override: 16px;
+  --radius-sheet: 16px;
+  --radius-pill-override: 999px;
+  --radius-pill: 999px;
+  --radius-button-override: 6px;
+  --radius-button: 6px;
+  --radius-input-override: 6px;
+  --radius-input: 6px;
+  --radius-badge-override: 4px;
+  --radius-badge: 4px;
+  --radius-popover-override: 8px;
+  --radius-popover: 8px;
+}
+
+:root[data-radius="md"],
+[data-radius="md"] {
+  --radius-xs-override: 4px;
+  --radius-xs: 4px;
+  --radius-chip-override: 6px;
+  --radius-chip: 6px;
+  --radius-event-override: 8px;
+  --radius-event: 8px;
+  --radius-control-override: 10px;
+  --radius-control: 10px;
+  --radius-tile-override: 10px;
+  --radius-tile: 10px;
+  --radius-banner-override: 12px;
+  --radius-banner: 12px;
+  --radius-card-override: 12px;
+  --radius-card: 12px;
+  --radius-dialog-override: 16px;
+  --radius-dialog: 16px;
+  --radius-sheet-override: 24px;
+  --radius-sheet: 24px;
+  --radius-pill-override: 999px;
+  --radius-pill: 999px;
+  --radius-button-override: 10px;
+  --radius-button: 10px;
+  --radius-input-override: 10px;
+  --radius-input: 10px;
+  --radius-badge-override: 6px;
+  --radius-badge: 6px;
+  --radius-popover-override: 12px;
+  --radius-popover: 12px;
+}
+
+:root[data-radius="lg"],
+[data-radius="lg"] {
+  --radius-xs-override: 6px;
+  --radius-xs: 6px;
+  --radius-chip-override: 8px;
+  --radius-chip: 8px;
+  --radius-event-override: 12px;
+  --radius-event: 12px;
+  --radius-control-override: 14px;
+  --radius-control: 14px;
+  --radius-tile-override: 14px;
+  --radius-tile: 14px;
+  --radius-banner-override: 18px;
+  --radius-banner: 18px;
+  --radius-card-override: 20px;
+  --radius-card: 20px;
+  --radius-dialog-override: 24px;
+  --radius-dialog: 24px;
+  --radius-sheet-override: 36px;
+  --radius-sheet: 36px;
+  --radius-pill-override: 999px;
+  --radius-pill: 999px;
+  --radius-button-override: 999px;
+  --radius-button: 999px;
+  --radius-input-override: 14px;
+  --radius-input: 14px;
+  --radius-badge-override: 999px;
+  --radius-badge: 999px;
+  --radius-popover-override: 16px;
+  --radius-popover: 16px;
+}
+
+:root[data-radius="full"],
+[data-radius="full"] {
+  --radius-xs-override: 8px;
+  --radius-xs: 8px;
+  --radius-chip-override: 999px;
+  --radius-chip: 999px;
+  --radius-event-override: 16px;
+  --radius-event: 16px;
+  --radius-control-override: 999px;
+  --radius-control: 999px;
+  --radius-tile-override: 20px;
+  --radius-tile: 20px;
+  --radius-banner-override: 24px;
+  --radius-banner: 24px;
+  --radius-card-override: 28px;
+  --radius-card: 28px;
+  --radius-dialog-override: 32px;
+  --radius-dialog: 32px;
+  --radius-sheet-override: 40px;
+  --radius-sheet: 40px;
+  --radius-pill-override: 999px;
+  --radius-pill: 999px;
+  --radius-button-override: 999px;
+  --radius-button: 999px;
+  --radius-input-override: 999px;
+  --radius-input: 999px;
+  --radius-badge-override: 999px;
+  --radius-badge: 999px;
+  --radius-popover-override: 20px;
+  --radius-popover: 20px;
 }
