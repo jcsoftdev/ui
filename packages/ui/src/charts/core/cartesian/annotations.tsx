@@ -24,10 +24,10 @@ function Pill({
   text: string;
   ink: string;
   soft: string;
-  anchor: "start" | "end";
+  anchor: "start" | "middle" | "end";
 }) {
   const width = estimateTextWidth(text, 10.5) + 12;
-  const left = anchor === "end" ? x - width : x;
+  const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x;
   return (
     <g>
       <rect x={left} y={y - 9} width={width} height={18} rx={9} style={{ fill: soft }} />
@@ -58,6 +58,44 @@ export const AnnotationLayer = memo(function AnnotationLayer({
     <g>
       {items.map((note) => {
         const { ink, soft } = TONE_COLORS[note.tone];
+        if (!("direction" in note)) {
+          const half = note.label ? (estimateTextWidth(note.label, 10.5) + 12) / 2 : 0;
+          const x = Math.min(Math.max(note.x, half), Math.max(half, width - half));
+          const above = note.y > 26;
+          const y = note.kind === "point" ? note.y + (above ? -16 : 16) : note.y;
+          return (
+            <g key={note.key} data-annotation={note.kind}>
+              {note.kind === "point" ? (
+                <circle
+                  cx={note.x}
+                  cy={note.y}
+                  r={5}
+                  strokeWidth={2.5}
+                  style={{ fill: ink, stroke: "var(--surface)" }}
+                />
+              ) : null}
+              {note.label ? (
+                note.kind === "point" ? (
+                  <Pill x={x} y={y} text={note.label} ink={ink} soft={soft} anchor="middle" />
+                ) : (
+                  <text
+                    x={x}
+                    y={y}
+                    dy="0.35em"
+                    textAnchor="middle"
+                    paintOrder="stroke"
+                    strokeWidth={3}
+                    strokeLinejoin="round"
+                    className="stroke-surface font-bold text-[11px]"
+                    style={{ fill: ink }}
+                  >
+                    {note.label}
+                  </text>
+                )
+              ) : null}
+            </g>
+          );
+        }
         const horizontal = note.direction === "horizontal";
         if (note.kind === "range") {
           return (

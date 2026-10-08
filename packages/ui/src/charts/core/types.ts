@@ -55,6 +55,8 @@ export function resolveLabels(labels?: Partial<ChartLabels>): ChartLabels {
 
 interface AnnotationBase {
   label?: string;
+  /** Extra sentence shown in a tooltip when the pointer is near a `point` or `text` mark. */
+  tooltip?: string;
   /** Color family, `neutral` by default. */
   tone?: ChartTone;
 }
@@ -74,7 +76,11 @@ export type ChartAnnotation =
       yAxis?: "left" | "right";
     })
   | (AnnotationBase & { type: "line"; axis: "x"; value: XValue })
-  | (AnnotationBase & { type: "range"; axis: "x"; from: XValue; to: XValue });
+  | (AnnotationBase & { type: "range"; axis: "x"; from: XValue; to: XValue })
+  /** Dot at a data coordinate (category `x`, value `y`) with an optional label pill. */
+  | (AnnotationBase & { type: "point"; x: XValue; y: number; yAxis?: "left" | "right" })
+  /** Free text anchored at a data coordinate. */
+  | (AnnotationBase & { type: "text"; x: XValue; y: number; yAxis?: "left" | "right" });
 
 export interface ValueAxisOptions {
   /** Fixed lower bound; by default the data decides (bars and areas start at 0). */

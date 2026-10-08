@@ -13,6 +13,8 @@ export interface ChartBrushProps {
   count: number;
   /** Full-length series drawn as the overview. */
   series: ReadonlyArray<{ id: string; color: string; data: ReadonlyArray<number | null> }>;
+  /** Original category index of each entry of `series` when the series were downsampled. */
+  indices?: readonly number[];
   /** Selected window, inclusive indices. */
   range: IndexRange;
   onChange: (range: IndexRange) => void;
@@ -43,6 +45,7 @@ const MIN_SPAN = 1;
 export function ChartBrush({
   count,
   series,
+  indices,
   range,
   onChange,
   width,
@@ -65,10 +68,11 @@ export function ChartBrush({
     const span = domain[1] - lo || 1;
     const y = (value: number) => height - 6 - ((value - lo) / span) * (height - 14);
     return series.map((item, index) => {
+      const at = (i: number) => scale.center(indices ? (indices[i] as number) : i);
       const points: Array<Point | null> = item.data.map((value, i) =>
-        value == null ? null : { x: scale.center(i), y: y(value) },
+        value == null ? null : { x: at(i), y: y(value) },
       );
-      const bottom = points.map((point, i) => ({ x: point?.x ?? scale.center(i), y: height - 6 }));
+      const bottom = points.map((point, i) => ({ x: point?.x ?? at(i), y: height - 6 }));
       return {
         id: item.id,
         color: item.color,
@@ -76,7 +80,7 @@ export function ChartBrush({
         area: index === 0 ? areaPath(points, bottom, "smooth") : undefined,
       };
     });
-  }, [series, scale, height]);
+  }, [series, indices, scale, height]);
 
   const [start, end] = range;
   const x0 = scale.center(start);

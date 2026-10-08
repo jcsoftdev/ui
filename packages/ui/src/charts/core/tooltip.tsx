@@ -28,6 +28,8 @@ export interface ChartTooltipProps {
   containerWidth: number;
   title?: ReactNode;
   rows: readonly TooltipRow[];
+  /** Wrapped sentence under the title, for notes that are not series values. */
+  body?: string;
   className?: string;
 }
 
@@ -39,7 +41,15 @@ export interface ChartTooltipProps {
  * always stays inside the container: it takes the side of the anchor with
  * room, and is clamped to the edges when neither side fits (narrow charts).
  */
-export function ChartTooltip({ x, y, containerWidth, title, rows, className }: ChartTooltipProps) {
+export function ChartTooltip({
+  x,
+  y,
+  containerWidth,
+  title,
+  rows,
+  body,
+  className,
+}: ChartTooltipProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(0);
   useIsomorphicLayoutEffect(() => {
@@ -62,6 +72,7 @@ export function ChartTooltip({ x, y, containerWidth, title, rows, className }: C
       }}
     >
       {title ? <div className="mb-1.5 font-bold text-[12px] text-ink">{title}</div> : null}
+      {body ? <div className="text-ink-2 leading-snug">{body}</div> : null}
       <div className="flex flex-col gap-1">
         {rows.map((row) => (
           <div

@@ -2,6 +2,7 @@
 
 import {
   type KeyboardEvent,
+  type MouseEvent,
   type PointerEvent,
   useCallback,
   useEffect,
@@ -14,6 +15,7 @@ import { cn } from "../../../utils/cn.js";
 import { AxisBottom, AxisLeft, AxisRight, GridLines } from "../axes.js";
 import { ChartFrame } from "../chart-frame.js";
 import { ChartDataTable } from "../data-table.js";
+import { sharedSampleIndices } from "../downsample.js";
 import { formatPercent, resolveFormat } from "../format.js";
 import { ChartLegend, type LegendItem, type LegendShape } from "../legend.js";
 import { EASE_OUT, fadeIn, revealClip, useEntryAnimation } from "../motion.js";
@@ -31,7 +33,25 @@ import {
   type ResolvedSeries,
 } from "./layout.js";
 import { BarMark, DataLabels, LineAreaMark } from "./marks.js";
+import { syncKeyOf, useChartSync } from "./sync.js";
 import type { CartesianChartProps, MarkKind } from "./types.js";
+
+const DEFAULT_MAX_POINTS = 2000;
+
+/** Downsampling only applies to plain vertical line and area plots; bars always draw every point. */
+function samplingThreshold(
+  maxPoints: number | false,
+  orientation: "vertical" | "horizontal",
+  resolved: ReadonlyArray<{ kind: MarkKind }>,
+): number | null {
+  if (maxPoints === false || orientation !== "vertical") return null;
+  return resolved.some((item) => item.kind === "column") ? null : maxPoints;
+}
+
+/** Keeps `indices` of an array (all of it when `indices` is null). */
+function pick<T>(values: readonly T[], indices: readonly number[] | null): readonly T[] {
+  return indices ? indices.map((index) => values[index] as T) : values;
+}
 
 const BRUSH_HEIGHT = 52;
 const BRUSH_GAP = 12;
@@ -69,6 +89,11 @@ export function CartesianChart({
   markers = false,
   dataLabels = false,
   gradient = true,
+  lineGradient = false,
+  transition = false,
+  maxPoints = DEFAULT_MAX_POINTS,
+  syncId,
+  onPointClick,
   barRadius = 6,
   valueFormat,
   xFormat,
@@ -91,9 +116,36 @@ export function CartesianChart({
   const [range, setRange] = useState<IndexRange | null>(null);
   const count = categories.length;
   const xLabel = xFormat ?? defaultXLabel;
+  const sync = useChartSync(syncId);
+  const syncedRange = sync.channel.range;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new data length invalidates the zoom window.
   useEffect(() => setRange(null), [count]);
+
+  // Adopt the zoom window another chart of the same sync group published.
+  useEffect(() => {
+    if (!syncId) return;
+    if (!syncedRange) {
+      setRange(null);
+      return;
+    }
+    const lo = categories.findIndex((value) => syncKeyOf(value) === syncedRange[0]);
+    const hi = categories.findIndex((value) => syncKeyOf(value) === syncedRange[1]);
+    if (lo < 0 || hi < 0 || hi <= lo) return;
+    setRange((current) => (current && current[0] === lo && current[1] === hi ? current : [lo, hi]));
+  }, [syncId, syncedRange, categories]);
+
+  const changeRange = useCallback(
+    (next: IndexRange | null) => {
+      setRange(next);
+      sync.setRange(
+        next
+          ? [syncKeyOf(categories[next[0]] as XValue), syncKeyOf(categories[next[1]] as XValue)]
+          : null,
+      );
+    },
+    [sync, categories],
+  );
 
   const resolved = useMemo<ResolvedSeries[]>(
     () =>
@@ -126,15 +178,29 @@ export function CartesianChart({
     hidden: state.isHidden(item.id),
   }));
 
+  const tableSample = useMemo(() => {
+    const threshold = samplingThreshold(maxPoints, orientation, resolved);
+    return threshold == null
+      ? null
+      : sharedSampleIndices(
+          resolved.map((item) => item.data),
+          threshold,
+        );
+  }, [maxPoints, orientation, resolved]);
+
   const table = (
     <ChartDataTable
       caption={description ? `${title}. ${description}` : title}
       categoryHeader={labels.category}
-      categories={categories.map((value) => titleOf(value, xLabel, xFormat != null))}
+      categories={pick(categories, tableSample).map((value) =>
+        titleOf(value, xLabel, xFormat != null),
+      )}
       columns={resolved.map((item) => ({
         id: item.id,
         name: item.name,
-        values: item.data.map((value) => (value == null ? "" : item.format(value))),
+        values: pick(item.data, tableSample).map((value) =>
+          value == null ? "" : item.format(value),
+        ),
       }))}
     />
   );
@@ -169,7 +235,7 @@ export function CartesianChart({
           hidden={state.hidden}
           highlighted={state.highlighted}
           range={range}
-          onRangeChange={setRange}
+          onRangeChange={changeRange}
           brush={brushOn}
           title={title}
           labels={labels}
@@ -179,6 +245,11 @@ export function CartesianChart({
           markers={markers}
           dataLabels={dataLabels}
           gradient={gradient}
+          lineGradient={lineGradient}
+          transition={transition}
+          maxPoints={maxPoints}
+          syncId={syncId}
+          onPointClick={onPointClick}
           barRadius={barRadius}
           valueFormat={valueFormat}
           xLabel={xLabel}
@@ -205,6 +276,11 @@ interface CartesianPlotProps
     | "markers"
     | "dataLabels"
     | "gradient"
+    | "lineGradient"
+    | "transition"
+    | "maxPoints"
+    | "syncId"
+    | "onPointClick"
     | "barRadius"
     | "valueFormat"
     | "xScale"
@@ -253,6 +329,11 @@ function CartesianPlot({
   markers = false,
   dataLabels = false,
   gradient = true,
+  lineGradient = false,
+  transition = false,
+  maxPoints = DEFAULT_MAX_POINTS,
+  syncId,
+  onPointClick,
   barRadius = 6,
   valueFormat,
   xLabel,
@@ -267,10 +348,14 @@ function CartesianPlot({
 }: CartesianPlotProps) {
   const uid = safeId(useId());
   const svgRef = useRef<SVGSVGElement>(null);
-  const [active, setActive] = useState<number | null>(null);
+  const owner = useId();
+  const sync = useChartSync(syncId);
+  const [localActive, setActive] = useState<number | null>(null);
+  const [noteKey, setNoteKey] = useState<string | null>(null);
   const [pointer, setPointer] = useState<Pointer | null>(null);
   const [selection, setSelection] = useState<{ from: number; to: number } | null>(null);
   const dragStart = useRef<number | null>(null);
+  const dragged = useRef(false);
 
   const total = categories.length;
   const start = range ? range[0] : 0;
@@ -292,13 +377,47 @@ function CartesianPlot({
     [categories, range, start, end],
   );
 
+  // Dense series are reduced to the points that keep their shape; zooming in samples again.
+  const threshold = samplingThreshold(maxPoints, orientation, resolved);
+  const sampled = useMemo(() => {
+    const indices =
+      threshold == null
+        ? null
+        : sharedSampleIndices(
+            visible.map((item) => item.data),
+            threshold,
+          );
+    if (!indices) return { indices, series: visible, categories: windowCategories };
+    return {
+      indices,
+      series: visible.map((item) => ({ ...item, data: pick(item.data, indices) })),
+      categories: pick(windowCategories, indices),
+    };
+  }, [visible, windowCategories, threshold]);
+  const brushSample = useMemo(
+    () =>
+      brush && threshold != null
+        ? sharedSampleIndices(
+            brushSeries.map((item) => item.data),
+            threshold,
+          )
+        : null,
+    [brush, threshold, brushSeries],
+  );
+  const brushSampled = useMemo(
+    () => brushSeries.map((item) => ({ ...item, data: pick(item.data, brushSample) })),
+    [brushSeries, brushSample],
+  );
+  const original = (index: number) =>
+    sampled.indices ? (sampled.indices[index] as number) : index;
+
   const layout: CartesianLayout = useMemo(
     () =>
       computeLayout({
         width,
         height,
-        categories: windowCategories,
-        series: visible,
+        categories: sampled.categories,
+        series: sampled.series,
         orientation,
         stack,
         curve,
@@ -314,8 +433,7 @@ function CartesianPlot({
     [
       width,
       height,
-      windowCategories,
-      visible,
+      sampled,
       orientation,
       stack,
       curve,
@@ -333,7 +451,42 @@ function CartesianPlot({
   const { margin, innerWidth, innerHeight, horizontal } = layout;
   const hasBars = layout.geometry.some((item) => item.kind === "column");
   const stackedAreas = stack !== "none";
-  const count = windowCategories.length;
+  const count = sampled.categories.length;
+
+  const syncedHover = syncId ? sync.channel.hover : null;
+  const syncedOwner = sync.channel.owner;
+  const syncedIndex = useMemo(() => {
+    if (syncedHover == null || syncedOwner === owner || count === 0) return null;
+    let best = -1;
+    let gap = Number.POSITIVE_INFINITY;
+    sampled.categories.forEach((value, index) => {
+      const key = syncKeyOf(value);
+      const distance =
+        typeof key === "number" && typeof syncedHover === "number"
+          ? Math.abs(key - syncedHover)
+          : key === syncedHover
+            ? 0
+            : Number.POSITIVE_INFINITY;
+      if (distance < gap) {
+        gap = distance;
+        best = index;
+      }
+    });
+    return best < 0 ? null : best;
+  }, [syncedHover, syncedOwner, owner, sampled.categories, count]);
+  const active = localActive ?? syncedIndex;
+
+  // Publish this chart's hover to its sync group, and withdraw it on leave or unmount.
+  const { setHover, clearHover } = sync;
+  const hoverKey =
+    localActive != null && localActive < count
+      ? syncKeyOf(sampled.categories[localActive] as XValue)
+      : null;
+  useEffect(() => {
+    if (hoverKey == null) clearHover(owner);
+    else setHover(hoverKey, owner);
+  }, [hoverKey, owner, setHover, clearHover]);
+  useEffect(() => () => clearHover(owner), [owner, clearHover]);
 
   // Keep the active index valid when zooming or toggling series.
   useEffect(() => {
@@ -377,14 +530,58 @@ function CartesianPlot({
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!brush || event.pointerType === "touch" || event.button !== 0) return;
     dragStart.current = localPoint(event).x;
+    dragged.current = false;
     event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const notesAt = (point: Pointer): string | null => {
+    let best: string | null = null;
+    let gap = 14;
+    for (const note of layout.annotations) {
+      if ((note.kind !== "point" && note.kind !== "text") || !note.tooltip) continue;
+      const distance = Math.hypot(note.x - point.x, note.y - point.y);
+      if (distance <= gap) {
+        gap = distance;
+        best = note.key;
+      }
+    }
+    return best;
+  };
+
+  const emitClick = (index: number, across: number | null) => {
+    if (!onPointClick) return;
+    let seriesId = sampled.series[0]?.id ?? "";
+    let value: number | null = null;
+    let nearest = Number.POSITIVE_INFINITY;
+    for (const item of sampled.series) {
+      const raw = item.data[index] ?? null;
+      const point = layout.geometry.find((geometry) => geometry.id === item.id)?.points[index];
+      if (raw == null || !point) continue;
+      const distance = across == null ? 0 : Math.abs((horizontal ? point.x : point.y) - across);
+      if (distance < nearest) {
+        nearest = distance;
+        seriesId = item.id;
+        value = raw;
+      }
+    }
+    const at = start + original(index);
+    onPointClick({ index: at, category: categories[at] as XValue, seriesId, value });
+  };
+
+  const onClick = (event: MouseEvent<HTMLDivElement>) => {
+    if (!onPointClick || dragged.current) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    emitClick(layout.indexAt(along(point)), horizontal ? point.x : point.y);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const point = localPoint(event);
     setPointer(point);
     setActive(layout.indexAt(along(point)));
+    setNoteKey(notesAt(point));
     if (dragStart.current != null && Math.abs(point.x - dragStart.current) > 4) {
+      dragged.current = true;
       const x = Math.min(Math.max(point.x, 0), innerWidth);
       setSelection({ from: Math.min(dragStart.current, x), to: Math.max(dragStart.current, x) });
     }
@@ -394,7 +591,7 @@ function CartesianPlot({
     if (dragStart.current != null && selection) {
       const lo = layout.indexAt(selection.from);
       const hi = layout.indexAt(selection.to);
-      if (hi - lo >= 1) onRangeChange([start + lo, start + hi]);
+      if (hi - lo >= 1) onRangeChange([start + original(lo), start + original(hi)]);
     }
     dragStart.current = null;
     setSelection(null);
@@ -407,6 +604,7 @@ function CartesianPlot({
     if (dragStart.current != null) return;
     setActive(null);
     setPointer(null);
+    setNoteKey(null);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -421,6 +619,10 @@ function CartesianPlot({
     else if (event.key === "Escape") {
       setActive(null);
       return;
+    } else if ((event.key === "Enter" || event.key === " ") && onPointClick && active != null) {
+      event.preventDefault();
+      emitClick(active, null);
+      return;
     } else return;
     event.preventDefault();
     setPointer(null);
@@ -431,11 +633,11 @@ function CartesianPlot({
   // Tooltip content ----------------------------------------------------------
   const describe = useCallback(
     (index: number) => {
-      const category = windowCategories[index] as XValue;
+      const category = sampled.categories[index] as XValue;
       const rows: TooltipRow[] = [];
       let sum = 0;
       let stackable = 0;
-      for (const item of visible) {
+      for (const item of sampled.series) {
         const raw = item.data[index];
         const layer = layout.layers.get(item.id);
         let note: string | undefined;
@@ -467,7 +669,7 @@ function CartesianPlot({
       }
       return { title: titleOf(category, xLabel, customXLabel), rows };
     },
-    [windowCategories, visible, layout, stack, valueFormat, labels.total, xLabel, customXLabel],
+    [sampled, layout, stack, valueFormat, labels.total, xLabel, customXLabel],
   );
 
   const details = active != null && active < count ? describe(active) : null;
@@ -500,6 +702,12 @@ function CartesianPlot({
   const activePosition = active != null ? layout.positions[active] : undefined;
   const bandSize = layout.mode === "band" ? layout.step : 0;
   const gradientId = (seriesId: string) => `${uid}-g-${safeId(seriesId)}`;
+  const strokeGradientId = (seriesId: string) => `${uid}-s-${safeId(seriesId)}`;
+  const markProps = (id: string) => ({
+    strokeGradientId: lineGradient ? strokeGradientId(id) : undefined,
+    transition,
+  });
+  const note = noteKey ? layout.annotations.find((item) => item.key === noteKey) : undefined;
 
   const rangeText = (from: number, to: number) =>
     `${titleOf(categories[from] as XValue, xLabel, customXLabel)} – ${titleOf(
@@ -529,6 +737,25 @@ function CartesianPlot({
               style={{ transformBox: "fill-box", transformOrigin: "left center" }}
             />
           </clipPath>
+          {lineGradient
+            ? layout.geometry
+                .map((item, index) => ({ item, index }))
+                .filter(({ item }) => item.kind !== "column")
+                .map(({ item, index }) => (
+                  <linearGradient
+                    key={item.id}
+                    id={strokeGradientId(item.id)}
+                    gradientUnits="userSpaceOnUse"
+                    x1={0}
+                    x2={Math.max(1, innerWidth)}
+                    y1={0}
+                    y2={0}
+                  >
+                    <stop offset="0%" style={{ stopColor: item.color }} />
+                    <stop offset="100%" style={{ stopColor: seriesColor(index + 1) }} />
+                  </linearGradient>
+                ))
+            : null}
           {gradient
             ? layout.geometry
                 .filter((item) => item.kind === "area")
@@ -587,6 +814,7 @@ function CartesianPlot({
                   gradientId={gradient ? gradientId(item.id) : undefined}
                   markers={markers && count <= Math.max(2, innerWidth / 9)}
                   stacked={stackedAreas}
+                  {...markProps(item.id)}
                 />
               ) : null,
             )}
@@ -610,6 +838,7 @@ function CartesianPlot({
                   dimmed={highlighted != null && highlighted !== item.id}
                   markers={markers && count <= Math.max(2, innerWidth / 9)}
                   stacked={stackedAreas}
+                  {...markProps(item.id)}
                 />
               ) : null,
             )}
@@ -713,14 +942,24 @@ function CartesianPlot({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onPointerLeave={onPointerLeave}
+        onClick={onClick}
         className={cn(
           "absolute rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-4",
-          brush ? "cursor-crosshair" : "cursor-default",
+          brush ? "cursor-crosshair" : onPointClick ? "cursor-pointer" : "cursor-default",
         )}
         style={{ left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
       />
 
-      {tooltip && details && anchor ? (
+      {note && (note.kind === "point" || note.kind === "text") ? (
+        <ChartTooltip
+          x={margin.left + note.x}
+          y={margin.top + note.y}
+          containerWidth={width}
+          title={note.label}
+          body={note.tooltip}
+          rows={[]}
+        />
+      ) : tooltip && details && anchor ? (
         <ChartTooltip
           x={anchor.x}
           y={anchor.y}
@@ -758,7 +997,8 @@ function CartesianPlot({
           left={margin.left}
           right={margin.right}
           height={BRUSH_HEIGHT}
-          series={brushSeries}
+          series={brushSampled}
+          indices={brushSample ?? undefined}
           range={range ?? [0, total - 1]}
           onChange={(next) => onRangeChange(next[0] === 0 && next[1] === total - 1 ? null : next)}
           label={labels.brush}
