@@ -14,6 +14,12 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `BarChart` | `bar-chart/` | `CartesianChart` (`kind: "column"`) |
 | `ComboChart` | `combo-chart/` | `CartesianChart` (mixed kinds, right axis) |
 | `Sparkline` | `sparkline/` | scales + paths directly (no frame) |
+| `PictogramChart` | `pictogram-chart/` | unit charts core (`units.ts`, `UnitGlyph`, `useCategoryExplorer`) |
+| `WaffleChart` | `waffle-chart/` | unit charts core (`waffleCounts`, `gridCell`) |
+| `ParliamentChart` | `parliament-chart/` | unit charts core (`parliamentLayout`) |
+| `FillGaugeChart` | `fill-gauge-chart/` | `UNIT_ICONS` shapes as clip paths |
+| `IsotypeRows` | `isotype-rows/` | unit charts core (`unitFractions`, `UnitGlyph`) |
+| `ProgressUnits` | `progress-units/` | unit charts core (`progressFractions`, `UnitGlyph`) |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
 Polar and other chart families should be built from these blocks; see "Building a new chart" below.
@@ -58,6 +64,10 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `data-table.tsx` | `ChartDataTable`: visually hidden table for screen readers. |
 | `axes.tsx` | `GridLines`, `AxisBottom`, `AxisLeft`, `AxisRight`, `thinTicks`, `estimateTextWidth`. |
 | `types.ts` | `XValue`, `ChartSeries`, `ChartAnnotation`, `ValueAxisOptions`, `ChartLabels` + `DEFAULT_LABELS` + `resolveLabels`. |
+| `units.ts` | Pure unit geometry: `unitCount`/`unitFractions` (23 at 5 per icon = 4 icons + 0.6), `progressFractions` (4.5 of 5 stars), `largestRemainder`/`waffleCounts` (integer cells that add up), `gridCell`, `fitUnitGrid` (largest icons that fit a box), `parliamentRows`/`parliamentLayout` (hemicycle seats, left to right), `assignUnits`. |
+| `unit-icons.ts` | `UNIT_ICONS` (person, scissors, chair, star, calendar, bottle, battery, droplet, target, shield; 24 x 24 solid silhouettes), `UnitIcon` (a name, a raw path or a `UnitShape` with its own box), `resolveUnitShape`, `UnitCategory`. |
+| `unit-glyph.tsx` | `UnitGlyph` (one icon in a square cell, partial fill clipped, track behind), `popUnits` (staggered entry), `UNIT_FRAME_CLASS` / `UNIT_LEGEND_CLASS` (frame as `@container/units`, legend below under `@sm`). |
+| `category-explorer.tsx` | `useCategoryExplorer` + `CategorySlider`: hover finds the category through `[data-category]`, a pointer-transparent `role="slider"` overlay moves between categories with the keyboard. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
 ## Theming
