@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Boxes, CalendarDays, LayoutDashboard, Scissors, Users } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button } from "../atoms/button/index.js";
 import { Chip } from "../atoms/chip/index.js";
 import { AreaChart } from "../charts/area-chart/index.js";
@@ -15,6 +17,9 @@ import {
   PageHeaderLede,
   PageHeaderTitle,
 } from "../containers/page-header/index.js";
+import { AppShell } from "../shell/app-shell/index.js";
+import { Sidebar, type SidebarGroup } from "../shell/sidebar/index.js";
+import { Topbar } from "../shell/topbar/index.js";
 import { BARBEROS, CLIENTES, SERVICIOS, seeded } from "./data.js";
 import {
   CardGrid,
@@ -218,6 +223,63 @@ function InicioDashboard() {
   );
 }
 
+const navGroups: SidebarGroup[] = [
+  {
+    id: "operacion",
+    label: "Operación",
+    items: [
+      { id: "inicio", label: "Inicio", href: "#inicio", icon: <LayoutDashboard />, active: true },
+      { id: "agenda", label: "Agenda", href: "#agenda", icon: <CalendarDays />, badge: 12 },
+      { id: "clientes", label: "Clientes", href: "#clientes", icon: <Users /> },
+    ],
+  },
+  {
+    id: "negocio",
+    label: "Negocio",
+    items: [
+      { id: "servicios", label: "Servicios", href: "#servicios", icon: <Scissors /> },
+      { id: "inventario", label: "Inventario", href: "#inventario", icon: <Boxes />, badge: 4 },
+    ],
+  },
+];
+
+/** The dashboard inside the app shell: the sidebar becomes a drawer under 900 px of shell width. */
+function InicioWithShell() {
+  const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const close = () => {
+    setOpen(false);
+    menuButton.current?.focus();
+  };
+  return (
+    <AppShell className="h-full">
+      <Sidebar
+        ariaLabel="Navegación principal"
+        groups={navGroups}
+        open={open}
+        onClose={close}
+        className="!h-full"
+        header={<strong className="px-2 text-card-title">Barbería Don Lucho</strong>}
+      />
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        <Topbar
+          breadcrumbs={["Operación", "Inicio"]}
+          breadcrumbsLabel="Ruta de navegación"
+          menuButtonRef={menuButton}
+          onOpenMenu={() => setOpen(true)}
+          menuLabel="Abrir menú"
+          onSearch={() => {}}
+          searchLabel="Buscar"
+          searchPlaceholder="Cliente, teléfono o servicio"
+        />
+        <div className="@container/page p-4 @min-[900px]/app:p-7">
+          <InicioDashboard />
+        </div>
+      </div>
+    </AppShell>
+  );
+}
+
 const meta = {
   title: "Dashboards/Inicio",
   component: InicioDashboard,
@@ -245,4 +307,30 @@ export const Narrow: Story = {
 export const Tablet: Story = {
   decorators: [tabletFrame],
   parameters: { docs: { description: { story: TABLET_NOTE } } },
+};
+
+/** Sidebar fixed at the side; the container is wide enough. */
+export const WithShell: Story = {
+  render: () => <InicioWithShell />,
+  parameters: { layout: "fullscreen" },
+  decorators: [
+    (Story) => (
+      <div className="h-[760px] overflow-hidden [transform:translateZ(0)]">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** 375 px container: the shell turns the sidebar into a drawer and the topbar shows the menu button, whatever the viewport is. */
+export const WithShellNarrow: Story = {
+  render: () => <InicioWithShell />,
+  parameters: { layout: "fullscreen" },
+  decorators: [
+    (Story) => (
+      <div className="h-[700px] w-[375px] max-w-full overflow-hidden border border-line [transform:translateZ(0)]">
+        <Story />
+      </div>
+    ),
+  ],
 };

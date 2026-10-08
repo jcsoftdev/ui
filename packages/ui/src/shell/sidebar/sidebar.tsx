@@ -1,30 +1,8 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { cn } from "../../utils/cn.js";
-
-const MOBILE_QUERY = "(max-width: 900px)";
-
-/**
- * Starts as `false` on both server and first client render so hydration matches;
- * the real value is applied in an effect.
- */
-function useIsMobile(query: string): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return;
-    }
-    const media = window.matchMedia(query);
-    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
-    setIsMobile(media.matches);
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
-  }, [query]);
-
-  return isMobile;
-}
+import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
 export interface SidebarLinkProps {
   href: string;
@@ -65,7 +43,7 @@ export interface SidebarProps {
   footer?: ReactNode;
   /** Link renderer; defaults to a plain anchor. */
   renderLink?: SidebarRenderLink;
-  /** Drawer state at <=900px. Ignored on desktop, where the sidebar is always visible. */
+  /** Drawer state when the app container is under 900 px. Ignored above it, where the sidebar is always visible. */
   open?: boolean;
   onClose?: () => void;
   className?: string;
@@ -76,8 +54,10 @@ const defaultRenderLink: SidebarRenderLink = ({ children, ...props }) => (
 );
 
 /**
- * Main navigation. Always visible on desktop; an off-canvas drawer at <=900px,
- * `inert` while closed so it is not reachable by keyboard.
+ * Main navigation. Always visible when its app container is wide; an off-canvas drawer under
+ * 900 px of container width, `inert` while closed so it is not reachable by keyboard.
+ * Render it inside `AppShell`: the container decides, never the viewport. Without an `AppShell`
+ * it measures its parent element instead.
  */
 export function Sidebar({
   groups,
@@ -89,10 +69,12 @@ export function Sidebar({
   onClose,
   className,
 }: SidebarProps) {
-  const isMobile = useIsMobile(MOBILE_QUERY);
+  const shell = useAppShell();
+  const asideRef = useRef<HTMLElement>(null);
+  const parentCompact = useCompactContainer(asideRef, (aside) => aside.parentElement, !shell);
+  const isMobile = shell ? shell.compact : parentCompact;
   const closedOnMobile = isMobile && !open;
   const openOnMobile = isMobile && open;
-  const asideRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!openOnMobile) return;
@@ -116,8 +98,18 @@ export function Sidebar({
         aria-label={ariaLabel}
         inert={closedOnMobile || undefined}
         className={cn(
-          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-line border-r bg-surface px-3 pt-3.5 pb-3 transition-transform duration-200 min-[901px]:sticky min-[901px]:top-0 min-[901px]:translate-x-0",
-          closedOnMobile ? "-translate-x-full" : "translate-x-0",
+          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-line border-r bg-surface px-3 pt-3.5 pb-3 transition-transform duration-200",
+          // Inside AppShell the container query decides before any script runs (no flash on a
+          // narrow first paint); the measured state only drives inert, the scrim and focus.
+          shell
+            ? cn(
+                open ? "translate-x-0" : "-translate-x-full",
+                "@min-[900px]/app:sticky @min-[900px]/app:top-0 @min-[900px]/app:translate-x-0",
+              )
+            : cn(
+                isMobile ? "fixed" : "sticky top-0",
+                closedOnMobile ? "-translate-x-full" : "translate-x-0",
+              ),
           openOnMobile && "shadow-pop",
           className,
         )}
