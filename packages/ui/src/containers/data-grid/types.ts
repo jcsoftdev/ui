@@ -6,7 +6,15 @@ export type { PinSide };
 
 export type CellValue = string | number | boolean | Date | null | undefined;
 
-export type ColumnType = "text" | "number" | "currency" | "date" | "status" | "boolean";
+export type ColumnType =
+  | "text"
+  | "number"
+  | "currency"
+  | "date"
+  | "status"
+  | "boolean"
+  /** A mini chart per row; see `DataGridColumn.sparkline`. The accessor still drives sort, filter and CSV. */
+  | "sparkline";
 export type ColumnAlign = "start" | "center" | "end";
 export type AggregateKind = "sum" | "avg" | "count" | "min" | "max";
 /** `set` is `select` with a searchable checkbox list and a select-all control. */
@@ -36,6 +44,17 @@ export interface CellContext<T> {
   value: CellValue;
   /** The value as text, with the column's formatter applied. */
   formatted: string;
+}
+
+/** Mini chart of a `sparkline` column. */
+export interface SparklineOptions<T> {
+  /** Points of the row's chart, in order; `null` leaves a gap. */
+  values: (row: T) => ReadonlyArray<number | null>;
+  kind?: "line" | "area" | "bar";
+  /** CSS color of the line or bars. */
+  color?: string;
+  /** Accessible description of each chart, e.g. "Ventas de los últimos 7 días". */
+  label?: string | ((row: T) => string);
 }
 
 export interface DataGridColumn<T> {
@@ -81,6 +100,8 @@ export interface DataGridColumn<T> {
    * open with the message instead of being committed; already invalid cells are flagged.
    */
   validate?: (value: CellValue, row: T) => string | null | undefined;
+  /** Mini chart per row for `type: "sparkline"` columns. */
+  sparkline?: SparklineOptions<T>;
   /** Header group path from the outermost level down; adjacent columns sharing it share a header. */
   group?: string | readonly string[];
 }

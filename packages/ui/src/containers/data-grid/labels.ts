@@ -124,6 +124,32 @@ export interface DataGridLabels {
   noneOption: string;
   // export
   exportSelection: string;
+  exportXlsx: string;
+  exportSelectionXlsx: string;
+  // integrated charts
+  chart: string;
+  chartTitle: (cells: number) => string;
+  chartKinds: Record<"bar" | "line" | "area" | "pie", string>;
+  chartKindGroup: string;
+  chartClose: string;
+  chartNoData: string;
+  chartOther: string;
+  chartRow: (position: number) => string;
+  // formulas
+  formulaBar: string;
+  formulaCell: string;
+  formulaEmpty: string;
+  formulaError: string;
+  // history and row tools
+  history: string;
+  undo: string;
+  redo: string;
+  addRow: string;
+  removeRows: string;
+  undone: (count: number) => string;
+  redone: (count: number) => string;
+  pasted: (count: number) => string;
+  filled: (count: number) => string;
 }
 
 const integer = { format: (value: number) => formatNumber(value) };
@@ -181,7 +207,7 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   nextPage: "Página siguiente",
   lastPage: "Última página",
   keyboardHelp:
-    "Flechas para moverte entre celdas; Inicio y Fin, Re Pág y Av Pág para saltar. En un encabezado: Enter ordena (Mayús + Enter agrega un orden), Alt + Flecha abajo abre sus opciones, Mayús + Flechas cambia el ancho y Ctrl + Mayús + Flechas la mueve. En una fila: Espacio la selecciona, Enter o F2 edita la celda, Alt + Flecha derecha o izquierda la expande o contrae, Alt + Flecha arriba o abajo la reordena y Alt + Mayús + Flecha arriba o abajo la fija. Con selección de celdas: Mayús + Flechas amplía el rango y Ctrl + C lo copia.",
+    "Flechas para moverte entre celdas; Inicio y Fin, Re Pág y Av Pág para saltar. En un encabezado: Enter ordena (Mayús + Enter agrega un orden), Alt + Flecha abajo abre sus opciones, Mayús + Flechas cambia el ancho y Ctrl + Mayús + Flechas la mueve. En una fila: Espacio la selecciona, Enter o F2 edita la celda, Alt + Flecha derecha o izquierda la expande o contrae, Alt + Flecha arriba o abajo la reordena y Alt + Mayús + Flecha arriba o abajo la fija. Con selección de celdas: Mayús + Flechas amplía el rango y Ctrl + C lo copia. Con historial activo: Ctrl + Z deshace y Mayús + Ctrl + Z o Ctrl + Y rehace; Ctrl + V pega y Ctrl + D o Ctrl + R rellenan hacia abajo o a la derecha. Con fórmulas, escribir = en una celda editable empieza una fórmula. Con gráficos, el botón Graficar dibuja el rango seleccionado.",
   aggregate: { sum: "Suma", avg: "Promedio", count: "Cantidad", min: "Mínimo", max: "Máximo" },
 
   searchValues: "Buscar valores…",
@@ -260,4 +286,27 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   pivotIncomplete: "Elige al menos un campo de fila, la columna y el valor.",
   noneOption: "Ninguna",
   exportSelection: "Exportar selección",
+  exportXlsx: "Exportar XLSX",
+  exportSelectionXlsx: "Exportar selección (XLSX)",
+  chart: "Graficar",
+  chartTitle: (cells) => (cells === 1 ? "Gráfico de 1 celda" : `Gráfico de ${cells} celdas`),
+  chartKinds: { bar: "Barras", line: "Líneas", area: "Área", pie: "Circular" },
+  chartKindGroup: "Tipo de gráfico",
+  chartClose: "Cerrar gráfico",
+  chartNoData: "El rango no tiene números para graficar. Selecciona celdas con valores numéricos.",
+  chartOther: "Otros",
+  chartRow: (position) => `Fila ${position}`,
+  formulaBar: "Barra de fórmulas",
+  formulaCell: "Celda",
+  formulaEmpty: "Selecciona una celda",
+  formulaError: "Error de fórmula",
+  history: "Historial de cambios",
+  undo: "Deshacer",
+  redo: "Rehacer",
+  addRow: "Agregar fila",
+  removeRows: "Eliminar filas",
+  undone: (count) => (count === 1 ? "1 cambio deshecho" : `${count} cambios deshechos`),
+  redone: (count) => (count === 1 ? "1 cambio rehecho" : `${count} cambios rehechos`),
+  pasted: (count) => (count === 1 ? "1 celda pegada" : `${count} celdas pegadas`),
+  filled: (count) => (count === 1 ? "1 celda rellenada" : `${count} celdas rellenadas`),
 };

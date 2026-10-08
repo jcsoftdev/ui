@@ -9,6 +9,7 @@ import {
   ArrowDownToLine,
   ArrowUp,
   ArrowUpToLine,
+  BarChart3,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -20,12 +21,15 @@ import {
   PinOff,
 } from "lucide-react";
 import {
+  type ClipboardEvent,
   type CSSProperties,
   type DragEvent,
   type FocusEvent,
   type KeyboardEvent,
+  lazy,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
+  Suspense,
   useCallback,
   useEffect,
   useId,
@@ -36,8 +40,10 @@ import {
 } from "react";
 import { Chip } from "../../atoms/chip/chip.js";
 import { formatCurrency, formatNumber } from "../../charts/core/format.js";
+import { Sparkline } from "../../charts/sparkline/sparkline.js";
 import { cn } from "../../utils/cn.js";
 import { computePinOffsets, type PinPosition, sanitizePinned } from "../table/pin.js";
+import { type GridChartKind, type RangeChartData, rangeToChart } from "./chart-range.js";
 import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
 import { ColumnMenu } from "./column-menu.js";
 import type { DataSource } from "./data-source.js";
@@ -48,7 +54,33 @@ import {
   type FilterGroup,
 } from "./filter-builder.js";
 import { FilterBuilder } from "./filter-builder-editor.js";
+import { cellAddress, columnLabel, isFormulaText, shiftFormula } from "./formula.js";
+import { FormulaBar } from "./formula-bar.js";
+import { buildSheet, displayValue, isErrorText, type ParseCache } from "./formula-sheet.js";
+import {
+  type FillDirection,
+  parseLooseNumber,
+  parseTSV,
+  planFill,
+  planPaste,
+  sameCellValue,
+} from "./grid-edit.js";
 import { GridToolbar } from "./grid-toolbar.js";
+import {
+  type CellDelta,
+  type ChangeSource,
+  commandSize,
+  createHistory,
+  DEFAULT_HISTORY_DEPTH,
+  type HistoryCommand,
+  type HistorySummary,
+  pushCommand,
+  type RowRef,
+  redoCommand,
+  setHistoryDepth,
+  summarizeHistory,
+  undoCommand,
+} from "./history.js";
 import { type DataGridLabels, DEFAULT_DATA_GRID_LABELS } from "./labels.js";
 import {
   aggregateValues,
@@ -118,6 +150,7 @@ import {
   scrollLeftToReveal,
   scrollTopToRevealSpan,
 } from "./virtual.js";
+import { gridToSheet, xlsxFilename } from "./xlsx-export.js";
 
 export interface CellChange<T> {
   row: T;
@@ -125,6 +158,16 @@ export interface CellChange<T> {
   columnId: string;
   value: CellValue;
   previous: CellValue;
+  /** Where the change comes from; `undo` and `redo` replay an earlier change in reverse or again. */
+  source?: ChangeSource;
+}
+
+/** Rows added or removed by the toolbar buttons, or by an undo / redo of them. */
+export interface RowsChange<T> {
+  type: "add" | "remove";
+  /** Ascending by `index` (the position in the `data` the grid was given). */
+  rows: ReadonlyArray<{ row: T; rowId: string; index: number }>;
+  source: "edit" | "undo" | "redo";
 }
 
 export interface RowReorderEvent {
@@ -137,6 +180,17 @@ export interface RowReorderEvent {
 
 export interface ExportPayload {
   csv: string;
+  filename: string;
+  rowCount: number;
+}
+
+const ChartPanel = lazy(() =>
+  import("./chart-panel.js").then((module) => ({ default: module.ChartPanel })),
+);
+
+export interface XlsxExportPayload {
+  /** The .xlsx file. */
+  bytes: Uint8Array;
   filename: string;
   rowCount: number;
 }
@@ -180,6 +234,27 @@ export interface DataGridProps<T> {
 
   /** Called when an inline edit is committed with a different value. The grid does not mutate `data`. */
   onCellChange?: (change: CellChange<T>) => void;
+  /**
+   * Called once with every cell a paste, fill, undo or redo changes. Without it those changes go to
+   * `onCellChange` one by one, which loses updates if the parent sets state from stale data.
+   */
+  onCellsChange?: (changes: CellChange<T>[]) => void;
+  /** Undo / redo of cell edits, paste, fill and row changes: buttons plus Ctrl / Cmd + Z, Shift + Ctrl / Cmd + Z, Ctrl + Y. */
+  history?: boolean;
+  /** Commands kept for undo (and for redo). 100 by default. */
+  historyDepth?: number;
+  onHistoryChange?: (history: HistorySummary) => void;
+  /**
+   * Spreadsheet formulas: a cell whose text starts with `=` is evaluated (`=B2*C2`, `=SUM(D2:D9)`,
+   * `=IF(E2>100,"alto","bajo")`). Columns are lettered in the order of `columns` and rows are
+   * numbered in the order of `data`; a formula bar shows the raw content of the focused cell.
+   * Off with `dataSource` and `pivot`.
+   */
+  formulas?: boolean;
+  /** Adds the "add row" button: the new row is appended through `onRowsChange`. */
+  createRow?: () => T;
+  /** Rows added (`createRow`), removed (the toolbar button removes the selected rows) or restored by undo. */
+  onRowsChange?: (change: RowsChange<T>) => void;
 
   /**
    * Server-side rows. Sort, filters and quick search are sent to `getRows` instead of being
@@ -213,6 +288,12 @@ export interface DataGridProps<T> {
 
   /** Rectangular cell selection by drag, Shift + click or Shift + arrows, with Ctrl + C as TSV. */
   rangeSelection?: boolean;
+  /**
+   * Adds a "Graficar" button to the range status bar (turns `rangeSelection` on): the selected cells
+   * open a bar, line, area or pie chart under the grid. The text column of the range names the
+   * categories and each numeric column is a series. The chart code is loaded when first used.
+   */
+  charts?: boolean;
 
   /** Advanced filter (AND / OR groups of conditions) applied after the column filters. */
   advancedFilter?: FilterGroup;
@@ -240,6 +321,14 @@ export interface DataGridProps<T> {
   exportFilename?: string | false;
   /** Called with the CSV right before it is downloaded. */
   onExport?: (payload: ExportPayload) => void;
+  /**
+   * Adds an "Exportar XLSX" button: a file name (`"ventas.xlsx"`) or `true` for `datos.xlsx`. Same
+   * rows and columns as the CSV export, with numbers as numbers and dates as dates. The writer
+   * (`@jcsoftdev/ui/xlsx`) is loaded when the button is used, so it costs nothing until then.
+   */
+  exportXlsx?: string | boolean;
+  /** Called with the file right before it is downloaded. */
+  onExportXlsx?: (payload: XlsxExportPayload) => void;
   toolbarActions?: ReactNode;
   labels?: Partial<DataGridLabels>;
   className?: string;
@@ -259,6 +348,14 @@ const EMPTY_SORT: readonly SortRule[] = [];
 const EMPTY_FILTERS: Filters = {};
 const EMPTY_LIST: readonly string[] = [];
 const EMPTY_ADVANCED: FilterGroup = emptyGroup("and", "root");
+
+interface CellEdit<T> {
+  row: T;
+  rowId: string;
+  column: DataGridColumn<T>;
+  value: CellValue;
+  previous: CellValue;
+}
 
 type RenderColumn<T> =
   | { kind: "select" }
@@ -290,8 +387,13 @@ function useControllable<V>(
 
 /** Starts a CSV download in the browser (no-op on the server). */
 export function downloadCSV(filename: string, csv: string): void {
+  downloadFile(filename, csv, "text/csv;charset=utf-8");
+}
+
+/** Starts a file download in the browser (no-op on the server). */
+export function downloadFile(filename: string, data: BlobPart, type: string): void {
   if (typeof document === "undefined") return;
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const url = URL.createObjectURL(new Blob([data], { type }));
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
@@ -380,6 +482,13 @@ export function DataGrid<T>({
   defaultSelectedRowIds = EMPTY_LIST,
   onSelectionChange,
   onCellChange,
+  onCellsChange,
+  formulas = false,
+  history: historyEnabled = false,
+  historyDepth = DEFAULT_HISTORY_DEPTH,
+  onHistoryChange,
+  createRow,
+  onRowsChange,
   dataSource,
   maxBlocks,
   tree,
@@ -394,7 +503,8 @@ export function DataGrid<T>({
   onPinnedRowsChange,
   rowReorder = false,
   onRowReorder,
-  rangeSelection = false,
+  rangeSelection: rangeSelectionProp = false,
+  charts = false,
   advancedFilter: advancedFilterProp,
   defaultAdvancedFilter = EMPTY_ADVANCED,
   onAdvancedFilterChange,
@@ -410,6 +520,8 @@ export function DataGrid<T>({
   hideToolbar = false,
   exportFilename = "datos.csv",
   onExport,
+  exportXlsx = false,
+  onExportXlsx,
   toolbarActions,
   labels: labelsProp,
   className,
@@ -471,6 +583,8 @@ export function DataGrid<T>({
     columnId: string;
     draft: string;
     error?: string;
+    /** Place the caret at the end instead of selecting the text (typing `=` to start a formula). */
+    caretEnd?: boolean;
   } | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [scrolled, setScrolled] = useState({ start: false, end: false });
@@ -489,6 +603,13 @@ export function DataGrid<T>({
   const dragId = useRef<string | null>(null);
   const rowDrag = useRef<string | null>(null);
 
+  const rangeSelection = rangeSelectionProp || charts;
+  const [chart, setChart] = useState<{
+    data: RangeChartData | null;
+    kind: GridChartKind;
+    cells: number;
+    currency: boolean;
+  } | null>(null);
   const paged = pageSizeProp !== undefined;
   const sourceActive = dataSource !== undefined;
 
@@ -502,13 +623,49 @@ export function DataGrid<T>({
   );
   const pivotActive = pivotResult !== null;
   const structured = !sourceActive && !pivotActive;
-  const columns = useMemo(
+  const formulasOn = formulas && structured;
+  const formulaCache = useRef<ParseCache>(new Map());
+  const sheet = useMemo(
     () =>
-      (pivotResult
-        ? pivotColumns(columnsProp, pivotConfig, pivotResult, labels.total)
-        : columnsProp) as readonly DataGridColumn<T>[],
-    [pivotResult, columnsProp, pivotConfig, labels.total],
+      formulasOn && columnsProp.length > 0
+        ? buildSheet({
+            rows: dataProp.length,
+            cols: columnsProp.length,
+            read: (r, c) => getCellValue(dataProp[r] as T, columnsProp[c] as DataGridColumn<T>),
+            cache: formulaCache.current,
+          })
+        : null,
+    [formulasOn, dataProp, columnsProp],
   );
+  const sourceIndex = useMemo(() => {
+    if (!sheet) return null;
+    const rows = new Map<T, number>();
+    dataProp.forEach((row, index) => {
+      rows.set(row, index);
+    });
+    const cols = new Map(columnsProp.map((column, index) => [column.id, index]));
+    return { rows, cols };
+  }, [sheet, dataProp, columnsProp]);
+  const columns = useMemo(() => {
+    if (pivotResult) {
+      return pivotColumns(
+        columnsProp,
+        pivotConfig,
+        pivotResult,
+        labels.total,
+      ) as readonly DataGridColumn<T>[];
+    }
+    if (!sheet || !sourceIndex) return columnsProp;
+    // Formula cells read as their result everywhere (sort, filter, totals, CSV); editing reads the raw text.
+    return columnsProp.map((column, c) => ({
+      ...column,
+      accessor: (row: T): CellValue => {
+        const r = sourceIndex.rows.get(row);
+        const shown = r === undefined ? undefined : displayValue(sheet, r, c);
+        return shown === undefined ? getCellValue(row, column) : shown;
+      },
+    })) as readonly DataGridColumn<T>[];
+  }, [pivotResult, columnsProp, pivotConfig, labels.total, sheet, sourceIndex]);
   const data = useMemo(
     () => (pivotResult ? pivotResult.rows : dataProp) as readonly T[],
     [pivotResult, dataProp],
@@ -979,6 +1136,22 @@ export function DataGrid<T>({
     onExport?.({ csv, filename: exportFilename, rowCount: rows.length });
     downloadCSV(exportFilename, csv);
   };
+  const xlsxName = exportXlsx === true ? "datos.xlsx" : exportXlsx || null;
+  const exportToXlsx = async () => {
+    if (!xlsxName) return;
+    const rows =
+      selectable && selection.length > 0
+        ? sorted.filter((row) => selected.has(keyOf(row)))
+        : sorted;
+    const filename = xlsxFilename(xlsxName);
+    const { buildXlsx, XLSX_MIME } = await import("../../xlsx/index.js");
+    const bytes = buildXlsx({
+      sheets: [gridToSheet(rows, dataColumns, filename.replace(/\.xlsx$/i, ""))],
+      creator: "@jcsoftdev/ui",
+    });
+    onExportXlsx?.({ bytes, filename, rowCount: rows.length });
+    downloadFile(filename, bytes as BlobPart, XLSX_MIME);
+  };
   const labelOfRow = (key: string) => {
     const row = rowByKey.get(key);
     const first = dataColumns[0];
@@ -1031,6 +1204,45 @@ export function DataGrid<T>({
     const cells = (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1);
     setAnnouncement(labels.rangeCopied(cells));
   };
+  const openChart = () => {
+    if (!cellRange) return;
+    const bounds = rangeBounds(cellRange);
+    const headers: string[] = [];
+    const columnIds: string[] = [];
+    for (let c = bounds.c0; c <= bounds.c1; c += 1) {
+      const entry = renderColumns[c];
+      headers.push(entry?.kind === "data" ? entry.column.header : "");
+      columnIds.push(entry ? idOfColumn(entry) : String(c));
+    }
+    const cells = [];
+    for (let r = bounds.r0; r <= bounds.r1; r += 1) {
+      const line = [];
+      for (let c = bounds.c0; c <= bounds.c1; c += 1) {
+        const cell = cellAt(r, c);
+        line.push(
+          cell
+            ? {
+                value: getCellValue(cell.row, cell.column),
+                text: formatCellValue(getCellValue(cell.row, cell.column), cell.column),
+              }
+            : null,
+        );
+      }
+      cells.push(line);
+    }
+    const data = rangeToChart({ headers, columnIds, cells, rowLabel: labels.chartRow });
+    const currency =
+      !!data &&
+      data.series.length > 0 &&
+      data.series.every((series) => byId.get(series.id)?.type === "currency");
+    setChart({
+      data,
+      kind: "bar",
+      cells: (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1),
+      currency,
+    });
+    setAnnouncement(data ? labels.chartTitle(rangeCellCount) : labels.chartNoData);
+  };
   const onCellPointerDown = (event: ReactPointerEvent<HTMLElement>, r: number, c: number) => {
     if (
       !rangeSelection ||
@@ -1072,14 +1284,222 @@ export function DataGrid<T>({
   };
 
   // ---- editing -----------------------------------------------------------------------------
-  const startEdit = (key: string, column: DataGridColumn<T>) => {
+  const rawValue = (row: T, column: DataGridColumn<T>): CellValue =>
+    getCellValue(row, columnsProp.find((x) => x.id === column.id) ?? column);
+  /** Text typed (or pasted) into a cell to the value to store, or the reason it is refused. */
+  const coerceDraft = (
+    column: DataGridColumn<T>,
+    row: T,
+    draft: string,
+    loose = false,
+  ): { value: CellValue } | { error: string } => {
+    let value: CellValue = draft;
+    if (formulasOn && isFormulaText(draft)) return { value: draft.trim() };
+    if (editorOf(column) === "number") {
+      const number = loose ? parseLooseNumber(draft) : Number.parseFloat(draft.replace(",", "."));
+      if (number !== null && Number.isFinite(number)) value = number;
+      else return { error: labels.invalidCell };
+    }
+    const error = column.validate?.(value, row);
+    return error ? { error } : { value };
+  };
+
+  // ---- history -----------------------------------------------------------------------------
+  const historyRef = useRef(createHistory<T>(historyDepth));
+  const [historySummary, setHistorySummary] = useState<HistorySummary>(() =>
+    summarizeHistory(historyRef.current),
+  );
+  const syncHistory = (next: typeof historyRef.current) => {
+    historyRef.current = next;
+    const summary = summarizeHistory(next);
+    setHistorySummary(summary);
+    onHistoryChange?.(summary);
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a new depth trims the stack.
+  useEffect(() => {
+    if (historyRef.current.depth !== Math.max(1, Math.floor(historyDepth))) {
+      syncHistory(setHistoryDepth(historyRef.current, historyDepth));
+    }
+  }, [historyDepth]);
+  const record = (command: HistoryCommand<T>) => {
+    if (historyEnabled) syncHistory(pushCommand(historyRef.current, command));
+  };
+  const canWrite = !!(onCellChange || onCellsChange);
+  /** A single change goes to `onCellChange`; several go to `onCellsChange` when it exists. */
+  const emitChanges = (changes: CellChange<T>[]) => {
+    if (changes.length === 0) return;
+    if (changes.length === 1 && onCellChange) onCellChange(changes[0] as CellChange<T>);
+    else if (onCellsChange) onCellsChange(changes);
+    else for (const change of changes) onCellChange?.(change);
+  };
+  const commitChanges = (items: readonly CellEdit<T>[], source: "edit" | "paste" | "fill") => {
+    if (items.length === 0) return;
+    emitChanges(
+      items.map((item) => ({
+        row: item.row,
+        rowId: item.rowId,
+        columnId: item.column.id,
+        value: item.value,
+        previous: item.previous,
+        source,
+      })),
+    );
+    const deltas: CellDelta[] = items.map((item) => ({
+      rowId: item.rowId,
+      columnId: item.column.id,
+      before: item.previous,
+      after: item.value,
+    }));
+    record({ kind: "cells", source, changes: deltas });
+  };
+  const replay = (command: HistoryCommand<T>, source: "undo" | "redo") => {
+    if (command.kind === "cells") {
+      const changes: CellChange<T>[] = [];
+      for (const delta of command.changes) {
+        const row = rowByKey.get(delta.rowId);
+        const column = byId.get(delta.columnId);
+        if (!row || !column) continue;
+        changes.push({
+          row,
+          rowId: delta.rowId,
+          columnId: delta.columnId,
+          value: delta.after,
+          previous: rawValue(row, column),
+          source,
+        });
+      }
+      emitChanges(changes);
+      return;
+    }
+    const rows = [...command.rows].sort((a, b) => a.index - b.index);
+    onRowsChange?.({ type: command.kind === "rows-add" ? "add" : "remove", rows, source });
+  };
+  const undo = () => {
+    const step = undoCommand(historyRef.current);
+    if (!step) return;
+    syncHistory(step.state);
+    replay(step.apply, "undo");
+    setAnnouncement(labels.undone(commandSize(step.apply)));
+  };
+  const redo = () => {
+    const step = redoCommand(historyRef.current);
+    if (!step) return;
+    syncHistory(step.state);
+    replay(step.apply, "redo");
+    setAnnouncement(labels.redone(commandSize(step.apply)));
+  };
+
+  // ---- row tools ---------------------------------------------------------------------------
+  const addRow = () => {
+    if (!createRow || !onRowsChange) return;
+    const row = createRow();
+    const index = dataProp.length;
+    const ref: RowRef<T> = {
+      row,
+      rowId: getRowIdProp ? getRowIdProp(row, index) : String(index),
+      index,
+    };
+    onRowsChange({ type: "add", rows: [ref], source: "edit" });
+    record({ kind: "rows-add", rows: [ref] });
+  };
+  const removeSelectedRows = () => {
+    if (!onRowsChange || selection.length === 0) return;
+    const positions = new Map<T, number>();
+    dataProp.forEach((row, index) => {
+      positions.set(row, index);
+    });
+    const rows: RowRef<T>[] = [];
+    for (const key of selection) {
+      const row = rowByKey.get(key);
+      const index = row === undefined ? undefined : positions.get(row);
+      if (row !== undefined && index !== undefined) rows.push({ row, rowId: key, index });
+    }
+    rows.sort((a, b) => a.index - b.index);
+    if (rows.length === 0) return;
+    onRowsChange({ type: "remove", rows, source: "edit" });
+    record({ kind: "rows-remove", rows });
+    setSelection([]);
+  };
+
+  // ---- paste and fill ----------------------------------------------------------------------
+  const onPaste = (event: ClipboardEvent<HTMLTableElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      !canWrite ||
+      editingRef.current ||
+      target.closest("input,textarea,select,[data-detail-content]")
+    )
+      return;
+    const text = event.clipboardData.getData("text/plain");
+    if (!text) return;
+    event.preventDefault();
+    const bounds = cellRange ? rangeBounds(cellRange) : null;
+    const origin = bounds ? { r: bounds.r0, c: bounds.c0 } : { r: activeR, c: activeC };
+    const items: CellEdit<T>[] = [];
+    for (const cellTarget of planPaste(parseTSV(text), origin, { maxR, maxC }, bounds)) {
+      const cell = cellAt(cellTarget.r, cellTarget.c);
+      if (!cell || !canEdit(cell.column, cell.row)) continue;
+      const result = coerceDraft(cell.column, cell.row, cellTarget.text, true);
+      const previous = rawValue(cell.row, cell.column);
+      if ("error" in result || sameCellValue(result.value, previous)) continue;
+      items.push({
+        row: cell.row,
+        rowId: keyOf(cell.row),
+        column: cell.column,
+        value: result.value,
+        previous,
+      });
+    }
+    commitChanges(items, "paste");
+    if (items.length > 0) setAnnouncement(labels.pasted(items.length));
+  };
+  const fillRange = (direction: FillDirection) => {
+    if (!canWrite) return;
+    const bounds = cellRange
+      ? rangeBounds(cellRange)
+      : direction === "down"
+        ? { r0: activeR - 1, r1: activeR, c0: activeC, c1: activeC }
+        : { r0: activeR, r1: activeR, c0: activeC - 1, c1: activeC };
+    if (bounds.r0 < 1 || bounds.c0 < 0) return;
+    const items: CellEdit<T>[] = [];
+    for (const step of planFill(bounds, direction)) {
+      const from = cellAt(step.from.r, step.from.c);
+      const to = cellAt(step.r, step.c);
+      if (!from || !to || !canEdit(to.column, to.row)) continue;
+      let source = rawValue(from.row, from.column);
+      if (sourceIndex && isFormulaText(source)) {
+        const dr = (sourceIndex.rows.get(to.row) ?? 0) - (sourceIndex.rows.get(from.row) ?? 0);
+        const dc =
+          (sourceIndex.cols.get(to.column.id) ?? 0) - (sourceIndex.cols.get(from.column.id) ?? 0);
+        source = shiftFormula(source, dr, dc);
+      }
+      const result =
+        typeof source === "string"
+          ? coerceDraft(to.column, to.row, source, true)
+          : { value: source };
+      const previous = rawValue(to.row, to.column);
+      if ("error" in result || sameCellValue(result.value, previous)) continue;
+      items.push({
+        row: to.row,
+        rowId: keyOf(to.row),
+        column: to.column,
+        value: result.value,
+        previous,
+      });
+    }
+    commitChanges(items, "fill");
+    if (items.length > 0) setAnnouncement(labels.filled(items.length));
+  };
+
+  const startEdit = (key: string, column: DataGridColumn<T>, typed?: string) => {
     const row = rowByKey.get(key);
     if (!row || !canEdit(column, row)) return false;
-    const value = getCellValue(row, column);
+    const value = rawValue(row, column);
     setEditing({
       key,
       columnId: column.id,
-      draft: value === null || value === undefined ? "" : String(value),
+      draft: typed ?? (value === null || value === undefined ? "" : String(value)),
+      caretEnd: typed !== undefined,
     });
     return true;
   };
@@ -1100,31 +1520,21 @@ export function DataGrid<T>({
       close();
       return true;
     }
-    const previous = getCellValue(row, column);
-    let value: CellValue = current.draft;
-    let error: string | null | undefined;
-    if (editorOf(column) === "number") {
-      const number = Number.parseFloat(current.draft.replace(",", "."));
-      if (Number.isFinite(number)) value = number;
-      else error = labels.invalidCell;
-    }
-    error = error ?? column.validate?.(value, row);
-    if (error) {
+    const previous = rawValue(row, column);
+    const result = coerceDraft(column, row, current.draft);
+    if ("error" in result) {
       if (!strict) {
         close();
         return true;
       }
-      const next = { ...current, error };
+      const next = { ...current, error: result.error };
       editingRef.current = next;
       setEditing(next);
       return false;
     }
     close();
-    const unchanged =
-      value === previous ||
-      (typeof previous !== "number" && String(value) === String(previous ?? ""));
-    if (!unchanged) {
-      onCellChange?.({ row, rowId: current.key, columnId: column.id, value, previous });
+    if (!sameCellValue(result.value, previous)) {
+      commitChanges([{ row, rowId: current.key, column, value: result.value, previous }], "edit");
     }
     return true;
   };
@@ -1191,6 +1601,21 @@ export function DataGrid<T>({
     const row = r > 0 ? bodyRows[r - 1] : undefined;
     const handled = () => event.preventDefault();
     const mod = event.ctrlKey || event.metaKey;
+
+    if (mod && !event.altKey && !target.closest("input,textarea,select")) {
+      const letter = event.key.toLowerCase();
+      if (historyEnabled && (letter === "z" || (letter === "y" && !event.shiftKey))) {
+        handled();
+        if (letter === "y" || event.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (r > 0 && canWrite && !event.shiftKey && (letter === "d" || letter === "r")) {
+        handled();
+        fillRange(letter === "d" ? "down" : "right");
+        return;
+      }
+    }
 
     if (r === 0 && entry?.kind === "data") {
       const id = entry.column.id;
@@ -1345,6 +1770,10 @@ export function DataGrid<T>({
       toggleRow(row.key, event.shiftKey);
       return;
     }
+    if (formulasOn && event.key === "=" && !mod && !inner && entry?.kind === "data") {
+      if (startEdit(row.key, entry.column, "=")) handled();
+      return;
+    }
     if ((event.key === "Enter" || event.key === "F2") && entry?.kind === "data") {
       if (startEdit(row.key, entry.column)) handled();
       else if (event.key === "Enter" && selectable && entry.kind === "data") return;
@@ -1473,6 +1902,7 @@ export function DataGrid<T>({
   const tabIndexOf = (r: number, c: number) => (tabbable.r === r && tabbable.c === c ? 0 : -1);
   const firstDataIndex = renderColumns.findIndex((entry) => entry.kind === "data");
 
+  const cellLetter = (id: string) => columnLabel(sourceIndex?.cols.get(id) ?? 0);
   const sortOf = (id: string) => {
     const index = sort.findIndex((rule) => rule.id === id);
     return index === -1 ? null : { index, direction: (sort[index] as SortRule).direction };
@@ -1552,6 +1982,14 @@ export function DataGrid<T>({
           className={cn("flex min-w-0 items-center gap-1", align === "end" && "flex-row-reverse")}
         >
           <span className={cn("flex min-w-0 flex-1 items-center gap-1", justifyClass[align])}>
+            {formulasOn ? (
+              <span
+                aria-hidden="true"
+                className="shrink-0 rounded-xs bg-surface-2 px-1 font-[650] text-[10px] text-ink-3 normal-case tracking-normal"
+              >
+                {cellLetter(column.id)}
+              </span>
+            ) : null}
             <span className="truncate" title={column.header}>
               {column.header}
             </span>
@@ -1623,11 +2061,37 @@ export function DataGrid<T>({
     const value = getCellValue(row, column);
     const formatted = formatCellValue(value, column);
     if (column.cell) return column.cell({ row, rowId: key, value, formatted });
+    if (formulasOn && isErrorText(value) && isFormulaText(rawValue(row, column))) {
+      return (
+        <span
+          className="block truncate font-[650] text-danger"
+          title={`${labels.formulaError}: ${value}`}
+        >
+          {value}
+        </span>
+      );
+    }
     if (column.type === "status" && formatted) {
       return (
         <Chip tone={column.statusTones?.[String(value)] ?? "neutral"} className="h-5.5">
           {formatted}
         </Chip>
+      );
+    }
+    if (column.type === "sparkline" && column.sparkline) {
+      const { values, kind, color, label } = column.sparkline;
+      const description = typeof label === "function" ? label(row) : (label ?? column.header);
+      return (
+        <div className="min-w-0 py-1">
+          <Sparkline
+            data={values(row)}
+            label={description}
+            type={kind}
+            color={color}
+            height={24}
+            animate={false}
+          />
+        </div>
       );
     }
     if (column.type === "boolean" && formatted) {
@@ -1679,7 +2143,11 @@ export function DataGrid<T>({
           {...common}
           type="text"
           inputMode={editorOf(column) === "number" ? "decimal" : undefined}
-          onFocus={(event) => event.currentTarget.select()}
+          onFocus={(event) => {
+            const input = event.currentTarget;
+            if (editing.caretEnd) input.setSelectionRange(input.value.length, input.value.length);
+            else input.select();
+          }}
           onChange={(event) => change(event.target.value)}
           className={cn(editorClass, columnAlign(column) === "end" && "text-right")}
         />
@@ -2309,6 +2777,38 @@ export function DataGrid<T>({
   const formatStat = (value: number | null) =>
     value === null ? "" : rangeIsCurrency ? formatCurrency(value) : formatNumber(value);
 
+  const barCell = formulasOn ? cellAt(activeR, activeC) : null;
+  const [barError, setBarError] = useState<string | undefined>();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: moving to another cell clears the message.
+  useEffect(() => {
+    setBarError(undefined);
+  }, [activeR, activeC]);
+  const barRaw = barCell ? rawValue(barCell.row, barCell.column) : null;
+  const commitBar = (text: string) => {
+    if (!barCell || !canEdit(barCell.column, barCell.row)) return;
+    const result = coerceDraft(barCell.column, barCell.row, text);
+    if ("error" in result) {
+      setBarError(result.error);
+      return;
+    }
+    setBarError(undefined);
+    if (!sameCellValue(result.value, barRaw)) {
+      commitChanges(
+        [
+          {
+            row: barCell.row,
+            rowId: keyOf(barCell.row),
+            column: barCell.column,
+            value: result.value,
+            previous: barRaw,
+          },
+        ],
+        "edit",
+      );
+    }
+    focusCell(activeR, activeC);
+  };
+
   const emptyFiltered = activeFilters > 0 || search !== "" || advancedCount > 0;
 
   return (
@@ -2340,11 +2840,31 @@ export function DataGrid<T>({
           onHidden={grid.setHidden}
           onResetColumns={grid.reset}
           onExport={exportFilename === false ? undefined : exportCsv}
+          onExportXlsx={xlsxName ? exportToXlsx : undefined}
           exportSelected={selectable && selection.length > 0}
           rowCount={toolbarRows}
           selectedCount={selectable ? selection.length : null}
           actions={toolbarActions}
           hideColumnPicker={toolPanel}
+          history={
+            historyEnabled
+              ? {
+                  canUndo: historySummary.canUndo,
+                  canRedo: historySummary.canRedo,
+                  onUndo: undo,
+                  onRedo: redo,
+                }
+              : undefined
+          }
+          rowTools={
+            structured && onRowsChange && (createRow || selectable)
+              ? {
+                  onAdd: createRow ? addRow : undefined,
+                  onRemove: selectable ? removeSelectedRows : undefined,
+                  removeDisabled: selection.length === 0,
+                }
+              : undefined
+          }
           toolPanel={
             toolPanel ? { open: panelOpen, onToggle: () => setPanelOpen(!panelOpen) } : undefined
           }
@@ -2373,6 +2893,24 @@ export function DataGrid<T>({
           onClearAdvancedFilter={() => setAdvanced(emptyGroup("and", "root"))}
         />
       )}
+      {formulasOn ? (
+        <FormulaBar
+          address={
+            barCell && sourceIndex
+              ? cellAddress(
+                  sourceIndex.rows.get(barCell.row) ?? 0,
+                  sourceIndex.cols.get(barCell.column.id) ?? 0,
+                )
+              : ""
+          }
+          value={barRaw === null || barRaw === undefined ? "" : String(barRaw)}
+          editable={!!barCell && canWrite && canEdit(barCell.column, barCell.row)}
+          error={barError}
+          labels={{ bar: labels.formulaBar, cell: labels.formulaCell, empty: labels.formulaEmpty }}
+          onCommit={commitBar}
+          onDiscard={() => focusCell(activeR, activeC)}
+        />
+      ) : null}
       {sourceActive && remote.failed && remote.total !== null ? (
         <div
           role="alert"
@@ -2430,6 +2968,7 @@ export function DataGrid<T>({
             aria-busy={busy || undefined}
             onKeyDown={onGridKeyDown}
             onFocus={onGridFocus}
+            onPaste={onPaste}
             className={cn(
               "table-fixed border-separate border-spacing-0",
               rangeSelection && "select-none",
@@ -2559,10 +3098,23 @@ export function DataGrid<T>({
                   </span>
                 </>
               ) : null}
+              {charts ? (
+                <button
+                  type="button"
+                  onClick={openChart}
+                  className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+                >
+                  <BarChart3 aria-hidden="true" />
+                  {labels.chart}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={copyRange}
-                className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+                className={cn(
+                  "inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5",
+                  !charts && "ml-auto",
+                )}
               >
                 <Copy aria-hidden="true" />
                 {labels.copyRange}
@@ -2572,6 +3124,25 @@ export function DataGrid<T>({
             <span className="text-ink-3">{labels.rangeHint}</span>
           )}
         </div>
+      ) : null}
+      {charts && chart ? (
+        <Suspense fallback={<div aria-hidden="true" className="h-72 border-t-divider" />}>
+          <ChartPanel
+            data={chart.data}
+            kind={chart.kind}
+            onKind={(kind) => setChart({ ...chart, kind })}
+            onClose={() => setChart(null)}
+            valueFormat={chart.currency ? "currency" : "number"}
+            labels={{
+              title: labels.chartTitle(chart.cells),
+              kinds: labels.chartKinds,
+              kindGroup: labels.chartKindGroup,
+              close: labels.chartClose,
+              noData: labels.chartNoData,
+              other: labels.chartOther,
+            }}
+          />
+        </Suspense>
       ) : null}
       <p id={helpId} className="sr-only">
         {labels.keyboardHelp}
