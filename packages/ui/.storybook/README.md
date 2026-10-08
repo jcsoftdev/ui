@@ -95,6 +95,19 @@ through a hoisted `<style href precedence>`; all of them honor `prefers-reduced-
 then offers a "jump to latest" button. The `AI/Asistente` story composes the whole set with a
 simulated streaming reply.
 
+## Brand set (`@jcsoftdev/ui/brand`)
+
+Logo Forge lives in `src/brand` (subpath export through the `./*` pattern). `generateMark(options)`
+is a pure function that returns an SVG description (`viewBox`, `width`, `height`, node tree);
+`serializeMark` turns it into a standalone SVG string with every text and attribute XML-escaped, and
+colors restricted to hex, rgb/hsl and names. Options: shape (circle, squircle, shield, hexagon, badge,
+ribbon, none), monogram (1-3 initials or one of nine own glyphs), palette (accent-derived or custom),
+layout (icon, horizontal, stacked), solid/gradient/outline, wordmark weight/tracking and a `seed`
+(0 is canonical; other seeds vary gradient angle, tilt, ring and color order deterministically).
+Text uses `<text>` with a system font stack, nothing embedded. `<LogoMark />` renders a mark;
+`<LogoForge />` is the editor with 12 seeded variations and SVG/PNG/copy export. Marks keep their own
+palettes; only the editor chrome follows `data-style`, theme and accent.
+
 ## Files
 
 - `main.ts`: stories glob, addons (docs, a11y), Tailwind v4 vite plugin.
