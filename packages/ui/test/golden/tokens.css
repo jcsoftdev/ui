@@ -33,7 +33,7 @@
   --shadow-flat: 0 0 0 1px #fff1;
 }
 
-[data-accent="mint"] {
+:root[data-accent="mint"] {
   --accent: var(--pal-mint-fill);
   --on-accent: var(--pal-mint-deep);
   --accent-ink: var(--pal-mint-ink);

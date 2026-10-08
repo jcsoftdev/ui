@@ -282,7 +282,7 @@
   --shadow-pop: 0 0 0 1px rgba(255,255,255,.12);
 }
 
-[data-accent="durazno"] {
+:root[data-accent="durazno"] {
   --accent-2: var(--pal-durazno-2);
   --accent: var(--pal-durazno-fill);
   --on-accent: var(--pal-durazno-deep);
@@ -292,7 +292,7 @@
   --accent-line: var(--pal-durazno-line);
 }
 
-[data-accent="menta"] {
+:root[data-accent="menta"] {
   --accent-2: var(--pal-menta-2);
   --accent: var(--pal-menta-fill);
   --on-accent: var(--pal-menta-deep);
@@ -302,7 +302,7 @@
   --accent-line: var(--pal-menta-line);
 }
 
-[data-accent="cielo"] {
+:root[data-accent="cielo"] {
   --accent-2: var(--pal-cielo-2);
   --accent: var(--pal-cielo-fill);
   --on-accent: var(--pal-cielo-deep);
@@ -312,7 +312,7 @@
   --accent-line: var(--pal-cielo-line);
 }
 
-[data-accent="lavanda"] {
+:root[data-accent="lavanda"] {
   --accent-2: var(--pal-lavanda-2);
   --accent: var(--pal-lavanda-fill);
   --on-accent: var(--pal-lavanda-deep);
@@ -322,7 +322,7 @@
   --accent-line: var(--pal-lavanda-line);
 }
 
-[data-accent="orquidea"] {
+:root[data-accent="orquidea"] {
   --accent-2: var(--pal-orquidea-2);
   --accent: var(--pal-orquidea-fill);
   --on-accent: var(--pal-orquidea-deep);
@@ -332,7 +332,7 @@
   --accent-line: var(--pal-orquidea-line);
 }
 
-[data-accent="grafito"] {
+:root[data-accent="grafito"] {
   --accent-2: var(--pal-grafito-2);
   --accent: var(--pal-grafito-fill);
   --on-accent: var(--pal-grafito-deep);
