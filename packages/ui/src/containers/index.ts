@@ -2,6 +2,7 @@ export * from "./banner/index.js";
 export * from "./card/index.js";
 export * from "./cols/index.js";
 export * from "./comment/index.js";
+export * from "./data-grid/index.js";
 export * from "./description-list/index.js";
 export * from "./facts/index.js";
 export * from "./generic-row/index.js";
