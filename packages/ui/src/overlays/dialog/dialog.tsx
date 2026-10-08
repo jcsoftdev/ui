@@ -1,0 +1,139 @@
+"use client";
+
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
+import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import { cn } from "../../utils/cn.js";
+import {
+  PreviousFocusProvider,
+  restoreFocusOnClose,
+  useCapturePreviousFocus,
+  usePreviousFocus,
+} from "../focus-return/index.js";
+
+/**
+ * Wraps `DialogPrimitive.Root` so focus is restored on close even when the
+ * dialog is opened in a controlled way, without its own `DialogTrigger`.
+ */
+export function Dialog({
+  open,
+  children,
+  ...props
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) {
+  const focusRef = useCapturePreviousFocus(open);
+  return (
+    <DialogPrimitive.Root open={open} {...props}>
+      <PreviousFocusProvider focusRef={focusRef}>{children}</PreviousFocusProvider>
+    </DialogPrimitive.Root>
+  );
+}
+
+export const DialogTrigger = DialogPrimitive.Trigger;
+export const DialogClose = DialogPrimitive.Close;
+
+export type DialogWidth = "md" | "lg";
+
+const widthClasses: Record<DialogWidth, string> = {
+  md: "w-[min(520px,100%)]",
+  lg: "w-[min(780px,100%)]",
+};
+
+export interface DialogContentProps
+  extends ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  width?: DialogWidth;
+  /**
+   * While a mutation is in flight: `Escape`, outside click and the close button
+   * are disabled so half-saved state is not lost.
+   */
+  blocking?: boolean;
+  /** Accessible label of the close button. */
+  closeLabel?: string;
+}
+
+export function DialogContent({
+  className,
+  width = "md",
+  blocking = false,
+  closeLabel = "Close",
+  children,
+  onEscapeKeyDown,
+  onPointerDownOutside,
+  onInteractOutside,
+  onCloseAutoFocus,
+  ...props
+}: DialogContentProps) {
+  const previousFocusRef = usePreviousFocus();
+  return (
+    <DialogPrimitive.Portal>
+      <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
+      <DialogPrimitive.Content
+        className={cn(
+          "fixed top-[9vh] left-1/2 z-70 flex max-h-[84vh] -translate-x-1/2 flex-col overflow-auto rounded-dialog bg-float shadow-pop",
+          widthClasses[width],
+          className,
+        )}
+        onEscapeKeyDown={(event) => {
+          if (blocking) event.preventDefault();
+          onEscapeKeyDown?.(event);
+        }}
+        onPointerDownOutside={(event) => {
+          if (blocking) event.preventDefault();
+          onPointerDownOutside?.(event);
+        }}
+        onInteractOutside={(event) => {
+          if (blocking) event.preventDefault();
+          onInteractOutside?.(event);
+        }}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          restoreFocusOnClose(event, previousFocusRef);
+        }}
+        {...props}
+      >
+        {children}
+        {!blocking && (
+          <DialogPrimitive.Close
+            aria-label={closeLabel}
+            className="absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink"
+          >
+            <X aria-hidden="true" className="size-4" />
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
+  );
+}
+
+export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn("flex items-center gap-2.5 border-b border-line px-4.5 py-3.5", className)}
+      {...props}
+    />
+  );
+}
+
+export function DialogTitle({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+  return (
+    <DialogPrimitive.Title className={cn("m-0 text-dialog-title text-ink", className)} {...props} />
+  );
+}
+
+export function DialogBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("flex flex-col gap-4 p-4.5", className)} {...props} />;
+}
+
+export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-2 border-t border-line px-4.5 py-3",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
