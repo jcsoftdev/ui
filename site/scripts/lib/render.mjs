@@ -176,6 +176,48 @@ export function renderSubpathsTable(manifest) {
   ].join("\n");
 }
 
+export function renderSubpathsPage(manifest) {
+  const single = manifest.entries.filter((e) => e.depth === 2);
+  const counts = {};
+  for (const c of manifest.components) counts[c.subpath] = (counts[c.subpath] ?? 0) + 1;
+  const top = manifest.entries.filter((e) => e.depth === 1);
+  const pkg = manifest.packageName;
+  return [
+    frontmatter({
+      title: "Tree-shaking and subpaths",
+      description: `Every ${pkg} subpath and single-component entry point, and how to keep bundles small.`,
+      editUrl: false,
+      section: "Guides",
+    }),
+    `The package is unbundled ESM with \`"sideEffects": ["**/*.css"]\`: one output file per source file, so a bundler can reduce an import to the component you use and its own dependencies.`,
+    "",
+    "## Subpaths",
+    "",
+    "| Import path | Components |",
+    "| --- | --- |",
+    ...top.map((e) => `| \`${e.importPath}\` | ${counts[e.subpath] ?? 0} |`),
+    "",
+    `Also available: \`${pkg}/styles/*\` (CSS) and \`${pkg}/tokens/*\` (the tokens JSON).`,
+    "",
+    "## Single-component entries",
+    "",
+    `Inside a group, components that live in their own folder also have an entry point. ${single.length} are available, for example:`,
+    "",
+    "```ts",
+    ...single.slice(0, 6).map((e) => `import {} from "${e.importPath}";`),
+    "```",
+    "",
+    "## Rules of thumb",
+    "",
+    "- Prefer the group entry (`@jcsoftdev/ui/atoms`) in application code: it tree-shakes and reads well.",
+    "- Use a single-component entry when you need the smallest possible import graph, for example in an island that ships to the browser.",
+    "- Heavy features load lazily: the DataGrid chart panel and the XLSX writer are imported on demand.",
+    "- Add `@source` for the package `dist` folder so Tailwind generates the classes the components use.",
+    "- Compile the TypeScript yourself with the `source` export condition, which points at `src/*/index.ts`.",
+    "",
+  ].join("\n");
+}
+
 const lightDark = (v) => (typeof v === "object" ? `${code(v.light)} / ${code(v.dark)}` : code(v));
 
 /** Tokens reference generated from tokens/default.json. */

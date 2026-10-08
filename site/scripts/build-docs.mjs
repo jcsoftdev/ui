@@ -13,6 +13,7 @@ import {
   categoryTitle,
   renderComponentPage,
   renderReferencePage,
+  renderSubpathsPage,
   renderTokensPage,
 } from "./lib/render.mjs";
 import { parseStoriesFile, pickDefaultStory, usageSnippet } from "./lib/stories.mjs";
@@ -95,6 +96,7 @@ export function generateDocs({ uiRoot, outRoot = siteRoot, storybookUrl = "/stor
       name: c.name,
       slug,
       category: c.category,
+      subpath: c.subpath,
       page: `/docs/components/${slug}`,
       importPath: c.importPath,
       singleEntries: c.singleEntries,
@@ -140,6 +142,7 @@ export function generateDocs({ uiRoot, outRoot = siteRoot, storybookUrl = "/stor
   }));
   write(path.join(outRoot, "src/generated/sidebar.json"), `${JSON.stringify(sidebar, null, 2)}\n`);
 
+  write(path.join(outRoot, "src/content/docs/docs/subpaths.md"), renderSubpathsPage(manifest));
   write(
     path.join(outRoot, "src/content/docs/docs/reference/exports.md"),
     renderReferencePage(analysis),
