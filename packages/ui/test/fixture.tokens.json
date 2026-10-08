@@ -20,12 +20,27 @@
         "name": "Text",
         "family": "sans",
         "styles": [
-          { "name": "page-title", "fontSize": "26px", "lineHeight": 1.2, "fontWeight": 800, "letterSpacing": "-0.025em" }
+          {
+            "name": "page-title",
+            "fontSize": "26px",
+            "lineHeight": 1.2,
+            "fontWeight": 800,
+            "letterSpacing": "-0.025em"
+          }
         ]
       }
     ]
   },
-  "radius": { "tokens": [{ "name": "radius-card", "value": "16px" }, { "name": "radius-pill", "value": "999px" }] },
-  "shadow": { "tokens": [{ "name": "shadow-flat", "value": { "light": "0 1px 2px #0001", "dark": "0 0 0 1px #fff1" } }] },
+  "radius": {
+    "tokens": [
+      { "name": "radius-card", "value": "16px" },
+      { "name": "radius-pill", "value": "999px" }
+    ]
+  },
+  "shadow": {
+    "tokens": [
+      { "name": "shadow-flat", "value": { "light": "0 1px 2px #0001", "dark": "0 0 0 1px #fff1" } }
+    ]
+  },
   "size": { "tokens": [{ "name": "side-width", "value": "244px" }] }
 }
