@@ -1,0 +1,15 @@
+# Public landing + docs for @jcsoftdev/ui (static, Storybook under /storybook/) as its own
+# Dokploy compose (project jcsoftdev-ui). Domain ui.jcsoftdev.com -> port 8080.
+name: jcsoftdev-ui
+
+services:
+  site:
+    image: ${SITE_IMAGE:-ghcr.io/jcsoftdev/ui-site:main}
+    pull_policy: always
+    restart: unless-stopped
+    expose: ["8080"]
+    networks: [dokploy-network]
+
+networks:
+  dokploy-network:
+    external: true

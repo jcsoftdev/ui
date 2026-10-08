@@ -1,0 +1,42 @@
+name: release
+
+# Publishes @jcsoftdev/ui to npm when a tag v<version> is pushed. Uses npm provenance (OIDC);
+# NPM_TOKEN is the automation token used to authenticate the publish.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - name: Verify tag matches package version
+        run: |
+          version=$(node -p "require('./packages/ui/package.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match packages/ui version v${version}"
+            exit 1
+          fi
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - name: Typecheck (the site resolves the built library)
+        run: pnpm typecheck
+      - name: Publish to npm
+        run: pnpm publish --filter @jcsoftdev/ui --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
