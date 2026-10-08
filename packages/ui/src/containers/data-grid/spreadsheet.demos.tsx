@@ -447,3 +447,74 @@ export function FillHandleDemo({ density, height }: SheetControls) {
     </Stack>
   );
 }
+
+// ---- fill up and left, auto-scroll -------------------------------------------------------------
+
+const reservasBackwards: Reserva[] = Array.from({ length: 40 }, (_unused, index) => {
+  const row = index + 1;
+  const seed = index === 30 ? reservaSeeds[0] : index === 31 ? reservaSeeds[1] : undefined;
+  const last = index === 32 ? reservaSeeds[2] : undefined;
+  const filled = seed ?? last;
+  return {
+    id: `R-${row}`,
+    silla: index === 32 ? "Silla 3" : null,
+    turno: filled?.turno ?? null,
+    dia: filled?.dia ?? null,
+    precio: filled?.precio ?? null,
+    doble: null,
+  };
+});
+
+const DATE_STEPS = ["auto", "day", "month"] as const;
+
+/**
+ * Fill handle going up and left on a tall grid: the data sits at the bottom, so dragging up has to
+ * scroll. Dates can be forced to count days or months with the `fillSeries.dateStep` option.
+ */
+export function FillBackwardsDemo({ density, height }: SheetControls) {
+  const [rows, setRows] = useState<Reserva[]>(reservasBackwards);
+  const [dateStep, setDateStep] = useState<(typeof DATE_STEPS)[number]>("auto");
+  const idOf = useCallback((row: Reserva) => row.id, []);
+  const apply = useCallback(
+    (changes: readonly CellChange<Reserva>[]) =>
+      setRows((previous) => applyCellChanges(previous, changes, idOf)),
+    [idOf],
+  );
+  return (
+    <Stack>
+      <label className={note}>
+        Paso de fechas{" "}
+        <select
+          value={dateStep}
+          onChange={(event) => setDateStep(event.target.value as (typeof DATE_STEPS)[number])}
+        >
+          {DATE_STEPS.map((step) => (
+            <option key={step} value={step}>
+              {step}
+            </option>
+          ))}
+        </select>
+      </label>
+      <DataGrid
+        density={density}
+        height={height}
+        aria-label="Reservas por silla, relleno hacia arriba"
+        data={rows}
+        columns={reservaColumns}
+        getRowId={idOf}
+        history
+        rangeSelection
+        fillSeries={{ dateStep }}
+        hideToolbar={false}
+        onCellChange={(change) => apply([change])}
+        onCellsChange={apply}
+      />
+      <p className={note}>
+        Los datos están al final. Selecciona «Turno» (10, 20) o «Silla 3» y arrastra el cuadro del
+        borde inferior derecho hacia arriba o a la izquierda: la serie retrocede (0, -10; «Silla 2»)
+        y la tabla se desplaza sola cuando el puntero se acerca al borde. Suelta o pulsa Escape para
+        parar.
+      </p>
+    </Stack>
+  );
+}

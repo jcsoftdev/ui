@@ -47,12 +47,15 @@ import { type GridChartKind, type RangeChartData, rangeToChart } from "./chart-r
 import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
 import { ColumnMenu } from "./column-menu.js";
 import type { DataSource } from "./data-source.js";
+import type { DateStepMode } from "./fill-series.js";
 import {
   copyFill,
+  edgeScrollStep,
   type FillBounds,
   fillLanes,
   type HandleExtent,
   handleExtent,
+  isBackward,
   seriesFill,
 } from "./fill-series.js";
 import {
@@ -297,6 +300,11 @@ export interface DataGridProps<T> {
   /** Rectangular cell selection by drag, Shift + click or Shift + arrows, with Ctrl + C as TSV. */
   rangeSelection?: boolean;
   /**
+   * How the fill handle reads series. `dateStep`: "auto" (default) continues dates by months when they
+   * share the day of the month and by days otherwise; "day" and "month" force one unit.
+   */
+  fillSeries?: { dateStep?: DateStepMode };
+  /**
    * Adds a "Graficar" button to the range status bar (turns `rangeSelection` on): the selected cells
    * open a bar, line, area or pie chart under the grid. The text column of the range names the
    * categories and each numeric column is a series. The chart code is loaded when first used.
@@ -512,6 +520,7 @@ export function DataGrid<T>({
   rowReorder = false,
   onRowReorder,
   rangeSelection: rangeSelectionProp = false,
+  fillSeries: fillSeriesOptions,
   charts = false,
   advancedFilter: advancedFilterProp,
   defaultAdvancedFilter = EMPTY_ADVANCED,
@@ -1501,8 +1510,11 @@ export function DataGrid<T>({
         return rawValue(known.row, known.column);
       });
       const plan = copyOnly
-        ? copyFill(lane.targets.length, values.length)
-        : seriesFill(values, lane.targets.length);
+        ? copyFill(lane.targets.length, values.length, isBackward(extent.direction))
+        : seriesFill(values, lane.targets.length, {
+            backward: isBackward(extent.direction),
+            dateStep: fillSeriesOptions?.dateStep,
+          });
       lane.targets.forEach((pos, i) => {
         const to = cellAt(pos.r, pos.c);
         const step = plan[i];
@@ -1521,7 +1533,7 @@ export function DataGrid<T>({
     }
     commitChanges(items, "fill");
     setCellRange({
-      anchor: { r: base.r0, c: base.c0 },
+      anchor: { r: extent.bounds.r0, c: extent.bounds.c0 },
       focus: { r: extent.bounds.r1, c: extent.bounds.c1 },
     });
     if (items.length > 0) setAnnouncement(labels.filled(items.length));
@@ -1533,17 +1545,47 @@ export function DataGrid<T>({
     const base = rangeBounds(cellRange);
     let extent: HandleExtent | null = null;
     let cancelled = false;
-    const update = (clientX: number, clientY: number) => {
-      const cell = document.elementFromPoint(clientX, clientY)?.closest<HTMLElement>("td[data-r]");
+    let pointer = { x: event.clientX, y: event.clientY };
+    let frame = 0;
+    /** Viewport the pointer can hit cells in: the scroller below its sticky header. */
+    const viewport = () => {
+      const scroller = scrollerRef.current;
+      if (!scroller) return null;
+      const box = scroller.getBoundingClientRect();
+      const head = scroller.querySelector("thead")?.getBoundingClientRect().bottom ?? box.top;
+      return { left: box.left, right: box.right, top: Math.max(box.top, head), bottom: box.bottom };
+    };
+    const update = () => {
+      const view = viewport();
+      if (!view) return;
+      const x = Math.min(Math.max(pointer.x, view.left + 2), view.right - 2);
+      const y = Math.min(Math.max(pointer.y, view.top + 2), view.bottom - 2);
+      const cell = document.elementFromPoint(x, y)?.closest<HTMLElement>("td[data-r]");
       if (!cell || !gridRef.current?.contains(cell)) return;
       extent = handleExtent(
         base,
         { r: Number(cell.dataset.r), c: Number(cell.dataset.c) },
-        { maxR, maxC },
+        { maxR, maxC, minR: 1, minC: 0 },
       );
       setFillPreview(extent?.bounds ?? null);
     };
-    const move = (moveEvent: PointerEvent) => update(moveEvent.clientX, moveEvent.clientY);
+    const autoScroll = () => {
+      frame = requestAnimationFrame(autoScroll);
+      const view = viewport();
+      const scroller = scrollerRef.current;
+      if (!view || !scroller) return;
+      const dx = edgeScrollStep(pointer.x, view.left, view.right);
+      const dy = edgeScrollStep(pointer.y, view.top, view.bottom);
+      if (dx === 0 && dy === 0) return;
+      const before = { left: scroller.scrollLeft, top: scroller.scrollTop };
+      scroller.scrollLeft += dx;
+      scroller.scrollTop += dy;
+      if (scroller.scrollLeft !== before.left || scroller.scrollTop !== before.top) update();
+    };
+    const move = (moveEvent: PointerEvent) => {
+      pointer = { x: moveEvent.clientX, y: moveEvent.clientY };
+      update();
+    };
     const key = (keyEvent: globalThis.KeyboardEvent) => {
       if (keyEvent.key !== "Escape") return;
       cancelled = true;
@@ -1554,6 +1596,7 @@ export function DataGrid<T>({
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", cancel);
       window.removeEventListener("keydown", key);
+      cancelAnimationFrame(frame);
       setFillPreview(null);
       if (apply && !cancelled && extent) fillByHandle(base, extent, copyOnly);
     };
@@ -1563,6 +1606,7 @@ export function DataGrid<T>({
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", cancel);
     window.addEventListener("keydown", key);
+    frame = requestAnimationFrame(autoScroll);
   };
   const fillRange = (direction: FillDirection) => {
     if (!canWrite) return;

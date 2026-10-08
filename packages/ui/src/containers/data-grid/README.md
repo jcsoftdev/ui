@@ -21,13 +21,13 @@ Pure logic lives in plain modules (tested in `test/data-grid*.test.mjs`); `data-
 | Integrated charts | `charts` (button in the range status bar) | `chart-range.ts`, `chart-panel.tsx` (lazy) |
 | Sparkline column | `type: "sparkline"`, `sparkline` | `data-grid.tsx` (`Sparkline`) |
 | Paste, fill | Ctrl + V, Ctrl + D / R (needs `onCellChange` or `onCellsChange`) | `grid-edit.ts` |
-| Fill handle | square at the bottom-right of a range (`rangeSelection`, needs `onCellChange` or `onCellsChange`): drag down or right to extend; Ctrl on release copies only; Escape cancels | `fill-series.ts` (`handleExtent`, `fillLanes`, `seriesFill`) |
+| Fill handle | square at the bottom-right of a range (`rangeSelection`, needs `onCellChange` or `onCellsChange`): drag down, right, up or left to extend; Ctrl on release copies only; Escape cancels | `fill-series.ts` (`handleExtent`, `fillLanes`, `seriesFill`, `edgeScrollStep`) |
 
 The fill handle continues linear numeric runs (1, 2, 3 or 10, 20), dates (daily, weekly, by month or year, month ends
 kept) and text ending in a number ("Silla 1" gives "Silla 2", zero padding kept); a lone number or date, irregular
 runs and plain text are copied, and formulas are copied with their relative references shifted (`shiftFormula`).
 One drag is one history entry and one `onCellsChange` call with `source: "fill"`; the range grows to cover the fill.
-It does not auto-scroll while dragging, and only extends down or right.
+Dragging up or left runs the series backwards (10, 20, 30 gives 0, -10; dates go back; "Silla 3" gives "Silla 2"; copies repeat from the nearest cell). The viewport auto-scrolls on a `requestAnimationFrame` loop while the pointer is within 40 px of an edge, until release, Escape or cancel. `fillSeries={{ dateStep }}` sets how dates count: `"auto"` (default; months when they share the day of the month, days otherwise), `"day"` or `"month"`.
 
 The grid never mutates `data`: edits, paste, fill, undo and redo are reported through
 `onCellChange` (one change) or `onCellsChange` (several) with a `source`, and row changes through
