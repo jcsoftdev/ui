@@ -102,6 +102,27 @@ export const GroupedBySeries: Story = {
   },
 };
 
+export const WithPoints: Story = {
+  args: { title: "Duración del corte con cada servicio", showPoints: true },
+};
+
+export const Jitter: Story = {
+  args: {
+    title: "Duración del corte, dispersión amplia y color por valor",
+    showPoints: true,
+    jitter: 1,
+    pointColor: "value",
+    orientation: "horizontal",
+    height: 320,
+    seed: 5,
+  },
+  argTypes: {
+    jitter: { control: { type: "range", min: 0, max: 1, step: 0.1 } },
+    pointColor: { control: "inline-radio", options: ["series", "value"] },
+    seed: { control: "number" },
+  },
+};
+
 export const AverageTicket: Story = {
   args: {
     title: "Ticket promedio por día de la semana",
