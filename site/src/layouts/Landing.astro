@@ -11,7 +11,7 @@ interface Props {
 const { title, description } = Astro.props;
 const canonical = Astro.site ? new URL("/", Astro.site).href : undefined;
 const storybook = import.meta.env.PUBLIC_STORYBOOK_URL || "/storybook";
-const github = "https://github.com/jcsoftdev/barber";
+const github = "https://github.com/jcsoftdev/ui";
 const links = [
   { href: "/docs/getting-started/", label: "Docs" },
   { href: "/docs/components/button/", label: "Components" },

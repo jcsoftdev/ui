@@ -33,7 +33,7 @@ export default defineConfig({
         ThemeSelect: "./src/components/starlight/ThemeSelect.astro",
       },
       head: [{ tag: "script", content: presetInitScript }],
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/jcsoftdev/barber" }],
+      social: [{ icon: "github", label: "GitHub", href: "https://github.com/jcsoftdev/ui" }],
       lastUpdated: false,
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       expressiveCode: {
