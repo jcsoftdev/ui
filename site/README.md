@@ -8,13 +8,13 @@ Astro 7 with React islands, Starlight for `/docs`, Tailwind v4 through its Vite 
 
 Run from the repository root with `pnpm --filter @jcsoftdev/ui-site <script>` or from `site/`.
 
-| Script      | What it does                                                                         |
-| ----------- | ------------------------------------------------------------------------------------ |
-| `dev`       | Generates the docs, then `astro dev` on `$SITE_PORT` (default 4321).                 |
-| `build`     | Generates the docs, then `astro build` into `dist/` (Pagefind search included).      |
-| `start`     | `astro preview` of `dist/`.                                                          |
-| `typecheck` | Generates the docs, then `astro check` and `tsc --noEmit`.                           |
-| `lint`      | `prettier --check .`                                                                 |
+| Script      | What it does                                                                           |
+| ----------- | -------------------------------------------------------------------------------------- |
+| `dev`       | Generates the docs, then `astro dev` on `$SITE_PORT` (default 4321).                   |
+| `build`     | Generates the docs, then `astro build` into `dist/` (Pagefind search included).        |
+| `start`     | `astro preview` of `dist/`.                                                            |
+| `typecheck` | Generates the docs, then `astro check` and `tsc --noEmit`.                             |
+| `lint`      | `prettier --check .`                                                                   |
 | `test`      | Node test runner over the docs generator (fixture package plus checks on the real UI). |
 
 The site imports `@jcsoftdev/ui` from its `dist/`, so build it first: `pnpm --filter @jcsoftdev/ui build`.
