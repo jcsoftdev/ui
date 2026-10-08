@@ -50,3 +50,22 @@ export const AsLink: Story = {
     children: <a href="#barberos">Ver barberos</a>,
   },
 };
+
+/** A long label in a narrow container ends in "…" instead of overflowing; the icon keeps its size. */
+export const LongLabel: Story = {
+  args: {
+    variant: "primary",
+    children: (
+      <>
+        <Scissors aria-hidden /> Confirmar la reserva de corte y barba con Diego
+      </>
+    ),
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 200 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};

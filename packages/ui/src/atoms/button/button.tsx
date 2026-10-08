@@ -1,7 +1,13 @@
 "use client";
 
 import { Slot } from "@radix-ui/react-slot";
-import type { ComponentPropsWithoutRef } from "react";
+import {
+  Children,
+  type ComponentPropsWithoutRef,
+  Fragment,
+  isValidElement,
+  type ReactNode,
+} from "react";
 import { cn } from "../../utils/cn.js";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -34,21 +40,37 @@ export function Button({
   disabled,
   asChild,
   className,
+  children,
   ...props
 }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
+  // Text runs get their own truncating span so a long label ends in "…" inside a narrow
+  // container instead of overflowing; icons keep their size. Slot needs its single child as is.
+  const content = asChild ? children : Children.map(children, labelRun);
   return (
     <Comp
       {...(asChild ? {} : { type: "button" })}
       aria-busy={loading ? "true" : undefined}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-pill font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45",
+        "inline-flex min-w-0 max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-pill font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:shrink-0",
         variantClasses[variant],
         sizeClasses[size],
         className,
       )}
       {...props}
-    />
+    >
+      {content}
+    </Comp>
   );
+}
+
+function labelRun(child: ReactNode): ReactNode {
+  if (typeof child === "string" || typeof child === "number") {
+    return <span className="min-w-0 truncate">{child}</span>;
+  }
+  if (isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment) {
+    return Children.map(child.props.children, labelRun);
+  }
+  return child;
 }
