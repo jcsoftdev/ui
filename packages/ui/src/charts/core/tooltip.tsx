@@ -30,6 +30,8 @@ export interface ChartTooltipProps {
   rows: readonly TooltipRow[];
   /** Wrapped sentence under the title, for notes that are not series values. */
   body?: string;
+  /** Forces the side of the anchor the card opens on (when it fits); by default it follows the anchor. */
+  side?: "left" | "right";
   className?: string;
 }
 
@@ -48,6 +50,7 @@ export function ChartTooltip({
   title,
   rows,
   body,
+  side,
   className,
 }: ChartTooltipProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -56,7 +59,7 @@ export function ChartTooltip({
     const next = ref.current?.offsetWidth ?? 0;
     if (Math.abs(next - size) > 0.5) setSize(next);
   });
-  const left = tooltipLeft(x, size, containerWidth);
+  const left = tooltipLeft(x, size, containerWidth, side);
   return (
     <div
       ref={ref}
@@ -106,10 +109,15 @@ export function ChartTooltip({
 }
 
 /** Left edge of a tooltip `width` wide next to anchor `x`, kept inside `containerWidth`. */
-export function tooltipLeft(x: number, width: number, containerWidth: number): number {
+export function tooltipLeft(
+  x: number,
+  width: number,
+  containerWidth: number,
+  side?: "left" | "right",
+): number {
   const right = x + OFFSET;
   const leftSide = x - OFFSET - width;
-  const preferLeft = x > containerWidth * 0.6;
+  const preferLeft = side ? side === "left" : x > containerWidth * 0.6;
   const fitsRight = right + width <= containerWidth - EDGE;
   const fitsLeft = leftSide >= EDGE;
   const chosen =
