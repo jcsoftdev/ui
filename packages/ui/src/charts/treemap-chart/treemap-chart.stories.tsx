@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import type { HierarchyDatum } from "../core/hierarchy.js";
 import { TreemapChart } from "./treemap-chart.js";
 
@@ -46,6 +47,86 @@ const salesByCategory: HierarchyDatum = {
       children: [
         { name: "Corte + barba", value: 3870 },
         { name: "Novio VIP", value: 900 },
+      ],
+    },
+  ],
+};
+
+/** Ventas por sede, categoría y producto (S/): a market map with three nested levels. */
+const marketMap: HierarchyDatum = {
+  name: "Todas las sedes",
+  children: [
+    {
+      name: "Miraflores",
+      children: [
+        {
+          name: "Cortes",
+          children: [
+            { name: "Corte clásico", value: 4200 },
+            { name: "Degradado", value: 3600 },
+            { name: "Corte infantil", value: 1100 },
+          ],
+        },
+        {
+          name: "Barba",
+          children: [
+            { name: "Perfilado", value: 1900 },
+            { name: "Afeitado clásico", value: 1100 },
+          ],
+        },
+        {
+          name: "Productos",
+          children: [
+            { name: "Cera mate", value: 900 },
+            { name: "Pomada", value: 700 },
+            { name: "Aceite", value: 500 },
+          ],
+        },
+      ],
+    },
+    {
+      name: "San Isidro",
+      children: [
+        {
+          name: "Cortes",
+          children: [
+            { name: "Corte clásico", value: 3300 },
+            { name: "Degradado", value: 2900 },
+          ],
+        },
+        {
+          name: "Combos",
+          children: [
+            { name: "Corte + barba", value: 2700 },
+            { name: "Novio VIP", value: 800 },
+          ],
+        },
+        {
+          name: "Color",
+          children: [
+            { name: "Tinte", value: 1300 },
+            { name: "Mechas", value: 700 },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Barranco",
+      children: [
+        {
+          name: "Cortes",
+          children: [
+            { name: "Degradado", value: 2400 },
+            { name: "Corte clásico", value: 1800 },
+          ],
+        },
+        {
+          name: "Barba",
+          children: [
+            { name: "Perfilado", value: 1000 },
+            { name: "Toalla caliente", value: 600 },
+          ],
+        },
       ],
     },
   ],
@@ -116,6 +197,37 @@ export const Default: Story = {};
 /** One level only: each category is a single cell; click to open it. */
 export const TopLevel: Story = {
   args: { depth: 1 },
+};
+
+/** Market map: sede > categoría > producto drawn at once, each sede in its own hue. Open any group to focus it. */
+export const Nested: Story = {
+  args: {
+    data: marketMap,
+    title: "Ventas por sede, categoría y producto",
+    depth: 3,
+    height: 480,
+    gap: 2,
+    radius: 4,
+  },
+};
+
+/** Click a group to open it; the breadcrumb or Escape go back. The focus is reported below. */
+export const Drilldown: Story = {
+  args: { data: marketMap, depth: 1, height: 400 },
+  render: (args) => {
+    const [focus, setFocus] = useState("Todas las sedes");
+    return (
+      <div className="flex flex-col gap-2">
+        <TreemapChart
+          {...args}
+          onFocusChange={(node) =>
+            setFocus(node.parent ? `${node.name} (S/ ${node.value})` : "Todas las sedes")
+          }
+        />
+        <p className="m-0 text-[13px] text-ink-3">Vista abierta: {focus}</p>
+      </div>
+    );
+  },
 };
 
 export const DataOrder: Story = {

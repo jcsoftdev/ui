@@ -42,6 +42,8 @@ export interface SunburstChartProps {
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
   aspectRatio?: number;
   valueFormat?: ValueFormat;
+  /** Half disc opening upwards (a 180 degree fan) instead of a full circle. */
+  half?: boolean;
   /** Rings shown around the open node. */
   levels?: number;
   /** Click a segment to zoom into it, the center to zoom out. */
@@ -77,6 +79,7 @@ export function SunburstChart({
   height = 360,
   aspectRatio,
   valueFormat,
+  half = false,
   levels = 3,
   drillDown = true,
   breadcrumb = true,
@@ -121,6 +124,7 @@ export function SunburstChart({
           drill={drill}
           format={format}
           labels={labels}
+          half={half}
           levels={Math.max(1, Math.round(levels))}
           drillDown={drillDown}
           tooltip={tooltip}
@@ -142,6 +146,7 @@ interface SunburstPlotProps {
   drill: DrillState;
   format: ValueFormatter;
   labels: HierarchyLabels;
+  half: boolean;
   levels: number;
   drillDown: boolean;
   tooltip: boolean;
@@ -177,6 +182,7 @@ function SunburstPlot({
   drill,
   format,
   labels,
+  half,
   levels,
   drillDown,
   tooltip,
@@ -195,10 +201,15 @@ function SunburstPlot({
     { disabled: !animate },
   );
 
-  const size = Math.max(0, Math.min(width, height));
+  const sweep = half ? Math.PI : TAU;
+  const origin = half ? -Math.PI / 2 : 0;
+  const size = half
+    ? Math.max(0, Math.min(width / 2, height - 30))
+    : Math.max(0, Math.min(width, height)) / 2;
   const cx = width / 2;
-  const cy = height / 2;
-  const outer = Math.max(0, size / 2 - 4);
+  const outer = Math.max(0, size - 4);
+  const cy = half ? (height + outer) / 2 : height / 2;
+  const shift = half ? -18 : 0;
   // Small discs drop the outer rings before they get too thin to read.
   const visibleLevels = Math.max(1, Math.min(levels, Math.floor((outer * 0.72) / MIN_RING)));
   const center = outer * (visibleLevels > 2 ? 0.26 : 0.32);
@@ -213,13 +224,13 @@ function SunburstPlot({
       const projected = projectSpan(span, node.depth, view);
       const r0 = radius(projected.level);
       const r1 = radius(projected.level + 1);
-      const a0 = Math.max(0, Math.min(1, projected.x0)) * TAU;
-      const a1 = Math.max(0, Math.min(1, projected.x1)) * TAU;
+      const a0 = origin + Math.max(0, Math.min(1, projected.x0)) * sweep;
+      const a1 = origin + Math.max(0, Math.min(1, projected.x1)) * sweep;
       if (r1 - r0 < 0.5 || a1 - a0 < 1e-4) continue;
       out.push({ node, r0, r1, a0, a1 });
     }
     return out;
-  }, [nodes, spans, view, center, ring, outer]);
+  }, [nodes, spans, view, center, ring, outer, origin, sweep]);
 
   const [hover, setHover] = useState<{ arc: Arc; x: number; y: number } | null>(null);
   const [hoverCenter, setHoverCenter] = useState(false);
@@ -247,7 +258,8 @@ function SunburstPlot({
     const dy = y - cy;
     const r = Math.hypot(dx, dy);
     if (r <= center) return "center";
-    const angle = (Math.atan2(dx, -dy) + TAU) % TAU;
+    const raw = Math.atan2(dx, -dy);
+    const angle = half ? raw : (raw + TAU) % TAU;
     for (let i = arcs.length - 1; i >= 0; i--) {
       const arc = arcs[i] as Arc;
       if (r >= arc.r0 && r <= arc.r1 && angle >= arc.a0 && angle <= arc.a1) return arc;
@@ -387,7 +399,7 @@ function SunburstPlot({
           <g className="pointer-events-none select-none" textAnchor="middle">
             {focus.parent && drillDown ? (
               <path
-                d={`M${cx - 5},${cy - 22}l5,-5l5,5`}
+                d={`M${cx - 5},${cy - 22 + shift}l5,-5l5,5`}
                 fill="none"
                 strokeWidth={1.8}
                 strokeLinecap="round"
@@ -397,7 +409,7 @@ function SunburstPlot({
             ) : null}
             <text
               x={cx}
-              y={cy - 4}
+              y={cy - 4 + shift}
               className="font-semibold text-[12px]"
               style={{ fill: "var(--ink-3)" }}
             >
@@ -405,7 +417,7 @@ function SunburstPlot({
             </text>
             <text
               x={cx}
-              y={cy + 16}
+              y={cy + 16 + shift}
               className="font-bold text-[17px] tabular-nums"
               style={{ fill: "var(--ink)" }}
             >
@@ -485,7 +497,7 @@ function SegmentLabel({
   const radial = arcLength >= 14 && thickness >= textWidth + 10;
   const tangential = !radial && thickness >= 15 && arcLength >= textWidth + 12;
   if (!radial && !tangential) return null;
-  const degrees = (mid * 180) / Math.PI;
+  const degrees = ((((mid * 180) / Math.PI) % 360) + 360) % 360;
   const rotate = radial
     ? degrees < 180
       ? degrees - 90
