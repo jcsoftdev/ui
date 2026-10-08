@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ChartPattern } from "../core/patterns.js";
 import { BarChart } from "./bar-chart.js";
+import { DrilldownBarChart } from "./drilldown-bar-chart.js";
 
 const barbers = ["Kevin", "Renzo", "Abel", "Diego", "Luis"];
 const appointmentsThisWeek = [42, 38, 51, 29, 35];
@@ -351,6 +352,65 @@ export const PatternedStacked: Story = {
     series: stock.map((item, index) => ({ ...item, pattern: stockPatterns[index] })),
     labels: { ...spanishLabels, category: "Mes" },
   },
+};
+
+const salesTree = {
+  name: "Todas las sedes",
+  children: [
+    {
+      name: "Miraflores",
+      children: [
+        {
+          name: "Cortes",
+          children: [
+            { name: "Clásico", value: 4200 },
+            { name: "Degradado", value: 5600 },
+            { name: "Infantil", value: 1500 },
+          ],
+        },
+        {
+          name: "Barba",
+          children: [
+            { name: "Perfilado", value: 2100 },
+            { name: "Ritual con toalla", value: 1700 },
+          ],
+        },
+        { name: "Tinte", value: 1900 },
+      ],
+    },
+    {
+      name: "San Isidro",
+      children: [
+        {
+          name: "Cortes",
+          children: [
+            { name: "Clásico", value: 3100 },
+            { name: "Degradado", value: 3900 },
+          ],
+        },
+        { name: "Barba", value: 2400 },
+        { name: "Tinte", value: 1200 },
+      ],
+    },
+    { name: "Surco", value: 5200 },
+  ],
+};
+
+/** Click a bar with a `›` to open it; use the breadcrumb to go back. */
+export const Drilldown: Story = {
+  render: (args) => (
+    <DrilldownBarChart
+      title="Ingresos por sede, servicio y variante (S/)"
+      data={salesTree}
+      seriesName="Ingresos"
+      breadcrumbLabel="Ruta de la sede"
+      valueFormat="currency"
+      dataLabels
+      height={args.height}
+      labels={args.labels}
+    />
+  ),
+  parameters: { controls: { include: ["height"] } },
 };
 
 export const Loading: Story = { args: { loading: true } };
