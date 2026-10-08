@@ -48,6 +48,8 @@ export interface DialogContentProps
   blocking?: boolean;
   /** Accessible label of the close button. */
   closeLabel?: string;
+  /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
+  container?: HTMLElement | null;
 }
 
 export function DialogContent({
@@ -55,6 +57,7 @@ export function DialogContent({
   width = "md",
   blocking = false,
   closeLabel = "Close",
+  container,
   children,
   onEscapeKeyDown,
   onPointerDownOutside,
@@ -64,7 +67,7 @@ export function DialogContent({
 }: DialogContentProps) {
   const previousFocusRef = usePreviousFocus();
   return (
-    <DialogPrimitive.Portal>
+    <DialogPrimitive.Portal container={container}>
       <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(

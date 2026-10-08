@@ -142,3 +142,22 @@ export const Controlled: Story = {
     );
   },
 };
+
+/** `container` portals the dialog into a scoped wrapper so its `data-style` reaches it. */
+export const InScopedContainer: Story = {
+  render: (args) => <ScopedDialog {...args} />,
+  parameters: { layout: "padded" },
+};
+
+function ScopedDialog(args: React.ComponentProps<typeof DialogContent>) {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  return (
+    <div ref={setHost} data-style="brutal" className="relative min-h-80 bg-bg p-6">
+      <Dialog defaultOpen>
+        <DialogContent {...args} container={host}>
+          <CancelBody />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
