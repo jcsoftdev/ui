@@ -10,7 +10,7 @@ import type { DataGridColumn, Density } from "./types.js";
 const DENSITIES: Density[] = ["compact", "normal", "comfortable"];
 
 const buttonClass =
-  "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border border-line bg-surface px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
+  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
 
 export interface GridToolbarProps<T> {
   labels: DataGridLabels;
@@ -73,8 +73,8 @@ export function GridToolbar<T>({
   const visibleCount = columns.length - hidden.length;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-line border-b p-2">
-      <label className="relative flex h-8 w-full min-w-0 items-center @md/grid:w-60">
+    <div className="flex flex-wrap items-center gap-2 border-b-divider p-2">
+      <label className="relative flex h-control-sm w-full min-w-0 items-center @md/grid:w-60">
         <span className="sr-only">{labels.search}</span>
         <Search
           aria-hidden="true"
@@ -85,7 +85,7 @@ export function GridToolbar<T>({
           value={search}
           placeholder={labels.searchPlaceholder}
           onChange={(event) => onSearch(event.target.value)}
-          className="h-8 w-full min-w-0 rounded-control border border-line-control bg-surface pr-2 pl-8 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none"
+          className="h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control pr-2 pl-8 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none"
         />
       </label>
 
@@ -119,7 +119,7 @@ export function GridToolbar<T>({
           >
             {advancedFilter}
             {advancedFilterCount > 0 && onClearAdvancedFilter ? (
-              <div className="mt-3 flex justify-end border-line border-t pt-2">
+              <div className="mt-3 flex justify-end border-t-divider pt-2">
                 <button type="button" className={buttonClass} onClick={onClearAdvancedFilter}>
                   <X aria-hidden="true" />
                   {labels.clearAdvancedFilter}
@@ -153,7 +153,7 @@ export function GridToolbar<T>({
 
       {actions}
 
-      <fieldset className="flex h-8 items-center rounded-control border border-line bg-surface p-0.5">
+      <fieldset className="flex h-control-sm items-center rounded-control border-divider bg-surface-control p-0.5">
         <legend className="sr-only">{labels.density}</legend>
         {DENSITIES.map((option) => (
           <button
@@ -196,7 +196,7 @@ export function GridToolbar<T>({
                 );
               })}
             </fieldset>
-            <div className="border-line border-t p-1 pt-1.5">
+            <div className="border-t-divider p-1 pt-1.5">
               <button
                 type="button"
                 className={cn(buttonClass, "w-full justify-center")}

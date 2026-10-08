@@ -231,7 +231,7 @@ function PersistenceGrid({ density, height, onReset }: DemoControls & { onReset:
           <button
             type="button"
             onClick={reset}
-            className="inline-flex h-8 items-center rounded-control border border-line bg-surface px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink"
+            className="inline-flex h-control-sm items-center rounded-control border-divider bg-surface-control px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink"
           >
             Restablecer todo
           </button>
@@ -312,7 +312,7 @@ export function KeyboardDemo({ density }: DemoControls) {
         <caption className="sr-only">Atajos de teclado</caption>
         <tbody>
           {SHORTCUTS.map(([keys, action]) => (
-            <tr key={keys} className="border-line border-t">
+            <tr key={keys} className="border-t-divider">
               <th scope="row" className="w-1/2 py-1.5 pr-3 font-[600] text-ink">
                 <kbd className="font-mono text-[12px]">{keys}</kbd>
               </th>
@@ -343,7 +343,7 @@ export function TreeDemo({ density, height }: DemoControls) {
 
 function RequestLog({ entries, label }: { entries: ServerLogEntry[]; label: string }) {
   return (
-    <div className="rounded-card border border-line p-2 text-[12px] text-ink-2">
+    <div className="rounded-card border-card shadow-card p-2 text-[12px] text-ink-2">
       <p className="font-[650] text-ink">
         {label}: {entries.length}
       </p>
@@ -477,7 +477,7 @@ export function FilterBuilderDemo({ density, height }: DemoControls) {
   const text = describeFilter(filter, ventaColumns, words);
   return (
     <Stack>
-      <div className="rounded-card border border-line p-3">
+      <div className="rounded-card border-card shadow-card p-3">
         <FilterBuilder
           columns={ventaColumns}
           value={filter}
@@ -487,7 +487,7 @@ export function FilterBuilderDemo({ density, height }: DemoControls) {
             return column ? distinctValues(ventas, column) : [];
           }}
         />
-        <p className="mt-3 border-line border-t pt-2 text-[12.5px] text-ink-3">
+        <p className="mt-3 border-t-divider pt-2 text-[12.5px] text-ink-3">
           {text ? `Filtro: ${text}` : "Sin filtro activo."}{" "}
           <button
             type="button"
@@ -556,7 +556,7 @@ export function ExportDemo({ density, height }: DemoControls) {
         defaultPinned={{ left: ["id"] }}
       />
       <div
-        className="rounded-card border border-line p-2 text-[12px] text-ink-2"
+        className="rounded-card border-card shadow-card p-2 text-[12px] text-ink-2"
         aria-live="polite"
       >
         {last ? (

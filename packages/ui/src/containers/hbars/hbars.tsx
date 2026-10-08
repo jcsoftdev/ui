@@ -111,7 +111,7 @@ export function HBars({
         {rows.map((row) => (
           <Fragment key={row.id}>
             <span className="truncate font-semibold text-[12.5px]">{row.name}</span>
-            <div className="relative flex h-[22px] items-center border-line border-r bg-[linear-gradient(to_right,var(--line)_1px,transparent_1px)] [background-size:20%_100%]">
+            <div className="relative flex h-[22px] items-center border-r-divider bg-[linear-gradient(to_right,var(--line)_1px,transparent_1px)] [background-size:20%_100%]">
               {paired ? (
                 <div className="flex h-[26px] w-full flex-col items-start justify-center gap-[3px]">
                   {row.values.map((value, index) => (

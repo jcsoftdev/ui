@@ -1467,11 +1467,9 @@ export function DataGrid<T>({
   const pinShadow = (position: PinPosition | undefined) =>
     position?.edge &&
     (position.side === "left" ? scrolled.start : scrolled.end) &&
-    (position.side === "left"
-      ? "shadow-[6px_0_8px_-6px_rgb(0_0_0/0.28)]"
-      : "shadow-[-6px_0_8px_-6px_rgb(0_0_0/0.28)]");
+    (position.side === "left" ? "shadow-pinned-start" : "shadow-pinned-end");
   const cellBase =
-    "overflow-hidden border-line border-b px-3 outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:-outline-offset-2 @max-sm/grid:px-2";
+    "overflow-hidden border-b-divider px-3 outline-none focus-visible:outline-2 focus-visible:outline-accent focus-visible:-outline-offset-2 @max-sm/grid:px-2";
   const tabIndexOf = (r: number, c: number) => (tabbable.r === r && tabbable.c === c ? 0 : -1);
   const firstDataIndex = renderColumns.findIndex((entry) => entry.kind === "data");
 
@@ -1693,7 +1691,7 @@ export function DataGrid<T>({
           <span
             id={errorId}
             role="alert"
-            className="absolute top-full left-1 z-5 mt-0.5 flex max-w-64 items-center gap-1.5 rounded-xs border border-danger bg-surface px-2 py-1 text-[12px] text-danger shadow-pop"
+            className="absolute top-full left-1 z-5 mt-0.5 flex max-w-64 items-center gap-1.5 rounded-xs border border-danger bg-surface px-2 py-1 text-[12px] text-danger shadow-overlay"
           >
             <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
             {editing.error}
@@ -1790,7 +1788,7 @@ export function DataGrid<T>({
         onClick={() => toggleGroupRow(row.key)}
       >
         {cells.slice(0, fillerIndex)}
-        <td aria-hidden="true" className="border-line border-b" />
+        <td aria-hidden="true" className="border-b-divider" />
         {cells.slice(fillerIndex)}
       </tr>
     );
@@ -2082,7 +2080,7 @@ export function DataGrid<T>({
         )}
       >
         {cells.slice(0, fillerIndex)}
-        <td aria-hidden="true" className="border-line border-b" />
+        <td aria-hidden="true" className="border-b-divider" />
         {cells.slice(fillerIndex)}
       </tr>
     );
@@ -2139,7 +2137,7 @@ export function DataGrid<T>({
     return (
       <tr key={row.key} aria-rowindex={ariaRowOf(r)} aria-busy="true" style={{ height: rowHeight }}>
         {cells.slice(0, fillerIndex)}
-        <td aria-hidden="true" className="border-line border-b" />
+        <td aria-hidden="true" className="border-b-divider" />
         {cells.slice(fillerIndex)}
       </tr>
     );
@@ -2155,7 +2153,7 @@ export function DataGrid<T>({
         key={idOfColumn(entry)}
         style={pinStyle(position)}
         className={cn(
-          "sticky bottom-0 overflow-hidden border-line border-t bg-surface px-3 font-[650] text-[13px] text-ink @max-sm/grid:px-2",
+          "sticky bottom-0 overflow-hidden border-t-divider bg-surface px-3 font-[650] text-[13px] text-ink @max-sm/grid:px-2",
           position ? "z-3" : "z-2",
           pinShadow(position),
           column && alignClass[columnAlign(column)],
@@ -2201,7 +2199,7 @@ export function DataGrid<T>({
         <th
           key="filler"
           role="presentation"
-          className="sticky z-2 border-line border-b bg-surface"
+          className="sticky z-2 border-b-divider bg-surface"
           style={{ top, height: GROUP_HEADER_HEIGHT }}
         />,
       );
@@ -2212,7 +2210,7 @@ export function DataGrid<T>({
           key="lead"
           role="presentation"
           colSpan={leadingCount}
-          className="sticky z-3 border-line border-b bg-surface"
+          className="sticky z-3 border-b-divider bg-surface"
           style={{ left: 0, top, height: GROUP_HEADER_HEIGHT }}
         />,
       );
@@ -2232,7 +2230,7 @@ export function DataGrid<T>({
           role={cell.label ? "columnheader" : "presentation"}
           colSpan={cell.span}
           className={cn(
-            "sticky overflow-clip border-line border-b bg-surface px-3 text-center font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
+            "sticky overflow-clip border-b-divider bg-surface px-3 text-center font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
             zone === "center" ? "z-2" : "z-3",
             cell.label && "border-x",
           )}
@@ -2316,7 +2314,7 @@ export function DataGrid<T>({
   return (
     <div
       className={cn(
-        "@container/grid flex min-w-0 max-w-full flex-col overflow-hidden rounded-card border border-line bg-surface text-ink",
+        "@container/grid flex min-w-0 max-w-full flex-col overflow-hidden rounded-card border-card shadow-card surface-card text-ink",
         className,
       )}
     >
@@ -2378,7 +2376,7 @@ export function DataGrid<T>({
       {sourceActive && remote.failed && remote.total !== null ? (
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-2 border-line border-b bg-danger-soft px-3 py-2 text-[13px] text-danger"
+          className="flex flex-wrap items-center gap-2 border-b-divider bg-danger-soft px-3 py-2 text-[13px] text-danger"
         >
           <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
           <span className="min-w-0 flex-1">{labels.loadError}</span>
@@ -2453,7 +2451,7 @@ export function DataGrid<T>({
                 {headerCells.slice(0, fillerIndex)}
                 <th
                   role="presentation"
-                  className="sticky z-2 border-line border-b bg-surface"
+                  className="sticky z-2 border-b-divider bg-surface"
                   style={{ top: headerTop, height: headerHeight }}
                 />
                 {headerCells.slice(fillerIndex)}
@@ -2469,7 +2467,7 @@ export function DataGrid<T>({
                         <span className="block h-2.5 w-3/4 rounded-pill bg-surface-2 motion-safe:animate-pulse" />
                       </td>
                     ))}
-                    <td className="border-line border-b" />
+                    <td className="border-b-divider" />
                   </tr>
                 ))
               ) : bodyLength === 0 ? (
@@ -2486,7 +2484,7 @@ export function DataGrid<T>({
                       {sourceActive && remote.failed ? (
                         <button
                           type="button"
-                          className="rounded-control border border-line px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
+                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
                           onClick={remote.retry}
                         >
                           {labels.retry}
@@ -2494,7 +2492,7 @@ export function DataGrid<T>({
                       ) : emptyFiltered ? (
                         <button
                           type="button"
-                          className="rounded-control border border-line px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
+                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
                           onClick={() => {
                             setFiltersState({});
                             setSearch("");
@@ -2523,7 +2521,7 @@ export function DataGrid<T>({
                   {footerCells.slice(0, fillerIndex)}
                   <td
                     role="presentation"
-                    className="sticky bottom-0 z-2 border-line border-t bg-surface"
+                    className="sticky bottom-0 z-2 border-t-divider bg-surface"
                   />
                   {footerCells.slice(fillerIndex)}
                 </tr>
@@ -2533,7 +2531,7 @@ export function DataGrid<T>({
         </div>
       </div>
       {rangeSelection ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-line border-t px-3 py-1.5 text-[12.5px] text-ink-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-divider px-3 py-1.5 text-[12.5px] text-ink-2">
           {stats && cellRange ? (
             <>
               <span className="font-[650] text-ink">{labels.rangeCells(rangeCellCount)}</span>
@@ -2564,7 +2562,7 @@ export function DataGrid<T>({
               <button
                 type="button"
                 onClick={copyRange}
-                className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border border-line bg-surface px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+                className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
               >
                 <Copy aria-hidden="true" />
                 {labels.copyRange}
@@ -2626,14 +2624,14 @@ function Pagination({
   return (
     <nav
       aria-label={labels.rowsPerPage}
-      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-line border-t px-2 py-1.5 text-[12.5px] text-ink-2"
+      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-t-divider px-2 py-1.5 text-[12.5px] text-ink-2"
     >
       <label className="flex items-center gap-2">
         <span>{labels.rowsPerPage}</span>
         <select
           value={pageSize}
           onChange={(event) => onPageSize(Number(event.target.value))}
-          className="h-8 rounded-control border border-line-control bg-surface px-1.5 text-[12.5px] text-ink"
+          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-[12.5px] text-ink"
         >
           {[...new Set([...options, pageSize])]
             .sort((a, b) => a - b)

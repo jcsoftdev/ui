@@ -60,7 +60,7 @@ const itemClass =
   "flex min-h-8 w-full items-center gap-2 rounded-xs px-2 text-left text-[13px] text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:bg-surface-2 focus-visible:text-ink disabled:pointer-events-none disabled:opacity-40 aria-pressed:text-accent-ink [&_svg]:size-3.5 [&_svg]:shrink-0";
 
 const inputClass =
-  "h-8 w-full min-w-0 rounded-control border border-line-control bg-surface px-2 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
+  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
 
 function Item({
   icon: Icon,
@@ -84,7 +84,7 @@ function Item({
 
 function Section({ children, label }: { children: ReactNode; label?: string }) {
   return (
-    <div className="border-line border-t py-1 first:border-t-0 first:pt-0 last:pb-0">
+    <div className="border-t-divider py-1 first:border-t-0 first:pt-0 last:pb-0">
       {label ? (
         <p className="px-2 pt-1 pb-1.5 font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em]">
           {label}
@@ -127,7 +127,7 @@ function SetFilterEditor<T>({
       />
       <fieldset className="grid max-h-48 gap-0.5 overflow-y-auto">
         <legend className="sr-only">{`${labels.filter}: ${column.header}`}</legend>
-        <label className="flex min-h-7 items-center gap-2 border-line border-b px-1 text-[13px] text-ink-2">
+        <label className="flex min-h-7 items-center gap-2 border-b-divider px-1 text-[13px] text-ink-2">
           <input
             type="checkbox"
             className="size-4 accent-accent"

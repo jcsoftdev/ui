@@ -11,7 +11,7 @@ export function DashboardPage({ children }: { children: ReactNode }) {
 /** Joined KPI tiles: two per row when narrow, four from 720 px of page width. */
 export function KpiRow({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-card bg-line shadow-flat @min-[720px]/page:grid-cols-4">
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-card bg-line border-card shadow-card @min-[720px]/page:grid-cols-4">
       {children}
     </div>
   );

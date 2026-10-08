@@ -236,10 +236,7 @@ function usePinnedCell(columnId: string | undefined, header: boolean) {
     header
       ? "z-2"
       : "z-1 group-hover/row:bg-surface-2 group-aria-selected/row:bg-accent-soft group-data-[selected=true]/row:bg-accent-soft",
-    shadowed &&
-      (position.side === "left"
-        ? "shadow-[6px_0_8px_-6px_rgb(0_0_0/0.28)]"
-        : "shadow-[-6px_0_8px_-6px_rgb(0_0_0/0.28)]"),
+    shadowed && (position.side === "left" ? "shadow-pinned-start" : "shadow-pinned-end"),
   );
   const style: CSSProperties = { [position.side]: position.offset };
   return { context, attrs, className, style };
@@ -305,7 +302,7 @@ export function TableHeaderCell({
   return (
     <th
       className={cn(
-        "whitespace-nowrap border-line border-b px-4 py-2.5 text-left font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/table:px-2.5",
+        "whitespace-nowrap border-b-divider px-4 py-2.5 text-left font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/table:px-2.5",
         alignRight && "text-right",
         pinned.className,
         className,
@@ -329,7 +326,7 @@ export function TableHeaderCell({
 export function TableRow({ className, ...props }: ComponentPropsWithoutRef<"tr">) {
   return (
     <tr
-      className={cn("group/row border-line border-b last:border-b-0 hover:bg-surface-2", className)}
+      className={cn("group/row border-b-divider last:border-b-0 hover:bg-surface-2", className)}
       {...props}
     />
   );
@@ -386,7 +383,7 @@ export function TableLinkRow({
   return (
     <tr
       className={cn(
-        "group/row relative border-line border-b last:border-b-0 hover:bg-surface-2",
+        "group/row relative border-b-divider last:border-b-0 hover:bg-surface-2",
         className,
       )}
       {...props}

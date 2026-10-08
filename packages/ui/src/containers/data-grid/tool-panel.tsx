@@ -41,13 +41,13 @@ export interface GridToolPanelProps<T> {
 }
 
 const selectClass =
-  "h-8 w-full min-w-0 rounded-control border border-line-control bg-surface px-2 text-[13px] text-ink focus-visible:border-accent focus-visible:outline-none";
+  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-[13px] text-ink focus-visible:border-accent focus-visible:outline-none";
 const iconButton =
   "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface hover:text-ink disabled:pointer-events-none disabled:opacity-30 [&_svg]:size-3.5";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="grid gap-1 border-line border-b p-2 last:border-b-0">
+    <section className="grid gap-1 border-b-divider p-2 last:border-b-0">
       <h3 className="px-1 pb-0.5 font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em]">
         {title}
       </h3>
@@ -122,7 +122,7 @@ export function GridToolPanel<T>({
       aria-label={labels.toolPanel}
       style={maxHeight ? { maxHeight } : undefined}
       className={cn(
-        "min-h-0 min-w-0 overflow-y-auto border-line bg-surface-2/40 text-[13px] @max-2xl/grid:max-h-72 @max-2xl/grid:border-b @2xl/grid:w-64 @2xl/grid:shrink-0 @2xl/grid:border-l",
+        "min-h-0 min-w-0 overflow-y-auto bg-surface-2/40 text-[13px] @max-2xl/grid:max-h-72 @max-2xl/grid:border-b-divider @2xl/grid:w-64 @2xl/grid:shrink-0 @2xl/grid:border-l-divider",
         className,
       )}
     >
