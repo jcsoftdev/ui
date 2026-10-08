@@ -557,3 +557,34 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
   their own hidden table.
 - Pure helpers (`projection.ts`, `topojson.ts`, `simplify.ts`, `build-topology.ts`, `cluster.ts`, `view.ts`) are tested
   in `test/charts-maps.test.mjs`; `check:treeshake` asserts that a chart or one dataset never pulls in the other dataset.
+
+## Globe, crossfilter, ruler/ink and scrollytelling
+
+- `GlobeChart` (`globe-chart/`): the world as an orthographic globe. Props: `map` (`worldMap`), `data` (choropleth by id or
+  name, same scales and legend as `ChoroplethMap`), `points` (`MapPoint`, area-proportional), `routes` (`MapRoute`,
+  great-circle arcs lifted over the surface), `graticule`, `initialRotation` or controlled `rotation` +
+  `onRotationChange`, `autoRotate` (pauses on hover/focus, off under reduced motion, with a pause button). Drag or use
+  the arrow keys (Shift turns more), `0` resets, space pauses the spin. It is a disc that fits the container
+  (`height="fill"` too). All math (rotation, horizon clipping of rings and lines, great arcs, invert) is in
+  `maps/geo/globe.ts` and tested in `test/globe-parity.test.mjs`. Limits: no zoom, and a polygon that covers the whole
+  visible hemisphere without crossing the horizon (e.g. Antarctica, not shipped) is not filled.
+- Crossfilter (`crossfilter/`): `CrossfilterProvider data dimensions` shares one dataset and its filters;
+  `useCrossfilter()` exposes `filtered` (feed it to a `DataGrid`), `group`, `bins`, `toggle`, `setRange`, `clear`.
+  `CrossfilterBarChart` (click to filter), `CrossfilterHistogram` (drag or click bins) and `CrossfilterScatter`
+  (display only: filtered dots in accent, the rest faint) each show "filtered of total" and draw the totals as a ghost
+  series. A chart's own filter is excluded from its own counts (crossfilter semantics), so it stays stable while you
+  brush it. The engine (`crossfilter-engine.ts`) is pure and tested in `test/crossfilter-parity.test.mjs`. The
+  histogram brush uses the new cartesian prop `rangeSelect={{ value, onChange }}` (vertical charts, band of category
+  indices; no zoom).
+- Ruler and ink: `const ink = useChartInk()`; `<ChartInkToolbar ink={ink} />` and `<LineChart overlay={ink.overlay} />`
+  (any vertical `CartesianChart` preset). The ruler reports Δx (time axes in d/h/min, category axes in steps) and Δy
+  (value and %); the pen draws a thinned, smoothed, spline path. Marks are stored in data units and drawn inside the
+  chart SVG, so `ExportMenu` exports them. Undo, redo and clear are in the toolbar. `CartesianChartProps.overlay` is
+  `{ svg(plot), html(plot) }` with `CartesianPlotInfo` (pixel/data conversions) so other tools can reuse it. Pointer
+  only (no keyboard drawing); the last measurement is announced in a live region. Horizontal bars and downsampled
+  series are not supported by the x mapping. Math in `core/ink.ts`, tests in `test/ink-parity.test.mjs`.
+- `Scrolly` / `ScrollyStep` (`containers/scrolly/`): steps scroll while a sticky `graphic({ step, previous,
+  reducedMotion })` follows the one crossing the trigger line (`offset`, default the middle; `root` for an inner scroll
+  container). Wide containers (`@3xl`) put the graphic beside the text, narrow ones pin it on top. Steps are plain
+  content (`aria-current="step"` on the active one). Pure picking logic in `scrolly-logic.ts`, tested in
+  `test/scrolly-parity.test.mjs`.
