@@ -83,6 +83,9 @@
   --color-chart-cat-7: var(--chart-cat-7);
   --color-chart-grid: var(--chart-grid);
   --color-chart-crosshair: var(--chart-crosshair);
+  --color-chart-up: var(--chart-up);
+  --color-chart-down: var(--chart-down);
+  --color-chart-total: var(--chart-total);
   --radius-xs: var(--radius-xs);
   --radius-chip: var(--radius-chip);
   --radius-event: var(--radius-event);

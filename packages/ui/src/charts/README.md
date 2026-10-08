@@ -20,6 +20,13 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `PolarAreaChart` | `polar-area-chart/` | `arcPath` sectors, radius or area scale |
 | `FunnelChart` | `funnel-chart/` | `funnelStages` geometry (funnel / pyramid, vertical / horizontal) |
 | `Sparkline` | `sparkline/` | scales + paths directly (no frame) |
+| `RangeAreaChart` | `range-area-chart/` | `ChartFrame` + `buildCategoryAxis`: min-max bands with an average line |
+| `StreamGraph` | `stream-graph/` | `streamLayout` (wiggle / silhouette / zero / expand offsets), hover a stream to isolate it |
+| `WaterfallChart` | `waterfall-chart/` | `waterfallLayout` running totals, connectors, up/down/total tokens |
+| `DumbbellChart` | `dumbbell-chart/` | two values per row, sortable, change column |
+| `TimelineChart` | `timeline-chart/` | Gantt rows, `assignLanes` stacks overlapping bars, now marker, clock ticks |
+| `CandlestickChart` | `candlestick-chart/` | OHLC candles + volume panel + `ChartBrush` zoom |
+| `SlopeChart` | `slope-chart/` | two columns, `spreadSlopeLabels` collision avoidance on both sides |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
 Polar and other chart families should be built from these blocks; see "Building a new chart" below.
@@ -67,6 +74,9 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `tooltip.tsx` | `ChartTooltip`: positioned card with rows (color, name, value, note, emphasis); flips past 60% of the width; moves with a transform. |
 | `data-table.tsx` | `ChartDataTable`: visually hidden table for screen readers. |
 | `axes.tsx` | `GridLines`, `AxisBottom`, `AxisLeft`, `AxisRight`, `thinTicks`, `estimateTextWidth`. |
+| `category-axis.ts` | `buildCategoryAxis(categories, width, { mode: "point" \| "band" \| "time" })`: positions, ticks, `indexAt`, bandwidth for charts that share a horizontal category/time axis (range area, stream, candlestick). |
+| `plot-overlay.tsx` | `PlotOverlay`: the focusable `role="slider"` layer + pointer hit-testing used by the non-cartesian charts. Props: `indexAt(pointer)`, `keys`, optional `onKey`. |
+| `palette.ts` (direction) | `DIRECTION_COLORS` (`chart-up`, `chart-down`, `chart-total` tokens) and `directionOf(delta)`. |
 | `types.ts` | `XValue`, `ChartSeries`, `ChartAnnotation`, `ValueAxisOptions`, `ChartLabels` + `DEFAULT_LABELS` + `resolveLabels`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
@@ -76,6 +86,7 @@ Colors only come from CSS variables, applied through `style` (`fill`, `stroke`, 
 as SVG presentation attributes. Text uses Tailwind token utilities (`fill-ink-3`, `text-[11px]`).
 
 - Series 1 is always `var(--accent-word)`, so it follows `data-accent`. Series 2-8 use `--chart-cat-1` ... `--chart-cat-7`.
+- `--chart-up`, `--chart-down`, `--chart-total` are the semantic direction tokens (candles, waterfall, slopes, change columns).
 - `--chart-grid` (gridlines, hover band, empty-state rules) and `--chart-crosshair` are chart-only tokens.
 - All of them are defined in `tokens/default.json` with light and dark values; `pnpm build:styles` regenerates `styles/`.
 

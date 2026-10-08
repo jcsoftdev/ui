@@ -84,6 +84,9 @@
   --chart-cat-7: #788f22;
   --chart-grid: rgba(0,0,0,.06);
   --chart-crosshair: rgba(0,0,0,.30);
+  --chart-up: #0f8a55;
+  --chart-down: #d23b35;
+  --chart-total: #3e4656;
   --shadow-flat: 0 0 0 .67px rgba(0,0,0,.11),0 1px 2px rgba(0,0,0,.04);
   --shadow-hero: 0 0 0 .67px rgba(0,0,0,.11),0 4px 18px rgba(0,0,0,.10);
   --shadow-cta: 0 8px 36px rgba(0,0,0,.065);
@@ -209,6 +212,9 @@
     --chart-cat-7: #bcd56b;
     --chart-grid: rgba(255,255,255,.07);
     --chart-crosshair: rgba(255,255,255,.34);
+    --chart-up: #5fd69b;
+    --chart-down: #ff8f82;
+    --chart-total: #c3cad6;
     --shadow-flat: 0 0 0 1px rgba(255,255,255,.09);
     --shadow-hero: 0 0 0 1px rgba(255,255,255,.10);
     --shadow-cta: 0 0 0 0 rgba(0,0,0,0);
@@ -302,6 +308,9 @@
   --chart-cat-7: #bcd56b;
   --chart-grid: rgba(255,255,255,.07);
   --chart-crosshair: rgba(255,255,255,.34);
+  --chart-up: #5fd69b;
+  --chart-down: #ff8f82;
+  --chart-total: #c3cad6;
   --shadow-flat: 0 0 0 1px rgba(255,255,255,.09);
   --shadow-hero: 0 0 0 1px rgba(255,255,255,.10);
   --shadow-cta: 0 0 0 0 rgba(0,0,0,0);

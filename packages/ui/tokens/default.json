@@ -676,6 +676,30 @@
      "dark": "rgba(255,255,255,.34)"
     },
     "usage": "Gráficos: línea vertical que sigue al puntero y franja de la categoría en barras."
+   },
+   {
+    "name": "chart-up",
+    "value": {
+     "light": "#0f8a55",
+     "dark": "#5fd69b"
+    },
+    "usage": "Gráficos: valor que sube (vela alcista, aumento en cascada, línea ascendente). Verde propio, distinto de la serie Verde menta."
+   },
+   {
+    "name": "chart-down",
+    "value": {
+     "light": "#d23b35",
+     "dark": "#ff8f82"
+    },
+    "usage": "Gráficos: valor que baja (vela bajista, disminución en cascada, línea descendente)."
+   },
+   {
+    "name": "chart-total",
+    "value": {
+     "light": "#3e4656",
+     "dark": "#c3cad6"
+    },
+    "usage": "Gráficos: totales y subtotales de cascada, y valores sin cambio."
    }
   ]
  },

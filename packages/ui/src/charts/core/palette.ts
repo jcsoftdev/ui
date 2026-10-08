@@ -21,6 +21,20 @@ export function seriesColor(index: number, override?: string): string {
   return override ?? (CHART_PALETTE[index % CHART_PALETTE.length] as string);
 }
 
+/** Direction of change: `chart-up` and `chart-down` tokens, `chart-total` when flat or a total. */
+export const DIRECTION_COLORS = {
+  up: "var(--chart-up)",
+  down: "var(--chart-down)",
+  flat: "var(--chart-total)",
+} as const;
+
+export type ChartDirection = keyof typeof DIRECTION_COLORS;
+
+/** `up` / `down` / `flat` for a change; changes within `epsilon` count as flat. */
+export function directionOf(delta: number, epsilon = 0): ChartDirection {
+  return delta > epsilon ? "up" : delta < -epsilon ? "down" : "flat";
+}
+
 export type ChartTone = "neutral" | "accent" | "danger" | "warning" | "success";
 
 /** Stroke/text color and soft fill for annotations and status marks. */
