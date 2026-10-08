@@ -745,7 +745,7 @@ function TreePlot({
                         event.stopPropagation();
                         if (!panZoom.wasDrag()) toggle(node);
                       }}
-                      className="absolute top-0 left-0 grid h-5 min-w-5 cursor-pointer place-items-center rounded-pill border border-line bg-surface px-1 font-bold text-[10px] text-ink-2 tabular-nums shadow-flat hover:text-ink"
+                      className="absolute top-0 left-0 grid h-5 min-w-5 cursor-pointer place-items-center rounded-badge border-divider bg-surface-control px-1 font-bold text-[10px] text-ink-2 tabular-nums shadow-control hover:text-ink"
                       style={{
                         transform: `translate(${tx}px, ${ty}px) translate(-50%, -50%)`,
                         opacity: pose.opacity,
@@ -808,7 +808,7 @@ function TreePlot({
       </p>
       {searchable ? (
         <search
-          className="absolute top-2 left-2 flex items-center gap-0.5 rounded-control border border-line bg-surface p-0.5 shadow-flat"
+          className="absolute top-2 left-2 flex items-center gap-0.5 rounded-control border-divider bg-surface-control p-0.5 shadow-control"
           style={{ width: "min(17rem, calc(100% - 9.5rem))" }}
         >
           <svg
@@ -899,7 +899,7 @@ function TreePlot({
         <div
           role="toolbar"
           aria-label={labels.controls}
-          className="absolute top-2 right-2 flex items-center gap-1 rounded-control border border-line bg-surface p-0.5 shadow-flat"
+          className="absolute top-2 right-2 flex items-center gap-1 rounded-control border-divider bg-surface-control p-0.5 shadow-control"
         >
           <span className="hidden px-1.5 font-semibold text-[11px] text-ink-3 tabular-nums @sm/chart:inline">
             {Math.round(view.k * 100)}%

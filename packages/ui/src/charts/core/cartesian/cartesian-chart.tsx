@@ -1109,7 +1109,7 @@ function CartesianPlot({
         <button
           type="button"
           onClick={() => onRangeChange(null)}
-          className="absolute top-0 right-0 inline-flex h-7 cursor-pointer items-center gap-1 rounded-pill border-0 bg-surface-2 px-3 font-semibold text-[12px] text-ink-2 hover:bg-sunken hover:text-ink"
+          className="absolute top-0 right-0 inline-flex h-7 cursor-pointer items-center gap-1 rounded-button border-0 bg-surface-2 px-3 font-semibold text-[12px] text-ink-2 hover:bg-sunken hover:text-ink"
         >
           <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24">
             <path

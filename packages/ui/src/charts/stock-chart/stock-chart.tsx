@@ -431,7 +431,7 @@ export function StockChart({
         {toolbar ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             {ranges.length ? (
-              <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-0.5 rounded-pill border-0 bg-surface-2 p-0.5">
+              <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-0.5 rounded-button border-0 bg-surface-2 p-0.5">
                 <legend className="sr-only">{texts.ranges}</legend>
                 {ranges.map((preset) => (
                   <button
@@ -444,7 +444,7 @@ export function StockChart({
                       setRange(rangeWindow(dates, preset));
                     }}
                     className={cn(
-                      "cursor-pointer rounded-pill px-2 py-1 font-semibold text-[11.5px] tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-2.5",
+                      "cursor-pointer rounded-button px-2 py-1 font-semibold text-[11.5px] tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-2.5",
                       activePreset?.id === preset.id
                         ? "bg-surface text-ink shadow-xs"
                         : "text-ink-3 hover:text-ink",
@@ -458,7 +458,7 @@ export function StockChart({
             {seriesTypes.length > 1 ? (
               <fieldset
                 disabled={percent}
-                className="m-0 flex items-center gap-0.5 rounded-pill border-0 bg-surface-2 p-0.5 disabled:opacity-50"
+                className="m-0 flex items-center gap-0.5 rounded-button border-0 bg-surface-2 p-0.5 disabled:opacity-50"
               >
                 <legend className="sr-only">{texts.seriesTypes}</legend>
                 {seriesTypes.map((type) => (
@@ -470,7 +470,7 @@ export function StockChart({
                     title={texts.seriesTypeNames[type]}
                     onClick={() => setSeriesType(type)}
                     className={cn(
-                      "grid h-6 w-7 cursor-pointer place-items-center rounded-pill outline-none focus-visible:outline-2 focus-visible:outline-accent-ink disabled:cursor-default",
+                      "grid h-6 w-7 cursor-pointer place-items-center rounded-button outline-none focus-visible:outline-2 focus-visible:outline-accent-ink disabled:cursor-default",
                       seriesType === type
                         ? "bg-surface text-ink shadow-xs"
                         : "text-ink-3 hover:text-ink",
@@ -484,7 +484,7 @@ export function StockChart({
           </div>
         ) : null}
         {toolbar && tools.length > 0 ? (
-          <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-0.5 self-start rounded-pill border-0 bg-surface-2 p-0.5">
+          <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-0.5 self-start rounded-button border-0 bg-surface-2 p-0.5">
             <legend className="sr-only">{texts.tools}</legend>
             {tools.map((item) => (
               <button
@@ -495,7 +495,7 @@ export function StockChart({
                 title={texts.toolNames[item]}
                 onClick={() => setTool(item)}
                 className={cn(
-                  "grid h-6 w-7 cursor-pointer place-items-center rounded-pill outline-none focus-visible:outline-2 focus-visible:outline-accent-ink",
+                  "grid h-6 w-7 cursor-pointer place-items-center rounded-button outline-none focus-visible:outline-2 focus-visible:outline-accent-ink",
                   tool === item ? "bg-surface text-ink shadow-xs" : "text-ink-3 hover:text-ink",
                 )}
               >
@@ -512,7 +512,7 @@ export function StockChart({
                 commitDrawings(drawings.filter((d) => d.id !== selectedId));
                 setSelectedId(null);
               }}
-              className="grid h-6 w-7 cursor-pointer place-items-center rounded-pill text-ink-3 outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink disabled:cursor-default disabled:opacity-40"
+              className="grid h-6 w-7 cursor-pointer place-items-center rounded-button text-ink-3 outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink disabled:cursor-default disabled:opacity-40"
             >
               <ToolIcon tool="delete" />
             </button>

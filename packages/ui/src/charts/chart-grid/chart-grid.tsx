@@ -157,7 +157,7 @@ export function ChartGrid({
                   aria-labelledby={headingId}
                   className={cn(
                     "flex min-w-0 flex-col gap-1.5",
-                    bordered && "rounded-xl border border-line p-3",
+                    bordered && "rounded-tile border-divider p-3",
                   )}
                 >
                   <header className="flex min-w-0 items-baseline justify-between gap-2">

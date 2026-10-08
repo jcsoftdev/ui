@@ -47,7 +47,7 @@ export function ExportMenu({
     <fieldset
       ref={rootRef}
       className={cn(
-        "m-0 flex shrink-0 items-center gap-0.5 rounded-pill border-0 bg-surface-2 p-0.5",
+        "m-0 flex shrink-0 items-center gap-0.5 rounded-button border-0 bg-surface-2 p-0.5",
         className,
       )}
     >
@@ -58,7 +58,7 @@ export function ExportMenu({
           type="button"
           aria-label={`${texts.export} ${texts[kind]}`}
           onClick={() => run(kind)}
-          className="cursor-pointer rounded-pill px-2 py-1 font-semibold text-[11.5px] text-ink-3 outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
+          className="cursor-pointer rounded-button px-2 py-1 font-semibold text-[11.5px] text-ink-3 outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
         >
           {texts[kind]}
         </button>

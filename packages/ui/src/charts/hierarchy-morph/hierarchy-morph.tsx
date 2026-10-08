@@ -157,7 +157,7 @@ export function HierarchyMorph({
           aria-pressed={current === option}
           onClick={() => choose(option)}
           className={cn(
-            "cursor-pointer rounded-full border px-3 py-1 text-[12px] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2",
+            "cursor-pointer rounded-button border px-3 py-1 text-[12px] font-semibold outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2",
             current === option
               ? "border-transparent bg-accent-soft text-accent-ink"
               : "border-line bg-transparent text-ink-3 hover:text-ink",

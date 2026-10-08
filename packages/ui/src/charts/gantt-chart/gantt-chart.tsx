@@ -973,7 +973,7 @@ function GanttBody({
         className="flex shrink-0 items-center justify-between gap-2"
         style={{ height: TOOLBAR_HEIGHT }}
       >
-        <fieldset className="m-0 flex min-w-0 items-center gap-0.5 rounded-pill border-0 bg-surface-2 p-0.5">
+        <fieldset className="m-0 flex min-w-0 items-center gap-0.5 rounded-button border-0 bg-surface-2 p-0.5">
           <legend className="sr-only">{texts.zoom}</legend>
           {zoomLevels.map((level) => (
             <button
@@ -983,7 +983,7 @@ function GanttBody({
               aria-label={texts.zoomLevels[level]}
               onClick={() => onZoom(level)}
               className={cn(
-                "cursor-pointer rounded-pill px-2 py-1 font-semibold text-[11.5px] outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-3",
+                "cursor-pointer rounded-button px-2 py-1 font-semibold text-[11.5px] outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-3",
                 zoom === level ? "bg-surface text-ink shadow-xs" : "text-ink-3 hover:text-ink",
               )}
             >
@@ -1002,7 +1002,7 @@ function GanttBody({
               <li className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   aria-hidden="true"
-                  className="h-2 w-4 rounded-pill"
+                  className="h-2 w-4 rounded-button"
                   style={{ background: "var(--danger)" }}
                 />
                 {texts.criticalPath}
@@ -1012,7 +1012,7 @@ function GanttBody({
               <li className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
                   aria-hidden="true"
-                  className="h-1 w-4 rounded-pill"
+                  className="h-1 w-4 rounded-button"
                   style={{ background: "var(--ink-3)", opacity: 0.55 }}
                 />
                 {texts.baseline}
@@ -1077,7 +1077,7 @@ function GanttBody({
             <button
               type="button"
               onClick={() => scrollToTime(todayTime, true)}
-              className="shrink-0 cursor-pointer rounded-pill border border-line bg-surface px-3 py-1 font-semibold text-[11.5px] text-ink-2 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent-ink"
+              className="shrink-0 cursor-pointer rounded-button border-divider bg-surface-control px-3 py-1 font-semibold text-[11.5px] text-ink-2 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent-ink"
             >
               {texts.today}
             </button>
@@ -1093,7 +1093,7 @@ function GanttBody({
               top: event.currentTarget.scrollTop,
             })
           }
-          className="absolute inset-0 overflow-auto overscroll-contain rounded-event border border-line bg-surface"
+          className="absolute inset-0 overflow-auto overscroll-contain rounded-event border-divider bg-surface"
         >
           <div
             className="grid"
@@ -1104,7 +1104,7 @@ function GanttBody({
             }}
           >
             <div
-              className="sticky top-0 left-0 z-30 flex items-end border-line border-r border-b-[1px] bg-surface"
+              className="sticky top-0 left-0 z-30 flex items-end border-r-divider border-b-divider bg-surface"
               style={{ height: HEADER_HEIGHT, borderBottomColor: "var(--line-strong)" }}
             >
               <div
@@ -1149,7 +1149,7 @@ function GanttBody({
                 if (!event.currentTarget.contains(event.relatedTarget as Node)) setFocused(false);
               }}
               onPointerLeave={() => setHover(null)}
-              className="sticky left-0 z-10 border-line border-r bg-surface"
+              className="sticky left-0 z-10 border-r-divider bg-surface"
             >
               {rows.map((row, i) => (
                 <div
@@ -1332,7 +1332,7 @@ function GanttBody({
           className="group/divider absolute top-0 bottom-0 z-40 w-2.5 -translate-x-1/2 cursor-col-resize touch-none outline-none"
           style={{ left: gridW + 1 }}
         >
-          <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-pill bg-transparent group-hover/divider:bg-accent-word group-focus-visible/divider:bg-accent-word motion-safe:transition-colors" />
+          <span className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 rounded-button bg-transparent group-hover/divider:bg-accent-word group-focus-visible/divider:bg-accent-word motion-safe:transition-colors" />
         </div>
       </div>
       <p id={hintId} className="sr-only">

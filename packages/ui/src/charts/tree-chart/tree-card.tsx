@@ -40,10 +40,10 @@ export function TreeCard({ node, state }: TreeCardProps) {
   return (
     <div
       className={cn(
-        "relative flex h-full w-full items-center gap-2.5 overflow-hidden rounded-tile border bg-surface pr-2.5 pl-3.5 text-left shadow-flat",
+        "relative flex h-full w-full items-center gap-2.5 overflow-hidden rounded-tile border bg-surface-card pr-2.5 pl-3.5 text-left shadow-control",
         node.group && "border-dashed",
         "motion-safe:transition-[border-color,box-shadow] motion-safe:duration-150",
-        state.highlighted ? "shadow-pop" : "border-line",
+        state.highlighted ? "shadow-raised" : "border-line",
       )}
       style={state.highlighted ? { borderColor: node.color } : undefined}
     >
@@ -53,7 +53,7 @@ export function TreeCard({ node, state }: TreeCardProps) {
         style={{ background: node.color }}
       />
       <span
-        className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-pill font-bold text-[12px] text-ink"
+        className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-avatar font-bold text-[12px] text-ink"
         style={{ background: tint(node.color, 24) }}
       >
         {node.image ? (
@@ -75,7 +75,7 @@ export function TreeCard({ node, state }: TreeCardProps) {
             ) : null}
             {node.badge ? (
               <span
-                className="max-w-[60%] shrink-0 truncate rounded-pill px-1.5 font-bold text-[10px] text-ink-2 leading-[16px]"
+                className="max-w-[60%] shrink-0 truncate rounded-badge px-1.5 font-bold text-[10px] text-ink-2 leading-[16px]"
                 style={{ background: tint(node.color, 16) }}
               >
                 {node.badge}
@@ -94,7 +94,7 @@ function CountBadge({ state, color }: { state: TreeNodeState; color: string }) {
   if (!state.showCount || state.descendants === 0) return null;
   return (
     <span
-      className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-pill px-1 font-bold text-[10px] text-ink tabular-nums"
+      className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-badge px-1 font-bold text-[10px] text-ink tabular-nums"
       style={{ background: tint(color, 22) }}
       title={`+${state.descendants}`}
     >
@@ -111,10 +111,10 @@ export function TreeChip({ node, state }: TreeCardProps) {
   return (
     <div
       className={cn(
-        "flex h-full w-full items-center gap-1.5 overflow-hidden rounded-pill border bg-surface px-2 text-left shadow-flat",
+        "flex h-full w-full items-center gap-1.5 overflow-hidden rounded-badge border bg-surface px-2 text-left shadow-control",
         "motion-safe:transition-[border-color,box-shadow] motion-safe:duration-150",
         node.group && "border-dashed",
-        state.highlighted ? "shadow-pop" : "border-line",
+        state.highlighted ? "shadow-raised" : "border-line",
       )}
       style={state.highlighted ? { borderColor: node.color } : undefined}
     >

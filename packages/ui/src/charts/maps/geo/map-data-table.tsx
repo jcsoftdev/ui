@@ -81,14 +81,11 @@ export function MapDataTable({
     </th>
   );
   return (
-    <div
-      className="@container/table overflow-auto rounded-event border border-line"
-      style={{ height }}
-    >
+    <div className="@container/table overflow-auto rounded-event border-divider" style={{ height }}>
       <table className="w-full border-collapse text-[12.5px]">
         <caption className="sr-only">{caption}</caption>
         <thead>
-          <tr className="border-line border-b">
+          <tr className="border-b-divider">
             {header("name", labels.region)}
             {header("value", valueName, "text-right")}
             <th scope="col" className="sticky top-0 hidden w-1/3 bg-surface @sm/table:table-cell">
@@ -102,7 +99,7 @@ export function MapDataTable({
               key={row.id}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(
-                "border-line border-b last:border-b-0",
+                "border-b-divider last:border-b-0",
                 onRowClick && "cursor-pointer hover:bg-surface-2",
               )}
             >

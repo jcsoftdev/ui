@@ -44,7 +44,7 @@ export function ChartSkeleton({ height, label, shape = "bars", className }: Char
           />
         </svg>
       ) : (
-        <div className="flex flex-1 items-end gap-[3%] border-line border-b px-[2%]">
+        <div className="flex flex-1 items-end gap-[3%] border-b-divider px-[2%]">
           {SKELETON_BARS.map((ratio) => (
             <span
               key={ratio}

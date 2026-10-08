@@ -155,7 +155,7 @@ export function BarRaceChart({
               setPlaying((value) => !value);
             }}
             aria-label={playing ? pauseLabel : playLabel}
-            className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-pill border-0 bg-surface-2 text-ink-2 outline-none hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
+            className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-button border-0 bg-surface-2 text-ink-2 outline-none hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
           >
             <PlayIcon playing={playing} />
           </button>

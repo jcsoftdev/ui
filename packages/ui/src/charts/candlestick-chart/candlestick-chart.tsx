@@ -526,7 +526,7 @@ function CandlePlot({
         <button
           type="button"
           onClick={() => setRange([0, data.length - 1])}
-          className="absolute top-0 right-0 z-10 cursor-pointer rounded-pill border border-line bg-surface px-2.5 py-1 font-semibold text-[11px] text-ink-2 hover:bg-surface-2"
+          className="absolute top-0 right-0 z-10 cursor-pointer rounded-button border-divider bg-surface-control px-2.5 py-1 font-semibold text-[11px] text-ink-2 hover:bg-surface-2"
         >
           {labels.resetZoom}
         </button>

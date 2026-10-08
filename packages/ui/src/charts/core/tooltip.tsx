@@ -65,7 +65,7 @@ export function ChartTooltip({
       ref={ref}
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute top-0 left-0 z-10 min-w-[120px] rounded-event bg-float px-3 py-2.5 text-[12px] shadow-pop",
+        "pointer-events-none absolute top-0 left-0 z-10 min-w-[120px] rounded-popover surface-overlay px-3 py-2.5 text-[12px] shadow-overlay",
         "motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out",
         className,
       )}
@@ -82,7 +82,7 @@ export function ChartTooltip({
             key={row.id}
             className={cn(
               "flex items-center gap-2 text-ink-2",
-              row.emphasis && "mt-0.5 border-line border-t pt-1.5 text-ink",
+              row.emphasis && "mt-0.5 border-t-divider pt-1.5 text-ink",
             )}
           >
             {row.emphasis ? (
