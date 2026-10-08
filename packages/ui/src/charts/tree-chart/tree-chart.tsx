@@ -356,11 +356,22 @@ function TreePlot({
   }
 
   const layout = useMemo(() => {
-    const input = visibleTree(model.root, collapsed, () => ({
-      width: nodeWidth,
-      height: nodeHeight,
-    }));
-    if (radial) return radialTreeLayout(input, { levelGap, siblingGap });
+    const sized = (scale: number) =>
+      visibleTree(model.root, collapsed, () => ({
+        width: Math.round(nodeWidth * scale),
+        height: nodeHeight,
+      }));
+    if (radial) {
+      // Chips shrink (down to 60%) when the rings would otherwise have to be zoomed out too far.
+      let best = radialTreeLayout(sized(1), { levelGap, siblingGap });
+      for (const scale of [1, 0.85, 0.72, 0.6]) {
+        best = radialTreeLayout(sized(scale), { levelGap, siblingGap });
+        const zoom = Math.min(width / best.width, height / best.height);
+        if (zoom >= 0.8 || width <= 0 || height <= 0) break;
+      }
+      return best;
+    }
+    const input = sized(1);
     if (layoutKind === "dendrogram") {
       return dendrogramLayout(input, { direction, siblingGap, levelGap });
     }
@@ -375,6 +386,8 @@ function TreePlot({
     nodeHeight,
     siblingGap,
     levelGap,
+    width,
+    height,
   ]);
   const parentOf = useCallback((id: string) => model.byId.get(id)?.parent?.id ?? null, [model]);
   const poses = useTreeTransition(layout, parentOf, { disabled: !animate });

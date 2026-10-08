@@ -413,3 +413,38 @@ test("alluvial: nodes are pinned to their stage, in category order, with a stabl
   const second = graph.nodes.find((n) => n.id === "0:nuevo");
   assert.ok(first.y1 <= second.y0);
 });
+
+/** Same shape as the TreeChart story: owner > 3 managers > barbers (one with apprentices). */
+function storyTeam(width, height) {
+  const card = (id, children) => ({ id, width, height, children });
+  return card("dueno", [
+    card("miraflores", [
+      card("kevin"),
+      card("diego"),
+      card("andrea"),
+      card("mateo", [card("piero"), card("sofia")]),
+    ]),
+    card("surco", [card("luis"), card("renzo"), card("camila")]),
+    card("barranco", [card("bruno"), card("rosa"), card("hugo", [card("t1"), card("t2")])]),
+  ]);
+}
+
+test("radialTreeLayout: no two cards overlap for the story team, at card and chip sizes", () => {
+  for (const [w, h, gap] of [
+    [132, 28, 10],
+    [196, 64, 20],
+    [100, 28, 10],
+  ]) {
+    const { nodes } = lib.radialTreeLayout(storyTeam(w, h), { levelGap: 112, siblingGap: gap });
+    for (let i = 0; i < nodes.length; i += 1) {
+      for (let j = i + 1; j < nodes.length; j += 1) {
+        const a = nodes[i];
+        const b = nodes[j];
+        const apart =
+          Math.abs(a.x - b.x) >= (a.width + b.width) / 2 ||
+          Math.abs(a.y - b.y) >= (a.height + b.height) / 2;
+        assert.ok(apart, `${a.id} overlaps ${b.id} at ${w}x${h}`);
+      }
+    }
+  }
+});

@@ -96,20 +96,49 @@ export function radialTreeLayout(
   const maxDepth = Math.max(...all.map((node) => node.depth));
   const full = sweep >= TAU - 1e-6;
 
-  // Ring radius: the level gap, or whatever the crowded ring needs.
+  const slot = (index: number) => startAngle + ((index + 0.5) / leaves) * sweep;
+  const angleOf = (node: Walk) =>
+    node.children.length === 0 ? slot(node.lo) : (slot(node.lo) + slot(node.hi)) / 2;
+
+  // Ring radius: the level gap, or the smallest radius where no box touches another (siblingGap apart).
   const radii: number[] = [0];
+  const placed: Array<{ x: number; y: number; width: number; height: number }> = [
+    { x: 0, y: 0, width: tree.input.width, height: tree.input.height },
+  ];
+  const touches = (
+    a: { x: number; y: number; width: number; height: number },
+    b: { x: number; y: number; width: number; height: number },
+  ) =>
+    Math.abs(a.x - b.x) < (a.width + b.width) / 2 + siblingGap &&
+    Math.abs(a.y - b.y) < (a.height + b.height) / 2 + siblingGap;
   for (let depth = 1; depth <= maxDepth; depth += 1) {
     const ring = all.filter((node) => node.depth === depth);
     const arc = Math.max(
       ...ring.map((node) => Math.max(node.input.height, node.input.width * 0.55)),
     );
     const needed = (ring.length * (arc + siblingGap)) / (full ? TAU : sweep);
-    radii[depth] = Math.max((radii[depth - 1] as number) + levelGap, needed);
+    let radius = Math.max((radii[depth - 1] as number) + levelGap, needed * 0.6);
+    const fits = (candidate: number) => {
+      const boxes = ring.map((node) => {
+        const point = polar(angleOf(node), candidate);
+        return { ...point, width: node.input.width, height: node.input.height };
+      });
+      return boxes.every(
+        (box, index) =>
+          !placed.some((other) => touches(box, other)) &&
+          !boxes.some((other, otherIndex) => otherIndex > index && touches(box, other)),
+      );
+    };
+    for (let guard = 0; guard < 4000 && !fits(radius); guard += 1) radius += 2;
+    radii[depth] = radius;
+    for (const node of ring) {
+      const point = polar(angleOf(node), radius);
+      placed.push({ ...point, width: node.input.width, height: node.input.height });
+    }
   }
 
-  const slot = (index: number) => startAngle + ((index + 0.5) / leaves) * sweep;
   const nodes: TreeLayoutNode[] = all.map((node) => {
-    const angle = node.children.length === 0 ? slot(node.lo) : (slot(node.lo) + slot(node.hi)) / 2;
+    const angle = angleOf(node);
     const radius = radii[node.depth] as number;
     const point = polar(angle, radius);
     return {
