@@ -10,6 +10,7 @@ export * from "./chord-chart/index.js";
 export * from "./choropleth-map/index.js";
 export * from "./combo-chart/index.js";
 export * from "./core/index.js";
+export * from "./crossfilter/index.js";
 export * from "./donut-chart/index.js";
 export * from "./dumbbell-chart/index.js";
 export * from "./fill-gauge-chart/index.js";

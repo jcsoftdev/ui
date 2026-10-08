@@ -111,6 +111,15 @@ export interface CartesianChartProps {
   onCategoryClick?: (index: number) => void;
   /** Drag-to-zoom on the plot plus an overview brush with a reset button. */
   brush?: boolean;
+  /**
+   * Controlled band selection (vertical charts): drag across the plot, or click one category, to select
+   * an inclusive range of category indices; clicking the only selected category clears it. Unlike `brush`
+   * it does not zoom: it reports the range so another chart or a grid can filter by it.
+   */
+  rangeSelect?: {
+    value: readonly [number, number] | null;
+    onChange: (range: readonly [number, number] | null) => void;
+  };
   loading?: boolean;
   /** Entry animation (default true; always off with prefers-reduced-motion). */
   animate?: boolean;
