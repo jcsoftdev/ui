@@ -20,6 +20,11 @@ export function useReducedMotion(): boolean {
 
 export const EASE_OUT = "cubic-bezier(.22,1,.36,1)";
 
+/** Cubic ease-out for `requestAnimationFrame` transitions, `t` in 0..1. */
+export function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.(QUERY).matches;
 }
