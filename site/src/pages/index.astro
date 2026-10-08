@@ -1,4 +1,314 @@
 ---
+import { Code } from "@astrojs/starlight/components";
+import Landing from "../layouts/Landing.astro";
+import { BentoGrid } from "../components/landing/bento";
+import PresetSwitcher from "../components/landing/PresetSwitcher";
+import PresetDock from "../components/landing/PresetDock";
+import HeroScene from "../components/landing/HeroScene";
+import DashboardTile from "../components/landing/DashboardTile";
+import GlobeTile from "../components/landing/GlobeTile";
+import CrossfilterTile from "../components/landing/CrossfilterTile";
+import KanbanTile from "../components/landing/KanbanTile";
+import CalendarTile from "../components/landing/CalendarTile";
+import LogoForgeTile from "../components/landing/LogoForgeTile";
+import ChartsGallery from "../components/landing/ChartsGallery";
+import GridShowcase from "../components/landing/GridShowcase";
+import AiShowcase from "../components/landing/AiShowcase";
+import ResponsiveDemo from "../components/landing/ResponsiveDemo";
+import PresetsGallery from "../components/landing/PresetsGallery";
+import manifest from "../generated/manifest.json";
+
+const storybook = import.meta.env.PUBLIC_STORYBOOK_URL || "/storybook";
+const chartCount = manifest.categories.find((c: { id: string }) => c.id === "charts")?.count ?? 0;
+const stats = [
+  { value: manifest.counts.components, label: "components" },
+  { value: chartCount, label: "chart types" },
+  { value: manifest.counts.stories, label: "documented stories" },
+  { value: manifest.counts.entries, label: "tree-shakeable subpaths" },
+  { value: 6, label: "style presets" },
+  { value: 0, label: "runtime theming JS" },
+];
+
+const install = "pnpm add @jcsoftdev/ui react react-dom";
+const cssSnippet = `/* app.css */
+@import "tailwindcss";
+@import "@jcsoftdev/ui/styles/tokens.css";
+@import "@jcsoftdev/ui/styles/theme.css";
+@import "@jcsoftdev/ui/styles/base.css";
+@source "../node_modules/@jcsoftdev/ui/dist";`;
+const tsxSnippet = `import { Button, Chip } from "@jcsoftdev/ui/atoms";
+import { LineChart } from "@jcsoftdev/ui/charts";
+import { DataGrid } from "@jcsoftdev/ui/containers";
+
+export function Revenue() {
+  return (
+    <section data-style="glass" data-accent="menta">
+      <Chip tone="accent">Live</Chip>
+      <LineChart height={240} title="Revenue" categories={days} series={series} />
+      <Button variant="primary">Export</Button>
+    </section>
+  );
+}`;
+const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
+  <!-- same components, new look -->
+</section>`;
 ---
 
-<h1>placeholder</h1>
+<Landing
+  title="@jcsoftdev/ui — React components that restyle with one attribute"
+  description="A React component library with 260+ components, charts, a spreadsheet DataGrid and an AI kit. Six style presets, accents, dark mode and density switch with data attributes and zero runtime JavaScript."
+>
+  <section id="hero" class="landing-hero">
+    <div class="landing-wrap grid items-start gap-10 pb-16 pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-20">
+      <div class="min-w-0">
+        <p class="landing-kicker">
+          <span class="pole w-10" aria-hidden="true"></span> Design system for React + Tailwind
+        </p>
+        <h1 class="landing-h1">One token file. Six looks. Zero runtime.</h1>
+        <p class="landing-lead">
+          {manifest.counts.components} accessible components, {chartCount} chart types, a
+          spreadsheet-grade DataGrid and an AI chat kit. Switch the whole look with a data
+          attribute: the CSS does the rest. Try it on the right, the entire page restyles.
+        </p>
+        <div class="mt-7 flex flex-wrap items-center gap-3">
+          <a
+            href="/docs/getting-started/"
+            class="inline-flex h-11 items-center rounded-button bg-accent px-5 font-semibold text-on-accent no-underline pressable hover:brightness-110 focus-visible:focus-ring"
+          >
+            Get started
+          </a>
+          <a
+            href="#live"
+            class="inline-flex h-11 items-center rounded-button border-card px-5 font-semibold text-ink no-underline surface-card pressable hover:surface-2 focus-visible:focus-ring"
+          >
+            See it live
+          </a>
+        </div>
+        <div class="mt-6 flex max-w-xl items-center gap-2 rounded-card border-card p-2 pl-4 surface-card">
+          <code class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-[0.875rem] text-ink">
+            {install}
+          </code>
+          <button
+            type="button"
+            data-copy={install}
+            class="h-8 shrink-0 cursor-pointer rounded-button px-3 text-[0.8125rem] font-semibold text-ink-2 surface-2 pressable hover:text-ink focus-visible:focus-ring"
+          >
+            Copy
+          </button>
+        </div>
+        <ul class="landing-feature-list">
+          <li>
+            Role tokens in plain CSS: presets, accents, dark mode, density and radius are attribute
+            selectors.
+          </li>
+          <li>
+            Container queries everywhere, so components adapt to the space they get, not to the
+            viewport.
+          </li>
+          <li>
+            Docs for people and for LLMs: every page also ships as Markdown, plus{" "}
+            <a href="/llms.txt">llms.txt</a>.
+          </li>
+        </ul>
+      </div>
+      <div class="flex min-w-0 flex-col gap-4">
+        <PresetSwitcher client:load />
+        <HeroScene client:load />
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="stats" aria-label="The library in numbers">
+    <div class="landing-wrap grid grid-cols-2 gap-density md:grid-cols-3 lg:grid-cols-6">
+      {stats.map((stat, index) => (
+        <div
+          class="landing-stat reveal border-card shadow-card surface-card"
+          style={`--reveal-i:${index}`}
+        >
+          <strong>{stat.value}</strong>
+          <span>{stat.label}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="landing-section pt-0" id="live">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Real components, not screenshots</p>
+        <h2 class="landing-h2">See it live</h2>
+        <p class="landing-lead">
+          Everything below is the published library running in your browser. Drag the Kanban cards,
+          edit a spreadsheet cell, hover the globe. Change the look above and watch every tile
+          follow.
+        </p>
+      </div>
+      <BentoGrid>
+        <DashboardTile client:visible />
+        <GlobeTile client:visible />
+        <CrossfilterTile client:visible />
+        <KanbanTile client:visible />
+        <CalendarTile client:visible />
+        <LogoForgeTile client:visible />
+      </BentoGrid>
+    </div>
+  </section>
+
+  <section class="landing-section" id="theming">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 grid items-end gap-6 lg:grid-cols-2">
+        <div>
+          <p class="landing-kicker">Zero runtime theming</p>
+          <h2 class="landing-h2">The same markup, six looks</h2>
+          <p class="landing-lead">
+            These cards are server-rendered with identical HTML. The only difference is one{" "}
+            <code>data-style</code> attribute on the wrapper. No theme provider, no CSS-in-JS, no
+            JavaScript on this page for any of it.
+          </p>
+        </div>
+        <div class="landing-code" role="group" aria-label="Example attributes">
+          <Code code={attrSnippet} lang="html" />
+        </div>
+      </div>
+      <div class="reveal">
+        <PresetsGallery />
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="charts">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">{chartCount} chart types, zero chart dependencies</p>
+        <h2 class="landing-h2">Charts that fill their cell</h2>
+        <p class="landing-lead">
+          SVG charts built on the same tokens, with keyboard navigation and accessible summaries. A
+          dozen of them below, each filling its container exactly.{" "}
+          <a href="/docs/components/line-chart/">Browse them all in the docs</a>.
+        </p>
+      </div>
+      <ChartsGallery client:visible />
+    </div>
+  </section>
+
+  <section class="landing-section" id="grid">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Spreadsheet-grade DataGrid</p>
+        <h2 class="landing-h2">Type = to write a formula</h2>
+        <p class="landing-lead">
+          Virtualized rows, range selection, undo and redo, copy and paste, and a formula engine
+          with <code>SUM</code>, <code>IF</code>, <code>ROUND</code> and friends. Edit a price and
+          every total recalculates. Export to XLSX from the toolbar.
+        </p>
+      </div>
+      <GridShowcase client:visible />
+    </div>
+  </section>
+
+  <section class="landing-section" id="ai">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">AI kit</p>
+        <h2 class="landing-h2">Chat, reasoning and tool calls</h2>
+        <p class="landing-lead">
+          Conversation, streaming Markdown, chain of thought, tool calls, sources, attachments and
+          message actions. Press a suggestion: the reply is simulated and streams token by token.
+        </p>
+      </div>
+      <AiShowcase client:visible />
+    </div>
+  </section>
+
+  <section class="landing-section" id="responsive">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Accessible + container queries</p>
+        <h2 class="landing-h2">Responsive to the container, not the screen</h2>
+        <p class="landing-lead">
+          Resize the frame: the KPI group reflows from four columns to one and the chart keeps its
+          height, all with <code>@container</code> rules. Focus rings, roles, keyboard paths and
+          reduced-motion handling are part of every component, not an add-on.
+        </p>
+      </div>
+      <ResponsiveDemo client:visible />
+    </div>
+  </section>
+
+  <section class="landing-section" id="install">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Install</p>
+        <h2 class="landing-h2">Three snippets and you are in</h2>
+      </div>
+      <div class="reveal grid gap-density lg:grid-cols-2">
+        <div class="flex min-w-0 flex-col gap-density">
+          <div class="flex items-center gap-2 rounded-card border-card p-2 pl-4 surface-card">
+            <code class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-[0.875rem] text-ink">
+              {install}
+            </code>
+            <button
+              type="button"
+              data-copy={install}
+              class="h-8 shrink-0 cursor-pointer rounded-button px-3 text-[0.8125rem] font-semibold text-ink-2 surface-2 pressable hover:text-ink focus-visible:focus-ring"
+            >
+              Copy
+            </button>
+          </div>
+          <div class="landing-code">
+            <Code code={cssSnippet} lang="css" />
+          </div>
+        </div>
+        <div class="landing-code min-w-0">
+          <Code code={tsxSnippet} lang="tsx" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section pb-24" id="resources">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Docs for people and for LLMs</p>
+        <h2 class="landing-h2">Every page, as HTML and as Markdown</h2>
+      </div>
+      <div class="reveal grid gap-density sm:grid-cols-2 lg:grid-cols-4">
+        <a
+          class="landing-card-link rounded-card border-card shadow-card surface-card"
+          href="/docs/getting-started/"
+        >
+          <strong>Documentation</strong>
+          <span>
+            Guides, theming and {manifest.counts.components} component pages with live examples.
+          </span>
+        </a>
+        <a
+          class="landing-card-link rounded-card border-card shadow-card surface-card"
+          href={storybook}
+        >
+          <strong>Storybook</strong>
+          <span>{manifest.counts.stories} stories to poke at every state.</span>
+        </a>
+        <a
+          class="landing-card-link rounded-card border-card shadow-card surface-card"
+          href="/llms.txt"
+        >
+          <strong>llms.txt</strong>
+          <span>A curated index of the docs for language models.</span>
+        </a>
+        <a
+          class="landing-card-link rounded-card border-card shadow-card surface-card"
+          href="/llms-full.txt"
+        >
+          <strong>llms-full.txt</strong>
+          <span>
+            The whole documentation as one Markdown file. Add <code>.md</code> to any docs URL for
+            its page.
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <PresetDock client:load />
+</Landing>

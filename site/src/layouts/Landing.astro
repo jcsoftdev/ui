@@ -1,0 +1,124 @@
+---
+import "../styles/global.css";
+import "../styles/landing.css";
+import { presetInitScript } from "../lib/preset-script.mjs";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const canonical = Astro.site ? new URL("/", Astro.site).href : undefined;
+const storybook = import.meta.env.PUBLIC_STORYBOOK_URL || "/storybook";
+const github = "https://github.com/jcsoftdev/barber";
+const links = [
+  { href: "/docs/getting-started/", label: "Docs" },
+  { href: "/docs/components/button/", label: "Components" },
+  { href: storybook, label: "Storybook" },
+  { href: "/llms.txt", label: "llms.txt" },
+];
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    <script
+      is:inline
+      set:html={presetInitScript + 'document.documentElement.classList.add("js");'}
+    />
+  </head>
+  <body class="landing">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-button focus:px-3 focus:py-2 surface-overlay text-ink"
+    >
+      Skip to content
+    </a>
+    <header class="landing-nav">
+      <div class="landing-wrap flex h-14 items-center gap-4">
+        <a href="/" class="flex items-center gap-2 text-ink" aria-label="@jcsoftdev/ui home">
+          <img src="/favicon.svg" alt="" width="24" height="24" />
+          <strong class="text-[1.0625rem] tracking-tight">@jcsoftdev/ui</strong>
+        </a>
+        <nav aria-label="Main" class="ml-auto flex items-center gap-1">
+          {links.map((link, index) => (
+            <a
+              class={index === 0 ? "landing-link" : "landing-link landing-link--extra"}
+              href={link.href}
+            >
+              {link.label}
+            </a>
+          ))}
+          <a class="landing-link" href={github} rel="noopener">
+            GitHub
+          </a>
+        </nav>
+      </div>
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="border-t border-line py-10 text-ink-3">
+      <div class="landing-wrap flex flex-wrap items-center justify-between gap-4 text-[0.9375rem]">
+        <p class="m-0">@jcsoftdev/ui · by jcsoftdev</p>
+        <nav aria-label="Footer" class="flex flex-wrap gap-x-5 gap-y-2">
+          <a href="/docs/">Documentation</a>
+          <a href="/llms.txt">llms.txt</a>
+          <a href="/llms-full.txt">llms-full.txt</a>
+          <a href="/manifest.json">manifest.json</a>
+          <a href={storybook}>Storybook</a>
+          <a href={github} rel="noopener">
+            GitHub
+          </a>
+        </nav>
+      </div>
+    </footer>
+    <script>
+      // Reveal sections once as they enter the viewport; without JS or with reduced motion CSS keeps them visible.
+      const items = document.querySelectorAll<HTMLElement>(".reveal");
+      if ("IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("in");
+                observer.unobserve(entry.target);
+              }
+            }
+          },
+          { rootMargin: "0px 0px -8% 0px" },
+        );
+        items.forEach((item) => observer.observe(item));
+      } else {
+        items.forEach((item) => item.classList.add("in"));
+      }
+
+      // Copy buttons: <button data-copy="text">
+      document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const label = button.textContent;
+          try {
+            await navigator.clipboard.writeText(button.dataset.copy ?? "");
+            button.textContent = "Copied";
+          } catch {
+            button.textContent = "Press Ctrl+C";
+          }
+          setTimeout(() => (button.textContent = label), 1600);
+        });
+      });
+    </script>
+  </body>
+</html>

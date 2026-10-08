@@ -13,7 +13,7 @@
     "prebuild": "node scripts/build-docs.mjs",
     "build": "astro build",
     "start": "astro preview --host 127.0.0.1 --port ${SITE_PORT:-4321}",
-    "typecheck": "astro check",
+    "typecheck": "node scripts/build-docs.mjs && astro check && tsc --noEmit",
     "lint": "prettier --check .",
     "format": "prettier --write .",
     "test": "node --test \"test/*.test.mjs\""

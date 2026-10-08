@@ -1,0 +1,299 @@
+/* Landing only. Everything reads the library's role tokens, so every preset restyles it too. */
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4.5rem;
+}
+
+body.landing {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing a:not([class]) {
+  color: var(--accent-ink);
+  text-underline-offset: 3px;
+}
+
+.landing-wrap {
+  width: min(100% - 2rem, 80rem);
+  margin-inline: auto;
+}
+
+.landing-section {
+  padding-block: clamp(3rem, 7vw, 6rem);
+}
+
+.landing-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  color: var(--accent-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(2.25rem, 5.5vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.landing-h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.625rem, 3.2vw, 2.5rem);
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.landing-lead {
+  margin: 1rem 0 0;
+  max-width: 42rem;
+  color: var(--ink-2);
+  font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.landing-lead code,
+.landing-h2 + p code {
+  font-size: 0.88em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.35em;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklab, var(--bg) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+
+.landing-nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.landing-nav a:hover {
+  color: var(--ink);
+}
+
+.landing-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding-inline: 0.625rem;
+  border-radius: var(--radius-control, 0.5rem);
+  font-size: 0.9375rem;
+  font-weight: 550;
+}
+@media (max-width: 639px) {
+  .landing-link--extra {
+    display: none;
+  }
+}
+.landing-link:hover {
+  background: var(--surface-2);
+}
+
+/* Barber-pole stripes: a repeating diagonal in the accent, used as a rule and as a hero wash. */
+.pole {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--accent) 0 0.5rem,
+    var(--bg) 0.5rem 1rem,
+    var(--ink-3) 1rem 1.5rem,
+    var(--bg) 1.5rem 2rem
+  );
+  background-size: 2.83rem 100%;
+}
+
+.landing-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  z-index: -1;
+  height: 80%;
+  background:
+    radial-gradient(
+      40rem 22rem at 18% 0%,
+      color-mix(in oklab, var(--accent) 28%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      34rem 20rem at 85% 10%,
+      color-mix(in oklab, var(--accent) 14%, transparent),
+      transparent 70%
+    );
+  pointer-events: none;
+}
+
+.landing-glow {
+  box-shadow:
+    var(--shadow-raised, 0 8px 28px -10px rgb(0 0 0 / 0.35)),
+    0 0 0 1px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.landing-dock {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  pointer-events: none;
+}
+.landing-dock[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.landing-code {
+  min-width: 0;
+}
+.landing-code .expressive-code {
+  margin-top: 0;
+}
+
+.landing-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding: 1.25rem 1rem;
+  border-radius: var(--radius-card, 0.75rem);
+}
+.landing-stat strong {
+  color: var(--ink);
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+.landing-stat span {
+  color: var(--ink-3);
+  font-size: 0.875rem;
+}
+
+.landing-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.125rem;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.landing-card-link:hover {
+  transform: translateY(-2px);
+}
+.landing-card-link strong {
+  color: var(--ink);
+  font-size: 1.0625rem;
+}
+.landing-card-link span {
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+}
+
+.presets-cell {
+  background: var(--bg);
+  color: var(--ink-2);
+  outline: 1px dashed var(--line-strong);
+  outline-offset: -1px;
+}
+
+.landing-feature-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.landing-feature-list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+.landing-feature-list li::before {
+  content: "";
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: 0.5rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* Motion: only for visitors who did not ask for less. Without it everything is simply visible. */
+@media (prefers-reduced-motion: no-preference) {
+  .landing-dock {
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease;
+  }
+
+  @keyframes bento-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+    }
+  }
+  .bento-tile {
+    animation: bento-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation-delay: calc(var(--bento-i, 0) * 45ms);
+  }
+
+  .js .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: calc(var(--reveal-i, 0) * 70ms);
+  }
+  .js .reveal.in {
+    opacity: 1;
+    transform: none;
+  }
+
+  @keyframes pole-spin {
+    to {
+      background-position-x: 2.83rem;
+    }
+  }
+  .pole {
+    animation: pole-spin 1.6s linear infinite;
+  }
+}
+
+@media print {
+  .landing-dock,
+  .landing-nav {
+    display: none;
+  }
+}
