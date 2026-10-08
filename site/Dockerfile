@@ -18,9 +18,11 @@ COPY site site
 RUN pnpm --filter @jcsoftdev/ui build
 # Public origin and Storybook location, baked into links and canonical URLs at build time.
 ARG SITE_URL=
-ARG PUBLIC_STORYBOOK_URL=
+ARG PUBLIC_STORYBOOK_URL=/storybook/
 ENV SITE_URL=$SITE_URL PUBLIC_STORYBOOK_URL=$PUBLIC_STORYBOOK_URL ASTRO_TELEMETRY_DISABLED=1
 RUN pnpm --filter @jcsoftdev/ui-site build
+# Storybook is served by the same image under /storybook/ as the full component workbench.
+RUN pnpm --filter @jcsoftdev/ui build-storybook --output-dir /repo/site/dist/storybook
 
 # Unprivileged nginx: runs as uid 101 and listens on 8080.
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
