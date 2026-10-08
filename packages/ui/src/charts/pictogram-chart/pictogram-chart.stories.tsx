@@ -1,4 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { UnitGlyph } from "../core/unit-glyph.js";
+import {
+  BARBER_SILHOUETTES,
+  PICTOGRAM_SILHOUETTES,
+  resolveUnitShape,
+  UNIT_ICONS,
+} from "../core/unit-icons.js";
 import { PictogramChart } from "./pictogram-chart.js";
 
 const visitsBySegment = [
@@ -52,7 +59,7 @@ const meta = {
   argTypes: {
     icon: {
       control: "select",
-      options: ["person", "scissors", "chair", "star", "calendar", "bottle"],
+      options: Object.keys(UNIT_ICONS),
     },
     layout: { control: "inline-radio", options: ["grid", "rows"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
@@ -127,6 +134,82 @@ export const CustomShape: Story = {
     icon: comb,
     unitLabel: "peines",
     labels: { ...spanishLabels, category: "Sede" },
+  },
+};
+
+const SIZE = 56;
+
+function Gallery({ names }: { names: readonly (keyof typeof UNIT_ICONS)[] }) {
+  return (
+    <ul className="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-3 p-0">
+      {names.map((name) => (
+        <li
+          key={name}
+          className="flex flex-col items-center gap-1 rounded-md border border-line p-2"
+        >
+          <svg
+            width={SIZE * 2 + 8}
+            height={SIZE}
+            role="img"
+            aria-label={name}
+            className="max-w-full"
+          >
+            <UnitGlyph
+              shape={resolveUnitShape(name)}
+              x={0}
+              y={0}
+              size={SIZE}
+              fill={1}
+              color="var(--accent-word)"
+              clipId={`full-${name}`}
+            />
+            <UnitGlyph
+              shape={resolveUnitShape(name)}
+              x={SIZE + 8}
+              y={0}
+              size={SIZE}
+              fill={0.6}
+              color="var(--accent-word)"
+              clipId={`part-${name}`}
+            />
+          </svg>
+          <code className="text-[11px] text-ink-3">{name}</code>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Built-in silhouettes, each full and cut at 60%. Pass the name as `icon`, or any SVG path of your own. */
+export const Silhouettes: Story = {
+  render: () => (
+    <div className="flex flex-col gap-5">
+      <section className="flex flex-col gap-2">
+        <h3 className="m-0 text-[13px] font-bold text-ink">Personas y cosas de todos los días</h3>
+        <Gallery names={PICTOGRAM_SILHOUETTES} />
+      </section>
+      <section className="flex flex-col gap-2">
+        <h3 className="m-0 text-[13px] font-bold text-ink">Barbería</h3>
+        <Gallery names={BARBER_SILHOUETTES} />
+      </section>
+    </div>
+  ),
+};
+
+/** A family of silhouettes in one chart: a different one per category. */
+export const MixedSilhouettes: Story = {
+  args: {
+    title: "Clientes por tipo (1 figura = 2)",
+    data: [
+      { id: "hombres", name: "Hombres", value: 24, icon: "person" as const },
+      { id: "mujeres", name: "Mujeres", value: 9, icon: "woman" as const },
+      { id: "ninos", name: "Niños", value: 13, icon: "child" as const },
+    ],
+    perUnit: 2,
+    layout: "rows",
+    unitLabel: "clientes",
+    height: 170,
+    labels: { ...spanishLabels, category: "Tipo" },
   },
 };
 
