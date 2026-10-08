@@ -71,6 +71,20 @@ export const OpenByDefault: Story = {
   ),
 };
 
+/** Open on load with the trigger, title and close button all on screen. */
+export const WithTriggerOpen: Story = {
+  render: (args) => (
+    <Drawer defaultOpen>
+      <DrawerTrigger asChild>
+        <Button variant="secondary">Ver cita</Button>
+      </DrawerTrigger>
+      <DrawerContent {...args}>
+        <AppointmentDetail />
+      </DrawerContent>
+    </Drawer>
+  ),
+};
+
 export const Blocking: Story = {
   args: { blocking: true },
   render: (args) => (
