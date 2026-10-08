@@ -225,6 +225,20 @@
   border-color: var(--border-color-control);
 }
 
+@utility border-divider {
+  border-width: var(--border-width-divider);
+  border-style: solid;
+  border-color: var(--border-color-divider);
+}
+
+@utility border-l-divider {
+  border-left: var(--border-width-divider) solid var(--border-color-divider);
+}
+
+@utility border-r-divider {
+  border-right: var(--border-width-divider) solid var(--border-color-divider);
+}
+
 @utility border-t-divider {
   border-top: var(--border-width-divider) solid var(--border-color-divider);
 }
