@@ -81,7 +81,7 @@ export const UndoRedoPreset: Story = {
 const formulaHint =
   "Las columnas llevan letra (A, B, C…) y las filas siguen el orden de los datos. Selecciona una celda para ver su fórmula en la barra; escribe = para empezar una; Ctrl + D copia hacia abajo ajustando las referencias.";
 
-function Formulas(args: ControlArgs) {
+function FormulasStory(args: ControlArgs) {
   return (
     <FormulasDemo
       {...controls(args)}
@@ -93,15 +93,15 @@ function Formulas(args: ControlArgs) {
   );
 }
 
-export const FormulasPresupuesto: Story = {
+export const Formulas: Story = {
   name: "Formulas",
-  render: (args) => <Formulas {...args} />,
+  render: (args) => <FormulasStory {...args} />,
 };
 
 export const FormulasNarrow: Story = {
   name: "Formulas (320 px)",
   decorators: [narrow],
-  render: (args) => <Formulas {...args} />,
+  render: (args) => <FormulasStory {...args} />,
 };
 
 export const FormulasPreset: Story = {
@@ -113,7 +113,7 @@ export const FormulasPreset: Story = {
       </section>
     ),
   ],
-  render: (args) => <Formulas {...args} />,
+  render: (args) => <FormulasStory {...args} />,
 };
 
 export const FormulaErrors: Story = {
