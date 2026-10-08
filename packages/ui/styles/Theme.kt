@@ -42,6 +42,15 @@ class ThemeColors(
     val scrim: Color,
     val toastBg: Color,
     val toastInk: Color,
+    val chartCat1: Color,
+    val chartCat2: Color,
+    val chartCat3: Color,
+    val chartCat4: Color,
+    val chartCat5: Color,
+    val chartCat6: Color,
+    val chartCat7: Color,
+    val chartGrid: Color,
+    val chartCrosshair: Color,
 )
 
 object UiColors {
@@ -78,6 +87,15 @@ object UiColors {
         scrim = Color(0x33000000),
         toastBg = Color(0xFF000000),
         toastInk = Color(0xFFFFFFFF),
+        chartCat1 = Color(0xFF2F7FC1),
+        chartCat2 = Color(0xFF12936F),
+        chartCat3 = Color(0xFFC7820F),
+        chartCat4 = Color(0xFF6D5BD8),
+        chartCat5 = Color(0xFFBD4B95),
+        chartCat6 = Color(0xFF5F6B7D),
+        chartCat7 = Color(0xFF788F22),
+        chartGrid = Color(0x0F000000),
+        chartCrosshair = Color(0x4D000000),
     )
     val Dark = ThemeColors(
         bg = Color(0xFF000000),
@@ -112,6 +130,15 @@ object UiColors {
         scrim = Color(0xB8000000),
         toastBg = Color(0xFF222226),
         toastInk = Color(0xFFF2F2F5),
+        chartCat1 = Color(0xFF6DB8F2),
+        chartCat2 = Color(0xFF5FD0A6),
+        chartCat3 = Color(0xFFF0B85A),
+        chartCat4 = Color(0xFFAEA3FB),
+        chartCat5 = Color(0xFFEE9BD2),
+        chartCat6 = Color(0xFFA5AEBB),
+        chartCat7 = Color(0xFFBCD56B),
+        chartGrid = Color(0x12FFFFFF),
+        chartCrosshair = Color(0x57FFFFFF),
     )
 }
 

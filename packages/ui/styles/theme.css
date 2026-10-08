@@ -74,6 +74,15 @@
   --color-scrim: var(--scrim);
   --color-toast-bg: var(--toast-bg);
   --color-toast-ink: var(--toast-ink);
+  --color-chart-cat-1: var(--chart-cat-1);
+  --color-chart-cat-2: var(--chart-cat-2);
+  --color-chart-cat-3: var(--chart-cat-3);
+  --color-chart-cat-4: var(--chart-cat-4);
+  --color-chart-cat-5: var(--chart-cat-5);
+  --color-chart-cat-6: var(--chart-cat-6);
+  --color-chart-cat-7: var(--chart-cat-7);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-crosshair: var(--chart-crosshair);
   --radius-xs: var(--radius-xs);
   --radius-chip: var(--radius-chip);
   --radius-event: var(--radius-event);

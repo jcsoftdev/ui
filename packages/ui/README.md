@@ -79,7 +79,7 @@ import { Dialog } from "@jcsoftdev/ui/overlays/dialog"; // only the Dialog + @ra
 import { Chip, Avatar } from "@jcsoftdev/ui/atoms";     // group entry: still tree-shakes
 ```
 
-Entries: `atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `utils`
+Entries: `atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `utils`
 (each also as `<group>/<component>`), plus `styles/*` and `tokens/*`. Runtime dependencies (Radix, lucide-react,
 cmdk, sonner) are regular `dependencies`, so a consumer that imports one component only bundles that component's
 dependencies. Components that need state are marked `"use client"`.

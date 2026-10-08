@@ -604,6 +604,78 @@
      "dark": "#f2f2f5"
     },
     "usage": "Texto y botón del aviso breve."
+   },
+   {
+    "name": "chart-cat-1",
+    "value": {
+     "light": "#2f7fc1",
+     "dark": "#6db8f2"
+    },
+    "usage": "Gráficos: color de la serie 2 (Azul cielo). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-cat-2",
+    "value": {
+     "light": "#12936f",
+     "dark": "#5fd0a6"
+    },
+    "usage": "Gráficos: color de la serie 3 (Verde menta). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-cat-3",
+    "value": {
+     "light": "#c7820f",
+     "dark": "#f0b85a"
+    },
+    "usage": "Gráficos: color de la serie 4 (Ámbar). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-cat-4",
+    "value": {
+     "light": "#6d5bd8",
+     "dark": "#aea3fb"
+    },
+    "usage": "Gráficos: color de la serie 5 (Lavanda). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-cat-5",
+    "value": {
+     "light": "#bd4b95",
+     "dark": "#ee9bd2"
+    },
+    "usage": "Gráficos: color de la serie 6 (Orquídea). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-cat-6",
+    "value": {
+     "light": "#5f6b7d",
+     "dark": "#a5aebb"
+    },
+    "usage": "Gráficos: color de la serie 7 (Pizarra). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-cat-7",
+    "value": {
+     "light": "#788f22",
+     "dark": "#bcd56b"
+    },
+    "usage": "Gráficos: color de la serie 8 (Oliva). La serie 1 siempre usa accent-word; las demás siguen este orden."
+   },
+   {
+    "name": "chart-grid",
+    "value": {
+     "light": "rgba(0,0,0,.06)",
+     "dark": "rgba(255,255,255,.07)"
+    },
+    "usage": "Gráficos: líneas guía del fondo. Más suaves que line para que los datos manden."
+   },
+   {
+    "name": "chart-crosshair",
+    "value": {
+     "light": "rgba(0,0,0,.30)",
+     "dark": "rgba(255,255,255,.34)"
+    },
+    "usage": "Gráficos: línea vertical que sigue al puntero y franja de la categoría en barras."
    }
   ]
  },
