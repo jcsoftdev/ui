@@ -662,6 +662,14 @@
     "usage": "Gráficos: color de la serie 8 (Oliva). La serie 1 siempre usa accent-word; las demás siguen este orden."
    },
    {
+    "name": "chart-cat-reserve",
+    "value": {
+     "light": "#dc5d63",
+     "dark": "#f48f93"
+    },
+    "usage": "Color de categoría de reserva: reemplaza al color de categoría que se parece al acento activo (ver chartSwaps)."
+   },
+   {
     "name": "chart-grid",
     "value": {
      "light": "rgba(0,0,0,.06)",
@@ -1117,5 +1125,16 @@
     "usage": "Alto de una hora en la línea de tiempo de la app."
    }
   ]
+ },
+ "chartSwaps": {
+  "reserve": "chart-cat-reserve",
+  "palettes": {
+   "durazno": "chart-cat-3",
+   "menta": "chart-cat-2",
+   "cielo": "chart-cat-1",
+   "lavanda": "chart-cat-4",
+   "orquidea": "chart-cat-5",
+   "grafito": "chart-cat-6"
+  }
  }
 }

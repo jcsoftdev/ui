@@ -25,3 +25,12 @@ test("kotlin color conversion", () => {
   assert.equal(toKotlinColor("#faa2a2"), "Color(0xFFFAA2A2)");
   assert.equal(toKotlinColor("rgba(0,0,0,.11)"), "Color(0x1C000000)");
 });
+
+test("an accent palette swaps its look-alike chart category for the reserve", () => {
+  const theme = JSON.parse(readFileSync(join(here, "../tokens/default.json"), "utf8"));
+  const css = buildTheme(theme)["tokens.css"];
+  const menta = css.slice(css.indexOf(':root[data-accent="menta"]'));
+  assert.match(menta.slice(0, menta.indexOf("}")), /--chart-cat-2: var\(--chart-cat-reserve\);/);
+  const { chartSwaps: _ignored, ...plain } = theme;
+  assert.doesNotMatch(buildTheme(plain)["tokens.css"], /var\(--chart-cat-reserve\)/);
+});

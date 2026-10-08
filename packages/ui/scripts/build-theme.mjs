@@ -83,6 +83,11 @@ export function buildTokensCss(tokens) {
     const pairs = Object.entries(PALETTE_ROLES)
       .filter(([role]) => roles[role])
       .map(([role, target]) => [target, `var(--${roles[role]})`]);
+    // A chart category color that looks like this accent yields to the reserve, so series 1
+    // never repeats series 0 (which wears the accent).
+    const swap = tokens.chartSwaps?.palettes?.[id];
+    if (swap && tokens.chartSwaps.reserve)
+      pairs.push([swap, `var(--${tokens.chartSwaps.reserve})`]);
     // :root keeps a palette above the light/dark blocks, which are also scoped to :root.
     blocks.push(`:root[data-accent="${id}"] {\n${decls(pairs)}\n}`);
   }

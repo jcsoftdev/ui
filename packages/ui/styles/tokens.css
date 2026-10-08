@@ -82,7 +82,6 @@
   --chart-cat-5: #bd4b95;
   --chart-cat-6: #5f6b7d;
   --chart-cat-7: #788f22;
-  /* Replaces the categorical color that matches the active accent, so series 1 never repeats series 0. */
   --chart-cat-reserve: #dc5d63;
   --chart-grid: rgba(0,0,0,.06);
   --chart-crosshair: rgba(0,0,0,.30);
