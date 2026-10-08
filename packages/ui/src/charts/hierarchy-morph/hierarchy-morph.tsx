@@ -92,6 +92,8 @@ interface Shape {
   /** Room for a label in each layout: width and height. */
   rectRoom: [number, number];
   sectorRoom: [number, number];
+  /** Middle of the ring segment, where the label sits in the sunburst. */
+  sectorCenter: RingPoint;
 }
 
 /**
@@ -277,6 +279,10 @@ function MorphPlot({
               inTreemap: cell != null,
               rectRoom,
               sectorRoom: [(a1 - a0) * mid, r1 - r0],
+              sectorCenter: {
+                x: cx + mid * Math.sin((a0 + a1) / 2),
+                y: cy - mid * Math.cos((a0 + a1) / 2),
+              },
             });
           }
         }
@@ -292,7 +298,13 @@ function MorphPlot({
 
   const drawn = shapes.map((shape) => {
     const points = blendRings(shape.rect, shape.sector, progress);
-    return { shape, points, path: ringPath(points), center: ringCenter(points) };
+    const from = ringCenter(shape.rect);
+    const to = shape.sectorCenter;
+    const center = {
+      x: from.x + (to.x - from.x) * progress,
+      y: from.y + (to.y - from.y) * progress,
+    };
+    return { shape, points, path: ringPath(points), center };
   });
   const activeDrawn = active ? drawn.find((item) => item.shape === active) : undefined;
 
