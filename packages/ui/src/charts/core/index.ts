@@ -25,6 +25,7 @@ export * from "./plot-overlay.js";
 export * from "./polar.js";
 export * from "./sankey.js";
 export * from "./scales/index.js";
+export * from "./shape-morph.js";
 export * from "./stack.js";
 export * from "./time-range.js";
 export * from "./tooltip.js";
