@@ -362,9 +362,9 @@ function TreePlot({
         height: nodeHeight,
       }));
     if (radial) {
-      // Chips shrink (down to 60%) when the rings would otherwise have to be zoomed out too far.
+      // Chips shrink a little (to 85%) before the readable view takes over: names stay legible.
       let best = radialTreeLayout(sized(1), { levelGap, siblingGap });
-      for (const scale of [1, 0.85, 0.72, 0.6]) {
+      for (const scale of [1, 0.85]) {
         best = radialTreeLayout(sized(scale), { levelGap, siblingGap });
         const zoom = Math.min(width / best.width, height / best.height);
         if (zoom >= 0.8 || width <= 0 || height <= 0) break;
@@ -402,8 +402,9 @@ function TreePlot({
   const fit = useCallback(() => {
     const next = treeFitView(layout, width, height, radial ? "left" : direction, {
       inset: toolbarBand,
-      mode: radial ? "contain" : (fitChoice ?? fitProp),
+      mode: fitChoice ?? fitProp,
       minZoom,
+      centerRoot: radial,
     });
     appliedFit.current = next.mode;
     setView(next.view, { user: false });
@@ -412,6 +413,24 @@ function TreePlot({
   useEffect(() => {
     if (!userMoved.current) fit();
   }, [fit, userMoved]);
+  // After lazy children arrive, bring the view back to the tree if the new nodes fall outside it.
+  const loadedRef = useRef(false);
+  useEffect(() => {
+    if (!loadedRef.current) return;
+    loadedRef.current = false;
+    if (!userMoved.current || width <= 0 || height <= 0) return;
+    const { x, y, k } = view;
+    const outside = layout.nodes.some(
+      (node) =>
+        x + (node.x - node.width / 2) * k < 0 ||
+        x + (node.x + node.width / 2) * k > width ||
+        y + (node.y - node.height / 2) * k < toolbarBand ||
+        y + (node.y + node.height / 2) * k > height,
+    );
+    if (!outside) return;
+    userMoved.current = false;
+    fit();
+  }, [layout, view, width, height, toolbarBand, fit, userMoved]);
   const refit = () => {
     const moved = userMoved.current;
     userMoved.current = false;
@@ -430,6 +449,7 @@ function TreePlot({
     });
     try {
       const children = await loadChildren(node);
+      loadedRef.current = true;
       onLoaded(node.id, children);
       onToggle?.(node, true);
     } catch (error) {

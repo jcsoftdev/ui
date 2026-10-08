@@ -241,6 +241,13 @@ test("treeFitView contains when legible, else centres the root at a readable sca
   const view = lib.treeFitView(left, 320, 420, "left", { mode: "readable" }).view;
   close(view.x + (left.nodes[0].x - left.nodes[0].width / 2) * view.k, 16, "root on the left edge");
 
+  const radialView = lib.treeFitView(layout, 320, 420, "left", {
+    mode: "readable",
+    centerRoot: true,
+  }).view;
+  close(radialView.x + layout.nodes[0].x * radialView.k, 160, "radial root centred across");
+  close(radialView.y + layout.nodes[0].y * radialView.k, 210, "radial root centred down");
+
   for (const direction of ["left", "right"]) {
     const side = lib.treeLayout(team(), { direction });
     const fit = lib.treeFitView(side, 320, 420, direction, { mode: "readable", inset: 36 }).view;

@@ -411,7 +411,6 @@ export const Pivot: Story = {
       columns={ventaColumns}
       getRowId={(row) => row.id}
       toolPanel
-      defaultToolPanelOpen
       defaultPivot={{
         enabled: true,
         rows: ["barbero"],

@@ -286,7 +286,7 @@ export const Radial: Story = {
     layout: "radial",
     edgeStyle: "curved",
     height: 620,
-    nodeWidth: 132,
+    nodeWidth: 150,
     nodeHeight: 28,
     siblingGap: 10,
     levelGap: 112,
@@ -300,7 +300,7 @@ export const Dendrogram: Story = {
     direction: "left",
     edgeStyle: "step",
     height: 520,
-    nodeWidth: 132,
+    nodeWidth: 150,
     nodeHeight: 28,
     siblingGap: 8,
     levelGap: 76,
@@ -324,7 +324,7 @@ export const GroupedLeaves: Story = {
 
 /** Open the San Borja branch: its team loads asynchronously (1 s) and a spinner shows meanwhile. */
 export const LazyChildren: Story = {
-  args: { data: withLazyBranch, edgeStyle: "step", showCounts: true },
+  args: { data: withLazyBranch, edgeStyle: "step", showCounts: true, fit: "contain" },
   render: function Render(args) {
     return (
       <TreeChart
@@ -409,7 +409,7 @@ export const RadialNarrow: Story = {
     layout: "radial",
     height: 420,
     searchable: true,
-    nodeWidth: 132,
+    nodeWidth: 150,
     nodeHeight: 28,
     siblingGap: 10,
     levelGap: 112,

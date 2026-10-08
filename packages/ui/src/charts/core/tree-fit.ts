@@ -16,6 +16,8 @@ export interface TreeFitOptions {
   readableMin?: number;
   readableMax?: number;
   minZoom?: number;
+  /** Centre the root in the `readable` view (radial layouts), instead of pinning it to an edge. */
+  centerRoot?: boolean;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -41,6 +43,7 @@ export function treeFitView(
     readableMin = 0.85,
     readableMax = 1,
     minZoom = 0.05,
+    centerRoot = false,
   }: TreeFitOptions = {},
 ): { view: PanZoomView; mode: TreeFitMode } {
   const areaHeight = Math.max(1, height - inset);
@@ -71,7 +74,9 @@ export function treeFitView(
   );
   let x = width / 2 - root.x * k;
   let y = inset + areaHeight / 2 - root.y * k;
-  if (direction === "top") y = inset + padding - (root.y - root.height / 2) * k;
+  if (centerRoot) {
+    // Radial: the root stays at the middle, the rings are a pan away.
+  } else if (direction === "top") y = inset + padding - (root.y - root.height / 2) * k;
   else if (direction === "bottom") y = height - padding - (root.y + root.height / 2) * k;
   else {
     x =
