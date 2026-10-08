@@ -352,6 +352,11 @@ export interface CrossfilterScatterProps {
   yLabel?: string;
   /** Rectangular brush on both dimensions (drag, or focus the plot and use the keys). On by default. */
   brush?: boolean;
+  /**
+   * Touch: milliseconds a finger must rest before a drag draws the rectangle (350 by default), so a
+   * swipe over the plot still scrolls the page. `0` brushes at once and blocks scrolling on the plot.
+   */
+  touchDelay?: number;
   /** Pixels of deterministic spread for dimensions with few distinct values. */
   jitter?: number;
   height?: number | "fill";
@@ -364,7 +369,8 @@ export interface CrossfilterScatterProps {
  * One dot per record: accent for the records every filter leaves in, faint for the rest, so the
  * dots you filtered out stay visible as context. Drag a rectangle to filter both dimensions at
  * once (a click clears it). From the keyboard, focus the brush after the plot: arrows move the
- * rectangle, Shift and arrows resize it, Enter applies it and Escape clears it.
+ * rectangle, Shift and arrows resize it, Enter applies it and Escape clears it. On touch the page
+ * keeps scrolling: rest a finger on the plot for about 350 ms (`touchDelay`) and then drag to draw.
  */
 export function CrossfilterScatter({
   title,
@@ -376,6 +382,7 @@ export function CrossfilterScatter({
   xLabel,
   yLabel,
   brush = true,
+  touchDelay,
   labels: labelsProp,
   className,
   ...chart
@@ -431,6 +438,7 @@ export function CrossfilterScatter({
           xf.setRange(y, ranges.y);
         },
         label: labels.brush,
+        touchDelay,
         describe: (rect: BrushRect) =>
           labels.selection(
             `${xLabel ?? x} ${fx(rect.x0)} – ${fx(rect.x1)}`,

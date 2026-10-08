@@ -571,7 +571,7 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
 - Crossfilter (`crossfilter/`): `CrossfilterProvider data dimensions` shares one dataset and its filters;
   `useCrossfilter()` exposes `filtered` (feed it to a `DataGrid`), `group`, `bins`, `toggle`, `setRange`, `clear`.
   `CrossfilterBarChart` (click to filter), `CrossfilterHistogram` (drag or click bins) and `CrossfilterScatter`
-  (filtered dots in accent, the rest faint; a rectangular brush filters both dimensions: drag a rectangle, click to clear, or focus the brush after the plot: arrows move it, Shift + arrows resize it, Enter applies, Escape clears; a Clear button appears) each show "filtered of total" and draw the totals as a ghost
+  (filtered dots in accent, the rest faint; a rectangular brush filters both dimensions: drag a rectangle, click to clear, or focus the brush after the plot: arrows move it, Shift + arrows resize it, Enter applies, Escape clears; a Clear button appears; on touch the plot keeps `touch-action: pan-x pan-y`, so swipes scroll the page and the brush starts only after resting a finger ~350 ms, with a short vibration where supported: `touchDelay` on `CrossfilterScatter` / the `XYBrush`, `0` brushes at once and blocks scroll; mouse and pen drag immediately) each show "filtered of total" and draw the totals as a ghost
   series. A chart's own filter is excluded from its own counts (crossfilter semantics), so it stays stable while you
   brush it. The engine (`crossfilter-engine.ts`) is pure and tested in `test/crossfilter-parity.test.mjs`. The
   histogram brush uses the new cartesian prop `rangeSelect={{ value, onChange }}` (vertical charts, band of category

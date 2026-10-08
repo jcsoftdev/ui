@@ -2,6 +2,7 @@
 
 import {
   type KeyboardEvent,
+  type MouseEvent,
   memo,
   type PointerEvent,
   useEffect,
@@ -29,6 +30,8 @@ import {
   isClick,
   rectFromCorners,
   stepBrush,
+  TOUCH_BRUSH_DELAY,
+  touchIntent,
 } from "./brush.js";
 import { PlotExplorer } from "./explorer.js";
 import { type DistributionLabels, resolveDistributionLabels } from "./labels.js";
@@ -79,6 +82,12 @@ export interface XYBrush {
   label: string;
   /** Text a screen reader announces for a rectangle while it is moved or applied. */
   describe?: (rect: BrushRect, applied: boolean) => string;
+  /**
+   * Touch only: the finger must rest this many milliseconds before a drag draws the rectangle, so a
+   * swipe still scrolls the page (350 by default). `0` brushes at once and blocks page scroll on the
+   * plot. Mouse and pen drag immediately either way.
+   */
+  touchDelay?: number;
 }
 
 export interface XYPointChartProps {
@@ -689,6 +698,31 @@ function XYPointPlot({
       xDomain,
       yDomain,
     );
+  const touch = useRef<{
+    id: number;
+    from: { x: number; y: number };
+    since: number;
+    armed: boolean;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+  const touchDelay = brush?.touchDelay ?? TOUCH_BRUSH_DELAY;
+  const cancelTouch = () => {
+    if (touch.current) clearTimeout(touch.current.timer);
+    touch.current = null;
+  };
+  useEffect(() => {
+    const node = wrapRef.current;
+    if (!node) return;
+    // Once a long press armed the brush, the browser must not turn the drag into a page scroll.
+    const hold = (event: TouchEvent) => {
+      if (touch.current?.armed && event.cancelable) event.preventDefault();
+    };
+    node.addEventListener("touchmove", hold, { passive: false });
+    return () => {
+      node.removeEventListener("touchmove", hold);
+      if (touch.current) clearTimeout(touch.current.timer);
+    };
+  }, []);
   const brushHandlers = brush
     ? {
         onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
@@ -697,10 +731,41 @@ function XYPointPlot({
           const x = event.clientX - box.left - margin.left;
           const y = event.clientY - box.top - margin.top;
           if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return;
+          if (event.pointerType === "touch" && touchDelay > 0) {
+            cancelTouch();
+            const node = event.currentTarget;
+            const pointerId = event.pointerId;
+            const arm = () => {
+              if (!touch.current) return;
+              touch.current.armed = true;
+              dragFrom.current = { x, y };
+              node.setPointerCapture(pointerId);
+              navigator.vibrate?.(8);
+            };
+            touch.current = {
+              id: pointerId,
+              from: { x, y },
+              since: event.timeStamp,
+              armed: false,
+              timer: setTimeout(arm, touchDelay),
+            };
+            return;
+          }
           event.currentTarget.setPointerCapture(event.pointerId);
           dragFrom.current = { x, y };
         },
         onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
+          const pending = touch.current;
+          if (pending && !pending.armed) {
+            const intent = touchIntent(
+              pending.from,
+              plotPoint(event),
+              event.timeStamp - pending.since,
+              touchDelay,
+            );
+            if (intent === "scroll") cancelTouch();
+            return;
+          }
           const from = dragFrom.current;
           if (!from) return;
           const to = plotPoint(event);
@@ -710,6 +775,13 @@ function XYPointPlot({
           }
         },
         onPointerUp: (event: PointerEvent<HTMLDivElement>) => {
+          const pending = touch.current;
+          if (pending && !pending.armed) {
+            cancelTouch();
+            if (brush.value) brush.onChange(null);
+            return;
+          }
+          cancelTouch();
           const from = dragFrom.current;
           if (!from) return;
           dragFrom.current = null;
@@ -727,8 +799,12 @@ function XYPointPlot({
           speak(rect, true);
         },
         onPointerCancel: () => {
+          cancelTouch();
           dragFrom.current = null;
           setDraft(null);
+        },
+        onContextMenu: (event: MouseEvent<HTMLDivElement>) => {
+          if (touch.current) event.preventDefault();
         },
       }
     : {};
@@ -954,7 +1030,13 @@ function XYPointPlot({
   return (
     <div
       ref={wrapRef}
-      className={cn("relative h-full w-full", brush && "touch-none select-none")}
+      className={cn(
+        "relative h-full w-full",
+        brush &&
+          (brush.touchDelay === 0
+            ? "touch-none select-none"
+            : "touch-pan-x touch-pan-y select-none [-webkit-touch-callout:none]"),
+      )}
       {...brushHandlers}
     >
       <svg

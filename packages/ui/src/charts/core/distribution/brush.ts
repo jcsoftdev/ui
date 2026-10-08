@@ -128,3 +128,24 @@ export function stepBrush(
     : shift(rect.y0, rect.y1, sign * dy, yLo, yHi);
   return { ...rect, y0, y1 };
 }
+
+export const TOUCH_BRUSH_DELAY = 350;
+const TOUCH_SLOP = 10;
+
+export type TouchIntent = "wait" | "brush" | "scroll";
+
+/**
+ * What a touch that went down at `from` means once it is at `to` after `elapsed` ms. Moving more than
+ * a few pixels before the long-press delay is a scroll (the brush never starts); holding still past
+ * the delay arms the brush, and from then on every move is part of it.
+ */
+export function touchIntent(
+  from: BrushPoint,
+  to: BrushPoint,
+  elapsed: number,
+  delay = TOUCH_BRUSH_DELAY,
+  slop = TOUCH_SLOP,
+): TouchIntent {
+  if (elapsed >= delay) return "brush";
+  return Math.hypot(to.x - from.x, to.y - from.y) > slop ? "scroll" : "wait";
+}
