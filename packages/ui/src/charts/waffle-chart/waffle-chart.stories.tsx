@@ -84,6 +84,83 @@ export const Wide: Story = {
   args: { rows: 5, columns: 20, height: 140, legend: "bottom" },
 };
 
+const occupancyBySede = [
+  { id: "miraflores", name: "Miraflores", reserved: 82, walkIn: 11 },
+  { id: "san-isidro", name: "San Isidro", reserved: 64, walkIn: 19 },
+  { id: "surco", name: "Surco", reserved: 47, walkIn: 22 },
+  { id: "barranco", name: "Barranco", reserved: 31, walkIn: 38 },
+];
+
+/** One waffle per sede on the same scale. The grid follows the container width: 1, 2 or 4 columns. */
+export const SmallMultiples: Story = {
+  render: (args) => (
+    <div className="@container/multiples">
+      <ul className="m-0 grid list-none grid-cols-1 gap-x-6 gap-y-5 p-0 @sm/multiples:grid-cols-2 @3xl/multiples:grid-cols-4">
+        {occupancyBySede.map((sede) => (
+          <li key={sede.id} className="flex min-w-0 flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <h4 className="m-0 truncate text-[13px] font-bold text-ink">{sede.name}</h4>
+              <span className="text-[12px] tabular-nums text-ink-3">
+                {sede.reserved + sede.walkIn}%
+              </span>
+            </div>
+            <WaffleChart
+              {...args}
+              title={`Turnos ocupados en ${sede.name}`}
+              data={[
+                { id: "reservados", name: "Reservados", value: sede.reserved },
+                { id: "sin-cita", name: "Sin cita", value: sede.walkIn },
+              ]}
+              total={100}
+              aspectRatio={1}
+              height={undefined}
+              legend={false}
+              tooltip
+            />
+          </li>
+        ))}
+      </ul>
+      <p className="m-0 mt-4 flex gap-4 text-[12px] text-ink-3">
+        <span className="flex items-center gap-1.5">
+          <i className="size-2.5 rounded-xs" style={{ background: "var(--accent-word)" }} />
+          Reservados
+        </span>
+        <span className="flex items-center gap-1.5">
+          <i className="size-2.5 rounded-xs" style={{ background: "var(--chart-cat-1)" }} />
+          Sin cita
+        </span>
+        <span>1 cuadro = 1% de los turnos</span>
+      </p>
+    </div>
+  ),
+  args: {
+    rows: 10,
+    columns: 10,
+    cellShape: "rounded",
+    gap: 0.16,
+    labels: { ...spanishLabels, category: "Tipo de turno" },
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 900, padding: 16 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** Same grid in a 320 px container: a single column. */
+export const SmallMultiplesNarrow: Story = {
+  ...SmallMultiples,
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320, maxWidth: "100%" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
 export const Loading: Story = { args: { loading: true } };
 
 export const Empty: Story = { args: { data: [] } };
