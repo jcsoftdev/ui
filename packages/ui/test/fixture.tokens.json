@@ -1,0 +1,31 @@
+{
+  "name": "Fixture",
+  "color": {
+    "themes": [{ "id": "light" }, { "id": "dark" }],
+    "tokens": [
+      { "name": "bg", "value": { "light": "#ffffff", "dark": "#000" } },
+      { "name": "hair", "value": { "light": "rgba(0,0,0,.11)", "dark": "rgba(255,255,255,.1)" } },
+      { "name": "accent", "value": "#faa2a2" },
+      { "name": "on-accent", "value": "#3f191a" },
+      { "name": "pal-mint-fill", "value": "#77d3ad" },
+      { "name": "pal-mint-deep", "value": "#002f1f" },
+      { "name": "pal-mint-ink", "value": { "light": "#047554", "dark": "#91debc" } }
+    ]
+  },
+  "type": {
+    "fonts": [{ "family": "Figtree", "source": "google", "spec": "Figtree:wght@400;700" }],
+    "families": { "sans": "\"Figtree\", sans-serif" },
+    "groups": [
+      {
+        "name": "Text",
+        "family": "sans",
+        "styles": [
+          { "name": "page-title", "fontSize": "26px", "lineHeight": 1.2, "fontWeight": 800, "letterSpacing": "-0.025em" }
+        ]
+      }
+    ]
+  },
+  "radius": { "tokens": [{ "name": "radius-card", "value": "16px" }, { "name": "radius-pill", "value": "999px" }] },
+  "shadow": { "tokens": [{ "name": "shadow-flat", "value": { "light": "0 1px 2px #0001", "dark": "0 0 0 1px #fff1" } }] },
+  "size": { "tokens": [{ "name": "side-width", "value": "244px" }] }
+}
