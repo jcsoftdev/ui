@@ -88,7 +88,7 @@ export function WeekView({
                 data-date={date}
                 data-today={date === today || undefined}
                 className={cn(
-                  "flex h-10 min-w-0 items-center truncate whitespace-nowrap border-line border-b px-2 text-meta text-ink-3",
+                  "flex h-10 min-w-0 items-center truncate whitespace-nowrap border-b-divider px-2 text-meta text-ink-3",
                   date === today && "text-accent-ink",
                 )}
               >
@@ -101,7 +101,7 @@ export function WeekView({
             <div
               className={cn(
                 GUTTER,
-                "whitespace-nowrap border-line border-b px-1.5 pt-2.5 text-right text-meta text-ink-3",
+                "whitespace-nowrap border-b-divider px-1.5 pt-2.5 text-right text-meta text-ink-3",
               )}
             >
               {allDayLabel}
@@ -109,7 +109,7 @@ export function WeekView({
             {days.map((date) => (
               <div
                 key={date}
-                className="flex min-h-10 flex-col gap-1 border-line border-b border-l p-1"
+                className="flex min-h-10 flex-col gap-1 border-b-divider border-l-divider p-1"
               >
                 {markers
                   .filter((marker) => marker.date === date)
@@ -156,7 +156,7 @@ export function WeekView({
                     data-hours-column
                     data-shaded={shaded.has(date) || undefined}
                     className={cn(
-                      "relative border-line border-l bg-[linear-gradient(to_bottom,var(--line)_1px,transparent_1px)] bg-size-[100%_48px]",
+                      "relative border-l-divider bg-[linear-gradient(to_bottom,var(--line)_1px,transparent_1px)] bg-size-[100%_48px]",
                       isToday && "bg-accent-soft/40",
                       shaded.has(date) && SHADED_DAY_CLASS,
                     )}

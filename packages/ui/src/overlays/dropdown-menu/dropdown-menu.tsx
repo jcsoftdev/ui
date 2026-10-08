@@ -23,7 +23,7 @@ export function DropdownMenuContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          "z-85 min-w-[min(14.375rem,var(--radix-dropdown-menu-content-available-width))] max-h-(--radix-dropdown-menu-content-available-height) max-w-(--radix-dropdown-menu-content-available-width) overflow-y-auto rounded-card bg-float p-1.5 shadow-pop",
+          "z-85 min-w-[min(14.375rem,var(--radix-dropdown-menu-content-available-width))] max-h-(--radix-dropdown-menu-content-available-height) max-w-(--radix-dropdown-menu-content-available-width) overflow-y-auto rounded-popover surface-overlay p-1.5 shadow-overlay",
           className,
         )}
         {...props}
@@ -75,7 +75,7 @@ export interface DropdownMenuSeparatorProps
 export function DropdownMenuSeparator({ className, ...props }: DropdownMenuSeparatorProps) {
   return (
     <DropdownMenuPrimitive.Separator
-      className={cn("my-1.25 border-t border-line", className)}
+      className={cn("my-1.25 border-t-divider", className)}
       {...props}
     />
   );

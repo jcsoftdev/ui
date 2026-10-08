@@ -98,7 +98,7 @@ export function Sidebar({
         aria-label={ariaLabel}
         inert={closedOnMobile || undefined}
         className={cn(
-          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-line border-r bg-surface px-3 pt-3.5 pb-3 transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-r-divider bg-surface px-3 pt-3.5 pb-3 transition-transform duration-200",
           // Inside AppShell the container query decides before any script runs (no flash on a
           // narrow first paint); the measured state only drives inert, the scrim and focus.
           shell
@@ -110,7 +110,7 @@ export function Sidebar({
                 isMobile ? "fixed" : "sticky top-0",
                 closedOnMobile ? "-translate-x-full" : "translate-x-0",
               ),
-          openOnMobile && "shadow-pop",
+          openOnMobile && "shadow-overlay",
           className,
         )}
       >

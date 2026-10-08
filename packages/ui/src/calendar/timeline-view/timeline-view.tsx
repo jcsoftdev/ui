@@ -69,7 +69,7 @@ export function TimelineView({
             aria-label={isToday ? `${label} · ${todayLabel}` : label}
             data-date={date}
             data-today={isToday || undefined}
-            className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3.5 border-line border-t px-4 py-3.5 first:border-t-0 @max-[34rem]/timeline:grid-cols-[minmax(0,1fr)] @max-[34rem]/timeline:gap-y-2"
+            className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3.5 border-t-divider px-4 py-3.5 first:border-t-0 @max-[34rem]/timeline:grid-cols-[minmax(0,1fr)] @max-[34rem]/timeline:gap-y-2"
           >
             <div>
               <b className={cn("block text-row-title", isToday && "text-accent-ink")}>{label}</b>

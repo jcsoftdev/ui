@@ -65,7 +65,7 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "@container/topbar sticky top-0 z-30 h-top-height border-line border-b bg-bg",
+        "@container/topbar sticky top-0 z-30 h-top-height border-b-divider bg-bg",
         className,
       )}
     >
@@ -103,11 +103,11 @@ export function Topbar({
           type="button"
           aria-label={searchLabel}
           onClick={onSearch}
-          className="ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-pill border border-line-control bg-surface pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0"
+          className="ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0"
         >
           <Search className="size-4 shrink-0" aria-hidden="true" />
           <span className="truncate @max-[700px]/topbar:hidden">{searchPlaceholder}</span>
-          <span className="ml-auto rounded-xs border border-line bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden">
+          <span className="ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden">
             {shortcut}
           </span>
         </button>

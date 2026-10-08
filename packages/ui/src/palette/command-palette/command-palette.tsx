@@ -78,11 +78,11 @@ export function CommandPalette({
       label={label}
       overlayClassName="fixed inset-0 z-50 bg-scrim"
       contentClassName={cn(
-        "@container/palette fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,calc(100vw-1rem))] -translate-x-1/2 flex-col overflow-hidden rounded-dialog bg-float shadow-pop",
+        "@container/palette fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,calc(100vw-1rem))] -translate-x-1/2 flex-col overflow-hidden rounded-dialog surface-overlay shadow-overlay",
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 border-line border-b px-3 py-3 @min-[420px]/palette:px-4 @min-[420px]/palette:py-3.5">
+      <div className="flex items-center gap-2.5 border-b-divider px-3 py-3 @min-[420px]/palette:px-4 @min-[420px]/palette:py-3.5">
         <Search className="size-4.5 shrink-0 text-ink-3" aria-hidden="true" />
         <Command.Input
           autoFocus
@@ -90,7 +90,7 @@ export function CommandPalette({
           className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
           {...(onQueryChange ? { value: query ?? "", onValueChange: onQueryChange } : {})}
         />
-        <span className="shrink-0 rounded-xs border border-line bg-surface-2 px-1.25 py-1 font-mono @max-[360px]/palette:hidden text-count text-ink-2">
+        <span className="shrink-0 rounded-xs border-divider bg-surface-2 px-1.25 py-1 font-mono @max-[360px]/palette:hidden text-count text-ink-2">
           {closeKeyLabel}
         </span>
       </div>

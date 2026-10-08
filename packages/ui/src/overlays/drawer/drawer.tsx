@@ -58,7 +58,7 @@ export function DrawerContent({
       <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto bg-float shadow-pop",
+          "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto surface-overlay shadow-overlay",
           className,
         )}
         onEscapeKeyDown={(event) => {

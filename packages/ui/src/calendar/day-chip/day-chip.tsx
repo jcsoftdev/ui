@@ -3,7 +3,7 @@ import type { CalendarMarker } from "../internal/types.js";
 
 const TONE: Record<NonNullable<CalendarMarker["tone"]>, string> = {
   danger: "bg-danger text-on-accent",
-  accent: "bg-accent-soft text-accent-ink shadow-[inset_0_0_0_1px_var(--accent-line)]",
+  accent: "bg-accent-soft text-accent-ink shadow-inset-accent",
 };
 
 export interface DayChipProps {

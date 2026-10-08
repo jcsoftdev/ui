@@ -25,8 +25,8 @@ export function Toaster({
       toastOptions={{
         classNames: {
           toast:
-            "rounded-pill! border-none! bg-toast-bg! text-toast-ink! shadow-pop! text-control! min-h-11! py-1.5! pr-2! pl-4!",
-          actionButton: "rounded-pill! bg-toast-ink/18! text-toast-ink! font-bold! h-8! px-3!",
+            "rounded-button! border-none! bg-toast-bg! text-toast-ink! shadow-overlay! text-control! min-h-11! py-1.5! pr-2! pl-4!",
+          actionButton: "rounded-button! bg-toast-ink/18! text-toast-ink! font-bold! h-8! px-3!",
         },
       }}
       {...props}

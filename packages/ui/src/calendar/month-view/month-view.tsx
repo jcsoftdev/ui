@@ -62,7 +62,7 @@ export function MonthView({
       {days.slice(0, 7).map((date) => (
         <div
           key={date}
-          className="min-w-0 truncate border-line border-b px-2.5 py-2 text-overline text-ink-3 @max-[40rem]/month:px-0.5 @max-[40rem]/month:text-center"
+          className="min-w-0 truncate border-b-divider px-2.5 py-2 text-overline text-ink-3 @max-[40rem]/month:px-0.5 @max-[40rem]/month:text-center"
         >
           {formatWeekday(date, locale)}
         </div>
@@ -90,7 +90,7 @@ export function MonthView({
             data-outside-month={outside || undefined}
             data-shaded={shaded.has(date) || undefined}
             className={cn(
-              "flex min-h-30 min-w-0 flex-col gap-0.75 border-line border-b border-l p-1.5 @max-[40rem]/month:min-h-16 @max-[40rem]/month:items-center @max-[40rem]/month:p-0.5",
+              "flex min-h-30 min-w-0 flex-col gap-0.75 border-b-divider border-l-divider p-1.5 @max-[40rem]/month:min-h-16 @max-[40rem]/month:items-center @max-[40rem]/month:p-0.5",
               shaded.has(date) && SHADED_DAY_CLASS,
               outside && "opacity-45",
             )}
@@ -138,7 +138,7 @@ export function MonthView({
                           : undefined
                     }
                     className={cn(
-                      "size-2 rounded-full p-0",
+                      "size-2 rounded-avatar p-0",
                       kind === "marker"
                         ? item.tone === "danger"
                           ? DOT_TONE.danger

@@ -68,7 +68,7 @@ export function DialogContent({
       <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog bg-float shadow-pop",
+          "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog surface-overlay shadow-overlay",
           widthClasses[width],
           className,
         )}
@@ -107,10 +107,7 @@ export function DialogContent({
 export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "flex items-center gap-2.5 border-b border-line py-3.5 pr-10 pl-4.5",
-        className,
-      )}
+      className={cn("flex items-center gap-2.5 border-b-divider py-3.5 pr-10 pl-4.5", className)}
       {...props}
     />
   );
@@ -136,7 +133,7 @@ export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElem
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-t border-line px-4.5 py-3",
+        "flex flex-wrap items-center gap-2 border-t-divider px-4.5 py-3",
         "@max-sm/dialog:flex-col-reverse @max-sm/dialog:items-stretch @max-sm/dialog:[&>*]:w-full",
         className,
       )}
