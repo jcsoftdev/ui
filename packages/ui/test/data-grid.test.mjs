@@ -219,3 +219,31 @@ test("a column never starts narrower than its header label", () => {
   const wide = { id: "cliente", header: "Cliente", width: 220 };
   assert.equal(model.defaultWidth(wide), 220);
 });
+
+test("fillColumnWidths gives the leftover to flexible columns, never shrinks, respects resized and max", () => {
+  const cols = [
+    { id: "a", header: "A", accessor: "a", width: 200 },
+    { id: "b", header: "B", accessor: "b", type: "number", width: 100 },
+    { id: "c", header: "C", accessor: "c", width: 200, grow: 3 },
+  ];
+  const base = Object.fromEntries(cols.map((c) => [c.id, model.defaultWidth(c)]));
+  const sum = (w) => Object.values(w).reduce((x, y) => x + y, 0);
+
+  const filled = model.fillColumnWidths(cols, base, 1000);
+  assert.equal(sum(filled), 1000);
+  assert.equal(filled.b, base.b);
+  assert.ok(filled.c - base.c > filled.a - base.a);
+
+  assert.deepEqual(model.fillColumnWidths(cols, base, 300), base);
+
+  const resized = model.fillColumnWidths(cols, { ...base, a: base.a + 37 }, 1000);
+  assert.equal(resized.a, base.a + 37);
+  assert.equal(sum(resized), 1000);
+
+  const capped = model.fillColumnWidths([{ ...cols[0], maxWidth: 250 }, cols[2]], base, 1000);
+  assert.equal(capped.a, 250);
+  assert.equal(capped.a + capped.c, 1000);
+
+  assert.deepEqual(model.fillColumnWidths([cols[1]], base, 1000), base);
+  assert.equal(sum(model.fillColumnWidths(cols, base, 1000, 44)), 956);
+});

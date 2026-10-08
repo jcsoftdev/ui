@@ -51,6 +51,11 @@ export interface DataGridColumn<T> {
   width?: number;
   minWidth?: number;
   maxWidth?: number;
+  /**
+   * Weight of the leftover width this column takes when the grid is wider than its columns.
+   * Text columns default to `1`, the rest to `0` (fixed); a user-resized column never grows.
+   */
+  grow?: number;
   align?: ColumnAlign;
   sortable?: boolean;
   filterable?: boolean;

@@ -457,6 +457,62 @@ export function clampWidth<T>(width: number, column: DataGridColumn<T>): number 
   return Math.round(Math.min(max, Math.max(min, width)));
 }
 
+/** Share of the leftover width a column takes: `grow`, else 1 for text columns and 0 for the rest. */
+export function growWeight<T>(column: DataGridColumn<T>): number {
+  if (column.grow !== undefined) return Math.max(0, column.grow);
+  return (column.type ?? "text") === "text" ? 1 : 0;
+}
+
+/**
+ * Widths that fill `available` pixels: when the columns add up to less (`reserved` is the width of
+ * fixed extras such as the selection column), the leftover goes to the flexible columns in
+ * proportion to `growWeight`. Nothing shrinks below the current width, a column stops at its
+ * `maxWidth`, and a column the user resized (width other than `defaultWidth`) keeps its width.
+ * Without flexible columns, or when the content is already wider, `widths` comes back unchanged.
+ */
+export function fillColumnWidths<T>(
+  columns: readonly DataGridColumn<T>[],
+  widths: Readonly<Record<string, number>>,
+  available: number,
+  reserved = 0,
+): Record<string, number> {
+  const result: Record<string, number> = { ...widths };
+  const widthOf = (column: DataGridColumn<T>) => widths[column.id] ?? defaultWidth(column);
+  let leftover = available - reserved - columns.reduce((sum, column) => sum + widthOf(column), 0);
+  let active = columns.filter(
+    (column) => growWeight(column) > 0 && widthOf(column) === defaultWidth(column),
+  );
+  if (leftover < 1 || active.length === 0) return result;
+
+  for (;;) {
+    const total = active.reduce((sum, column) => sum + growWeight(column), 0);
+    const capped = active.filter(
+      (column) =>
+        column.maxWidth !== undefined &&
+        widthOf(column) + (leftover * growWeight(column)) / total > column.maxWidth,
+    );
+    if (capped.length === 0) break;
+    for (const column of capped) {
+      const max = Math.max(widthOf(column), column.maxWidth as number);
+      leftover -= max - widthOf(column);
+      result[column.id] = max;
+    }
+    active = active.filter((column) => !capped.includes(column));
+    if (active.length === 0 || leftover < 1) return result;
+  }
+
+  const total = active.reduce((sum, column) => sum + growWeight(column), 0);
+  let given = 0;
+  for (const column of active) {
+    const share = Math.floor((leftover * growWeight(column)) / total);
+    result[column.id] = widthOf(column) + share;
+    given += share;
+  }
+  const last = active[active.length - 1] as DataGridColumn<T>;
+  result[last.id] = (result[last.id] ?? 0) + (Math.floor(leftover) - given);
+  return result;
+}
+
 /** Moves `id` one step (`delta` -1 / +1) in `order`. */
 export function moveColumn(order: readonly string[], id: string, delta: number): string[] {
   const index = order.indexOf(id);
