@@ -440,8 +440,15 @@ const DEFAULT_WIDTH: Record<string, number> = {
 export const MIN_COLUMN_WIDTH = 60;
 export const MAX_COLUMN_WIDTH = 640;
 
+/** Width the uppercase header label needs next to its sort and menu buttons. */
+export function headerFitWidth<T>(column: DataGridColumn<T>): number {
+  return Math.ceil(column.header.length * 8.6 + 64);
+}
+
+/** Starting width: the column's own or the type default, never narrower than its header. A user can still resize below it. */
 export function defaultWidth<T>(column: DataGridColumn<T>): number {
-  return clampWidth(column.width ?? DEFAULT_WIDTH[column.type ?? "text"] ?? 160, column);
+  const base = column.width ?? DEFAULT_WIDTH[column.type ?? "text"] ?? 160;
+  return clampWidth(Math.max(base, headerFitWidth(column)), column);
 }
 
 export function clampWidth<T>(width: number, column: DataGridColumn<T>): number {

@@ -212,3 +212,10 @@ test("reveal math scrolls the least needed, vertically and around pinned columns
   assert.equal(virtual.pageCount(0, 25), 1);
   assert.equal(virtual.pageCount(51, 25), 3);
 });
+
+test("a column never starts narrower than its header label", () => {
+  const narrow = { id: "barbero", header: "Barbero", width: 90 };
+  assert.ok(model.defaultWidth(narrow) >= model.headerFitWidth(narrow));
+  const wide = { id: "cliente", header: "Cliente", width: 220 };
+  assert.equal(model.defaultWidth(wide), 220);
+});
