@@ -19,7 +19,7 @@ export interface UseMapViewOptions {
   content: Bounds;
   /** Wheel, drag and pinch. Buttons and keyboard (`zoomBy`, `fit`) always work. */
   gestures: boolean;
-  /** "always": the wheel zooms; "modifier": only with Ctrl or Cmd held, so page scrolling is never trapped. */
+  /** "always": the wheel zooms; "modifier" (default): only with Ctrl or Cmd held, so page scrolling is never trapped. */
   wheelZoom?: "always" | "modifier";
   minZoom?: number;
   maxZoom?: number;
@@ -45,7 +45,7 @@ export function useMapView<E extends Element>({
   height,
   content,
   gestures,
-  wheelZoom = "always",
+  wheelZoom = "modifier",
   minZoom = DEFAULT_LIMITS.minZoom,
   maxZoom = DEFAULT_LIMITS.maxZoom,
   animate = true,

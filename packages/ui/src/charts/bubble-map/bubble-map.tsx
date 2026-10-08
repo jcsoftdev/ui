@@ -99,7 +99,7 @@ export function BubbleMap({
   legend = true,
   tooltip = true,
   zoomable = true,
-  wheelZoom = "always",
+  wheelZoom = "modifier",
   maxZoom = 16,
   animate = true,
   loading,

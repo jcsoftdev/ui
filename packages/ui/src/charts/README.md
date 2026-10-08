@@ -279,7 +279,7 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
 - Projections (`maps/geo/projection.ts`): `equirectangular`, `mercator` (clamped to 85.05 deg), `equalEarth`, and `fitted`
   (equirectangular with the standard parallel at the middle of the area, for a country). `fitProjection` scales any of
   them to the exact box of the chart, so a map fills its parent like every other chart (`height="fill"`, `aspectRatio`).
-- Zoom and pan: buttons, wheel (`wheelZoom="modifier"` needs Ctrl/Cmd so page scrolling is never trapped), drag,
+- Zoom and pan: buttons, wheel (by default `wheelZoom="modifier"` needs Ctrl/Cmd so page scrolling is never trapped), drag,
   two-finger pinch, keys `+` `-` `0` and Shift+arrows. The view is clamped to the map and resets when the box resizes.
 - Keyboard: one focusable `role="slider"` layer; arrows walk the regions (or visible bubbles), Enter fires the click
   callback, the tooltip follows the keyboard selection and the view pans to keep it visible. A hidden data table
