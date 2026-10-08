@@ -2,6 +2,7 @@
 export * from "./build-topology.js";
 export * from "./cluster.js";
 export * from "./geo-path.js";
+export * from "./globe.js";
 export * from "./match.js";
 export * from "./projection.js";
 export * from "./routes.js";

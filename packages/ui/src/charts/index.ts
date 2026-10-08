@@ -16,6 +16,7 @@ export * from "./fill-gauge-chart/index.js";
 export * from "./funnel-chart/index.js";
 export * from "./gantt-chart/index.js";
 export * from "./gauge-chart/index.js";
+export * from "./globe-chart/index.js";
 export * from "./heatmap-chart/index.js";
 export * from "./hex-tile-map/index.js";
 export * from "./hierarchy-morph/index.js";
