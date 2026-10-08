@@ -68,3 +68,14 @@ export const NewAppointment: Story = {
     </FormGrid>
   ),
 };
+
+export const Narrow: Story = {
+  render: Default.render,
+  decorators: [
+    (Story) => (
+      <div className="@container w-80 max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};

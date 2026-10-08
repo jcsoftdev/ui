@@ -25,11 +25,16 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className={cn("flex flex-col items-center gap-2 px-6 py-10 text-center", className)}
+      className={cn(
+        "@container/state flex min-w-0 flex-col items-center gap-2 px-4 py-8 text-center @min-[360px]/state:px-6 @min-[360px]/state:py-10",
+        className,
+      )}
     >
-      <p className="font-semibold text-[14px] text-ink">{message}</p>
+      <p className="max-w-full font-semibold text-[14px] text-ink [overflow-wrap:anywhere]">
+        {message}
+      </p>
       {correlationId ? (
-        <p className="text-[11.5px] text-ink-3 tabular-nums">
+        <p className="max-w-full text-[11.5px] text-ink-3 tabular-nums [overflow-wrap:anywhere]">
           {correlationLabel} {correlationId}
         </p>
       ) : null}

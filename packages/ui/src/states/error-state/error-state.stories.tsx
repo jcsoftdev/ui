@@ -29,3 +29,13 @@ export const Default: Story = {};
 export const WithoutRetry: Story = { args: { onRetry: undefined } };
 
 export const WithoutCorrelation: Story = { args: { correlationId: undefined } };
+
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="@container w-80 max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};

@@ -30,7 +30,7 @@ export function Chip({ tone = "neutral", square, className, ...props }: ChipProp
   return (
     <span
       className={cn(
-        "inline-flex h-6 items-center gap-1.5 whitespace-nowrap px-2.5 font-[650] text-[12px] leading-none [&_svg]:size-3",
+        "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-[12px] leading-none [&_svg]:size-3",
         square ? "rounded-chip" : "rounded-pill",
         toneClasses[tone],
         className,

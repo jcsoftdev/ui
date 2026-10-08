@@ -11,7 +11,7 @@ export interface StatusPillProps {
   className?: string;
 }
 
-/** Pill showing a status LED and its label; the label is hidden on narrow screens. */
+/** Pill showing a status LED and its label; the label is hidden when the surrounding container (e.g. the topbar) is narrow. */
 export function StatusPill({ status, label, onSelect, className }: StatusPillProps) {
   return (
     <button
@@ -24,7 +24,7 @@ export function StatusPill({ status, label, onSelect, className }: StatusPillPro
       )}
     >
       <Led status={status} label={label} />
-      <span aria-hidden="true" className="max-[900px]:hidden">
+      <span aria-hidden="true" className="@max-[700px]:hidden">
         {label}
       </span>
     </button>

@@ -40,10 +40,10 @@ export const ThreeSteps: Story = {
   },
 };
 
-export const NarrowWraps: Story = {
+export const Narrow: Story = {
   decorators: [
     (Story) => (
-      <div className="w-60">
+      <div className="@container w-80 max-w-full">
         <Story />
       </div>
     ),

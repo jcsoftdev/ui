@@ -14,11 +14,16 @@ export interface StepperProps {
 /** Step 1-N indicator for multi-stage flows. */
 export function Stepper({ steps, currentStepId, className }: StepperProps) {
   return (
-    <ol className={cn("flex flex-wrap items-center gap-1.5 text-meta text-ink-3", className)}>
+    <ol
+      className={cn(
+        "@container/stepper flex min-w-0 flex-wrap items-center gap-1.5 text-meta text-ink-3",
+        className,
+      )}
+    >
       {steps.map((step, index) => {
         const isCurrent = step.id === currentStepId;
         return (
-          <li key={step.id} className="flex items-center gap-1.5">
+          <li key={step.id} className="flex min-w-0 items-center gap-1.5">
             <span
               aria-current={isCurrent ? "step" : undefined}
               className={cn("flex items-center gap-1.5", isCurrent && "text-ink")}
@@ -31,10 +36,21 @@ export function Stepper({ steps, currentStepId, className }: StepperProps) {
               >
                 {index + 1}
               </span>
-              {step.label}
+              <span
+                className={cn(
+                  "min-w-0 truncate",
+                  !isCurrent && "@max-[420px]/stepper:sr-only",
+                  isCurrent && "@max-[420px]/stepper:max-w-[40cqw]",
+                )}
+              >
+                {step.label}
+              </span>
             </span>
             {index < steps.length - 1 && (
-              <span aria-hidden="true" className="h-px w-4.5 bg-line-strong" />
+              <span
+                aria-hidden="true"
+                className="h-px w-4.5 bg-line-strong @max-[420px]/stepper:w-2.5"
+              />
             )}
           </li>
         );

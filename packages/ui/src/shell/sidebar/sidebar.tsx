@@ -143,11 +143,11 @@ export function Sidebar({
                     children: (
                       <>
                         {item.icon}
-                        {item.label}
+                        <span className="min-w-0 truncate">{item.label}</span>
                         {item.badge !== undefined ? (
                           <span
                             className={cn(
-                              "ml-auto rounded-chip px-1.5 py-0.75 text-count",
+                              "ml-auto shrink-0 rounded-chip px-1.5 py-0.75 text-count",
                               badgeTone,
                             )}
                           >

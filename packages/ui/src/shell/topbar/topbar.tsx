@@ -14,7 +14,7 @@ export interface TopbarProps {
   breadcrumbs: string[];
   /** Accessible name of the breadcrumb landmark. */
   breadcrumbsLabel: string;
-  /** Menu button (<=900px) that opens the sidebar drawer. Omitted when not set. */
+  /** Menu button (shown at <=900px viewport width, matching the Sidebar drawer) that opens the sidebar drawer. Omitted when not set. */
   onOpenMenu?: () => void;
   menuLabel?: string;
   /** Ref to the menu button so the opener can restore focus when the drawer closes. */
@@ -65,57 +65,56 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-top-height items-center gap-2.5 border-line border-b bg-bg px-7 max-[900px]:px-4",
+        "@container/topbar sticky top-0 z-30 h-top-height border-line border-b bg-bg",
         className,
       )}
     >
-      {onOpenMenu ? (
-        <button
-          ref={menuButtonRef}
-          type="button"
-          aria-label={menuLabel}
-          onClick={onOpenMenu}
-          className="hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink max-[900px]:inline-flex"
-        >
-          <Menu className="size-5" aria-hidden="true" />
-        </button>
-      ) : null}
+      <div className="flex h-full min-w-0 items-center gap-2.5 px-4 @min-[640px]/topbar:px-7">
+        {onOpenMenu ? (
+          <button
+            ref={menuButtonRef}
+            type="button"
+            aria-label={menuLabel}
+            onClick={onOpenMenu}
+            className="hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink max-[900px]:inline-flex"
+          >
+            <Menu className="size-5" aria-hidden="true" />
+          </button>
+        ) : null}
 
-      <nav
-        aria-label={breadcrumbsLabel}
-        className="flex min-w-0 items-center gap-2 whitespace-nowrap text-ink-3 text-meta"
-      >
-        {previous.map((crumb) => (
-          <span key={crumb} className="flex items-center gap-2 max-[620px]:hidden">
-            <span>{crumb}</span>
-            <span aria-hidden="true" className="text-line-control">
-              /
+        <nav
+          aria-label={breadcrumbsLabel}
+          className="flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta"
+        >
+          {previous.map((crumb) => (
+            <span key={crumb} className="flex items-center gap-2 @max-[560px]/topbar:hidden">
+              <span>{crumb}</span>
+              <span aria-hidden="true" className="text-line-control">
+                /
+              </span>
             </span>
-          </span>
-        ))}
-        <strong
-          aria-current="page"
-          className="overflow-hidden text-ellipsis font-semibold text-ink"
+          ))}
+          <strong aria-current="page" className="min-w-0 truncate font-semibold text-ink">
+            {current}
+          </strong>
+        </nav>
+
+        <button
+          type="button"
+          aria-label={searchLabel}
+          onClick={onSearch}
+          className="ml-auto flex h-8.5 w-[min(320px,30cqw)] shrink-0 items-center gap-2 rounded-pill border border-line-control bg-surface pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0"
         >
-          {current}
-        </strong>
-      </nav>
+          <Search className="size-4 shrink-0" aria-hidden="true" />
+          <span className="truncate @max-[700px]/topbar:hidden">{searchPlaceholder}</span>
+          <span className="ml-auto rounded-xs border border-line bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden">
+            {shortcut}
+          </span>
+        </button>
 
-      <button
-        type="button"
-        aria-label={searchLabel}
-        onClick={onSearch}
-        className="ml-auto flex h-8.5 w-[min(320px,30vw)] shrink-0 items-center gap-2 rounded-pill border border-line-control bg-surface pr-2 pl-2.5 text-ink-3 text-meta max-[900px]:w-8.5 max-[900px]:justify-center max-[900px]:px-0"
-      >
-        <Search className="size-4 shrink-0" aria-hidden="true" />
-        <span className="truncate max-[900px]:hidden">{searchPlaceholder}</span>
-        <span className="ml-auto rounded-xs border border-line bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 max-[900px]:hidden">
-          {shortcut}
-        </span>
-      </button>
-
-      {actions}
-      {end}
+        {actions}
+        {end}
+      </div>
     </header>
   );
 }

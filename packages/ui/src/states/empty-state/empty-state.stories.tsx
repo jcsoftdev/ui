@@ -38,3 +38,13 @@ export const Inventory: Story = {
     action: <Button variant="secondary">Agregar producto</Button>,
   },
 };
+
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="@container w-80 max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};

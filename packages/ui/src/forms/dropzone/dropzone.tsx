@@ -89,7 +89,7 @@ export function Dropzone({
     // biome-ignore lint/a11y/noStaticElementInteractions: the browse button is the keyboard-accessible path; dragging is an extra shortcut
     <div
       className={cn(
-        "flex flex-col items-center gap-1.5 rounded-tile border-[1.5px] border-line-control border-dashed bg-surface-2 p-5.5 text-center text-ink-2",
+        "@container/dropzone flex min-w-0 flex-col items-center gap-1.5 rounded-tile border-[1.5px] border-line-control border-dashed bg-surface-2 p-3 text-center text-ink-2 @min-[360px]/dropzone:p-5.5",
         dragging && "border-accent-ink bg-accent-soft",
         className,
       )}
@@ -100,12 +100,14 @@ export function Dropzone({
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
     >
-      <Upload aria-hidden="true" className="size-5.5" />
-      <b className="text-control">{title}</b>
-      {hint ? <span className="text-meta text-ink-3">{hint}</span> : null}
+      <Upload aria-hidden="true" className="size-4.5 @min-[360px]/dropzone:size-5.5" />
+      <b className="max-w-full text-control [overflow-wrap:anywhere]">{title}</b>
+      {hint ? (
+        <span className="max-w-full text-meta text-ink-3 [overflow-wrap:anywhere]">{hint}</span>
+      ) : null}
       <button
         type="button"
-        className="mt-1 inline-flex h-control-height-sm items-center justify-center rounded-control border border-line-control bg-surface px-3 font-semibold text-chip-text hover:bg-surface-2"
+        className="mt-1 inline-flex h-control-height-sm max-w-full items-center justify-center rounded-control border border-line-control bg-surface px-3 font-semibold text-chip-text hover:bg-surface-2"
         onClick={() => inputRef.current?.click()}
       >
         {browseLabel}

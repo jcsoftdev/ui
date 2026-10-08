@@ -13,15 +13,28 @@ export interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn("flex flex-col items-center gap-2 px-6 py-12 text-center", className)}>
+    <div
+      className={cn(
+        "@container/empty flex min-w-0 flex-col items-center gap-2 px-4 py-8 text-center @min-[360px]/empty:px-6 @min-[360px]/empty:py-12",
+        className,
+      )}
+    >
       {icon ? (
         <span aria-hidden="true" className="text-ink-3">
           {icon}
         </span>
       ) : null}
-      <p className="font-semibold text-[14px] text-ink">{title}</p>
-      {description ? <p className="max-w-[42ch] text-[13px] text-ink-3">{description}</p> : null}
-      {action ? <div className="mt-2">{action}</div> : null}
+      <p className="max-w-full font-semibold text-[14px] text-ink [overflow-wrap:anywhere]">
+        {title}
+      </p>
+      {description ? (
+        <p className="max-w-[42ch] text-[13px] text-ink-3 [overflow-wrap:anywhere]">
+          {description}
+        </p>
+      ) : null}
+      {action ? (
+        <div className="mt-2 flex max-w-full flex-wrap justify-center gap-2">{action}</div>
+      ) : null}
     </div>
   );
 }

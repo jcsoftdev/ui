@@ -37,7 +37,7 @@ export function StatusDot({
   className,
 }: StatusDotProps) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5", className)}>
+    <span className={cn("inline-flex max-w-full items-center gap-1.5", className)}>
       <span
         aria-hidden="true"
         className={cn(
@@ -46,7 +46,7 @@ export function StatusDot({
           hollow ? "bg-transparent shadow-[inset_0_0_0_2px_var(--accent)]" : toneClasses[tone],
         )}
       />
-      <span className={showLabel ? undefined : "sr-only"}>{label}</span>
+      <span className={showLabel ? "min-w-0 truncate" : "sr-only"}>{label}</span>
     </span>
   );
 }

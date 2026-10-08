@@ -12,10 +12,17 @@ export function ForbiddenState({ title, reason, className }: ForbiddenStateProps
   return (
     <div
       role="alert"
-      className={cn("flex flex-col items-center gap-2 px-6 py-10 text-center", className)}
+      className={cn(
+        "@container/state flex min-w-0 flex-col items-center gap-2 px-4 py-8 text-center @min-[360px]/state:px-6 @min-[360px]/state:py-10",
+        className,
+      )}
     >
-      <p className="font-semibold text-[14px] text-ink">{title}</p>
-      {reason ? <p className="max-w-[42ch] text-[13px] text-ink-3">{reason}</p> : null}
+      <p className="max-w-full font-semibold text-[14px] text-ink [overflow-wrap:anywhere]">
+        {title}
+      </p>
+      {reason ? (
+        <p className="max-w-[42ch] text-[13px] text-ink-3 [overflow-wrap:anywhere]">{reason}</p>
+      ) : null}
     </div>
   );
 }

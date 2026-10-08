@@ -106,3 +106,13 @@ export const PanelLayout: Story = {
     );
   },
 };
+
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="@container w-80 max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};

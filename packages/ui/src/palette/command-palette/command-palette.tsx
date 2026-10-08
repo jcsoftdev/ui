@@ -78,24 +78,24 @@ export function CommandPalette({
       label={label}
       overlayClassName="fixed inset-0 z-50 bg-scrim"
       contentClassName={cn(
-        "fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,92vw)] -translate-x-1/2 flex-col overflow-hidden rounded-dialog bg-float shadow-pop",
+        "@container/palette fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,calc(100vw-1rem))] -translate-x-1/2 flex-col overflow-hidden rounded-dialog bg-float shadow-pop",
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 border-line border-b px-4 py-3.5">
-        <Search className="size-4.5 text-ink-3" aria-hidden="true" />
+      <div className="flex items-center gap-2.5 border-line border-b px-3 py-3 @min-[420px]/palette:px-4 @min-[420px]/palette:py-3.5">
+        <Search className="size-4.5 shrink-0 text-ink-3" aria-hidden="true" />
         <Command.Input
           autoFocus
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
+          className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
           {...(onQueryChange ? { value: query ?? "", onValueChange: onQueryChange } : {})}
         />
-        <span className="rounded-xs border border-line bg-surface-2 px-1.25 py-1 font-mono text-count text-ink-2">
+        <span className="shrink-0 rounded-xs border border-line bg-surface-2 px-1.25 py-1 font-mono @max-[360px]/palette:hidden text-count text-ink-2">
           {closeKeyLabel}
         </span>
       </div>
       <ResultCount format={formatResultCount} />
-      <Command.List className="overflow-y-auto p-2">
+      <Command.List className="overflow-y-auto p-1.5 @min-[420px]/palette:p-2">
         <Command.Empty className="p-4 text-center text-ink-3 text-meta">{emptyLabel}</Command.Empty>
         {groupItems(items).map(([group, groupItemsList]) => (
           <Command.Group
@@ -115,9 +115,11 @@ export function CommandPalette({
                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-control px-2.5 py-2 text-ink text-meta data-[selected=true]:bg-surface-2 [&_svg]:size-4 [&_svg]:text-ink-3"
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="min-w-0 truncate">{item.label}</span>
                 {item.hint ? (
-                  <span className="ml-auto text-ink-3 text-meta">{item.hint}</span>
+                  <span className="ml-auto max-w-[40%] shrink-0 truncate text-ink-3 text-meta @max-[360px]/palette:hidden">
+                    {item.hint}
+                  </span>
                 ) : null}
               </Command.Item>
             ))}

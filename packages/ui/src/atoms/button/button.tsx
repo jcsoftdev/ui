@@ -43,7 +43,7 @@ export function Button({
       aria-busy={loading ? "true" : undefined}
       disabled={disabled || loading}
       className={cn(
-        "inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-pill font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45",
+        "inline-flex max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-pill font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45",
         variantClasses[variant],
         sizeClasses[size],
         className,

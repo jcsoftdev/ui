@@ -42,8 +42,11 @@ export function PinInput({
   }
 
   return (
-    <div className={cn("flex flex-col items-center gap-3", className)}>
-      <div className="flex gap-3" aria-hidden="true">
+    <div className={cn("@container/pin flex min-w-0 flex-col items-center gap-3", className)}>
+      <div
+        className="flex max-w-full flex-wrap justify-center gap-2 @min-[240px]/pin:gap-3"
+        aria-hidden="true"
+      >
         {Array.from({ length }, (_, index) => (
           <i
             key={`digit-${
@@ -51,14 +54,14 @@ export function PinInput({
               index
             }`}
             className={cn(
-              "size-3.5 rounded-pill border-2 border-line-control",
+              "size-3 shrink-0 rounded-pill border-2 border-line-control @min-[240px]/pin:size-3.5",
               index < current.length && "border-ink bg-ink",
             )}
           />
         ))}
       </div>
       <input
-        className="h-input-height w-full min-w-0 rounded-control border border-line-control bg-surface px-3 text-center font-mono text-control text-ink tracking-[0.3em] focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1"
+        className="h-input-height w-full min-w-0 rounded-control border border-line-control bg-surface px-2 text-center font-mono text-control text-ink tracking-[0.15em] @min-[240px]/pin:px-3 @min-[240px]/pin:tracking-[0.3em] focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1"
         type="password"
         inputMode="numeric"
         maxLength={length}
