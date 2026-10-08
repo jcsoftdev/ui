@@ -20,7 +20,7 @@ export function TabsList({ className, ...props }: TabsListProps) {
   return (
     <TabsPrimitive.List
       className={cn(
-        "@container/tabs flex max-w-full gap-0.5 overflow-x-auto overscroll-x-contain border-b border-line px-2",
+        "@container/tabs flex max-w-full gap-0.5 overflow-x-auto overscroll-x-contain border-b-divider px-2",
         className,
       )}
       {...props}

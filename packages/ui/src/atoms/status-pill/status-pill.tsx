@@ -19,7 +19,7 @@ export function StatusPill({ status, label, onSelect, className }: StatusPillPro
       onClick={onSelect}
       disabled={!onSelect}
       className={cn(
-        "flex h-control-height-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-pill border border-line bg-surface px-2.5 font-semibold text-[12px] text-ink-2 hover:enabled:border-line-strong disabled:cursor-default",
+        "flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge border-divider bg-surface-control px-2.5 font-semibold text-[12px] text-ink-2 hover:enabled:border-line-strong disabled:cursor-default",
         className,
       )}
     >

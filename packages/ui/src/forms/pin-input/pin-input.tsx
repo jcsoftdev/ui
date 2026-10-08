@@ -61,7 +61,7 @@ export function PinInput({
         ))}
       </div>
       <input
-        className="h-input-height w-full min-w-0 rounded-control border border-line-control bg-surface px-2 text-center font-mono text-control text-ink tracking-[0.15em] @min-[240px]/pin:px-3 @min-[240px]/pin:tracking-[0.3em] focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1"
+        className="h-input w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-center font-mono text-control text-ink tracking-[0.15em] @min-[240px]/pin:px-3 @min-[240px]/pin:tracking-[0.3em] focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1"
         type="password"
         inputMode="numeric"
         maxLength={length}

@@ -31,7 +31,7 @@ export function Chip({ tone = "neutral", square, className, ...props }: ChipProp
     <span
       className={cn(
         "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-[12px] leading-none [&_svg]:size-3",
-        square ? "rounded-chip" : "rounded-pill",
+        square ? "rounded-chip" : "rounded-badge",
         toneClasses[tone],
         className,
       )}

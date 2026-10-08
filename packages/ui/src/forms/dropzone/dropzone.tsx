@@ -107,7 +107,7 @@ export function Dropzone({
       ) : null}
       <button
         type="button"
-        className="mt-1 inline-flex h-control-height-sm max-w-full items-center justify-center rounded-control border border-line-control bg-surface px-3 font-semibold text-chip-text hover:bg-surface-2"
+        className="mt-1 inline-flex h-control-sm max-w-full items-center justify-center rounded-input border-control bg-surface-control px-3 font-semibold text-chip-text hover:bg-surface-2"
         onClick={() => inputRef.current?.click()}
       >
         {browseLabel}

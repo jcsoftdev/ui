@@ -12,7 +12,7 @@ export function Segmented({ className, ...props }: SegmentedProps) {
     <ToggleGroupPrimitive.Root
       type="single"
       className={cn(
-        "inline-flex max-w-full overflow-x-auto rounded-pill bg-seg-track p-0.75",
+        "inline-flex max-w-full overflow-x-auto rounded-button bg-seg-track p-0.75",
         className,
       )}
       {...props}
@@ -27,7 +27,7 @@ export function SegmentedItem({ className, ...props }: SegmentedItemProps) {
   return (
     <ToggleGroupPrimitive.Item
       className={cn(
-        "inline-flex h-7.5 shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-pill px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",
+        "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-button px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",
         className,
       )}
       {...props}

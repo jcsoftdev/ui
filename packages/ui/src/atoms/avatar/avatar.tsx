@@ -36,7 +36,7 @@ export function Avatar({ name, src, size = "md", highlighted, className }: Avata
       role="img"
       aria-label={name}
       className={cn(
-        "inline-grid shrink-0 place-items-center overflow-hidden rounded-pill font-bold tracking-[.02em]",
+        "inline-grid shrink-0 place-items-center overflow-hidden rounded-avatar font-bold tracking-[.02em]",
         highlighted ? "bg-accent text-on-accent" : "bg-sunken text-ink-2",
         sizeClasses[size],
         className,

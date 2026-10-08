@@ -53,7 +53,7 @@ export function AccentPicker({
         <RadioGroupPrimitive.Item
           key={option.value}
           value={option.value}
-          className="flex items-center gap-2 rounded-control border border-line px-2.5 py-1.75 font-semibold text-chip-text text-ink data-[state=checked]:border-accent-ink data-[state=checked]:shadow-sel"
+          className="flex items-center gap-2 rounded-control border-divider px-2.5 py-1.75 font-semibold text-chip-text text-ink data-[state=checked]:border-accent-ink data-[state=checked]:shadow-selected"
         >
           <span
             aria-hidden="true"

@@ -42,7 +42,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-2 inline-flex h-control-height-sm cursor-pointer items-center rounded-control border border-line-control bg-surface px-3 font-semibold text-[13px] text-ink hover:bg-surface-2"
+          className="mt-2 inline-flex h-control-sm cursor-pointer items-center rounded-input border-control bg-surface-control px-3 font-semibold text-[13px] text-ink hover:bg-surface-2"
         >
           {retryLabel}
         </button>

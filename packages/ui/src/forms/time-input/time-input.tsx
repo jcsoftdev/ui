@@ -103,7 +103,7 @@ export function TimeInput({
       maxLength={5}
       placeholder={placeholder}
       className={cn(
-        "h-input-height w-full min-w-0 rounded-control border border-line-control bg-surface px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
+        "h-input w-full min-w-0 rounded-input border-control bg-surface-control px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
         className,
       )}
       {...props}

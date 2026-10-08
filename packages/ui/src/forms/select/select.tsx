@@ -13,7 +13,7 @@ export function Select({ className, children, ...props }: SelectProps) {
     <span className="relative flex w-full items-center">
       <select
         className={cn(
-          "h-input-height w-full min-w-0 appearance-none rounded-control border border-line-control bg-surface py-0 pr-7 pl-3 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
+          "h-input w-full min-w-0 appearance-none rounded-input border-control bg-surface-control py-0 pr-7 pl-3 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
           className,
         )}
         {...props}
