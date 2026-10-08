@@ -15,6 +15,11 @@ const idle = {
   active: false,
   collapsed: false,
   hasChildren: true,
+  descendants: 4,
+  showCount: false,
+  loading: false,
+  matched: false,
+  selected: false,
 };
 
 const meta = {
