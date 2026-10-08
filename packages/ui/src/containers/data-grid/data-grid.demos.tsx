@@ -364,11 +364,15 @@ function RequestLog({ entries, label }: { entries: ServerLogEntry[]; label: stri
 
 export function RemotePaginationDemo({ density, height }: DemoControls) {
   const [log, setLog] = useState<ServerLogEntry[]>([]);
+  const [offline, setOffline] = useState(false);
+  const offlineRef = useRef(false);
+  offlineRef.current = offline;
   const source = useMemo(
     () =>
       createFakeServer(citas5k, citaColumns, {
         latency: 650,
         onRequest: (entry) => setLog((previous) => [...previous, entry]),
+        fail: () => offlineRef.current,
       }),
     [],
   );
@@ -384,6 +388,15 @@ export function RemotePaginationDemo({ density, height }: DemoControls) {
         pageSize={20}
         defaultPinned={{ left: ["id"] }}
       />
+      <label className="flex items-center gap-2 text-[13px] text-ink">
+        <input
+          type="checkbox"
+          className="size-4 accent-accent"
+          checked={offline}
+          onChange={(event) => setOffline(event.target.checked)}
+        />
+        Simular servidor caído (las páginas nuevas fallan y se pueden reintentar)
+      </label>
       <RequestLog entries={log} label="Solicitudes al servidor simulado (650 ms)" />
     </Stack>
   );
