@@ -45,7 +45,7 @@ export interface MapRoute {
   color?: string;
 }
 
-interface ResolvedRoute {
+export interface ResolvedRoute {
   route: MapRoute;
   name: string;
   fromName: string;
@@ -54,7 +54,10 @@ interface ResolvedRoute {
   to: Position;
 }
 
-function resolveRoutes(routes: readonly MapRoute[], points: readonly MapPoint[]): ResolvedRoute[] {
+export function resolveRoutes(
+  routes: readonly MapRoute[],
+  points: readonly MapPoint[],
+): ResolvedRoute[] {
   const place = (end: MapRouteEnd): { position: Position; name: string } | null => {
     if (typeof end !== "string") {
       return {

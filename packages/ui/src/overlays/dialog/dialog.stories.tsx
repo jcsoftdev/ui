@@ -161,3 +161,41 @@ function ScopedDialog(args: React.ComponentProps<typeof DialogContent>) {
     </div>
   );
 }
+
+/**
+ * Verified: with `container` set to the element that carries `data-style`, the dialog card reads that
+ * preset (under `brutal` its radius is 0, with a 2 px ring and a hard offset shadow; under `soft` 20 px).
+ * Pick a preset to see it change; the page outside the wrapper keeps its own style.
+ */
+export const InScopedPreset: Story = {
+  parameters: { layout: "padded" },
+  render: (args) => {
+    const [host, setHost] = useState<HTMLElement | null>(null);
+    const [style, setStyle] = useState("brutal");
+    return (
+      <div className="flex flex-col gap-3">
+        <label className="flex items-center gap-2 text-ink-2 text-meta">
+          Preset del contenedor
+          <select
+            value={style}
+            onChange={(event) => setStyle(event.target.value)}
+            className="rounded-input border-control bg-surface-control px-2 py-1 text-ink"
+          >
+            {["soft", "bordered", "elevated", "flat", "glass", "brutal"].map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div ref={setHost} data-style={style} className="relative min-h-80 bg-bg p-6">
+          <Dialog defaultOpen>
+            <DialogContent {...args} container={host}>
+              <CancelBody />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+    );
+  },
+};

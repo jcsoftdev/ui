@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { ValueFormat } from "../format.js";
 import type { Curve } from "../path.js";
 import type { StackMode } from "../stack.js";
@@ -45,6 +46,36 @@ export interface CartesianPointEvent {
   category: XValue;
   seriesId: string;
   value: number | null;
+}
+
+/** What an overlay needs to draw in data units on top of a vertical cartesian plot. */
+export interface CartesianPlotInfo {
+  /** Plot box inside the chart container, in pixels. */
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  /** "index": x is a (fractional) index into `categories`; "time": x is epoch milliseconds. */
+  xKind: "index" | "time";
+  /** Data x to plot-relative pixels and back. */
+  toX: (value: number) => number;
+  fromX: (pixel: number) => number;
+  /** Primary value axis, data y to plot-relative pixels and back. */
+  toY: (value: number) => number;
+  fromY: (pixel: number) => number;
+  /** Text of a data x (the nearest category, or a date) and of a data y. */
+  formatX: (value: number) => string;
+  formatY: (value: number) => string;
+}
+
+/**
+ * Layers added to a vertical cartesian chart. `svg` renders inside the chart drawing (plot
+ * coordinates, so it is part of the SVG export); `html` renders over the plot, above the chart's
+ * own pointer layer, for tools that need pointer events.
+ */
+export interface CartesianOverlay {
+  svg?: (plot: CartesianPlotInfo) => ReactNode;
+  html?: (plot: CartesianPlotInfo) => ReactNode;
 }
 
 export interface CartesianChartProps {
@@ -111,6 +142,17 @@ export interface CartesianChartProps {
   onCategoryClick?: (index: number) => void;
   /** Drag-to-zoom on the plot plus an overview brush with a reset button. */
   brush?: boolean;
+  /**
+   * Controlled band selection (vertical charts): drag across the plot, or click one category, to select
+   * an inclusive range of category indices; clicking the only selected category clears it. Unlike `brush`
+   * it does not zoom: it reports the range so another chart or a grid can filter by it.
+   */
+  /** Extra layers over the plot, e.g. the ruler and ink tools of `useChartInk`. Vertical charts only. */
+  overlay?: CartesianOverlay;
+  rangeSelect?: {
+    value: readonly [number, number] | null;
+    onChange: (range: readonly [number, number] | null) => void;
+  };
   loading?: boolean;
   /** Entry animation (default true; always off with prefers-reduced-motion). */
   animate?: boolean;
