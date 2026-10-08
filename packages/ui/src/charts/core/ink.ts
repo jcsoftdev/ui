@@ -190,6 +190,54 @@ export function createAxisMap(pixels: readonly number[], values: readonly number
   };
 }
 
+/**
+ * Conversions of a plot. On a vertical chart `toX` / `fromX` map the category (or time) axis to pixels
+ * along x and `toY` / `fromY` the value axis along y. On a horizontal bar chart the categories run
+ * top to bottom: `toX` / `fromX` still map the category axis (now to pixels along y) and `toY` / `fromY`
+ * the value axis (now to pixels along x). A data point is always `{ x: category, y: value }`.
+ */
+export interface PlotAxes {
+  horizontal?: boolean;
+  width: number;
+  height: number;
+  xKind: "index" | "time";
+  toX: (value: number) => number;
+  fromX: (pixel: number) => number;
+  toY: (value: number) => number;
+  fromY: (pixel: number) => number;
+}
+
+/** Plot-relative pixel of a data point, whichever way the plot is laid out. */
+export function plotToPixel(plot: PlotAxes, point: DataPoint): PixelPoint {
+  return plot.horizontal
+    ? { x: plot.toY(point.y), y: plot.toX(point.x) }
+    : { x: plot.toX(point.x), y: plot.toY(point.y) };
+}
+
+/** Data point under a plot-relative pixel, clamped to the plot box. */
+export function pixelToPlot(plot: PlotAxes, pixel: PixelPoint): DataPoint {
+  const px = Math.min(plot.width, Math.max(0, pixel.x));
+  const py = Math.min(plot.height, Math.max(0, pixel.y));
+  return plot.horizontal
+    ? { x: plot.fromX(py), y: plot.fromY(px) }
+    : { x: plot.fromX(px), y: plot.fromY(py) };
+}
+
+/** Visible data window of a plot, for the keyboard cursor. */
+export function plotDomain(plot: PlotAxes): CursorDomain {
+  return plot.horizontal
+    ? {
+        x: [plot.fromX(0), plot.fromX(plot.height)],
+        y: [plot.fromY(0), plot.fromY(plot.width)],
+        xKind: plot.xKind,
+      }
+    : {
+        x: [plot.fromX(0), plot.fromX(plot.width)],
+        y: [plot.fromY(plot.height), plot.fromY(0)],
+        xKind: plot.xKind,
+      };
+}
+
 export type CursorKey = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown";
 
 /** Visible data window of a plot, which the keyboard cursor moves inside. */
@@ -215,17 +263,27 @@ export function startCursor(domain: CursorDomain): DataPoint {
 /**
  * One arrow-key step of the crosshair in data units: a category on index axes (a fiftieth of the
  * window on time axes) and a fiftieth of the value window vertically; `big` moves five times as far.
- * It never leaves the window.
+ * It never leaves the window. On a horizontal plot (`horizontal`) left and right move the value and
+ * up and down the category (down is the next one, as the categories run top to bottom).
  */
 export function moveCursor(
   cursor: DataPoint,
   key: CursorKey,
   big: boolean,
   domain: CursorDomain,
+  horizontal = false,
 ): DataPoint {
   const factor = big ? 5 : 1;
   const xStep = domain.xKind === "index" ? 1 : Math.abs(domain.x[1] - domain.x[0]) / 50;
   const yStep = Math.abs(domain.y[1] - domain.y[0]) / 50;
+  if (horizontal) {
+    const sideways = key === "ArrowLeft" || key === "ArrowRight";
+    const forward = key === "ArrowRight" || key === "ArrowDown";
+    const sign = forward ? 1 : -1;
+    return sideways
+      ? { ...cursor, y: clampTo(cursor.y + sign * yStep * factor, domain.y) }
+      : { ...cursor, x: clampTo(cursor.x + sign * xStep * factor, domain.x) };
+  }
   const sign = key === "ArrowRight" || key === "ArrowUp" ? 1 : -1;
   if (key === "ArrowLeft" || key === "ArrowRight") {
     return { ...cursor, x: clampTo(cursor.x + sign * xStep * factor, domain.x) };

@@ -62,3 +62,60 @@ test("pen: space adds vertices, enter finishes with the cursor as the last one",
   assert.equal(lib.cursorAction("ink", "Enter", [], a).type, "pending");
   assert.equal(lib.cursorAction("ink", "Escape", [a, b], c).type, "cancel");
 });
+
+// Horizontal bars: categories run top to bottom (y pixels), values left to right (x pixels).
+const hbars = {
+  horizontal: true,
+  width: 400,
+  height: 200,
+  xKind: "index",
+  // 4 categories, band centers at 25, 75, 125, 175 px
+  toX: (value) => 25 + value * 50,
+  fromX: (pixel) => (pixel - 25) / 50,
+  // values 0..100 across 400 px
+  toY: (value) => value * 4,
+  fromY: (pixel) => pixel / 4,
+};
+
+test("horizontal plot: a data point maps to x by value and y by category, and back", () => {
+  const pixel = lib.plotToPixel(hbars, { x: 2, y: 50 });
+  assert.deepEqual(pixel, { x: 200, y: 125 });
+  assert.deepEqual(lib.pixelToPlot(hbars, pixel), { x: 2, y: 50 });
+  assert.deepEqual(lib.pixelToPlot(hbars, { x: 999, y: -20 }), { x: -0.5, y: 100 });
+  const vertical = { ...hbars, horizontal: false, width: 200, height: 400 };
+  const flipped = {
+    ...vertical,
+    toX: (value) => value * 50,
+    fromX: (pixel) => pixel / 50,
+    toY: (value) => 400 - value * 4,
+    fromY: (pixel) => (400 - pixel) / 4,
+  };
+  assert.deepEqual(lib.plotToPixel(flipped, { x: 2, y: 50 }), { x: 100, y: 200 });
+});
+
+test("horizontal plot: the cursor window spans categories on x and values on y", () => {
+  const domain = lib.plotDomain(hbars);
+  assert.deepEqual(domain.x, [-0.5, 3.5]);
+  assert.deepEqual(domain.y, [0, 100]);
+  assert.deepEqual(lib.startCursor(domain), { x: 2, y: 50 });
+});
+
+test("horizontal plot: left and right move the value, up and down the category", () => {
+  const domain = lib.plotDomain(hbars);
+  const at = { x: 1, y: 50 };
+  assert.equal(lib.moveCursor(at, "ArrowRight", false, domain, true).y, 52);
+  assert.equal(lib.moveCursor(at, "ArrowLeft", true, domain, true).y, 40);
+  assert.equal(lib.moveCursor(at, "ArrowDown", false, domain, true).x, 2);
+  assert.equal(lib.moveCursor(at, "ArrowUp", false, domain, true).x, 0);
+  assert.equal(lib.moveCursor({ x: 3, y: 100 }, "ArrowRight", true, domain, true).y, 100);
+  assert.equal(lib.moveCursor({ x: 3, y: 100 }, "ArrowDown", true, domain, true).x, 3.5);
+});
+
+test("horizontal ruler: the value change is in value units, the distance in categories", () => {
+  const a = lib.pixelToPlot(hbars, { x: 80, y: 25 });
+  const b = lib.pixelToPlot(hbars, { x: 280, y: 125 });
+  const measure = lib.measureSegment(a, b);
+  assert.equal(measure.dy, 50);
+  assert.equal(measure.dx, 2);
+  assert.equal(measure.percent, 250);
+});

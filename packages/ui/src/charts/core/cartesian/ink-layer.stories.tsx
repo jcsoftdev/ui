@@ -21,13 +21,15 @@ const spanish: Partial<InkLabels> = {
   redo: "Rehacer",
   clear: "Borrar todo",
   steps: (count) => `${count} ${count === 1 ? "barbero" : "barberos"}`,
+  deltaValue: "Δ cortes",
+  deltaCategory: "Δ barberos",
   plot: "Gráfico de anotación: las flechas mueven la mira, Mayús va más rápido, Espacio fija un punto, Intro termina, Escape cancela",
   position: (x, y) => `${x}, ${y}`,
   pending: (count) => `${count} ${count === 1 ? "punto fijado" : "puntos fijados"}`,
   finished: "Trazo terminado",
 };
 
-type Kind = "line" | "bars" | "dense";
+type Kind = "line" | "bars" | "hbars" | "dense";
 
 const hours = Array.from({ length: 4000 }, (_, i) => new Date(2026, 5, 1, i));
 const traffic = hours.map((_, i) =>
@@ -79,6 +81,7 @@ function InkDemo({ kind, tool }: { kind: Kind; tool?: "ruler" | "ink" }) {
           title="Cortes por barbero"
           categories={barbers}
           series={[{ id: "cortes", name: "Cortes", data: cuts }]}
+          orientation={kind === "hbars" ? "horizontal" : "vertical"}
           height={300}
           overlay={ink.overlay}
           legend={false}
@@ -122,6 +125,16 @@ export const Default: Story = {
 export const OnBars: Story = {
   args: { ink: placeholder },
   render: () => <InkDemo kind="bars" tool="ink" />,
+};
+
+/**
+ * Barras horizontales (barberos en el eje vertical, cortes en el horizontal): la regla mide Δ cortes
+ * en unidades de valor sobre el eje X y Δ barberos sobre el Y. Con teclado, izquierda y derecha mueven
+ * el valor; arriba y abajo cambian de barbero.
+ */
+export const OnHorizontalBars: Story = {
+  args: { ink: placeholder },
+  render: () => <InkDemo kind="hbars" tool="ruler" />,
 };
 
 /** 320 px: la barra de herramientas se parte en filas y el gráfico llena el ancho. */

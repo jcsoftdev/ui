@@ -585,7 +585,11 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
   category or a fiftieth of the time window; Shift five times as far), Space or Enter sets a point (ruler: two
   points; pen: Space adds vertices, Enter finishes), Escape cancels. The position is the slider's value text and the
   last measurement is announced in a live region. Downsampled series map x through the original sample indices (and
-  real times), so measures are in data units, not samples. Horizontal bars are not supported. Math in `core/ink.ts`,
+  real times), so measures are in data units, not samples. Horizontal bars (`orientation="horizontal"`) work too: the
+  plot info carries `horizontal: true` (`toX`/`fromX` stay the category axis, now along y; `toY`/`fromY` the value axis,
+  now along x), the ruler reports Δ value in value units plus the distance in categories (`deltaValue`,
+  `deltaCategory` labels), and the arrows move the value left/right and the category up/down. `plotToPixel`,
+  `pixelToPlot` and `plotDomain` in `core/ink.ts` convert for either layout. Math in `core/ink.ts`,
   tests in `test/ink-parity.test.mjs` and `test/ink-keyboard.test.mjs`.
 - `Scrolly` / `ScrollyStep` (`containers/scrolly/`): steps scroll while a sticky `graphic({ step, previous,
   reducedMotion })` follows the one crossing the trigger line (`offset`, default the middle; `root` for an inner scroll

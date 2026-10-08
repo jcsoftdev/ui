@@ -23,6 +23,9 @@ import {
   type Measure,
   measureSegment,
   moveCursor,
+  pixelToPlot,
+  plotDomain,
+  plotToPixel,
   signed,
   startCursor,
 } from "../ink.js";
@@ -40,6 +43,9 @@ export interface InkLabels {
   clear: string;
   deltaX: string;
   deltaY: string;
+  /** Horizontal bars: change of the value (read along x) and distance between categories. */
+  deltaValue: string;
+  deltaCategory: string;
   /** Distance along a category axis, e.g. "3 steps". */
   steps: (count: number) => string;
   /** Accessible name of the plot while a tool is active (keyboard use). */
@@ -61,6 +67,8 @@ export const DEFAULT_INK_LABELS: InkLabels = {
   clear: "Clear",
   deltaX: "Δx",
   deltaY: "Δy",
+  deltaValue: "Δ value",
+  deltaCategory: "Δ category",
   steps: (count) => `${count} ${count === 1 ? "step" : "steps"}`,
   plot: "Annotation plot: arrows move the crosshair, Shift moves faster, Space sets a point, Enter finishes, Escape cancels",
   position: (x, y) => `${x}, ${y}`,
@@ -89,7 +97,7 @@ export interface ChartInk {
   labels: InkLabels;
   /** Spoken description of the last ruler. */
   status: string;
-  /** Pass to a vertical cartesian chart: `<LineChart overlay={ink.overlay} />`. */
+  /** Pass to a cartesian chart (vertical or horizontal bars): `<LineChart overlay={ink.overlay} />`. */
   overlay: CartesianOverlay;
 }
 
@@ -101,6 +109,9 @@ function describe(measure: Measure, plot: CartesianPlotInfo, labels: InkLabels):
   const dy = signed(measure.dy, plot.formatY);
   const percent =
     measure.percent == null ? "" : ` (${signed(measure.percent, (v) => `${round(v)} %`)})`;
+  if (plot.horizontal) {
+    return `${labels.deltaValue} ${dy}${percent} · ${labels.deltaCategory} ${dx}`;
+  }
   return `${labels.deltaX} ${dx} · ${labels.deltaY} ${dy}${percent}`;
 }
 
@@ -134,11 +145,7 @@ export function useChartInk({
       return [{ kind: "stroke", id: -1, color, points: [...points, at] }];
     };
 
-    const domainOf = (plot: CartesianPlotInfo): CursorDomain => ({
-      x: [plot.fromX(0), plot.fromX(plot.width)],
-      y: [plot.fromY(plot.height), plot.fromY(0)],
-      xKind: plot.xKind,
-    });
+    const domainOf = (plot: CartesianPlotInfo): CursorDomain => plotDomain(plot);
     const reset = () => {
       setCursor(null);
       setPlaced([]);
@@ -150,7 +157,13 @@ export function useChartInk({
       if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown") {
         event.preventDefault();
         setCursor((current) =>
-          moveCursor(current ?? startCursor(domain), key as CursorKey, event.shiftKey, domain),
+          moveCursor(
+            current ?? startCursor(domain),
+            key as CursorKey,
+            event.shiftKey,
+            domain,
+            plot.horizontal,
+          ),
         );
         return;
       }
@@ -185,9 +198,7 @@ export function useChartInk({
     };
     const pointOf = (event: PointerEvent<HTMLDivElement>, plot: CartesianPlotInfo): DataPoint => {
       const rect = event.currentTarget.getBoundingClientRect();
-      const px = Math.min(plot.width, Math.max(0, event.clientX - rect.left));
-      const py = Math.min(plot.height, Math.max(0, event.clientY - rect.top));
-      return { x: plot.fromX(px), y: plot.fromY(py) };
+      return pixelToPlot(plot, { x: event.clientX - rect.left, y: event.clientY - rect.top });
     };
     return {
       svg: (plot) => (
@@ -203,7 +214,7 @@ export function useChartInk({
               item.kind === "stroke" ? (
                 <path
                   key={item.id}
-                  d={inkPath(item.points.map((p) => ({ x: plot.toX(p.x), y: plot.toY(p.y) })))}
+                  d={inkPath(item.points.map((p) => plotToPixel(plot, p)))}
                   strokeWidth={2.5}
                   style={{ stroke: item.color }}
                 />
@@ -284,10 +295,9 @@ export function useChartInk({
               setDraft(null);
               if (!done) return;
               if (done.kind === "ruler") {
-                const length = Math.hypot(
-                  plot.toX(done.b.x) - plot.toX(done.a.x),
-                  plot.toY(done.b.y) - plot.toY(done.a.y),
-                );
+                const from = plotToPixel(plot, done.a);
+                const to = plotToPixel(plot, done.b);
+                const length = Math.hypot(to.x - from.x, to.y - from.y);
                 if (length < 4) return;
                 setStatus(describe(measureSegment(done.a, done.b), plot, labels));
               }
@@ -326,8 +336,7 @@ export function useChartInk({
 }
 
 function Crosshair({ at, plot }: { at: DataPoint; plot: CartesianPlotInfo }) {
-  const x = plot.toX(at.x);
-  const y = plot.toY(at.y);
+  const { x, y } = plotToPixel(plot, at);
   return (
     <g data-crosshair="" strokeWidth={1} style={{ stroke: "var(--ink-2)" }}>
       <path d={`M${x},0V${plot.height}M0,${y}H${plot.width}`} strokeDasharray="2 3" />
@@ -347,10 +356,8 @@ function Ruler({
   plot: CartesianPlotInfo;
   text: string;
 }) {
-  const ax = plot.toX(a.x);
-  const ay = plot.toY(a.y);
-  const bx = plot.toX(b.x);
-  const by = plot.toY(b.y);
+  const { x: ax, y: ay } = plotToPixel(plot, a);
+  const { x: bx, y: by } = plotToPixel(plot, b);
   const width = text.length * 6.7 + 16;
   const height = 22;
   const x = Math.min(Math.max(0, (ax + bx) / 2 - width / 2), Math.max(0, plot.width - width));
