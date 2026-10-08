@@ -12,6 +12,8 @@ export * from "./chart-states.js";
 export * from "./color-scale.js";
 export * from "./data-table.js";
 export * from "./distribution/index.js";
+export * from "./export.js";
+export * from "./export-menu.js";
 export * from "./format.js";
 export * from "./gantt.js";
 export * from "./hierarchy.js";

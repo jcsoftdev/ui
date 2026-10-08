@@ -12,7 +12,7 @@ export const HOUR_MS = 3_600_000;
 export const DAY_MS = 86_400_000;
 
 export type CalendarUnit = "hour" | "day" | "week" | "month" | "quarter" | "year";
-export type GanttZoom = "hour" | "day" | "week" | "month" | "quarter";
+export type GanttZoom = "hour" | "day" | "week" | "month" | "quarter" | "year";
 
 export interface GanttZoomLevel {
   /** Pixels per day before stretching to fill the pane. */
@@ -69,9 +69,24 @@ export const GANTT_ZOOMS: Record<GanttZoom, GanttZoomLevel> = {
     snap: DAY_MS,
     shadeNonWorking: false,
   },
+  year: {
+    pxPerDay: 0.55,
+    top: "year",
+    bottom: "quarter",
+    pad: "year",
+    snap: DAY_MS,
+    shadeNonWorking: false,
+  },
 };
 
-export const GANTT_ZOOM_ORDER: readonly GanttZoom[] = ["hour", "day", "week", "month", "quarter"];
+export const GANTT_ZOOM_ORDER: readonly GanttZoom[] = [
+  "hour",
+  "day",
+  "week",
+  "month",
+  "quarter",
+  "year",
+];
 
 /** Start of the calendar unit holding `time`, in local time. Weeks start on Monday. */
 export function startOf(time: number, unit: CalendarUnit): number {
@@ -311,6 +326,8 @@ export interface GanttTaskLike {
   start: Date | number;
   end: Date | number;
   progress?: number;
+  /** Predecessors (finish-to-start). */
+  dependencies?: readonly string[];
 }
 
 export interface GanttRow<T extends GanttTaskLike = GanttTaskLike> {
@@ -403,4 +420,111 @@ export function ganttRows<T extends GanttTaskLike>(
 
 function clamp01(value: number): number {
   return Math.min(1, Math.max(0, value));
+}
+
+export interface CriticalPath {
+  /** Leaf tasks with no slack: delaying any of them delays the project end. */
+  tasks: Set<string>;
+  /** Dependency links `"from>to"` between critical tasks that are tight (no waiting). */
+  links: Set<string>;
+  /** Slack of every scheduled leaf task, in milliseconds. */
+  slack: Map<string, number>;
+  /** Earliest finish of the whole plan. */
+  end: number;
+}
+
+/**
+ * Critical path method over finish-to-start dependencies. Each leaf task keeps
+ * its duration and cannot start before its own start date or before every
+ * predecessor ends (a dependency on a parent means all of its leaves). A forward
+ * pass finds the earliest dates and the project end, a backward pass the latest
+ * ones; tasks whose slack is within `tolerance` form the critical path. Tasks
+ * caught in a dependency cycle are left out.
+ */
+export function criticalPath(tasks: readonly GanttTaskLike[], tolerance = 60_000): CriticalPath {
+  const rows = ganttRows(tasks);
+  const leaves = rows.filter((row) => !row.parent);
+  const leafIds = new Set(leaves.map((row) => row.task.id));
+  const parentOf = new Map(tasks.map((task) => [task.id, task.parentId]));
+  const under = new Map<string, string[]>();
+  for (const leaf of leaves) {
+    for (let id = parentOf.get(leaf.task.id), hops = 0; id && hops < 32; hops += 1) {
+      const list = under.get(id);
+      if (list) list.push(leaf.task.id);
+      else under.set(id, [leaf.task.id]);
+      id = parentOf.get(id);
+    }
+  }
+
+  const preds = new Map<string, Set<string>>();
+  const succs = new Map<string, Set<string>>();
+  for (const leaf of leaves) {
+    preds.set(leaf.task.id, new Set());
+    succs.set(leaf.task.id, new Set());
+  }
+  for (const leaf of leaves) {
+    for (const dep of leaf.task.dependencies ?? []) {
+      const sources = leafIds.has(dep) ? [dep] : (under.get(dep) ?? []);
+      for (const source of sources) {
+        if (source === leaf.task.id) continue;
+        preds.get(leaf.task.id)?.add(source);
+        succs.get(source)?.add(leaf.task.id);
+      }
+    }
+  }
+
+  const info = new Map(leaves.map((row) => [row.task.id, row]));
+  const indegree = new Map([...preds].map(([id, set]) => [id, set.size]));
+  const order: string[] = [];
+  const queue = [...indegree].filter(([, count]) => count === 0).map(([id]) => id);
+  while (queue.length > 0) {
+    const id = queue.shift() as string;
+    order.push(id);
+    for (const next of succs.get(id) ?? []) {
+      const left = (indegree.get(next) ?? 0) - 1;
+      indegree.set(next, left);
+      if (left === 0) queue.push(next);
+    }
+  }
+
+  const duration = (id: string) => {
+    const row = info.get(id) as GanttRow;
+    return Math.max(0, row.end - row.start);
+  };
+  const earliestStart = new Map<string, number>();
+  const earliestFinish = new Map<string, number>();
+  let end = Number.NEGATIVE_INFINITY;
+  for (const id of order) {
+    let start = (info.get(id) as GanttRow).start;
+    for (const pred of preds.get(id) ?? []) start = Math.max(start, earliestFinish.get(pred) ?? 0);
+    earliestStart.set(id, start);
+    earliestFinish.set(id, start + duration(id));
+    end = Math.max(end, start + duration(id));
+  }
+
+  const latestFinish = new Map<string, number>();
+  const slack = new Map<string, number>();
+  for (let i = order.length - 1; i >= 0; i -= 1) {
+    const id = order[i] as string;
+    let finish = end;
+    for (const next of succs.get(id) ?? []) {
+      finish = Math.min(finish, (latestFinish.get(next) ?? end) - duration(next));
+    }
+    latestFinish.set(id, finish);
+    slack.set(id, finish - (earliestFinish.get(id) as number));
+  }
+
+  const critical = new Set(order.filter((id) => (slack.get(id) as number) <= tolerance));
+  const links = new Set<string>();
+  for (const id of critical) {
+    for (const pred of preds.get(id) ?? []) {
+      if (
+        critical.has(pred) &&
+        (earliestFinish.get(pred) as number) + tolerance >= (earliestStart.get(id) as number)
+      ) {
+        links.add(`${pred}>${id}`);
+      }
+    }
+  }
+  return { tasks: critical, links, slack, end: order.length > 0 ? end : 0 };
 }

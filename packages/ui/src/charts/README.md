@@ -116,6 +116,7 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `gantt.ts` | `GANTT_ZOOMS` (hour / day / week / month / quarter: px per day, header units, snap), `startOf` / `addUnits` (local calendar, weeks start Monday), `ganttDomain`, `ganttScale(domain, zoom, minWidth)` (stretches to fill the pane), `ganttHeader` / `headerCells`, `nonWorkingSpans(domain, workingDays, holidays)`, `snapTime`, `routeDependency` (finish-to-start, right angles, wraps back through the row gutter when the successor starts too early), `roundedPolyline`, `ganttRows(tasks, collapsed)` (depth-first rows, parents roll up dates and duration-weighted progress). Tested in `test/charts-gantt-stock.test.mjs`. |
 | `tree-layout.ts` | Pure, tested in `test/charts-graph.test.mjs`: `treeLayout(root, { direction, siblingGap, levelGap })` (contour packing in the Reingold–Tilford / Walker family: parents centred over children, siblings packed from both ends and averaged so small subtrees spread evenly, one depth band per level), `treeEdgePath` (`curved` / `step` with rounded elbows / `straight`), `treePathToRoot`, `treeKeyMove` (arrow key to parent/child/sibling for each direction), `treeNeighbor`. |
 | `sankey.ts` | Pure, tested in `test/charts-graph.test.mjs`: `sankeyLayout(nodes, links, { width, height, nodeWidth, nodePadding, iterations, align })` (columns by longest path, `justify` sinks, shared scale `ky`, relaxation sweeps with collision resolution, links ordered by the other end), `breakCycles` (weighted Eades–Lin–Smyth order; backward links are reported in `removed` with a reason), `sankeyLinkPath`, `sankeyFlowOf` (everything upstream and downstream of a node). |
+| `export.ts` / `export-menu.tsx` | `serializeSvg(svg \| svg[])` clones the drawing(s), bakes computed paint (CSS variables, Tailwind classes) into inline style and stacks them vertically; `downloadSvg`, `downloadPng` (canvas, 2x), `exportFileName`, `stackLayout`; `ExportMenu` is the two-button group used by Gantt and Sankey. Browser only, no dependencies. |
 | `use-pan-zoom.ts` | `usePanZoom({ minZoom, maxZoom, wheel })`: drag to pan (capture starts after a few pixels so clicks still work), two-pointer pinch, wheel zoom with Ctrl/⌘ by default, `zoomBy`, `wasDrag()`; pure `zoomAround` and `fitView`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
@@ -249,6 +250,13 @@ Every chart adapts to its exact parent, width and height, from the container and
   Alt+arrows move by the zoom snap, Shift+arrows change the end, `+`/`-` change progress by 10%. Edits are controlled:
   the chart reports them and shows the dragged draft until `tasks` changes. Late links (successor starts before the
   predecessor ends) use the danger token. Default height follows the rows (220-560 px); `"fill"` scrolls rows inside.
+- Gantt extras: `showCriticalPath` runs `criticalPath(tasks)` (forward/backward pass over finish-to-start
+  dependencies; a task cannot start before its own date or before its predecessors end; a dependency on a parent
+  means all its leaves; cycles are left out) and draws zero-slack tasks and their tight links in the danger tone,
+  with the slack of the others in the tooltip. `showBaselines` draws `task.baseline` as a thin bar under the
+  actual one and adds baseline and variance to the tooltip. `annotations` are dated lines or bands (`to`) with a
+  label, stacked into lanes so labels never overlap. `zoom="year"` shows a whole year (quarters in the header).
+  `exportable` adds SVG and PNG buttons that export the header and the timeline (`core/export.ts`).
 - Stock: indicators run on the whole series and are sliced to the window, so the warm-up never shows inside the view;
   VWAP is anchored at the first visible bar. Visible comparisons switch the chart to % change from the first visible
   bar (the main series becomes a line, overlays hide, the type switch is disabled). The price and oscillator panes

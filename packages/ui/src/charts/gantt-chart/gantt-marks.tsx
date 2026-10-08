@@ -31,6 +31,19 @@ export interface GanttTask {
   color?: string;
   /** Extra line in the tooltip and the table, e.g. who does the work. */
   assignee?: string;
+  /** The planned dates; with `showBaselines` a thin bar under the bar shows the plan against the actual. */
+  baseline?: { start: Date | number; end: Date | number };
+}
+
+/** A date line, or a band when `to` is set, with a label. */
+export interface GanttAnnotation {
+  id: string;
+  at: Date | number;
+  /** End of a band; omit for a line. */
+  to?: Date | number;
+  label: string;
+  /** CSS color, the warning tone by default. */
+  color?: string;
 }
 
 export type Row = GanttRow<GanttTask>;
@@ -75,7 +88,13 @@ export const TimelineHeader = memo(function TimelineHeader({
   todayLabel: string;
 }) {
   return (
-    <svg aria-hidden="true" width={width} height={HEADER_HEIGHT} className="block">
+    <svg
+      aria-hidden="true"
+      data-export-part=""
+      width={width}
+      height={HEADER_HEIGHT}
+      className="block"
+    >
       {header.top.map((cell) => {
         // The label of a long cell sticks to the left edge of the visible window.
         const room = cell.width - 16;
@@ -250,12 +269,17 @@ export const TimelineBars = memo(function TimelineBars({
   rowHeight,
   editable,
   draft,
+  critical,
+  baselines,
 }: {
   rows: readonly Row[];
   scale: GanttScale;
   rowHeight: number;
   editable: boolean;
   draft: BarDraft | null;
+  /** Ids drawn in the danger tone (critical path). */
+  critical?: ReadonlySet<string>;
+  baselines?: boolean;
 }) {
   return (
     <g>
@@ -266,7 +290,10 @@ export const TimelineBars = memo(function TimelineBars({
             : source;
         const box = barBox(row, scale, rowHeight);
         const cy = i * rowHeight + rowHeight / 2;
-        const color = row.task.color ?? (box.milestone ? MILESTONE_COLOR : "var(--accent-word)");
+        const isCritical = !!critical?.has(row.task.id);
+        const color = isCritical
+          ? "var(--danger)"
+          : (row.task.color ?? (box.milestone ? MILESTONE_COLOR : "var(--accent-word)"));
         if (box.milestone) {
           const half = box.size / 2;
           const x = box.x0 + half;
@@ -356,6 +383,21 @@ export const TimelineBars = memo(function TimelineBars({
                 rx={6}
                 className={editable ? "cursor-grab" : undefined}
                 style={{ fill: color }}
+              />
+            ) : null}
+            {baselines && row.task.baseline ? (
+              <rect
+                {...DECORATIVE}
+                x={scale.x(+row.task.baseline.start)}
+                y={top + h + 2}
+                width={Math.max(
+                  2,
+                  scale.x(+row.task.baseline.end) - scale.x(+row.task.baseline.start),
+                )}
+                height={4}
+                rx={2}
+                className="pointer-events-none"
+                style={{ fill: "var(--ink-3)", fillOpacity: 0.55 }}
               />
             ) : null}
             {inside ? (
@@ -494,10 +536,13 @@ export const DependencyLayer = memo(function DependencyLayer({
   links,
   activeId,
   markerId,
+  critical,
 }: {
   links: readonly Link[];
   activeId: string | null;
   markerId: string;
+  /** Link keys (`"from>to"`) on the critical path. */
+  critical?: ReadonlySet<string>;
 }) {
   return (
     <g {...DECORATIVE} fill="none" className="pointer-events-none">
@@ -519,19 +564,108 @@ export const DependencyLayer = memo(function DependencyLayer({
       </defs>
       {links.map((link) => {
         const active = activeId != null && (link.from === activeId || link.to === activeId);
-        const tone = link.late ? "late" : active ? "active" : "base";
+        const hot = !!critical?.has(link.key);
+        const tone = link.late || hot ? "late" : active ? "active" : "base";
         return (
           <path
             key={link.key}
             d={link.d}
-            strokeWidth={active ? 1.75 : 1.25}
+            strokeWidth={hot ? 2.25 : active ? 1.75 : 1.25}
             markerEnd={`url(#${markerId}-${tone})`}
             className="motion-safe:transition-[stroke-opacity] motion-safe:duration-150"
             style={{
-              stroke: link.late ? "var(--danger)" : active ? "var(--ink)" : "var(--ink-3)",
-              strokeOpacity: activeId == null || active ? 0.9 : 0.35,
+              stroke: link.late || hot ? "var(--danger)" : active ? "var(--ink)" : "var(--ink-3)",
+              strokeOpacity: hot || activeId == null || active ? 0.9 : 0.35,
             }}
           />
+        );
+      })}
+    </g>
+  );
+});
+
+/** Annotation placed in pixels, with the lane its label sits in so labels never overlap. */
+export interface PlacedAnnotation {
+  id: string;
+  x0: number;
+  x1: number | null;
+  label: string;
+  color: string;
+  lane: number;
+}
+
+const LABEL_LANE = 18;
+
+/** Positions annotations on the scale and stacks overlapping labels into lanes. */
+export function placeAnnotations(
+  annotations: readonly GanttAnnotation[],
+  scale: GanttScale,
+): PlacedAnnotation[] {
+  const sorted = [...annotations]
+    .filter((a) => +a.at >= scale.domain[0] - 1 && +a.at <= scale.domain[1] + 1)
+    .sort((a, b) => +a.at - +b.at);
+  const ends: number[] = [];
+  return sorted.map((a) => {
+    const x0 = scale.x(+a.at);
+    const x1 = a.to == null ? null : scale.x(+a.to);
+    const width = estimateTextWidth(a.label, 10.5) + 14;
+    let lane = ends.findIndex((end) => end + 4 <= x0);
+    if (lane < 0) lane = ends.length;
+    ends[lane] = x0 + width;
+    return { id: a.id, x0, x1, label: a.label, color: a.color ?? "var(--warning)", lane };
+  });
+}
+
+/** Dated lines and bands over the timeline body, labelled in a lane at the top. */
+export const AnnotationLayer = memo(function AnnotationLayer({
+  items,
+  height,
+}: {
+  items: readonly PlacedAnnotation[];
+  height: number;
+}) {
+  return (
+    <g {...DECORATIVE} className="pointer-events-none">
+      {items.map((item) => {
+        const width = estimateTextWidth(item.label, 10.5) + 14;
+        const y = 4 + item.lane * LABEL_LANE;
+        return (
+          <g key={item.id}>
+            {item.x1 != null ? (
+              <rect
+                x={item.x0}
+                y={0}
+                width={Math.max(1, item.x1 - item.x0)}
+                height={height}
+                style={{ fill: item.color, fillOpacity: 0.12 }}
+              />
+            ) : null}
+            <line
+              x1={item.x0}
+              x2={item.x0}
+              y1={0}
+              y2={height}
+              strokeWidth={1.5}
+              strokeDasharray="5 4"
+              style={{ stroke: item.color }}
+            />
+            <rect
+              x={item.x0 + 3}
+              y={y}
+              width={width}
+              height={15}
+              rx={7.5}
+              style={{ fill: "var(--surface)", fillOpacity: 0.92, stroke: item.color }}
+            />
+            <text
+              x={item.x0 + 10}
+              y={y + 7.5}
+              dy="0.34em"
+              className="fill-ink font-semibold text-[10.5px]"
+            >
+              {item.label}
+            </text>
+          </g>
         );
       })}
     </g>
