@@ -1,5 +1,6 @@
 import type { ValueFormat } from "./format.js";
 import type { ChartTone } from "./palette.js";
+import type { ChartPattern } from "./patterns.js";
 
 /** A category or time stamp on the category axis. */
 export type XValue = string | number | Date;
@@ -17,6 +18,8 @@ export interface ChartSeries {
   dashed?: boolean;
   /** Overrides the chart `valueFormat` for this series. */
   format?: ValueFormat;
+  /** Fills bars with an SVG pattern (stripes, dots, ...) in the series color, for color-blind friendly charts. */
+  pattern?: ChartPattern;
 }
 
 /** Visible strings. English defaults; pass Spanish (or any language) from the app. */
@@ -67,20 +70,20 @@ interface AnnotationBase {
  * bar charts the value axis runs left to right, so "y" lines are drawn vertical.
  */
 export type ChartAnnotation =
-  | (AnnotationBase & { type: "line"; axis: "y"; value: number; yAxis?: "left" | "right" })
+  | (AnnotationBase & { type: "line"; axis: "y"; value: number; yAxis?: string })
   | (AnnotationBase & {
       type: "range";
       axis: "y";
       from: number;
       to: number;
-      yAxis?: "left" | "right";
+      yAxis?: string;
     })
   | (AnnotationBase & { type: "line"; axis: "x"; value: XValue })
   | (AnnotationBase & { type: "range"; axis: "x"; from: XValue; to: XValue })
   /** Dot at a data coordinate (category `x`, value `y`) with an optional label pill. */
-  | (AnnotationBase & { type: "point"; x: XValue; y: number; yAxis?: "left" | "right" })
+  | (AnnotationBase & { type: "point"; x: XValue; y: number; yAxis?: string })
   /** Free text anchored at a data coordinate. */
-  | (AnnotationBase & { type: "text"; x: XValue; y: number; yAxis?: "left" | "right" });
+  | (AnnotationBase & { type: "text"; x: XValue; y: number; yAxis?: string });
 
 export interface ValueAxisOptions {
   /** Fixed lower bound; by default the data decides (bars and areas start at 0). */
@@ -97,4 +100,6 @@ export interface ValueAxisOptions {
   scale?: "linear" | "log";
   /** Force zero into the domain (lines default to "auto": only when data sits near zero). */
   zero?: boolean;
+  /** Flips the axis: values grow downwards (or to the left), bars hang from the top (or the right). */
+  reversed?: boolean;
 }

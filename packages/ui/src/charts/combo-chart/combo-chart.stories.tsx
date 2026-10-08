@@ -116,4 +116,64 @@ export const StackedColumnsWithTotalLine: Story = {
   },
 };
 
+/** Three measures, three units: sales (S/) on the left, customers and average ticket stacked on the right. */
+export const MultiAxis: Story = {
+  args: {
+    title: "Ventas, clientes y ticket promedio",
+    series: [
+      {
+        id: "ventas",
+        name: "Ventas",
+        type: "column",
+        data: revenue,
+        format: "currency",
+        color: "var(--accent-word)",
+      },
+      {
+        id: "clientes",
+        name: "Clientes",
+        type: "line",
+        axis: "right",
+        data: appointments,
+        format: "integer",
+        color: "var(--chart-cat-1)",
+      },
+      {
+        id: "ticket",
+        name: "Ticket promedio",
+        type: "line",
+        axis: "ticket",
+        data: ticket,
+        format: "currency",
+        color: "var(--chart-cat-3)",
+      },
+    ],
+    yAxis: { title: "Ventas", format: "compact" },
+    rightAxis: { title: "Clientes" },
+    axes: [
+      { id: "left", color: "var(--accent-word)" },
+      { id: "right", color: "var(--chart-cat-1)" },
+      {
+        id: "ticket",
+        title: "Ticket",
+        side: "right",
+        color: "var(--chart-cat-3)",
+        min: 30,
+        max: 60,
+      },
+    ],
+  },
+};
+
+export const MultiAxisNarrow: Story = {
+  ...MultiAxis,
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
 export const Loading: Story = { args: { loading: true } };

@@ -1,11 +1,22 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useMemo, useSyncExternalStore } from "react";
-import { ChartSyncStore, type SyncChannel, type SyncKey } from "./sync-store.js";
+import {
+  ChartSyncStore,
+  EMPTY_CHANNEL as EMPTY,
+  type SyncChannel,
+  type SyncKey,
+  type SyncMargin,
+} from "./sync-store.js";
 
-export { ChartSyncStore, type SyncChannel, type SyncKey, syncKeyOf } from "./sync-store.js";
+export {
+  ChartSyncStore,
+  type SyncChannel,
+  type SyncKey,
+  type SyncMargin,
+  syncKeyOf,
+} from "./sync-store.js";
 
-const EMPTY: SyncChannel = { hover: null, owner: null, range: null };
 const globalStore = new ChartSyncStore();
 const SyncContext = createContext<ChartSyncStore>(globalStore);
 
@@ -23,6 +34,7 @@ export interface ChartSync {
   channel: SyncChannel;
   setHover: (key: SyncKey, owner: string) => void;
   clearHover: (owner: string) => void;
+  setMargin: (owner: string, margin: SyncMargin | null) => void;
   setRange: (range: readonly [SyncKey, SyncKey] | null) => void;
 }
 
@@ -42,6 +54,9 @@ export function useChartSync(syncId: string | undefined): ChartSync {
       },
       clearHover: (owner: string) => {
         if (syncId) store.clearHover(id, owner);
+      },
+      setMargin: (owner: string, margin: SyncMargin | null) => {
+        if (syncId) store.setMargin(id, owner, margin);
       },
       setRange: (range: readonly [SyncKey, SyncKey] | null) => {
         if (syncId) store.setRange(id, range);

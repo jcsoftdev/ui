@@ -176,7 +176,7 @@ export function roundedRectPath(
   ].join("");
 }
 
-export type BarEnd = "top" | "bottom" | "left" | "right" | "none";
+export type BarEnd = "top" | "bottom" | "left" | "right" | "all" | "none";
 
 /** Bar rounded only at its value end, the way the eye reads the bar's length. */
 export function barPath(
@@ -188,10 +188,11 @@ export function barPath(
   end: BarEnd,
 ): string {
   const on = (corner: boolean) => (corner ? radius : 0);
+  const all = end === "all";
   return roundedRectPath(x, y, width, height, {
-    tl: on(end === "top" || end === "left"),
-    tr: on(end === "top" || end === "right"),
-    br: on(end === "bottom" || end === "right"),
-    bl: on(end === "bottom" || end === "left"),
+    tl: on(all || end === "top" || end === "left"),
+    tr: on(all || end === "top" || end === "right"),
+    br: on(all || end === "bottom" || end === "right"),
+    bl: on(all || end === "bottom" || end === "left"),
   });
 }

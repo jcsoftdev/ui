@@ -48,6 +48,7 @@ const meta = {
     sort: { control: "inline-radio", options: ["none", "delta", "abs-delta", "to"] },
     delta: { control: "inline-radio", options: ["absolute", "percent", false] },
     valueFormat: { control: "select", options: ["number", "integer", "currency", "compact"] },
+    orientation: { control: "inline-radio", options: ["horizontal", "vertical"] },
     items: { control: false },
     rowHeight: { control: { type: "range", min: 28, max: 64, step: 2 } },
   },
@@ -94,6 +95,33 @@ export const LowerIsBetter: Story = {
     lowerIsBetter: true,
     sort: "abs-delta",
   },
+};
+
+/** Vertical orientation: a column per service, dots on the value axis. */
+export const Columns: Story = {
+  args: { orientation: "vertical", height: 340, title: "Citas por servicio (columnas)" },
+};
+
+/** Any number of measures per row with `values` and `measures`; the change compares the first with the last. */
+export const ThreeMeasures: Story = {
+  args: {
+    title: "Tiempo de atención por barbero (minutos): meta, septiembre y octubre",
+    measures: [{ name: "Septiembre" }, { name: "Octubre" }, { name: "Meta" }],
+    items: [
+      { label: "Mateo", values: [42, 38, 35] },
+      { label: "Valeria", values: [33, 36, 35] },
+      { label: "Diego", values: [48, 41, 35] },
+      { label: "Camila", values: [37, 34, 35] },
+      { label: "Renzo", values: [30, 31, 35] },
+    ],
+    delta: "absolute",
+    lowerIsBetter: true,
+    valueFormat: "integer",
+  },
+};
+
+export const ThreeMeasuresColumns: Story = {
+  args: { ...ThreeMeasures.args, orientation: "vertical", height: 340 },
 };
 
 export const Loading: Story = { args: { loading: true } };

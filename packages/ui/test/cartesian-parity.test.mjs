@@ -14,6 +14,7 @@ const bundle = await build({
       `export * from ${JSON.stringify(join(core, "path.ts"))};`,
       `export * from ${JSON.stringify(join(core, "downsample.ts"))};`,
       `export * from ${JSON.stringify(join(core, "cartesian/sync-store.ts"))};`,
+      `export * from ${JSON.stringify(join(core, "cartesian/axis-stack.ts"))};`,
     ].join("\n"),
     resolveDir: core,
     loader: "ts",
@@ -105,4 +106,82 @@ test("sync store: only the owner clears the hover; equal ranges do not notify", 
 test("syncKeyOf identifies dates by time", () => {
   assert.equal(lib.syncKeyOf(new Date(2026, 9, 8)), +new Date(2026, 9, 8));
   assert.equal(lib.syncKeyOf("lun"), "lun");
+});
+
+test("stackAxes: axes hang outward on their side and margins add up", () => {
+  const stacked = lib.stackAxes(
+    [
+      { id: "ventas", side: "left", width: 50 },
+      { id: "clientes", side: "right", width: 30 },
+      { id: "ticket", side: "right", width: 40 },
+      { id: "extra", side: "left", width: 24 },
+    ],
+    { minLeft: 20, rightFallback: 8 },
+  );
+  assert.equal(stacked.left, 74);
+  assert.equal(stacked.right, 70);
+  assert.deepEqual(Object.fromEntries(stacked.offsets), {
+    ventas: 0,
+    clientes: 0,
+    ticket: 30,
+    extra: 50,
+  });
+});
+
+test("stackAxes: no right axis falls back, tiny left labels keep the minimum", () => {
+  const stacked = lib.stackAxes([{ id: "left", side: "left", width: 12 }], {
+    minLeft: 20,
+    rightFallback: 9,
+  });
+  assert.equal(stacked.left, 20);
+  assert.equal(stacked.right, 9);
+});
+
+test("resolveAxes: left/right are sugar, extra axes merge or append, unused axes drop", () => {
+  const used = new Set(["left", "right", "ticket"]);
+  const axes = lib.resolveAxes(
+    { title: "S/" },
+    { title: "Citas" },
+    [{ id: "right", color: "red" }, { id: "ticket", title: "Ticket" }, { id: "nadie" }],
+    used,
+  );
+  assert.deepEqual(
+    axes.map((axis) => [axis.id, axis.side]),
+    [
+      ["left", "left"],
+      ["right", "right"],
+      ["ticket", "right"],
+    ],
+  );
+  assert.equal(axes[1].options.title, "Citas");
+  assert.equal(axes[1].color, "red");
+  assert.equal(axes[2].options.title, "Ticket");
+});
+
+test("resolveAxes: the left axis is dropped when only other axes are used, kept when nothing is", () => {
+  assert.deepEqual(
+    lib.resolveAxes({}, {}, [], new Set(["right"])).map((axis) => axis.id),
+    ["right"],
+  );
+  assert.deepEqual(
+    lib.resolveAxes({}, {}, [], new Set()).map((axis) => axis.id),
+    ["left"],
+  );
+});
+
+test("sync store: the group margin is the widest one and shrinks when a chart leaves", () => {
+  const store = new lib.ChartSyncStore();
+  store.setMargin("g", "a", { left: 40, right: 10 });
+  store.setMargin("g", "b", { left: 62, right: 8 });
+  assert.deepEqual(store.get("g").margin, { left: 62, right: 10 });
+  let calls = 0;
+  store.subscribe(() => {
+    calls += 1;
+  });
+  store.setMargin("g", "b", { left: 62, right: 8 });
+  assert.equal(calls, 0);
+  store.setMargin("g", "b", null);
+  assert.deepEqual(store.get("g").margin, { left: 40, right: 10 });
+  store.setMargin("g", "a", null);
+  assert.equal(store.get("g").margin, null);
 });

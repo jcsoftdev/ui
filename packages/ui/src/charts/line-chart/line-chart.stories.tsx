@@ -338,7 +338,7 @@ const bigValues = (() => {
   return Array.from({ length: MINUTES }, (_, i) => {
     const hour = ((i % 1440) / 60) | 0;
     const open = hour >= 9 && hour < 20 ? 1 : 0.15;
-    noise = noise * 0.9 + (random() - 0.5) * 3;
+    noise = noise * 0.98 + (random() - 0.5) * 0.6;
     return Math.max(
       0,
       Math.round((4 + 5 * Math.sin(((i % 1440) / 1440) * Math.PI * 2) ** 2) * open + noise),

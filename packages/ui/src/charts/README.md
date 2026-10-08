@@ -11,7 +11,11 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | --- | --- | --- |
 | `LineChart` | `line-chart/` | `CartesianChart` (series `kind: "line"`) |
 | `AreaChart` | `area-chart/` | `CartesianChart` (`kind: "area"`) |
-| `BarChart` | `bar-chart/` | `CartesianChart` (`kind: "column"`) |
+| `BarChart` | `bar-chart/` | `CartesianChart` (`kind: "column"`): ranges, stack groups, patterns, reversed axis, group labels |
+| `DrilldownBarChart` | `bar-chart/` | `BarChart` + `useDrill` + `ChartBreadcrumb` |
+| `BarRaceChart` | `bar-chart/` | `bar-race.ts` rank interpolation, play / pause / scrub |
+| `LollipopChart` | `lollipop-chart/` | stick + dot per category, horizontal or vertical, negatives |
+| `BulletChart` | `bullet-chart/` | `bullet-layout.ts` bands, actual bar, target tick, per-row or shared scale |
 | `ComboChart` | `combo-chart/` | `CartesianChart` (mixed kinds, right axis) |
 | `DonutChart` / `PieChart` | `donut-chart/`, `pie-chart/` | `ChartFrame` + `polar.ts` (rounded arcs, gaps, explode, outside labels, semi variant) |
 | `RadialBarChart` | `radial-bar-chart/` | stroked `arcLine` rings, track, gradient, ring labels |
@@ -23,7 +27,7 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `RangeAreaChart` | `range-area-chart/` | `ChartFrame` + `buildCategoryAxis`: min-max bands with an average line |
 | `StreamGraph` | `stream-graph/` | `streamLayout` (wiggle / silhouette / zero / expand offsets), hover a stream to isolate it |
 | `WaterfallChart` | `waterfall-chart/` | `waterfallLayout` running totals, connectors, up/down/total tokens |
-| `DumbbellChart` | `dumbbell-chart/` | two values per row, sortable, change column |
+| `DumbbellChart` | `dumbbell-chart/` | two or more values per row, horizontal or vertical, sortable, change column |
 | `TimelineChart` | `timeline-chart/` | Gantt rows, `assignLanes` stacks overlapping bars, now marker, clock ticks |
 | `CandlestickChart` | `candlestick-chart/` | OHLC candles + volume panel + `ChartBrush` zoom |
 | `StockChart` | `stock-chart/` | candle / OHLC / line / area, range presets (`time-range.ts`), `ChartBrush` navigator, `indicators.ts` overlays and RSI/MACD pane, % comparisons, flags |
@@ -321,6 +325,44 @@ Every chart adapts to its exact parent, width and height, from the container and
 - `stockStats(bars)` is headless: returns, annualized volatility, high/low, best/worst day and maximum drawdown; pair it
   with `onWindowChange({ from, to })` to summarize the visible window.
 
+## Bars and relatives
+
+```tsx
+<BarChart                                   // floating bars: [start, end] per category
+  series={[{ id: "turno", name: "Turno", ranges: [[9, 17], [10, 18]] }]} />
+<BarChart stack="normal" series={[         // grouped stacked: one pile per stackGroup
+  { id: "cortes", name: "Cortes", stackGroup: "ingresos", data },
+  { id: "sueldos", name: "Sueldos", stackGroup: "costos", data },
+]} />
+<BarChart categoryGroups={[{ label: "1.er trimestre", count: 3 }]} categories={months} />
+<BarChart yAxis={{ reversed: true }} />    // bars hang from the top (left-to-right axis flips for horizontal)
+<BarChart series={[{ id: "a", name: "A", data, pattern: "stripes" }]} />
+<BarChart distributed /> // or series[].colors = ["var(--chart-up)", undefined, ...]
+<BarChart categoryLabelRotation={-45} />
+<DrilldownBarChart data={tree} breadcrumbLabel="Ruta" />   // HierarchyDatum; click a bar with a `›`
+<BarRaceChart entities={[{ id, name }]} frames={[{ label: "Sem 1", values: [..] }]} topN={6} />
+<WaterfallChart orientation="horizontal" />
+<DumbbellChart orientation="vertical" measures={[{ name: "Sep" }, { name: "Oct" }, { name: "Meta" }]}
+  items={[{ label: "Mateo", values: [42, 38, 35] }]} />
+<LollipopChart items={[{ label, value }]} orientation="vertical" sort="desc" />
+<BulletChart items={[{ label, actual: 78, target: 85, ranges: [60, 80, 100] }]} rangeLabels={["Bajo", "Medio", "Alto"]} />
+```
+
+- `CartesianSeries` gained `from` (floating start), `stackGroup` and `pointColors`; `ChartSeries` gained `pattern`;
+  `ValueAxisOptions` gained `reversed`; `CartesianChartProps` gained `categoryGroups`, `categoryLabelRotation` and
+  `onCategoryClick(index)` (click or Enter on the focused plot). Floating series never stack and are rounded at both ends.
+- Group labels (`CategoryGroupAxis`, `categoryGroupSpans` in `core/cartesian/`) are a second tier under vertical category
+  axes; they hide while the plot is zoomed.
+- Patterns (`core/patterns.ts`, `core/pattern-defs.tsx`): `PATTERN_NAMES` (stripes, stripes-reverse, dots, crosshatch,
+  grid, zigzag, checks, diamonds, waves) or your own `PatternTile { size, shapes }`. Tiles are drawn in the series color
+  over a soft backdrop of the same token, so themes still decide the hue. `ChartPatternDefs` + `patternId` / `patternFill`
+  are exported so other charts (donut, area) can use them: render the defs in your `<defs>` and fill with `url(#id)`.
+- Bar race: values move linearly and ranks follow a smoothstep (`raceItems`), so bars glide into place; bars pass over each
+  other while swapping. Reduced motion steps frame to frame. The hidden table lists every frame.
+- Bullet: `scale="row"` (default) gives every row its own 0-to-max scale, for mixed units; `"shared"` draws one axis.
+- Dumbbell with `values`: the change compares the first measure with the last; two measures keep the gradient bar, more
+  use a neutral bar. Vertical dumbbells put the change above each column.
+
 ## Annotations (cartesian)
 
 ```ts
@@ -352,7 +394,7 @@ pointer is within 14 px (any annotation type accepts `tooltip`, only `point` and
 | `onPointClick` | every cartesian chart | `{ index, category, seriesId, value }` for a click, or Enter on the focused plot. `index` is in your original `categories`, whatever the zoom or downsampling. |
 | `transition` | every cartesian chart | Eases line and area paths between updates with the CSS `d` property (live feeds with a fixed point count; browsers without it jump). |
 | `maxPoints` | every cartesian chart | LTTB threshold, 2000 by default, `false` to draw everything. Applies to line and area plots (never bars or horizontal charts): `sharedSampleIndices` picks the union of each series' LTTB points plus the neighbours of every gap, so series stay aligned. Zooming resamples the window; the hidden data table and the brush overview use the reduced data. |
-| `gradient` (LineChart) | Line | Strokes each line from its color to the next palette color. (On Area/Combo `gradient` is still the fill under the area.) |
+| `gradient` (LineChart) | Line | Strokes each line from its color towards the next palette color. (On Area/Combo `gradient` is still the fill under the area.) |
 
 `downsample(points, threshold)`, `lttbIndices` and `sharedSampleIndices` (core `downsample.ts`) are pure and tested in
 `test/cartesian-parity.test.mjs`, together with the step paths and the sync store.
@@ -361,8 +403,13 @@ pointer is within 14 px (any annotation type accepts `tooltip`, only `point` and
 value is its own or the sum of its children, clicking a point with children drills in (`useDrill`) and `ChartBreadcrumb`
 climbs out. It keeps `useDrill`'s rule that only positive values are shown.
 
-Not supported: more than two value axes (`yAxis` + `rightAxis`); the layout reserves margins and ticks for exactly one
-axis per side.
+Value axes: `yAxis` and `rightAxis` are shorthand for the axes with id `"left"` and `"right"`. `axes` declares any number
+of them (`{ id, side?: "left" | "right", color?, ...ValueAxisOptions }`; extra ones default to the right), series pick one
+with `axis: "<id>"` and annotations with `yAxis: "<id>"`. Axes stack outward from the plot on their side, each taking
+the width of its widest tick label (`stackAxes`, tested); an axis no series uses is dropped. `color` tints the labels
+and draws a thin axis line so a reader can tell which scale belongs to which series. The first axis is the primary one
+(gridlines, zero line, bar baseline). Charts with a `syncId` also share the widest left and right margin of the group, so
+their plot areas line up.
 
 ## Distribution family (`core/distribution/`)
 

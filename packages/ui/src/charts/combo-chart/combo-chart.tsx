@@ -7,8 +7,8 @@ import type { ChartSeries } from "../core/types.js";
 
 export interface ComboSeries extends ChartSeries {
   type: "column" | "line" | "area";
-  /** Measure against the right axis (configure it with `rightAxis`). */
-  axis?: "left" | "right";
+  /** Measure against the right axis (configure it with `rightAxis`), or the id of an entry of `axes`. */
+  axis?: string;
 }
 
 export interface ComboChartProps
