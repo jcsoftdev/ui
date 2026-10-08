@@ -31,7 +31,8 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `SlopeChart` | `slope-chart/` | two columns, `spreadSlopeLabels` collision avoidance on both sides |
 | `HeatmapChart`, `CalendarHeatmap` | `heatmap-chart/` | `color-scale.ts` + an internal `HeatmapGrid` |
 | `TreemapChart` | `treemap-chart/` | `hierarchy.ts` (`treemapLayout`, squarified) + `hierarchy-chart.tsx` |
-| `SunburstChart` | `sunburst-chart/` | `hierarchy.ts` (`partitionLayout`, `sectorPath`) + `use-drill.ts` |
+| `SunburstChart` | `sunburst-chart/` | `hierarchy.ts` (`partitionLayout`, `sectorPath`) + `use-drill.ts`; `half` for a 180 degree fan |
+| `HierarchyMorph` | `hierarchy-morph/` | treemap and sunburst layouts sampled as polygons (`shape-morph.ts`) and blended |
 | `IcicleChart` | `icicle-chart/` | same partition as the sunburst, rectangular |
 | `BoxPlot` | `box-plot/` | `distribution/` (`categoryLayout`, `BoxGlyph`) |
 | `ViolinChart` | `violin-chart/` | `distribution/` (`gaussianKde`, `violinPath`) |
@@ -108,7 +109,8 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `breadcrumb.tsx` | `ChartBreadcrumb`: drill path, ancestors are buttons, current item has `aria-current`. |
 | `distribution/` | Statistics and geometry for the distribution family; see below. |
 | `units.ts` | Pure unit geometry: `unitCount`/`unitFractions` (23 at 5 per icon = 4 icons + 0.6), `progressFractions` (4.5 of 5 stars), `largestRemainder`/`waffleCounts` (integer cells that add up), `gridCell`, `fitUnitGrid` (largest icons that fit a box), `parliamentRows`/`parliamentLayout` (hemicycle seats, left to right), `assignUnits`. |
-| `unit-icons.ts` | `UNIT_ICONS` (person, scissors, chair, star, calendar, bottle, battery, droplet, target, shield; 24 x 24 solid silhouettes), `UnitIcon` (a name, a raw path or a `UnitShape` with its own box), `resolveUnitShape`, `UnitCategory`. |
+| `shape-morph.ts` | `rectRing`, `sectorRing`, `blendRings`, `ringPath`, `ringCenter`: rectangles and annular sectors as polygons with the same point count, so any blend between them is a point-wise lerp. |
+| `unit-icons.ts` | `UNIT_ICONS` (person, woman, child, heart, tree, house, car, star, drop, clock, pin, scissors, comb, mustache, pole, chair, calendar, bottle, battery, droplet, target, shield; 24 x 24 solid silhouettes), `PICTOGRAM_SILHOUETTES` and `BARBER_SILHOUETTES` (gallery order), `UnitIcon` (a name, a raw path or a `UnitShape` with its own box), `resolveUnitShape`, `UnitCategory`. |
 | `unit-glyph.tsx` | `UnitGlyph` (one icon in a square cell, partial fill clipped, track behind), `popUnits` (staggered entry), `UNIT_FRAME_CLASS` / `UNIT_LEGEND_CLASS` (frame as `@container/units`, legend below under `@sm`). |
 | `category-explorer.tsx` | `useCategoryExplorer` + `CategorySlider`: hover finds the category through `[data-category]`, a pointer-transparent `role="slider"` overlay moves between categories with the keyboard. |
 | `indicators.ts` | Pure, aligned with the input (`null` while warming up), tested in `test/charts-gantt-stock.test.mjs`: `sma`, `ema` (seeded with the SMA, skips leading nulls), `bollinger` (population deviation), `vwap(bars, from)` (anchored), `rsi` (Wilder), `macd` (line, signal, histogram), `rebase` (% change from a base point). |
@@ -160,6 +162,16 @@ Every chart must keep these, so all families behave the same:
 - Drill-down keeps a breadcrumb; sunburst and icicle animate the zoom window with `useAnimatedView`.
 - Colors: each top-level branch of the open node takes a palette slot; depth and sibling rank vary the
   tint. Heatmaps use `color-scale.ts`, so they follow the theme and `data-accent`.
+
+### Semi-circle sunburst and the treemap/sunburst morph
+
+- `<SunburstChart half />` draws the partition on a 180 degree fan; the center label sits above the baseline and the
+  pointer and keyboard behave as in the full disc.
+- `<HierarchyMorph data={tree} />` shows one hierarchy as treemap rectangles or sunburst rings and morphs between them
+  (`mode` / `defaultMode` / `onModeChange`, `showSwitch={false}` to drive it from outside). It draws the first
+  `levels` (1 or 2) levels; shapes that have no rectangle in the treemap grow out of their parent.
+- Treemap, sunburst and icicle have `Drilldown` stories that report the open node through `onFocusChange`;
+  `Nested` (treemap, `depth={3}`) is the market-map layout.
 
 ## Node-link charts: tree and sankey
 
@@ -328,6 +340,18 @@ outside labels (donut/pie) and rim labels (polar area) give way to the legend be
 hide below 360 px, radar axis names shorten, funnel label columns shrink and truncate, and the tooltip flips inside
 the frame. Every polar chart ships a `Narrow` story rendered in a 320 px container.
 8. Pure helpers get a case in `test/charts-core.test.mjs` (hierarchy and matrix layouts: `test/charts-hierarchy.test.mjs`).
+
+### Radial charts: shades, fills, updates, drilldown
+
+- `monochrome` (`PieChart`, `DonutChart`, `PolarAreaChart`): one hue in shades, darkest on the largest value
+  (`monochromeByValue` in `palette.ts`). `true` uses the accent, a string sets the base color.
+- `DonutChart` `fill`: `"gradient"` fades each slice from the hole to the rim; `"pattern"` adds a texture per slice
+  (stripes, dots, grid, wide stripes, checks) so color is not the only cue. Image fills are not supported.
+- Data changes ease: slices grow, shrink and appear, and the centre total counts along (not under reduced motion).
+- `DonutChart` drilldown: a datum with `children` opens in the same ring on click or Enter; a breadcrumb (and Escape or
+  Backspace) goes back; children default to shades of the parent color. `rootLabel` names the first crumb.
+- `GaugeChart`: `tickMarks` + `minorTicks` draw a dial; `centerContent` replaces the value/caption with your own
+  HTML. `FunnelChart`: `tapered` (default) or straight bars, and `neck` for how far the last stage narrows.
 
 ## Maps
 
