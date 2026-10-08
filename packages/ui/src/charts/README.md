@@ -31,6 +31,13 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `TreemapChart` | `treemap-chart/` | `hierarchy.ts` (`treemapLayout`, squarified) + `hierarchy-chart.tsx` |
 | `SunburstChart` | `sunburst-chart/` | `hierarchy.ts` (`partitionLayout`, `sectorPath`) + `use-drill.ts` |
 | `IcicleChart` | `icicle-chart/` | same partition as the sunburst, rectangular |
+| `BoxPlot` | `box-plot/` | `distribution/` (`categoryLayout`, `BoxGlyph`) |
+| `ViolinChart` | `violin-chart/` | `distribution/` (`gaussianKde`, `violinPath`) |
+| `RaincloudChart` | `raincloud-chart/` | `distribution/` (half violin + `BoxGlyph` + jittered rain) |
+| `Histogram` | `histogram/` | `distribution/` (`binEdges`, `binCounts`, `xyLayout`) |
+| `BeeswarmChart` | `beeswarm-chart/` | `distribution/` (`beeswarm` collision layout) |
+| `ScatterChart` | `scatter-chart/` | `XYPointChart` (trend lines, quadrants) |
+| `BubbleChart` | `bubble-chart/` | `XYPointChart` (`sized`, area-proportional radius) |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
 Polar and other chart families should be built from these blocks; see "Building a new chart" below.
@@ -87,6 +94,7 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `use-drill.ts` | `useDrill(data)`: hierarchy + focused node + `drill(id)` / `up()`; `useAnimatedView(view)`: rAF zoom transition, instant under reduced motion. |
 | `hierarchy-chart.tsx` | Shared pieces of the hierarchy charts: `HierarchyLabels` (+ `breadcrumb`, `share`, `drillHint`), `branchColor`, `levelStrength`, `HierarchyHeader` (breadcrumb), `HierarchyLegend`, `HierarchyTable`, `hierarchyKey` (keyboard model), `HIERARCHY_FRAME_CLASS`. |
 | `breadcrumb.tsx` | `ChartBreadcrumb`: drill path, ancestors are buttons, current item has `aria-current`. |
+| `distribution/` | Statistics and geometry for the distribution family; see below. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
 ## Theming
@@ -131,7 +139,7 @@ Every chart must keep these, so all families behave the same:
 - Colors: each top-level branch of the open node takes a palette slot; depth and sibling rank vary the
   tint. Heatmaps use `color-scale.ts`, so they follow the theme and `data-accent`.
 
-## Responsive (container width)
+## Responsive: hierarchy and heatmap charts
 
 Charts receive the measured width of their container from `ChartFrame`, never the viewport. The hierarchy
 and heatmap charts make the frame a size container (`@container/chart`) so the HTML around the drawing
@@ -153,6 +161,42 @@ annotations={[
 
 `axis: "y"` is the value axis (drawn vertical in horizontal bar charts), `axis: "x"` the category axis; x values match a
 category (dates by time). `yAxis: "right"` measures against the secondary axis.
+
+## Distribution family (`core/distribution/`)
+
+```ts
+interface DistributionSeries {          // BoxPlot, ViolinChart, RaincloudChart
+  id: string; name: string; color?: string; format?: ValueFormat;
+  data: ReadonlyArray<ReadonlyArray<number | null>>; // data[i] = raw samples of categories[i]
+}
+// Histogram: { id, name, values: number[] }   Beeswarm: { id, name, points: { value, category?, size?, label? }[] }
+// Scatter / Bubble: { id, name, points: { x, y, size?, label? }[] }
+```
+
+| Module | What it gives you |
+| --- | --- |
+| `stats.ts` | Pure, tested in `test/charts-distribution.test.mjs`: `quantileSorted` (type 7), `boxStats` (Tukey whiskers, outliers, mean), `standardDeviation`, `silvermanBandwidth`, `gaussianKde`, `normalPdf`, `sturgesBinCount`, `freedmanDiaconisWidth`, `binEdges` (nice widths), `binCounts`, `histogram`, `linearRegression` (slope, intercept, r²), `seededRandom` (stable jitter), `beeswarm` (collision-free offsets, closest free slot to the axis). |
+| `layout.ts` | `categoryLayout` (category axis + value axis, vertical or horizontal, dodged `slot(category, series)`), `xyLayout` (two continuous axes, `inset` for radii), `nearestPoint`, `truncateLabel`, `tooltipFit`. |
+| `marks.tsx` | `CategoryAxes`, `XYAxes`, `BoxGlyph` (`variant: "box" \| "inner"`), `boxTooltipRows`, `boxValueText`, `BoxStatsTable`. |
+| `geometry.ts` | `violinPath` (full or half, either orientation), `toXY`. |
+| `explorer.tsx` | `PlotExplorer`: the focusable `role="slider"` overlay (arrows, Home/End, PageUp/PageDown, Escape) plus pointer picking. |
+| `use-legend.tsx` | `useDistributionLegend`: colors, toggling, highlight and the legend node. |
+| `xy-points.tsx` | `XYPointChart`, the engine behind `ScatterChart` and `BubbleChart`. |
+| `labels.ts` | `StatLabels` (median, Q1, mean, outliers, ...) merged with `ChartLabels`; pass Spanish through `labels`. |
+
+Exploration order is the reading order: boxes/violins category by category, histogram bins left to right, beeswarm
+points row by row, scatter points by x. The tooltip and `aria-valuetext` carry the same numbers.
+
+## Responsive: all charts and the distribution family
+
+Charts only know the width `ChartFrame` measures, never the viewport:
+
+- Tick counts derive from the plot size; crowded category labels are thinned (`thinTicks`), long row labels are
+  truncated (`truncateLabel`), and the right margin leaves room for the last tick label.
+- Distribution charts give the frame `@container`; their top legend uses `order-last @md:order-none`, so it sits under
+  the plot below 448 px. `tooltipFit(width)` flips the tooltip at the middle and caps it to `50cqw` under 480 px.
+- Bubble labels outside the bubble, trend-line R² labels and quadrant captions hide or truncate when they do not fit.
+- `ChartDataTable` wraps its table in an `sr-only` div: a table ignores `width: 1px`, so a wide one used to overflow.
 
 ## Building a new chart (polar, heatmap, candlestick, treemap, ...)
 

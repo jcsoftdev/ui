@@ -10,6 +10,7 @@ export * from "./chart-frame.js";
 export * from "./chart-states.js";
 export * from "./color-scale.js";
 export * from "./data-table.js";
+export * from "./distribution/index.js";
 export * from "./format.js";
 export * from "./hierarchy.js";
 export * from "./hierarchy-chart.js";

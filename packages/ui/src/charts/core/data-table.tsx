@@ -18,29 +18,32 @@ export function ChartDataTable({
   columns,
 }: ChartDataTableProps) {
   return (
-    <table className="sr-only">
-      <caption>{caption}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{categoryHeader}</th>
-          {columns.map((column) => (
-            <th key={column.id} scope="col">
-              {column.name}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {categories.map((category, row) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: categories can repeat; rows follow the data order.
-          <tr key={row}>
-            <th scope="row">{category}</th>
+    // The wrapper clips: a table ignores `width: 1px`, so a wide one would still overflow the page.
+    <div className="sr-only">
+      <table>
+        <caption>{caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{categoryHeader}</th>
             {columns.map((column) => (
-              <td key={column.id}>{column.values[row] ?? ""}</td>
+              <th key={column.id} scope="col">
+                {column.name}
+              </th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {categories.map((category, row) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: categories can repeat; rows follow the data order.
+            <tr key={row}>
+              <th scope="row">{category}</th>
+              {columns.map((column) => (
+                <td key={column.id}>{column.values[row] ?? ""}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
