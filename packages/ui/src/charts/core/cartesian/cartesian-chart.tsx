@@ -593,8 +593,8 @@ function CartesianPlot({
   );
 
   const plotInfo = useMemo<CartesianPlotInfo | null>(() => {
-    if (!overlay || horizontal || count === 0) return null;
-    const time = layout.mode === "time";
+    if (!overlay || count === 0) return null;
+    const time = !horizontal && layout.mode === "time";
     const values = sampled.categories.map((category, index) =>
       time
         ? new Date(category as Date | number | string).getTime()
@@ -607,6 +607,7 @@ function CartesianPlot({
       top: margin.top,
       width: innerWidth,
       height: innerHeight,
+      horizontal,
       xKind: time ? "time" : "index",
       toX: xMap.toPixel,
       fromX: xMap.fromPixel,

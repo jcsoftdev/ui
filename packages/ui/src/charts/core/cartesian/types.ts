@@ -48,19 +48,25 @@ export interface CartesianPointEvent {
   value: number | null;
 }
 
-/** What an overlay needs to draw in data units on top of a vertical cartesian plot. */
+/** What an overlay needs to draw in data units on top of a cartesian plot. */
 export interface CartesianPlotInfo {
   /** Plot box inside the chart container, in pixels. */
   left: number;
   top: number;
   width: number;
   height: number;
+  /** True on a horizontal bar chart: categories run top to bottom, values left to right. */
+  horizontal?: boolean;
   /** "index": x is a (fractional) index into `categories`; "time": x is epoch milliseconds. */
   xKind: "index" | "time";
-  /** Data x to plot-relative pixels and back. */
+  /**
+   * Data x (the category axis) to plot-relative pixels and back. These are pixels along x on a vertical
+   * chart and along y when `horizontal`; use `plotToPixel` / `pixelToPlot` from `core/ink` to convert
+   * a whole point.
+   */
   toX: (value: number) => number;
   fromX: (pixel: number) => number;
-  /** Primary value axis, data y to plot-relative pixels and back. */
+  /** Primary value axis, data y to plot-relative pixels and back (along x when `horizontal`). */
   toY: (value: number) => number;
   fromY: (pixel: number) => number;
   /** Text of a data x (the nearest category, or a date) and of a data y. */
@@ -69,7 +75,7 @@ export interface CartesianPlotInfo {
 }
 
 /**
- * Layers added to a vertical cartesian chart. `svg` renders inside the chart drawing (plot
+ * Layers added to a cartesian chart. `svg` renders inside the chart drawing (plot
  * coordinates, so it is part of the SVG export); `html` renders over the plot, above the chart's
  * own pointer layer, for tools that need pointer events.
  */

@@ -94,3 +94,13 @@ test("keyboard: shift resizes (right/up grow, left/down shrink) and never collap
     full = brush.stepBrush(full, "ArrowRight", true, [0, 100], [0, 100]);
   assert.equal(full.x1, 100);
 });
+
+test("touch intent: moving early is a scroll, resting past the delay arms the brush", () => {
+  const down = { x: 50, y: 50 };
+  assert.equal(brush.touchIntent(down, { x: 52, y: 51 }, 100), "wait");
+  assert.equal(brush.touchIntent(down, { x: 50, y: 90 }, 120), "scroll");
+  assert.equal(brush.touchIntent(down, { x: 52, y: 50 }, 350), "brush");
+  assert.equal(brush.touchIntent(down, { x: 200, y: 200 }, 400), "brush");
+  assert.equal(brush.touchIntent(down, { x: 50, y: 70 }, 100, 0), "brush");
+  assert.equal(brush.TOUCH_BRUSH_DELAY, 350);
+});

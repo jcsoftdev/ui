@@ -7,6 +7,7 @@ import {
   diagnosticoColumns,
   diagnosticos,
   ExportXlsxDemo,
+  FillBackwardsDemo,
   FillHandleDemo,
   FormulasDemo,
   lineaColumns,
@@ -202,4 +203,15 @@ export const FillHandlePreset: Story = {
   name: "Fill handle (bordered preset)",
   decorators: [preset],
   render: (args) => <FillHandleDemo {...controls(args)} />,
+};
+
+export const FillUpAndLeft: Story = {
+  name: "Fill handle (up, left and auto-scroll)",
+  render: (args) => <FillBackwardsDemo {...controls(args)} />,
+};
+
+export const FillUpAndLeftNarrow: Story = {
+  name: "Fill handle (up, left, 320 px)",
+  decorators: [narrow],
+  render: (args) => <FillBackwardsDemo {...controls(args)} />,
 };

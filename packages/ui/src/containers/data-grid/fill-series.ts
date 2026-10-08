@@ -1,6 +1,7 @@
 // Pure planning of the fill handle: how far a drag extends a range, and the values it writes.
 // A numeric run continues linearly, dates continue by days, months or years, text ending in a
-// number counts up ("Silla 1" -> "Silla 2"), and anything else repeats.
+// number counts up ("Silla 1" -> "Silla 2"), and anything else repeats. Dragging up or left runs
+// the series backwards (10, 20, 30 gives 0, -10; "Silla 3" gives "Silla 2").
 import type { CellValue } from "./types.js";
 
 export interface FillBounds {
@@ -10,7 +11,7 @@ export interface FillBounds {
   c1: number;
 }
 
-export type HandleDirection = "down" | "right";
+export type HandleDirection = "down" | "right" | "up" | "left";
 
 export interface HandleExtent {
   direction: HandleDirection;
@@ -18,20 +19,42 @@ export interface HandleExtent {
   bounds: FillBounds;
 }
 
+/** Whether a direction counts backwards (up and left continue the series in reverse). */
+export const isBackward = (direction: HandleDirection) =>
+  direction === "up" || direction === "left";
+
 /**
  * Range a drag of the handle to cell `to` extends to, or null when the pointer is still inside the
- * range. The axis with the larger overshoot (in cells) wins, so a drag stays a straight fill.
+ * range. The axis with the larger overshoot (in cells) wins, so a drag stays a straight fill; the
+ * pointer above or left of the range fills up or left. `minR` / `minC` default to 0.
  */
 export function handleExtent(
   base: FillBounds,
   to: { r: number; c: number },
-  limits: { maxR: number; maxC: number },
+  limits: { maxR: number; maxC: number; minR?: number; minC?: number },
 ): HandleExtent | null {
   const down = Math.min(to.r, limits.maxR) - base.r1;
   const right = Math.min(to.c, limits.maxC) - base.c1;
-  if (down <= 0 && right <= 0) return null;
-  if (down >= right) return { direction: "down", bounds: { ...base, r1: base.r1 + down } };
-  return { direction: "right", bounds: { ...base, c1: base.c1 + right } };
+  const up = base.r0 - Math.max(to.r, limits.minR ?? 0);
+  const left = base.c0 - Math.max(to.c, limits.minC ?? 0);
+  const best = Math.max(down, right, up, left);
+  if (best <= 0) return null;
+  if (down === best) return { direction: "down", bounds: { ...base, r1: base.r1 + down } };
+  if (right === best) return { direction: "right", bounds: { ...base, c1: base.c1 + right } };
+  if (up === best) return { direction: "up", bounds: { ...base, r0: base.r0 - up } };
+  return { direction: "left", bounds: { ...base, c0: base.c0 - left } };
+}
+
+/**
+ * Scroll step (pixels per frame) for a pointer at `pos` along an axis whose viewport spans
+ * `lo..hi`: zero in the middle, ramping up inside `zone` pixels of an edge and capped at `max`
+ * (also beyond the edge). Negative scrolls towards the start.
+ */
+export function edgeScrollStep(pos: number, lo: number, hi: number, zone = 40, max = 22): number {
+  const ratio = (limit: number, sign: 1 | -1) => sign * Math.min(1, Math.abs(limit) / zone) * max;
+  if (pos < lo + zone) return Math.round(ratio(lo + zone - pos, -1));
+  if (pos > hi - zone) return Math.round(ratio(pos - (hi - zone), 1));
+  return 0;
 }
 
 export interface FillLane {
@@ -41,25 +64,28 @@ export interface FillLane {
   targets: Array<{ r: number; c: number }>;
 }
 
-/** One lane per column (fill down) or row (fill right) of the original range. */
+/**
+ * One lane per column (fill down or up) or row (fill right or left) of the original range. The
+ * source keeps reading order; targets run away from the range, nearest first.
+ */
 export function fillLanes(base: FillBounds, extent: HandleExtent): FillLane[] {
   const lanes: FillLane[] = [];
-  if (extent.direction === "down") {
-    for (let c = base.c0; c <= base.c1; c += 1) {
-      const source = [];
-      const targets = [];
-      for (let r = base.r0; r <= base.r1; r += 1) source.push({ r, c });
-      for (let r = base.r1 + 1; r <= extent.bounds.r1; r += 1) targets.push({ r, c });
-      lanes.push({ source, targets });
+  const vertical = extent.direction === "down" || extent.direction === "up";
+  const outer = vertical ? [base.c0, base.c1] : [base.r0, base.r1];
+  for (let lane = outer[0] as number; lane <= (outer[1] as number); lane += 1) {
+    const cell = (index: number) => (vertical ? { r: index, c: lane } : { r: lane, c: index });
+    const [from, to] = vertical ? [base.r0, base.r1] : [base.c0, base.c1];
+    const source = [];
+    const targets = [];
+    for (let i = from; i <= to; i += 1) source.push(cell(i));
+    if (extent.direction === "down" || extent.direction === "right") {
+      const end = vertical ? extent.bounds.r1 : extent.bounds.c1;
+      for (let i = to + 1; i <= end; i += 1) targets.push(cell(i));
+    } else {
+      const end = vertical ? extent.bounds.r0 : extent.bounds.c0;
+      for (let i = from - 1; i >= end; i -= 1) targets.push(cell(i));
     }
-  } else {
-    for (let r = base.r0; r <= base.r1; r += 1) {
-      const source = [];
-      const targets = [];
-      for (let c = base.c0; c <= base.c1; c += 1) source.push({ r, c });
-      for (let c = base.c1 + 1; c <= extent.bounds.c1; c += 1) targets.push({ r, c });
-      lanes.push({ source, targets });
-    }
+    lanes.push({ source, targets });
   }
   return lanes;
 }
@@ -104,6 +130,12 @@ export function addDays(date: Date, days: number): Date {
   return next;
 }
 
+/**
+ * How a run of dates picks its step: "auto" reads months when they share the day of the month and
+ * days otherwise; "day" always counts days; "month" always counts whole months.
+ */
+export type DateStepMode = "auto" | "day" | "month";
+
 export type DateStep =
   | { unit: "days"; amount: number }
   /** `endOfMonth`: the dates are month ends (31 Jan, 28 Feb), so results stay month ends. */
@@ -114,7 +146,7 @@ export type DateStep =
  * and yearly series, e.g. the 1st of every month), otherwise a constant number of days (daily,
  * weekly). Null when the dates do not follow one step.
  */
-export function dateStep(dates: readonly Date[]): DateStep | null {
+export function dateStep(dates: readonly Date[], mode: DateStepMode = "auto"): DateStep | null {
   if (dates.length < 2) return null;
   const first = dates[0] as Date;
   const second = dates[1] as Date;
@@ -125,7 +157,13 @@ export function dateStep(dates: readonly Date[]): DateStep | null {
   const endOfMonth = dates.every(
     (date) => date.getDate() === new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate(),
   );
-  if (months !== 0 && (sameDay || endOfMonth)) {
+  if (mode === "month") {
+    const steady =
+      months !== 0 &&
+      dates.every((date, i) => i === 0 || monthly(date, dates[i - 1] as Date) === months);
+    return steady ? { unit: "months", amount: months, endOfMonth: endOfMonth && !sameDay } : null;
+  }
+  if (mode === "auto" && months !== 0 && (sameDay || endOfMonth)) {
     const steady = dates.every(
       (date, i) => i === 0 || monthly(date, dates[i - 1] as Date) === months,
     );
@@ -166,17 +204,41 @@ function formatCounted(prefix: string, value: number, width: number, padded: boo
 }
 
 /** Plain copy: the lane repeats from its first cell. */
-export const copyFill = (count: number, length: number): FillResult[] =>
-  Array.from({ length: count }, (_unused, i) => ({ from: i % length }));
+export const copyFill = (count: number, length: number, backward = false): FillResult[] =>
+  Array.from({ length: count }, (_unused, i) => ({
+    from: backward ? length - 1 - (i % length) : i % length,
+  }));
+
+export interface SeriesOptions {
+  /** Continue before the first cell (fill up or left): the run is read from its last cell backwards. */
+  backward?: boolean;
+  dateStep?: DateStepMode;
+  /** Step of a lone text counter; set internally so "Silla 3" going backwards gives "Silla 2". */
+  loneStep?: number;
+}
 
 /**
  * The `count` values that continue `source` (a column read top to bottom, or a row left to right).
  * Series are detected from the whole source; a lone number, date or word is copied, except text
  * that ends in a number, which counts up. Formulas are always copied (the caller shifts them).
  */
-export function seriesFill(source: readonly CellValue[], count: number): FillResult[] {
+export function seriesFill(
+  source: readonly CellValue[],
+  count: number,
+  options: SeriesOptions = {},
+): FillResult[] {
   if (count <= 0 || source.length === 0) return [];
-  if (source.some(isFormula) || source.some(isBlank)) return copyFill(count, source.length);
+  const backward = options.backward === true;
+  if (source.some(isFormula) || source.some(isBlank)) {
+    return copyFill(count, source.length, backward);
+  }
+  if (backward) {
+    const last = source.length - 1;
+    const reversed = source.slice().reverse();
+    return seriesFill(reversed, count, { ...options, backward: false, loneStep: -1 }).map((item) =>
+      "from" in item ? { from: last - item.from } : item,
+    );
+  }
 
   if (source.every((value): value is number => typeof value === "number")) {
     const step = constantStep(source);
@@ -186,7 +248,7 @@ export function seriesFill(source: readonly CellValue[], count: number): FillRes
   }
 
   if (source.every((value): value is Date => value instanceof Date)) {
-    const step = dateStep(source);
+    const step = dateStep(source, options.dateStep);
     if (!step) return copyFill(count, source.length);
     const last = source[source.length - 1] as Date;
     return Array.from({ length: count }, (_unused, i) => ({
@@ -202,7 +264,10 @@ export function seriesFill(source: readonly CellValue[], count: number): FillRes
     const first = counted[0];
     if (first && counted.every((item) => item !== null && item.prefix === first.prefix)) {
       const items = counted as Counted[];
-      const step = items.length === 1 ? 1 : constantStep(items.map((item) => item.value));
+      const step =
+        items.length === 1
+          ? (options.loneStep ?? 1)
+          : constantStep(items.map((item) => item.value));
       if (step !== null) {
         const last = items[items.length - 1] as Counted;
         const padded = items.some((item) => item.padded);

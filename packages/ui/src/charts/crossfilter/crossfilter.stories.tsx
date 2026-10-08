@@ -239,3 +239,18 @@ export const PincelNarrow: Story = {
     </div>
   ),
 };
+
+/**
+ * Táctil: el gráfico no bloquea el scroll de la página (`touch-action: pan-x pan-y`). Mantén el dedo
+ * quieto unos 350 ms (vibra al activarse) y arrastra para dibujar el rectángulo; un deslizamiento
+ * normal sigue desplazando la página. Un toque corto quita el filtro. El ratón y el lápiz arrastran
+ * sin espera. `touchDelay={0}` vuelve a brochar al instante y bloquea el scroll sobre el gráfico.
+ */
+export const PincelTactil: Story = {
+  args: storyArgs,
+  render: () => (
+    <div style={{ width: 320 }}>
+      <BrushPlot />
+    </div>
+  ),
+};
