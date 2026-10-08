@@ -6,6 +6,7 @@ export * from "./cartesian/types.js";
 export * from "./chart-frame.js";
 export * from "./chart-states.js";
 export * from "./data-table.js";
+export * from "./distribution/index.js";
 export * from "./format.js";
 export * from "./legend.js";
 export * from "./motion.js";

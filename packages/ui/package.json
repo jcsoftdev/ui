@@ -37,7 +37,7 @@
     "build-storybook": "storybook build -o storybook-static",
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/build-theme.test.mjs test/charts-core.test.mjs",
+    "test": "node --test test/build-theme.test.mjs test/charts-core.test.mjs test/charts-distribution.test.mjs",
     "check:treeshake": "node test/treeshake.mjs"
   },
   "dependencies": {
