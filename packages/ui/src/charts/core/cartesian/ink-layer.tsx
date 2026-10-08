@@ -1,8 +1,19 @@
 "use client";
 
-import { type PointerEvent, useCallback, useMemo, useReducer, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  type PointerEvent,
+  useCallback,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "../../../utils/cn.js";
 import {
+  type CursorDomain,
+  type CursorKey,
+  cursorAction,
   type DataPoint,
   EMPTY_INK,
   formatDuration,
@@ -11,7 +22,9 @@ import {
   inkReducer,
   type Measure,
   measureSegment,
+  moveCursor,
   signed,
+  startCursor,
 } from "../ink.js";
 import type { CartesianOverlay, CartesianPlotInfo } from "./types.js";
 
@@ -29,6 +42,14 @@ export interface InkLabels {
   deltaY: string;
   /** Distance along a category axis, e.g. "3 steps". */
   steps: (count: number) => string;
+  /** Accessible name of the plot while a tool is active (keyboard use). */
+  plot: string;
+  /** Spoken position of the crosshair; receives the formatted x and y. */
+  position: (x: string, y: string) => string;
+  /** Spoken count of the points already set. */
+  pending: (count: number) => string;
+  /** Spoken when a pen stroke is finished. */
+  finished: string;
 }
 
 export const DEFAULT_INK_LABELS: InkLabels = {
@@ -41,6 +62,10 @@ export const DEFAULT_INK_LABELS: InkLabels = {
   deltaX: "Δx",
   deltaY: "Δy",
   steps: (count) => `${count} ${count === 1 ? "step" : "steps"}`,
+  plot: "Annotation plot: arrows move the crosshair, Shift moves faster, Space sets a point, Enter finishes, Escape cancels",
+  position: (x, y) => `${x}, ${y}`,
+  pending: (count) => `${count} ${count === 1 ? "point" : "points"} set`,
+  finished: "Stroke finished",
 };
 
 export interface UseChartInkOptions {
@@ -95,10 +120,69 @@ export function useChartInk({
   const [tool, setTool] = useState<InkTool>(initialTool);
   const [draft, setDraft] = useState<InkItem | null>(null);
   const [status, setStatus] = useState("");
+  const [cursor, setCursor] = useState<DataPoint | null>(null);
+  const [placed, setPlaced] = useState<DataPoint[]>([]);
   const nextId = useRef(1);
   const drawing = useRef(false);
 
   const overlay = useMemo<CartesianOverlay>(() => {
+    const keyboardDraft = (at: DataPoint | null, points: readonly DataPoint[]): InkItem[] => {
+      if (!at || points.length === 0) return [];
+      if (tool === "ruler") {
+        return [{ kind: "ruler", id: -1, a: points[0] as DataPoint, b: at }];
+      }
+      return [{ kind: "stroke", id: -1, color, points: [...points, at] }];
+    };
+
+    const domainOf = (plot: CartesianPlotInfo): CursorDomain => ({
+      x: [plot.fromX(0), plot.fromX(plot.width)],
+      y: [plot.fromY(plot.height), plot.fromY(0)],
+      xKind: plot.xKind,
+    });
+    const reset = () => {
+      setCursor(null);
+      setPlaced([]);
+    };
+    const onKeyDown = (event: KeyboardEvent<HTMLDivElement>, plot: CartesianPlotInfo) => {
+      if (tool === "none") return;
+      const domain = domainOf(plot);
+      const key = event.key;
+      if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown") {
+        event.preventDefault();
+        setCursor((current) =>
+          moveCursor(current ?? startCursor(domain), key as CursorKey, event.shiftKey, domain),
+        );
+        return;
+      }
+      if (key !== " " && key !== "Enter" && key !== "Escape") return;
+      event.preventDefault();
+      const at = cursor ?? startCursor(domain);
+      const action = cursorAction(tool === "ruler" ? "ruler" : "ink", key, placed, at);
+      if (action.type === "cancel") {
+        if (placed.length > 0) setPlaced([]);
+        else setCursor(null);
+        return;
+      }
+      setCursor(at);
+      if (action.type === "pending") {
+        setPlaced(action.points);
+        return;
+      }
+      const id = nextId.current++;
+      const [first, last] = [
+        action.points[0] as DataPoint,
+        action.points[action.points.length - 1],
+      ];
+      if (tool === "ruler") {
+        const item: InkItem = { kind: "ruler", id, a: first, b: last as DataPoint };
+        setStatus(describe(measureSegment(item.a, (item as { b: DataPoint }).b), plot, labels));
+        dispatch({ type: "add", item });
+      } else {
+        dispatch({ type: "add", item: { kind: "stroke", id, color, points: action.points } });
+        setStatus(labels.finished);
+      }
+      setPlaced([]);
+    };
     const pointOf = (event: PointerEvent<HTMLDivElement>, plot: CartesianPlotInfo): DataPoint => {
       const rect = event.currentTarget.getBoundingClientRect();
       const px = Math.min(plot.width, Math.max(0, event.clientX - rect.left));
@@ -114,31 +198,51 @@ export function useChartInk({
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {[...state.items, ...(draft ? [draft] : [])].map((item) =>
-            item.kind === "stroke" ? (
-              <path
-                key={item.id}
-                d={inkPath(item.points.map((p) => ({ x: plot.toX(p.x), y: plot.toY(p.y) })))}
-                strokeWidth={2.5}
-                style={{ stroke: item.color }}
-              />
-            ) : (
-              <Ruler
-                key={item.id}
-                a={item.a}
-                b={item.b}
-                plot={plot}
-                text={describe(measureSegment(item.a, item.b), plot, labels)}
-              />
-            ),
+          {[...state.items, ...(draft ? [draft] : []), ...keyboardDraft(cursor, placed)].map(
+            (item) =>
+              item.kind === "stroke" ? (
+                <path
+                  key={item.id}
+                  d={inkPath(item.points.map((p) => ({ x: plot.toX(p.x), y: plot.toY(p.y) })))}
+                  strokeWidth={2.5}
+                  style={{ stroke: item.color }}
+                />
+              ) : (
+                <Ruler
+                  key={item.id}
+                  a={item.a}
+                  b={item.b}
+                  plot={plot}
+                  text={describe(measureSegment(item.a, item.b), plot, labels)}
+                />
+              ),
           )}
+          {cursor ? <Crosshair at={cursor} plot={plot} /> : null}
         </g>
       ),
       html: (plot) =>
         tool === "none" ? null : (
           <div
             data-export-skip=""
-            className="absolute touch-none select-none"
+            role="slider"
+            tabIndex={0}
+            aria-label={labels.plot}
+            aria-valuemin={0}
+            aria-valuemax={1}
+            aria-valuenow={cursor ? 1 : 0}
+            aria-valuetext={
+              cursor
+                ? `${labels.position(plot.formatX(cursor.x), plot.formatY(cursor.y))}${placed.length ? `. ${labels.pending(placed.length)}` : ""}`
+                : labels.plot
+            }
+            onKeyDown={(event) => onKeyDown(event, plot)}
+            onFocus={(event) => {
+              if (!cursor && event.currentTarget.matches(":focus-visible")) {
+                setCursor(startCursor(domainOf(plot)));
+              }
+            }}
+            onBlur={reset}
+            className="absolute touch-none select-none outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
             style={{
               left: plot.left,
               top: plot.top,
@@ -148,6 +252,7 @@ export function useChartInk({
             }}
             onPointerDown={(event) => {
               if (event.button !== 0) return;
+              reset();
               event.currentTarget.setPointerCapture(event.pointerId);
               drawing.current = true;
               const point = pointOf(event, plot);
@@ -195,7 +300,7 @@ export function useChartInk({
           />
         ),
     };
-  }, [state.items, draft, tool, color, labels]);
+  }, [state.items, draft, tool, color, labels, cursor, placed]);
 
   const undo = useCallback(() => dispatch({ type: "undo" }), []);
   const redo = useCallback(() => dispatch({ type: "redo" }), []);
@@ -218,6 +323,17 @@ export function useChartInk({
     status,
     overlay,
   };
+}
+
+function Crosshair({ at, plot }: { at: DataPoint; plot: CartesianPlotInfo }) {
+  const x = plot.toX(at.x);
+  const y = plot.toY(at.y);
+  return (
+    <g data-crosshair="" strokeWidth={1} style={{ stroke: "var(--ink-2)" }}>
+      <path d={`M${x},0V${plot.height}M0,${y}H${plot.width}`} strokeDasharray="2 3" />
+      <circle cx={x} cy={y} r={5} fill="none" strokeWidth={2} />
+    </g>
+  );
 }
 
 function Ruler({

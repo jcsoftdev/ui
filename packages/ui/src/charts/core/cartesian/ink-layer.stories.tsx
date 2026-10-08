@@ -21,9 +21,20 @@ const spanish: Partial<InkLabels> = {
   redo: "Rehacer",
   clear: "Borrar todo",
   steps: (count) => `${count} ${count === 1 ? "barbero" : "barberos"}`,
+  plot: "Gráfico de anotación: las flechas mueven la mira, Mayús va más rápido, Espacio fija un punto, Intro termina, Escape cancela",
+  position: (x, y) => `${x}, ${y}`,
+  pending: (count) => `${count} ${count === 1 ? "punto fijado" : "puntos fijados"}`,
+  finished: "Trazo terminado",
 };
 
-type Kind = "line" | "bars";
+type Kind = "line" | "bars" | "dense";
+
+const hours = Array.from({ length: 4000 }, (_, i) => new Date(2026, 5, 1, i));
+const traffic = hours.map((_, i) =>
+  Math.round(
+    40 + 18 * Math.sin(i / 11) + 9 * Math.sin(i / 3.7) + (i % 24 > 9 && i % 24 < 20 ? 22 : 0),
+  ),
+);
 
 function InkDemo({ kind, tool }: { kind: Kind; tool?: "ruler" | "ink" }) {
   const ink = useChartInk({ labels: spanish, tool });
@@ -52,6 +63,16 @@ function InkDemo({ kind, tool }: { kind: Kind; tool?: "ruler" | "ink" }) {
           overlay={ink.overlay}
           legend={false}
           labels={{ explore: "Ventas diarias. Usa las flechas para recorrer los días." }}
+        />
+      ) : kind === "dense" ? (
+        <LineChart
+          title="Clientes por hora"
+          categories={hours}
+          series={[{ id: "clientes", name: "Clientes", data: traffic }]}
+          height={300}
+          maxPoints={240}
+          overlay={ink.overlay}
+          legend={false}
         />
       ) : (
         <BarChart
@@ -121,4 +142,20 @@ export const BrutalPreset: Story = {
       <InkDemo kind="line" tool="ruler" />
     </div>
   ),
+};
+
+/**
+ * Con teclado: activa la regla en la barra de herramientas, enfoca el gráfico (Tab) y mueve la mira con
+ * las flechas (Mayús avanza más rápido). Espacio o Intro fija el primer punto y el segundo mide; con el
+ * lápiz, Espacio añade vértices e Intro termina. Escape cancela. La medida se anuncia en voz alta.
+ */
+export const Keyboard: Story = {
+  args: { ink: placeholder },
+  render: () => <InkDemo kind="line" tool="ruler" />,
+};
+
+/** 4 000 puntos por hora reducidos a 240: la regla sigue midiendo en tiempo real, no en muestras. */
+export const Downsampled: Story = {
+  args: { ink: placeholder },
+  render: () => <InkDemo kind="dense" tool="ruler" />,
 };

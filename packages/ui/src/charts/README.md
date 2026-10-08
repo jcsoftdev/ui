@@ -571,7 +571,7 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
 - Crossfilter (`crossfilter/`): `CrossfilterProvider data dimensions` shares one dataset and its filters;
   `useCrossfilter()` exposes `filtered` (feed it to a `DataGrid`), `group`, `bins`, `toggle`, `setRange`, `clear`.
   `CrossfilterBarChart` (click to filter), `CrossfilterHistogram` (drag or click bins) and `CrossfilterScatter`
-  (display only: filtered dots in accent, the rest faint) each show "filtered of total" and draw the totals as a ghost
+  (filtered dots in accent, the rest faint; a rectangular brush filters both dimensions: drag a rectangle, click to clear, or focus the brush after the plot: arrows move it, Shift + arrows resize it, Enter applies, Escape clears; a Clear button appears) each show "filtered of total" and draw the totals as a ghost
   series. A chart's own filter is excluded from its own counts (crossfilter semantics), so it stays stable while you
   brush it. The engine (`crossfilter-engine.ts`) is pure and tested in `test/crossfilter-parity.test.mjs`. The
   histogram brush uses the new cartesian prop `rangeSelect={{ value, onChange }}` (vertical charts, band of category
@@ -581,8 +581,12 @@ import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a 
   (value and %); the pen draws a thinned, smoothed, spline path. Marks are stored in data units and drawn inside the
   chart SVG, so `ExportMenu` exports them. Undo, redo and clear are in the toolbar. `CartesianChartProps.overlay` is
   `{ svg(plot), html(plot) }` with `CartesianPlotInfo` (pixel/data conversions) so other tools can reuse it. Pointer
-  only (no keyboard drawing); the last measurement is announced in a live region. Horizontal bars and downsampled
-  series are not supported by the x mapping. Math in `core/ink.ts`, tests in `test/ink-parity.test.mjs`.
+  or keyboard: with the ruler or pen active the plot is focusable (`role="slider"`); arrows move a crosshair (one
+  category or a fiftieth of the time window; Shift five times as far), Space or Enter sets a point (ruler: two
+  points; pen: Space adds vertices, Enter finishes), Escape cancels. The position is the slider's value text and the
+  last measurement is announced in a live region. Downsampled series map x through the original sample indices (and
+  real times), so measures are in data units, not samples. Horizontal bars are not supported. Math in `core/ink.ts`,
+  tests in `test/ink-parity.test.mjs` and `test/ink-keyboard.test.mjs`.
 - `Scrolly` / `ScrollyStep` (`containers/scrolly/`): steps scroll while a sticky `graphic({ step, previous,
   reducedMotion })` follows the one crossing the trigger line (`offset`, default the middle; `root` for an inner scroll
   container). Wide containers (`@3xl`) put the graphic beside the text, narrow ones pin it on top. Steps are plain

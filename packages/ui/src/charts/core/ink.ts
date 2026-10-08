@@ -189,3 +189,75 @@ export function createAxisMap(pixels: readonly number[], values: readonly number
     fromPixel: (pixel) => interpolate(pixels, values, pixel),
   };
 }
+
+export type CursorKey = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown";
+
+/** Visible data window of a plot, which the keyboard cursor moves inside. */
+export interface CursorDomain {
+  x: readonly [number, number];
+  y: readonly [number, number];
+  /** "index": x moves one category at a time; "time": by a fiftieth of the window. */
+  xKind: "index" | "time";
+}
+
+const clampTo = (value: number, [a, b]: readonly [number, number]) =>
+  Math.min(Math.max(a, b), Math.max(Math.min(a, b), value));
+
+/** Where the crosshair appears when a plot is focused: the middle of the window. */
+export function startCursor(domain: CursorDomain): DataPoint {
+  const x = (domain.x[0] + domain.x[1]) / 2;
+  return {
+    x: domain.xKind === "index" ? clampTo(Math.round(x), domain.x) : x,
+    y: (domain.y[0] + domain.y[1]) / 2,
+  };
+}
+
+/**
+ * One arrow-key step of the crosshair in data units: a category on index axes (a fiftieth of the
+ * window on time axes) and a fiftieth of the value window vertically; `big` moves five times as far.
+ * It never leaves the window.
+ */
+export function moveCursor(
+  cursor: DataPoint,
+  key: CursorKey,
+  big: boolean,
+  domain: CursorDomain,
+): DataPoint {
+  const factor = big ? 5 : 1;
+  const xStep = domain.xKind === "index" ? 1 : Math.abs(domain.x[1] - domain.x[0]) / 50;
+  const yStep = Math.abs(domain.y[1] - domain.y[0]) / 50;
+  const sign = key === "ArrowRight" || key === "ArrowUp" ? 1 : -1;
+  if (key === "ArrowLeft" || key === "ArrowRight") {
+    return { ...cursor, x: clampTo(cursor.x + sign * xStep * factor, domain.x) };
+  }
+  return { ...cursor, y: clampTo(cursor.y + sign * yStep * factor, domain.y) };
+}
+
+/**
+ * What a key does with the points collected so far. The ruler needs two points and commits on the
+ * second; the pen collects vertices with Space and Enter finishes (the cursor becomes the last vertex).
+ */
+export type CursorAction =
+  | { type: "pending"; points: DataPoint[] }
+  | { type: "commit"; points: DataPoint[] }
+  | { type: "cancel" };
+
+export function cursorAction(
+  tool: "ruler" | "ink",
+  key: " " | "Enter" | "Escape",
+  points: readonly DataPoint[],
+  cursor: DataPoint,
+): CursorAction {
+  if (key === "Escape") return { type: "cancel" };
+  if (tool === "ruler") {
+    const first = points[0];
+    if (!first) return { type: "pending", points: [cursor] };
+    if (first.x === cursor.x && first.y === cursor.y) return { type: "pending", points: [first] };
+    return { type: "commit", points: [first, cursor] };
+  }
+  if (key === " ") return { type: "pending", points: [...points, cursor] };
+  const last = points[points.length - 1];
+  const all =
+    last && last.x === cursor.x && last.y === cursor.y ? [...points] : [...points, cursor];
+  return all.length >= 2 ? { type: "commit", points: all } : { type: "pending", points: all };
+}
