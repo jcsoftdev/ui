@@ -87,7 +87,11 @@ export interface Measurement {
 }
 
 /** What a drag between two anchors measures. */
-export function measureRange(times: readonly number[], a: StockAnchor, b: StockAnchor): Measurement {
+export function measureRange(
+  times: readonly number[],
+  a: StockAnchor,
+  b: StockAnchor,
+): Measurement {
   const change = b.price - a.price;
   return {
     change,

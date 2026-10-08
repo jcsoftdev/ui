@@ -1,5 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { type StockBar, StockChart, type StockComparison, type StockFlag } from "./stock-chart.js";
+import { type ComponentProps, useEffect, useRef, useState } from "react";
+import {
+  DEFAULT_STOCK_TOOLS,
+  type StockBar,
+  StockChart,
+  type StockComparison,
+  type StockDrawing,
+  type StockFlag,
+  type StockWindow,
+  stockStats,
+  useStockStream,
+} from "./stock-chart.js";
 
 /** Deterministic pseudo-random sequence so stories never change between renders. */
 function sequence(seed: number) {
@@ -102,10 +113,31 @@ const spanishTexts = {
   price: "Navajas importadas",
   ranges: "Periodo",
   seriesTypes: "Tipo de gráfico",
-  seriesTypeNames: { candle: "Velas", ohlc: "Barras OHLC", line: "Línea", area: "Área" },
+  seriesTypeNames: {
+    candle: "Velas",
+    ohlc: "Barras OHLC",
+    line: "Línea",
+    area: "Área",
+    column: "Columnas",
+    "heikin-ashi": "Heikin-Ashi",
+    renko: "Renko",
+  },
   signal: "Señal",
   histogram: "Histograma",
   events: "Eventos",
+  tools: "Herramientas de dibujo",
+  toolNames: {
+    cursor: "Seleccionar",
+    trend: "Línea de tendencia",
+    horizontal: "Línea horizontal",
+    range: "Rango",
+    fib: "Retroceso de Fibonacci",
+    measure: "Medir",
+  },
+  deleteDrawing: "Borrar el dibujo seleccionado",
+  bars: "barras",
+  days: "d",
+  drawingLayer: "Zona de dibujo",
 };
 
 const meta = {
@@ -143,7 +175,14 @@ const meta = {
     comparisons: { control: false },
     flags: { control: false },
     ranges: { control: false },
-    defaultSeriesType: { control: "inline-radio", options: ["candle", "ohlc", "line", "area"] },
+    defaultSeriesType: {
+      control: "select",
+      options: ["candle", "ohlc", "line", "area", "column", "heikin-ashi", "renko"],
+    },
+    drawingTools: { control: false },
+    drawings: { control: false },
+    defaultDrawings: { control: false },
+    defaultPinned: { control: false },
     height: { control: { type: "range", min: 260, max: 640, step: 10 } },
   },
   decorators: [
@@ -245,4 +284,174 @@ export const FillParent: Story = {
       </div>
     ),
   ],
+};
+
+/** Smoothed candles: each one opens at the middle of the previous one. */
+export const HeikinAshi: Story = {
+  args: { defaultSeriesType: "heikin-ashi", defaultRange: "6m", oscillator: undefined },
+};
+
+/** Bricks of a fixed size (the 14-day ATR unless `renkoBrickSize` is set): time disappears, only moves count. */
+export const Renko: Story = {
+  args: { defaultSeriesType: "renko", defaultRange: "todo", oscillator: undefined, overlays: [] },
+};
+
+export const Columns: Story = {
+  args: { defaultSeriesType: "column", defaultRange: "3m", oscillator: undefined, overlays: [] },
+};
+
+function LiveChart(args: ComponentProps<typeof StockChart>) {
+  const { data, appendData } = useStockStream(navajas.slice(-90), { maxBars: 140 });
+  const [running, setRunning] = useState(true);
+  const latest = useRef(data);
+  latest.current = data;
+  useEffect(() => {
+    if (!running) return;
+    const random = sequence(77);
+    let ticks = 0;
+    const timer = setInterval(() => {
+      ticks += 1;
+      const last = latest.current[latest.current.length - 1] as StockBar;
+      const move = (random() - 0.5) * 1.6;
+      if (ticks % 6 === 0) {
+        const date = new Date(last.date);
+        date.setDate(date.getDate() + 1);
+        const close = Math.round((last.close + move) * 100) / 100;
+        appendData({
+          date,
+          open: last.close,
+          high: Math.max(last.close, close),
+          low: Math.min(last.close, close),
+          close,
+          volume: 40,
+        });
+        return;
+      }
+      const close = Math.round((last.close + move) * 100) / 100;
+      appendData({
+        ...last,
+        close,
+        high: Math.max(last.high, close),
+        low: Math.min(last.low, close),
+        volume: (last.volume ?? 0) + Math.round(random() * 30),
+      });
+    }, 450);
+    return () => clearInterval(timer);
+  }, [running, appendData]);
+  return (
+    <div className="flex flex-col gap-3">
+      <button
+        type="button"
+        onClick={() => setRunning((value) => !value)}
+        className="self-start rounded-pill bg-surface-2 px-3 py-1 font-semibold text-[12px] text-ink"
+      >
+        {running ? "Pausar" : "Reanudar"}
+      </button>
+      <StockChart {...args} data={data} />
+    </div>
+  );
+}
+
+/** A new tick every 450 ms updates the forming candle; each 6th starts a new day. The window follows the tail. */
+export const Streaming: Story = {
+  args: { defaultRange: "1m", overlays: [{ type: "sma", period: 10 }], oscillator: undefined },
+  render: (args) => <LiveChart {...args} />,
+};
+
+const sampleDrawings: StockDrawing[] = [
+  {
+    id: "tendencia",
+    type: "trend",
+    a: { time: +days[days.length - 150], price: 86 },
+    b: { time: +days[days.length - 40], price: 108 },
+  },
+  { id: "soporte", type: "horizontal", price: 92 },
+  {
+    id: "fibonacci",
+    type: "fib",
+    a: { time: +days[days.length - 120], price: 118 },
+    b: { time: +days[days.length - 70], price: 90 },
+  },
+];
+
+function DrawingStory(args: ComponentProps<typeof StockChart>) {
+  const [saved, setSaved] = useState<StockDrawing[]>(args.defaultDrawings?.slice() ?? []);
+  return (
+    <div className="flex flex-col gap-3">
+      <StockChart {...args} onDrawingsChange={setSaved} />
+      <p className="m-0 text-[12px] text-ink-3">
+        Dibujos guardados por <code>onDrawingsChange</code>: {saved.length}
+        {saved.length ? ` (${saved.map((d) => d.type).join(", ")})` : ""}. Elige una herramienta y
+        arrastra sobre el precio; selecciona un dibujo y pulsa Supr para borrarlo.
+      </p>
+    </div>
+  );
+}
+
+export const DrawingTools: Story = {
+  args: {
+    drawingTools: DEFAULT_STOCK_TOOLS.filter((tool) => tool !== "measure"),
+    defaultDrawings: sampleDrawings,
+    defaultRange: "6m",
+    oscillator: undefined,
+  },
+  render: (args) => <DrawingStory {...args} />,
+};
+
+/** Arrastra con la regla: variación %, barras y días entre los dos extremos. */
+export const RangeMeasure: Story = {
+  args: {
+    drawingTools: ["cursor", "measure"],
+    defaultRange: "6m",
+    oscillator: undefined,
+    overlays: [],
+  },
+};
+
+/** Clic (o Enter) en una barra fija su tooltip; fija varias para comparar días. */
+export const PinnedTooltips: Story = {
+  args: {
+    pinnable: true,
+    defaultPinned: [+days[days.length - 90], +days[days.length - 30]],
+    defaultRange: "6m",
+    oscillator: undefined,
+    overlays: [],
+  },
+};
+
+function StatsStory(args: ComponentProps<typeof StockChart>) {
+  const [window_, setWindow] = useState<StockWindow | null>(null);
+  const stats = window_ ? stockStats(navajas.slice(window_.from, window_.to + 1)) : null;
+  const percent = (value: number) => `${value > 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
+  const tiles: Array<[string, string]> = stats
+    ? [
+        ["Variación", percent(stats.changePercent)],
+        ["Volatilidad anual", `${(stats.annualizedVolatility * 100).toFixed(1)}%`],
+        ["Máximo", `S/ ${stats.high.price.toFixed(2)}`],
+        ["Mínimo", `S/ ${stats.low.price.toFixed(2)}`],
+        ["Caída máxima", `-${(stats.maxDrawdown.depth * 100).toFixed(1)}%`],
+        ["Mejor día", percent(stats.bestDay.change)],
+        ["Peor día", percent(stats.worstDay.change)],
+        ["Cajas vendidas", stats.totalVolume.toLocaleString("es-PE")],
+      ]
+    : [];
+  return (
+    <div className="@container/stats flex flex-col gap-3">
+      <StockChart {...args} onWindowChange={setWindow} />
+      <dl className="m-0 grid grid-cols-2 gap-2 @md/stats:grid-cols-4">
+        {tiles.map(([label, value]) => (
+          <div key={label} className="rounded-event bg-surface-2 px-3 py-2">
+            <dt className="text-[11px] text-ink-3">{label}</dt>
+            <dd className="m-0 font-bold text-[15px] text-ink tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** `stockStats(data)` on the visible window: change the range or drag the navigator and the panel follows. */
+export const Stats: Story = {
+  args: { defaultRange: "6m", oscillator: undefined, overlays: [] },
+  render: (args) => <StatsStory {...args} />,
 };

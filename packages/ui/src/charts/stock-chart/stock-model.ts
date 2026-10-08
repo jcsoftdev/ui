@@ -20,7 +20,19 @@ export interface StockBar {
   volume?: number;
 }
 
-export type StockSeriesType = "candle" | "ohlc" | "line" | "area";
+export type StockSeriesType =
+  | "candle"
+  | "ohlc"
+  | "line"
+  | "area"
+  | "column"
+  | "heikin-ashi"
+  | "renko";
+
+/** The types drawn as candles (the last two are transforms of the data first). */
+export function isCandleLike(type: StockSeriesType): boolean {
+  return type === "candle" || type === "heikin-ashi" || type === "renko";
+}
 
 /** Indicators drawn over the price. */
 export type StockOverlay =

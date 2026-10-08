@@ -254,6 +254,20 @@ Every chart adapts to its exact parent, width and height, from the container and
   bar (the main series becomes a line, overlays hide, the type switch is disabled). The price and oscillator panes
   share one crosshair and one keyboard slider; the navigator is `ChartBrush`. `height` covers price and oscillator; the
   navigator is extra, as with the candlestick brush (`"fill"` includes it).
+- Stock types: `seriesType` also takes `"column"`, `"heikin-ashi"` and `"renko"`. The last two transform the data
+  (`heikinAshi(data)`, `renko(data, brickSize)` in `stock-transforms.ts`, `renkoBrickSize` defaults to the ATR(14));
+  overlays and the oscillator then run on the transformed bars, the hidden data table keeps the raw prices.
+- Streaming: `useStockStream(initial, { maxBars })` returns `{ data, appendData }`; `appendBars` replaces a bar with the
+  same date (the forming candle) and appends newer ones. A window that ends at the last bar follows new bars, any other
+  window keeps its dates; a different series type or an unrelated dataset resets to `defaultRange`.
+- Drawing tools: `drawingTools={DEFAULT_STOCK_TOOLS}` shows select, trend line, horizontal line, range box, Fibonacci and
+  measure. Drawings are `{ id, type, a, b }` with `{ time, price }` anchors, so they survive zoom and new data; the list is
+  controlled with `drawings` or `defaultDrawings` and every change reaches `onDrawingsChange(all)`. Select one by clicking it
+  and delete it with Supr or the toolbar button. Measure is transient: it shows % change, bars and days between two points.
+  Drawings are hidden in % comparison mode.
+- `pinnable` pins a bar's tooltip on click or Enter (several at once, `defaultPinned` / `onPinnedChange` carry times in ms).
+- `stockStats(bars)` is headless: returns, annualized volatility, high/low, best/worst day and maximum drawdown; pair it
+  with `onWindowChange({ from, to })` to summarize the visible window.
 
 ## Annotations (cartesian)
 
