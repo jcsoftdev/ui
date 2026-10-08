@@ -6,7 +6,7 @@ Run: `pnpm --filter @jcsoftdev/ui storybook` (dev, port 6006) or `build-storyboo
 
 - Lives next to the component: `src/<category>/<component>/<component>.stories.tsx`.
 - CSF3, typed with `import type { Meta, StoryObj } from "@storybook/react-vite"`; use `satisfies Meta<typeof Component>`.
-- `title: "<Category>/<ComponentName>"`. Categories: Atoms, Forms, Navigation, Containers, Overlays, Shell, Palette, Calendar, States, Charts.
+- `title: "<Category>/<ComponentName>"`. Categories: Foundations, Atoms, Forms, Navigation, Containers, Overlays, Shell, Palette, Calendar, States, Charts.
 - `tags: ["autodocs"]` and `component` set.
 - `args` + `argTypes` so Controls work (`inline-radio` for unions, `boolean`, `text`). Use `control: false` for non-serializable props.
 - A `Default` story first, then one story per meaningful variant or state (sizes, disabled, loading, empty, error).
@@ -36,8 +36,55 @@ in a sidebar, a card, a dialog or a full page.
 
 The toolbar sets `data-theme` (`light`/`dark`) and `data-accent` (Coral is the default and has no attribute) on `<html>`, same as the web app. Use token utilities (`bg-surface`, `text-ink`, `border-line`), never hard-coded colors. Check both themes and a couple of palettes before finishing.
 
+## Style presets, density and radius
+
+Three root attributes restyle the whole library with zero runtime: they only remap CSS custom
+properties generated from `tokens/default.json` (`styles` section) into `styles/tokens.css`.
+Never hand-edit `tokens.css`, `theme.css` or `Theme.kt`: change the JSON or
+`scripts/build-theme.mjs` and run `pnpm build:styles`.
+
+| Attribute | Values | Default (no attribute) |
+| --- | --- | --- |
+| `data-style` | `soft`, `bordered`, `elevated`, `flat`, `glass`, `brutal` | `soft` (the base tokens) |
+| `data-density` | `compact` (×0.875), `normal`, `comfortable` (×1.125) | `normal` |
+| `data-radius` | `none`, `sm`, `md`, `lg`, `full` | the preset's own radii |
+
+- They combine with `data-theme` and every `data-accent`. Presets with light/dark-specific
+  values (`elevated`, `glass`) get dark blocks for both `data-theme="dark"` and
+  `prefers-color-scheme: dark`.
+- They work on any element, not only `<html>`: `<section data-style="glass">` restyles its
+  subtree. Every block declares its whole set of properties, so nesting never reads stale
+  values computed at `:root`.
+- Precedence on one element is source order at equal specificity: theme < accent <
+  `data-style` < `data-density` < `data-radius`. `data-radius` also wins over a preset set on a
+  descendant (presets read `var(--radius-card-override, <own>)`). Presets never touch density
+  tokens; the generator rejects it. No `!important` anywhere.
+- Density is a unitless `--density` that scales control heights, control and card padding and
+  the `gap-density*` scale with `calc()`. Tailwind's global `--spacing` is not scaled.
+- Avatars keep their shape under `data-radius`; only a preset (`brutal`) squares them.
+
+### Components must read semantic tokens
+
+A preset can only restyle what reads its tokens. Use these, never raw radii, arbitrary
+shadows (`shadow-[...]`), fixed heights or `border border-line` for a card edge:
+
+| Concern | Tokens / utilities |
+| --- | --- |
+| Radius | `rounded-button`, `rounded-input`, `rounded-badge`, `rounded-avatar`, `rounded-popover`, `rounded-card`, `rounded-control`, `rounded-chip`, `rounded-dialog`… |
+| Edge | `border-card`, `border-control`, `border-t-divider`, `border-b-divider` (width + style + color) |
+| Shadow | `shadow-card` (pairs with `border-card`), `shadow-raised`, `shadow-overlay`, `shadow-control`, `shadow-selected`, `shadow-inset`, `shadow-inset-accent`, `shadow-pinned-start/end` |
+| Surface | `bg-surface-card`, `bg-surface-control`, `bg-surface-overlay`, `bg-surface-sunken`, `bg-surface-backdrop`; add `surface-card`/`surface-overlay` for the glass blur |
+| Density | `h-control`, `h-control-sm`, `h-input`, `px-control-x`, `p-card`, `gap-density-sm`, `gap-density`, `gap-density-lg` |
+| Focus and motion | `focus-visible:focus-ring`, `pressable`, `ease-style`, `duration-(--motion-duration)` |
+
+A card edge is `border-card shadow-card`: `soft` puts the hairline in the shadow (border width
+0), `bordered` puts it in the border (no shadow). The legacy names (`shadow-flat`,
+`shadow-pop`, `shadow-hero`, `radius-*`, `control-height`) are remapped by the presets too,
+so unrefactored components follow along partially. The `Foundations/StylePresets` story shows
+every preset side by side; check it with the Estilo, Densidad and Radio toolbars.
+
 ## Files
 
 - `main.ts`: stories glob, addons (docs, a11y), Tailwind v4 vite plugin.
 - `storybook.css`: Tailwind entry plus library tokens/theme/base; `@source "../src"` generates the utilities used in components.
-- `preview.tsx`: toolbar globals and theme decorator.
+- `preview.tsx`: toolbar globals (theme, accent, style, density, radius, container) and the decorator that sets them on `<html>`.

@@ -6,6 +6,7 @@ body {
 
 body {
   background: var(--bg);
+  background-image: var(--page-backdrop, none);
   color: var(--ink);
   font: 400 14px/1.5 var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -25,8 +26,8 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-ink);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--accent-ink));
+  outline-offset: var(--focus-ring-offset, 2px);
 }
 
 @media (prefers-reduced-motion: reduce) {

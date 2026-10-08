@@ -180,4 +180,79 @@
   --text-m-meta: 13px;
   --text-m-meta--line-height: 1.4;
   --text-m-meta--font-weight: 400;
+  --radius-button: var(--radius-button);
+  --radius-input: var(--radius-input);
+  --radius-badge: var(--radius-badge);
+  --radius-avatar: var(--radius-avatar);
+  --radius-popover: var(--radius-popover);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-control: var(--shadow-control);
+  --shadow-selected: var(--shadow-selected);
+  --shadow-inset: var(--shadow-inset);
+  --shadow-inset-accent: var(--shadow-inset-accent);
+  --shadow-pinned-start: var(--shadow-pinned-start);
+  --shadow-pinned-end: var(--shadow-pinned-end);
+  --color-surface-card: var(--surface-card);
+  --color-surface-control: var(--surface-control);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-backdrop: var(--surface-backdrop);
+  --color-divider: var(--border-color-divider);
+  --color-focus-ring: var(--focus-ring-color);
+  --blur-surface: var(--surface-blur);
+  --ease-style: var(--motion-ease);
+  --spacing-control: var(--control-height);
+  --spacing-control-sm: var(--control-height-sm);
+  --spacing-input: var(--input-height);
+  --spacing-control-x: var(--pad-control-x);
+  --spacing-card: var(--pad-card);
+  --spacing-density-sm: var(--gap-density-sm);
+  --spacing-density: var(--gap-density);
+  --spacing-density-lg: var(--gap-density-lg);
+}
+
+@utility border-card {
+  border-width: var(--border-width-card);
+  border-style: solid;
+  border-color: var(--border-color-card);
+}
+
+@utility border-control {
+  border-width: var(--border-width-control);
+  border-style: solid;
+  border-color: var(--border-color-control);
+}
+
+@utility border-t-divider {
+  border-top: var(--border-width-divider) solid var(--border-color-divider);
+}
+
+@utility border-b-divider {
+  border-bottom: var(--border-width-divider) solid var(--border-color-divider);
+}
+
+@utility surface-card {
+  background-color: var(--surface-card);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+}
+
+@utility surface-overlay {
+  background-color: var(--surface-overlay);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+}
+
+@utility focus-ring {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@utility pressable {
+  transition: scale var(--motion-duration) var(--motion-ease);
+  &:active:not(:disabled) {
+    scale: var(--press-scale);
+  }
 }
