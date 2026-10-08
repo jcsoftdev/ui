@@ -10,7 +10,7 @@ const charts = join(here, "../src/charts");
 
 const bundle = await build({
   stdin: {
-    contents: ["core/tree-layout.ts", "core/sankey.ts"]
+    contents: ["core/tree-layout.ts", "core/tree-fit.ts", "core/sankey.ts"]
       .map((file) => `export * from ${JSON.stringify(join(charts, file))};`)
       .join("\n"),
     resolveDir: charts,
@@ -219,4 +219,25 @@ test("sankey breaks cycles and drops invalid links, reporting why", () => {
     graph.nodes.map((node) => node.column),
     [0, 1, 2],
   );
+});
+
+test("treeFitView contains when legible, else centres the root at a readable scale", () => {
+  const layout = lib.treeLayout(team(), { direction: "top", siblingGap: 20, levelGap: 40 });
+  const wide = lib.treeFitView(layout, 1600, 600, "top");
+  assert.equal(wide.mode, "contain");
+  assert.ok(wide.view.k >= 0.6);
+
+  const narrow = lib.treeFitView(layout, 320, 420, "top", { inset: 36 });
+  assert.equal(narrow.mode, "readable");
+  assert.ok(narrow.view.k >= 0.85 && narrow.view.k <= 1);
+  const root = layout.nodes[0];
+  close(narrow.view.x + root.x * narrow.view.k, 160, "root is centred across");
+  assert.ok(narrow.view.y + (root.y - root.height / 2) * narrow.view.k >= 36, "below the toolbar");
+
+  assert.equal(lib.treeFitView(layout, 320, 420, "top", { mode: "contain" }).mode, "contain");
+  assert.equal(lib.treeFitView(layout, 1600, 600, "top", { mode: "readable" }).mode, "readable");
+
+  const left = lib.treeLayout(team(), { direction: "left" });
+  const view = lib.treeFitView(left, 320, 420, "left", { mode: "readable" }).view;
+  close(view.x + (left.nodes[0].x - left.nodes[0].width / 2) * view.k, 16, "root on the left edge");
 });

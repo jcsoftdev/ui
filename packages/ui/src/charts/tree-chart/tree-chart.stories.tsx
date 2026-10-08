@@ -107,6 +107,7 @@ const meta = {
   argTypes: {
     direction: { control: "inline-radio", options: ["top", "bottom", "left", "right"] },
     edgeStyle: { control: "inline-radio", options: ["curved", "step", "straight"] },
+    fit: { control: "inline-radio", options: ["auto", "contain", "readable"] },
     wheelZoom: { control: "inline-radio", options: ["modifier", "always", "off"] },
     height: { control: { type: "range", min: 240, max: 760, step: 10 } },
     siblingGap: { control: { type: "range", min: 4, max: 60, step: 2 } },
@@ -184,7 +185,7 @@ export const Empty: Story = {
   args: { data: null },
 };
 
-/** 320 px container: the whole tree is fitted at first; pinch, drag or use the buttons. */
+/** 320 px container: `fit="auto"` keeps the cards readable and centres the root; drag to pan, the fit button shows the whole tree. */
 export const Narrow: Story = {
   args: { height: 420, direction: "left", edgeStyle: "step", nodeWidth: 168, initialDepth: 2 },
   decorators: [
