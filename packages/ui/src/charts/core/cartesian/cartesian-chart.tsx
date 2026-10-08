@@ -18,12 +18,16 @@ import { formatPercent, resolveFormat } from "../format.js";
 import { ChartLegend, type LegendItem, type LegendShape } from "../legend.js";
 import { EASE_OUT, fadeIn, revealClip, useEntryAnimation } from "../motion.js";
 import { seriesColor } from "../palette.js";
+import { ChartPatternDefs } from "../pattern-defs.js";
+import { patternId } from "../patterns.js";
 import { formatDate } from "../scales/time.js";
 import { ChartTooltip, type TooltipRow } from "../tooltip.js";
 import { type ChartLabels, resolveLabels, type XValue } from "../types.js";
 import { useSeriesState } from "../use-series-state.js";
 import { AnnotationLayer } from "./annotations.js";
 import { ChartBrush, type IndexRange } from "./brush.js";
+import { CategoryGroupAxis } from "./category-group-axis.js";
+import { categoryGroupSpans } from "./category-groups.js";
 import {
   type CartesianLayout,
   computeLayout,
@@ -79,6 +83,9 @@ export function CartesianChart({
   legend,
   tooltip = true,
   annotations,
+  categoryGroups,
+  categoryLabelRotation,
+  onCategoryClick,
   brush = false,
   loading = false,
   animate = true,
@@ -106,6 +113,10 @@ export function CartesianChart({
         dashed: item.dashed ?? false,
         format: resolveFormat(item.format ?? valueFormat),
         data: item.data,
+        from: item.from,
+        stackGroup: item.stackGroup,
+        pointColors: item.pointColors,
+        pattern: item.pattern,
       })),
     [series, valueFormat],
   );
@@ -134,7 +145,13 @@ export function CartesianChart({
       columns={resolved.map((item) => ({
         id: item.id,
         name: item.name,
-        values: item.data.map((value) => (value == null ? "" : item.format(value))),
+        values: item.data.map((value, index) => {
+          if (value == null) return "";
+          const origin = item.from?.[index];
+          return origin == null
+            ? item.format(value)
+            : `${item.format(origin)} – ${item.format(value)}`;
+        }),
       }))}
     />
   );
@@ -189,6 +206,9 @@ export function CartesianChart({
           grid={grid}
           tooltip={tooltip}
           annotations={annotations}
+          categoryGroups={categoryGroups}
+          categoryLabelRotation={categoryLabelRotation}
+          onCategoryClick={onCategoryClick}
           animate={animate}
         />
       )}
@@ -213,6 +233,9 @@ interface CartesianPlotProps
     | "grid"
     | "tooltip"
     | "annotations"
+    | "categoryGroups"
+    | "categoryLabelRotation"
+    | "onCategoryClick"
     | "animate"
   > {
   width: number;
@@ -263,6 +286,9 @@ function CartesianPlot({
   grid = true,
   tooltip = true,
   annotations,
+  categoryGroups,
+  categoryLabelRotation,
+  onCategoryClick,
   animate = true,
 }: CartesianPlotProps) {
   const uid = safeId(useId());
@@ -280,7 +306,16 @@ function CartesianPlot({
     () =>
       resolved
         .filter((item) => !hidden.has(item.id))
-        .map((item) => (range ? { ...item, data: item.data.slice(start, end + 1) } : item)),
+        .map((item) =>
+          range
+            ? {
+                ...item,
+                data: item.data.slice(start, end + 1),
+                from: item.from?.slice(start, end + 1),
+                pointColors: item.pointColors?.slice(start, end + 1),
+              }
+            : item,
+        ),
     [resolved, hidden, range, start, end],
   );
   const brushSeries = useMemo(
@@ -292,6 +327,7 @@ function CartesianPlot({
     [categories, range, start, end],
   );
 
+  const groupsOn = !range && orientation === "vertical" && (categoryGroups?.length ?? 0) > 0;
   const layout: CartesianLayout = useMemo(
     () =>
       computeLayout({
@@ -310,6 +346,8 @@ function CartesianPlot({
         yAxis: yAxis ?? {},
         rightAxis: rightAxis ?? {},
         annotations: annotations ?? [],
+        categoryGroups: groupsOn,
+        labelRotation: categoryLabelRotation,
       }),
     [
       width,
@@ -327,10 +365,19 @@ function CartesianPlot({
       yAxis,
       rightAxis,
       annotations,
+      groupsOn,
+      categoryLabelRotation,
     ],
   );
 
   const { margin, innerWidth, innerHeight, horizontal } = layout;
+  const groupSpans = useMemo(
+    () =>
+      groupsOn && categoryGroups
+        ? categoryGroupSpans(categoryGroups, layout.positions, layout.step)
+        : [],
+    [groupsOn, categoryGroups, layout.positions, layout.step],
+  );
   const hasBars = layout.geometry.some((item) => item.kind === "column");
   const stackedAreas = stack !== "none";
   const count = windowCategories.length;
@@ -409,7 +456,16 @@ function CartesianPlot({
     setPointer(null);
   };
 
+  const pick = () => {
+    if (active != null && active < count) onCategoryClick?.(start + active);
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if ((event.key === "Enter" || event.key === " ") && onCategoryClick) {
+      event.preventDefault();
+      pick();
+      return;
+    }
     const last = count - 1;
     let move: (current: number) => number;
     if (event.key === "ArrowRight" || event.key === "ArrowDown") {
@@ -449,13 +505,19 @@ function CartesianPlot({
         rows.push({
           id: item.id,
           name: item.name,
-          value: raw == null ? "—" : item.format(raw),
-          color: item.color,
+          value:
+            raw == null
+              ? "—"
+              : item.from?.[index] != null
+                ? `${item.format(item.from[index] as number)} – ${item.format(raw)}`
+                : item.format(raw),
+          color: item.pointColors?.[index] ?? item.color,
           shape: legendShape(item.kind, item.dashed),
           note,
         });
       }
-      if (stack === "normal" && stackable > 1) {
+      const groups = new Set(visible.map((item) => item.stackGroup ?? ""));
+      if (stack === "normal" && stackable > 1 && groups.size <= 1) {
         const format = resolveFormat(valueFormat);
         rows.push({
           id: "__total",
@@ -529,6 +591,19 @@ function CartesianPlot({
               style={{ transformBox: "fill-box", transformOrigin: "left center" }}
             />
           </clipPath>
+          <ChartPatternDefs
+            items={layout.geometry.flatMap((item) =>
+              item.pattern
+                ? [
+                    {
+                      id: patternId(uid, item.id),
+                      pattern: item.pattern,
+                      color: item.color,
+                    },
+                  ]
+                : [],
+            )}
+          />
           {gradient
             ? layout.geometry
                 .filter((item) => item.kind === "area")
@@ -597,6 +672,7 @@ function CartesianPlot({
                 key={item.id}
                 geometry={item}
                 horizontal={horizontal}
+                patternId={item.pattern ? patternId(uid, item.id) : undefined}
                 dimmed={highlighted != null && highlighted !== item.id}
               />
             ) : null,
@@ -652,7 +728,14 @@ function CartesianPlot({
           ) : (
             <>
               <AxisLeft ticks={layout.valueTicks} offset={0} title={yAxis?.title} />
-              <AxisBottom ticks={layout.categoryTicks} offset={innerHeight} />
+              <AxisBottom
+                ticks={layout.categoryTicks}
+                offset={innerHeight}
+                rotate={categoryLabelRotation}
+              />
+              {groupSpans.length ? (
+                <CategoryGroupAxis spans={groupSpans} offset={innerHeight + margin.bottom - 20} />
+              ) : null}
               {layout.rightScale ? (
                 <AxisRight ticks={layout.rightTicks} offset={innerWidth} title={rightAxis?.title} />
               ) : null}
@@ -713,9 +796,10 @@ function CartesianPlot({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onPointerLeave={onPointerLeave}
+        onClick={onCategoryClick ? pick : undefined}
         className={cn(
           "absolute rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-4",
-          brush ? "cursor-crosshair" : "cursor-default",
+          brush ? "cursor-crosshair" : onCategoryClick ? "cursor-pointer" : "cursor-default",
         )}
         style={{ left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
       />

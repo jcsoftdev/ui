@@ -1,5 +1,6 @@
 import type { ValueFormat } from "./format.js";
 import type { ChartTone } from "./palette.js";
+import type { ChartPattern } from "./patterns.js";
 
 /** A category or time stamp on the category axis. */
 export type XValue = string | number | Date;
@@ -17,6 +18,8 @@ export interface ChartSeries {
   dashed?: boolean;
   /** Overrides the chart `valueFormat` for this series. */
   format?: ValueFormat;
+  /** Fills bars with an SVG pattern (stripes, dots, ...) in the series color, for color-blind friendly charts. */
+  pattern?: ChartPattern;
 }
 
 /** Visible strings. English defaults; pass Spanish (or any language) from the app. */
@@ -91,4 +94,6 @@ export interface ValueAxisOptions {
   scale?: "linear" | "log";
   /** Force zero into the domain (lines default to "auto": only when data sits near zero). */
   zero?: boolean;
+  /** Flips the axis: values grow downwards (or to the left), bars hang from the top (or the right). */
+  reversed?: boolean;
 }

@@ -16,6 +16,25 @@ export interface CartesianSeries extends ChartSeries {
   kind: MarkKind;
   /** Value axis the series is measured against. */
   axis?: "left" | "right";
+  /**
+   * Floating columns: where each bar starts (`data` is where it ends). Floating
+   * series never stack; both ends are rounded.
+   */
+  from?: ReadonlyArray<number | null>;
+  /**
+   * Columns of one group pile up with `stack`; each group is a column of its
+   * own next to the others in the same category.
+   */
+  stackGroup?: string;
+  /** Color of each bar (columns), `undefined` entries keep the series color. */
+  pointColors?: ReadonlyArray<string | undefined>;
+}
+
+/** A label spanning consecutive categories, drawn under their own tick labels. */
+export interface CategoryGroup {
+  label: string;
+  /** How many consecutive categories belong to the group. */
+  count: number;
 }
 
 export interface CartesianChartProps {
@@ -59,6 +78,12 @@ export interface CartesianChartProps {
   /** Shared tooltip (default true). */
   tooltip?: boolean;
   annotations?: readonly ChartAnnotation[];
+  /** Tilts the category labels (degrees, e.g. -45) so long names fit; vertical charts only. */
+  categoryLabelRotation?: number;
+  /** Second tier of labels under the category axis (vertical charts); counts must add up to the categories. */
+  categoryGroups?: readonly CategoryGroup[];
+  /** Click (or Enter on the focused plot) on a category; receives its index in `categories`. */
+  onCategoryClick?: (index: number) => void;
   /** Drag-to-zoom on the plot plus an overview brush with a reset button. */
   brush?: boolean;
   loading?: boolean;

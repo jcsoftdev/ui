@@ -70,10 +70,17 @@ export interface BarMarkProps {
   geometry: SeriesGeometry;
   dimmed: boolean;
   horizontal: boolean;
+  /** Id of the `<pattern>` (in the chart `<defs>`) that fills the bars instead of the plain color. */
+  patternId?: string;
 }
 
 /** Bars of a column series, rounded at their value end. */
-export const BarMark = memo(function BarMark({ geometry, dimmed, horizontal }: BarMarkProps) {
+export const BarMark = memo(function BarMark({
+  geometry,
+  dimmed,
+  horizontal,
+  patternId,
+}: BarMarkProps) {
   const { color, dashed } = geometry;
   return (
     <g className={DIM} style={{ opacity: dimmed ? 0.16 : 1 }}>
@@ -83,9 +90,10 @@ export const BarMark = memo(function BarMark({ geometry, dimmed, horizontal }: B
           d={bar.d}
           data-bar=""
           style={{
-            fill: color,
+            fill: patternId ? `url(#${patternId})` : (bar.color ?? color),
             fillOpacity: dashed ? 0.35 : 1,
-            stroke: dashed ? color : undefined,
+            stroke: dashed || patternId ? (bar.color ?? color) : undefined,
+            strokeWidth: patternId ? 1.25 : undefined,
             strokeDasharray: dashed ? "4 3" : undefined,
             transformBox: "fill-box",
             transformOrigin: horizontal
