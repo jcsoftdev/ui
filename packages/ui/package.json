@@ -5,9 +5,20 @@
   "author": "jcsoftdev",
   "license": "MIT",
   "type": "module",
-  "sideEffects": ["**/*.css"],
-  "bin": { "ui-theme": "./bin/ui-theme.mjs" },
-  "files": ["dist", "src", "styles", "tokens", "bin", "scripts/build-theme.mjs"],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "bin": {
+    "ui-theme": "./bin/ui-theme.mjs"
+  },
+  "files": [
+    "dist",
+    "src",
+    "styles",
+    "tokens",
+    "bin",
+    "scripts/build-theme.mjs"
+  ],
   "exports": {
     "./styles/*": "./styles/*",
     "./tokens/*": "./tokens/*",
@@ -24,7 +35,8 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/build-theme.test.mjs"
+    "test": "node --test test/build-theme.test.mjs",
+    "check:treeshake": "node test/treeshake.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.6",
@@ -53,6 +65,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tsup": "^8.5.0",
