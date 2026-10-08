@@ -9,7 +9,7 @@ export type ChatRole = "user" | "assistant" | "system";
 export type ChatMessageStatus = "sending" | "streaming" | "done" | "error";
 
 export interface ChatMessageProps extends Omit<ComponentPropsWithoutRef<"article">, "content"> {
-  role: ChatRole;
+  author: ChatRole;
   /** Display name, also the avatar's accessible name. */
   name?: string;
   avatarSrc?: string;
@@ -29,7 +29,7 @@ export interface ChatMessageProps extends Omit<ComponentPropsWithoutRef<"article
 
 /** One chat turn: avatar, bubble, status, streaming caret and an optional footer slot. */
 export function ChatMessage({
-  role,
+  author,
   name,
   avatarSrc,
   status = "done",
@@ -43,7 +43,7 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const streaming = status === "streaming";
 
-  if (role === "system") {
+  if (author === "system") {
     return (
       <article
         className={cn("flex justify-center", className)}
@@ -57,7 +57,7 @@ export function ChatMessage({
     );
   }
 
-  const user = role === "user";
+  const user = author === "user";
   const body =
     children ??
     (user ? (
