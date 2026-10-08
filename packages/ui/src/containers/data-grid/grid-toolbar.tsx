@@ -1,6 +1,6 @@
 "use client";
 
-import { Columns3, Download, Search, X } from "lucide-react";
+import { Columns3, Download, ListFilter, PanelRight, Search, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
@@ -31,6 +31,16 @@ export interface GridToolbarProps<T> {
   selectedCount: number | null;
   /** Extra content at the end of the toolbar. */
   actions?: ReactNode;
+  /** Advanced filter editor shown in a popover; the button is hidden without it. */
+  advancedFilter?: ReactNode;
+  advancedFilterCount?: number;
+  onClearAdvancedFilter?: () => void;
+  /** Toggle of the side tool panel; hidden when absent. */
+  toolPanel?: { open: boolean; onToggle: () => void };
+  /** The export button exports the selected rows. */
+  exportSelected?: boolean;
+  /** Hides the column picker (pivot and tool-panel modes manage columns elsewhere). */
+  hideColumnPicker?: boolean;
 }
 
 /** Search, filter and grouping chips, column visibility, density and export. Wraps when narrow. */
@@ -52,6 +62,12 @@ export function GridToolbar<T>({
   rowCount,
   selectedCount,
   actions,
+  advancedFilter,
+  advancedFilterCount = 0,
+  onClearAdvancedFilter,
+  toolPanel,
+  exportSelected = false,
+  hideColumnPicker = false,
 }: GridToolbarProps<T>) {
   const hideable = columns.filter((column) => column.hideable !== false);
   const visibleCount = columns.length - hidden.length;
@@ -80,6 +96,38 @@ export function GridToolbar<T>({
             {labels.filtersActive(activeFilters)} · {labels.clearFilters}
           </span>
         </button>
+      ) : null}
+
+      {advancedFilter ? (
+        <Popover>
+          <PopoverTrigger
+            className={cn(
+              buttonClass,
+              advancedFilterCount > 0 && "border-accent-line bg-accent-soft text-accent-ink",
+            )}
+          >
+            <ListFilter aria-hidden="true" />
+            {labels.advancedFilter}
+            {advancedFilterCount > 0 ? (
+              <span className="tabular-nums">· {advancedFilterCount}</span>
+            ) : null}
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            aria-label={labels.advancedFilter}
+            className="w-[36rem] p-3"
+          >
+            {advancedFilter}
+            {advancedFilterCount > 0 && onClearAdvancedFilter ? (
+              <div className="mt-3 flex justify-end border-line border-t pt-2">
+                <button type="button" className={buttonClass} onClick={onClearAdvancedFilter}>
+                  <X aria-hidden="true" />
+                  {labels.clearAdvancedFilter}
+                </button>
+              </div>
+            ) : null}
+          </PopoverContent>
+        </Popover>
       ) : null}
 
       {groupBy.map((id) => {
@@ -120,49 +168,66 @@ export function GridToolbar<T>({
         ))}
       </fieldset>
 
-      <Popover>
-        <PopoverTrigger className={buttonClass}>
-          <Columns3 aria-hidden="true" />
-          {labels.columns}
-        </PopoverTrigger>
-        <PopoverContent align="end" aria-label={labels.columns} className="w-60">
-          <fieldset className="grid max-h-72 gap-0.5 overflow-y-auto p-1">
-            <legend className="sr-only">{labels.columns}</legend>
-            {hideable.map((column) => {
-              const isHidden = hidden.includes(column.id);
-              return (
-                <label
-                  key={column.id}
-                  className="flex min-h-8 items-center gap-2 rounded-xs px-1.5 text-[13px] text-ink hover:bg-surface-2"
-                >
-                  <input
-                    type="checkbox"
-                    className="size-4 accent-accent"
-                    checked={!isHidden}
-                    disabled={!isHidden && visibleCount <= 1}
-                    onChange={(event) => onHidden(column.id, !event.target.checked)}
-                  />
-                  <span className="truncate">{column.header}</span>
-                </label>
-              );
-            })}
-          </fieldset>
-          <div className="border-line border-t p-1 pt-1.5">
-            <button
-              type="button"
-              className={cn(buttonClass, "w-full justify-center")}
-              onClick={onResetColumns}
-            >
-              {labels.resetColumns}
-            </button>
-          </div>
-        </PopoverContent>
-      </Popover>
+      {hideColumnPicker ? null : (
+        <Popover>
+          <PopoverTrigger className={buttonClass}>
+            <Columns3 aria-hidden="true" />
+            {labels.columns}
+          </PopoverTrigger>
+          <PopoverContent align="end" aria-label={labels.columns} className="w-60">
+            <fieldset className="grid max-h-72 gap-0.5 overflow-y-auto p-1">
+              <legend className="sr-only">{labels.columns}</legend>
+              {hideable.map((column) => {
+                const isHidden = hidden.includes(column.id);
+                return (
+                  <label
+                    key={column.id}
+                    className="flex min-h-8 items-center gap-2 rounded-xs px-1.5 text-[13px] text-ink hover:bg-surface-2"
+                  >
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-accent"
+                      checked={!isHidden}
+                      disabled={!isHidden && visibleCount <= 1}
+                      onChange={(event) => onHidden(column.id, !event.target.checked)}
+                    />
+                    <span className="truncate">{column.header}</span>
+                  </label>
+                );
+              })}
+            </fieldset>
+            <div className="border-line border-t p-1 pt-1.5">
+              <button
+                type="button"
+                className={cn(buttonClass, "w-full justify-center")}
+                onClick={onResetColumns}
+              >
+                {labels.resetColumns}
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      )}
+
+      {toolPanel ? (
+        <button
+          type="button"
+          className={cn(
+            buttonClass,
+            toolPanel.open && "border-accent-line bg-accent-soft text-accent-ink",
+          )}
+          aria-pressed={toolPanel.open}
+          onClick={toolPanel.onToggle}
+        >
+          <PanelRight aria-hidden="true" />
+          {labels.toolPanel}
+        </button>
+      ) : null}
 
       {onExport ? (
         <button type="button" className={buttonClass} onClick={onExport}>
           <Download aria-hidden="true" />
-          {labels.exportCsv}
+          {exportSelected ? labels.exportSelection : labels.exportCsv}
         </button>
       ) : null}
     </div>

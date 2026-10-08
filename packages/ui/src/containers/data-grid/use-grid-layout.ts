@@ -61,7 +61,12 @@ export function useGridLayout<T>(
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-read only when the key or the set of columns changes.
   useEffect(() => {
     const stored = storageKey ? parseStoredLayout(readStorage(storageKey)) : null;
-    setLayout((previous) => reconcileLayout(columns, stored, loaded.current ? previous : initial));
+    setLayout((previous) => {
+      if (!loaded.current) return reconcileLayout(columns, stored, initial);
+      // Columns changed (a pivot, a new definition): keep what is known, add what is new.
+      const base = { ...previous, widths: { ...initial.widths, ...previous.widths } };
+      return reconcileLayout(columns, stored ?? base, base);
+    });
     loaded.current = true;
   }, [storageKey, columnsKey]);
 
