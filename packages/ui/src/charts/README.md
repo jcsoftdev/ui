@@ -361,7 +361,9 @@ Pure parts are tested in `test/distribution-parity.test.mjs`.
   violin width) and `seed`; `pointColor="value"` grades each dot from a pale tint of the series colour to the full colour.
   Violin dots spread by the local density, so they follow the shape. Outlier dots are the same dots when `showPoints` is on.
 - `Histogram`: `exploded` / `defaultExploded` / `onExplodedChange` turn every bin into one dot per observation (dot plot
-  on the same bins, shared radius, staggered pop-in); `explodeToggle` shows the button (`labels.explode`).
+  on the same bins, one column per bin, staggered pop-in); dot k fills the k-th unit cell of the y axis, so a stack is as
+  tall as its count, and the axis stretches when dots would otherwise be taller than the bin is wide.
+  `explodeToggle` shows the button (`labels.explode`, `labels.bars` while exploded; `aria-pressed`).
 - `ScatterChart` / `BubbleChart`: `xType="time"` (x in epoch ms, calendar ticks, `formatDate` tooltips), `jitter`
   (pixels, number or `{ x, y }`, tooltips keep the true values), `XYPoint.image` (URL or data URI, clipped to the
   marker, ringed in the series colour), `shading="shaded"` (bubbles only: off-centre radial gradient, a lit sphere).
@@ -374,9 +376,10 @@ Pure parts are tested in `test/distribution-parity.test.mjs`.
   `DrilldownHeatmap` takes a root `HeatmapLevel` whose `drill({ row, column, value })` returns the sub-matrix.
 - `ChartGrid`: `panels` (`id`, `title`, `subtitle`, `extent`, `xExtent`) and a render prop `(panel, ctx)`;
   `ctx.valueDomain` / `ctx.xDomain` are the shared domains (`sharedDomain`: union of extents, niced, `includeZero`),
-  `ctx.height`, `ctx.compact`. Columns come from the measured container width (`gridColumns`, `minPanelWidth`,
-  `maxColumns`), never the viewport. `legend` is one shared `ChartLegend`; `syncHover` draws a pointer guide in the other
-  panels (exact when panels share domain and format, so the plot margins match).
+  `ctx.height` (default: about 1.4:1 from the panel width, at least 180), `ctx.tickCount` (the shared domain is niced for it, pass it as `yAxis.tickCount`), `ctx.compact`. Columns come from the measured container width (`gridColumns`, `minPanelWidth`,
+  `maxColumns`), never the viewport. `legend` is one shared `ChartLegend`; `syncHover` wraps the grid in a
+  `ChartSyncProvider` and exposes `ctx.syncId`: pass it to each chart's `syncId` and every panel shows the real crosshair
+  and tooltip of the hovered category.
 
 Exploration order is the reading order: boxes/violins category by category, histogram bins left to right, beeswarm
 points row by row, scatter points by x. The tooltip and `aria-valuetext` carry the same numbers.

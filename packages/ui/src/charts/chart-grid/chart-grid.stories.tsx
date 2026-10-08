@@ -59,7 +59,6 @@ const meta = {
     minPanelWidth: 220,
     maxColumns: 3,
     gap: 16,
-    panelHeight: 150,
     sharedValueDomain: true,
     sharedXDomain: false,
     includeZero: false,
@@ -106,7 +105,12 @@ const renderLine: Story["args"] = {
         ]}
         valueFormat="currency"
         height={ctx.height}
-        yAxis={ctx.valueDomain ? { min: ctx.valueDomain[0], max: ctx.valueDomain[1] } : undefined}
+        syncId={ctx.syncId}
+        yAxis={
+          ctx.valueDomain
+            ? { min: ctx.valueDomain[0], max: ctx.valueDomain[1], tickCount: ctx.tickCount }
+            : undefined
+        }
         legend={false}
         labels={{ empty: "Sin ventas", loading: "Cargando", explore: "Puntos del gráfico." }}
       />
@@ -117,7 +121,7 @@ const renderLine: Story["args"] = {
 /** Misma escala en todos los paneles: la misma altura significa el mismo monto. */
 export const Trellis: Story = { args: renderLine };
 
-/** El puntero de un panel dibuja una guía en los demás. */
+/** Pasar el puntero por un panel muestra el cursor y el tooltip reales en los demás. */
 export const TrellisSyncHover: Story = { args: { ...renderLine, syncHover: true } };
 
 const services = ["Corte", "Barba", "Combo", "Tinte"];
@@ -157,7 +161,11 @@ export const TrellisBars: Story = {
           ]}
           valueFormat="integer"
           height={ctx.height}
-          yAxis={ctx.valueDomain ? { min: 0, max: ctx.valueDomain[1] } : undefined}
+          yAxis={
+            ctx.valueDomain
+              ? { min: 0, max: ctx.valueDomain[1], tickCount: ctx.tickCount }
+              : undefined
+          }
           legend={false}
           labels={{ empty: "Sin servicios", loading: "Cargando", explore: "Barras del gráfico." }}
         />

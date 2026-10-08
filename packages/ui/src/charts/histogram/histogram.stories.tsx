@@ -107,7 +107,7 @@ export const Explode: Story = {
     binWidth: 10,
     bins: undefined,
     explodeToggle: true,
-    labels: { ...spanishLabels, explode: "Ver cada venta" },
+    labels: { ...spanishLabels, explode: "Ver cada venta", bars: "Ver barras" },
   },
 };
 

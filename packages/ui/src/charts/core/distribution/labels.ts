@@ -21,6 +21,8 @@ export interface StatLabels {
   point: string;
   /** Toggle that explodes histogram bins into dots. */
   explode: string;
+  /** Same toggle while exploded: back to bars. */
+  bars: string;
 }
 
 export const DEFAULT_STAT_LABELS: StatLabels = {
@@ -42,6 +44,7 @@ export const DEFAULT_STAT_LABELS: StatLabels = {
   series: "Series",
   point: "Point",
   explode: "Show each observation",
+  bars: "Show bars",
 };
 
 export type DistributionLabels = ChartLabels & StatLabels;
