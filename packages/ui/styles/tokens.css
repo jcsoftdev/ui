@@ -82,6 +82,8 @@
   --chart-cat-5: #bd4b95;
   --chart-cat-6: #5f6b7d;
   --chart-cat-7: #788f22;
+  /* Replaces the categorical color that matches the active accent, so series 1 never repeats series 0. */
+  --chart-cat-reserve: #dc5d63;
   --chart-grid: rgba(0,0,0,.06);
   --chart-crosshair: rgba(0,0,0,.30);
   --chart-up: #0f8a55;
@@ -210,6 +212,7 @@
     --chart-cat-5: #ee9bd2;
     --chart-cat-6: #a5aebb;
     --chart-cat-7: #bcd56b;
+    --chart-cat-reserve: #f48f93;
     --chart-grid: rgba(255,255,255,.07);
     --chart-crosshair: rgba(255,255,255,.34);
     --chart-up: #5fd69b;
@@ -306,6 +309,7 @@
   --chart-cat-5: #ee9bd2;
   --chart-cat-6: #a5aebb;
   --chart-cat-7: #bcd56b;
+  --chart-cat-reserve: #f48f93;
   --chart-grid: rgba(255,255,255,.07);
   --chart-crosshair: rgba(255,255,255,.34);
   --chart-up: #5fd69b;
@@ -326,6 +330,7 @@
   --accent-word: var(--pal-durazno-word);
   --accent-soft: var(--pal-durazno-soft);
   --accent-line: var(--pal-durazno-line);
+  --chart-cat-3: var(--chart-cat-reserve);
 }
 
 :root[data-accent="menta"] {
@@ -336,6 +341,7 @@
   --accent-word: var(--pal-menta-word);
   --accent-soft: var(--pal-menta-soft);
   --accent-line: var(--pal-menta-line);
+  --chart-cat-2: var(--chart-cat-reserve);
 }
 
 :root[data-accent="cielo"] {
@@ -346,6 +352,7 @@
   --accent-word: var(--pal-cielo-word);
   --accent-soft: var(--pal-cielo-soft);
   --accent-line: var(--pal-cielo-line);
+  --chart-cat-1: var(--chart-cat-reserve);
 }
 
 :root[data-accent="lavanda"] {
@@ -356,6 +363,7 @@
   --accent-word: var(--pal-lavanda-word);
   --accent-soft: var(--pal-lavanda-soft);
   --accent-line: var(--pal-lavanda-line);
+  --chart-cat-4: var(--chart-cat-reserve);
 }
 
 :root[data-accent="orquidea"] {
@@ -366,6 +374,7 @@
   --accent-word: var(--pal-orquidea-word);
   --accent-soft: var(--pal-orquidea-soft);
   --accent-line: var(--pal-orquidea-line);
+  --chart-cat-5: var(--chart-cat-reserve);
 }
 
 :root[data-accent="grafito"] {
@@ -376,4 +385,5 @@
   --accent-word: var(--pal-grafito-word);
   --accent-soft: var(--pal-grafito-soft);
   --accent-line: var(--pal-grafito-line);
+  --chart-cat-6: var(--chart-cat-reserve);
 }
