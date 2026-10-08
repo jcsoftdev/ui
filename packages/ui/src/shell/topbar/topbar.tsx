@@ -103,7 +103,7 @@ export function Topbar({
           type="button"
           aria-label={searchLabel}
           onClick={onSearch}
-          className="ml-auto flex h-8.5 w-[min(320px,30cqw)] shrink-0 items-center gap-2 rounded-pill border border-line-control bg-surface pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0"
+          className="ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-pill border border-line-control bg-surface pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0"
         >
           <Search className="size-4 shrink-0" aria-hidden="true" />
           <span className="truncate @max-[700px]/topbar:hidden">{searchPlaceholder}</span>
