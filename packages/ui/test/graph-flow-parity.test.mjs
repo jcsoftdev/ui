@@ -50,15 +50,17 @@ test("criticalPath finds the zero-slack chain and the slack of the rest", () => 
   assert.ok(!cp.links.has("a>c") && !cp.links.has("c>d"));
 });
 
-test("criticalPath: a task waiting for its own start date gives the predecessor slack", () => {
+test("criticalPath ignores waiting gaps: float comes from the longest chain of durations", () => {
   const tasks = [
     { id: "a", start: day(1), end: day(3) },
-    { id: "b", start: day(8), end: day(10), dependencies: ["a"] },
+    { id: "c", start: day(1), end: day(2) },
+    { id: "b", start: day(8), end: day(15), dependencies: ["a", "c"] },
   ];
   const cp = lib.criticalPath(tasks);
-  assert.deepEqual([...cp.tasks], ["b"]);
-  assert.equal(cp.slack.get("a"), day(8) - day(3));
-  assert.equal(cp.links.size, 0);
+  assert.deepEqual([...cp.tasks].sort(), ["a", "b"]);
+  assert.equal(cp.slack.get("c"), day(2) - day(1));
+  assert.equal(cp.end, day(3) + (day(15) - day(8)));
+  assert.ok(cp.links.has("a>b") && !cp.links.has("c>b"));
 });
 
 test("criticalPath expands parent dependencies and survives cycles and missing ids", () => {

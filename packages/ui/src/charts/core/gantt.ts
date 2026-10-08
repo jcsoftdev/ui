@@ -435,8 +435,9 @@ export interface CriticalPath {
 
 /**
  * Critical path method over finish-to-start dependencies. Each leaf task keeps
- * its duration and cannot start before its own start date or before every
- * predecessor ends (a dependency on a parent means all of its leaves). A forward
+ * its duration; tasks without predecessors start at their own start date and the
+ * rest as soon as every predecessor ends (a dependency on a parent means all of
+ * its leaves), so waiting gaps in the plan do not count. A forward
  * pass finds the earliest dates and the project end, a backward pass the latest
  * ones; tasks whose slack is within `tolerance` form the critical path. Tasks
  * caught in a dependency cycle are left out.
@@ -495,8 +496,8 @@ export function criticalPath(tasks: readonly GanttTaskLike[], tolerance = 60_000
   const earliestFinish = new Map<string, number>();
   let end = Number.NEGATIVE_INFINITY;
   for (const id of order) {
-    let start = (info.get(id) as GanttRow).start;
-    for (const pred of preds.get(id) ?? []) start = Math.max(start, earliestFinish.get(pred) ?? 0);
+    const before = [...(preds.get(id) ?? [])].map((pred) => earliestFinish.get(pred) ?? 0);
+    const start = before.length > 0 ? Math.max(...before) : (info.get(id) as GanttRow).start;
     earliestStart.set(id, start);
     earliestFinish.set(id, start + duration(id));
     end = Math.max(end, start + duration(id));
