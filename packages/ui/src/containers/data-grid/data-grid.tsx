@@ -6,12 +6,18 @@
 
 import {
   ArrowDown,
+  ArrowDownToLine,
   ArrowUp,
+  ArrowUpToLine,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  CircleAlert,
+  Copy,
+  GripVertical,
+  PinOff,
 } from "lucide-react";
 import {
   type CSSProperties,
@@ -29,15 +35,26 @@ import {
   useState,
 } from "react";
 import { Chip } from "../../atoms/chip/chip.js";
+import { formatCurrency, formatNumber } from "../../charts/core/format.js";
 import { cn } from "../../utils/cn.js";
 import { computePinOffsets, type PinPosition, sanitizePinned } from "../table/pin.js";
+import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
 import { ColumnMenu } from "./column-menu.js";
+import type { DataSource } from "./data-source.js";
+import {
+  applyAdvancedFilter,
+  countConditions,
+  emptyGroup,
+  type FilterGroup,
+} from "./filter-builder.js";
+import { FilterBuilder } from "./filter-builder-editor.js";
 import { GridToolbar } from "./grid-toolbar.js";
 import { type DataGridLabels, DEFAULT_DATA_GRID_LABELS } from "./labels.js";
 import {
   aggregateValues,
   buildDisplayRows,
   columnAlign,
+  computeAggregates,
   countActiveFilters,
   distinctValues,
   fillColumnWidths,
@@ -50,6 +67,36 @@ import {
   toCSV,
   toggleSort,
 } from "./model.js";
+import {
+  buildPivot,
+  isPivotValid,
+  type PivotConfig,
+  type PivotRow,
+  pivotColumns,
+  pivotFooter,
+} from "./pivot.js";
+import {
+  type CellRange,
+  extendRange,
+  inRange,
+  rangeBounds,
+  rangeStats,
+  rangeToTSV,
+} from "./range.js";
+import {
+  insertDetailRows,
+  moveRowBy,
+  moveRowTo,
+  NO_PINNED_ROWS,
+  type PinnedRows,
+  pinnedSideOf,
+  type RowPinSide,
+  splitPinnedRows,
+  togglePinnedRow,
+  toggleSetMember,
+} from "./rows.js";
+import { EMPTY_PIVOT, GridToolPanel } from "./tool-panel.js";
+import { buildTreeRows, withAncestors } from "./tree.js";
 import type {
   CellValue,
   DataGridColumn,
@@ -61,13 +108,15 @@ import type {
   PinSide,
   SortRule,
 } from "./types.js";
+import { useDataSource } from "./use-data-source.js";
 import { useGridLayout } from "./use-grid-layout.js";
 import {
+  computeVariableWindow,
   computeVirtualWindow,
   pageCount,
   pageStep,
   scrollLeftToReveal,
-  scrollTopToReveal,
+  scrollTopToRevealSpan,
 } from "./virtual.js";
 
 export interface CellChange<T> {
@@ -78,8 +127,23 @@ export interface CellChange<T> {
   previous: CellValue;
 }
 
+export interface RowReorderEvent {
+  rowId: string;
+  fromIndex: number;
+  toIndex: number;
+  /** Ids of all rows in the new order. */
+  order: string[];
+}
+
+export interface ExportPayload {
+  csv: string;
+  filename: string;
+  rowCount: number;
+}
+
 export interface DataGridProps<T> {
-  data: readonly T[];
+  /** Rows to show. Optional with `dataSource`, which loads them. */
+  data?: readonly T[];
   columns: readonly DataGridColumn<T>[];
   /** Accessible name of the grid. */
   "aria-label": string;
@@ -117,6 +181,54 @@ export interface DataGridProps<T> {
   /** Called when an inline edit is committed with a different value. The grid does not mutate `data`. */
   onCellChange?: (change: CellChange<T>) => void;
 
+  /**
+   * Server-side rows. Sort, filters and quick search are sent to `getRows` instead of being
+   * applied here; with `pageSize` the grid pages through blocks of that size, without it rows are
+   * loaded as you scroll. Grouping, tree data, row pinning, pivot and detail rows are off.
+   */
+  dataSource?: DataSource<T>;
+  /** Blocks kept in memory in infinite mode before the least recently used are dropped. */
+  maxBlocks?: number;
+
+  /** Shows `data` as a tree: `getParentId` links a row to its parent (nullish for roots). */
+  tree?: { getParentId: (row: T) => string | null | undefined };
+  /** Expanded row ids: tree nodes and rows with a detail panel. */
+  expandedRowIds?: readonly string[];
+  defaultExpandedRowIds?: readonly string[];
+  onExpandedRowsChange?: (ids: string[]) => void;
+  /** Detail panel (master / detail) rendered under an expanded row. */
+  renderDetail?: (row: T, rowId: string) => ReactNode;
+  /** Height of a detail panel in px (fixed so rows stay virtualizable). 240 by default. */
+  detailHeight?: number | ((row: T) => number);
+
+  /** Adds pin-to-top / pin-to-bottom buttons to rows; pinned rows stay in view while scrolling. */
+  rowPinning?: boolean;
+  pinnedRows?: PinnedRows;
+  defaultPinnedRows?: PinnedRows;
+  onPinnedRowsChange?: (pinned: PinnedRows) => void;
+  /** Drag handle and Alt + arrows to reorder rows; works without sort, filters or grouping. */
+  rowReorder?: boolean;
+  /** Called with the new order; the grid does not mutate `data`. */
+  onRowReorder?: (event: RowReorderEvent) => void;
+
+  /** Rectangular cell selection by drag, Shift + click or Shift + arrows, with Ctrl + C as TSV. */
+  rangeSelection?: boolean;
+
+  /** Advanced filter (AND / OR groups of conditions) applied after the column filters. */
+  advancedFilter?: FilterGroup;
+  defaultAdvancedFilter?: FilterGroup;
+  onAdvancedFilterChange?: (filter: FilterGroup) => void;
+  /** Adds the advanced filter button to the toolbar. */
+  showAdvancedFilter?: boolean;
+
+  /** Side panel to show, hide and reorder columns, group rows and set up a pivot. */
+  toolPanel?: boolean;
+  defaultToolPanelOpen?: boolean;
+  /** Pivot: row fields x pivot column x aggregated value. */
+  pivot?: PivotConfig;
+  defaultPivot?: PivotConfig;
+  onPivotChange?: (pivot: PivotConfig) => void;
+
   loading?: boolean;
   /** Shown when there are no rows (a filtered-out message is used when filters are active). */
   emptyMessage?: ReactNode;
@@ -126,6 +238,8 @@ export interface DataGridProps<T> {
   hideToolbar?: boolean;
   /** CSV file name for the export button; `false` hides the button. */
   exportFilename?: string | false;
+  /** Called with the CSV right before it is downloaded. */
+  onExport?: (payload: ExportPayload) => void;
   toolbarActions?: ReactNode;
   labels?: Partial<DataGridLabels>;
   className?: string;
@@ -134,16 +248,27 @@ export interface DataGridProps<T> {
 const ROW_HEIGHT: Record<Density, number> = { compact: 32, normal: 40, comfortable: 48 };
 const SELECT_ID = "__select";
 const SELECT_WIDTH = 44;
+const TOOLS_ID = "__tools";
+const TOOL_SLOT = 26;
+const GROUP_HEADER_HEIGHT = 32;
+const DEFAULT_DETAIL_HEIGHT = 240;
+const DEFAULT_BLOCK_SIZE = 50;
+const EMPTY_DATA: readonly never[] = [];
 const SKELETON_ROWS = 8;
 const EMPTY_SORT: readonly SortRule[] = [];
 const EMPTY_FILTERS: Filters = {};
 const EMPTY_LIST: readonly string[] = [];
+const EMPTY_ADVANCED: FilterGroup = emptyGroup("and", "root");
 
-type RenderColumn<T> = { kind: "select" } | { kind: "data"; column: DataGridColumn<T> };
+type RenderColumn<T> =
+  | { kind: "select" }
+  | { kind: "tools" }
+  | { kind: "data"; column: DataGridColumn<T> };
 type Zone = PinSide | "center";
 
 function idOfColumn<T>(entry: RenderColumn<T>): string {
-  return entry.kind === "select" ? SELECT_ID : entry.column.id;
+  if (entry.kind === "select") return SELECT_ID;
+  return entry.kind === "tools" ? TOOLS_ID : entry.column.id;
 }
 
 function useControllable<V>(
@@ -176,6 +301,33 @@ export function downloadCSV(filename: string, csv: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+const ARROW_STEPS: Record<string, { dr: number; dc: number } | undefined> = {
+  ArrowUp: { dr: -1, dc: 0 },
+  ArrowDown: { dr: 1, dc: 0 },
+  ArrowLeft: { dr: 0, dc: -1 },
+  ArrowRight: { dr: 0, dc: 1 },
+};
+
+/** Copies text to the clipboard, with a textarea fallback for contexts without the async API. */
+function writeClipboard(text: string): void {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).catch(() => undefined);
+    return;
+  }
+  if (typeof document === "undefined") return;
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.style.position = "fixed";
+  area.style.opacity = "0";
+  document.body.append(area);
+  area.select();
+  try {
+    document.execCommand("copy");
+  } finally {
+    area.remove();
+  }
+}
+
 function editorOf<T>(column: DataGridColumn<T>): EditorKind {
   if (column.editor) return column.editor;
   if (column.options?.length) return "select";
@@ -201,10 +353,10 @@ const justifyClass = {
  * its pinned columns kept in place.
  */
 export function DataGrid<T>({
-  data,
-  columns,
+  data: dataProp = EMPTY_DATA as readonly T[],
+  columns: columnsProp,
   "aria-label": ariaLabel,
-  getRowId,
+  getRowId: getRowIdProp,
   height = 480,
   pageSize: pageSizeProp,
   pageSizeOptions = [25, 50, 100],
@@ -228,11 +380,36 @@ export function DataGrid<T>({
   defaultSelectedRowIds = EMPTY_LIST,
   onSelectionChange,
   onCellChange,
+  dataSource,
+  maxBlocks,
+  tree,
+  expandedRowIds,
+  defaultExpandedRowIds = EMPTY_LIST,
+  onExpandedRowsChange,
+  renderDetail,
+  detailHeight = DEFAULT_DETAIL_HEIGHT,
+  rowPinning = false,
+  pinnedRows,
+  defaultPinnedRows = NO_PINNED_ROWS,
+  onPinnedRowsChange,
+  rowReorder = false,
+  onRowReorder,
+  rangeSelection = false,
+  advancedFilter: advancedFilterProp,
+  defaultAdvancedFilter = EMPTY_ADVANCED,
+  onAdvancedFilterChange,
+  showAdvancedFilter = false,
+  toolPanel = false,
+  defaultToolPanelOpen = false,
+  pivot: pivotProp,
+  defaultPivot = EMPTY_PIVOT,
+  onPivotChange,
   loading = false,
   emptyMessage,
   showFooter,
   hideToolbar = false,
   exportFilename = "datos.csv",
+  onExport,
   toolbarActions,
   labels: labelsProp,
   className,
@@ -263,37 +440,94 @@ export function DataGrid<T>({
     defaultSelectedRowIds,
     onSelectionChange && ((next) => onSelectionChange([...next])),
   );
+  const [expanded, setExpanded] = useControllable<readonly string[]>(
+    expandedRowIds,
+    defaultExpandedRowIds,
+    onExpandedRowsChange && ((next) => onExpandedRowsChange([...next])),
+  );
+  const [pinnedRowIds, setPinnedRowIds] = useControllable<PinnedRows>(
+    pinnedRows,
+    defaultPinnedRows,
+    onPinnedRowsChange,
+  );
+  const [advanced, setAdvanced] = useControllable<FilterGroup>(
+    advancedFilterProp,
+    defaultAdvancedFilter,
+    onAdvancedFilterChange,
+  );
+  const [pivotConfig, setPivotConfig] = useControllable<PivotConfig>(
+    pivotProp,
+    defaultPivot,
+    onPivotChange,
+  );
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(() => new Set());
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(pageSizeProp ?? 25);
   const [active, setActive] = useState({ r: 0, c: 0 });
   const [menuColumn, setMenuColumn] = useState<string | null>(null);
-  const [editing, setEditing] = useState<{ key: string; columnId: string; draft: string } | null>(
-    null,
-  );
-  const [firstRow, setFirstRow] = useState(0);
+  const [editing, setEditing] = useState<{
+    key: string;
+    columnId: string;
+    draft: string;
+    error?: string;
+  } | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
   const [scrolled, setScrolled] = useState({ start: false, end: false });
   const [dropTarget, setDropTarget] = useState<{ id: string; place: "before" | "after" } | null>(
     null,
   );
+  const [dropRow, setDropRow] = useState<{ key: string; place: "before" | "after" } | null>(null);
+  const [cellRange, setCellRange] = useState<CellRange | null>(null);
+  const [panelOpen, setPanelOpen] = useState(defaultToolPanelOpen);
+  const [announcement, setAnnouncement] = useState("");
   const editingRef = useRef(editing);
   editingRef.current = editing;
   const pendingFocus = useRef(false);
   const anchor = useRef<string | null>(null);
   const resizing = useRef(false);
   const dragId = useRef<string | null>(null);
+  const rowDrag = useRef<string | null>(null);
 
   const paged = pageSizeProp !== undefined;
+  const sourceActive = dataSource !== undefined;
+
+  // ---- pivot: the grid shows a derived table of rows and columns ---------------------------
+  const pivotResult = useMemo(
+    () =>
+      !sourceActive && isPivotValid(pivotConfig, columnsProp)
+        ? buildPivot(dataProp, columnsProp, pivotConfig)
+        : null,
+    [sourceActive, pivotConfig, columnsProp, dataProp],
+  );
+  const pivotActive = pivotResult !== null;
+  const structured = !sourceActive && !pivotActive;
+  const columns = useMemo(
+    () =>
+      (pivotResult
+        ? pivotColumns(columnsProp, pivotConfig, pivotResult, labels.total)
+        : columnsProp) as readonly DataGridColumn<T>[],
+    [pivotResult, columnsProp, pivotConfig, labels.total],
+  );
+  const data = useMemo(
+    () => (pivotResult ? pivotResult.rows : dataProp) as readonly T[],
+    [pivotResult, dataProp],
+  );
+  const getRowId = useMemo(
+    () => (pivotResult ? (row: T) => (row as unknown as PivotRow).id : getRowIdProp),
+    [pivotResult, getRowIdProp],
+  );
+
   const layoutDefaults = useMemo(
     () => ({ pinned: defaultPinned, hidden: defaultHidden, density: defaultDensity }),
     [defaultPinned, defaultHidden, defaultDensity],
   );
-  const grid = useGridLayout(columns, layoutDefaults, storageKey);
+  const grid = useGridLayout(columns, layoutDefaults, pivotActive ? undefined : storageKey);
   const { layout } = grid;
   const density = densityProp ?? layout.density ?? defaultDensity;
   const rowHeight = ROW_HEIGHT[density];
   const headerHeight = Math.max(rowHeight, 36);
+  const firstRow = Math.floor(scrollTop / rowHeight);
 
   // ---- columns -----------------------------------------------------------------------------
   const byId = useMemo(() => new Map(columns.map((column) => [column.id, column])), [columns]);
@@ -314,63 +548,172 @@ export function DataGrid<T>({
     };
   }, [layout.order, layout.hidden, layout.pinned, byId]);
 
+  const detailEnabled = !!renderDetail && structured && !tree;
+  const reorderEnabled = rowReorder && structured;
+  const pinningEnabled = rowPinning && structured;
+  const toolSlots = (detailEnabled ? 1 : 0) + (reorderEnabled ? 1 : 0) + (pinningEnabled ? 2 : 0);
+  const toolsWidth = toolSlots * TOOL_SLOT + 12;
   const renderColumns = useMemo<RenderColumn<T>[]>(
     () => [
       ...(selectable ? [{ kind: "select" } as const] : []),
+      ...(toolSlots > 0 ? [{ kind: "tools" } as const] : []),
       ...dataColumns.map((column) => ({ kind: "data", column }) as const),
     ],
-    [selectable, dataColumns],
+    [selectable, toolSlots, dataColumns],
   );
+  const leadingCount = renderColumns.length - dataColumns.length;
   const fillerIndex = renderColumns.length - pinned.right.length;
   const [containerWidth, setContainerWidth] = useState(0);
+  const reservedWidth = (selectable ? SELECT_WIDTH : 0) + (toolSlots > 0 ? toolsWidth : 0);
   // Columns narrower than their container grow to fill it; user-resized ones keep their width.
   const shownWidths = useMemo(
     () =>
       containerWidth > 0
-        ? fillColumnWidths(
-            dataColumns,
-            layout.widths,
-            containerWidth,
-            selectable ? SELECT_WIDTH : 0,
-          )
+        ? fillColumnWidths(dataColumns, layout.widths, containerWidth, reservedWidth)
         : layout.widths,
-    [containerWidth, dataColumns, layout.widths, selectable],
+    [containerWidth, dataColumns, layout.widths, reservedWidth],
   );
   const widthOf = useCallback(
     (entry: RenderColumn<T>) =>
-      entry.kind === "select" ? SELECT_WIDTH : (shownWidths[entry.column.id] ?? 160),
-    [shownWidths],
+      entry.kind === "select"
+        ? SELECT_WIDTH
+        : entry.kind === "tools"
+          ? toolsWidth
+          : (shownWidths[entry.column.id] ?? 160),
+    [shownWidths, toolsWidth],
   );
   const positions = useMemo(() => {
-    const widths: Record<string, number> = { [SELECT_ID]: SELECT_WIDTH, ...shownWidths };
-    const left = selectable ? [SELECT_ID, ...pinned.left] : pinned.left;
+    const widths: Record<string, number> = {
+      [SELECT_ID]: SELECT_WIDTH,
+      [TOOLS_ID]: toolsWidth,
+      ...shownWidths,
+    };
+    const left = [
+      ...(selectable ? [SELECT_ID] : []),
+      ...(toolSlots > 0 ? [TOOLS_ID] : []),
+      ...pinned.left,
+    ];
     return computePinOffsets(widths, { left, right: pinned.right });
-  }, [shownWidths, pinned, selectable]);
+  }, [shownWidths, pinned, selectable, toolSlots, toolsWidth]);
   const totalWidth = renderColumns.reduce((sum, entry) => sum + widthOf(entry), 0);
 
+  // Multi-level headers: the levels come from the `group` path of the visible columns.
+  const headerLevels = useMemo(() => {
+    const paths = dataColumns.map((column) => groupPathOf(column));
+    const breaks = dataColumns
+      .map((column, index) =>
+        index > 0 && zoneOf.get(column.id) !== zoneOf.get(dataColumns[index - 1]?.id ?? "")
+          ? index
+          : -1,
+      )
+      .filter((index) => index >= 0);
+    return buildHeaderGroups(paths, breaks);
+  }, [dataColumns, zoneOf]);
+  const groupLevels = headerLevels.length;
+  const headerTop = groupLevels * GROUP_HEADER_HEIGHT;
+
   // ---- rows --------------------------------------------------------------------------------
-  const keyOf = useMemo(() => {
+  const blockSize = paged ? pageSize : (dataSource?.blockSize ?? DEFAULT_BLOCK_SIZE);
+  const remoteRange = paged
+    ? { start: page * pageSize, end: (page + 1) * pageSize }
+    : { start: Math.max(0, firstRow - 8), end: firstRow + Math.ceil(height / rowHeight) + 12 };
+  const remote = useDataSource(dataSource, {
+    sort,
+    filters,
+    search,
+    blockSize,
+    maxBlocks,
+    range: remoteRange,
+  });
+
+  // The first response of a remote source is still pending: show the skeleton.
+  const busy = loading || (sourceActive && remote.total === null && !remote.failed);
+
+  const localKeys = useMemo(() => {
     const keys = new Map<T, string>();
     data.forEach((row, index) => {
       keys.set(row, getRowId ? getRowId(row, index) : String(index));
     });
-    return (row: T) => keys.get(row) ?? "";
+    return keys;
   }, [data, getRowId]);
-  const rowByKey = useMemo(() => new Map(data.map((row) => [keyOf(row), row])), [data, keyOf]);
+  const rowAt = remote.rowAt;
+  const remoteModel = useMemo(() => {
+    if (!sourceActive) return null;
+    const keys = new Map<T, string>();
+    const byKey = new Map<string, T>();
+    const rows: DisplayRow<T>[] = [];
+    const loaded: T[] = [];
+    const total = remote.total ?? 0;
+    for (let index = 0; index < total; index += 1) {
+      const row = rowAt(index);
+      if (row === undefined) {
+        rows.push({ kind: "placeholder", key: `~${index}`, index });
+        continue;
+      }
+      const key = getRowId ? getRowId(row, index) : String(index);
+      keys.set(row, key);
+      byKey.set(key, row);
+      loaded.push(row);
+      rows.push({ kind: "data", key, depth: 0, row });
+    }
+    return { keys, byKey, rows, loaded };
+  }, [sourceActive, remote.total, rowAt, getRowId]);
+  const keyOf = useCallback(
+    (row: T) => (remoteModel ? remoteModel.keys : localKeys).get(row) ?? "",
+    [remoteModel, localKeys],
+  );
+  const rowByKey = useMemo(
+    () => remoteModel?.byKey ?? new Map(data.map((row) => [keyOf(row), row])),
+    [remoteModel, data, keyOf],
+  );
 
-  const filtered = useMemo(
-    () => filterRows(data, columns, filters, search),
-    [data, columns, filters, search],
+  const advancedCount = countConditions(advanced);
+  const filterActive = countActiveFilters(filters) > 0 || search.trim() !== "" || advancedCount > 0;
+  const filtered = useMemo(() => {
+    if (sourceActive) return [] as T[];
+    const base = filterRows(data, columns, filters, search);
+    return advancedCount > 0 ? applyAdvancedFilter(base, columns, advanced) : base;
+  }, [sourceActive, data, columns, filters, search, advanced, advancedCount]);
+  const treeOptions = useMemo(
+    () => (tree && structured ? { getKey: keyOf, getParentId: tree.getParentId } : null),
+    [tree, structured, keyOf],
   );
-  const sorted = useMemo(() => sortRows(filtered, columns, sort), [filtered, columns, sort]);
-  const display = useMemo<DisplayRow<T>[]>(
-    () => buildDisplayRows(sorted, columns, groupBy, collapsed, keyOf, sort),
-    [sorted, columns, groupBy, collapsed, keyOf, sort],
+  const sorted = useMemo(() => {
+    if (remoteModel) return remoteModel.loaded;
+    const rows = treeOptions ? withAncestors(data, filtered, treeOptions) : filtered;
+    return sortRows(rows, columns, sort);
+  }, [remoteModel, treeOptions, data, filtered, columns, sort]);
+  const expandedSet = useMemo(() => new Set(expanded), [expanded]);
+  const treeResult = useMemo(
+    () =>
+      treeOptions
+        ? buildTreeRows(sorted, columns, {
+            ...treeOptions,
+            expanded: expandedSet,
+            forceExpand: filterActive,
+          })
+        : null,
+    [treeOptions, sorted, columns, expandedSet, filterActive],
   );
+  const flat = useMemo<DisplayRow<T>[]>(() => {
+    if (remoteModel) return remoteModel.rows;
+    if (treeResult) return treeResult.rows;
+    return buildDisplayRows(
+      sorted,
+      columns,
+      structured ? groupBy : EMPTY_LIST,
+      collapsed,
+      keyOf,
+      sort,
+    );
+  }, [remoteModel, treeResult, sorted, columns, structured, groupBy, collapsed, keyOf, sort]);
+
   const hasAggregates = columns.some((column) => column.aggregate);
-  const footer = (showFooter ?? hasAggregates) && !loading && display.length > 0;
+  const footer = !sourceActive && (showFooter ?? hasAggregates) && !busy && flat.length > 0;
   const totals = useMemo(() => {
     if (!footer) return {};
+    if (pivotResult) return pivotFooter(pivotResult);
+    if (treeResult) return computeAggregates(treeResult.leaves, columns);
     const result: Record<string, number | null> = {};
     for (const column of columns) {
       if (!column.aggregate) continue;
@@ -378,43 +721,95 @@ export function DataGrid<T>({
       result[column.id] = aggregateValues(values, column.aggregate);
     }
     return result;
-  }, [footer, columns, filtered]);
+  }, [footer, pivotResult, treeResult, columns, filtered]);
 
-  const pages = pageCount(display.length, pageSize);
+  // Pinned rows leave the scrolling list; detail rows are added under their expanded row.
+  const split = useMemo(
+    () =>
+      pinningEnabled ? splitPinnedRows(flat, pinnedRowIds) : { top: [], middle: flat, bottom: [] },
+    [pinningEnabled, flat, pinnedRowIds],
+  );
+  const pages = pageCount(split.middle.length, pageSize);
   const currentPage = Math.min(page, pages - 1);
   const pageOffset = paged ? currentPage * pageSize : 0;
-  const bodyRows = paged ? display.slice(pageOffset, pageOffset + pageSize) : display;
-  const bodyViewport = Math.max(rowHeight, height - headerHeight - (footer ? rowHeight : 0));
-  const win = paged
-    ? { start: 0, end: bodyRows.length, padTop: 0, padBottom: 0 }
-    : computeVirtualWindow({
-        count: bodyRows.length,
-        rowHeight,
+  const pageRows = paged ? split.middle.slice(pageOffset, pageOffset + pageSize) : split.middle;
+  const heightOfDetail = useCallback(
+    (row: T) => (typeof detailHeight === "function" ? detailHeight(row) : detailHeight),
+    [detailHeight],
+  );
+  const middle = useMemo(
+    () => (detailEnabled ? insertDetailRows(pageRows, expandedSet, heightOfDetail) : pageRows),
+    [detailEnabled, pageRows, expandedSet, heightOfDetail],
+  );
+  const bodyRows = useMemo(
+    () =>
+      split.top.length > 0 || split.bottom.length > 0
+        ? [...split.top, ...middle, ...split.bottom]
+        : middle,
+    [split, middle],
+  );
+  const topCount = split.top.length;
+  const bottomCount = split.bottom.length;
+  const variableHeights = detailEnabled && middle.some((row) => row.kind === "detail");
+  const bodyViewport = Math.max(
+    rowHeight,
+    height - headerHeight - headerTop - (footer ? rowHeight : 0),
+  );
+  const win = useMemo(() => {
+    if (paged) return { start: 0, end: bodyRows.length, offsets: null as number[] | null };
+    if (variableHeights) {
+      return computeVariableWindow({
+        heights: bodyRows.map((row) => (row.kind === "detail" ? row.height : rowHeight)),
         viewportHeight: bodyViewport,
-        scrollTop: firstRow * rowHeight,
+        scrollTop,
         overscan: 8,
       });
+    }
+    const uniform = computeVirtualWindow({
+      count: bodyRows.length,
+      rowHeight,
+      viewportHeight: bodyViewport,
+      scrollTop: firstRow * rowHeight,
+      overscan: 8,
+    });
+    return { start: uniform.start, end: uniform.end, offsets: null as number[] | null };
+  }, [paged, variableHeights, bodyRows, rowHeight, bodyViewport, scrollTop, firstRow]);
+  const bodyLength = bodyRows.length;
+  const midStart = Math.max(win.start, topCount);
+  const midEnd = Math.max(midStart, Math.min(win.end, bodyLength - bottomCount));
+  const offsetOf = (index: number) => (win.offsets ? (win.offsets[index] ?? 0) : index * rowHeight);
+  const gapTop = offsetOf(midStart) - offsetOf(topCount);
+  const gapBottom = offsetOf(bodyLength - bottomCount) - offsetOf(midEnd);
+  const isRendered = (index: number) =>
+    index < topCount ||
+    index >= bodyLength - bottomCount ||
+    (index >= win.start && index < win.end);
 
   const selected = useMemo(() => new Set(selection), [selection]);
   const visibleKeys = useMemo(
-    () => display.filter((row) => row.kind === "data").map((row) => row.key),
-    [display],
+    () => flat.filter((row) => row.kind === "data").map((row) => row.key),
+    [flat],
   );
   const allKeys = useMemo(() => sorted.map(keyOf), [sorted, keyOf]);
   const selectedInView = allKeys.filter((key) => selected.has(key)).length;
+  const pivotValid = isPivotValid(pivotConfig, columnsProp);
+
+  // Row reordering only makes sense when the list is in its natural order.
+  const reorderAllowed =
+    reorderEnabled && sort.length === 0 && groupBy.length === 0 && !tree && !filterActive;
 
   // ---- navigation geometry -----------------------------------------------------------------
-  const maxR = loading ? 0 : bodyRows.length;
+  const maxR = busy ? 0 : bodyRows.length;
   const maxC = renderColumns.length - 1;
   const activeR = Math.min(active.r, maxR);
   const activeC = Math.min(active.c, Math.max(0, maxC));
-  const activeRendered = activeR === 0 || (activeR - 1 >= win.start && activeR - 1 < win.end);
+  const activeRendered = activeR === 0 || isRendered(activeR - 1);
   const tabbable = activeRendered ? { r: activeR, c: activeC } : { r: 0, c: activeC };
 
   const syncScroll = useCallback(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
-    setFirstRow(Math.floor(scroller.scrollTop / rowHeight));
+    setScrollTop(Math.floor(scroller.scrollTop / rowHeight) * rowHeight);
     const start = scroller.scrollLeft > 0;
     const end = scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 1;
     setScrolled((previous) =>
@@ -452,11 +847,20 @@ export function DataGrid<T>({
     (r: number, c: number) => {
       const scroller = scrollerRef.current;
       if (!scroller) return;
-      if (!paged && r > 0) {
-        const top = scrollTopToReveal(r - 1, rowHeight, bodyViewport, scroller.scrollTop);
+      const index = r - 1;
+      if (!paged && r > 0 && index >= topCount && index < bodyLength - bottomCount) {
+        const item = bodyRows[index];
+        const top = scrollTopToRevealSpan(
+          win.offsets ? (win.offsets[index] ?? 0) : index * rowHeight,
+          item?.kind === "detail" ? item.height : rowHeight,
+          bodyViewport,
+          scroller.scrollTop,
+          topCount * rowHeight,
+          bottomCount * rowHeight,
+        );
         if (top !== scroller.scrollTop) {
           scroller.scrollTop = top;
-          setFirstRow(Math.floor(top / rowHeight));
+          setScrollTop(Math.floor(top / rowHeight) * rowHeight);
         }
       }
       const entry = renderColumns[c];
@@ -478,7 +882,19 @@ export function DataGrid<T>({
         pinnedRight,
       );
     },
-    [paged, rowHeight, bodyViewport, renderColumns, positions, widthOf],
+    [
+      paged,
+      rowHeight,
+      bodyViewport,
+      renderColumns,
+      positions,
+      widthOf,
+      bodyRows,
+      topCount,
+      bottomCount,
+      bodyLength,
+      win.offsets,
+    ],
   );
 
   const focusCell = useCallback(
@@ -555,7 +971,104 @@ export function DataGrid<T>({
   };
   const exportCsv = () => {
     if (exportFilename === false) return;
-    downloadCSV(exportFilename, toCSV(sorted, dataColumns, { bom: true }));
+    const rows =
+      selectable && selection.length > 0
+        ? sorted.filter((row) => selected.has(keyOf(row)))
+        : sorted;
+    const csv = toCSV(rows, dataColumns, { bom: true });
+    onExport?.({ csv, filename: exportFilename, rowCount: rows.length });
+    downloadCSV(exportFilename, csv);
+  };
+  const labelOfRow = (key: string) => {
+    const row = rowByKey.get(key);
+    const first = dataColumns[0];
+    return row && first ? formatCellValue(getCellValue(row, first), first) || key : key;
+  };
+
+  // ---- expansion, pinned rows and reordering -----------------------------------------------
+  const setExpandedRow = (key: string, open?: boolean) => {
+    const isOpen = expandedSet.has(key);
+    if ((open ?? !isOpen) === isOpen) return;
+    setExpanded([...toggleSetMember(expandedSet, key)]);
+  };
+  const pinRow = (key: string, side: RowPinSide) => {
+    setPinnedRowIds(togglePinnedRow(pinnedRowIds, key, side));
+  };
+  const reorderRow = (
+    key: string,
+    target: { delta: number } | { id: string; place: "before" | "after" },
+  ) => {
+    if (!reorderAllowed) return false;
+    const order = data.map(keyOf);
+    const next =
+      "delta" in target
+        ? moveRowBy(order, key, target.delta)
+        : moveRowTo(order, key, target.id, target.place);
+    const fromIndex = order.indexOf(key);
+    const toIndex = next.indexOf(key);
+    if (fromIndex === -1 || fromIndex === toIndex) return false;
+    onRowReorder?.({ rowId: key, fromIndex, toIndex, order: next });
+    setAnnouncement(labels.rowMoved(labelOfRow(key), toIndex + 1, order.length));
+    return true;
+  };
+
+  // ---- cell ranges -------------------------------------------------------------------------
+  const cellAt = (r: number, c: number) => {
+    const row = bodyRows[r - 1];
+    const entry = renderColumns[c];
+    return row?.kind === "data" && entry?.kind === "data"
+      ? { row: row.row, column: entry.column }
+      : null;
+  };
+  const copyRange = () => {
+    if (!cellRange) return;
+    const bounds = rangeBounds(cellRange);
+    const text = rangeToTSV(bounds, (r, c) => {
+      const cell = cellAt(r, c);
+      return cell ? formatCellValue(getCellValue(cell.row, cell.column), cell.column) : null;
+    });
+    writeClipboard(text);
+    const cells = (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1);
+    setAnnouncement(labels.rangeCopied(cells));
+  };
+  const onCellPointerDown = (event: ReactPointerEvent<HTMLElement>, r: number, c: number) => {
+    if (
+      !rangeSelection ||
+      event.button !== 0 ||
+      editingRef.current ||
+      event.pointerType === "touch"
+    )
+      return;
+    if (
+      (event.target as HTMLElement).closest("button,input,select,a,textarea,[data-detail-content]")
+    )
+      return;
+    if (event.shiftKey && cellRange) {
+      setCellRange({ anchor: cellRange.anchor, focus: { r, c } });
+      return;
+    }
+    setCellRange({ anchor: { r, c }, focus: { r, c } });
+    const move = (moveEvent: PointerEvent) => {
+      const cell = document
+        .elementFromPoint(moveEvent.clientX, moveEvent.clientY)
+        ?.closest<HTMLElement>("td[data-r]");
+      if (!cell || !gridRef.current?.contains(cell)) return;
+      const nextR = Number(cell.dataset.r);
+      const nextC = Number(cell.dataset.c);
+      setCellRange((previous) =>
+        previous && (previous.focus.r !== nextR || previous.focus.c !== nextC)
+          ? { anchor: previous.anchor, focus: { r: nextR, c: nextC } }
+          : previous,
+      );
+    };
+    const end = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
   };
 
   // ---- editing -----------------------------------------------------------------------------
@@ -570,26 +1083,50 @@ export function DataGrid<T>({
     });
     return true;
   };
-  const commitEdit = () => {
+  /**
+   * Commits the open edit. With `strict` (Enter, Tab) an invalid value keeps the editor open with
+   * its message and returns false; on blur an invalid value is discarded.
+   */
+  const commitEdit = (strict = false): boolean => {
     const current = editingRef.current;
-    if (!current) return;
-    editingRef.current = null;
-    setEditing(null);
+    if (!current) return true;
     const row = rowByKey.get(current.key);
     const column = byId.get(current.columnId);
-    if (!row || !column) return;
+    const close = () => {
+      editingRef.current = null;
+      setEditing(null);
+    };
+    if (!row || !column) {
+      close();
+      return true;
+    }
     const previous = getCellValue(row, column);
     let value: CellValue = current.draft;
+    let error: string | null | undefined;
     if (editorOf(column) === "number") {
       const number = Number.parseFloat(current.draft.replace(",", "."));
-      if (!Number.isFinite(number)) return;
-      value = number;
+      if (Number.isFinite(number)) value = number;
+      else error = labels.invalidCell;
     }
+    error = error ?? column.validate?.(value, row);
+    if (error) {
+      if (!strict) {
+        close();
+        return true;
+      }
+      const next = { ...current, error };
+      editingRef.current = next;
+      setEditing(next);
+      return false;
+    }
+    close();
     const unchanged =
       value === previous ||
       (typeof previous !== "number" && String(value) === String(previous ?? ""));
-    if (unchanged) return;
-    onCellChange?.({ row, rowId: current.key, columnId: column.id, value, previous });
+    if (!unchanged) {
+      onCellChange?.({ row, rowId: current.key, columnId: column.id, value, previous });
+    }
+    return true;
   };
   const cancelEdit = () => {
     editingRef.current = null;
@@ -621,11 +1158,11 @@ export function DataGrid<T>({
       focusCell(r, c);
     } else if (event.key === "Enter") {
       event.preventDefault();
-      commitEdit();
+      if (!commitEdit(true)) return;
       focusCell(Math.min(r + 1, maxR), c);
     } else if (event.key === "Tab") {
       event.preventDefault();
-      commitEdit();
+      if (!commitEdit(true)) return;
       const next = nextEditable(r, c, event.shiftKey ? -1 : 1);
       if (!next) {
         focusCell(r, c);
@@ -641,6 +1178,7 @@ export function DataGrid<T>({
   // ---- keyboard ----------------------------------------------------------------------------
   const onGridKeyDown = (event: KeyboardEvent<HTMLTableElement>) => {
     const target = event.target as HTMLElement;
+    if (target.closest("[data-detail-content]")) return;
     const cell = target.closest<HTMLElement>("[data-r]");
     if (!cell || !event.currentTarget.contains(cell)) return;
     const r = Number(cell.dataset.r);
@@ -675,6 +1213,69 @@ export function DataGrid<T>({
         handled();
         if (entry.column.sortable !== false) applySort(toggleSort(sort, id, event.shiftKey));
         return;
+      }
+    }
+
+    if (r > 0 && rangeSelection && !event.altKey) {
+      const step = ARROW_STEPS[event.key];
+      if (step && event.shiftKey) {
+        handled();
+        const from = { r, c: Math.max(c, firstDataIndex) };
+        const base = cellRange ?? { anchor: from, focus: from };
+        const next = extendRange(base, step.dr * (mod ? maxR : 1), step.dc * (mod ? maxC : 1), {
+          minR: 1,
+          maxR,
+          minC: Math.max(0, firstDataIndex),
+          maxC,
+        });
+        setCellRange(next);
+        focusCell(next.focus.r, next.focus.c);
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "c" && cellRange) {
+        handled();
+        copyRange();
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "a" && !selectable) {
+        handled();
+        setCellRange({
+          anchor: { r: 1, c: Math.max(0, firstDataIndex) },
+          focus: { r: maxR, c: maxC },
+        });
+        return;
+      }
+      if (
+        cellRange &&
+        (step || ["Home", "End", "PageUp", "PageDown", "Escape"].includes(event.key))
+      ) {
+        setCellRange(null);
+      }
+    }
+    if (r > 0 && row?.kind === "data" && event.altKey && !mod) {
+      const vertical = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+      if (vertical !== 0 && event.shiftKey && pinningEnabled) {
+        handled();
+        pinRow(row.key, vertical < 0 ? "top" : "bottom");
+        return;
+      }
+      if (
+        vertical !== 0 &&
+        !event.shiftKey &&
+        reorderAllowed &&
+        !pinnedSideOf(pinnedRowIds, row.key)
+      ) {
+        handled();
+        if (reorderRow(row.key, { delta: vertical })) focusCell(r + vertical, c);
+        return;
+      }
+      if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+        const expandable = detailEnabled || !!row.tree?.hasChildren;
+        if (expandable) {
+          handled();
+          setExpandedRow(row.key, event.key === "ArrowRight");
+          return;
+        }
       }
     }
 
@@ -723,7 +1324,7 @@ export function DataGrid<T>({
       toggleAll();
       return;
     }
-    if (!row) return;
+    if (!row || row.kind === "placeholder" || row.kind === "detail") return;
     if (row.kind === "group") {
       if (event.key === "Enter" || event.key === " ") {
         handled();
@@ -732,6 +1333,11 @@ export function DataGrid<T>({
         handled();
         toggleGroupRow(row.key);
       }
+      return;
+    }
+    if ((event.key === "Enter" || event.key === " ") && entry?.kind === "tools") {
+      handled();
+      if (detailEnabled) setExpandedRow(row.key);
       return;
     }
     if (event.key === " " && selectable) {
@@ -750,6 +1356,7 @@ export function DataGrid<T>({
   };
 
   const onGridFocus = (event: FocusEvent<HTMLTableElement>) => {
+    if ((event.target as HTMLElement).closest("[data-detail-content]")) return;
     const cell = (event.target as HTMLElement).closest<HTMLElement>("[data-r]");
     if (!cell || !event.currentTarget.contains(cell)) return;
     const r = Number(cell.dataset.r);
@@ -817,6 +1424,42 @@ export function DataGrid<T>({
     setDropTarget(null);
   };
 
+  const onRowDragStart = (event: DragEvent<HTMLElement>, key: string) => {
+    if (!reorderAllowed) {
+      event.preventDefault();
+      return;
+    }
+    rowDrag.current = key;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", key);
+    const row = event.currentTarget.closest("tr");
+    if (row) event.dataTransfer.setDragImage(row, 16, rowHeight / 2);
+  };
+  const dropPlace = (event: DragEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+  };
+  const onRowDragOver = (event: DragEvent<HTMLElement>, key: string) => {
+    const source = rowDrag.current;
+    if (!source || source === key) return;
+    event.preventDefault();
+    const place = dropPlace(event);
+    setDropRow((previous) =>
+      previous?.key === key && previous.place === place ? previous : { key, place },
+    );
+  };
+  const onRowDrop = (event: DragEvent<HTMLElement>, key: string) => {
+    event.preventDefault();
+    const source = rowDrag.current;
+    if (source && source !== key) reorderRow(source, { id: key, place: dropPlace(event) });
+    rowDrag.current = null;
+    setDropRow(null);
+  };
+  const onRowDragEnd = () => {
+    rowDrag.current = null;
+    setDropRow(null);
+  };
+
   // ---- rendering helpers -------------------------------------------------------------------
   const pinOf = (entry: RenderColumn<T>): PinPosition | undefined => positions[idOfColumn(entry)];
   const pinStyle = (position: PinPosition | undefined): CSSProperties | undefined =>
@@ -843,9 +1486,16 @@ export function DataGrid<T>({
       "data-r": 0,
       "data-c": c,
       tabIndex: tabIndexOf(0, c),
-      style: { ...pinStyle(position), height: headerHeight },
+      style: { ...pinStyle(position), top: headerTop, height: headerHeight },
     };
-    const sticky = cn("sticky top-0 bg-surface", position ? "z-3" : "z-2", pinShadow(position));
+    const sticky = cn("sticky bg-surface", position ? "z-3" : "z-2", pinShadow(position));
+    if (entry.kind === "tools") {
+      return (
+        <th key={TOOLS_ID} className={cn(cellBase, sticky, "px-0")} {...common}>
+          <span className="sr-only">{labels.rowActions}</span>
+        </th>
+      );
+    }
     if (entry.kind === "select") {
       const all = allKeys.length > 0 && selectedInView === allKeys.length;
       return (
@@ -982,6 +1632,13 @@ export function DataGrid<T>({
         </Chip>
       );
     }
+    if (column.type === "boolean" && formatted) {
+      return (
+        <Chip tone={value === true ? "success" : "neutral"} className="h-5.5">
+          {formatted}
+        </Chip>
+      );
+    }
     return (
       <span className="block truncate" title={formatted}>
         {formatted}
@@ -991,20 +1648,26 @@ export function DataGrid<T>({
 
   const renderEditor = (column: DataGridColumn<T>, r: number, c: number) => {
     if (!editing) return null;
-    const editorClass =
-      "h-[calc(100%-6px)] w-full min-w-0 rounded-xs border border-accent bg-surface px-1.5 text-[13px] text-ink outline-none";
+    const errorId = `${helpId}-error`;
+    const editorClass = cn(
+      "h-[calc(100%-6px)] w-full min-w-0 rounded-xs border bg-surface px-1.5 text-[13px] text-ink outline-none",
+      editing.error ? "border-danger" : "border-accent",
+    );
     const common = {
       autoFocus: true,
       "aria-label": column.header,
+      "aria-invalid": editing.error ? true : undefined,
+      "aria-describedby": editing.error ? errorId : undefined,
       value: editing.draft,
-      onBlur: commitEdit,
+      onBlur: () => commitEdit(),
       onKeyDown: (event: KeyboardEvent<HTMLElement>) => onEditorKey(event, r, c),
     };
-    if (editorOf(column) === "select") {
-      return (
+    const change = (draft: string) => setEditing({ ...editing, draft, error: undefined });
+    const editor =
+      editorOf(column) === "select" ? (
         <select
           {...common}
-          onChange={(event) => setEditing({ ...editing, draft: event.target.value })}
+          onChange={(event) => change(event.target.value)}
           className={editorClass}
         >
           {(column.options ?? []).map((option) => (
@@ -1013,19 +1676,35 @@ export function DataGrid<T>({
             </option>
           ))}
         </select>
+      ) : (
+        <input
+          {...common}
+          type="text"
+          inputMode={editorOf(column) === "number" ? "decimal" : undefined}
+          onFocus={(event) => event.currentTarget.select()}
+          onChange={(event) => change(event.target.value)}
+          className={cn(editorClass, columnAlign(column) === "end" && "text-right")}
+        />
       );
-    }
     return (
-      <input
-        {...common}
-        type="text"
-        inputMode={editorOf(column) === "number" ? "decimal" : undefined}
-        onFocus={(event) => event.currentTarget.select()}
-        onChange={(event) => setEditing({ ...editing, draft: event.target.value })}
-        className={cn(editorClass, columnAlign(column) === "end" && "text-right")}
-      />
+      <>
+        {editor}
+        {editing.error ? (
+          <span
+            id={errorId}
+            role="alert"
+            className="absolute top-full left-1 z-5 mt-0.5 flex max-w-64 items-center gap-1.5 rounded-xs border border-danger bg-surface px-2 py-1 text-[12px] text-danger shadow-pop"
+          >
+            <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
+            {editing.error}
+          </span>
+        ) : null}
+      </>
     );
   };
+
+  const ariaRowOf = (r: number) => groupLevels + pageOffset + r + 1;
+  const dividerRow = (r: number) => (topCount > 0 && r === topCount ? "top" : null);
 
   const renderGroupRow = (row: Extract<DisplayRow<T>, { kind: "group" }>, r: number) => {
     const header = byId.get(row.columnId)?.header ?? row.columnId;
@@ -1105,7 +1784,7 @@ export function DataGrid<T>({
     return (
       <tr
         key={row.key}
-        aria-rowindex={pageOffset + r + 1}
+        aria-rowindex={ariaRowOf(r)}
         style={{ height: rowHeight }}
         className="group/row bg-surface-2"
         onClick={() => toggleGroupRow(row.key)}
@@ -1117,13 +1796,146 @@ export function DataGrid<T>({
     );
   };
 
+  /** Row stuck to the top or bottom of the scroller (pinned rows), with its sticky offset. */
+  const rowPinInfo = (r: number) => {
+    const index = r - 1;
+    if (index < topCount) {
+      return { side: "top" as const, offset: headerTop + headerHeight + index * rowHeight };
+    }
+    if (index >= bodyLength - bottomCount) {
+      const fromEnd = bodyLength - 1 - index;
+      return { side: "bottom" as const, offset: (footer ? rowHeight : 0) + fromEnd * rowHeight };
+    }
+    return null;
+  };
+
+  const renderToolsCell = (
+    row: Extract<DisplayRow<T>, { kind: "data" }>,
+    r: number,
+    c: number,
+    position: PinPosition | undefined,
+    pinInfo: ReturnType<typeof rowPinInfo>,
+    sticky: string | undefined | false,
+  ) => {
+    const isOpen = expandedSet.has(row.key);
+    const pinSide = pinnedSideOf(pinnedRowIds, row.key);
+    const name = labelOfRow(row.key);
+    const tool =
+      "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-35 [&_svg]:size-3.5";
+    return (
+      <td
+        key={TOOLS_ID}
+        data-r={r}
+        data-c={c}
+        tabIndex={tabIndexOf(r, c)}
+        role="gridcell"
+        style={{ ...pinStyle(position), ...(pinInfo ? { [pinInfo.side]: pinInfo.offset } : null) }}
+        className={cn(cellBase, sticky, pinShadow(position), "px-1")}
+      >
+        <span className="flex items-center justify-center gap-0.5">
+          {reorderEnabled && !pinInfo ? (
+            <span
+              draggable={reorderAllowed}
+              aria-hidden="true"
+              title={reorderAllowed ? labels.dragRow : labels.reorderBlocked}
+              onDragStart={(event) => onRowDragStart(event, row.key)}
+              onDragEnd={onRowDragEnd}
+              className={cn(
+                tool,
+                reorderAllowed
+                  ? "cursor-grab active:cursor-grabbing"
+                  : "cursor-not-allowed opacity-35",
+              )}
+            >
+              <GripVertical aria-hidden="true" />
+            </span>
+          ) : reorderEnabled ? (
+            <span className="size-6 shrink-0" aria-hidden="true" />
+          ) : null}
+          {detailEnabled ? (
+            pinInfo ? (
+              <span className="size-6 shrink-0" aria-hidden="true" />
+            ) : (
+              <button
+                type="button"
+                tabIndex={-1}
+                className={tool}
+                aria-expanded={isOpen}
+                aria-label={`${isOpen ? labels.collapseRow : labels.expandRow}: ${name}`}
+                onClick={() => setExpandedRow(row.key)}
+              >
+                <ChevronRight
+                  aria-hidden="true"
+                  className={cn(
+                    "transition-transform motion-reduce:transition-none",
+                    isOpen && "rotate-90",
+                  )}
+                />
+              </button>
+            )
+          ) : null}
+          {pinningEnabled ? (
+            pinSide ? (
+              <>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={cn(tool, "text-accent-ink")}
+                  aria-label={`${labels.unpinRow}: ${name}`}
+                  title={labels.unpinRow}
+                  onClick={() => pinRow(row.key, pinSide)}
+                >
+                  <PinOff aria-hidden="true" />
+                </button>
+                <span className="size-6 shrink-0" aria-hidden="true" />
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={tool}
+                  aria-label={`${labels.pinRowTop}: ${name}`}
+                  title={labels.pinRowTop}
+                  onClick={() => pinRow(row.key, "top")}
+                >
+                  <ArrowUpToLine aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={tool}
+                  aria-label={`${labels.pinRowBottom}: ${name}`}
+                  title={labels.pinRowBottom}
+                  onClick={() => pinRow(row.key, "bottom")}
+                >
+                  <ArrowDownToLine aria-hidden="true" />
+                </button>
+              </>
+            )
+          ) : null}
+        </span>
+      </td>
+    );
+  };
+
   const renderDataRow = (row: Extract<DisplayRow<T>, { kind: "data" }>, r: number) => {
     const isSelected = selected.has(row.key);
+    const pinInfo = rowPinInfo(r);
+    const isDropTarget = dropRow?.key === row.key;
     const cells = renderColumns.map((entry, c) => {
       const position = pinOf(entry);
+      const stuck = !!position || !!pinInfo;
       const sticky =
-        position &&
-        "sticky z-1 bg-surface group-hover/row:bg-surface-2 group-aria-selected/row:bg-accent-soft";
+        stuck &&
+        cn(
+          "sticky bg-surface group-hover/row:bg-surface-2 group-aria-selected/row:bg-accent-soft",
+          pinInfo ? (position ? "z-3" : "z-2") : "z-1",
+        );
+      const stuckStyle: CSSProperties = {
+        ...pinStyle(position),
+        ...(pinInfo ? { [pinInfo.side]: pinInfo.offset } : null),
+      };
       if (entry.kind === "select") {
         return (
           <td
@@ -1131,7 +1943,7 @@ export function DataGrid<T>({
             data-r={r}
             data-c={c}
             tabIndex={tabIndexOf(r, c)}
-            style={pinStyle(position)}
+            style={stuckStyle}
             className={cn(cellBase, sticky, pinShadow(position), "px-0 text-center")}
           >
             <input
@@ -1146,9 +1958,54 @@ export function DataGrid<T>({
           </td>
         );
       }
+      if (entry.kind === "tools") {
+        return renderToolsCell(row, r, c, position, pinInfo, sticky);
+      }
       const { column } = entry;
       const isEditing = editing?.key === row.key && editing.columnId === column.id;
       const editable = canEdit(column, row.row);
+      const value = getCellValue(row.row, column);
+      const invalid = column.validate ? column.validate(value, row.row) : null;
+      const inSelection = rangeSelection && inRange(cellRange, r, c);
+      const isTreeCell = !!tree && structured && c === firstDataIndex;
+      const parentAggregate =
+        row.tree?.hasChildren && column.aggregate ? (row.tree.aggregates[column.id] ?? null) : null;
+      const content =
+        parentAggregate !== null && column.aggregate ? (
+          <span className="block truncate font-[650] tabular-nums">
+            <span className="sr-only">{labels.aggregate[column.aggregate]}: </span>
+            {formatAggregate(parentAggregate, column.aggregate, column)}
+          </span>
+        ) : (
+          renderValue(row.row, row.key, column)
+        );
+      const body = isTreeCell ? (
+        <span className="flex min-w-0 items-center gap-1" style={{ paddingLeft: row.depth * 16 }}>
+          {row.tree?.hasChildren ? (
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label={`${row.tree.expanded ? labels.collapseRow : labels.expandRow}: ${labelOfRow(row.key)}`}
+              aria-expanded={row.tree.expanded}
+              onClick={() => setExpandedRow(row.key)}
+              className="grid size-5 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface-2 hover:text-ink"
+            >
+              <ChevronRight
+                aria-hidden="true"
+                className={cn(
+                  "size-3.5 transition-transform motion-reduce:transition-none",
+                  row.tree.expanded && "rotate-90",
+                )}
+              />
+            </button>
+          ) : (
+            <span className="size-5 shrink-0" aria-hidden="true" />
+          )}
+          <span className="min-w-0 flex-1">{content}</span>
+        </span>
+      ) : (
+        content
+      );
       return (
         <td
           key={column.id}
@@ -1157,12 +2014,19 @@ export function DataGrid<T>({
           tabIndex={tabIndexOf(r, c)}
           role="gridcell"
           aria-readonly={onCellChange && !editable ? true : undefined}
+          aria-selected={rangeSelection ? inSelection : undefined}
+          aria-invalid={invalid ? true : undefined}
+          title={invalid ? `${labels.invalidCell}: ${invalid}` : undefined}
+          onPointerDown={rangeSelection ? (event) => onCellPointerDown(event, r, c) : undefined}
           onDoubleClick={() => {
             if (startEdit(row.key, column)) setActive({ r, c });
           }}
           style={{
-            ...pinStyle(position),
-            paddingLeft: c === firstDataIndex && row.depth > 0 ? 12 + row.depth * 16 : undefined,
+            ...stuckStyle,
+            paddingLeft:
+              c === firstDataIndex && row.depth > 0 && !isTreeCell
+                ? 12 + row.depth * 16
+                : undefined,
           }}
           className={cn(
             cellBase,
@@ -1170,22 +2034,110 @@ export function DataGrid<T>({
             pinShadow(position),
             alignClass[columnAlign(column)],
             (column.type === "number" || column.type === "currency") && "tabular-nums",
-            isEditing && "px-1",
+            isEditing && "relative overflow-visible px-1",
             editable && "cursor-text",
+            invalid && "bg-danger-soft",
+            inSelection && "bg-accent-soft",
           )}
         >
-          {isEditing ? renderEditor(column, r, c) : renderValue(row.row, row.key, column)}
+          {isEditing ? (
+            renderEditor(column, r, c)
+          ) : invalid ? (
+            <span className="flex min-w-0 items-center gap-1.5">
+              <CircleAlert aria-hidden="true" className="size-3.5 shrink-0 text-danger" />
+              <span className="sr-only">
+                {labels.invalidCell}: {invalid}.{" "}
+              </span>
+              <span className="min-w-0 flex-1">{body}</span>
+            </span>
+          ) : (
+            body
+          )}
         </td>
       );
     });
     return (
       <tr
         key={row.key}
-        aria-rowindex={pageOffset + r + 1}
+        aria-rowindex={ariaRowOf(r)}
         aria-selected={selectable ? isSelected : undefined}
+        aria-level={tree && structured ? row.depth + 1 : undefined}
+        aria-expanded={
+          tree && structured && row.tree?.hasChildren
+            ? row.tree.expanded
+            : detailEnabled
+              ? expandedSet.has(row.key)
+              : undefined
+        }
+        data-drop={isDropTarget ? dropRow?.place : undefined}
+        data-pinned={pinInfo?.side}
+        data-divider={dividerRow(r)}
         style={{ height: rowHeight }}
-        className="group/row text-[13px] text-ink hover:bg-surface-2 aria-selected:bg-accent-soft"
+        onDragOver={reorderAllowed ? (event) => onRowDragOver(event, row.key) : undefined}
+        onDrop={reorderAllowed ? (event) => onRowDrop(event, row.key) : undefined}
+        className={cn(
+          "group/row text-[13px] text-ink hover:bg-surface-2 aria-selected:bg-accent-soft",
+          "data-[drop=before]:[&>td]:shadow-[inset_0_2px_0_var(--accent)] data-[drop=after]:[&>td]:shadow-[inset_0_-2px_0_var(--accent)]",
+          "data-[divider=top]:[&>td]:border-b-line-strong",
+        )}
       >
+        {cells.slice(0, fillerIndex)}
+        <td aria-hidden="true" className="border-line border-b" />
+        {cells.slice(fillerIndex)}
+      </tr>
+    );
+  };
+
+  const renderDetailRow = (row: Extract<DisplayRow<T>, { kind: "detail" }>, r: number) => {
+    const labelled = labels.detailOf(labelOfRow(row.rowKey));
+    return (
+      <tr key={row.key} aria-rowindex={ariaRowOf(r)} style={{ height: row.height }}>
+        <td
+          data-r={r}
+          data-c={0}
+          data-c-end={maxC}
+          colSpan={colSpan}
+          role="gridcell"
+          tabIndex={tabbable.r === r ? 0 : -1}
+          aria-label={labelled}
+          className={cn(cellBase, "overflow-hidden bg-surface-2/50 p-0")}
+        >
+          <div
+            data-detail-content=""
+            className="sticky left-0 box-border overflow-auto p-2"
+            style={{ width: containerWidth || "100%", height: row.height - 1 }}
+          >
+            {renderDetail?.(row.row, row.rowKey)}
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderPlaceholderRow = (
+    row: Extract<DisplayRow<T>, { kind: "placeholder" }>,
+    r: number,
+  ) => {
+    const cells = renderColumns.map((entry, c) => {
+      const position = pinOf(entry);
+      return (
+        <td
+          key={idOfColumn(entry)}
+          data-r={r}
+          data-c={c}
+          tabIndex={tabIndexOf(r, c)}
+          role="gridcell"
+          style={pinStyle(position)}
+          className={cn(cellBase, position && "sticky z-1 bg-surface", pinShadow(position))}
+        >
+          {entry.kind === "data" ? (
+            <span className="block h-2.5 w-3/4 rounded-pill bg-surface-2 motion-safe:animate-pulse" />
+          ) : null}
+        </td>
+      );
+    });
+    return (
+      <tr key={row.key} aria-rowindex={ariaRowOf(r)} aria-busy="true" style={{ height: rowHeight }}>
         {cells.slice(0, fillerIndex)}
         <td aria-hidden="true" className="border-line border-b" />
         {cells.slice(fillerIndex)}
@@ -1222,14 +2174,133 @@ export function DataGrid<T>({
     );
   });
 
-  const rendered = bodyRows.slice(win.start, win.end);
   const colSpan = renderColumns.length + 1;
   const activeFilters = countActiveFilters(filters);
-  const rowCount = display.length + 1 + (footer ? 1 : 0);
+  const rowCount = bodyLength + groupLevels + 1 + (footer ? 1 : 0);
+  const toolbarRows = sourceActive ? (remote.total ?? 0) : sorted.length;
 
   useEffect(() => {
     if (page > pages - 1) setPage(Math.max(0, pages - 1));
   }, [page, pages]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a range refers to rows by position, so any change of the rows drops it.
+  useEffect(() => {
+    setCellRange(null);
+  }, [sort, filters, search, groupBy, page, advanced, data]);
+
+  const renderGroupHeaderRow = (level: number) => {
+    const top = level * GROUP_HEADER_HEIGHT;
+    const out: ReactNode[] = [];
+    let fillerDone = false;
+    const filler = () => {
+      fillerDone = true;
+      out.push(
+        <th
+          key="filler"
+          role="presentation"
+          className="sticky z-2 border-line border-b bg-surface"
+          style={{ top, height: GROUP_HEADER_HEIGHT }}
+        />,
+      );
+    };
+    if (leadingCount > 0) {
+      out.push(
+        <th
+          key="lead"
+          role="presentation"
+          colSpan={leadingCount}
+          className="sticky z-3 border-line border-b bg-surface"
+          style={{ left: 0, top, height: GROUP_HEADER_HEIGHT }}
+        />,
+      );
+    }
+    for (const cell of headerLevels[level] ?? []) {
+      const startIndex = cell.start + leadingCount;
+      if (!fillerDone && startIndex >= fillerIndex) filler();
+      const zone = zoneOf.get(dataColumns[cell.start]?.id ?? "") ?? "center";
+      const first = renderColumns[startIndex];
+      const last = renderColumns[startIndex + cell.span - 1];
+      const style: CSSProperties = { top, height: GROUP_HEADER_HEIGHT };
+      if (zone === "left" && first) style.left = positions[idOfColumn(first)]?.offset;
+      if (zone === "right" && last) style.right = positions[idOfColumn(last)]?.offset;
+      out.push(
+        <th
+          key={`${cell.start}-${cell.label}`}
+          role={cell.label ? "columnheader" : "presentation"}
+          colSpan={cell.span}
+          className={cn(
+            "sticky overflow-hidden border-line border-b bg-surface px-3 text-center font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
+            zone === "center" ? "z-2" : "z-3",
+            cell.label && "border-x",
+          )}
+          style={style}
+        >
+          <span className="block truncate" title={cell.label}>
+            {cell.label}
+          </span>
+        </th>,
+      );
+    }
+    if (!fillerDone) filler();
+    return (
+      <tr key={`group-header-${level}`} aria-rowindex={level + 1}>
+        {out}
+      </tr>
+    );
+  };
+
+  const renderBodyRow = (row: DisplayRow<T>, index: number) => {
+    const r = index + 1;
+    switch (row.kind) {
+      case "group":
+        return renderGroupRow(row, r);
+      case "detail":
+        return renderDetailRow(row, r);
+      case "placeholder":
+        return renderPlaceholderRow(row, r);
+      default:
+        return renderDataRow(row, r);
+    }
+  };
+  const bodyRowsIn = (start: number, end: number) =>
+    bodyRows.slice(start, end).map((row, offset) => renderBodyRow(row, start + offset));
+  const spacer = (key: string, px: number) =>
+    px > 0 ? (
+      <tr key={key} aria-hidden="true" style={{ height: px }}>
+        <td colSpan={colSpan} className="p-0" />
+      </tr>
+    ) : null;
+
+  const stats = cellRange
+    ? rangeStats(rangeBounds(cellRange), (r, c) => {
+        const cell = cellAt(r, c);
+        return cell ? getCellValue(cell.row, cell.column) : undefined;
+      })
+    : null;
+  const rangeCellCount = cellRange
+    ? (() => {
+        const b = rangeBounds(cellRange);
+        return (b.r1 - b.r0 + 1) * (b.c1 - b.c0 + 1);
+      })()
+    : 0;
+  const rangeIsCurrency = (() => {
+    if (!cellRange) return false;
+    const b = rangeBounds(cellRange);
+    const kinds = new Set<string>();
+    for (let c = b.c0; c <= b.c1; c += 1) {
+      const entry = renderColumns[c];
+      if (
+        entry?.kind === "data" &&
+        (entry.column.type === "number" || entry.column.type === "currency")
+      ) {
+        kinds.add(entry.column.type);
+      }
+    }
+    return kinds.size === 1 && kinds.has("currency");
+  })();
+  const formatStat = (value: number | null) =>
+    value === null ? "" : rangeIsCurrency ? formatCurrency(value) : formatNumber(value);
+
+  const emptyFiltered = activeFilters > 0 || search !== "" || advancedCount > 0;
 
   return (
     <div
@@ -1251,7 +2322,7 @@ export function DataGrid<T>({
             setFiltersState({});
             resetPage();
           }}
-          groupBy={groupBy}
+          groupBy={structured ? groupBy : EMPTY_LIST}
           columns={columns}
           onUngroup={(id) => setGroup(id, false)}
           density={density}
@@ -1260,136 +2331,251 @@ export function DataGrid<T>({
           onHidden={grid.setHidden}
           onResetColumns={grid.reset}
           onExport={exportFilename === false ? undefined : exportCsv}
-          rowCount={sorted.length}
+          exportSelected={selectable && selection.length > 0}
+          rowCount={toolbarRows}
           selectedCount={selectable ? selection.length : null}
           actions={toolbarActions}
+          hideColumnPicker={toolPanel}
+          toolPanel={
+            toolPanel ? { open: panelOpen, onToggle: () => setPanelOpen(!panelOpen) } : undefined
+          }
+          advancedFilter={
+            showAdvancedFilter && !sourceActive ? (
+              <FilterBuilder
+                columns={columns}
+                value={advanced}
+                onChange={(next) => {
+                  setAdvanced(next);
+                  resetPage();
+                }}
+                valuesOf={(id) => {
+                  const column = byId.get(id);
+                  return column
+                    ? column.options
+                      ? [...column.options]
+                      : distinctValues(data, column)
+                    : [];
+                }}
+                labels={labelsProp}
+              />
+            ) : undefined
+          }
+          advancedFilterCount={advancedCount}
+          onClearAdvancedFilter={() => setAdvanced(emptyGroup("and", "root"))}
         />
       )}
-      <div
-        ref={scrollerRef}
-        onScroll={syncScroll}
-        className="relative min-h-0 overflow-auto overscroll-contain"
-        style={paged ? undefined : { maxHeight: height }}
-      >
-        <table
-          ref={gridRef}
-          role="grid"
-          aria-label={ariaLabel}
-          aria-describedby={helpId}
-          aria-rowcount={loading ? -1 : rowCount}
-          aria-colcount={renderColumns.length}
-          aria-multiselectable={selectable || undefined}
-          aria-busy={loading || undefined}
-          onKeyDown={onGridKeyDown}
-          onFocus={onGridFocus}
-          className="table-fixed border-separate border-spacing-0"
-          style={{ width: totalWidth, minWidth: "100%" }}
+      {sourceActive && remote.failed && remote.total !== null ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-2 border-line border-b bg-danger-soft px-3 py-2 text-[13px] text-danger"
         >
-          <colgroup>
-            {renderColumns.slice(0, fillerIndex).map((entry) => (
-              <col key={idOfColumn(entry)} style={{ width: widthOf(entry) }} />
-            ))}
-            <col />
-            {renderColumns.slice(fillerIndex).map((entry) => (
-              <col key={idOfColumn(entry)} style={{ width: widthOf(entry) }} />
-            ))}
-          </colgroup>
-          <thead>
-            <tr aria-rowindex={1}>
-              {headerCells.slice(0, fillerIndex)}
-              <th
-                role="presentation"
-                className="sticky top-0 z-2 border-line border-b bg-surface"
-                style={{ height: headerHeight }}
-              />
-              {headerCells.slice(fillerIndex)}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              Array.from({ length: SKELETON_ROWS }, (_, index) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows.
-                <tr key={index} aria-hidden="true" style={{ height: rowHeight }}>
-                  {renderColumns.map((entry) => (
-                    <td key={idOfColumn(entry)} className={cn(cellBase)}>
-                      <span className="block h-2.5 w-3/4 rounded-pill bg-surface-2 motion-safe:animate-pulse" />
-                    </td>
-                  ))}
-                  <td className="border-line border-b" />
-                </tr>
-              ))
-            ) : display.length === 0 ? (
-              <tr aria-rowindex={2}>
-                <td colSpan={colSpan} className="px-4 py-10 text-center text-[13px] text-ink-3">
-                  <div className="sticky left-0 inline-flex max-w-[calc(100cqw-2rem)] flex-col items-center gap-2">
-                    <span>
-                      {activeFilters > 0 || search
-                        ? labels.emptyFiltered
-                        : (emptyMessage ?? labels.empty)}
-                    </span>
-                    {activeFilters > 0 || search ? (
-                      <button
-                        type="button"
-                        className="rounded-control border border-line px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
-                        onClick={() => {
-                          setFiltersState({});
-                          setSearch("");
-                        }}
-                      >
-                        {labels.clearFilters}
-                      </button>
-                    ) : null}
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              <>
-                {win.padTop > 0 ? (
-                  <tr aria-hidden="true" style={{ height: win.padTop }}>
-                    <td colSpan={colSpan} className="p-0" />
-                  </tr>
-                ) : null}
-                {rendered.map((row, index) => {
-                  const r = win.start + index + 1;
-                  return row.kind === "group" ? renderGroupRow(row, r) : renderDataRow(row, r);
-                })}
-                {win.padBottom > 0 ? (
-                  <tr aria-hidden="true" style={{ height: win.padBottom }}>
-                    <td colSpan={colSpan} className="p-0" />
-                  </tr>
-                ) : null}
-              </>
+          <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
+          <span className="min-w-0 flex-1">{labels.loadError}</span>
+          <button
+            type="button"
+            className="rounded-control border border-danger px-2.5 py-1 font-[600] text-[12.5px] hover:bg-surface"
+            onClick={remote.retry}
+          >
+            {labels.retry}
+          </button>
+        </div>
+      ) : null}
+      <div className="flex min-h-0 min-w-0 flex-col @2xl/grid:flex-row">
+        {toolPanel && panelOpen ? (
+          <GridToolPanel
+            labels={labels}
+            columns={columnsProp}
+            order={layout.order}
+            hidden={layout.hidden}
+            onHidden={grid.setHidden}
+            onMove={grid.move}
+            groupBy={groupBy}
+            onGroup={setGroup}
+            pivot={pivotConfig}
+            onPivot={(next) => {
+              setPivotConfig(next);
+              resetPage();
+            }}
+            pivotValid={pivotValid}
+            canGroup={structured && !tree}
+            canPivot={!sourceActive}
+            maxHeight={height}
+            className="order-first @2xl/grid:order-last"
+          />
+        ) : null}
+        <div
+          ref={scrollerRef}
+          onScroll={syncScroll}
+          className="relative min-h-0 min-w-0 overflow-auto overscroll-contain @2xl/grid:flex-1"
+          style={paged ? undefined : { maxHeight: height }}
+        >
+          <table
+            ref={gridRef}
+            role="grid"
+            aria-label={ariaLabel}
+            aria-describedby={helpId}
+            aria-rowcount={busy ? -1 : rowCount}
+            aria-colcount={renderColumns.length}
+            aria-multiselectable={selectable || rangeSelection || undefined}
+            aria-busy={busy || undefined}
+            onKeyDown={onGridKeyDown}
+            onFocus={onGridFocus}
+            className={cn(
+              "table-fixed border-separate border-spacing-0",
+              rangeSelection && "select-none",
             )}
-          </tbody>
-          {footer ? (
-            <tfoot>
-              <tr aria-rowindex={rowCount} style={{ height: rowHeight }}>
-                {footerCells.slice(0, fillerIndex)}
-                <td
+            style={{ width: totalWidth, minWidth: "100%" }}
+          >
+            <colgroup>
+              {renderColumns.slice(0, fillerIndex).map((entry) => (
+                <col key={idOfColumn(entry)} style={{ width: widthOf(entry) }} />
+              ))}
+              <col />
+              {renderColumns.slice(fillerIndex).map((entry) => (
+                <col key={idOfColumn(entry)} style={{ width: widthOf(entry) }} />
+              ))}
+            </colgroup>
+            <thead>
+              {headerLevels.map((_, level) => renderGroupHeaderRow(level))}
+              <tr aria-rowindex={groupLevels + 1}>
+                {headerCells.slice(0, fillerIndex)}
+                <th
                   role="presentation"
-                  className="sticky bottom-0 z-2 border-line border-t bg-surface"
+                  className="sticky z-2 border-line border-b bg-surface"
+                  style={{ top: headerTop, height: headerHeight }}
                 />
-                {footerCells.slice(fillerIndex)}
+                {headerCells.slice(fillerIndex)}
               </tr>
-            </tfoot>
-          ) : null}
-        </table>
+            </thead>
+            <tbody>
+              {busy ? (
+                Array.from({ length: SKELETON_ROWS }, (_, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: static placeholder rows.
+                  <tr key={index} aria-hidden="true" style={{ height: rowHeight }}>
+                    {renderColumns.map((entry) => (
+                      <td key={idOfColumn(entry)} className={cn(cellBase)}>
+                        <span className="block h-2.5 w-3/4 rounded-pill bg-surface-2 motion-safe:animate-pulse" />
+                      </td>
+                    ))}
+                    <td className="border-line border-b" />
+                  </tr>
+                ))
+              ) : bodyLength === 0 ? (
+                <tr aria-rowindex={groupLevels + 2}>
+                  <td colSpan={colSpan} className="px-4 py-10 text-center text-[13px] text-ink-3">
+                    <div className="sticky left-0 inline-flex max-w-[calc(100cqw-2rem)] flex-col items-center gap-2">
+                      <span>
+                        {sourceActive && remote.failed
+                          ? labels.loadError
+                          : emptyFiltered
+                            ? labels.emptyFiltered
+                            : (emptyMessage ?? labels.empty)}
+                      </span>
+                      {sourceActive && remote.failed ? (
+                        <button
+                          type="button"
+                          className="rounded-control border border-line px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
+                          onClick={remote.retry}
+                        >
+                          {labels.retry}
+                        </button>
+                      ) : emptyFiltered ? (
+                        <button
+                          type="button"
+                          className="rounded-control border border-line px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
+                          onClick={() => {
+                            setFiltersState({});
+                            setSearch("");
+                            setAdvanced(emptyGroup("and", "root"));
+                          }}
+                        >
+                          {labels.clearFilters}
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                <>
+                  {bodyRowsIn(0, topCount)}
+                  {spacer("gap-top", gapTop)}
+                  {bodyRowsIn(midStart, midEnd)}
+                  {spacer("gap-bottom", gapBottom)}
+                  {bodyRowsIn(bodyLength - bottomCount, bodyLength)}
+                </>
+              )}
+            </tbody>
+            {footer ? (
+              <tfoot>
+                <tr aria-rowindex={rowCount} style={{ height: rowHeight }}>
+                  {footerCells.slice(0, fillerIndex)}
+                  <td
+                    role="presentation"
+                    className="sticky bottom-0 z-2 border-line border-t bg-surface"
+                  />
+                  {footerCells.slice(fillerIndex)}
+                </tr>
+              </tfoot>
+            ) : null}
+          </table>
+        </div>
       </div>
+      {rangeSelection ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-line border-t px-3 py-1.5 text-[12.5px] text-ink-2">
+          {stats && cellRange ? (
+            <>
+              <span className="font-[650] text-ink">{labels.rangeCells(rangeCellCount)}</span>
+              <span>
+                {labels.rangeCount}:{" "}
+                <b className="font-[650] text-ink tabular-nums">{stats.count}</b>
+              </span>
+              {stats.numeric > 0 ? (
+                <>
+                  <span>
+                    {labels.rangeSum}:{" "}
+                    <b className="font-[650] text-ink tabular-nums">{formatStat(stats.sum)}</b>
+                  </span>
+                  <span>
+                    {labels.rangeAvg}:{" "}
+                    <b className="font-[650] text-ink tabular-nums">{formatStat(stats.avg)}</b>
+                  </span>
+                  <span className="@max-sm/grid:hidden">
+                    {labels.rangeMin}:{" "}
+                    <b className="font-[650] text-ink tabular-nums">{formatStat(stats.min)}</b>
+                  </span>
+                  <span className="@max-sm/grid:hidden">
+                    {labels.rangeMax}:{" "}
+                    <b className="font-[650] text-ink tabular-nums">{formatStat(stats.max)}</b>
+                  </span>
+                </>
+              ) : null}
+              <button
+                type="button"
+                onClick={copyRange}
+                className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border border-line bg-surface px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+              >
+                <Copy aria-hidden="true" />
+                {labels.copyRange}
+              </button>
+            </>
+          ) : (
+            <span className="text-ink-3">{labels.rangeHint}</span>
+          )}
+        </div>
+      ) : null}
       <p id={helpId} className="sr-only">
         {labels.keyboardHelp}
       </p>
-      {loading ? (
-        <p className="sr-only" role="status">
-          {labels.loading}
-        </p>
-      ) : null}
-      {paged && display.length > 0 ? (
+      <p className="sr-only" role="status" aria-live="polite">
+        {busy ? labels.loading : announcement}
+      </p>
+      {paged && split.middle.length > 0 ? (
         <Pagination
           labels={labels}
           page={currentPage}
           pages={pages}
           pageSize={pageSize}
-          total={display.length}
+          total={split.middle.length}
           options={pageSizeOptions}
           onPage={setPage}
           onPageSize={(size) => {
