@@ -3,7 +3,7 @@ import { peruMap } from "../maps/data/peru/index.js";
 import { worldMap } from "../maps/data/world/index.js";
 import type { MapLabels } from "../maps/geo/map-labels.js";
 import { selectRegions } from "../maps/geo/topojson.js";
-import { BubbleMap, type BubbleMapCategory, type MapPoint } from "./bubble-map.js";
+import { BubbleMap, type BubbleMapCategory, type MapPoint, type MapRoute } from "./bubble-map.js";
 
 /** Lima Metropolitana y Callao: el mapa base se ajusta a esa zona. */
 const limaMap = selectRegions(peruMap, ["PE-LMA", "PE-CAL"]);
@@ -157,6 +157,9 @@ const meta = {
     categories: { control: false },
     valueFormat: { control: false },
     onPointClick: { control: false },
+    routes: { control: false },
+    routeStyle: { control: "inline-radio", options: ["curve", "great-circle"] },
+    routeBend: { control: { type: "range", min: -0.6, max: 0.6, step: 0.05 } },
   },
   decorators: [
     (Story) => (
@@ -211,6 +214,95 @@ export const World: Story = {
   decorators: [
     (Story) => (
       <div style={{ maxWidth: 880, padding: 16 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** Almacén central en Lima y las cajas de insumos que salen hacia cada sede regional. */
+const hubs: MapPoint[] = [
+  {
+    id: "alm",
+    name: "Almacén central (Lima)",
+    lat: -12.05,
+    lon: -77.04,
+    value: 5200,
+    category: "almacen",
+  },
+  { id: "tru", name: "Trujillo", lat: -8.1116, lon: -79.0288, value: 900, category: "sede" },
+  { id: "piu", name: "Piura", lat: -5.1945, lon: -80.6328, value: 700, category: "sede" },
+  { id: "aqp", name: "Arequipa", lat: -16.399, lon: -71.537, value: 1100, category: "sede" },
+  { id: "cus", name: "Cusco", lat: -13.5319, lon: -71.9675, value: 640, category: "sede" },
+  { id: "iqu", name: "Iquitos", lat: -3.7491, lon: -73.2538, value: 260, category: "sede" },
+  { id: "tac", name: "Tacna", lat: -18.0066, lon: -70.2463, value: 300, category: "sede" },
+  { id: "hyo", name: "Huancayo", lat: -12.0651, lon: -75.2049, value: 420, category: "sede" },
+];
+
+const hubRoutes: MapRoute[] = hubs
+  .filter((hub) => hub.id !== "alm")
+  .map((hub) => ({
+    id: `alm-${hub.id}`,
+    from: "alm",
+    to: hub.id,
+    value: hub.value,
+    name: `Almacén → ${hub.name}`,
+  }));
+
+/** Rutas de reparto con trazos que avanzan hacia el destino; el ancho es el volumen. Pasa el cursor sobre una ruta. */
+export const Routes: Story = {
+  args: {
+    title: "Reparto de insumos desde el almacén central",
+    map: peruMap,
+    points: hubs,
+    categories: [
+      { id: "almacen", name: "Almacén" },
+      { id: "sede", name: "Sede regional" },
+    ],
+    routes: hubRoutes,
+    valueName: "Cajas enviadas",
+    maxRadius: 18,
+    height: 560,
+  },
+};
+
+const worldRoutes: MapRoute[] = [
+  { id: "r1", from: "lim", to: "mad", value: 2600, name: "Lima → Madrid" },
+  { id: "r2", from: "lim", to: "nyc", value: 4200, name: "Lima → Nueva York" },
+  { id: "r3", from: "lim", to: "tok", value: 1200, name: "Lima → Tokio" },
+  { id: "r4", from: "lim", to: "jnb", value: 300, name: "Lima → Johannesburgo" },
+  { id: "r5", from: "lim", to: "syd", value: 600, name: "Lima → Sídney" },
+];
+
+/** Great-circle routes: the shortest path on the globe, split where it crosses the antimeridian. */
+export const RoutesWorld: Story = {
+  args: {
+    title: "Exportaciones desde Lima",
+    map: worldMap,
+    points: worldCities,
+    categories: worldCategories,
+    routes: worldRoutes,
+    routeStyle: "great-circle",
+    valueName: "Cajas",
+    maxRadius: 22,
+    wheelZoom: "modifier",
+    height: undefined,
+  },
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 880, padding: 16 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** 320 px container: routes keep their width and the legend goes below. */
+export const RoutesNarrow: Story = {
+  args: { ...Routes.args, height: 420 },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
         <Story />
       </div>
     ),
