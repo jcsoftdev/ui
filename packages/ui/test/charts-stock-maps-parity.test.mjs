@@ -163,10 +163,112 @@ test("fibLevels and measureRange", () => {
   assert.equal(levels[levels.length - 1].price, 200);
   near(levels.find((l) => l.ratio === 0.5).price, 150, "half");
   const times = [0, 1, 2, 3, 4].map((n) => n * 86_400_000);
-  const m = stock.measureRange(times, { time: times[1], price: 100 }, { time: times[4], price: 90 });
+  const m = stock.measureRange(
+    times,
+    { time: times[1], price: 100 },
+    { time: times[4], price: 90 },
+  );
   near(m.percent, -0.1, "percent");
   assert.equal(m.bars, 3);
   assert.equal(stock.durationDays(m.duration), 3);
   near(stock.distanceToSegment({ x: 5, y: 3 }, { x: 0, y: 0 }, { x: 10, y: 0 }), 3, "distance");
-  near(stock.distanceToSegment({ x: 14, y: 3 }, { x: 0, y: 0 }, { x: 10, y: 0 }), 5, "past the end");
+  near(
+    stock.distanceToSegment({ x: 14, y: 3 }, { x: 0, y: 0 }, { x: 10, y: 0 }),
+    5,
+    "past the end",
+  );
+});
+
+const maps = await load(["maps/geo/routes.ts", "hex-tile-map/hex-layout.ts"]);
+
+test("greatCircle: ends are kept, the equator is a straight run and the antimeridian splits", () => {
+  const pieces = maps.greatCircle([0, 0], [90, 0], 4);
+  assert.equal(pieces.length, 1);
+  assert.deepEqual(pieces[0][0], [0, 0]);
+  assert.deepEqual(pieces[0][4], [90, 0]);
+  near(pieces[0][2][0], 45, "mid lon");
+  near(pieces[0][2][1], 0, "mid lat");
+  // Madrid -> Tokyo bows north of both cities.
+  const [route] = maps.greatCircle([-3.7, 40.4], [139.7, 35.7], 20);
+  assert.ok(Math.max(...route.map((p) => p[1])) > 45);
+  // Lima -> Sydney crosses the 180th meridian: two pieces, no jump inside a piece.
+  const split = maps.greatCircle([-77, -12], [151, -34], 60);
+  assert.ok(split.length >= 1);
+  for (const piece of split) {
+    for (let i = 1; i < piece.length; i += 1)
+      assert.ok(Math.abs(piece[i][0] - piece[i - 1][0]) <= 180);
+  }
+  near(maps.greatCircleDistance([0, 0], [0, 90]), 90, "quarter");
+  assert.deepEqual(maps.greatCircle([10, 10], [10, 10], 3).length, 1);
+});
+
+test("route arcs bulge to the left of the travel direction and paths are well formed", () => {
+  const [cx, cy] = maps.routeControl([0, 100], [100, 100], 0.25);
+  near(cx, 50, "control x");
+  near(cy, 75, "control y (up on screen)");
+  assert.deepEqual(maps.routeControl([0, 0], [10, 0], 0), [5, 0]);
+  assert.equal(maps.routeArcPath([0, 0], [10, 0], 0), "M0.0,0.0Q5.0,0.0 10.0,0.0");
+  assert.equal(
+    maps.routePolylinePath([
+      [
+        [0, 0],
+        [1, 1],
+      ],
+      [[5, 5]],
+    ]),
+    "M0.0,0.0L1.0,1.0",
+  );
+});
+
+test("Peru hex layout: 25 unique cells and ids, one connected body", () => {
+  const tiles = maps.PERU_HEX_TILES;
+  assert.equal(tiles.length, 25);
+  assert.equal(new Set(tiles.map((t) => t.id)).size, 25);
+  assert.equal(
+    new Set(tiles.map((t) => `${t.row}:${t.col}`)).size,
+    25,
+    "no two tiles share a cell",
+  );
+  assert.ok(tiles.every((t) => /^PE-[A-Z]{3}$/.test(t.id) && t.code.length === 3));
+  const seen = new Set([tiles[0].id]);
+  const queue = [tiles[0]];
+  while (queue.length) {
+    const tile = queue.pop();
+    for (const id of maps.hexNeighbors(tile, tiles)) {
+      if (!seen.has(id)) {
+        seen.add(id);
+        queue.push(tiles.find((t) => t.id === id));
+      }
+    }
+  }
+  assert.equal(seen.size, 25, "every tile touches the rest");
+  const lima = tiles.find((t) => t.id === "PE-LIM");
+  const callao = tiles.find((t) => t.id === "PE-CAL");
+  assert.ok(maps.hexNeighbors(lima, tiles).includes("PE-CAL"));
+  assert.ok(maps.hexNeighbors(callao, tiles).includes("PE-LIM"));
+});
+
+test("layoutHexGrid fits the box, centers it and hit-testing finds the tile", () => {
+  const tiles = maps.PERU_HEX_TILES;
+  for (const [w, h] of [
+    [320, 400],
+    [800, 300],
+    [500, 500],
+  ]) {
+    const grid = maps.layoutHexGrid(tiles, w, h);
+    assert.ok(grid.size > 0);
+    assert.ok(grid.width <= w + 1e-6 && grid.height <= h + 1e-6, `${w}x${h} fits`);
+    for (const [x, y] of grid.centers) {
+      assert.ok(x - grid.size * 0.86 >= -1e-6 && x + grid.size * 0.86 <= w + 1e-6);
+      assert.ok(y - grid.size >= -1e-6 && y + grid.size <= h + 1e-6);
+    }
+    assert.ok(Math.abs(grid.offsetX + grid.width / 2 - w / 2) < 1e-6);
+    tiles.forEach((_, index) => {
+      const [x, y] = grid.centers[index];
+      assert.equal(maps.hexAt(grid.centers, grid.size, x, y), index);
+    });
+    assert.equal(maps.hexAt(grid.centers, grid.size, -50, -50), -1);
+  }
+  assert.equal(maps.layoutHexGrid([], 100, 100).size, 0);
+  assert.equal(maps.hexPoints(0, 0, 10).split(" ").length, 6);
 });
