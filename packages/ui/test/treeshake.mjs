@@ -118,3 +118,31 @@ for (const banned of ["bar-chart/", "pie-chart/", "line-chart/", "area-chart/"])
   );
 }
 console.log("xlsx and integrated charts tree-shaking OK");
+
+// Logo Forge: the generator is pure; importing it from the brand barrel must not drag in the
+// editor, React, Radix or icons.
+const brandBuild = await build({
+  stdin: {
+    contents: `import { generateMark, serializeMark } from "@jcsoftdev/ui/brand"; console.log(generateMark, serializeMark);`,
+    resolveDir: process.cwd(),
+    loader: "js",
+  },
+  bundle: true,
+  minify: true,
+  format: "esm",
+  write: false,
+  metafile: true,
+  external: ["react", "react-dom", "react/jsx-runtime"],
+});
+// Dropped modules still appear in `inputs`; `outputs` lists what survived tree-shaking.
+const brandKept = Object.keys(Object.values(brandBuild.metafile.outputs)[0].inputs);
+for (const banned of ["react", "radix", "lucide", "logo-forge", "logo-mark", "atoms"]) {
+  assert.ok(
+    !brandKept.some((f) => f.includes(banned)),
+    `brand generateMark must not include "${banned}"`,
+  );
+}
+console.log(
+  `brand generator: ${brandBuild.outputFiles[0].contents.length} bytes, ${brandKept.length} modules`,
+);
+console.log("brand tree-shaking OK");
