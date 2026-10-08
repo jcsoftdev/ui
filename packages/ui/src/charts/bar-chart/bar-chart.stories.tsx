@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ChartPattern } from "../core/patterns.js";
 import { BarChart } from "./bar-chart.js";
+import { BarRaceChart } from "./bar-race-chart.js";
 import { DrilldownBarChart } from "./drilldown-bar-chart.js";
 
 const barbers = ["Kevin", "Renzo", "Abel", "Diego", "Luis"];
@@ -408,6 +409,38 @@ export const Drilldown: Story = {
       dataLabels
       height={args.height}
       labels={args.labels}
+    />
+  ),
+  parameters: { controls: { include: ["height"] } },
+};
+
+const raceBarbers = ["Kevin", "Renzo", "Abel", "Diego", "Luis", "Marco", "Sofía", "Iván"].map(
+  (name) => ({ id: name.toLowerCase(), name }),
+);
+const raceWeeks = Array.from({ length: 10 }, (_, week) => ({
+  label: `Sem ${week + 1}`,
+  values: raceBarbers.map((_, index) => {
+    const pace = 28 + ((index * 7) % 11);
+    const swing = Math.sin((week + 1) * (0.55 + index * 0.17) + index * 1.3) * 12;
+    return Math.round((pace + swing + week * (3 + (index % 4))) * 10) / 10;
+  }),
+}));
+
+/** Citas acumuladas por barbero: las barras suben, bajan y se reordenan. */
+export const Race: Story = {
+  name: "Race (animated re-sort)",
+  render: (args) => (
+    <BarRaceChart
+      title="Carrera de citas acumuladas por barbero"
+      entities={raceBarbers}
+      frames={raceWeeks}
+      topN={6}
+      valueFormat="integer"
+      height={args.height}
+      labels={args.labels}
+      playLabel="Reproducir"
+      pauseLabel="Pausar"
+      momentLabel="Semana"
     />
   ),
   parameters: { controls: { include: ["height"] } },
