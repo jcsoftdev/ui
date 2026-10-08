@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import type { ColorRange, ScaleColors } from "../core/color-scale.js";
 import { ChartDataTable } from "../core/data-table.js";
@@ -8,6 +9,7 @@ import { resolveFormat, type ValueFormat } from "../core/format.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { useIndexNavigation } from "../core/use-index-navigation.js";
 import { heatmapScale } from "../heatmap-chart/heatmap-scale.js";
+import { type MapDataRow, MapDataTable } from "../maps/geo/map-data-table.js";
 import { type MapLabels, resolveMapLabels } from "../maps/geo/map-labels.js";
 import { MapLegend } from "../maps/geo/map-legend.js";
 import { MapViewport } from "../maps/geo/map-viewport.js";
@@ -58,6 +60,12 @@ export interface ChoroplethMapProps {
   aspectRatio?: number;
   legend?: boolean;
   tooltip?: boolean;
+  /**
+   * The numbers as a real table, the accessible alternative to color: "hidden" (default, for
+   * screen readers only), "visible" (replaces the map) or "toggle" (a button switches between
+   * the map and the table).
+   */
+  dataTable?: "hidden" | "visible" | "toggle";
   /** Zoom buttons, wheel, drag and pinch. */
   zoomable?: boolean;
   /** "modifier": the wheel only zooms with Ctrl or Cmd held, so page scrolling is never trapped. */
@@ -92,6 +100,7 @@ export function ChoroplethMap({
   valueName,
   projection,
   regionLabels = "none",
+  dataTable = "hidden",
   height,
   aspectRatio,
   legend = true,
@@ -120,6 +129,23 @@ export function ChoroplethMap({
     [finite, scale, domain, center, colors, ranges],
   );
   const name = valueName ?? labels.value;
+  const [tableOpen, setTableOpen] = useState(false);
+  const showTable = dataTable === "visible" || (dataTable === "toggle" && tableOpen);
+  const rows = useMemo<MapDataRow[]>(
+    () =>
+      (map.topology.objects[map.object]?.geometries ?? []).map((region) => {
+        const regionName = region.properties?.name ?? region.id ?? "";
+        const value = lookup({ id: region.id ?? "", name: regionName })?.value ?? null;
+        return {
+          id: region.id ?? regionName,
+          name: regionName,
+          value,
+          display: value == null ? "" : format(value),
+          color: value == null ? NO_DATA_FILL : (colorScale.color(value)?.color ?? NO_DATA_FILL),
+        };
+      }),
+    [map, lookup, format, colorScale],
+  );
 
   return (
     <ChartFrame
@@ -130,6 +156,21 @@ export function ChoroplethMap({
       empty={finite.length === 0}
       skeleton="bars"
       className={className}
+      legend={
+        dataTable === "toggle" ? (
+          <button
+            type="button"
+            aria-pressed={tableOpen}
+            onClick={() => setTableOpen((open) => !open)}
+            className={cn(
+              "cursor-pointer rounded-pill border-0 px-3 py-1 font-semibold text-[12px] outline-none focus-visible:outline-2 focus-visible:outline-accent-ink",
+              tableOpen ? "bg-surface-2 text-ink" : "bg-surface-2 text-ink-3 hover:text-ink",
+            )}
+          >
+            {tableOpen ? labels.showMap : labels.showTable}
+          </button>
+        ) : null
+      }
       footer={
         legend ? (
           <MapLegend
@@ -144,37 +185,57 @@ export function ChoroplethMap({
         ) : null
       }
       table={
-        <ChoroplethTable
-          title={title}
-          map={map}
-          lookup={lookup}
-          format={format}
-          valueName={name}
-          labels={labels}
-        />
+        showTable ? null : (
+          <ChoroplethTable
+            title={title}
+            map={map}
+            lookup={lookup}
+            format={format}
+            valueName={name}
+            labels={labels}
+          />
+        )
       }
     >
-      {(width, drawingHeight) => (
-        <ChoroplethPlot
-          width={width}
-          height={drawingHeight}
-          title={title}
-          map={map}
-          lookup={lookup}
-          colorScale={colorScale}
-          format={format}
-          valueName={name}
-          projection={projection}
-          regionLabels={regionLabels}
-          tooltip={tooltip}
-          zoomable={zoomable}
-          wheelZoom={wheelZoom}
-          maxZoom={maxZoom}
-          animate={animate}
-          labels={labels}
-          onRegionClick={onRegionClick}
-        />
-      )}
+      {(width, drawingHeight) =>
+        showTable ? (
+          <MapDataTable
+            caption={title}
+            rows={rows}
+            valueName={name}
+            labels={labels}
+            height={drawingHeight}
+            onRowClick={
+              onRegionClick
+                ? (row) => {
+                    const index = rows.findIndex((candidate) => candidate.id === row.id);
+                    onRegionClick({ index, id: row.id, name: row.name, value: row.value });
+                  }
+                : undefined
+            }
+          />
+        ) : (
+          <ChoroplethPlot
+            width={width}
+            height={drawingHeight}
+            title={title}
+            map={map}
+            lookup={lookup}
+            colorScale={colorScale}
+            format={format}
+            valueName={name}
+            projection={projection}
+            regionLabels={regionLabels}
+            tooltip={tooltip}
+            zoomable={zoomable}
+            wheelZoom={wheelZoom}
+            maxZoom={maxZoom}
+            animate={animate}
+            labels={labels}
+            onRegionClick={onRegionClick}
+          />
+        )
+      }
     </ChartFrame>
   );
 }
