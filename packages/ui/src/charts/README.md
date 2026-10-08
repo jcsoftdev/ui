@@ -14,6 +14,10 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `BarChart` | `bar-chart/` | `CartesianChart` (`kind: "column"`) |
 | `ComboChart` | `combo-chart/` | `CartesianChart` (mixed kinds, right axis) |
 | `Sparkline` | `sparkline/` | scales + paths directly (no frame) |
+| `HeatmapChart`, `CalendarHeatmap` | `heatmap-chart/` | `color-scale.ts` + an internal `HeatmapGrid` |
+| `TreemapChart` | `treemap-chart/` | `hierarchy.ts` (`treemapLayout`, squarified) + `hierarchy-chart.tsx` |
+| `SunburstChart` | `sunburst-chart/` | `hierarchy.ts` (`partitionLayout`, `sectorPath`) + `use-drill.ts` |
+| `IcicleChart` | `icicle-chart/` | same partition as the sunburst, rectangular |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
 Polar and other chart families should be built from these blocks; see "Building a new chart" below.
@@ -54,10 +58,15 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `chart-frame.tsx` | `ChartFrame`: measures width, swaps in loading/empty states, places legend / drawing / footer / hidden table. Render prop `children(width)`. |
 | `chart-states.tsx` | `ChartSkeleton` (`shape: "bars" \| "line" \| "ring"`), `ChartEmpty`. |
 | `legend.tsx` | `ChartLegend`: toggle buttons with `aria-pressed`, hover/focus highlight, swatch shapes `line \| dashed \| square \| dot`. The last visible series cannot be hidden. |
-| `tooltip.tsx` | `ChartTooltip`: positioned card with rows (color, name, value, note, emphasis); flips past 60% of the width; moves with a transform. |
+| `tooltip.tsx` | `ChartTooltip`: positioned card with rows (color, name, value, note, emphasis); measures itself and stays inside the container (prefers the left side past 60%, clamps to the edges when neither side fits); moves with a transform. `tooltipLeft` is the pure placement. |
 | `data-table.tsx` | `ChartDataTable`: visually hidden table for screen readers. |
 | `axes.tsx` | `GridLines`, `AxisBottom`, `AxisLeft`, `AxisRight`, `thinTicks`, `estimateTextWidth`. |
 | `types.ts` | `XValue`, `ChartSeries`, `ChartAnnotation`, `ValueAxisOptions`, `ChartLabels` + `DEFAULT_LABELS` + `resolveLabels`. |
+| `color-scale.ts` | Token-only color scales as `color-mix()`: `tint(color, %)`, `inkOn(%)` (readable text on a tint), `sequentialColor`, `divergingColor`, `ColorRange` + `rangeIndex` / `rangeColor` (stepped, `tone` aware), `scaleGradient` for legend bars. |
+| `hierarchy.ts` | `buildHierarchy` (sums, drops empty branches, sorts, `branch` index), `ancestors`, `descendants`, `findNode`, `heightOf`; `squarify` and nested `treemapLayout`; `partitionLayout` (spans 0-1), `PartitionView` + `projectSpan` + `interpolateView` (zoom window), `sectorPath` (annular sector, 0 at twelve o'clock). |
+| `use-drill.ts` | `useDrill(data)`: hierarchy + focused node + `drill(id)` / `up()`; `useAnimatedView(view)`: rAF zoom transition, instant under reduced motion. |
+| `hierarchy-chart.tsx` | Shared pieces of the hierarchy charts: `HierarchyLabels` (+ `breadcrumb`, `share`, `drillHint`), `branchColor`, `levelStrength`, `HierarchyHeader` (breadcrumb), `HierarchyLegend`, `HierarchyTable`, `hierarchyKey` (keyboard model), `HIERARCHY_FRAME_CLASS`. |
+| `breadcrumb.tsx` | `ChartBreadcrumb`: drill path, ancestors are buttons, current item has `aria-current`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
 ## Theming
@@ -83,6 +92,32 @@ Every chart must keep these, so all families behave the same:
 - Entry animation through `useEntryAnimation` (line reveal by a clip rect, bars grow from their baseline with a short
   stagger, labels fade). Nothing animates with `prefers-reduced-motion` or `animate={false}`.
 - `loading` shows `ChartSkeleton`; no finite data shows `ChartEmpty`.
+
+## Hierarchy and matrix charts
+
+```tsx
+<TreemapChart title="Ventas por categoría" data={{ name: "Octubre", children: [...] }} valueFormat="currency" />
+<SunburstChart title="Servicios" data={tree} levels={3} />
+<IcicleChart title="Ingresos" data={tree} orientation="vertical" />
+<HeatmapChart title="Ocupación" rows={days} columns={hours} values={matrix} scale="diverging" />
+<CalendarHeatmap title="Citas por día" days={[{ date, value }]} ranges={[{ to: 5, label: "0-4" }]} />
+```
+
+- Data is a `HierarchyDatum` tree (`name`, `value` on leaves, optional `color`, `children`).
+- Keyboard: arrows move between the children of the open node, Enter opens one, Escape goes up
+  (heatmaps: arrows move by row/column, Enter calls `onCellClick`, Escape clears).
+- Drill-down keeps a breadcrumb; sunburst and icicle animate the zoom window with `useAnimatedView`.
+- Colors: each top-level branch of the open node takes a palette slot; depth and sibling rank vary the
+  tint. Heatmaps use `color-scale.ts`, so they follow the theme and `data-accent`.
+
+## Responsive (container width)
+
+Charts receive the measured width of their container from `ChartFrame`, never the viewport. The hierarchy
+and heatmap charts make the frame a size container (`@container/chart`) so the HTML around the drawing
+reacts with container variants: the legend sits below the drawing in narrow containers and moves above it
+from `@md/chart`. Inside the SVG: labels only render where they fit, column labels thin out, the sunburst and
+icicle drop outer levels before they get too thin, the calendar keeps only the most recent weeks that fit,
+and the tooltip never leaves the frame. Every chart has a `Narrow` story at 320 px.
 
 ## Annotations (cartesian)
 
@@ -112,4 +147,4 @@ category (dates by time). `yAxis: "right"` measures against the secondary axis.
 6. Reuse `ChartTooltip` (pass container-relative `x`/`y`) and a focusable overlay with `role="slider"` +
    `aria-valuetext` for keyboard exploration.
 7. Animate with `useEntryAnimation`; respect `animate={false}`.
-8. Pure helpers get a case in `test/charts-core.test.mjs`.
+8. Pure helpers get a case in `test/charts-core.test.mjs` (hierarchy and matrix layouts: `test/charts-hierarchy.test.mjs`).
