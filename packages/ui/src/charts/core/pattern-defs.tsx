@@ -31,7 +31,6 @@ export function ChartPatternDefs({ items }: { items: readonly PatternDefItem[] }
               style={{ fill: color, fillOpacity: tile.backdrop ?? 0.2 }}
             />
             {tile.shapes.map((shape, index) => {
-              // biome-ignore lint/suspicious/noArrayIndexKey: shapes are static and ordered.
               const key = index;
               if (shape.type === "line") {
                 return (

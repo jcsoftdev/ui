@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useId, useMemo, useRef, useState } from "react";
-import { AxisBottom, estimateTextWidth, GridLines } from "../core/axes.js";
+import { AxisBottom, AxisLeft, estimateTextWidth, GridLines } from "../core/axes.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
 import {
@@ -15,14 +15,24 @@ import { EASE_OUT, fadeIn, useEntryAnimation } from "../core/motion.js";
 import { DIRECTION_COLORS, directionOf, seriesColor } from "../core/palette.js";
 import { PlotOverlay } from "../core/plot-overlay.js";
 import { linearScale } from "../core/scales/linear.js";
-import { ChartTooltip } from "../core/tooltip.js";
+import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels, type ValueAxisOptions } from "../core/types.js";
 
 export interface DumbbellItem {
   id?: string;
   label: string;
-  from: number;
-  to: number;
+  /** First value (the left or bottom dot). Not needed with `values`. */
+  from?: number;
+  /** Last value (the right or top dot). Not needed with `values`. */
+  to?: number;
+  /** Any number of measures per row, in the order of `measures`; wins over `from` and `to`. */
+  values?: readonly number[];
+}
+
+export interface DumbbellMeasure {
+  name: string;
+  /** CSS color or token; defaults to the palette slot of the measure. */
+  color?: string;
 }
 
 export type DumbbellSort = "none" | "delta" | "abs-delta" | "to";
@@ -38,21 +48,29 @@ export interface DumbbellChartProps {
   toLabel?: string;
   fromColor?: string;
   toColor?: string;
+  /** Names and colors of the dots when rows have `values`; the first and last are compared by the change. */
+  measures?: readonly DumbbellMeasure[];
+  /** "vertical" draws a column per category with the dots stacked on the value axis. */
+  orientation?: "horizontal" | "vertical";
   valueFormat?: ValueFormat;
   /** Order of the rows; "delta" puts the biggest increase first. */
   sort?: DumbbellSort;
-  /** Height of every row in pixels (default 38). */
+  /** Height of every row in pixels (default 38), horizontal only. */
   rowHeight?: number;
-  /** `"fill"` stretches the rows to the height of the parent. */
-  height?: "fill";
+  /**
+   * Height of the drawing in pixels, or `"fill"` to take the height of the
+   * parent. Horizontal rows stretch to it; by default they size themselves.
+   */
+  height?: number | "fill";
   /** Width / height ratio; stretches the rows to fit it. */
   aspectRatio?: number;
-  /** Change printed at the end of each row. `false` hides it. */
+  /** Change (last minus first value) printed next to each row. `false` hides it. */
   delta?: "absolute" | "percent" | false;
-  /** Writes both values next to the dots (default true). */
+  /** Writes the values next to the dots (default true). */
   valueLabels?: boolean;
   /** Colors the change green when it goes down (e.g. cancellations or waiting time). */
   lowerIsBetter?: boolean;
+  /** Axis of the values (bottom axis, or left axis when vertical). */
   xAxis?: ValueAxisOptions;
   grid?: boolean;
   legend?: boolean;
@@ -64,30 +82,44 @@ export interface DumbbellChartProps {
   className?: string;
 }
 
+interface Row {
+  id: string;
+  label: string;
+  values: readonly number[];
+}
+
 const MARGIN = { top: 8, bottom: 30 };
 const DELTA_COLUMN = 64;
 const DOT_PAD = 40;
+const NEUTRAL_LINE = "var(--line-strong)";
 
-function sortItems(items: readonly DumbbellItem[], sort: DumbbellSort): DumbbellItem[] {
-  const list = [...items];
-  if (sort === "delta") list.sort((a, b) => b.to - b.from - (a.to - a.from));
-  else if (sort === "abs-delta")
-    list.sort((a, b) => Math.abs(b.to - b.from) - Math.abs(a.to - a.from));
-  else if (sort === "to") list.sort((a, b) => b.to - a.to);
+const firstOf = (row: Row) => row.values[0] ?? 0;
+const lastOf = (row: Row) => row.values[row.values.length - 1] ?? 0;
+const diffOf = (row: Row) => lastOf(row) - firstOf(row);
+
+function toRows(items: readonly DumbbellItem[]): Row[] {
+  return items.map((item) => ({
+    id: item.id ?? item.label,
+    label: item.label,
+    values: item.values ?? [item.from ?? 0, item.to ?? 0],
+  }));
+}
+
+function sortRows(rows: readonly Row[], sort: DumbbellSort): Row[] {
+  const list = [...rows];
+  if (sort === "delta") list.sort((a, b) => diffOf(b) - diffOf(a));
+  else if (sort === "abs-delta") list.sort((a, b) => Math.abs(diffOf(b)) - Math.abs(diffOf(a)));
+  else if (sort === "to") list.sort((a, b) => lastOf(b) - lastOf(a));
   return list;
 }
 
-function changeText(
-  item: DumbbellItem,
-  mode: "absolute" | "percent",
-  fmt: (v: number) => string,
-): string {
-  const diff = item.to - item.from;
+function changeText(row: Row, mode: "absolute" | "percent", fmt: (v: number) => string): string {
+  const diff = diffOf(row);
   const sign = diff > 0 ? "+" : "";
   if (mode === "percent") {
-    return item.from === 0
+    return firstOf(row) === 0
       ? "—"
-      : `${sign}${formatPercent(diff / Math.abs(item.from), { decimals: 0 })}`;
+      : `${sign}${formatPercent(diff / Math.abs(firstOf(row)), { decimals: 0 })}`;
   }
   return `${sign}${fmt(diff)}`;
 }
@@ -97,29 +129,30 @@ function fitLabel(text: string, room: number): string {
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
-const Row = memo(function Row({
-  y,
-  x1,
-  x2,
-  gradientId,
-  fromColor,
-  toColor,
-  dimmed,
-  active,
-  rowHeight,
-  width,
-}: {
-  y: number;
-  x1: number;
-  x2: number;
+interface LinkProps {
+  /** Pixel of each dot, in measure order. */
+  points: ReadonlyArray<{ x: number; y: number }>;
+  colors: readonly string[];
   gradientId: string;
-  fromColor: string;
-  toColor: string;
   dimmed: boolean;
   active: boolean;
-  rowHeight: number;
-  width: number;
-}) {
+  /** Highlight band behind the row. */
+  band: { x: number; y: number; width: number; height: number };
+}
+
+/** The bar and the dots of one row; a gradient joins two measures, a neutral bar joins more. */
+const Link = memo(function Link({ points, colors, gradientId, dimmed, active, band }: LinkProps) {
+  const first = points[0] ?? { x: 0, y: 0 };
+  const last = points[points.length - 1] ?? first;
+  const lo = {
+    x: Math.min(...points.map((point) => point.x)),
+    y: Math.min(...points.map((point) => point.y)),
+  };
+  const hi = {
+    x: Math.max(...points.map((point) => point.x)),
+    y: Math.max(...points.map((point) => point.y)),
+  };
+  const gradient = points.length === 2;
   return (
     <g
       className="motion-safe:transition-opacity motion-safe:duration-150"
@@ -127,62 +160,62 @@ const Row = memo(function Row({
     >
       {active ? (
         <rect
-          x={0}
-          y={y - rowHeight / 2}
-          width={width}
-          height={rowHeight}
+          x={band.x}
+          y={band.y}
+          width={band.width}
+          height={band.height}
           rx={8}
           style={{ fill: "var(--chart-grid)" }}
         />
       ) : null}
-      <defs>
-        <linearGradient
-          id={gradientId}
-          gradientUnits="userSpaceOnUse"
-          x1={x1}
-          x2={x2 === x1 ? x1 + 1 : x2}
-          y1={0}
-          y2={0}
-        >
-          <stop offset="0%" style={{ stopColor: fromColor }} />
-          <stop offset="100%" style={{ stopColor: toColor }} />
-        </linearGradient>
-      </defs>
+      {gradient ? (
+        <defs>
+          <linearGradient
+            id={gradientId}
+            gradientUnits="userSpaceOnUse"
+            x1={first.x}
+            y1={first.y}
+            x2={last.x === first.x && last.y === first.y ? last.x + 1 : last.x}
+            y2={last.y}
+          >
+            <stop offset="0%" style={{ stopColor: colors[0] }} />
+            <stop offset="100%" style={{ stopColor: colors[colors.length - 1] }} />
+          </linearGradient>
+        </defs>
+      ) : null}
       <line
         data-bar=""
-        x1={x1}
-        x2={x2}
-        y1={y}
-        y2={y}
+        x1={lo.x}
+        x2={hi.x}
+        y1={lo.y}
+        y2={hi.y}
         strokeWidth={4}
         strokeLinecap="round"
         style={{
-          stroke: `url(#${gradientId})`,
+          stroke: gradient ? `url(#${gradientId})` : NEUTRAL_LINE,
           transformBox: "fill-box",
           transformOrigin: "center",
         }}
       />
-      <circle
-        cx={x1}
-        cy={y}
-        r={active ? 7 : 6}
-        strokeWidth={2}
-        style={{ fill: fromColor, stroke: "var(--surface)" }}
-      />
-      <circle
-        cx={x2}
-        cy={y}
-        r={active ? 7.5 : 6.5}
-        strokeWidth={2}
-        style={{ fill: toColor, stroke: "var(--surface)" }}
-      />
+      {points.map((point, index) => (
+        <circle
+          // biome-ignore lint/suspicious/noArrayIndexKey: one dot per measure, in order.
+          key={index}
+          cx={point.x}
+          cy={point.y}
+          r={(active ? 7 : 6) + (index === points.length - 1 ? 0.5 : 0)}
+          strokeWidth={2}
+          style={{ fill: colors[index], stroke: "var(--surface)" }}
+        />
+      ))}
     </g>
   );
 });
 
 /**
- * Two values per category joined by a bar: the length of the line is the
- * change. Rows run top to bottom; use `sort` to rank by change.
+ * Two or more values per category joined by a bar: the length of the line is
+ * the spread, the change is last minus first. Rows run top to bottom, or
+ * columns left to right with `orientation="vertical"`; use `sort` to rank by change.
  */
 export function DumbbellChart({
   items,
@@ -192,10 +225,12 @@ export function DumbbellChart({
   toLabel = "After",
   fromColor: fromOverride,
   toColor: toOverride,
+  measures: measuresProp,
+  orientation = "horizontal",
   valueFormat,
   sort = "none",
   rowHeight = 38,
-  height: heightMode,
+  height: heightProp,
   aspectRatio,
   delta = "absolute",
   valueLabels = true,
@@ -212,15 +247,41 @@ export function DumbbellChart({
 }: DumbbellChartProps) {
   const labels = resolveLabels(labelOverrides);
   const fmt = useMemo(() => resolveFormat(valueFormat), [valueFormat]);
-  const rows = useMemo(() => sortItems(items, sort), [items, sort]);
-  const fromColor = fromOverride ?? seriesColor(6);
-  const toColor = toOverride ?? seriesColor(0);
-  const stretch = heightMode === "fill" || aspectRatio != null;
+  const rows = useMemo(() => sortRows(toRows(items), sort), [items, sort]);
+  const vertical = orientation === "vertical";
+  const measures = useMemo<DumbbellMeasure[]>(() => {
+    const widest = Math.max(2, ...rows.map((row) => row.values.length));
+    if (measuresProp && measuresProp.length > 0) {
+      return Array.from({ length: Math.max(widest, measuresProp.length) }, (_, index) => ({
+        name: measuresProp[index]?.name ?? `#${index + 1}`,
+        color: measuresProp[index]?.color ?? seriesColor(index),
+      }));
+    }
+    if (widest === 2) {
+      return [
+        { name: fromLabel, color: fromOverride ?? seriesColor(6) },
+        { name: toLabel, color: toOverride ?? seriesColor(0) },
+      ];
+    }
+    return Array.from({ length: widest }, (_, index) => ({
+      name: `#${index + 1}`,
+      color: seriesColor(index),
+    }));
+  }, [rows, measuresProp, fromLabel, toLabel, fromOverride, toOverride]);
+  const stretch = heightProp != null || aspectRatio != null;
   const plotHeight = rows.length * rowHeight + MARGIN.top + MARGIN.bottom;
+  const frameHeight =
+    heightProp === "fill"
+      ? "fill"
+      : typeof heightProp === "number"
+        ? heightProp
+        : vertical
+          ? 320
+          : Math.max(plotHeight, 120);
 
   return (
     <ChartFrame
-      height={heightMode === "fill" ? "fill" : Math.max(plotHeight, 120)}
+      height={frameHeight}
       aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
@@ -229,10 +290,12 @@ export function DumbbellChart({
       legend={
         legend ? (
           <ChartLegend
-            items={[
-              { id: "from", name: fromLabel, color: fromColor, shape: "dot" },
-              { id: "to", name: toLabel, color: toColor, shape: "dot" },
-            ]}
+            items={measures.map((measure, index) => ({
+              id: String(index),
+              name: measure.name,
+              color: measure.color as string,
+              shape: "dot" as const,
+            }))}
           />
         ) : null
       }
@@ -243,8 +306,11 @@ export function DumbbellChart({
           categoryHeader={labels.category}
           categories={rows.map((row) => row.label)}
           columns={[
-            { id: "from", name: fromLabel, values: rows.map((row) => fmt(row.from)) },
-            { id: "to", name: toLabel, values: rows.map((row) => fmt(row.to)) },
+            ...measures.map((measure, index) => ({
+              id: `m${index}`,
+              name: measure.name,
+              values: rows.map((row) => (row.values[index] == null ? "" : fmt(row.values[index]))),
+            })),
             {
               id: "delta",
               name: deltaLabel,
@@ -257,14 +323,12 @@ export function DumbbellChart({
       {(width, measuredHeight) => (
         <DumbbellPlot
           width={width}
-          height={stretch ? measuredHeight : plotHeight}
+          height={vertical ? measuredHeight : stretch ? measuredHeight : plotHeight}
           rows={rows}
-          fromLabel={fromLabel}
-          toLabel={toLabel}
-          fromColor={fromColor}
-          toColor={toColor}
+          measures={measures}
           fmt={fmt}
           valueFormat={valueFormat}
+          vertical={vertical}
           rowHeight={
             stretch
               ? Math.max(20, (measuredHeight - MARGIN.top - MARGIN.bottom) / rows.length)
@@ -289,13 +353,11 @@ export function DumbbellChart({
 interface PlotProps {
   width: number;
   height: number;
-  rows: readonly DumbbellItem[];
-  fromLabel: string;
-  toLabel: string;
-  fromColor: string;
-  toColor: string;
+  rows: readonly Row[];
+  measures: readonly DumbbellMeasure[];
   fmt: (value: number) => string;
   valueFormat?: ValueFormat;
+  vertical: boolean;
   rowHeight: number;
   delta: "absolute" | "percent" | false;
   valueLabels: boolean;
@@ -313,12 +375,10 @@ function DumbbellPlot({
   width,
   height,
   rows,
-  fromLabel,
-  toLabel,
-  fromColor,
-  toColor,
+  measures,
   fmt,
   valueFormat,
+  vertical,
   rowHeight,
   delta,
   valueLabels,
@@ -334,42 +394,93 @@ function DumbbellPlot({
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const svgRef = useRef<SVGSVGElement>(null);
   const [active, setActive] = useState<number | null>(null);
-  const innerHeight = rows.length * rowHeight;
   const narrow = width < 440;
   const dotPad = narrow ? 14 : DOT_PAD;
   const deltaColumn = narrow ? 50 : DELTA_COLUMN;
-  const showValues = valueLabels && !narrow;
+  const colors = measures.map((measure) => measure.color as string);
 
   const model = useMemo(() => {
-    const labelWidth = Math.min(
+    const all = rows.flatMap((row) => row.values);
+    const lo = all.length ? Math.min(...all) : 0;
+    const hi = all.length ? Math.max(...all) : 1;
+    const domain: [number, number] = [
+      xAxis?.min ?? (lo > 0 && lo < hi * 0.4 ? 0 : lo),
+      xAxis?.max ?? hi,
+    ];
+    const format = resolveAxisFormat(xAxis?.format ?? valueFormat);
+    if (vertical) {
+      const top = delta ? 26 : 12;
+      const innerHeight = Math.max(60, height - top - 30);
+      const pad = 14;
+      const y = linearScale({
+        domain,
+        range: [innerHeight - pad, pad],
+        tickCount: xAxis?.tickCount ?? Math.max(3, Math.round(innerHeight / 52)),
+      });
+      const ticks = y
+        .ticks()
+        .map((tick) => ({ key: tick, position: y.map(tick), label: format(tick) }));
+      const left = Math.max(...ticks.map((tick) => estimateTextWidth(tick.label)), 16) + 18;
+      const innerWidth = Math.max(60, width - left - 8);
+      const column = innerWidth / Math.max(1, rows.length);
+      return {
+        vertical: true as const,
+        top,
+        left,
+        innerWidth,
+        innerHeight,
+        column,
+        scale: y,
+        ticks,
+      };
+    }
+    const left = Math.min(
       Math.max(72, width * (narrow ? 0.3 : 0.28)),
       Math.max(...rows.map((row) => estimateTextWidth(row.label, 13)), 40) + 16,
     );
     const rightPad = delta ? deltaColumn : 8;
-    const innerWidth = Math.max(60, width - labelWidth - rightPad);
-    const values = rows.flatMap((row) => [row.from, row.to]);
-    const lo = Math.min(...values);
-    const hi = Math.max(...values);
+    const innerWidth = Math.max(60, width - left - rightPad);
     const x = linearScale({
-      domain: [xAxis?.min ?? (lo > 0 && lo < hi * 0.4 ? 0 : lo), xAxis?.max ?? hi],
+      domain,
       range: [dotPad, innerWidth - dotPad],
       tickCount: xAxis?.tickCount ?? Math.max(3, Math.round(innerWidth / 90)),
     });
-    const format = resolveAxisFormat(xAxis?.format ?? valueFormat);
     const ticks = x
       .ticks()
       .map((tick) => ({ key: tick, position: x.map(tick), label: format(tick) }));
-    return { labelWidth, innerWidth, x, ticks };
-  }, [rows, width, delta, xAxis, valueFormat, narrow, dotPad, deltaColumn]);
-  const { labelWidth, innerWidth, x, ticks } = model;
+    return {
+      vertical: false as const,
+      top: MARGIN.top,
+      left,
+      innerWidth,
+      innerHeight: rows.length * rowHeight,
+      column: 0,
+      scale: x,
+      ticks,
+    };
+  }, [
+    rows,
+    width,
+    height,
+    delta,
+    xAxis,
+    valueFormat,
+    narrow,
+    dotPad,
+    deltaColumn,
+    vertical,
+    rowHeight,
+  ]);
+  const { top, left, innerWidth, innerHeight, column, scale, ticks } = model;
 
   useEntryAnimation(
     svgRef,
     (root) => {
       const lines = root.querySelectorAll("[data-bar]");
       const per = Math.min(50, 400 / Math.max(1, lines.length));
+      const [from, to] = vertical ? ["scaleY(0)", "scaleY(1)"] : ["scaleX(0)", "scaleX(1)"];
       lines.forEach((line, i) => {
-        line.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
+        line.animate([{ transform: from }, { transform: to }], {
           duration: 560,
           delay: i * per,
           easing: EASE_OUT,
@@ -381,16 +492,42 @@ function DumbbellPlot({
     { disabled: !animate },
   );
 
-  const current = active != null ? (rows[active] as DumbbellItem) : null;
+  const current = active != null ? (rows[active] as Row) : null;
   const goodUp = !lowerIsBetter;
-  const deltaColor = (item: DumbbellItem) => {
-    const direction = directionOf(item.to - item.from);
+  const deltaColor = (row: Row) => {
+    const direction = directionOf(diffOf(row));
     if (direction === "flat") return DIRECTION_COLORS.flat;
     return (direction === "up") === goodUp ? DIRECTION_COLORS.up : DIRECTION_COLORS.down;
   };
+  const measureText = (row: Row) =>
+    measures.map((measure, index) => `${measure.name} ${fmt(row.values[index] ?? 0)}`).join(", ");
   const valueText = current
-    ? `${current.label}. ${fromLabel} ${fmt(current.from)}, ${toLabel} ${fmt(current.to)}, ${deltaLabel} ${changeText(current, delta || "absolute", fmt)}`
+    ? `${current.label}. ${measureText(current)}, ${deltaLabel} ${changeText(current, delta || "absolute", fmt)}`
     : labels.explore;
+  const showValues = valueLabels && (vertical ? column >= 64 : !narrow);
+
+  const tooltipRows = (row: Row): TooltipRow[] => [
+    ...measures.map((measure, index) => ({
+      id: String(index),
+      name: measure.name,
+      value: fmt(row.values[index] ?? 0),
+      color: measure.color as string,
+      shape: "dot" as const,
+    })),
+    {
+      id: "delta",
+      name: deltaLabel,
+      value: changeText(row, delta || "absolute", fmt),
+      color: "transparent",
+      emphasis: true,
+    },
+  ];
+
+  const pixels = (row: Row) => row.values.map((value) => scale.map(value));
+  const span = (row: Row) => {
+    const px = pixels(row);
+    return px.reduce((sum, value) => sum + value, 0) / Math.max(1, px.length) || 0;
+  };
 
   return (
     <div className="relative" style={{ width }}>
@@ -402,29 +539,93 @@ function DumbbellPlot({
         height={height}
         className="block overflow-visible"
       >
-        <g transform={`translate(${labelWidth},${MARGIN.top})`}>
-          {grid ? <GridLines ticks={ticks} direction="vertical" length={innerHeight} /> : null}
-          <AxisBottom ticks={ticks} offset={innerHeight} />
+        <g transform={`translate(${left},${top})`}>
+          {vertical ? (
+            <>
+              {grid ? <GridLines ticks={ticks} direction="horizontal" length={innerWidth} /> : null}
+              <AxisLeft ticks={ticks} offset={0} />
+              <AxisBottom
+                ticks={rows.map((row, i) => ({
+                  key: row.id,
+                  position: i * column + column / 2,
+                  label: fitLabel(row.label, column - 6),
+                }))}
+                offset={innerHeight}
+              />
+            </>
+          ) : (
+            <>
+              {grid ? <GridLines ticks={ticks} direction="vertical" length={innerHeight} /> : null}
+              <AxisBottom ticks={ticks} offset={innerHeight} />
+            </>
+          )}
           {rows.map((row, i) => {
-            const cy = i * rowHeight + rowHeight / 2;
-            const a = x.map(row.from);
-            const b = x.map(row.to);
             const dimmed = active != null && active !== i;
-            const left = Math.min(a, b);
-            const right = Math.max(a, b);
+            const px = pixels(row);
+            const lowPx = Math.min(...px);
+            const highPx = Math.max(...px);
+            if (vertical) {
+              const cx = i * column + column / 2;
+              return (
+                <g key={row.id}>
+                  <Link
+                    points={px.map((y) => ({ x: cx, y }))}
+                    colors={colors}
+                    gradientId={`${uid}-g${i}`}
+                    dimmed={dimmed}
+                    active={active === i}
+                    band={{ x: i * column + 2, y: 0, width: column - 4, height: innerHeight }}
+                  />
+                  {showValues ? (
+                    <g
+                      data-fade=""
+                      className="font-bold text-[11px] tabular-nums"
+                      style={{ fill: "var(--ink-2)", opacity: dimmed ? 0.4 : 1 }}
+                    >
+                      {row.values.map((value, index) => (
+                        <text
+                          // biome-ignore lint/suspicious/noArrayIndexKey: one label per measure, in order.
+                          key={index}
+                          x={cx + 12}
+                          y={px[index] as number}
+                          dy="0.34em"
+                          textAnchor="start"
+                        >
+                          {fmt(value)}
+                        </text>
+                      ))}
+                    </g>
+                  ) : null}
+                  {delta ? (
+                    <text
+                      data-fade=""
+                      x={cx}
+                      y={-10}
+                      textAnchor="middle"
+                      className="font-bold text-[12px] tabular-nums"
+                      style={{ fill: deltaColor(row), opacity: dimmed ? 0.4 : 1 }}
+                    >
+                      {changeText(row, delta, fmt)}
+                    </text>
+                  ) : null}
+                </g>
+              );
+            }
+            const cy = i * rowHeight + rowHeight / 2;
             return (
-              <g key={row.id ?? row.label}>
-                <Row
-                  y={cy}
-                  x1={a}
-                  x2={b}
+              <g key={row.id}>
+                <Link
+                  points={px.map((x) => ({ x, y: cy }))}
+                  colors={colors}
                   gradientId={`${uid}-g${i}`}
-                  fromColor={fromColor}
-                  toColor={toColor}
                   dimmed={dimmed}
                   active={active === i}
-                  rowHeight={rowHeight - 4}
-                  width={innerWidth + (delta ? deltaColumn : 0)}
+                  band={{
+                    x: 0,
+                    y: cy - (rowHeight - 4) / 2,
+                    width: innerWidth + (delta ? deltaColumn : 0),
+                    height: rowHeight - 4,
+                  }}
                 />
                 <text
                   x={-12}
@@ -437,7 +638,7 @@ function DumbbellPlot({
                     opacity: dimmed ? 0.5 : 1,
                   }}
                 >
-                  {fitLabel(row.label, labelWidth - 14)}
+                  {fitLabel(row.label, left - 14)}
                 </text>
                 {showValues ? (
                   <g
@@ -445,12 +646,32 @@ function DumbbellPlot({
                     className="font-bold text-[11px] tabular-nums"
                     style={{ fill: "var(--ink-2)", opacity: dimmed ? 0.4 : 1 }}
                   >
-                    <text x={left - 12} y={cy} dy="0.34em" textAnchor="end">
-                      {fmt(a <= b ? row.from : row.to)}
-                    </text>
-                    <text x={right + 12} y={cy} dy="0.34em" textAnchor="start">
-                      {fmt(a <= b ? row.to : row.from)}
-                    </text>
+                    {row.values.length === 2 ? (
+                      <>
+                        <text x={lowPx - 12} y={cy} dy="0.34em" textAnchor="end">
+                          {fmt(
+                            px[0] === lowPx ? (row.values[0] as number) : (row.values[1] as number),
+                          )}
+                        </text>
+                        <text x={highPx + 12} y={cy} dy="0.34em" textAnchor="start">
+                          {fmt(
+                            px[0] === lowPx ? (row.values[1] as number) : (row.values[0] as number),
+                          )}
+                        </text>
+                      </>
+                    ) : (
+                      row.values.map((value, index) => (
+                        <text
+                          // biome-ignore lint/suspicious/noArrayIndexKey: one label per measure, in order.
+                          key={index}
+                          x={px[index] as number}
+                          y={cy - 12}
+                          textAnchor="middle"
+                        >
+                          {fmt(value)}
+                        </text>
+                      ))
+                    )}
                   </g>
                 ) : null}
                 {delta ? (
@@ -472,43 +693,29 @@ function DumbbellPlot({
         </g>
       </svg>
       <PlotOverlay
-        left={0}
-        top={MARGIN.top}
-        width={width}
+        left={vertical ? left : 0}
+        top={top}
+        width={vertical ? innerWidth : width}
         height={innerHeight}
         label={labels.explore}
         count={rows.length}
         active={active}
         valueText={valueText}
         onActiveChange={setActive}
-        keys="vertical"
-        indexAt={({ y }) =>
-          rows.length ? Math.min(rows.length - 1, Math.max(0, Math.floor(y / rowHeight))) : null
-        }
+        keys={vertical ? "horizontal" : "vertical"}
+        indexAt={({ x, y }) => {
+          if (!rows.length) return null;
+          const index = vertical ? Math.floor(x / column) : Math.floor(y / rowHeight);
+          return Math.min(rows.length - 1, Math.max(0, index));
+        }}
       />
       {tooltip && current && active != null ? (
         <ChartTooltip
-          x={labelWidth + (x.map(current.from) + x.map(current.to)) / 2}
-          y={MARGIN.top + active * rowHeight + rowHeight / 2}
+          x={vertical ? left + active * column + column / 2 : left + span(current)}
+          y={vertical ? top + span(current) : top + active * rowHeight + rowHeight / 2}
           containerWidth={width}
           title={current.label}
-          rows={[
-            {
-              id: "from",
-              name: fromLabel,
-              value: fmt(current.from),
-              color: fromColor,
-              shape: "dot",
-            },
-            { id: "to", name: toLabel, value: fmt(current.to), color: toColor, shape: "dot" },
-            {
-              id: "delta",
-              name: deltaLabel,
-              value: changeText(current, delta || "absolute", fmt),
-              color: "transparent",
-              emphasis: true,
-            },
-          ]}
+          rows={tooltipRows(current)}
         />
       ) : null}
     </div>
