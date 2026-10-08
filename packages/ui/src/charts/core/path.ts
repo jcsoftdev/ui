@@ -5,7 +5,18 @@ export interface Point {
   y: number;
 }
 
-export type Curve = "linear" | "smooth";
+/**
+ * `smooth` is a monotone cubic; the `step*` curves hold a value until the next
+ * sample (`step-after`), jump to it early (`step-before`) or change halfway (`step`).
+ */
+export type Curve = "linear" | "smooth" | "step" | "step-before" | "step-after";
+
+/** The same step curve walked backwards (the lower edge of an area). */
+function mirrorCurve(curve: Curve): Curve {
+  if (curve === "step-before") return "step-after";
+  if (curve === "step-after") return "step-before";
+  return curve;
+}
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
@@ -61,6 +72,21 @@ export function curveCommands(points: readonly Point[], curve: Curve, join = fal
   if (!points.length) return "";
   const first = points[0] as Point;
   let d = `${join ? "L" : "M"}${round(first.x)},${round(first.y)}`;
+  if (curve === "step" || curve === "step-before" || curve === "step-after") {
+    for (let k = 1; k < points.length; k += 1) {
+      const a = points[k - 1] as Point;
+      const b = points[k] as Point;
+      if (curve === "step-after") {
+        d += `H${round(b.x)}V${round(b.y)}`;
+      } else if (curve === "step-before") {
+        d += `V${round(b.y)}H${round(b.x)}`;
+      } else {
+        const mid = round((a.x + b.x) / 2);
+        d += `H${mid}V${round(b.y)}H${round(b.x)}`;
+      }
+    }
+    return d;
+  }
   if (curve === "linear" || points.length < 3) {
     for (let k = 1; k < points.length; k += 1) {
       const p = points[k] as Point;
@@ -102,7 +128,7 @@ export function areaPath(
     if (start < 0) return;
     const upper = top.slice(start, end) as Point[];
     const lower = bottom.slice(start, end).reverse();
-    d += `${curveCommands(upper, curve)}${curveCommands(lower, curve, true)}Z`;
+    d += `${curveCommands(upper, curve)}${curveCommands(lower, mirrorCurve(curve), true)}Z`;
     start = -1;
   };
   top.forEach((point, index) => {

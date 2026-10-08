@@ -49,7 +49,10 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
-    curve: { control: "inline-radio", options: ["smooth", "linear"] },
+    curve: {
+      control: "inline-radio",
+      options: ["smooth", "linear", "step", "step-before", "step-after"],
+    },
     stack: { control: "inline-radio", options: ["none", "normal", "percent"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 160, max: 520, step: 10 } },
@@ -96,6 +99,59 @@ export const BrushZoom: Story = {
     labels: { ...spanishLabels, category: "Día" },
     annotations: [{ type: "line", axis: "y", value: 1200, label: "Promedio", tone: "accent" }],
   },
+};
+
+/** Stock on the shelf only changes when a delivery arrives or a sale happens: a step area tells that truthfully. */
+export const Step: Story = {
+  args: {
+    title: "Unidades de pomada en inventario",
+    categories: ["1 oct", "2 oct", "3 oct", "4 oct", "5 oct", "6 oct", "7 oct", "8 oct", "9 oct"],
+    series: [{ id: "pomada", name: "Pomada mate", data: [48, 48, 41, 41, 96, 88, 88, 79, 79] }],
+    curve: "step-after",
+    valueFormat: "integer",
+    annotations: [
+      { type: "line", axis: "y", value: 30, label: "Punto de pedido", tone: "warning" },
+    ],
+  },
+};
+
+/** Weekly cash flow: income minus expenses dips below zero in slow weeks. */
+export const NegativeValues: Story = {
+  args: {
+    title: "Flujo de caja semanal",
+    description: "Ingresos menos gastos; las semanas con pérdida quedan bajo cero.",
+    categories: weeks,
+    series: [{ id: "flujo", name: "Flujo neto", data: [420, 150, -260, -90, 310, 540, -120, 680] }],
+    valueFormat: "currency",
+    annotations: [
+      { type: "range", axis: "y", from: -400, to: 0, label: "Pérdida", tone: "danger" },
+    ],
+  },
+};
+
+/** Weeks without a closing report leave the area open instead of inventing a value. */
+export const WithGaps: Story = {
+  args: {
+    title: "Servicios por semana (cierres faltantes)",
+    series: [
+      {
+        id: "corte",
+        name: "Corte clásico",
+        data: [62, 58, null, null, 74, 80, 77, null],
+      },
+    ],
+    markers: true,
+  },
+};
+
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export const Loading: Story = { args: { loading: true } };

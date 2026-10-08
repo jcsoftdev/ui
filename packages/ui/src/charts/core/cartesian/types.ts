@@ -18,6 +18,15 @@ export interface CartesianSeries extends ChartSeries {
   axis?: "left" | "right";
 }
 
+/** What a click on the plot reports: the nearest category and the series line closest to the pointer. */
+export interface CartesianPointEvent {
+  /** Index in the `categories` you passed (not in the zoomed or downsampled window). */
+  index: number;
+  category: XValue;
+  seriesId: string;
+  value: number | null;
+}
+
 export interface CartesianChartProps {
   /** One entry per data point: strings, numbers or dates. */
   categories: readonly XValue[];
@@ -39,6 +48,16 @@ export interface CartesianChartProps {
   markers?: boolean;
   /** Values printed on the marks. */
   dataLabels?: boolean;
+  /** Strokes lines with a gradient from each series color to the next palette color. */
+  lineGradient?: boolean;
+  /** Eases lines and areas between data updates (live data); off by default. */
+  transition?: boolean;
+  /** Series with more points than this are reduced with LTTB, 2000 by default; `false` draws every point. */
+  maxPoints?: number | false;
+  /** Charts with the same id share hover (crosshair and tooltip) and the zoom window. */
+  syncId?: string;
+  /** Called with the category (and nearest series) under the pointer when the plot is clicked or Enter is pressed. */
+  onPointClick?: (point: CartesianPointEvent) => void;
   /** Gradient fill under areas (default true). */
   gradient?: boolean;
   /** Corner radius at the value end of bars, 6 by default. */

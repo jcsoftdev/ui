@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { type CSSProperties, memo } from "react";
 import { cn } from "../../../utils/cn.js";
 import type { SeriesGeometry } from "./layout.js";
 
@@ -14,6 +14,16 @@ export interface SeriesMarkProps {
   markers: boolean;
   /** Stacked areas use a flatter fill so layers stay distinguishable. */
   stacked: boolean;
+  /** Id of a gradient that strokes the line instead of the flat color. */
+  strokeGradientId?: string;
+  /** Eases the paths between data updates (Chromium and Firefox; others jump). */
+  transition?: boolean;
+}
+
+const PATH_EASE = "d 420ms cubic-bezier(0.22, 1, 0.36, 1)";
+
+function morph(d: string, on: boolean): CSSProperties {
+  return on ? ({ d: `path("${d}")`, transition: PATH_EASE } as CSSProperties) : {};
 }
 
 /** Fill and stroke of an area or line series. */
@@ -23,6 +33,8 @@ export const LineAreaMark = memo(function LineAreaMark({
   gradientId,
   markers,
   stacked,
+  strokeGradientId,
+  transition = false,
 }: SeriesMarkProps) {
   const { color, dashed } = geometry;
   return (
@@ -33,6 +45,7 @@ export const LineAreaMark = memo(function LineAreaMark({
           style={{
             fill: gradientId ? `url(#${gradientId})` : color,
             fillOpacity: gradientId ? 1 : stacked ? 0.42 : 0.16,
+            ...morph(geometry.area, transition),
           }}
         />
       ) : null}
@@ -44,7 +57,10 @@ export const LineAreaMark = memo(function LineAreaMark({
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeDasharray={dashed ? "6 6" : undefined}
-          style={{ stroke: color }}
+          style={{
+            stroke: strokeGradientId ? `url(#${strokeGradientId})` : color,
+            ...morph(geometry.line, transition),
+          }}
         />
       ) : null}
       {markers

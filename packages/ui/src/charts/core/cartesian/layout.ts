@@ -61,16 +61,29 @@ export interface SeriesGeometry {
   labels: LabelGeometry[];
 }
 
-export interface AnnotationGeometry {
+interface AnnotationBaseGeometry {
   key: string;
+  label?: string;
+  tooltip?: string;
+  tone: ChartTone;
+}
+
+export interface AnnotationSpanGeometry extends AnnotationBaseGeometry {
   kind: "line" | "range";
   /** Screen direction of the line (or the long side of the range). */
   direction: "horizontal" | "vertical";
   from: number;
   to: number;
-  label?: string;
-  tone: ChartTone;
 }
+
+/** A dot or text anchored at a pixel of the plot. */
+export interface AnnotationMarkerGeometry extends AnnotationBaseGeometry {
+  kind: "point" | "text";
+  x: number;
+  y: number;
+}
+
+export type AnnotationGeometry = AnnotationSpanGeometry | AnnotationMarkerGeometry;
 
 export interface Margin {
   top: number;
@@ -231,6 +244,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
 
   const yAnnotations = (axis: "left" | "right") =>
     input.annotations.flatMap((note) => {
+      if (note.type === "point" || note.type === "text") return [];
       if (note.axis !== "y" || (note.yAxis ?? "left") !== axis) return [];
       return note.type === "line" ? [note.value] : [note.from, note.to];
     });
@@ -589,6 +603,22 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   input.annotations.forEach((note, index) => {
     const tone = note.tone ?? "neutral";
     const key = `note-${index}`;
+    if (note.type === "point" || note.type === "text") {
+      const along = categoryPixel(note.x);
+      const scale = note.yAxis === "right" && rightScale ? rightScale : valueScale;
+      const across = scale.map(note.y);
+      if (along == null || across < -0.5 || across > valueLength + 0.5) return;
+      annotations.push({
+        key,
+        kind: note.type,
+        x: horizontal ? across : along,
+        y: horizontal ? along : across,
+        label: note.label,
+        tooltip: note.tooltip,
+        tone,
+      });
+      return;
+    }
     if (note.axis === "y") {
       const scale = note.yAxis === "right" && rightScale ? rightScale : valueScale;
       const direction = horizontal ? "vertical" : "horizontal";
