@@ -11,10 +11,17 @@ export interface ToasterProps extends ComponentProps<typeof SonnerToaster> {}
  * Ephemeral, non-critical confirmations. Pass `action: { label, onClick }` to
  * `toast()` for an undo button. Critical messages belong in a banner instead.
  */
-export function Toaster({ position = "bottom-center", ...props }: ToasterProps) {
+export function Toaster({
+  position = "bottom-center",
+  duration = 6000,
+  visibleToasts = 2,
+  ...props
+}: ToasterProps) {
   return (
     <SonnerToaster
       position={position}
+      duration={duration}
+      visibleToasts={visibleToasts}
       toastOptions={{
         classNames: {
           toast:
