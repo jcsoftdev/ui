@@ -29,7 +29,9 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `StockChart` | `stock-chart/` | candle / OHLC / line / area, range presets (`time-range.ts`), `ChartBrush` navigator, `indicators.ts` overlays and RSI/MACD pane, % comparisons, flags |
 | `GanttChart` | `gantt-chart/` | `gantt.ts` (zoom scale, two-tier header, rows with rollups, orthogonal dependency routes), task tree + timeline in one sticky scroller |
 | `SlopeChart` | `slope-chart/` | two columns, `spreadSlopeLabels` collision avoidance on both sides |
-| `HeatmapChart`, `CalendarHeatmap` | `heatmap-chart/` | `color-scale.ts` + an internal `HeatmapGrid` |
+| `HeatmapChart`, `CalendarHeatmap` | `heatmap-chart/` | `color-scale.ts` + an internal `HeatmapGrid` (`shape="hex"`, `renderer="canvas"`, `Date` columns) |
+| `DrilldownHeatmap` | `heatmap-chart/` | `HeatmapChart` + `ChartBreadcrumb`; each `HeatmapLevel` returns the matrix behind a cell |
+| `ChartGrid` | `chart-grid/` | small multiples (trellis): shared value/x domains, shared legend, columns from the container width |
 | `TreemapChart` | `treemap-chart/` | `hierarchy.ts` (`treemapLayout`, squarified) + `hierarchy-chart.tsx` |
 | `SunburstChart` | `sunburst-chart/` | `hierarchy.ts` (`partitionLayout`, `sectorPath`) + `use-drill.ts`; `half` for a 180 degree fan |
 | `HierarchyMorph` | `hierarchy-morph/` | treemap and sunburst layouts sampled as polygons (`shape-morph.ts`) and blended |
@@ -39,8 +41,8 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `RaincloudChart` | `raincloud-chart/` | `distribution/` (half violin + `BoxGlyph` + jittered rain) |
 | `Histogram` | `histogram/` | `distribution/` (`binEdges`, `binCounts`, `xyLayout`) |
 | `BeeswarmChart` | `beeswarm-chart/` | `distribution/` (`beeswarm` collision layout) |
-| `ScatterChart` | `scatter-chart/` | `XYPointChart` (trend lines, quadrants) |
-| `BubbleChart` | `bubble-chart/` | `XYPointChart` (`sized`, area-proportional radius) |
+| `ScatterChart` | `scatter-chart/` | `XYPointChart` (trend lines, quadrants, time axis, jitter, image markers, canvas renderer) |
+| `BubbleChart` | `bubble-chart/` | `XYPointChart` (`sized`, area-proportional radius, `shading="shaded"` spheres) |
 | `ChoroplethMap` | `choropleth-map/` | `maps/geo/` (`MapViewport`, `useMapGeometry`, `useMapView`) + `heatmapScale` (sequential / diverging / thresholds) |
 | `BubbleMap` | `bubble-map/` | same stage + `clusterPoints`; bubbles and clusters are drawn in screen space |
 | `PictogramChart` | `pictogram-chart/` | unit charts core (`units.ts`, `UnitGlyph`, `useCategoryExplorer`) |
@@ -330,7 +332,36 @@ interface DistributionSeries {          // BoxPlot, ViolinChart, RaincloudChart
 | `explorer.tsx` | `PlotExplorer`: the focusable `role="slider"` overlay (arrows, Home/End, PageUp/PageDown, Escape) plus pointer picking. |
 | `use-legend.tsx` | `useDistributionLegend`: colors, toggling, highlight and the legend node. |
 | `xy-points.tsx` | `XYPointChart`, the engine behind `ScatterChart` and `BubbleChart`. |
+| `points.ts`, `observations.tsx` | `jitterValues(values, seed, reach)` (deterministic jitter, `reach` may follow a density), `groupSeed`, and `ObservationDots` (raw dots of a box or violin, `coloring: "series" \| "value"`). |
+| `dot-stack.ts` | `packDots`, `fitRadius`, `explodeBins`: row-by-row dot stacks that fit a bin, one shared radius (histogram explode). |
+| `point-index.ts` | `createPointIndex(points, cell)`: uniform-grid index, `nearest(x, y, radius)` in microseconds for 50 000 marks; ties go to the smaller mark. |
+| `../use-canvas.ts` | `useCanvasPaint` (device-pixel-ratio canvas, repaint on deps and theme change), `resolveCssColors` (token / `color-mix()` colors to something a canvas understands). |
 | `labels.ts` | `StatLabels` (median, Q1, mean, outliers, ...) merged with `ChartLabels`; pass Spanish through `labels`. |
+
+### Parity features (distribution, scatter, heatmap, trellis)
+
+Pure parts are tested in `test/distribution-parity.test.mjs`.
+
+- `BoxPlot` / `ViolinChart`: `showPoints` draws every raw sample with seeded `jitter` (0-1, the share of the box or local
+  violin width) and `seed`; `pointColor="value"` grades each dot from a pale tint of the series colour to the full colour.
+  Violin dots spread by the local density, so they follow the shape. Outlier dots are the same dots when `showPoints` is on.
+- `Histogram`: `exploded` / `defaultExploded` / `onExplodedChange` turn every bin into one dot per observation (dot plot
+  on the same bins, shared radius, staggered pop-in); `explodeToggle` shows the button (`labels.explode`).
+- `ScatterChart` / `BubbleChart`: `xType="time"` (x in epoch ms, calendar ticks, `formatDate` tooltips), `jitter`
+  (pixels, number or `{ x, y }`, tooltips keep the true values), `XYPoint.image` (URL or data URI, clipped to the
+  marker, ringed in the series colour), `shading="shaded"` (bubbles only: off-centre radial gradient, a lit sphere).
+- `renderer="canvas"` (scatter, bubble, heatmap): marks are painted on a canvas; axes, tooltip, focus ring and
+  keyboard stay SVG/HTML. Scatter hit-testing is a grid index (`createPointIndex`); heatmap hit-testing is cell
+  arithmetic (`hexLayout.cellAt` for honeycombs). The hidden data table is capped (500 points, 60 x 40 cells), and the
+  heatmap crosshair dimming is skipped. Scatter falls back to SVG when points have images or bubbles are shaded.
+- `HeatmapChart`: `shape="hex"` honeycomb (`hexLayout`, `hexPath`: pointy-top, odd rows shifted half a cell),
+  `columns` may be `Date[]`: the header is labelled only at calendar boundaries (`datetimeColumnLabels`).
+  `DrilldownHeatmap` takes a root `HeatmapLevel` whose `drill({ row, column, value })` returns the sub-matrix.
+- `ChartGrid`: `panels` (`id`, `title`, `subtitle`, `extent`, `xExtent`) and a render prop `(panel, ctx)`;
+  `ctx.valueDomain` / `ctx.xDomain` are the shared domains (`sharedDomain`: union of extents, niced, `includeZero`),
+  `ctx.height`, `ctx.compact`. Columns come from the measured container width (`gridColumns`, `minPanelWidth`,
+  `maxColumns`), never the viewport. `legend` is one shared `ChartLegend`; `syncHover` draws a pointer guide in the other
+  panels (exact when panels share domain and format, so the plot margins match).
 
 Exploration order is the reading order: boxes/violins category by category, histogram bins left to right, beeswarm
 points row by row, scatter points by x. The tooltip and `aria-valuetext` carry the same numbers.

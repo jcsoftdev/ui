@@ -131,6 +131,25 @@ export const WaitingTimes: Story = {
   },
 };
 
+export const WithPoints: Story = {
+  args: { title: "Duración por servicio con cada observación", showPoints: true },
+};
+
+export const ColourGradedJitter: Story = {
+  args: {
+    title: "Duración por servicio, color según el tiempo",
+    showPoints: true,
+    pointColor: "value",
+    jitter: 0.9,
+    inner: "quartiles",
+  },
+  argTypes: {
+    jitter: { control: { type: "range", min: 0, max: 1, step: 0.1 } },
+    pointColor: { control: "inline-radio", options: ["series", "value"] },
+    seed: { control: "number" },
+  },
+};
+
 export const Narrow: Story = {
   args: { series: weekSeries, split: true },
   decorators: [

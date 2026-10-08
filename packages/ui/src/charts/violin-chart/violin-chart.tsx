@@ -18,6 +18,13 @@ import {
   boxValueText,
   CategoryAxes,
 } from "../core/distribution/marks.js";
+import { ObservationDots } from "../core/distribution/observations.js";
+import {
+  groupSeed,
+  type JitteredValue,
+  jitterValues,
+  type PointColoring,
+} from "../core/distribution/points.js";
 import {
   type BoxStats,
   boxStats,
@@ -54,6 +61,14 @@ export interface ViolinChartProps {
    * "area": one density scale for all, so a wider violin means a denser peak.
    */
   scale?: "width" | "area";
+  /** Every raw observation as a dot inside the violin, spread by its density. */
+  showPoints?: boolean;
+  /** Share (0-1) of the local violin width the dots spread over. */
+  jitter?: number;
+  /** "value" grades each dot from pale to full colour across the value range. */
+  pointColor?: PointColoring;
+  /** Seed of the jitter, so the dots are stable between renders. */
+  seed?: number;
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
   aspectRatio?: number;
@@ -107,6 +122,10 @@ export function ViolinChart({
   split = false,
   bandwidth,
   scale = "width",
+  showPoints = false,
+  jitter = 0.8,
+  pointColor = "series",
+  seed = 11,
   height = 340,
   aspectRatio,
   legend,
@@ -172,6 +191,10 @@ export function ViolinChart({
           inner={inner}
           split={split && legendState.visible.length === 2}
           scale={scale}
+          showPoints={showPoints}
+          jitter={jitter}
+          pointColor={pointColor}
+          seed={seed}
           grid={grid}
           tooltip={tooltip}
           animate={animate}
@@ -277,6 +300,10 @@ interface PlotProps {
   inner: ViolinInner;
   split: boolean;
   scale: "width" | "area";
+  showPoints: boolean;
+  jitter: number;
+  pointColor: PointColoring;
+  seed: number;
   grid: boolean;
   tooltip: boolean;
   animate: boolean;
@@ -297,6 +324,10 @@ function ViolinPlot({
   inner,
   split,
   scale,
+  showPoints,
+  jitter,
+  pointColor,
+  seed,
   grid,
   tooltip,
   animate,
@@ -393,6 +424,23 @@ function ViolinPlot({
       : (categories[item.category] as string);
   const maxFor = (item: ViolinItem) =>
     scale === "area" ? globalMax : Math.max(...item.density.map((p) => p.density), 1e-12);
+  const dots = useMemo(() => {
+    if (!showPoints) return [] as JitteredValue[][];
+    const share = Math.min(1, Math.max(0, jitter));
+    return items.map((item) => {
+      const top =
+        scale === "area" ? globalMax : Math.max(...item.density.map((p) => p.density), 1e-12);
+      const sign = item.side === "start" ? -1 : 1;
+      const placed = jitterValues(
+        item.series.source.data[item.category] ?? [],
+        groupSeed(seed, item.category, item.series.index),
+        (value) => (densityAt(item.density, value) / top) * item.halfWidth * share,
+      );
+      return item.side === "both"
+        ? placed
+        : placed.map((point) => ({ ...point, offset: sign * Math.abs(point.offset) }));
+    });
+  }, [showPoints, jitter, items, scale, globalMax, seed]);
 
   return (
     <div className="relative h-full w-full">
@@ -419,6 +467,21 @@ function ViolinPlot({
               active={active === index}
             />
           ))}
+          {showPoints
+            ? items.map((item, index) => (
+                <ObservationDots
+                  key={`dots-${item.key}`}
+                  points={dots[index] ?? []}
+                  map={valueScale.map}
+                  center={item.center}
+                  horizontal={horizontal}
+                  color={item.series.color}
+                  coloring={pointColor}
+                  range={[item.stats.min, item.stats.max]}
+                  dimmed={isDimmed(item.series.id)}
+                />
+              ))
+            : null}
         </g>
       </svg>
       <PlotExplorer

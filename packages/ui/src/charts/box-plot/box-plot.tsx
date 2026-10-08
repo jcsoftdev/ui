@@ -18,6 +18,13 @@ import {
   boxValueText,
   CategoryAxes,
 } from "../core/distribution/marks.js";
+import { ObservationDots } from "../core/distribution/observations.js";
+import {
+  groupSeed,
+  type JitteredValue,
+  jitterValues,
+  type PointColoring,
+} from "../core/distribution/points.js";
 import { type BoxStats, boxStats } from "../core/distribution/stats.js";
 import { type ColoredSeries, useDistributionLegend } from "../core/distribution/use-legend.js";
 import { resolveFormat, type ValueFormat, type ValueFormatter } from "../core/format.js";
@@ -41,6 +48,14 @@ export interface BoxPlotProps {
   showMean?: boolean;
   /** Dots for values outside the whiskers. */
   showOutliers?: boolean;
+  /** Every raw observation as a dot over the box, with deterministic jitter. */
+  showPoints?: boolean;
+  /** Share (0-1) of the box width the dots spread over. */
+  jitter?: number;
+  /** "value" grades each dot from pale to full colour across the value range. */
+  pointColor?: PointColoring;
+  /** Seed of the jitter, so the dots are stable between renders. */
+  seed?: number;
   /** Height of the drawing in pixels. */
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
@@ -63,6 +78,7 @@ interface BoxItem {
   center: number;
   size: number;
   format: ValueFormatter;
+  dots: JitteredValue[];
 }
 
 /**
@@ -79,6 +95,10 @@ export function BoxPlot({
   whisker = 1.5,
   showMean = true,
   showOutliers = true,
+  showPoints = false,
+  jitter = 0.7,
+  pointColor = "series",
+  seed = 11,
   height = 320,
   aspectRatio,
   legend,
@@ -135,6 +155,10 @@ export function BoxPlot({
           valueAxis={valueAxis}
           showMean={showMean}
           showOutliers={showOutliers}
+          showPoints={showPoints}
+          jitter={jitter}
+          pointColor={pointColor}
+          seed={seed}
           grid={grid}
           tooltip={tooltip}
           animate={animate}
@@ -158,6 +182,10 @@ interface PlotProps {
   valueAxis?: DistributionAxisOptions;
   showMean: boolean;
   showOutliers: boolean;
+  showPoints: boolean;
+  jitter: number;
+  pointColor: PointColoring;
+  seed: number;
   grid: boolean;
   tooltip: boolean;
   animate: boolean;
@@ -177,6 +205,10 @@ function BoxPlotPlot({
   valueAxis,
   showMean,
   showOutliers,
+  showPoints,
+  jitter,
+  pointColor,
+  seed,
   grid,
   tooltip,
   animate,
@@ -213,14 +245,22 @@ function BoxPlotPlot({
         const summary = stats[item.index]?.[category];
         if (!summary) return;
         const slot = layout.slot(category, slotIndex);
+        const size = Math.min(slot.size * 0.72, 72);
         items.push({
           key: `${item.id}-${category}`,
           category,
           series: item,
           stats: summary,
           center: slot.center,
-          size: Math.min(slot.size * 0.72, 72),
+          size,
           format: item.source.format ? resolveFormat(item.source.format) : fallback,
+          dots: showPoints
+            ? jitterValues(
+                item.source.data[category] ?? [],
+                groupSeed(seed, category, item.index),
+                (size / 2) * Math.min(1, Math.max(0, jitter)),
+              )
+            : [],
         });
       });
     });
@@ -235,6 +275,9 @@ function BoxPlotPlot({
     valueFormat,
     valueAxis,
     showOutliers,
+    showPoints,
+    jitter,
+    seed,
   ]);
 
   const { margin, innerWidth, innerHeight, horizontal, valueScale } = layout;
@@ -321,10 +364,22 @@ function BoxPlotPlot({
                 horizontal={horizontal}
                 color={item.series.color}
                 showMean={showMean}
-                showOutliers={showOutliers}
+                showOutliers={showOutliers && !showPoints}
                 dimmed={isDimmed(item.series.id)}
                 active={active === index}
               />
+              {showPoints ? (
+                <ObservationDots
+                  points={item.dots}
+                  map={map}
+                  center={item.center}
+                  horizontal={horizontal}
+                  color={item.series.color}
+                  coloring={pointColor}
+                  range={[item.stats.min, item.stats.max]}
+                  dimmed={isDimmed(item.series.id)}
+                />
+              ) : null}
             </g>
           ))}
         </g>

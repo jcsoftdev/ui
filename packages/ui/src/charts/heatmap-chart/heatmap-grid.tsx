@@ -14,7 +14,9 @@ import type { ValueFormatter } from "../core/format.js";
 import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type ChartLabels, DEFAULT_LABELS } from "../core/types.js";
+import { useCanvasPaint } from "../core/use-canvas.js";
 import type { HeatmapScale } from "./heatmap-scale.js";
+import { hexLayout, hexPath } from "./hex-layout.js";
 
 /** Visible strings of the heatmaps. */
 export interface HeatmapLabels extends ChartLabels {
@@ -66,6 +68,14 @@ export interface HeatmapGridProps {
   onCellClick?: (cell: HeatmapCellInfo) => void;
   /** Name of the value in the tooltip; the row label by default. */
   valueName?: string;
+  /** "hex" lays the cells out as a honeycomb (odd rows shifted half a cell). */
+  shape?: "rect" | "hex";
+  /**
+   * "canvas" paints the cells on a canvas for very large matrices. Labels,
+   * focus ring, tooltip and keyboard stay SVG/HTML; the crosshair dimming is
+   * skipped because it would repaint every cell on each pointer move.
+   */
+  renderer?: "svg" | "canvas";
 }
 
 /** Height of the column-label header above the cells. */
@@ -104,6 +114,8 @@ export function HeatmapGrid({
   animate,
   onCellClick,
   valueName,
+  shape = "rect",
+  renderer = "svg",
 }: HeatmapGridProps) {
   const rows = rowLabels.length;
   const columns = columnLabels.length;
@@ -117,25 +129,44 @@ export function HeatmapGrid({
   const w = square ? side : cellWidth;
   const h = square ? side : cellHeight;
   const pad = Math.min(gap, w * 0.2, h * 0.2);
+  const canvas = renderer === "canvas";
+  const honeycomb = useMemo(
+    () =>
+      shape === "hex"
+        ? hexLayout({ rows, columns, width: availableWidth, height: availableHeight })
+        : null,
+    [shape, rows, columns, availableWidth, availableHeight],
+  );
+  const hexDraw = honeycomb ? Math.max(0, honeycomb.radius - gap * 0.55) : 0;
+  const cellCenter = (row: number, column: number) => {
+    if (honeycomb) {
+      const c = honeycomb.center(row, column);
+      return { x: left + c.x, y: TOP + c.y };
+    }
+    return { x: left + column * w + w / 2, y: TOP + row * h + h / 2 };
+  };
 
   const visibleColumnLabels = useMemo(() => {
     const out: Array<{ index: number; label: string }> = [];
     let lastEnd = Number.NEGATIVE_INFINITY;
     columnLabels.forEach((label, index) => {
       if (!label) return;
-      const x = left + index * w + (square ? 0 : w / 2);
+      const x = honeycomb
+        ? left + honeycomb.center(0, index).x
+        : left + index * w + (square ? 0 : w / 2);
       const textWidth = estimateTextWidth(label, 11);
-      const start = square ? x : x - textWidth / 2;
+      const start = square && !honeycomb ? x : x - textWidth / 2;
       if (start < lastEnd + 6 || start + textWidth > width + 2) return;
       out.push({ index, label });
       lastEnd = start + textWidth;
     });
     return out;
-  }, [columnLabels, left, w, square, width]);
+  }, [columnLabels, left, w, square, width, honeycomb]);
 
   const [hover, setHover] = useState<{ row: number; column: number } | null>(null);
   const [active, setActive] = useState<{ row: number; column: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEntryAnimation(
     svgRef,
@@ -153,12 +184,69 @@ export function HeatmapGrid({
   );
 
   const valueAt = (row: number, column: number): HeatmapValue => values[row]?.[column];
+  useCanvasPaint(
+    canvasRef,
+    width,
+    height,
+    ({ ctx, resolve }) => {
+      const css: Array<string | undefined> = new Array(rows * columns);
+      const wanted = new Set<string>();
+      for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          const value = valueAt(row, column);
+          if (value === undefined) continue;
+          const color =
+            (value == null ? null : colorScale.color(value)?.color) ?? "var(--surface-2)";
+          css[row * columns + column] = color;
+          wanted.add(color);
+        }
+      }
+      const list = [...wanted];
+      const resolvedList = resolve(list);
+      const stops = new Map(list.map((color, index) => [color, resolvedList[index] as string]));
+      const round = (ctx as CanvasRenderingContext2D & { roundRect?: unknown }).roundRect;
+      for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          const color = css[row * columns + column];
+          if (color === undefined) continue;
+          ctx.fillStyle = stops.get(color) as string;
+          ctx.beginPath();
+          if (honeycomb) {
+            const c = honeycomb.center(row, column);
+            for (let i = 0; i < 6; i += 1) {
+              const angle = (Math.PI / 180) * (60 * i - 90);
+              const px = left + c.x + hexDraw * Math.cos(angle);
+              const py = TOP + c.y + hexDraw * Math.sin(angle);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+          } else {
+            const x = left + column * w + pad / 2;
+            const y = TOP + row * h + pad / 2;
+            const cw = Math.max(0, w - pad);
+            const ch = Math.max(0, h - pad);
+            if (typeof round === "function" && radius > 0) {
+              ctx.roundRect(x, y, cw, ch, Math.min(radius, cw / 2, ch / 2));
+            } else ctx.rect(x, y, cw, ch);
+          }
+          ctx.fill();
+        }
+      }
+    },
+    [values, colorScale, honeycomb, w, h, pad, left, radius, rows, columns, canvas],
+  );
   const lit = hover ?? active;
+  const crosshair = !honeycomb && !canvas;
 
   const local = (event: PointerEvent<HTMLDivElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
     const x = event.clientX - box.left - left;
     const y = event.clientY - box.top - TOP;
+    if (honeycomb) {
+      const hit = honeycomb.cellAt(x, y);
+      return hit && valueAt(hit.row, hit.column) !== undefined ? hit : null;
+    }
     const column = Math.floor(x / w);
     const row = Math.floor(y / h);
     if (x < 0 || y < 0 || column >= columns || row >= rows) return null;
@@ -225,20 +313,28 @@ export function HeatmapGrid({
 
   return (
     <div className="relative h-full w-full">
+      {canvas ? (
+        <canvas
+          ref={canvasRef}
+          data-canvas=""
+          className="pointer-events-none absolute top-0 left-0"
+          style={{ width, height }}
+        />
+      ) : null}
       <svg
         ref={svgRef}
         role="img"
         aria-label={title}
         width={width}
         height={height}
-        className="block overflow-visible"
+        className="relative block overflow-visible"
       >
         {rowLabels.map((label, row) => (
           <text
             // biome-ignore lint/suspicious/noArrayIndexKey: rows follow the data order.
             key={row}
             x={left - 8}
-            y={TOP + row * h + h / 2}
+            y={cellCenter(row, 0).y}
             textAnchor="end"
             dominantBaseline="central"
             className={cn(
@@ -254,9 +350,9 @@ export function HeatmapGrid({
         {visibleColumnLabels.map(({ index, label }) => (
           <text
             key={index}
-            x={left + index * w + (square ? pad / 2 : w / 2)}
+            x={honeycomb ? cellCenter(0, index).x : left + index * w + (square ? pad / 2 : w / 2)}
             y={TOP - 8}
-            textAnchor={square ? "start" : "middle"}
+            textAnchor={square && !honeycomb ? "start" : "middle"}
             className={cn(
               "select-none text-[11px] transition-[fill] duration-150",
               lit?.column === index ? "fill-ink font-bold" : "fill-ink-3 font-semibold",
@@ -265,68 +361,112 @@ export function HeatmapGrid({
             {label}
           </text>
         ))}
-        {Array.from({ length: columns }, (_, column) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: columns follow the data order.
-          <g key={column} data-column="">
-            {Array.from({ length: rows }, (_, row) => {
-              const value = valueAt(row, column);
-              if (value === undefined) return null;
-              const stop = value == null ? null : colorScale.color(value);
-              const inCross = lit != null && (lit.row === row || lit.column === column);
-              const dimmed = lit != null && !inCross;
-              const x = left + column * w + pad / 2;
-              const y = TOP + row * h + pad / 2;
-              const cw = Math.max(0, w - pad);
-              const ch = Math.max(0, h - pad);
-              const text = value == null ? "" : format(value);
-              const showText =
-                cellLabels && value != null && cw >= estimateTextWidth(text, 11) + 6 && ch >= 16;
-              return (
-                // biome-ignore lint/suspicious/noArrayIndexKey: rows follow the data order.
-                <g key={row}>
-                  <rect
-                    x={x}
-                    y={y}
-                    width={cw}
-                    height={ch}
-                    rx={Math.min(radius, cw / 2, ch / 2)}
-                    style={{
-                      fill: stop?.color ?? "var(--surface-2)",
-                      opacity: dimmed ? 0.42 : 1,
-                      transition: "opacity 150ms ease-out",
-                    }}
-                  />
-                  {showText ? (
-                    <text
-                      x={x + cw / 2}
-                      y={y + ch / 2}
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      className="pointer-events-none select-none font-bold text-[11px] tabular-nums"
-                      style={{
-                        fill: inkOn(stop?.strength ?? 0),
-                        opacity: dimmed ? 0.5 : 1,
-                      }}
-                    >
-                      {text}
-                    </text>
-                  ) : null}
-                </g>
-              );
-            })}
-          </g>
-        ))}
+        {canvas
+          ? null
+          : Array.from({ length: columns }, (_, column) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: columns follow the data order.
+              <g key={column} data-column="">
+                {Array.from({ length: rows }, (_, row) => {
+                  const value = valueAt(row, column);
+                  if (value === undefined) return null;
+                  const stop = value == null ? null : colorScale.color(value);
+                  const inCross = lit != null && (lit.row === row || lit.column === column);
+                  const dimmed = crosshair && lit != null && !inCross;
+                  const fill = stop?.color ?? "var(--surface-2)";
+                  const style = {
+                    fill,
+                    opacity: dimmed ? 0.42 : 1,
+                    transition: "opacity 150ms ease-out",
+                  };
+                  const text = value == null ? "" : format(value);
+                  if (honeycomb) {
+                    const c = cellCenter(row, column);
+                    const showHexText =
+                      cellLabels && value != null && hexDraw * 1.6 >= estimateTextWidth(text, 11);
+                    return (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: rows follow the data order.
+                      <g key={row}>
+                        <path d={hexPath(c.x, c.y, hexDraw)} strokeLinejoin="round" style={style} />
+                        {showHexText ? (
+                          <text
+                            x={c.x}
+                            y={c.y}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            className="pointer-events-none select-none font-bold text-[11px] tabular-nums"
+                            style={{ fill: inkOn(stop?.strength ?? 0) }}
+                          >
+                            {text}
+                          </text>
+                        ) : null}
+                      </g>
+                    );
+                  }
+                  const x = left + column * w + pad / 2;
+                  const y = TOP + row * h + pad / 2;
+                  const cw = Math.max(0, w - pad);
+                  const ch = Math.max(0, h - pad);
+                  const showText =
+                    cellLabels &&
+                    value != null &&
+                    cw >= estimateTextWidth(text, 11) + 6 &&
+                    ch >= 16;
+                  return (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: rows follow the data order.
+                    <g key={row}>
+                      <rect
+                        x={x}
+                        y={y}
+                        width={cw}
+                        height={ch}
+                        rx={Math.min(radius, cw / 2, ch / 2)}
+                        style={style}
+                      />
+                      {showText ? (
+                        <text
+                          x={x + cw / 2}
+                          y={y + ch / 2}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          className="pointer-events-none select-none font-bold text-[11px] tabular-nums"
+                          style={{
+                            fill: inkOn(stop?.strength ?? 0),
+                            opacity: dimmed ? 0.5 : 1,
+                          }}
+                        >
+                          {text}
+                        </text>
+                      ) : null}
+                    </g>
+                  );
+                })}
+              </g>
+            ))}
         {lit ? (
-          <rect
-            x={left + lit.column * w + pad / 2 - 1}
-            y={TOP + lit.row * h + pad / 2 - 1}
-            width={Math.max(0, w - pad) + 2}
-            height={Math.max(0, h - pad) + 2}
-            rx={radius + 1}
-            strokeWidth={2}
-            className="pointer-events-none"
-            style={{ fill: "none", stroke: "var(--ink)" }}
-          />
+          honeycomb ? (
+            <path
+              d={hexPath(
+                cellCenter(lit.row, lit.column).x,
+                cellCenter(lit.row, lit.column).y,
+                hexDraw + 1.5,
+              )}
+              strokeWidth={2}
+              strokeLinejoin="round"
+              className="pointer-events-none"
+              style={{ fill: "none", stroke: "var(--ink)" }}
+            />
+          ) : (
+            <rect
+              x={left + lit.column * w + pad / 2 - 1}
+              y={TOP + lit.row * h + pad / 2 - 1}
+              width={Math.max(0, w - pad) + 2}
+              height={Math.max(0, h - pad) + 2}
+              rx={radius + 1}
+              strokeWidth={2}
+              className="pointer-events-none"
+              style={{ fill: "none", stroke: "var(--ink)" }}
+            />
+          )
         ) : null}
       </svg>
 
@@ -368,8 +508,8 @@ export function HeatmapGrid({
 
       {tooltip && shown ? (
         <ChartTooltip
-          x={left + shown.column * w + w / 2}
-          y={TOP + shown.row * h + h / 2}
+          x={cellCenter(shown.row, shown.column).x}
+          y={cellCenter(shown.row, shown.column).y}
           containerWidth={width}
           title={cellTitle(shown.row, shown.column)}
           rows={[

@@ -56,6 +56,9 @@ const meta = {
     height: { control: { type: "range", min: 180, max: 520, step: 10 } },
     valueFormat: { control: false },
     series: { control: false },
+    exploded: { control: "boolean" },
+    defaultExploded: { control: "boolean" },
+    explodeToggle: { control: "boolean" },
   },
   decorators: [
     (Story) => (
@@ -93,6 +96,18 @@ export const OverlaidSeries: Story = {
     valueFormat: minutes as ValueFormat,
     xAxis: { title: "Espera (min)" },
     labels: { ...spanishLabels, frequency: "Clientes", empty: "Sin esperas registradas" },
+  },
+};
+
+/** Press the toggle to turn every bin into one dot per sale. */
+export const Explode: Story = {
+  args: {
+    title: "Cada venta del turno de la tarde",
+    series: [{ id: "tarde", name: "Ticket", values: [...samples(103, 70, 40, 9, 15), 95, 110] }],
+    binWidth: 10,
+    bins: undefined,
+    explodeToggle: true,
+    labels: { ...spanishLabels, explode: "Ver cada venta" },
   },
 };
 

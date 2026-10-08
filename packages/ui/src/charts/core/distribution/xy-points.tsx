@@ -4,22 +4,20 @@ import { memo, useEffect, useId, useMemo, useRef, useState } from "react";
 import { cn } from "../../../utils/cn.js";
 import { estimateTextWidth } from "../axes.js";
 import { ChartFrame } from "../chart-frame.js";
+import { tint } from "../color-scale.js";
 import { ChartDataTable } from "../data-table.js";
 import { formatNumber, resolveFormat, type ValueFormat } from "../format.js";
 import { useEntryAnimation } from "../motion.js";
 import { type ChartTone, TONE_COLORS } from "../palette.js";
+import { formatDate } from "../scales/time.js";
 import { ChartTooltip, type TooltipRow } from "../tooltip.js";
+import { useCanvasPaint } from "../use-canvas.js";
 import { PlotExplorer } from "./explorer.js";
 import { type DistributionLabels, resolveDistributionLabels } from "./labels.js";
-import {
-  type DistributionAxisOptions,
-  nearestPoint,
-  tooltipFit,
-  truncateLabel,
-  xyLayout,
-} from "./layout.js";
+import { type DistributionAxisOptions, tooltipFit, truncateLabel, xyLayout } from "./layout.js";
 import { XYAxes } from "./marks.js";
-import { linearRegression, mean } from "./stats.js";
+import { createPointIndex } from "./point-index.js";
+import { linearRegression, mean, seededRandom } from "./stats.js";
 import { type ColoredSeries, useDistributionLegend } from "./use-legend.js";
 
 export interface XYPoint {
@@ -29,6 +27,8 @@ export interface XYPoint {
   size?: number;
   /** Name in the tooltip, the data table and bubble labels, e.g. a barber. */
   label?: string;
+  /** Image drawn inside the marker instead of a plain dot (URL or data URI), e.g. an avatar. */
+  image?: string;
 }
 
 export interface XYSeries {
@@ -67,6 +67,23 @@ export interface XYPointChartProps {
   /** Bubble mode: radius from `size`, area-proportional, the largest gets `sizeRange[1]`. */
   sized?: boolean;
   sizeRange?: readonly [number, number];
+  /** "time": `x` is epoch milliseconds and the axis shows calendar ticks. */
+  xType?: "linear" | "time";
+  /**
+   * Deterministic displacement in pixels that separates overlapping points
+   * (a number applies to both axes). Tooltips still show the true values.
+   */
+  jitter?: number | { x?: number; y?: number };
+  /** Seed of the jitter, so points are stable between renders. */
+  seed?: number;
+  /**
+   * "canvas" paints the marks on a canvas for tens of thousands of points;
+   * axes, tooltip and keyboard stay SVG/HTML. Falls back to SVG when points
+   * carry images or `shading` is "shaded".
+   */
+  renderer?: "svg" | "canvas";
+  /** "shaded" fills bubbles with an off-centre radial gradient so they read as spheres. */
+  shading?: "flat" | "shaded";
   /** Text labels next to (or inside) the points that have a `label`. */
   showLabels?: boolean;
   /** Reference circles explaining the bubble sizes, under the plot. */
@@ -116,6 +133,11 @@ export function XYPointChart({
   sizeRange = [4, 30],
   showLabels = false,
   sizeLegend = sized,
+  xType = "linear",
+  jitter,
+  seed = 17,
+  renderer = "svg",
+  shading = "flat",
   height = 340,
   aspectRatio,
   legend,
@@ -130,7 +152,8 @@ export function XYPointChart({
   const legendState = useDistributionLegend(series, legend, "dot");
   // The size key lives outside the plot, so the plot reports the width it got.
   const [plotWidth, setPlotWidth] = useState<number | null>(null);
-  const fx = resolveFormat(xFormat);
+  const time = xType === "time";
+  const fx = time && !xFormat ? formatDate : resolveFormat(xFormat);
   const fy = resolveFormat(yFormat);
   const fs = resolveFormat(sizeFormat);
   const finite = (point: XYPoint) => Number.isFinite(point.x) && Number.isFinite(point.y);
@@ -139,9 +162,17 @@ export function XYPointChart({
     0,
     ...legendState.visible.flatMap((item) => item.source.points.map((point) => point.size ?? 0)),
   );
-  const rows = legendState.all.flatMap((item) =>
-    item.source.points.filter(finite).map((point, index) => ({ item, point, index })),
-  );
+  const canvas =
+    renderer === "canvas" &&
+    shading !== "shaded" &&
+    !series.some((item) => item.points.some((point) => point.image));
+  // A table with tens of thousands of rows would drown the DOM the canvas avoids.
+  const tableLimit = canvas ? 500 : Number.POSITIVE_INFINITY;
+  const rows = legendState.all
+    .flatMap((item) =>
+      item.source.points.filter(finite).map((point, index) => ({ item, point, index })),
+    )
+    .slice(0, tableLimit);
   const xName = xAxis?.title ?? "x";
   const yName = yAxis?.title ?? "y";
   return (
@@ -200,6 +231,11 @@ export function XYPointChart({
           sizeFormat={sizeFormat}
           xAxis={xAxis}
           yAxis={yAxis}
+          xTime={time}
+          jitter={jitter}
+          seed={seed}
+          canvas={canvas}
+          shading={shading}
           trendLine={trendLine}
           quadrants={quadrants}
           radius={radius}
@@ -262,36 +298,149 @@ function SizeKey({
 const Points = memo(function Points({
   points,
   sized,
+  shadeId,
   isDimmed,
 }: {
   points: readonly PlacedPoint[];
   sized: boolean;
+  /** Gradient id for a series index when bubbles are shaded. */
+  shadeId?: (seriesIndex: number) => string;
   isDimmed: (id: string) => boolean;
 }) {
   return (
     <g>
-      {points.map((point) => (
-        <circle
-          key={point.key}
-          data-point=""
-          cx={point.x}
-          cy={point.y}
-          r={point.r}
-          strokeWidth={sized ? 1.5 : 1.25}
-          className="transition-opacity duration-150"
-          style={{
-            fill: point.series.color,
-            fillOpacity: sized ? 0.42 : 0.8,
-            stroke: sized ? point.series.color : "var(--surface)",
-            opacity: isDimmed(point.series.id) ? 0.18 : 1,
-            transformBox: "fill-box",
-            transformOrigin: "center",
-          }}
-        />
-      ))}
+      {points.map((point) => {
+        const dimmed = isDimmed(point.series.id);
+        const image = point.point.image;
+        if (image) {
+          return (
+            <g
+              key={point.key}
+              data-point=""
+              className="transition-opacity duration-150"
+              style={{
+                opacity: dimmed ? 0.18 : 1,
+                transformBox: "fill-box",
+                transformOrigin: "center",
+              }}
+            >
+              <circle cx={point.x} cy={point.y} r={point.r} style={{ fill: "var(--surface-2)" }} />
+              <image
+                href={image}
+                x={point.x - point.r}
+                y={point.y - point.r}
+                width={point.r * 2}
+                height={point.r * 2}
+                preserveAspectRatio="xMidYMid slice"
+                style={{ clipPath: "circle(50%)" }}
+              />
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={point.r}
+                fill="none"
+                strokeWidth={2}
+                style={{ stroke: point.series.color }}
+              />
+            </g>
+          );
+        }
+        return (
+          <circle
+            key={point.key}
+            data-point=""
+            cx={point.x}
+            cy={point.y}
+            r={point.r}
+            strokeWidth={sized ? 1.5 : 1.25}
+            className="transition-opacity duration-150"
+            style={{
+              fill: shadeId ? `url(#${shadeId(point.series.index)})` : point.series.color,
+              fillOpacity: shadeId ? 0.96 : sized ? 0.42 : 0.8,
+              stroke: shadeId
+                ? tint(point.series.color, 70, "black")
+                : sized
+                  ? point.series.color
+                  : "var(--surface)",
+              opacity: dimmed ? 0.18 : 1,
+              transformBox: "fill-box",
+              transformOrigin: "center",
+            }}
+          />
+        );
+      })}
     </g>
   );
 });
+
+/** Radial gradient that turns a bubble into a lit sphere (highlight up and left, shade down and right). */
+function SphereGradient({ id, color }: { id: string; color: string }) {
+  return (
+    <radialGradient id={id} cx="0.5" cy="0.5" r="0.62" fx="0.34" fy="0.3">
+      <stop offset="0%" style={{ stopColor: tint(color, 30, "white") }} />
+      <stop offset="38%" style={{ stopColor: color }} />
+      <stop offset="100%" style={{ stopColor: tint(color, 58, "black") }} />
+    </radialGradient>
+  );
+}
+
+/** Paints every mark on one canvas; used for dense scatter plots. */
+function CanvasMarks({
+  points,
+  visible,
+  width,
+  height,
+  sized,
+  dimmedKey,
+  isDimmed,
+}: {
+  points: readonly PlacedPoint[];
+  visible: readonly ColoredSeries<XYSeries>[];
+  width: number;
+  height: number;
+  sized: boolean;
+  dimmedKey: string;
+  isDimmed: (id: string) => boolean;
+}) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useCanvasPaint(
+    ref,
+    width,
+    height,
+    ({ ctx, resolve }) => {
+      const fills = resolve(visible.map((item) => item.color));
+      const ring = resolve(["var(--surface)"])[0] as string;
+      visible.forEach((item, seriesIndex) => {
+        const mine = points.filter((point) => point.series.id === item.id);
+        if (mine.length === 0) return;
+        ctx.globalAlpha = (isDimmed(item.id) ? 0.12 : 1) * (sized ? 0.5 : 0.75);
+        ctx.fillStyle = fills[seriesIndex] as string;
+        ctx.beginPath();
+        for (const point of mine) {
+          ctx.moveTo(point.x + point.r, point.y);
+          ctx.arc(point.x, point.y, point.r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        if (sized || (mine[0] && mine[0].r >= 3)) {
+          ctx.globalAlpha = isDimmed(item.id) ? 0.12 : 0.9;
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = sized ? (fills[seriesIndex] as string) : ring;
+          ctx.stroke();
+        }
+      });
+      ctx.globalAlpha = 1;
+    },
+    [points, visible, sized, dimmedKey],
+  );
+  return (
+    <canvas
+      ref={ref}
+      data-canvas=""
+      className="pointer-events-none absolute"
+      style={{ left: 0, top: 0, width, height }}
+    />
+  );
+}
 
 interface PlotProps {
   width: number;
@@ -303,6 +452,11 @@ interface PlotProps {
   sizeFormat?: ValueFormat;
   xAxis?: DistributionAxisOptions;
   yAxis?: DistributionAxisOptions;
+  xTime: boolean;
+  jitter?: number | { x?: number; y?: number };
+  seed: number;
+  canvas: boolean;
+  shading: "flat" | "shaded";
   trendLine: boolean;
   quadrants?: QuadrantOptions;
   radius: number;
@@ -330,6 +484,11 @@ function XYPointPlot({
   sizeFormat,
   xAxis,
   yAxis,
+  xTime,
+  jitter,
+  seed,
+  canvas,
+  shading,
   trendLine,
   quadrants,
   radius,
@@ -345,8 +504,12 @@ function XYPointPlot({
   onWidth,
 }: PlotProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   useEffect(() => onWidth?.(width), [onWidth, width]);
-  const clipId = `${useId().replace(/[^a-zA-Z0-9_-]/g, "")}-plot`;
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const clipId = `${uid}-plot`;
+  const shaded = sized && shading === "shaded";
+  const shadeId = (seriesIndex: number) => `${uid}-sphere-${seriesIndex}`;
   const [active, setActive] = useState<number | null>(null);
 
   const geometry = useMemo(() => {
@@ -375,6 +538,7 @@ function XYPointPlot({
       yFormat,
       xAxis,
       yAxis,
+      xTime,
       inset: sized ? maxRadius * 0.7 : radius + 2,
     });
     const { xScale, yScale } = layout;
@@ -385,16 +549,23 @@ function XYPointPlot({
             maxRadius * Math.sqrt(Math.max(0, point.size ?? 0) / (maxSize || 1)),
           )
         : radius;
+    const spread = typeof jitter === "number" ? { x: jitter, y: jitter } : (jitter ?? {});
+    const jx = Math.max(0, spread.x ?? 0);
+    const jy = Math.max(0, spread.y ?? 0);
     const placed: PlacedPoint[] = [];
     for (const item of visible) {
+      const random = seededRandom(seed + item.index * 131);
       item.source.points.forEach((point, index) => {
         if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+        // Both draws always happen, so a point keeps its offset when the spread changes.
+        const dx = (random() * 2 - 1) * jx;
+        const dy = (random() * 2 - 1) * jy;
         placed.push({
           key: `${item.id}-${index}`,
           series: item,
           point,
-          x: xScale.map(point.x),
-          y: yScale.map(point.y),
+          x: xScale.map(point.x) + dx,
+          y: yScale.map(point.y) + dy,
           r: radiusOf(point),
         });
       });
@@ -442,6 +613,9 @@ function XYPointPlot({
     yFormat,
     xAxis,
     yAxis,
+    xTime,
+    jitter,
+    seed,
     trendLine,
     quadrants,
     radius,
@@ -482,9 +656,28 @@ function XYPointPlot({
     { disabled: !animate, replayKey: readOrder.length },
   );
 
-  const fx = resolveFormat(xFormat);
+  useEntryAnimation(
+    wrapRef,
+    (root) => {
+      root.querySelectorAll("[data-canvas]").forEach((layer) => {
+        layer.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 450,
+          easing: "ease-out",
+          fill: "backwards",
+        });
+      });
+    },
+    { disabled: !animate || !canvas, replayKey: readOrder.length },
+  );
+
+  const fx = xTime && !xFormat ? formatDate : resolveFormat(xFormat);
   const fy = resolveFormat(yFormat);
   const fs = resolveFormat(sizeFormat);
+  const pointIndex = useMemo(() => createPointIndex(readOrder, 24), [readOrder]);
+  const dimmedKey = visible
+    .filter((item) => isDimmed(item.id))
+    .map((item) => item.id)
+    .join("|");
   const xName = xAxis?.title ?? "x";
   const yName = yAxis?.title ?? "y";
   const current = active != null ? readOrder[active] : undefined;
@@ -515,8 +708,83 @@ function XYPointPlot({
   const narrow = width < 480;
   const half = (size: number) => size / 2 - 12;
 
+  const over = (
+    <>
+      {trends.map((trend) => (
+        <g key={trend.series.id} data-trend="">
+          <line
+            x1={trend.x1}
+            y1={trend.y1}
+            x2={trend.x2}
+            y2={trend.y2}
+            strokeWidth={4}
+            strokeLinecap="round"
+            style={{ stroke: "var(--surface)", opacity: 0.8 }}
+          />
+          <line
+            x1={trend.x1}
+            y1={trend.y1}
+            x2={trend.x2}
+            y2={trend.y2}
+            strokeWidth={2}
+            strokeDasharray="6 4"
+            strokeLinecap="round"
+            style={{ stroke: trend.series.color }}
+          />
+          {narrow ? null : (
+            <text
+              x={Math.min(trend.x2, innerWidth) - 4}
+              y={trend.y2 - 8}
+              textAnchor="end"
+              className="font-bold text-[10.5px] tabular-nums"
+              style={{ fill: trend.series.color }}
+            >
+              {`R² ${formatNumber(trend.fit.r2, { maximumFractionDigits: 2 })}`}
+            </text>
+          )}
+        </g>
+      ))}
+      {showLabels
+        ? drawOrder.map((point) => {
+            const text = point.point.label;
+            if (!text) return null;
+            const textWidth = estimateTextWidth(text, 11);
+            const inside = textWidth <= point.r * 1.8 && point.r >= 12;
+            // Outside labels only where there is room for them.
+            if (!inside && (narrow || point.x + point.r + 4 + textWidth > innerWidth)) return null;
+            return (
+              <text
+                key={`label-${point.key}`}
+                x={inside ? point.x : point.x + point.r + 4}
+                y={point.y}
+                dy="0.34em"
+                textAnchor={inside ? "middle" : "start"}
+                className={cn(
+                  "pointer-events-none font-semibold text-[11px] transition-opacity duration-150",
+                  inside ? "fill-ink" : "fill-ink-2",
+                )}
+                style={{ opacity: isDimmed(point.series.id) ? 0.2 : 1 }}
+              >
+                {text}
+              </text>
+            );
+          })
+        : null}
+      {current ? (
+        <circle
+          cx={current.x}
+          cy={current.y}
+          r={current.r + 3.5}
+          strokeWidth={2}
+          fill="none"
+          style={{ stroke: current.series.color }}
+        />
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="relative h-full w-full">
+    <div ref={wrapRef} className="relative h-full w-full">
       <svg
         ref={svgRef}
         role="img"
@@ -529,6 +797,11 @@ function XYPointPlot({
           <clipPath id={clipId}>
             <rect x={0} y={0} width={innerWidth} height={innerHeight} />
           </clipPath>
+          {shaded
+            ? visible.map((item) => (
+                <SphereGradient key={item.id} id={shadeId(item.index)} color={item.color} />
+              ))
+            : null}
         </defs>
         <g transform={`translate(${margin.left},${margin.top})`}>
           {quadrant && quadrants?.tones
@@ -589,95 +862,51 @@ function XYPointPlot({
               })}
             </g>
           ) : null}
-          <g clipPath={sized ? undefined : `url(#${clipId})`}>
-            <Points points={drawOrder} sized={sized} isDimmed={isDimmed} />
-          </g>
-          {trends.map((trend) => (
-            <g key={trend.series.id} data-trend="">
-              <line
-                x1={trend.x1}
-                y1={trend.y1}
-                x2={trend.x2}
-                y2={trend.y2}
-                strokeWidth={4}
-                strokeLinecap="round"
-                style={{ stroke: "var(--surface)", opacity: 0.8 }}
+          {canvas ? null : (
+            <g clipPath={sized ? undefined : `url(#${clipId})`}>
+              <Points
+                points={drawOrder}
+                sized={sized}
+                shadeId={shaded ? shadeId : undefined}
+                isDimmed={isDimmed}
               />
-              <line
-                x1={trend.x1}
-                y1={trend.y1}
-                x2={trend.x2}
-                y2={trend.y2}
-                strokeWidth={2}
-                strokeDasharray="6 4"
-                strokeLinecap="round"
-                style={{ stroke: trend.series.color }}
-              />
-              {narrow ? null : (
-                <text
-                  x={Math.min(trend.x2, innerWidth) - 4}
-                  y={trend.y2 - 8}
-                  textAnchor="end"
-                  className="font-bold text-[10.5px] tabular-nums"
-                  style={{ fill: trend.series.color }}
-                >
-                  {`R² ${formatNumber(trend.fit.r2, { maximumFractionDigits: 2 })}`}
-                </text>
-              )}
             </g>
-          ))}
-          {showLabels
-            ? drawOrder.map((point) => {
-                const text = point.point.label;
-                if (!text) return null;
-                const textWidth = estimateTextWidth(text, 11);
-                const inside = textWidth <= point.r * 1.8 && point.r >= 12;
-                // Outside labels only where there is room for them.
-                if (!inside && (narrow || point.x + point.r + 4 + textWidth > innerWidth))
-                  return null;
-                return (
-                  <text
-                    key={`label-${point.key}`}
-                    x={inside ? point.x : point.x + point.r + 4}
-                    y={point.y}
-                    dy="0.34em"
-                    textAnchor={inside ? "middle" : "start"}
-                    className={cn(
-                      "pointer-events-none font-semibold text-[11px] transition-opacity duration-150",
-                      inside ? "fill-ink" : "fill-ink-2",
-                    )}
-                    style={{ opacity: isDimmed(point.series.id) ? 0.2 : 1 }}
-                  >
-                    {text}
-                  </text>
-                );
-              })
-            : null}
-          {current ? (
-            <circle
-              cx={current.x}
-              cy={current.y}
-              r={current.r + 3.5}
-              strokeWidth={2}
-              fill="none"
-              style={{ stroke: current.series.color }}
-            />
-          ) : null}
+          )}
+          {canvas ? null : over}
         </g>
       </svg>
+      {canvas ? (
+        <>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute"
+            style={{ left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
+          >
+            <CanvasMarks
+              points={drawOrder}
+              visible={visible}
+              width={innerWidth}
+              height={innerHeight}
+              sized={sized}
+              dimmedKey={dimmedKey}
+              isDimmed={isDimmed}
+            />
+          </div>
+          <svg
+            aria-hidden="true"
+            width={width}
+            height={height}
+            className="pointer-events-none absolute top-0 left-0 overflow-visible"
+          >
+            <g transform={`translate(${margin.left},${margin.top})`}>{over}</g>
+          </svg>
+        </>
+      ) : null}
       <PlotExplorer
         count={readOrder.length}
         active={active}
         onActiveChange={setActive}
-        pick={(x, y) => {
-          // Inside overlapping bubbles the smallest one wins, so it stays reachable.
-          let inside: number | null = null;
-          readOrder.forEach((point, index) => {
-            if (Math.hypot(point.x - x, point.y - y) > point.r + 3) return;
-            if (inside == null || point.r < (readOrder[inside] as PlacedPoint).r) inside = index;
-          });
-          return inside ?? nearestPoint(readOrder, x, y, 16);
-        }}
+        pick={(x, y) => pointIndex.nearest(x, y, 16)}
         label={labels.explore}
         valueText={valueText}
         margin={margin}

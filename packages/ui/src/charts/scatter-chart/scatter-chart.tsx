@@ -4,7 +4,7 @@ import { XYPointChart, type XYPointChartProps } from "../core/distribution/xy-po
 
 export type ScatterChartProps = Omit<
   XYPointChartProps,
-  "sized" | "sizeRange" | "sizeLegend" | "sizeFormat"
+  "sized" | "sizeRange" | "sizeLegend" | "sizeFormat" | "shading"
 >;
 
 /**
