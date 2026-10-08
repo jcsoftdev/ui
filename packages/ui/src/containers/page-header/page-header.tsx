@@ -6,7 +6,7 @@ export type PageHeaderProps = ComponentPropsWithoutRef<"header">;
 /**
  * Page header. No required parts: compose an eyebrow / title / lede block in
  * a plain `<div>` and, when the view has buttons, `PageHeaderActions` as the
- * second child.
+ * second child. Actions wrap under the title when the container is too narrow.
  */
 export function PageHeader({ className, ...props }: PageHeaderProps) {
   return (
@@ -27,13 +27,23 @@ export type PageHeaderTitleProps = ComponentPropsWithoutRef<"h1">;
 
 /** Page title. Wrap a word in `<span className="text-accent-word">` to accent it. */
 export function PageHeaderTitle({ className, ...props }: PageHeaderTitleProps) {
-  return <h1 className={cn("m-0 text-page-title [text-wrap:balance]", className)} {...props} />;
+  return (
+    <h1
+      className={cn("m-0 break-words text-page-title [text-wrap:balance]", className)}
+      {...props}
+    />
+  );
 }
 
 export type PageHeaderLedeProps = ComponentPropsWithoutRef<"p">;
 
 export function PageHeaderLede({ className, ...props }: PageHeaderLedeProps) {
-  return <p className={cn("mt-[5px] max-w-[68ch] text-lede text-ink-2", className)} {...props} />;
+  return (
+    <p
+      className={cn("mt-[5px] max-w-[68ch] break-words text-lede text-ink-2", className)}
+      {...props}
+    />
+  );
 }
 
 export type PageHeaderActionsProps = ComponentPropsWithoutRef<"div">;

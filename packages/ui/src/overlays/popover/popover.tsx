@@ -13,13 +13,19 @@ export interface PopoverContentProps
   extends ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {}
 
 /** Positioned contextual panel; viewport collision is handled by Radix (Floating UI). */
-export function PopoverContent({ className, sideOffset = 6, ...props }: PopoverContentProps) {
+export function PopoverContent({
+  className,
+  sideOffset = 6,
+  collisionPadding = 8,
+  ...props
+}: PopoverContentProps) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(
-          "z-85 min-w-57.5 max-w-[calc(100vw-32px)] rounded-card bg-float p-1.5 text-ink shadow-pop",
+          "z-85 min-w-[min(14.375rem,var(--radix-popover-content-available-width))] max-h-(--radix-popover-content-available-height) max-w-(--radix-popover-content-available-width) overflow-y-auto rounded-card bg-float p-1.5 text-ink shadow-pop",
           className,
         )}
         {...props}

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { Chip } from "../../atoms/chip/chip.js";
 import {
+  type PinnedColumns,
   Table,
   TableBody,
   TableCell,
@@ -116,4 +118,161 @@ export const Empty: Story = {
       </>
     ),
   },
+};
+
+const wide = [
+  {
+    id: "POM-001",
+    name: "Pomada mate Hombre Fuerte",
+    brand: "Hombre Fuerte",
+    stock: 24,
+    min: 10,
+    cost: "S/ 22",
+    price: "S/ 38",
+    supplier: "Distribuidora Lima",
+  },
+  {
+    id: "CER-014",
+    name: "Cera brillo clásica",
+    brand: "Barber Co.",
+    stock: 9,
+    min: 12,
+    cost: "S/ 18",
+    price: "S/ 32",
+    supplier: "Importadora Sur",
+  },
+  {
+    id: "ACE-007",
+    name: "Aceite para barba",
+    brand: "Barba Real",
+    stock: 31,
+    min: 8,
+    cost: "S/ 27",
+    price: "S/ 45",
+    supplier: "Distribuidora Lima",
+  },
+  {
+    id: "NAV-003",
+    name: "Navajas desechables (caja)",
+    brand: "Shave Pro",
+    stock: 4,
+    min: 6,
+    cost: "S/ 15",
+    price: "S/ 28",
+    supplier: "Insumos Perú",
+  },
+];
+
+function WideTable(props: {
+  pinnedColumns?: PinnedColumns;
+  defaultPinnedColumns?: PinnedColumns;
+  pinStorageKey?: string;
+  onPinnedColumnsChange?: (pinned: PinnedColumns) => void;
+  pinnable?: boolean;
+}) {
+  const { pinnable, ...tableProps } = props;
+  return (
+    <Table aria-label="Inventario completo" className="min-w-[960px]" {...tableProps}>
+      <TableHead>
+        <tr>
+          <TableHeaderCell columnId="name" pinnable={pinnable}>
+            Producto
+          </TableHeaderCell>
+          <TableHeaderCell columnId="id" pinnable={pinnable}>
+            SKU
+          </TableHeaderCell>
+          <TableHeaderCell columnId="brand" pinnable={pinnable}>
+            Marca
+          </TableHeaderCell>
+          <TableHeaderCell columnId="supplier" pinnable={pinnable}>
+            Proveedor
+          </TableHeaderCell>
+          <TableHeaderCell columnId="stock" alignRight pinnable={pinnable}>
+            Stock
+          </TableHeaderCell>
+          <TableHeaderCell columnId="min" alignRight pinnable={pinnable}>
+            Mínimo
+          </TableHeaderCell>
+          <TableHeaderCell columnId="cost" alignRight pinnable={pinnable}>
+            Costo
+          </TableHeaderCell>
+          <TableHeaderCell columnId="price" alignRight pinnable={pinnable}>
+            Precio
+          </TableHeaderCell>
+          <TableHeaderCell columnId="actions">Acciones</TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        {wide.map((item) => (
+          <TableRow key={item.id}>
+            <TableCell columnId="name">{item.name}</TableCell>
+            <TableCell columnId="id">{item.id}</TableCell>
+            <TableCell columnId="brand">{item.brand}</TableCell>
+            <TableCell columnId="supplier">{item.supplier}</TableCell>
+            <TableCell columnId="stock" alignRight>
+              {item.stock}
+            </TableCell>
+            <TableCell columnId="min" alignRight>
+              {item.min}
+            </TableCell>
+            <TableCell columnId="cost" alignRight>
+              {item.cost}
+            </TableCell>
+            <TableCell columnId="price" alignRight>
+              {item.price}
+            </TableCell>
+            <TableCell columnId="actions">
+              <button type="button" className="text-accent-ink">
+                Editar
+              </button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+/** Producto pinned left and acciones pinned right: the middle columns scroll under them. */
+export const PinnedLeftAndRight: Story = {
+  name: "PinnedColumns",
+  render: () => <WideTable pinnedColumns={{ left: ["name"], right: ["actions"] }} />,
+};
+
+/** Uncontrolled: use the pin buttons in the headers; the choice is remembered in localStorage. */
+export const UserPinning: Story = {
+  render: () => (
+    <WideTable
+      pinnable
+      pinStorageKey="ui-story-table-pins"
+      defaultPinnedColumns={{ left: ["name"] }}
+    />
+  ),
+};
+
+/** Controlled pins, with the current value shown below. */
+export const ControlledPinning: Story = {
+  render: function Render() {
+    const [pins, setPins] = useState<PinnedColumns>({ left: ["name"], right: ["price"] });
+    return (
+      <div className="flex flex-col gap-2">
+        <WideTable pinnable pinnedColumns={pins} onPinnedColumnsChange={setPins} />
+        <code className="px-2 pb-2 text-meta text-ink-3">{JSON.stringify(pins)}</code>
+      </div>
+    );
+  },
+};
+
+/** 320 px container: the table scrolls inside its wrapper and the pinned columns stay put. */
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="@container/page w-[320px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => (
+    <WideTable pinnable defaultPinnedColumns={{ left: ["name"], right: ["actions"] }} />
+  ),
 };

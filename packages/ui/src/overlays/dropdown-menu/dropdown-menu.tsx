@@ -14,13 +14,18 @@ export interface DropdownMenuContentProps
 export function DropdownMenuContent({
   className,
   sideOffset = 6,
+  collisionPadding = 8,
   ...props
 }: DropdownMenuContentProps) {
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         sideOffset={sideOffset}
-        className={cn("z-85 min-w-57.5 rounded-card bg-float p-1.5 shadow-pop", className)}
+        collisionPadding={collisionPadding}
+        className={cn(
+          "z-85 min-w-[min(14.375rem,var(--radix-dropdown-menu-content-available-width))] max-h-(--radix-dropdown-menu-content-available-height) max-w-(--radix-dropdown-menu-content-available-width) overflow-y-auto rounded-card bg-float p-1.5 shadow-pop",
+          className,
+        )}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>

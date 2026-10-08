@@ -68,7 +68,7 @@ export function DialogContent({
       <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed top-[9vh] left-1/2 z-70 flex max-h-[84vh] -translate-x-1/2 flex-col overflow-auto rounded-dialog bg-float shadow-pop",
+          "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog bg-float shadow-pop",
           widthClasses[width],
           className,
         )}
@@ -107,7 +107,10 @@ export function DialogContent({
 export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex items-center gap-2.5 border-b border-line px-4.5 py-3.5", className)}
+      className={cn(
+        "flex items-center gap-2.5 border-b border-line py-3.5 pr-10 pl-4.5",
+        className,
+      )}
       {...props}
     />
   );
@@ -118,7 +121,10 @@ export function DialogTitle({
   ...props
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
-    <DialogPrimitive.Title className={cn("m-0 text-dialog-title text-ink", className)} {...props} />
+    <DialogPrimitive.Title
+      className={cn("m-0 min-w-0 break-words text-dialog-title text-ink", className)}
+      {...props}
+    />
   );
 }
 
@@ -131,6 +137,7 @@ export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElem
     <div
       className={cn(
         "flex flex-wrap items-center gap-2 border-t border-line px-4.5 py-3",
+        "@max-sm/dialog:flex-col-reverse @max-sm/dialog:items-stretch @max-sm/dialog:[&>*]:w-full",
         className,
       )}
       {...props}
