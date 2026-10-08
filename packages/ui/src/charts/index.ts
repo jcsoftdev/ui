@@ -29,6 +29,7 @@ export * from "./range-area-chart/index.js";
 export * from "./scatter-chart/index.js";
 export * from "./slope-chart/index.js";
 export * from "./sparkline/index.js";
+export * from "./stock-chart/index.js";
 export * from "./stream-graph/index.js";
 export * from "./sunburst-chart/index.js";
 export * from "./timeline-chart/index.js";
