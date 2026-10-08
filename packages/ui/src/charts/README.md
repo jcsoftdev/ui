@@ -38,6 +38,8 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `BeeswarmChart` | `beeswarm-chart/` | `distribution/` (`beeswarm` collision layout) |
 | `ScatterChart` | `scatter-chart/` | `XYPointChart` (trend lines, quadrants) |
 | `BubbleChart` | `bubble-chart/` | `XYPointChart` (`sized`, area-proportional radius) |
+| `ChoroplethMap` | `choropleth-map/` | `maps/geo/` (`MapViewport`, `useMapGeometry`, `useMapView`) + `heatmapScale` (sequential / diverging / thresholds) |
+| `BubbleMap` | `bubble-map/` | same stage + `clusterPoints`; bubbles and clusters are drawn in screen space |
 | `PictogramChart` | `pictogram-chart/` | unit charts core (`units.ts`, `UnitGlyph`, `useCategoryExplorer`) |
 | `WaffleChart` | `waffle-chart/` | unit charts core (`waffleCounts`, `gridCell`) |
 | `ParliamentChart` | `parliament-chart/` | unit charts core (`parliamentLayout`) |
@@ -258,3 +260,33 @@ outside labels (donut/pie) and rim labels (polar area) give way to the legend be
 hide below 360 px, radar axis names shorten, funnel label columns shrink and truncate, and the tooltip flips inside
 the frame. Every polar chart ships a `Narrow` story rendered in a 320 px container.
 8. Pure helpers get a case in `test/charts-core.test.mjs` (hierarchy and matrix layouts: `test/charts-hierarchy.test.mjs`).
+
+## Maps
+
+```tsx
+import { ChoroplethMap } from "@jcsoftdev/ui/charts/choropleth-map";
+import { peruMap } from "@jcsoftdev/ui/charts/maps/data/peru"; // geometry is a separate module
+
+<ChoroplethMap title="Clientes por departamento" map={peruMap} valueName="Clientes"
+  data={[{ id: "PE-CUS", value: 520 }, { id: "Arequipa", value: 760 }]} />
+<BubbleMap title="Sedes" map={selectRegions(peruMap, ["PE-LMA", "PE-CAL"])} cluster
+  points={[{ id: "mir", name: "Miraflores", lat: -12.12, lon: -77.03, value: 1840, category: "propia" }]} />
+```
+
+- Data joins by region id or name (accents and case ignored). `value: null` or a missing region has no data.
+- Geometry is TopoJSON decoded by our own `topologyFeatures`; `maps/data/README.md` has sources, licenses and how it was
+  simplified. `selectRegions(map, ids)` restricts a map (the projection re-fits, so it also zooms to those regions).
+- Projections (`maps/geo/projection.ts`): `equirectangular`, `mercator` (clamped to 85.05 deg), `equalEarth`, and `fitted`
+  (equirectangular with the standard parallel at the middle of the area, for a country). `fitProjection` scales any of
+  them to the exact box of the chart, so a map fills its parent like every other chart (`height="fill"`, `aspectRatio`).
+- Zoom and pan: buttons, wheel (`wheelZoom="modifier"` needs Ctrl/Cmd so page scrolling is never trapped), drag,
+  two-finger pinch, keys `+` `-` `0` and Shift+arrows. The view is clamped to the map and resets when the box resizes.
+- Keyboard: one focusable `role="slider"` layer; arrows walk the regions (or visible bubbles), Enter fires the click
+  callback, the tooltip follows the keyboard selection and the view pans to keep it visible. A hidden data table
+  repeats every value.
+- Touch: the map takes the gestures (`touch-action: none`), so on phones scroll the page from outside the map or pass
+  `zoomable={false}`.
+- Region labels (`regionLabels`) sit at a point inside each region, only where they fit and do not collide. Bubble and
+  cluster sizes are in screen pixels, area proportional between `minRadius` and `maxRadius`.
+- Pure helpers (`projection.ts`, `topojson.ts`, `simplify.ts`, `build-topology.ts`, `cluster.ts`, `view.ts`) are tested
+  in `test/charts-maps.test.mjs`; `check:treeshake` asserts that a chart or one dataset never pulls in the other dataset.
