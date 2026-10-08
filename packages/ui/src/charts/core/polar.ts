@@ -271,6 +271,11 @@ export interface FunnelOptions {
   variant?: "funnel" | "pyramid";
   /** Width of the last stage's far edge relative to its own width (funnel only). */
   neck?: number;
+  /**
+   * `true` (default) narrows each stage towards the next one (trapezoids, one
+   * continuous outline); `false` keeps every stage a straight bar of its own width.
+   */
+  tapered?: boolean;
 }
 
 /**
@@ -279,7 +284,7 @@ export interface FunnelOptions {
  * outline is continuous. Widths are proportional to value.
  */
 export function funnelStages(values: readonly number[], options: FunnelOptions): FunnelStage[] {
-  const { length, thickness, gap = 0, variant = "funnel", neck = 0.72 } = options;
+  const { length, thickness, gap = 0, variant = "funnel", neck = 0.72, tapered = true } = options;
   const clean = values.map((value) => (Number.isFinite(value) && value > 0 ? value : 0));
   const max = Math.max(0, ...clean);
   const count = clean.length;
@@ -289,11 +294,13 @@ export function funnelStages(values: readonly number[], options: FunnelOptions):
     const next = clean[index + 1];
     const widthFrom = max > 0 ? (value / max) * thickness : 0;
     const widthTo =
-      next != null && max > 0
-        ? (next / max) * thickness
-        : variant === "pyramid"
-          ? 0
-          : widthFrom * neck;
+      !tapered && variant !== "pyramid"
+        ? widthFrom
+        : next != null && max > 0
+          ? (next / max) * thickness
+          : variant === "pyramid"
+            ? 0
+            : widthFrom * neck;
     const previous = clean[index - 1];
     return {
       index,

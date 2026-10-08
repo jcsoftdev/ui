@@ -34,6 +34,10 @@ export interface FunnelChartProps {
   /** `funnel` narrows towards the last stage; `pyramid` tapers it to a point with the first stage as the base. */
   variant?: "funnel" | "pyramid";
   orientation?: "vertical" | "horizontal";
+  /** Trapezoid stages that narrow into the next one (default); `false` draws straight bars of each stage's own width. */
+  tapered?: boolean;
+  /** How far the last stage narrows, as a fraction of its width (funnel, tapered). */
+  neck?: number;
   /** Conversion % between consecutive stages. */
   showConversion?: boolean;
   /** `categorical` colors each stage; `accent` fades one brand color. */
@@ -70,6 +74,8 @@ export function FunnelChart({
   stages,
   variant = "funnel",
   orientation = "vertical",
+  tapered = true,
+  neck = 0.72,
   showConversion = true,
   tone = "categorical",
   gap = 4,
@@ -134,6 +140,8 @@ export function FunnelChart({
           stages={stages}
           variant={variant}
           orientation={orientation}
+          tapered={tapered}
+          neck={neck}
           showConversion={showConversion}
           tone={tone}
           gap={gap}
@@ -154,6 +162,8 @@ interface PlotProps {
   stages: readonly FunnelDatum[];
   variant: "funnel" | "pyramid";
   orientation: "vertical" | "horizontal";
+  tapered: boolean;
+  neck: number;
   showConversion: boolean;
   tone: "categorical" | "accent";
   gap: number;
@@ -182,6 +192,8 @@ function FunnelPlot({
   stages,
   variant,
   orientation,
+  tapered,
+  neck,
   showConversion,
   tone,
   gap,
@@ -211,9 +223,9 @@ function FunnelPlot({
     () =>
       funnelStages(
         stages.map((stage) => stage.value),
-        { length, thickness, gap, variant },
+        { length, thickness, gap, variant, tapered, neck },
       ),
-    [stages, length, thickness, gap, variant],
+    [stages, length, thickness, gap, variant, tapered, neck],
   );
 
   const shapes = useMemo<Shape[]>(() => {

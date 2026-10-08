@@ -27,6 +27,8 @@ const meta = {
     stages: bookings,
     variant: "funnel",
     orientation: "vertical",
+    tapered: true,
+    neck: 0.72,
     showConversion: true,
     tone: "categorical",
     gap: 4,
@@ -39,6 +41,8 @@ const meta = {
   argTypes: {
     variant: { control: "inline-radio", options: ["funnel", "pyramid"] },
     orientation: { control: "inline-radio", options: ["vertical", "horizontal"] },
+    tapered: { control: "boolean" },
+    neck: { control: { type: "range", min: 0.1, max: 1, step: 0.02 } },
     tone: { control: "inline-radio", options: ["categorical", "accent"] },
     gap: { control: { type: "range", min: 0, max: 16, step: 1 } },
     height: { control: { type: "range", min: 200, max: 560, step: 10 } },
@@ -58,6 +62,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** Trapezoids: every stage narrows into the next one and the last one closes to a narrow neck. */
+export const Tapered: Story = { args: { tapered: true, neck: 0.35, gap: 2, tone: "accent" } };
+
+/** Straight bars: each stage keeps the width of its own value. */
+export const Stepped: Story = { args: { tapered: false, gap: 6 } };
+
+export const HorizontalTapered: Story = {
+  args: { orientation: "horizontal", tapered: true, neck: 0.35, gap: 2 },
+};
 
 export const Horizontal: Story = { args: { orientation: "horizontal" } };
 
