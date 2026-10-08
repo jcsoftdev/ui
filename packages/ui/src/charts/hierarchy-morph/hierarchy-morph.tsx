@@ -89,11 +89,25 @@ interface Shape {
   sector: RingPoint[];
   /** Present in the treemap layout; otherwise the shape grows out of its parent. */
   inTreemap: boolean;
-  /** Room for a label in each layout: width and height. */
-  rectRoom: [number, number];
-  sectorRoom: [number, number];
+  /** Label slot in the treemap: top-left of a leaf tile, or of a group's header band. */
+  rectLabel: { x: number; y: number; width: number; group: boolean } | null;
+  /** Label slot in the sunburst: the horizontal room inside the ring segment. */
+  sectorLabel: { width: number; height: number };
   /** Middle of the ring segment, where the label sits in the sunburst. */
   sectorCenter: RingPoint;
+}
+
+const LABEL_FONT = 11;
+const LABEL_PAD = 6;
+
+/** The text cut to `maxWidth` with an ellipsis, or null when not even a few letters fit. */
+function fitText(text: string, maxWidth: number): string | null {
+  if (estimateTextWidth(text, LABEL_FONT) <= maxWidth) return text;
+  for (let length = text.length - 1; length >= 3; length -= 1) {
+    const cut = `${text.slice(0, length).trimEnd()}…`;
+    if (estimateTextWidth(cut, LABEL_FONT) <= maxWidth) return cut;
+  }
+  return null;
 }
 
 /**
@@ -201,6 +215,13 @@ interface PlotProps {
   animate: boolean;
 }
 
+/** Horizontal room for upright text at the middle of a ring segment of arc length `arc` and thickness `thick`. */
+function sectorRoom(angle: number, arc: number, thick: number): Shape["sectorLabel"] {
+  const sin = Math.abs(Math.sin(angle));
+  const cos = Math.abs(Math.cos(angle));
+  return { width: sin * thick + cos * arc, height: sin * arc + cos * thick };
+}
+
 /** Strength (0-100) of the branch hue, blended between the treemap and sunburst looks. */
 function shapeStrength(shape: Shape, root: HierarchyNode, progress: number): number {
   const siblings = shape.node.parent?.children.length ?? 1;
@@ -262,10 +283,18 @@ function MorphPlot({
             const sector = sectorRing(cx, cy, r0, r1, a0, Math.max(a0 + 1e-3, a1));
             const cell = cellOf.get(child.id);
             let rect: RingPoint[];
-            let rectRoom: [number, number] = [0, 0];
+            let rectLabel: Shape["rectLabel"] = null;
             if (cell) {
               rect = rectRing(cell.x0, cell.y0, cell.x1, cell.y1);
-              rectRoom = [cell.x1 - cell.x0, cell.group ? HEADER : cell.y1 - cell.y0];
+              const height = cell.group ? HEADER : cell.y1 - cell.y0;
+              if (height >= 16) {
+                rectLabel = {
+                  x: cell.x0 + LABEL_PAD,
+                  y: cell.y0 + (cell.group ? HEADER / 2 : 11),
+                  width: cell.x1 - cell.x0 - LABEL_PAD * 2,
+                  group: cell.group,
+                };
+              }
             } else {
               const parent = cellOf.get(child.parent?.id ?? "");
               const px = parent ? (parent.x0 + parent.x1) / 2 : cx;
@@ -277,8 +306,8 @@ function MorphPlot({
               rect,
               sector,
               inTreemap: cell != null,
-              rectRoom,
-              sectorRoom: [(a1 - a0) * mid, r1 - r0],
+              rectLabel,
+              sectorLabel: sectorRoom((a0 + a1) / 2, (a1 - a0) * mid, r1 - r0),
               sectorCenter: {
                 x: cx + mid * Math.sin((a0 + a1) / 2),
                 y: cy - mid * Math.cos((a0 + a1) / 2),
@@ -337,26 +366,42 @@ function MorphPlot({
             />
           );
         })}
-        {drawn.map(({ shape, center }) => {
-          if (shape.node.depth !== 1) return null;
-          const roomW = shape.rectRoom[0] + (shape.sectorRoom[0] - shape.rectRoom[0]) * progress;
-          const roomH = shape.rectRoom[1] + (shape.sectorRoom[1] - shape.rectRoom[1]) * progress;
-          const text = shape.node.name;
-          const fits = roomH >= 14 && roomW >= estimateTextWidth(text, 11) + 10;
-          if (!fits) return null;
+        {drawn.map(({ shape }) => {
           const strength = shapeStrength(shape, root, progress);
+          const slot = shape.rectLabel;
+          const treemapText = slot ? fitText(shape.node.name, slot.width) : null;
+          const sectorText =
+            shape.sectorLabel.height >= 14
+              ? fitText(shape.node.name, shape.sectorLabel.width - 10)
+              : null;
+          const treemapOpacity = shape.inTreemap ? Math.max(0, 1 - progress * 2.5) : 0;
+          const sectorOpacity = Math.max(0, progress * 2.5 - 1.5);
           return (
-            <text
-              key={shape.node.id}
-              x={center.x}
-              y={center.y}
-              textAnchor="middle"
-              dominantBaseline="central"
-              className="pointer-events-none select-none font-semibold text-[11px]"
-              style={{ fill: inkOn(strength) }}
-            >
-              {text}
-            </text>
+            <g key={shape.node.id} className="pointer-events-none select-none">
+              {slot && treemapText && treemapOpacity > 0 ? (
+                <text
+                  x={slot.x}
+                  y={slot.y}
+                  dominantBaseline="central"
+                  className={cn("text-[11px]", slot.group ? "font-bold" : "font-semibold")}
+                  style={{ fill: inkOn(strength), opacity: treemapOpacity }}
+                >
+                  {treemapText}
+                </text>
+              ) : null}
+              {sectorText && sectorOpacity > 0 ? (
+                <text
+                  x={shape.sectorCenter.x}
+                  y={shape.sectorCenter.y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  className="font-semibold text-[11px]"
+                  style={{ fill: inkOn(strength), opacity: sectorOpacity }}
+                >
+                  {sectorText}
+                </text>
+              ) : null}
+            </g>
           );
         })}
         {activeDrawn ? (
