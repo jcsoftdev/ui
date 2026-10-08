@@ -506,14 +506,13 @@ function DonutPlot({
   // Tooltip -------------------------------------------------------------------
   const tipItem = activeIndex != null ? items[activeIndex] : null;
   const tipSlice = activeIndex != null ? slices[activeIndex] : null;
-  const anchor =
-    nav.pointer ??
-    (tipSlice
-      ? (() => {
-          const point = polarPoint(cx, cy, (inner + radius) / 2, tipSlice.mid);
-          return point;
-        })()
-      : null);
+  // The card sits past the ring edge of the slice, lifted above or below the centre line,
+  // so the total in the middle stays readable.
+  const edge = tipSlice ? polarPoint(cx, cy, radius + explode + 6, tipSlice.mid) : null;
+  const anchor = edge
+    ? { x: edge.x, y: Math.max(20, Math.min(height - 20, edge.y + (edge.y <= cy ? -44 : 44))) }
+    : null;
+  const tipSide = anchor && anchor.x < cx ? "left" : "right";
   const rows: TooltipRow[] =
     tipItem && tipSlice
       ? [
@@ -697,7 +696,7 @@ function DonutPlot({
       />
 
       {tooltip && anchor && rows.length ? (
-        <ChartTooltip x={anchor.x} y={anchor.y} containerWidth={width} rows={rows} />
+        <ChartTooltip x={anchor.x} y={anchor.y} containerWidth={width} rows={rows} side={tipSide} />
       ) : null}
     </div>
   );
@@ -739,7 +738,12 @@ const SliceMark = memo(function SliceMark({
       onPointerEnter={onEnter}
       onPointerMove={onEnter}
       onPointerLeave={onLeave}
-      onClick={onClick}
+      onPointerUp={onClick}
+      onClick={(event) => {
+        // A mouse or touch press opens on pointer-up (a hover shift can move the slice
+        // between press and release and swallow the click); click is for keyboard and AT.
+        if (event.detail === 0) onClick?.();
+      }}
       className={cn(
         "motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out",
         clickable && "cursor-pointer",
