@@ -117,6 +117,7 @@ export function CartesianChart({
   const count = categories.length;
   const xLabel = xFormat ?? defaultXLabel;
   const sync = useChartSync(syncId);
+  const publishRange = sync.setRange;
   const syncedRange = sync.channel.range;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new data length invalidates the zoom window.
@@ -138,13 +139,13 @@ export function CartesianChart({
   const changeRange = useCallback(
     (next: IndexRange | null) => {
       setRange(next);
-      sync.setRange(
+      publishRange(
         next
           ? [syncKeyOf(categories[next[0]] as XValue), syncKeyOf(categories[next[1]] as XValue)]
           : null,
       );
     },
-    [sync, categories],
+    [publishRange, categories],
   );
 
   const resolved = useMemo<ResolvedSeries[]>(

@@ -35,19 +35,19 @@ export function useChartSync(syncId: string | undefined): ChartSync {
     () => (syncId ? store.get(id) : EMPTY),
     () => EMPTY,
   );
-  return useMemo<ChartSync>(
+  const actions = useMemo(
     () => ({
-      channel,
-      setHover: (key, owner) => {
+      setHover: (key: SyncKey, owner: string) => {
         if (syncId) store.setHover(id, key, owner);
       },
-      clearHover: (owner) => {
+      clearHover: (owner: string) => {
         if (syncId) store.clearHover(id, owner);
       },
-      setRange: (range) => {
+      setRange: (range: readonly [SyncKey, SyncKey] | null) => {
         if (syncId) store.setRange(id, range);
       },
     }),
-    [channel, store, id, syncId],
+    [store, id, syncId],
   );
+  return { channel, ...actions };
 }
