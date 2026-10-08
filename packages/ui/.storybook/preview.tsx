@@ -27,16 +27,42 @@ const withTheme: Decorator = (Story, context) => {
     else root.dataset.accent = accent;
   }, [theme, accent]);
 
+  // Components size themselves with container queries, so the width under test is the
+  // container's, not the viewport's. The frame is a size container and can be dragged.
+  const width = CONTAINER_WIDTHS[String(context.globals.container ?? "full")];
+
   return (
     <div lang="es-PE" className="min-h-screen bg-bg p-6 text-ink">
-      <Story />
+      <div
+        className="@container max-w-full"
+        style={
+          width
+            ? {
+                width,
+                resize: "horizontal",
+                overflow: "auto",
+                outline: "1px dashed var(--line)",
+              }
+            : undefined
+        }
+      >
+        <Story />
+      </div>
     </div>
   );
 };
 
+const CONTAINER_WIDTHS: Record<string, string | undefined> = {
+  full: undefined,
+  "320": "320px",
+  "480": "480px",
+  "768": "768px",
+  "1024": "1024px",
+};
+
 const preview: Preview = {
   decorators: [withTheme],
-  initialGlobals: { theme: "light", accent: "coral" },
+  initialGlobals: { theme: "light", accent: "coral", container: "full" },
   globalTypes: {
     theme: {
       description: "Tema",
@@ -47,6 +73,21 @@ const preview: Preview = {
         items: [
           { value: "light", title: "Claro", icon: "sun" },
           { value: "dark", title: "Oscuro", icon: "moon" },
+        ],
+      },
+    },
+    container: {
+      description: "Ancho del contenedor (container queries)",
+      toolbar: {
+        title: "Contenedor",
+        icon: "grow",
+        dynamicTitle: true,
+        items: [
+          { value: "full", title: "Completo" },
+          { value: "320", title: "320 px" },
+          { value: "480", title: "480 px" },
+          { value: "768", title: "768 px" },
+          { value: "1024", title: "1024 px" },
         ],
       },
     },
