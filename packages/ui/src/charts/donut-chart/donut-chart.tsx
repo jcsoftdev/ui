@@ -388,12 +388,18 @@ function DonutPlot({
   const activeItem = focusIndex != null ? items[focusIndex] : undefined;
   const activeSlice = focusIndex != null ? slices[focusIndex] : undefined;
   const showCenter = variant === "donut" && inner > 18;
-  const valueSize = Math.round(Math.min(34, Math.max(15, inner * 0.34)));
   const captionSize = inner > 54 ? 12 : 10.5;
   const centerMax = Math.max(4, Math.floor((inner * 1.5) / (captionSize * 0.58)));
   const centerMain = activeItem
     ? activeItem.format(activeItem.datum.value)
     : (centerValue ?? format(sum));
+  // A value is never cut: the font shrinks until the whole figure fits the hole.
+  const valueSize = Math.round(
+    Math.max(
+      10,
+      Math.min(34, Math.max(15, inner * 0.34), (inner * 1.7) / (centerMain.length * 0.6)),
+    ),
+  );
   const centerCaption = activeItem
     ? `${activeItem.datum.name}${activeSlice ? ` · ${formatPercent(activeSlice.fraction, { decimals: 0 })}` : ""}`
     : centerLabel;
@@ -527,7 +533,7 @@ function DonutPlot({
               className="fill-ink font-bold tabular-nums"
               style={{ fontSize: valueSize }}
             >
-              {truncate(centerMain, Math.max(4, Math.floor((inner * 1.7) / (valueSize * 0.58))))}
+              {centerMain}
             </text>
             <text
               x={cx}
