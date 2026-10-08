@@ -3,6 +3,7 @@
 import {
   Columns3,
   Download,
+  FileSpreadsheet,
   ListFilter,
   PanelRight,
   Plus,
@@ -38,6 +39,8 @@ export interface GridToolbarProps<T> {
   onHidden: (id: string, hidden: boolean) => void;
   onResetColumns: () => void;
   onExport?: () => void;
+  /** Adds the XLSX export button next to the CSV one. */
+  onExportXlsx?: () => void;
   rowCount: number;
   selectedCount: number | null;
   /** Extra content at the end of the toolbar. */
@@ -74,6 +77,7 @@ export function GridToolbar<T>({
   onHidden,
   onResetColumns,
   onExport,
+  onExportXlsx,
   rowCount,
   selectedCount,
   actions,
@@ -289,6 +293,13 @@ export function GridToolbar<T>({
         <button type="button" className={buttonClass} onClick={onExport}>
           <Download aria-hidden="true" />
           {exportSelected ? labels.exportSelection : labels.exportCsv}
+        </button>
+      ) : null}
+
+      {onExportXlsx ? (
+        <button type="button" className={buttonClass} onClick={onExportXlsx}>
+          <FileSpreadsheet aria-hidden="true" />
+          {exportSelected ? labels.exportSelectionXlsx : labels.exportXlsx}
         </button>
       ) : null}
     </div>

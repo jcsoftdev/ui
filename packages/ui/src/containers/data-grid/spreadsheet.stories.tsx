@@ -5,6 +5,7 @@ import { DataGrid } from "./data-grid.js";
 import {
   diagnosticoColumns,
   diagnosticos,
+  ExportXlsxDemo,
   FormulasDemo,
   lineaColumns,
   lineas,
@@ -124,4 +125,27 @@ export const FormulaErrors: Story = {
       hint="#DIV/0!, #NAME?, #REF!, #VALUE! y #CYCLE! se muestran en rojo; un error se propaga a las fórmulas que lo leen."
     />
   ),
+};
+
+export const ExportXlsx: Story = {
+  name: "Export XLSX",
+  render: (args) => <ExportXlsxDemo {...controls(args)} />,
+};
+
+export const ExportXlsxNarrow: Story = {
+  name: "Export XLSX (320 px)",
+  decorators: [narrow],
+  render: (args) => <ExportXlsxDemo {...controls(args)} />,
+};
+
+export const ExportXlsxPreset: Story = {
+  name: "Export XLSX (glass preset)",
+  decorators: [
+    (Story) => (
+      <section data-style="glass">
+        <Story />
+      </section>
+    ),
+  ],
+  render: (args) => <ExportXlsxDemo {...controls(args)} />,
 };

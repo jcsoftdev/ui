@@ -15,3 +15,4 @@ export * from "./rows.js";
 export * from "./tree.js";
 export * from "./types.js";
 export * from "./virtual.js";
+export * from "./xlsx-export.js";

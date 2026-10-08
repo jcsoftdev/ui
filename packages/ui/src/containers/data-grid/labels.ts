@@ -124,6 +124,8 @@ export interface DataGridLabels {
   noneOption: string;
   // export
   exportSelection: string;
+  exportXlsx: string;
+  exportSelectionXlsx: string;
   // formulas
   formulaBar: string;
   formulaCell: string;
@@ -275,6 +277,8 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   pivotIncomplete: "Elige al menos un campo de fila, la columna y el valor.",
   noneOption: "Ninguna",
   exportSelection: "Exportar selección",
+  exportXlsx: "Exportar XLSX",
+  exportSelectionXlsx: "Exportar selección (XLSX)",
   formulaBar: "Barra de fórmulas",
   formulaCell: "Celda",
   formulaEmpty: "Selecciona una celda",

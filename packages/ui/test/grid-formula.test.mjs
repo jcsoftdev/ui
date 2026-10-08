@@ -223,7 +223,7 @@ test("updateCell can create a formula, replace it with a value and break a cycle
 
 test("the parse cache is reused between builds", () => {
   const cache = new Map();
-  const read = (r, c) => (c === 0 ? 4 : "=A1*A1");
+  const read = (_r, c) => (c === 0 ? 4 : "=A1*A1");
   sheetLib.buildSheet({ rows: 1, cols: 2, read, cache });
   assert.equal(cache.size, 1);
   assert.equal(cache.get("=A1*A1").error, null);

@@ -145,6 +145,7 @@ import {
   scrollLeftToReveal,
   scrollTopToRevealSpan,
 } from "./virtual.js";
+import { gridToSheet, xlsxFilename } from "./xlsx-export.js";
 
 export interface CellChange<T> {
   row: T;
@@ -174,6 +175,13 @@ export interface RowReorderEvent {
 
 export interface ExportPayload {
   csv: string;
+  filename: string;
+  rowCount: number;
+}
+
+export interface XlsxExportPayload {
+  /** The .xlsx file. */
+  bytes: Uint8Array;
   filename: string;
   rowCount: number;
 }
@@ -298,6 +306,14 @@ export interface DataGridProps<T> {
   exportFilename?: string | false;
   /** Called with the CSV right before it is downloaded. */
   onExport?: (payload: ExportPayload) => void;
+  /**
+   * Adds an "Exportar XLSX" button: a file name (`"ventas.xlsx"`) or `true` for `datos.xlsx`. Same
+   * rows and columns as the CSV export, with numbers as numbers and dates as dates. The writer
+   * (`@jcsoftdev/ui/xlsx`) is loaded when the button is used, so it costs nothing until then.
+   */
+  exportXlsx?: string | boolean;
+  /** Called with the file right before it is downloaded. */
+  onExportXlsx?: (payload: XlsxExportPayload) => void;
   toolbarActions?: ReactNode;
   labels?: Partial<DataGridLabels>;
   className?: string;
@@ -356,8 +372,13 @@ function useControllable<V>(
 
 /** Starts a CSV download in the browser (no-op on the server). */
 export function downloadCSV(filename: string, csv: string): void {
+  downloadFile(filename, csv, "text/csv;charset=utf-8");
+}
+
+/** Starts a file download in the browser (no-op on the server). */
+export function downloadFile(filename: string, data: BlobPart, type: string): void {
   if (typeof document === "undefined") return;
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const url = URL.createObjectURL(new Blob([data], { type }));
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
@@ -483,6 +504,8 @@ export function DataGrid<T>({
   hideToolbar = false,
   exportFilename = "datos.csv",
   onExport,
+  exportXlsx = false,
+  onExportXlsx,
   toolbarActions,
   labels: labelsProp,
   className,
@@ -1089,6 +1112,22 @@ export function DataGrid<T>({
     const csv = toCSV(rows, dataColumns, { bom: true });
     onExport?.({ csv, filename: exportFilename, rowCount: rows.length });
     downloadCSV(exportFilename, csv);
+  };
+  const xlsxName = exportXlsx === true ? "datos.xlsx" : exportXlsx || null;
+  const exportToXlsx = async () => {
+    if (!xlsxName) return;
+    const rows =
+      selectable && selection.length > 0
+        ? sorted.filter((row) => selected.has(keyOf(row)))
+        : sorted;
+    const filename = xlsxFilename(xlsxName);
+    const { buildXlsx, XLSX_MIME } = await import("../../xlsx/index.js");
+    const bytes = buildXlsx({
+      sheets: [gridToSheet(rows, dataColumns, filename.replace(/\.xlsx$/i, ""))],
+      creator: "@jcsoftdev/ui",
+    });
+    onExportXlsx?.({ bytes, filename, rowCount: rows.length });
+    downloadFile(filename, bytes as BlobPart, XLSX_MIME);
   };
   const labelOfRow = (key: string) => {
     const row = rowByKey.get(key);
@@ -2723,6 +2762,7 @@ export function DataGrid<T>({
           onHidden={grid.setHidden}
           onResetColumns={grid.reset}
           onExport={exportFilename === false ? undefined : exportCsv}
+          onExportXlsx={xlsxName ? exportToXlsx : undefined}
           exportSelected={selectable && selection.length > 0}
           rowCount={toolbarRows}
           selectedCount={selectable ? selection.length : null}

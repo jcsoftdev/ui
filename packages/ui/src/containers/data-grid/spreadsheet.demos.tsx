@@ -1,7 +1,13 @@
 // Stateful demos behind the spreadsheet stories of DataGrid: history, formulas, XLSX and charts.
 import { type ReactNode, useCallback, useState } from "react";
 import { type Venta, ventaColumns, ventas } from "./data-grid.fixtures.js";
-import { type CellChange, DataGrid, type DataGridProps, type RowsChange } from "./data-grid.js";
+import {
+  type CellChange,
+  DataGrid,
+  type DataGridProps,
+  type RowsChange,
+  type XlsxExportPayload,
+} from "./data-grid.js";
 import type { HistorySummary } from "./history.js";
 import type { CellValue, DataGridColumn } from "./types.js";
 
@@ -238,6 +244,34 @@ export function FormulasDemo<T extends { id: string }>({
         onCellsChange={apply}
       />
       <p className={note}>{hint}</p>
+    </Stack>
+  );
+}
+
+// ---- XLSX export ----------------------------------------------------------------------------
+
+export function ExportXlsxDemo({ density, height }: SheetControls) {
+  const [last, setLast] = useState<XlsxExportPayload | null>(null);
+  return (
+    <Stack>
+      <DataGrid
+        density={density}
+        height={height}
+        aria-label="Ventas para exportar a Excel"
+        data={ventas}
+        columns={ventaColumns}
+        getRowId={(row) => row.id}
+        selectable
+        exportFilename={false}
+        exportXlsx="ventas-octubre.xlsx"
+        onExportXlsx={setLast}
+        defaultPinned={{ left: ["id"] }}
+      />
+      <p className={note} aria-live="polite">
+        {last
+          ? `${last.filename}: ${last.rowCount} filas, ${last.bytes.length} bytes, firma ${String.fromCharCode(last.bytes[0] ?? 0, last.bytes[1] ?? 0)} (ZIP).`
+          : "Exportar XLSX usa las filas filtradas y ordenadas y las columnas visibles; con filas seleccionadas exporta solo la selección. Números como números, fechas como fechas."}
+      </p>
     </Stack>
   );
 }

@@ -71,3 +71,44 @@ console.log(
   `maps: world ${world.bytes} bytes, peru ${peru.bytes} bytes, ChoroplethMap ${choropleth.bytes} bytes`,
 );
 console.log("maps tree-shaking OK");
+
+// XLSX export: the writer is its own subpath with no React and no grid; the writer module is only
+// reached from DataGrid through a dynamic import.
+const writer = await inputsFor(
+  `import { buildXlsx } from "@jcsoftdev/ui/xlsx"; console.log(buildXlsx);`,
+);
+for (const banned of ["react", "containers", "lucide", "radix"]) {
+  assert.ok(
+    !writer.files.some((f) => f.includes(banned)),
+    `@jcsoftdev/ui/xlsx must not include "${banned}"`,
+  );
+}
+console.log(`xlsx writer: ${writer.bytes} bytes, ${writer.files.length} modules`);
+const grid = await build({
+  stdin: {
+    contents: `import { DataGrid } from "@jcsoftdev/ui/containers/data-grid"; console.log(DataGrid);`,
+    resolveDir: process.cwd(),
+    loader: "js",
+  },
+  bundle: true,
+  splitting: true,
+  outdir: "out",
+  minify: true,
+  format: "esm",
+  write: false,
+  metafile: true,
+  external: ["react", "react-dom", "react/jsx-runtime"],
+});
+const entryOutputs = Object.entries(grid.metafile.outputs);
+const mainChunk = entryOutputs.find(([, output]) => output.entryPoint);
+assert.ok(
+  mainChunk && !Object.keys(mainChunk[1].inputs).some((f) => f.includes("xlsx/")),
+  "the DataGrid entry chunk must not contain the XLSX writer",
+);
+assert.ok(
+  entryOutputs.some(([, output]) =>
+    Object.keys(output.inputs).some((f) => f.includes("xlsx/xlsx")),
+  ),
+  "the XLSX writer is emitted as its own lazy chunk",
+);
+console.log("xlsx tree-shaking OK");
