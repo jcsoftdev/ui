@@ -2,6 +2,7 @@ import { type AxisTick, estimateTextWidth, thinTicks } from "../axes.js";
 import { resolveAxisFormat, type ValueFormat } from "../format.js";
 import { type BandScale, bandScale } from "../scales/band.js";
 import { type ContinuousScale, linearScale } from "../scales/linear.js";
+import { timeScale, timeTicks } from "../scales/time.js";
 
 /** Value axis options shared by the distribution charts. */
 export interface DistributionAxisOptions {
@@ -37,6 +38,26 @@ function ticksOf(
     .ticks(count)
     .filter((value) => value >= Math.min(d0, d1) - 1e-9 && value <= Math.max(d0, d1) + 1e-9)
     .map((value) => ({ key: value, position: scale.map(value), label: toText(value) }));
+}
+
+const clock = new Intl.DateTimeFormat("es-PE", { hour: "2-digit", minute: "2-digit" });
+
+/** Calendar ticks; spans shorter than two days fall back to evenly spaced clock times. */
+function timeAxisTicks(scale: ContinuousScale, count: number): AxisTick[] {
+  const [d0, d1] = scale.domain;
+  const calendar = timeTicks(d0, d1, count);
+  if (calendar.length >= 2) {
+    return calendar.map((tick) => ({
+      key: tick.value,
+      position: scale.map(tick.value),
+      label: tick.label,
+    }));
+  }
+  const steps = Math.max(2, Math.min(count, 6));
+  return Array.from({ length: steps }, (_unused, i) => {
+    const value = d0 + ((d1 - d0) * i) / (steps - 1);
+    return { key: value, position: scale.map(value), label: clock.format(value) };
+  });
 }
 
 /** Shortens `label` with an ellipsis so it fits `maxWidth` pixels at `fontSize`. */
@@ -178,6 +199,8 @@ export interface XYLayoutInput {
   yAxis?: DistributionAxisOptions;
   /** Extra room inside the plot for marks with a radius (pixels). */
   inset?: number;
+  /** x values are epoch milliseconds: a calendar axis with es-PE tick labels. */
+  xTime?: boolean;
 }
 
 export interface XYLayout {
@@ -219,12 +242,10 @@ export function xyLayout(input: XYLayoutInput): XYLayout {
   const innerWidth = Math.max(10, width - margin.left - margin.right);
   const innerHeight = Math.max(10, height - margin.top - margin.bottom);
   const xCount = xAxis.tickCount ?? clamp(Math.round(innerWidth / 90), 2, 10);
-  const xScale = linearScale({
-    domain: xDomain,
-    range: [inset, Math.max(inset + 1, innerWidth - inset)],
-    nice: !xFixed,
-    tickCount: xCount,
-  });
+  const xRange: [number, number] = [inset, Math.max(inset + 1, innerWidth - inset)];
+  const xScale: ContinuousScale = input.xTime
+    ? timeScale({ domain: xDomain, range: xRange })
+    : linearScale({ domain: xDomain, range: xRange, nice: !xFixed, tickCount: xCount });
   const yScale = linearScale({
     domain: yDomain,
     range: [Math.max(inset + 1, innerHeight - inset), inset],
@@ -237,7 +258,9 @@ export function xyLayout(input: XYLayoutInput): XYLayout {
     innerHeight,
     xScale,
     yScale,
-    xTicks: thinTicks(ticksOf(xScale, xCount, xFormat)),
+    xTicks: thinTicks(
+      input.xTime ? timeAxisTicks(xScale, xCount) : ticksOf(xScale, xCount, xFormat),
+    ),
     yTicks: ticksOf(yScale, yCount, yFormat),
   };
 }

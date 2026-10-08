@@ -113,6 +113,19 @@ export const WithQuadrants: Story = {
   },
 };
 
+export const Shaded3D: Story = {
+  args: {
+    title: "Barberos como esferas: calificación, ticket y clientes",
+    series: branches,
+    shading: "shaded",
+    xFormat: (value: number) => formatNumber(value, { maximumFractionDigits: 1 }),
+    xAxis: { title: "Calificación", min: 3.4, max: 5 },
+    yAxis: { title: "Ticket (S/)" },
+    labels: { ...spanishLabels, size: "Clientes", point: "Barbero" },
+  },
+  argTypes: { shading: { control: "inline-radio", options: ["flat", "shaded"] } },
+};
+
 export const WithoutLabels: Story = { args: { showLabels: false, sizeLegend: false } };
 
 export const Narrow: Story = {
