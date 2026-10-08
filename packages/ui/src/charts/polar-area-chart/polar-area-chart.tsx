@@ -14,7 +14,7 @@ import {
 } from "../core/format.js";
 import { ChartLegend, type LegendItem } from "../core/legend.js";
 import { EASE_OUT, fadeIn, useEntryAnimation } from "../core/motion.js";
-import { seriesColor } from "../core/palette.js";
+import { monochromeByValue, seriesColor } from "../core/palette.js";
 import { arcPath, degToRad, polarPoint, TAU } from "../core/polar.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels } from "../core/types.js";
@@ -47,6 +47,8 @@ export interface PolarAreaChartProps {
   showLabels?: boolean;
   /** Rotation of the first sector, in degrees from 12 o'clock. */
   startAngle?: number;
+  /** One hue in shades, darkest on the largest value. `true` uses the accent; a string sets the base color. */
+  monochrome?: boolean | string;
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
   aspectRatio?: number;
@@ -87,6 +89,7 @@ export function PolarAreaChart({
   levels = 4,
   showLabels = true,
   startAngle = 0,
+  monochrome = false,
   height = 340,
   aspectRatio,
   valueFormat,
@@ -100,15 +103,19 @@ export function PolarAreaChart({
 }: PolarAreaChartProps) {
   const labels = resolveLabels(labelsProp);
   const state = useSeriesState(initialHidden);
-  const resolved = useMemo<Resolved[]>(
-    () =>
-      data.map((datum, index) => ({
-        datum,
-        color: seriesColor(index, datum.color),
-        format: resolveFormat(datum.format ?? valueFormat),
-      })),
-    [data, valueFormat],
-  );
+  const resolved = useMemo<Resolved[]>(() => {
+    const shades = monochrome
+      ? monochromeByValue(
+          data.map((datum) => Math.max(0, datum.value || 0)),
+          typeof monochrome === "string" ? monochrome : undefined,
+        )
+      : null;
+    return data.map((datum, index) => ({
+      datum,
+      color: datum.color ?? shades?.[index] ?? seriesColor(index),
+      format: resolveFormat(datum.format ?? valueFormat),
+    }));
+  }, [data, valueFormat, monochrome]);
   const empty = resolved.every((item) => !(item.datum.value > 0));
   const legendPlacement =
     legend === false ? null : legend === true || legend == null ? "bottom" : legend;

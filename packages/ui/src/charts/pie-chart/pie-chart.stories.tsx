@@ -42,6 +42,8 @@ const meta = {
     cornerRadius: { control: { type: "range", min: 0, max: 24, step: 1 } },
     gap: { control: { type: "range", min: 0, max: 12, step: 1 } },
     explode: { control: { type: "range", min: 0, max: 24, step: 1 } },
+    monochrome: { control: "boolean" },
+    fill: { control: "inline-radio", options: ["solid", "gradient", "pattern"] },
     outsideLabels: { control: "select", options: [false, true, "name", "percent", "both"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 200, max: 520, step: 10 } },
@@ -68,6 +70,9 @@ export const OutsideLabels: Story = { args: { outsideLabels: "both", height: 360
 export const SemiPie: Story = { args: { semi: true, height: 260, outsideLabels: "name" } };
 
 export const SharpNoGap: Story = { args: { cornerRadius: 0, gap: 0, explode: 6 } };
+
+/** One hue in shades: the largest slice is the darkest. */
+export const Monochrome: Story = { args: { monochrome: true, outsideLabels: "both", height: 360 } };
 
 export const Loading: Story = { args: { loading: true } };
 

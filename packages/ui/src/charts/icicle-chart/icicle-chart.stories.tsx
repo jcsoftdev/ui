@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import type { HierarchyDatum } from "../core/hierarchy.js";
 import { IcicleChart } from "./icicle-chart.js";
 
@@ -129,6 +130,25 @@ export const Vertical: Story = {
 
 export const TwoLevels: Story = {
   args: { levels: 2 },
+};
+
+/** Click a band to zoom into it; the breadcrumb or Escape go back. The focus is reported below. */
+export const Drilldown: Story = {
+  args: { levels: 2, height: 340 },
+  render: (args) => {
+    const [focus, setFocus] = useState("Todas las sedes");
+    return (
+      <div className="flex flex-col gap-2">
+        <IcicleChart
+          {...args}
+          onFocusChange={(node) =>
+            setFocus(node.parent ? `${node.name} (S/ ${node.value})` : "Todas las sedes")
+          }
+        />
+        <p className="m-0 text-[13px] text-ink-3">Vista abierta: {focus}</p>
+      </div>
+    );
+  },
 };
 
 export const Loading: Story = {

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { UNIT_ICONS } from "../core/unit-icons.js";
 import { IsotypeRows } from "./isotype-rows.js";
 
 const servicesByBarber = [
@@ -43,7 +44,7 @@ const meta = {
   argTypes: {
     icon: {
       control: "select",
-      options: ["scissors", "person", "chair", "star", "calendar", "bottle"],
+      options: Object.keys(UNIT_ICONS),
     },
     colorMode: { control: "inline-radio", options: ["single", "category"] },
     perIcon: { control: { type: "number", min: 1, step: 1 } },
@@ -83,6 +84,66 @@ export const IconPerRow: Story = {
     colorMode: "category",
     unitLabel: "ventas",
     labels: { ...spanishLabels, category: "Tipo" },
+  },
+};
+
+/** Average rating per barber: full stars plus a cut one for the decimals (4.6 = four and 60% of a fifth). */
+export const ReviewRatings: Story = {
+  args: {
+    title: "Calificación promedio por barbero",
+    data: [
+      { id: "abel", name: "Abel", value: 4.9 },
+      { id: "kevin", name: "Kevin", value: 4.7 },
+      { id: "renzo", name: "Renzo", value: 4.4 },
+      { id: "luis", name: "Luis", value: 4.1 },
+      { id: "diego", name: "Diego", value: 3.6 },
+    ],
+    icon: "star",
+    perIcon: 1,
+    track: true,
+    rowHeight: 38,
+    valueFormat: "number",
+    unitLabel: "estrellas",
+    showKey: false,
+    labels: { ...spanishLabels, category: "Barbero" },
+  },
+};
+
+/** Minutes until the first reply, a clock per 5 minutes. */
+export const ResponseTimes: Story = {
+  args: {
+    title: "Tiempo de respuesta por canal (1 reloj = 5 min)",
+    data: [
+      { id: "whatsapp", name: "WhatsApp", value: 7 },
+      { id: "instagram", name: "Instagram", value: 18 },
+      { id: "llamada", name: "Llamada", value: 3 },
+      { id: "web", name: "Formulario web", value: 32 },
+    ],
+    icon: "clock",
+    perIcon: 5,
+    colorMode: "category",
+    rowHeight: 36,
+    unitLabel: "min",
+    labels: { ...spanishLabels, category: "Canal" },
+  },
+};
+
+/** Clients registered per sede, a pin per 20 clients. */
+export const StoreLocations: Story = {
+  args: {
+    title: "Clientes registrados por sede (1 pin = 20)",
+    data: [
+      { id: "miraflores", name: "Miraflores", value: 210 },
+      { id: "san-isidro", name: "San Isidro", value: 164 },
+      { id: "surco", name: "Surco", value: 118 },
+      { id: "barranco", name: "Barranco", value: 87 },
+    ],
+    icon: "pin",
+    perIcon: 20,
+    colorMode: "category",
+    rowHeight: 38,
+    unitLabel: "clientes",
+    labels: { ...spanishLabels, category: "Sede" },
   },
 };
 

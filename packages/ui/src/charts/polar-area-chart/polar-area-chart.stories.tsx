@@ -47,6 +47,7 @@ const meta = {
     cornerRadius: { control: { type: "range", min: 0, max: 16, step: 1 } },
     gap: { control: { type: "range", min: 0, max: 12, step: 1 } },
     levels: { control: { type: "range", min: 2, max: 8, step: 1 } },
+    monochrome: { control: "boolean" },
     startAngle: { control: { type: "range", min: -90, max: 90, step: 5 } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 240, max: 560, step: 10 } },
@@ -72,6 +73,9 @@ export const NightingaleArea: Story = {
 };
 
 export const WithHole: Story = { args: { innerRadius: 0.3, cornerRadius: 8 } };
+
+/** One hue in shades: the longest sector is the darkest. */
+export const Monochrome: Story = { args: { monochrome: true, scale: "area" } };
 
 export const Loading: Story = { args: { loading: true } };
 

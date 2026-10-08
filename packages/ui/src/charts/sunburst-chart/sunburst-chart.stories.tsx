@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import type { HierarchyDatum } from "../core/hierarchy.js";
 import { SunburstChart } from "./sunburst-chart.js";
 
@@ -85,6 +86,7 @@ const meta = {
     data: servicesByBranch,
     valueFormat: "integer",
     height: 380,
+    half: false,
     levels: 3,
     drillDown: true,
     breadcrumb: true,
@@ -100,6 +102,7 @@ const meta = {
   },
   argTypes: {
     valueFormat: { control: "inline-radio", options: ["integer", "compact", "number"] },
+    half: { control: "boolean" },
     levels: { control: { type: "range", min: 1, max: 4, step: 1 } },
     height: { control: { type: "range", min: 220, max: 560, step: 10 } },
     gap: { control: { type: "range", min: 0, max: 6, step: 0.5 } },
@@ -132,6 +135,41 @@ export const WithoutLabels: Story = {
 
 export const StaticView: Story = {
   args: { drillDown: false, legend: false },
+};
+
+/** Click a segment to zoom in; the breadcrumb, the centre or Escape zoom back out. The focus is reported below. */
+export const Drilldown: Story = {
+  args: { levels: 2, height: 400 },
+  render: (args) => {
+    const [focus, setFocus] = useState("Todas las sedes");
+    return (
+      <div className="flex flex-col gap-2">
+        <SunburstChart
+          {...args}
+          onFocusChange={(node) =>
+            setFocus(node.parent ? `${node.name} (${node.value})` : "Todas las sedes")
+          }
+        />
+        <p className="m-0 text-[13px] text-ink-3">Vista abierta: {focus}</p>
+      </div>
+    );
+  },
+};
+
+/** A 180 degree fan: the same partition on a half disc, with the title and total above the baseline. */
+export const SemiCircle: Story = {
+  args: { half: true, height: 280, levels: 3 },
+};
+
+export const SemiCircleNarrow: Story = {
+  args: { half: true, height: 200, legend: false },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
+        <Story />
+      </div>
+    ),
+  ],
 };
 
 export const Loading: Story = {

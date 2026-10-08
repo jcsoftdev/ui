@@ -15,6 +15,7 @@ export * from "./funnel-chart/index.js";
 export * from "./gantt-chart/index.js";
 export * from "./gauge-chart/index.js";
 export * from "./heatmap-chart/index.js";
+export * from "./hierarchy-morph/index.js";
 export * from "./histogram/index.js";
 export * from "./icicle-chart/index.js";
 export * from "./isotype-rows/index.js";

@@ -94,9 +94,85 @@ export const UNIT_ICONS = {
   shield: {
     path: "M12 1.8l8.5 3.2v6.4c0 5.4-3.6 9.5-8.5 11.1c-4.9-1.6-8.5-5.7-8.5-11.1V5z",
   },
+  woman: {
+    path: "M12 0.9a3.4 3.4 0 1 1 0 6.8a3.4 3.4 0 1 1 0-6.8zM9 9h6l4.5 10h-15zM9.8 19h1.9v4h-1.9zM12.3 19h1.9v4h-1.9z",
+    labelY: 15,
+  },
+  child: {
+    path: "M12 5.4a3.2 3.2 0 1 1 0 6.4a3.2 3.2 0 1 1 0-6.4zM6.8 21.5v-2.2c0-2.9 2.3-5 5.2-5s5.2 2.1 5.2 5v2.2z",
+    labelY: 18,
+  },
+  heart: {
+    path: "M12 21.2C5.6 16.1 2.5 12.6 2.5 8.6A5 5 0 0 1 12 6.4a5 5 0 0 1 9.5 2.2c0 4-3.1 7.5-9.5 12.6z",
+    labelY: 11.5,
+  },
+  tree: {
+    path: "M12 1.8L18 9.5H15.2L19.5 15.5H4.5L8.8 9.5H6zM10.8 15.5h2.4V22h-2.4z",
+    labelY: 11,
+  },
+  house: {
+    path: "M12 2.2L21.5 10.6H18.9V21H13.7V15H10.3V21H5.1V10.6H2.5z",
+    labelY: 12,
+  },
+  car: {
+    fillRule: "evenodd",
+    path: [
+      "M3.2 12.5l1.7-4.6A2.5 2.5 0 0 1 7.2 6.3h9.6a2.5 2.5 0 0 1 2.3 1.6l1.7 4.6c.9.3 1.5 1.1 1.5 2.1v3.2a1 1 0 0 1-1 1h-1.2a2.8 2.8 0 0 1-5.6 0H9.4a2.8 2.8 0 0 1-5.6 0H2.7a1 1 0 0 1-1-1v-3.2c0-1 .6-1.8 1.5-2.1z",
+      "M7 8h4.2v3.3H5.9zM12.8 8H17l1.1 3.3h-5.3z",
+    ].join(""),
+  },
+  drop: {
+    path: "M12 1.8c3.9 4.8 7.5 9 7.5 13a7.5 7.5 0 0 1-15 0c0-4 3.6-8.2 7.5-13z",
+  },
+  clock: {
+    fillRule: "evenodd",
+    path: "M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20zM11 6h2v6.3l4 2.3-1 1.7-5-3z",
+  },
+  pin: {
+    fillRule: "evenodd",
+    path: "M12 1.8a7.5 7.5 0 0 0-7.5 7.5c0 5.4 7.5 12.9 7.5 12.9s7.5-7.5 7.5-12.9A7.5 7.5 0 0 0 12 1.8zM12 6.7a2.6 2.6 0 1 1 0 5.2a2.6 2.6 0 1 1 0-5.2z",
+    labelY: 9.3,
+  },
+  mustache: {
+    path: "M12 9.2C10.6 7.4 8.6 6.4 6.4 6.4C3.8 6.4 1.9 8 1.5 10.6C3.2 9.6 4.9 9.6 6.4 10.7C8.1 12 9.9 13.4 12 13.4C14.1 13.4 15.9 12 17.6 10.7C19.1 9.6 20.8 9.6 22.5 10.6C22.1 8 20.2 6.4 17.6 6.4C15.4 6.4 13.4 7.4 12 9.2Z",
+    labelY: 10,
+  },
+  comb: {
+    path: "M3 4h18a1 1 0 0 1 1 1v4H2V5a1 1 0 0 1 1-1zM3 10h1.6v10H3zM6.2 10h1.6v10H6.2zM9.4 10h1.6v10H9.4zM12.6 10h1.6v10h-1.6zM15.8 10h1.6v10h-1.6zM19 10h1.6v10H19z",
+    labelY: 7,
+  },
+  pole: {
+    fillRule: "evenodd",
+    path: "M8 1.5h8v2.5H8zM8.5 4h7v16h-7zM8 20h8v2.5H8zM8.5 7.5l7-2.5v3l-7 2.5zM8.5 13.5l7-2.5v3l-7 2.5z",
+  },
 } as const satisfies Record<string, UnitShape>;
 
 export type UnitIconName = keyof typeof UNIT_ICONS;
+
+/** Human figures and everyday silhouettes for pictograms, in gallery order. */
+export const PICTOGRAM_SILHOUETTES = [
+  "person",
+  "woman",
+  "child",
+  "heart",
+  "tree",
+  "house",
+  "car",
+  "star",
+  "drop",
+  "clock",
+  "pin",
+] as const satisfies readonly UnitIconName[];
+
+/** Barbershop silhouettes drawn for this library. */
+export const BARBER_SILHOUETTES = [
+  "scissors",
+  "comb",
+  "mustache",
+  "pole",
+  "chair",
+  "bottle",
+] as const satisfies readonly UnitIconName[];
 
 /** A built-in name, a raw path (24 x 24 box) or a full shape definition. */
 export type UnitIcon = UnitIconName | UnitShape | (string & {});
