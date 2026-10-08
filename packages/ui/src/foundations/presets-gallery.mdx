@@ -1,0 +1,59 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Foundations/Presets gallery" />
+
+# Galería de estilos
+
+Una sola librería con seis looks. Cambias el aspecto de toda la interfaz, dashboards incluidos, con atributos en un elemento raíz. Sin JavaScript, sin contexto de React y sin variantes de componentes.
+
+## Atributos
+
+| Atributo | Valores | Sin atributo |
+| --- | --- | --- |
+| `data-style` | `soft`, `bordered`, `elevated`, `flat`, `glass`, `brutal` | `soft` |
+| `data-density` | `compact`, `normal`, `comfortable` | `normal` |
+| `data-radius` | `none`, `sm`, `md`, `lg`, `full` | los radios del estilo |
+
+```html
+<html data-theme="dark" data-accent="menta" data-style="glass" data-density="compact" data-radius="lg">
+```
+
+Funcionan en cualquier elemento, no solo en `<html>`: `<section data-style="brutal">` restyla solo ese subárbol.
+
+## Precedencia
+
+En un mismo elemento gana, de menor a mayor: **tema < acento < estilo < densidad < radio**. Es orden de fuente con la misma especificidad, sin `!important`. `data-radius` además gana sobre un estilo puesto en un descendiente. Los estilos nunca tocan la densidad.
+
+## Cero costo en ejecución
+
+- Los atributos solo reasignan variables CSS generadas desde `tokens/default.json` por `scripts/build-theme.mjs`.
+- Los componentes leen tokens semánticos (`rounded-card`, `border-card`, `shadow-card`, `bg-surface-card`, `h-control`…). No hay props de estilo ni código por preset en el bundle.
+- Tree shaking intacto: importar un componente no arrastra ningún preset; el CSS de los seis estilos es una sola hoja de variables.
+
+## En una app Next.js
+
+Pon los atributos en `<html>` del layout raíz:
+
+```tsx
+// app/layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="es-PE" data-style="glass" data-density="normal">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+Para que el usuario elija, escribe el atributo en el cliente y guárdalo en una cookie para leerlo en el servidor:
+
+```tsx
+document.documentElement.dataset.style = "brutal"; // o removeAttribute("data-style") para soft
+```
+
+## Dónde verlo
+
+- **Dashboards / Presets**: el mismo dashboard de Inicio en cada estilo, más compacta, radio sin y completo y Dark.
+- **Dashboards / Presets / PresetGallery**: los seis estilos lado a lado, cada uno con su fragmento para copiar.
+- **Foundations / StylePresets**: componentes sueltos en los seis estilos.
+- Las barras Estilo, Densidad y Radio de Storybook aplican los atributos a `<html>`.
