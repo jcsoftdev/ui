@@ -113,7 +113,6 @@
     "vite": "7.3.6"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   }
 }

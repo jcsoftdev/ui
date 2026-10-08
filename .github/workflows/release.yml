@@ -36,7 +36,7 @@ jobs:
       - name: Typecheck (the site resolves the built library)
         run: pnpm typecheck
       - name: Publish to npm
-        run: pnpm publish --filter @jcsoftdev/ui --access public --no-git-checks
+        run: pnpm publish --filter @jcsoftdev/ui --access public --provenance --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
