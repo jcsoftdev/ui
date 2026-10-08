@@ -1,3 +1,4 @@
+export * from "./a11y.js";
 export * from "./axes.js";
 export * from "./cartesian/brush.js";
 export * from "./cartesian/cartesian-chart.js";
@@ -11,9 +12,11 @@ export * from "./legend.js";
 export * from "./motion.js";
 export * from "./palette.js";
 export * from "./path.js";
+export * from "./polar.js";
 export * from "./scales/index.js";
 export * from "./stack.js";
 export * from "./tooltip.js";
 export * from "./types.js";
 export * from "./use-chart-size.js";
+export * from "./use-index-navigation.js";
 export * from "./use-series-state.js";

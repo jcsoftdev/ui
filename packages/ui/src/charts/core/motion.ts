@@ -1,6 +1,6 @@
 "use client";
 
-import { type RefObject, useEffect, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -68,4 +68,40 @@ export function fadeIn(element: Element, duration = 400, delay = 0): void {
     easing: "ease-out",
     fill: "backwards",
   });
+}
+
+/**
+ * Eases a displayed number towards `target` (cubic ease-out). Starts from
+ * `from` on mount, then from wherever it currently is when `target` changes.
+ * Returns `target` at once under `prefers-reduced-motion` or `disabled`.
+ */
+export function useAnimatedNumber(
+  target: number,
+  {
+    from = 0,
+    duration = 900,
+    disabled = false,
+  }: { from?: number; duration?: number; disabled?: boolean } = {},
+): number {
+  const [value, setValue] = useState(disabled ? target : from);
+  const current = useRef(value);
+  current.current = value;
+  useEffect(() => {
+    if (disabled || prefersReducedMotion() || typeof requestAnimationFrame !== "function") {
+      setValue(target);
+      return;
+    }
+    const start = current.current;
+    const startedAt = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - (1 - progress) ** 3;
+      setValue(start + (target - start) * eased);
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target, duration, disabled]);
+  return value;
 }
