@@ -67,20 +67,20 @@ interface AnnotationBase {
  * bar charts the value axis runs left to right, so "y" lines are drawn vertical.
  */
 export type ChartAnnotation =
-  | (AnnotationBase & { type: "line"; axis: "y"; value: number; yAxis?: "left" | "right" })
+  | (AnnotationBase & { type: "line"; axis: "y"; value: number; yAxis?: string })
   | (AnnotationBase & {
       type: "range";
       axis: "y";
       from: number;
       to: number;
-      yAxis?: "left" | "right";
+      yAxis?: string;
     })
   | (AnnotationBase & { type: "line"; axis: "x"; value: XValue })
   | (AnnotationBase & { type: "range"; axis: "x"; from: XValue; to: XValue })
   /** Dot at a data coordinate (category `x`, value `y`) with an optional label pill. */
-  | (AnnotationBase & { type: "point"; x: XValue; y: number; yAxis?: "left" | "right" })
+  | (AnnotationBase & { type: "point"; x: XValue; y: number; yAxis?: string })
   /** Free text anchored at a data coordinate. */
-  | (AnnotationBase & { type: "text"; x: XValue; y: number; yAxis?: "left" | "right" });
+  | (AnnotationBase & { type: "text"; x: XValue; y: number; yAxis?: string });
 
 export interface ValueAxisOptions {
   /** Fixed lower bound; by default the data decides (bars and areas start at 0). */

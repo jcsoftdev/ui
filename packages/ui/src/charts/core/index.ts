@@ -1,6 +1,7 @@
 export * from "./a11y.js";
 export * from "./axes.js";
 export * from "./breadcrumb.js";
+export * from "./cartesian/axis-stack.js";
 export * from "./cartesian/brush.js";
 export * from "./cartesian/cartesian-chart.js";
 export * from "./cartesian/layout.js";

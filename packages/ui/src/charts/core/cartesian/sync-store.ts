@@ -13,9 +13,25 @@ export interface SyncChannel {
   owner: string | null;
   /** Zoom window as the first and last visible category. */
   range: readonly [SyncKey, SyncKey] | null;
+  /** Margins each chart needs, by chart. */
+  margins: Readonly<Record<string, SyncMargin>>;
+  /** The widest left and right margin of the group: every chart takes it so the plots line up. */
+  margin: SyncMargin | null;
 }
 
-const EMPTY: SyncChannel = { hover: null, owner: null, range: null };
+export interface SyncMargin {
+  left: number;
+  right: number;
+}
+
+export const EMPTY_CHANNEL: SyncChannel = {
+  hover: null,
+  owner: null,
+  range: null,
+  margins: {},
+  margin: null,
+};
+const EMPTY = EMPTY_CHANNEL;
 
 /** A set of named channels. `ChartSyncProvider` scopes one; charts outside a provider share a global one. */
 export class ChartSyncStore {
@@ -57,5 +73,31 @@ export class ChartSyncStore {
         current.range[1] === range[1]);
     if (same) return;
     this.set(id, { ...current, range });
+  }
+
+  /** Registers (or with `null` withdraws) the margins `owner` needs. */
+  setMargin(id: string, owner: string, margin: SyncMargin | null) {
+    const current = this.get(id);
+    const before = current.margins[owner];
+    if (
+      before === margin ||
+      (before && margin && before.left === margin.left && before.right === margin.right)
+    ) {
+      return;
+    }
+    const margins = { ...current.margins };
+    if (margin) margins[owner] = margin;
+    else delete margins[owner];
+    const all = Object.values(margins);
+    const widest = all.length
+      ? { left: Math.max(...all.map((m) => m.left)), right: Math.max(...all.map((m) => m.right)) }
+      : null;
+    const same =
+      current.margin === widest ||
+      (current.margin &&
+        widest &&
+        current.margin.left === widest.left &&
+        current.margin.right === widest.right);
+    this.set(id, { ...current, margins, margin: same ? current.margin : widest });
   }
 }

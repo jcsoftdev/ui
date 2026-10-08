@@ -8,14 +8,15 @@ import type {
   ValueAxisOptions,
   XValue,
 } from "../types.js";
+import type { CartesianAxisSpec } from "./axis-stack.js";
 
 export type MarkKind = "line" | "area" | "column";
 
 export interface CartesianSeries extends ChartSeries {
   /** How the series is drawn. */
   kind: MarkKind;
-  /** Value axis the series is measured against. */
-  axis?: "left" | "right";
+  /** Id of the value axis the series is measured against: "left" (default), "right" or one declared in `axes`. */
+  axis?: string;
 }
 
 /** What a click on the plot reports: the nearest category and the series line closest to the pointer. */
@@ -71,6 +72,11 @@ export interface CartesianChartProps {
   yAxis?: ValueAxisOptions;
   /** Secondary axis for series with `axis: "right"`. */
   rightAxis?: ValueAxisOptions;
+  /**
+   * Any number of value axes. `yAxis` and `rightAxis` are shorthand for the ids "left" and "right";
+   * more entries stack outward on their `side` (right by default) and series pick one with `axis`.
+   */
+  axes?: readonly CartesianAxisSpec[];
   /** Background gridlines (default true). */
   grid?: boolean;
   /** Legend placement, or false to hide it. Defaults to "top" with two or more series. */

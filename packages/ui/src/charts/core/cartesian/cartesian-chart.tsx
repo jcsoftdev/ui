@@ -100,6 +100,7 @@ export function CartesianChart({
   xScale = "auto",
   yAxis,
   rightAxis,
+  axes,
   grid = true,
   legend,
   tooltip = true,
@@ -258,6 +259,7 @@ export function CartesianChart({
           xScale={xScale}
           yAxis={yAxis}
           rightAxis={rightAxis}
+          axes={axes}
           grid={grid}
           tooltip={tooltip}
           annotations={annotations}
@@ -287,6 +289,7 @@ interface CartesianPlotProps
     | "xScale"
     | "yAxis"
     | "rightAxis"
+    | "axes"
     | "grid"
     | "tooltip"
     | "annotations"
@@ -342,6 +345,7 @@ function CartesianPlot({
   xScale = "auto",
   yAxis,
   rightAxis,
+  axes,
   grid = true,
   tooltip = true,
   annotations,
@@ -412,25 +416,25 @@ function CartesianPlot({
   const original = (index: number) =>
     sampled.indices ? (sampled.indices[index] as number) : index;
 
-  const layout: CartesianLayout = useMemo(
-    () =>
-      computeLayout({
-        width,
-        height,
-        categories: sampled.categories,
-        series: sampled.series,
-        orientation,
-        stack,
-        curve,
-        dataLabels,
-        barRadius,
-        xScale,
-        xLabel,
-        valueFormat,
-        yAxis: yAxis ?? {},
-        rightAxis: rightAxis ?? {},
-        annotations: annotations ?? [],
-      }),
+  const layoutInput = useMemo(
+    () => ({
+      width,
+      height,
+      categories: sampled.categories,
+      series: sampled.series,
+      orientation,
+      stack,
+      curve,
+      dataLabels,
+      barRadius,
+      xScale,
+      xLabel,
+      valueFormat,
+      yAxis: yAxis ?? {},
+      rightAxis: rightAxis ?? {},
+      axes,
+      annotations: annotations ?? [],
+    }),
     [
       width,
       height,
@@ -445,8 +449,27 @@ function CartesianPlot({
       valueFormat,
       yAxis,
       rightAxis,
+      axes,
       annotations,
     ],
+  );
+  const natural = useMemo(() => computeLayout(layoutInput), [layoutInput]);
+
+  // Charts of one sync group publish the margins they need and all take the widest, so the plots line up.
+  const { setMargin } = sync;
+  const naturalLeft = natural.margin.left;
+  const naturalRight = natural.margin.right;
+  useEffect(() => {
+    setMargin(owner, { left: naturalLeft, right: naturalRight });
+    return () => setMargin(owner, null);
+  }, [owner, setMargin, naturalLeft, naturalRight]);
+  const groupMargin = syncId ? sync.channel.margin : null;
+  const layout: CartesianLayout = useMemo(
+    () =>
+      groupMargin && (groupMargin.left > naturalLeft || groupMargin.right > naturalRight)
+        ? computeLayout({ ...layoutInput, minMargin: groupMargin })
+        : natural,
+    [natural, layoutInput, groupMargin, naturalLeft, naturalRight],
   );
 
   const { margin, innerWidth, innerHeight, horizontal } = layout;
@@ -753,7 +776,12 @@ function CartesianPlot({
                     y2={0}
                   >
                     <stop offset="0%" style={{ stopColor: item.color }} />
-                    <stop offset="100%" style={{ stopColor: seriesColor(index + 1) }} />
+                    <stop
+                      offset="100%"
+                      style={{
+                        stopColor: `color-mix(in oklab, ${item.color} 45%, ${seriesColor(index + 1)})`,
+                      }}
+                    />
                   </linearGradient>
                 ))
             : null}
@@ -881,11 +909,27 @@ function CartesianPlot({
             </>
           ) : (
             <>
-              <AxisLeft ticks={layout.valueTicks} offset={0} title={yAxis?.title} />
               <AxisBottom ticks={layout.categoryTicks} offset={innerHeight} />
-              {layout.rightScale ? (
-                <AxisRight ticks={layout.rightTicks} offset={innerWidth} title={rightAxis?.title} />
-              ) : null}
+              {layout.axes.map((axis) => {
+                const left = axis.side === "left";
+                const at = left ? -axis.offset : innerWidth + axis.offset;
+                const Axis = left ? AxisLeft : AxisRight;
+                return (
+                  <g key={axis.id}>
+                    {axis.color || axis.offset > 0 ? (
+                      <line
+                        x1={at}
+                        x2={at}
+                        y1={0}
+                        y2={innerHeight}
+                        shapeRendering="crispEdges"
+                        style={{ stroke: axis.color ?? "var(--line-strong)", strokeOpacity: 0.55 }}
+                      />
+                    ) : null}
+                    <Axis ticks={axis.ticks} offset={at} title={axis.title} color={axis.color} />
+                  </g>
+                );
+              })}
             </>
           )}
           {dataLabels

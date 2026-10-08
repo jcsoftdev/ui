@@ -13,6 +13,7 @@ import { logScale } from "../scales/log.js";
 import { shortMonth, timeScale } from "../scales/time.js";
 import { type StackLayer, type StackMode, stackLayers } from "../stack.js";
 import type { ChartAnnotation, ValueAxisOptions, XValue } from "../types.js";
+import { type CartesianAxisSpec, resolveAxes, stackAxes } from "./axis-stack.js";
 import type { MarkKind } from "./types.js";
 
 /** A visible series with its data already cut to the zoom window. */
@@ -20,7 +21,8 @@ export interface ResolvedSeries {
   id: string;
   name: string;
   kind: MarkKind;
-  axis: "left" | "right";
+  /** Id of the value axis the series is measured against. */
+  axis: string;
   color: string;
   dashed: boolean;
   format: ValueFormatter;
@@ -85,6 +87,18 @@ export interface AnnotationMarkerGeometry extends AnnotationBaseGeometry {
 
 export type AnnotationGeometry = AnnotationSpanGeometry | AnnotationMarkerGeometry;
 
+/** A value axis ready to draw: its scale, ticks and where it hangs. */
+export interface AxisGeometry {
+  id: string;
+  side: "left" | "right";
+  scale: ContinuousScale;
+  ticks: AxisTick[];
+  /** Distance outward from the plot edge on its side (0 for the first axis of a side). */
+  offset: number;
+  title?: string;
+  color?: string;
+}
+
 export interface Margin {
   top: number;
   right: number;
@@ -107,9 +121,13 @@ export interface CartesianLayout {
   /** Category index nearest to a pixel on the category axis. */
   indexAt: (pixel: number) => number;
   valueScale: ContinuousScale;
+  /** Scale of the first right-hand axis, if any. */
   rightScale: ContinuousScale | null;
+  /** Every value axis in drawing order; the first is the primary one. */
+  axes: AxisGeometry[];
   categoryTicks: AxisTick[];
   valueTicks: AxisTick[];
+  /** Ticks of the first right-hand axis. */
   rightTicks: AxisTick[];
   /** Pixel of the zero value on the value axis, when inside the plot. */
   zero: number | null;
@@ -133,6 +151,10 @@ export interface LayoutInput {
   valueFormat?: ValueFormat;
   yAxis: ValueAxisOptions;
   rightAxis: ValueAxisOptions;
+  /** More value axes; `yAxis` and `rightAxis` are the axes with id "left" and "right". */
+  axes?: readonly CartesianAxisSpec[];
+  /** Lower bound for the margins, to line this plot up with others (synced charts). */
+  minMargin?: { left: number; right: number };
   annotations: readonly ChartAnnotation[];
 }
 
@@ -239,34 +261,42 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   const percent = stack === "percent";
 
   const layers = buildLayers(series, stack);
-  const leftSeries = series.filter((item) => item.axis === "left");
-  const rightSeries = series.filter((item) => item.axis === "right");
+  const axisSpecs = resolveAxes(
+    input.yAxis,
+    input.rightAxis,
+    input.axes ?? [],
+    new Set(series.map((item) => item.axis)),
+  );
+  const primaryId = (axisSpecs[0] as { id: string }).id;
+  const axisIds = new Set(axisSpecs.map((axis) => axis.id));
+  const axisOf = (id: string) => (axisIds.has(id) ? id : primaryId);
 
-  const yAnnotations = (axis: "left" | "right") =>
+  const yAnnotations = (axis: string) =>
     input.annotations.flatMap((note) => {
       if (note.type === "point" || note.type === "text") return [];
-      if (note.axis !== "y" || (note.yAxis ?? "left") !== axis) return [];
+      if (note.axis !== "y" || axisOf(note.yAxis ?? primaryId) !== axis) return [];
       return note.type === "line" ? [note.value] : [note.from, note.to];
     });
 
   const top =
     8 +
     (dataLabels && !horizontal ? 12 : 0) +
-    (input.yAxis.title || input.rightAxis.title ? 16 : 0);
+    (axisSpecs.some((axis) => axis.options.title) ? 16 : 0);
   const bottom = 26;
   const innerHeightGuess = Math.max(40, height - top - bottom);
 
-  // Value axis (left) first: its labels decide the left margin.
   const percentAxis = (axisSeries: readonly ResolvedSeries[]) =>
     percent && axisSeries.length > 0 && axisSeries.every((item) => isStackable(item, stack));
-  const leftDomain = axisDomain(leftSeries, layers, input.yAxis, yAnnotations("left"));
-  const rightDomain = axisDomain(rightSeries, layers, input.rightAxis, yAnnotations("right"));
-  const leftFormat = resolveAxisFormat(
-    input.yAxis.format ?? (percentAxis(leftSeries) ? "percent" : input.valueFormat),
-  );
-  const rightFormat = resolveAxisFormat(
-    input.rightAxis.format ?? (percentAxis(rightSeries) ? "percent" : input.valueFormat),
-  );
+  const axisInfo = axisSpecs.map((spec) => {
+    const own = series.filter((item) => axisOf(item.axis) === spec.id);
+    return {
+      spec,
+      domain: axisDomain(own, layers, spec.options, yAnnotations(spec.id)),
+      format: resolveAxisFormat(
+        spec.options.format ?? (percentAxis(own) ? "percent" : input.valueFormat),
+      ),
+    };
+  });
 
   const categoryLabels = categories.map((value) => input.xLabel(value));
   // The last x label is centred on its tick: only reserve what overhangs the plot.
@@ -277,6 +307,8 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   );
   let margin: Margin;
   let valueTickCount: number;
+  let offsets = new Map<string, number>();
+  const tickCountOf = (options: ValueAxisOptions) => options.tickCount ?? valueTickCount;
   if (horizontal) {
     const widestCategory = Math.max(
       0,
@@ -292,25 +324,32 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
       input.yAxis.tickCount ?? clamp(Math.round((width - margin.left - margin.right) / 96), 2, 8);
   } else {
     valueTickCount = input.yAxis.tickCount ?? clamp(Math.round(innerHeightGuess / 52), 2, 8);
-    const probe = makeValueScale(
-      leftDomain,
-      [innerHeightGuess, 0],
-      input.yAxis,
-      valueTickCount,
-      false,
-    );
-    const probeRight = rightSeries.length
-      ? makeValueScale(rightDomain, [innerHeightGuess, 0], input.rightAxis, valueTickCount, false)
-      : null;
-    const leftWidth = widestLabel(valueTicks(probe, valueTickCount, leftFormat));
-    const rightWidth = probeRight
-      ? widestLabel(valueTicks(probeRight, valueTickCount, rightFormat))
-      : 0;
+    const slots = axisInfo.map(({ spec, domain, format }) => {
+      const probe = makeValueScale(
+        domain,
+        [innerHeightGuess, 0],
+        spec.options,
+        tickCountOf(spec.options),
+        false,
+      );
+      const labels = widestLabel(valueTicks(probe, tickCountOf(spec.options), format));
+      const title = spec.options.title ? estimateTextWidth(spec.options.title, 10.5) : 0;
+      const shared = axisInfo.filter((other) => other.spec.side === spec.side).length > 1;
+      return {
+        id: spec.id,
+        side: spec.side,
+        width: Math.max(labels, shared ? title : 0) + 10 + (shared ? 10 : 0),
+      };
+    });
+    const stacked = stackAxes(slots, { minLeft: 20, rightFallback: lastLabelOverhang });
+    offsets = stacked.offsets;
+    margin = { top, right: stacked.right, bottom, left: stacked.left };
+  }
+  if (input.minMargin) {
     margin = {
-      top,
-      right: probeRight ? rightWidth + 10 : lastLabelOverhang,
-      bottom,
-      left: Math.max(20, leftWidth + 10),
+      ...margin,
+      left: Math.max(margin.left, input.minMargin.left),
+      right: Math.max(margin.right, input.minMargin.right),
     };
   }
 
@@ -319,17 +358,33 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   const valueRange: [number, number] = horizontal ? [0, innerWidth] : [innerHeight, 0];
   const categoryRange: [number, number] = horizontal ? [0, innerHeight] : [0, innerWidth];
 
-  const fixedLeft = input.yAxis.min != null && input.yAxis.max != null;
-  const valueScale = makeValueScale(leftDomain, valueRange, input.yAxis, valueTickCount, fixedLeft);
-  const rightScale = rightSeries.length
-    ? makeValueScale(
-        rightDomain,
+  const scales = new Map<string, ContinuousScale>(
+    axisInfo.map(({ spec, domain }) => [
+      spec.id,
+      makeValueScale(
+        domain,
         valueRange,
-        input.rightAxis,
-        valueTickCount,
-        input.rightAxis.min != null && input.rightAxis.max != null,
-      )
-    : null;
+        spec.options,
+        tickCountOf(spec.options),
+        spec.options.min != null && spec.options.max != null,
+      ),
+    ]),
+  );
+  const scaleOf = (id: string) => scales.get(axisOf(id)) as ContinuousScale;
+  const valueScale = scaleOf(primaryId);
+  const axes: AxisGeometry[] = axisInfo.map(({ spec, format }) => {
+    const scale = scales.get(spec.id) as ContinuousScale;
+    return {
+      id: spec.id,
+      side: spec.side,
+      scale,
+      ticks: valueTicks(scale, tickCountOf(spec.options), format),
+      offset: offsets.get(spec.id) ?? 0,
+      title: spec.options.title,
+      color: spec.color,
+    };
+  });
+  const firstRight = axes.find((axis) => axis.side === "right");
 
   // Category axis.
   const useTime =
@@ -424,7 +479,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
 
   const labelEvery = (spacing: number) => Math.max(1, Math.ceil(34 / Math.max(1, spacing)));
   const geometry: SeriesGeometry[] = series.map((item) => {
-    const scale = item.axis === "right" && rightScale ? rightScale : valueScale;
+    const scale = scaleOf(item.axis);
     const layer = layers.get(item.id);
     const startOf = (index: number) => layer?.y0[index] ?? 0;
     const endOf = (index: number) => (layer ? (layer.y1[index] as number) : item.data[index]);
@@ -605,7 +660,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
     const key = `note-${index}`;
     if (note.type === "point" || note.type === "text") {
       const along = categoryPixel(note.x);
-      const scale = note.yAxis === "right" && rightScale ? rightScale : valueScale;
+      const scale = scaleOf(note.yAxis ?? primaryId);
       const across = scale.map(note.y);
       if (along == null || across < -0.5 || across > valueLength + 0.5) return;
       annotations.push({
@@ -620,7 +675,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
       return;
     }
     if (note.axis === "y") {
-      const scale = note.yAxis === "right" && rightScale ? rightScale : valueScale;
+      const scale = scaleOf(note.yAxis ?? primaryId);
       const direction = horizontal ? "vertical" : "horizontal";
       if (note.type === "line") {
         const at = scale.map(note.value);
@@ -684,10 +739,11 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
     step: mode === "band" ? band.step : count > 1 ? innerWidth / (count - 1) : innerWidth,
     indexAt,
     valueScale,
-    rightScale,
+    rightScale: firstRight?.scale ?? null,
+    axes,
     categoryTicks,
-    valueTicks: valueTicks(valueScale, valueTickCount, leftFormat),
-    rightTicks: rightScale ? valueTicks(rightScale, valueTickCount, rightFormat) : [],
+    valueTicks: (axes[0] as AxisGeometry).ticks,
+    rightTicks: firstRight?.ticks ?? [],
     zero: zeroInside ? valueScale.map(0) : null,
     layers,
     geometry,

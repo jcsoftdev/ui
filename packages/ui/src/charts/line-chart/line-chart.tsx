@@ -11,7 +11,7 @@ export interface LineChartProps
     "series" | "orientation" | "stack" | "gradient" | "lineGradient" | "barRadius" | "rightAxis"
   > {
   series: readonly ChartSeries[];
-  /** Strokes each line with a gradient from its color to the next palette color. */
+  /** Strokes each line with a gradient from its color towards the next palette color. */
   gradient?: boolean;
 }
 

@@ -79,6 +79,8 @@ export interface AxisProps {
   /** Offset of the axis line: `y` for bottom, `x` for left/right. */
   offset: number;
   title?: string;
+  /** Overrides the label color (a value axis matched to its series). */
+  color?: string;
 }
 
 /** Category or time labels under the plot. */
@@ -95,11 +97,17 @@ export const AxisBottom = memo(function AxisBottom({ ticks, offset }: AxisProps)
 });
 
 /** Value labels on the left, right-aligned against the plot. */
-export const AxisLeft = memo(function AxisLeft({ ticks, offset, title }: AxisProps) {
+export const AxisLeft = memo(function AxisLeft({ ticks, offset, title, color }: AxisProps) {
   return (
     <g transform={`translate(${offset},0)`}>
       {title ? (
-        <text x={-10} y={-16} textAnchor="end" className="fill-ink-3 font-bold text-[10.5px]">
+        <text
+          x={-10}
+          y={-16}
+          textAnchor="end"
+          className="fill-ink-3 font-bold text-[10.5px]"
+          style={color ? { fill: color } : undefined}
+        >
           {title}
         </text>
       ) : null}
@@ -111,6 +119,7 @@ export const AxisLeft = memo(function AxisLeft({ ticks, offset, title }: AxisPro
           dy="0.34em"
           textAnchor="end"
           className={TEXT}
+          style={color ? { fill: color } : undefined}
         >
           {tick.label}
         </text>
@@ -120,11 +129,17 @@ export const AxisLeft = memo(function AxisLeft({ ticks, offset, title }: AxisPro
 });
 
 /** Value labels on the right, for a secondary axis. */
-export const AxisRight = memo(function AxisRight({ ticks, offset, title }: AxisProps) {
+export const AxisRight = memo(function AxisRight({ ticks, offset, title, color }: AxisProps) {
   return (
     <g transform={`translate(${offset},0)`}>
       {title ? (
-        <text x={10} y={-16} textAnchor="start" className="fill-ink-3 font-bold text-[10.5px]">
+        <text
+          x={10}
+          y={-16}
+          textAnchor="start"
+          className="fill-ink-3 font-bold text-[10.5px]"
+          style={color ? { fill: color } : undefined}
+        >
           {title}
         </text>
       ) : null}
@@ -136,6 +151,7 @@ export const AxisRight = memo(function AxisRight({ ticks, offset, title }: AxisP
           dy="0.34em"
           textAnchor="start"
           className={TEXT}
+          style={color ? { fill: color } : undefined}
         >
           {tick.label}
         </text>

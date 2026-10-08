@@ -286,7 +286,7 @@ pointer is within 14 px (any annotation type accepts `tooltip`, only `point` and
 | `onPointClick` | every cartesian chart | `{ index, category, seriesId, value }` for a click, or Enter on the focused plot. `index` is in your original `categories`, whatever the zoom or downsampling. |
 | `transition` | every cartesian chart | Eases line and area paths between updates with the CSS `d` property (live feeds with a fixed point count; browsers without it jump). |
 | `maxPoints` | every cartesian chart | LTTB threshold, 2000 by default, `false` to draw everything. Applies to line and area plots (never bars or horizontal charts): `sharedSampleIndices` picks the union of each series' LTTB points plus the neighbours of every gap, so series stay aligned. Zooming resamples the window; the hidden data table and the brush overview use the reduced data. |
-| `gradient` (LineChart) | Line | Strokes each line from its color to the next palette color. (On Area/Combo `gradient` is still the fill under the area.) |
+| `gradient` (LineChart) | Line | Strokes each line from its color towards the next palette color. (On Area/Combo `gradient` is still the fill under the area.) |
 
 `downsample(points, threshold)`, `lttbIndices` and `sharedSampleIndices` (core `downsample.ts`) are pure and tested in
 `test/cartesian-parity.test.mjs`, together with the step paths and the sync store.
@@ -295,8 +295,13 @@ pointer is within 14 px (any annotation type accepts `tooltip`, only `point` and
 value is its own or the sum of its children, clicking a point with children drills in (`useDrill`) and `ChartBreadcrumb`
 climbs out. It keeps `useDrill`'s rule that only positive values are shown.
 
-Not supported: more than two value axes (`yAxis` + `rightAxis`); the layout reserves margins and ticks for exactly one
-axis per side.
+Value axes: `yAxis` and `rightAxis` are shorthand for the axes with id `"left"` and `"right"`. `axes` declares any number
+of them (`{ id, side?: "left" | "right", color?, ...ValueAxisOptions }`; extra ones default to the right), series pick one
+with `axis: "<id>"` and annotations with `yAxis: "<id>"`. Axes stack outward from the plot on their side, each taking
+the width of its widest tick label (`stackAxes`, tested); an axis no series uses is dropped. `color` tints the labels
+and draws a thin axis line so a reader can tell which scale belongs to which series. The first axis is the primary one
+(gridlines, zero line, bar baseline). Charts with a `syncId` also share the widest left and right margin of the group, so
+their plot areas line up.
 
 ## Distribution family (`core/distribution/`)
 
