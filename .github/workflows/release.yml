@@ -1,7 +1,7 @@
 name: release
 
-# Publishes @jcsoftdev/ui to npm when a tag v<version> is pushed. Uses npm provenance (OIDC);
-# NPM_TOKEN is the automation token used to authenticate the publish.
+# Publishes @jcsoftdev/ui to npm when a tag v<version> is pushed. Authenticates with npm
+# trusted publishing (OIDC, configured on npmjs.com for this repo and workflow): no token.
 
 on:
   push:
@@ -35,8 +35,8 @@ jobs:
       - run: pnpm build
       - name: Typecheck (the site resolves the built library)
         run: pnpm typecheck
+      - name: Upgrade npm (trusted publishing needs npm 11.5.1 or later)
+        run: npm install -g npm@latest
       - name: Publish to npm
-        run: pnpm publish --filter @jcsoftdev/ui --access public --provenance --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"
+        working-directory: packages/ui
+        run: npm publish --access public --provenance
