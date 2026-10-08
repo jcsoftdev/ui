@@ -44,6 +44,8 @@ import { Sparkline } from "@jcsoftdev/ui/charts/sparkline"; // single entry, tre
 | `FillGaugeChart` | `fill-gauge-chart/` | `UNIT_ICONS` shapes as clip paths |
 | `IsotypeRows` | `isotype-rows/` | unit charts core (`unitFractions`, `UnitGlyph`) |
 | `ProgressUnits` | `progress-units/` | unit charts core (`progressFractions`, `UnitGlyph`) |
+| `TreeChart` | `tree-chart/` | `tree-layout.ts` (tidy tree, 4 directions, edge paths) + `use-pan-zoom.ts`; HTML card templates |
+| `SankeyChart` | `sankey-chart/` | `sankey.ts` (columns by longest path, relaxation, link ordering, cycle breaking) |
 
 Everything else lives in `core/` (exported as `@jcsoftdev/ui/charts/core` and re-exported from `@jcsoftdev/ui/charts`).
 Polar and other chart families should be built from these blocks; see "Building a new chart" below.
@@ -105,6 +107,9 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 | `unit-icons.ts` | `UNIT_ICONS` (person, scissors, chair, star, calendar, bottle, battery, droplet, target, shield; 24 x 24 solid silhouettes), `UnitIcon` (a name, a raw path or a `UnitShape` with its own box), `resolveUnitShape`, `UnitCategory`. |
 | `unit-glyph.tsx` | `UnitGlyph` (one icon in a square cell, partial fill clipped, track behind), `popUnits` (staggered entry), `UNIT_FRAME_CLASS` / `UNIT_LEGEND_CLASS` (frame as `@container/units`, legend below under `@sm`). |
 | `category-explorer.tsx` | `useCategoryExplorer` + `CategorySlider`: hover finds the category through `[data-category]`, a pointer-transparent `role="slider"` overlay moves between categories with the keyboard. |
+| `tree-layout.ts` | Pure, tested in `test/charts-graph.test.mjs`: `treeLayout(root, { direction, siblingGap, levelGap })` (contour packing in the Reingold–Tilford / Walker family: parents centred over children, siblings packed from both ends and averaged so small subtrees spread evenly, one depth band per level), `treeEdgePath` (`curved` / `step` with rounded elbows / `straight`), `treePathToRoot`, `treeKeyMove` (arrow key to parent/child/sibling for each direction), `treeNeighbor`. |
+| `sankey.ts` | Pure, tested in `test/charts-graph.test.mjs`: `sankeyLayout(nodes, links, { width, height, nodeWidth, nodePadding, iterations, align })` (columns by longest path, `justify` sinks, shared scale `ky`, relaxation sweeps with collision resolution, links ordered by the other end), `breakCycles` (weighted Eades–Lin–Smyth order; backward links are reported in `removed` with a reason), `sankeyLinkPath`, `sankeyFlowOf` (everything upstream and downstream of a node). |
+| `use-pan-zoom.ts` | `usePanZoom({ minZoom, maxZoom, wheel })`: drag to pan (capture starts after a few pixels so clicks still work), two-pointer pinch, wheel zoom with Ctrl/⌘ by default, `zoomBy`, `wasDrag()`; pure `zoomAround` and `fitView`. |
 | `cartesian/` | `CartesianChart` (the engine), `computeLayout` (pure geometry), `ChartBrush`, marks and annotations. |
 
 ## Theming
@@ -148,6 +153,30 @@ Every chart must keep these, so all families behave the same:
 - Drill-down keeps a breadcrumb; sunburst and icicle animate the zoom window with `useAnimatedView`.
 - Colors: each top-level branch of the open node takes a palette slot; depth and sibling rank vary the
   tint. Heatmaps use `color-scale.ts`, so they follow the theme and `data-accent`.
+
+## Node-link charts: tree and sankey
+
+```tsx
+<TreeChart title="Equipo de la barbería" data={{ name: "Carlos", subtitle: "Dueño", children: [...] }}
+  direction="left" edgeStyle="step" initialDepth={2} height="fill" />
+<TreeChart ... renderNode={(node, state) => <MyCard node={node} highlighted={state.highlighted} />} />
+<SankeyChart title="Origen de clientes" nodes={[{ id: "ig", name: "Instagram" }, ...]}
+  links={[{ source: "ig", target: "corte", value: 142 }, ...]} columns={["Origen", "Servicio", "Pago"]} />
+```
+
+- `TreeChart` draws edges in SVG and nodes as absolutely positioned HTML boxes (`nodeWidth` x `nodeHeight`)
+  inside one transformed stage, so templates are ordinary React + Tailwind. The default `TreeCard` has a color
+  rail, avatar (image or initials), name, subtitle and badge. Expand/collapse animates with `useTreeTransition`
+  (nodes grow out of and fold back into their closest visible ancestor). The view fits the tree and follows the
+  container until the user pans or zooms; the fit button (or `0`) returns to following. Keyboard: the explorer
+  slider moves by arrows relative to the direction (towards the leaves = first child, across = siblings), Enter
+  toggles, `+`/`-` zoom, Home goes to the root; the active node is panned into view.
+- `SankeyChart`: hover a node to light its whole flow upstream and downstream, a link to isolate it; the tooltip
+  gives the value, share of its source and share of the total. Keyboard: up/down within a column, left/right to
+  the nearest node of the next column, Enter steps through the node's flows. Links that close a cycle are left
+  out, reported through `onRemovedLinks`, and logged with `console.warn` outside production.
+- Narrow containers: the tree is fitted (and can be zoomed); sankey labels shorten, then hide when the gap
+  between columns is under 40 px, and a node legend shows below the drawing until `@lg/chart`.
 
 ## Responsive: hierarchy and heatmap charts
 
