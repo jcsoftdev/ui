@@ -312,7 +312,7 @@ export const TimelineBars = memo(function TimelineBars({
                 strokeWidth={2}
                 style={{ fill: color, stroke: color }}
               />
-              <BarLabel x={box.x1 + 8} y={cy} text={row.task.name} outside />
+              <BarLabel {...outsideLabel(box, row.task.name, scale.width)} y={cy} outside />
             </g>
           );
         }
@@ -347,7 +347,12 @@ export const TimelineBars = memo(function TimelineBars({
                 d={`M${box.x0},${top}h7l-7,9Z M${box.x1},${top}h-7l7,9Z`}
                 style={{ fill: SUMMARY_COLOR }}
               />
-              <BarLabel x={box.x1 + 8} y={cy} text={row.task.name} outside strong />
+              <BarLabel
+                {...outsideLabel(box, row.task.name, scale.width, true)}
+                y={cy}
+                outside
+                strong
+              />
             </g>
           );
         }
@@ -403,7 +408,7 @@ export const TimelineBars = memo(function TimelineBars({
             {inside ? (
               <BarLabel x={box.x0 + 8} y={cy} text={label} onFill={row.progress > 0.35} />
             ) : (
-              <BarLabel x={box.x1 + 8} y={cy} text={label} outside />
+              <BarLabel {...outsideLabel(box, label, scale.width)} y={cy} outside />
             )}
             {editable ? (
               <g className="opacity-0 group-hover/bar:opacity-100 motion-safe:transition-opacity">
@@ -452,10 +457,40 @@ export const TimelineBars = memo(function TimelineBars({
   );
 });
 
+const LABEL_GAP = 8;
+const LABEL_EDGE = 4;
+
+/**
+ * Places a label beside its bar: to the right when it fits inside the plot, otherwise
+ * flipped to the left, otherwise truncated on the roomier side. Never crosses the plot edge.
+ */
+export function outsideLabel(
+  box: { x0: number; x1: number },
+  text: string,
+  plotWidth: number,
+  strong?: boolean,
+): { x: number; text: string; end?: boolean } {
+  const size = strong ? 11.5 : 11;
+  const full = estimateTextWidth(text, size);
+  const right = plotWidth - LABEL_EDGE - (box.x1 + LABEL_GAP);
+  if (full <= right) return { x: box.x1 + LABEL_GAP, text };
+  const left = box.x0 - LABEL_GAP - LABEL_EDGE;
+  if (full <= left) return { x: box.x0 - LABEL_GAP, text, end: true };
+  const useRight = right >= left;
+  const room = Math.max(0, useRight ? right : left);
+  let cut = text;
+  while (cut.length > 1 && estimateTextWidth(`${cut}…`, size) > room) cut = cut.slice(0, -1);
+  const label = room > 0 ? `${cut.trimEnd()}…` : "";
+  return useRight
+    ? { x: box.x1 + LABEL_GAP, text: label }
+    : { x: box.x0 - LABEL_GAP, text: label, end: true };
+}
+
 function BarLabel({
   x,
   y,
   text,
+  end,
   outside,
   strong,
   onFill,
@@ -463,6 +498,7 @@ function BarLabel({
   x: number;
   y: number;
   text: string;
+  end?: boolean;
   outside?: boolean;
   strong?: boolean;
   onFill?: boolean;
@@ -473,6 +509,7 @@ function BarLabel({
       x={x}
       y={y}
       dy="0.34em"
+      textAnchor={end ? "end" : undefined}
       className={
         outside
           ? `pointer-events-none fill-ink-2 text-[11px] ${strong ? "font-bold" : "font-medium"}`
