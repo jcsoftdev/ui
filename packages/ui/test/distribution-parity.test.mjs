@@ -43,3 +43,45 @@ test("groupSeed separates groups", () => {
   assert.notEqual(points.groupSeed(1, 0, 0), points.groupSeed(1, 1, 0));
   assert.notEqual(points.groupSeed(1, 0, 0), points.groupSeed(1, 0, 1));
 });
+
+const stack = await load("../src/charts/core/distribution/dot-stack.ts");
+
+test("packDots keeps every dot inside the lane and above the baseline", () => {
+  const dots = stack.packDots(23, 40, 3, 1);
+  assert.equal(dots.length, 23);
+  for (const dot of dots) {
+    assert.ok(dot.x - 3 >= -1e-9 && dot.x + 3 <= 40 + 1e-9);
+    assert.ok(dot.y >= 3);
+  }
+});
+
+test("packDots never overlaps two dots", () => {
+  const dots = stack.packDots(30, 36, 2.5, 1);
+  for (let i = 0; i < dots.length; i += 1) {
+    for (let j = i + 1; j < dots.length; j += 1) {
+      const d = Math.hypot(dots[i].x - dots[j].x, dots[i].y - dots[j].y);
+      assert.ok(d >= 5 - 1e-9, `dots ${i} and ${j} overlap`);
+    }
+  }
+});
+
+test("explodeBins shares one radius that fits the fullest bin", () => {
+  const { radius, stacks } = stack.explodeBins(
+    [
+      { count: 2, width: 30, height: 30 },
+      { count: 40, width: 30, height: 40 },
+    ],
+    { maxRadius: 6, minRadius: 1.5 },
+  );
+  assert.ok(radius < 6 && radius >= 1.5);
+  assert.deepEqual(
+    stacks.map((s) => s.length),
+    [2, 40],
+  );
+  const top = Math.max(...stacks[1].map((dot) => dot.y + radius));
+  assert.ok(top <= 40 + 1e-9);
+});
+
+test("fitRadius falls back to the minimum when nothing fits", () => {
+  assert.equal(stack.fitRadius({ count: 500, width: 10, height: 10 }, { minRadius: 1.5 }), 1.5);
+});

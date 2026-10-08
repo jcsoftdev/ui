@@ -1,3 +1,4 @@
+export * from "./dot-stack.js";
 export * from "./explorer.js";
 export * from "./geometry.js";
 export * from "./labels.js";

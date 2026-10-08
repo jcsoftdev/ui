@@ -4,6 +4,7 @@ import { memo, useMemo, useRef, useState } from "react";
 import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
+import { explodeBins } from "../core/distribution/dot-stack.js";
 import { PlotExplorer } from "../core/distribution/explorer.js";
 import { type DistributionLabels, resolveDistributionLabels } from "../core/distribution/labels.js";
 import { type DistributionAxisOptions, tooltipFit, xyLayout } from "../core/distribution/layout.js";
@@ -50,6 +51,15 @@ export interface HistogramProps {
   valueFormat?: ValueFormat;
   xAxis?: DistributionAxisOptions;
   yAxis?: DistributionAxisOptions;
+  /**
+   * Explode every bin into one dot per observation (a dot plot on the same
+   * bins). Controlled when set; otherwise `defaultExploded` starts it.
+   */
+  exploded?: boolean;
+  defaultExploded?: boolean;
+  onExplodedChange?: (exploded: boolean) => void;
+  /** Shows the toggle button under the plot. */
+  explodeToggle?: boolean;
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
   aspectRatio?: number;
@@ -86,6 +96,10 @@ export function Histogram({
   valueFormat,
   xAxis,
   yAxis,
+  exploded: explodedProp,
+  defaultExploded = false,
+  onExplodedChange,
+  explodeToggle = false,
   height = 300,
   aspectRatio,
   legend,
@@ -100,6 +114,12 @@ export function Histogram({
   const legendState = useDistributionLegend(series, legend);
   const format = resolveFormat(valueFormat);
   const visibleIds = legendState.visible.map((item) => item.id).join("|");
+  const [innerExploded, setInnerExploded] = useState(defaultExploded);
+  const exploded = explodedProp ?? innerExploded;
+  const setExploded = (next: boolean) => {
+    if (explodedProp == null) setInnerExploded(next);
+    onExplodedChange?.(next);
+  };
 
   // Edges come from every visible sample, so overlapping series share bins.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `visibleIds` stands for the visible set.
@@ -135,6 +155,20 @@ export function Histogram({
       className={cn("@container", className)}
       legend={legendState.node}
       legendPosition={legendState.position}
+      footer={
+        explodeToggle ? (
+          <div className="flex px-2">
+            <button
+              type="button"
+              aria-pressed={exploded}
+              onClick={() => setExploded(!exploded)}
+              className="inline-flex min-h-8 items-center gap-2 rounded-pill border border-line bg-surface px-3 font-semibold text-[12px] text-ink-2 transition-colors hover:bg-surface-2 aria-pressed:border-accent aria-pressed:text-ink"
+            >
+              {labels.explode}
+            </button>
+          </div>
+        ) : null
+      }
       table={
         <ChartDataTable
           caption={title}
@@ -160,6 +194,7 @@ export function Histogram({
           valueFormat={valueFormat}
           xAxis={xAxis}
           yAxis={yAxis}
+          exploded={exploded}
           grid={grid}
           tooltip={tooltip}
           animate={animate}
@@ -177,12 +212,15 @@ const Bars = memo(function Bars({
   paths,
   overlap,
   dimmed,
+  hidden,
 }: {
   item: Binned;
   paths: ReadonlyArray<string | null>;
   overlap: boolean;
   dimmed: boolean;
+  hidden: boolean;
 }) {
+  if (hidden) return null;
   return (
     <g className="transition-opacity duration-150" style={{ opacity: dimmed ? 0.25 : 1 }}>
       {paths.map((d, index) =>
@@ -216,6 +254,7 @@ interface PlotProps {
   valueFormat?: ValueFormat;
   xAxis?: DistributionAxisOptions;
   yAxis?: DistributionAxisOptions;
+  exploded: boolean;
   grid: boolean;
   tooltip: boolean;
   animate: boolean;
@@ -235,6 +274,7 @@ function HistogramPlot({
   valueFormat,
   xAxis,
   yAxis,
+  exploded,
   grid,
   tooltip,
   animate,
@@ -287,6 +327,31 @@ function HistogramPlot({
         return barPath(x0 + gap / 2, y, w, Math.max(1, baseline - y), Math.min(4, w / 3), "top");
       }),
     );
+    const lanes = Math.max(1, binned.length);
+    const maxRadius = 6;
+    const requests = binned.flatMap((item) =>
+      item.bins.map((bin) => {
+        const x0 = xScale.map(bin.x0);
+        const x1 = xScale.map(bin.x1);
+        return {
+          count: bin.count,
+          width: Math.max(2, (x1 - x0 - 2) / lanes),
+          height: Math.max(baseline - yScale.map(heightOf(item, bin.count)), maxRadius * 2 + 1),
+        };
+      }),
+    );
+    const packed = explodeBins(requests, { maxRadius });
+    const dots = binned.map((item, seriesIndex) =>
+      item.bins.map((bin, binIndex) => {
+        const laneWidth = (requests[seriesIndex * item.bins.length + binIndex] as { width: number })
+          .width;
+        const left = xScale.map(bin.x0) + 1 + seriesIndex * laneWidth;
+        return (packed.stacks[seriesIndex * item.bins.length + binIndex] ?? []).map((dot) => ({
+          cx: left + dot.x,
+          cy: baseline - dot.y,
+        }));
+      }),
+    );
     const curves = normalCurve
       ? binned.map((item) => {
           if (!(item.sd > 0)) return "";
@@ -297,10 +362,10 @@ function HistogramPlot({
           return linePath(points, "smooth");
         })
       : [];
-    return { layout, paths, curves, heightOf };
+    return { layout, paths, curves, heightOf, dots, dotRadius: packed.radius };
   }, [width, height, edges, binned, density, normalCurve, valueFormat, xAxis, yAxis]);
 
-  const { layout, paths, curves } = geometry;
+  const { layout, paths, curves, dots, dotRadius } = geometry;
   const { margin, innerWidth, innerHeight, xScale, yScale } = layout;
   const overlap = binned.length > 1;
   const binCount = Math.max(0, edges.length - 1);
@@ -308,6 +373,23 @@ function HistogramPlot({
   useEntryAnimation(
     svgRef,
     (root) => {
+      if (exploded) {
+        root.querySelectorAll("[data-dot]").forEach((dot, index) => {
+          dot.animate(
+            [
+              { opacity: 0, transform: "translateY(-18px) scale(0.2)" },
+              { opacity: 1, transform: "none" },
+            ],
+            {
+              duration: 420,
+              delay: Math.min(600, index * 3),
+              easing: "cubic-bezier(.34,1.56,.64,1)",
+              fill: "backwards",
+            },
+          );
+        });
+        return;
+      }
       root.querySelectorAll("[data-bar]").forEach((bar, index) => {
         bar.animate([{ transform: "scaleY(0)" }, { transform: "scaleY(1)" }], {
           duration: 520,
@@ -325,7 +407,7 @@ function HistogramPlot({
         });
       });
     },
-    { disabled: !animate, replayKey: binCount },
+    { disabled: !animate, replayKey: `${binCount}-${exploded}` },
   );
 
   const pick = (x: number) => {
@@ -394,8 +476,37 @@ function HistogramPlot({
               paths={paths[index] ?? []}
               overlap={overlap}
               dimmed={isDimmed(item.series.id)}
+              hidden={exploded}
             />
           ))}
+          {exploded
+            ? binned.map((item, index) => (
+                <g
+                  key={`dots-${item.series.id}`}
+                  className="pointer-events-none transition-opacity duration-150"
+                  style={{ opacity: isDimmed(item.series.id) ? 0.25 : 1 }}
+                >
+                  {(dots[index] ?? []).flatMap((bin, binIndex) =>
+                    bin.map((dot, dotIndex) => (
+                      <circle
+                        // biome-ignore lint/suspicious/noArrayIndexKey: bins and dots are positional.
+                        key={`${binIndex}-${dotIndex}`}
+                        data-dot=""
+                        cx={dot.cx}
+                        cy={dot.cy}
+                        r={dotRadius}
+                        style={{
+                          fill: item.series.color,
+                          fillOpacity: overlap ? 0.7 : 0.9,
+                          stroke: "var(--surface)",
+                          strokeWidth: 0.75,
+                        }}
+                      />
+                    )),
+                  )}
+                </g>
+              ))
+            : null}
           {curves.map((d, index) =>
             d ? (
               <g key={binned[index]?.series.id} data-curve="">
