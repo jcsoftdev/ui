@@ -15,6 +15,12 @@ Pure logic lives in plain modules (tested in `test/data-grid*.test.mjs`); `data-
 | Server-side rows | `dataSource`, `pageSize`, `maxBlocks` | `data-source.ts`, `use-data-source.ts` |
 | Pivot, tool panel | `pivot`, `toolPanel` | `pivot.ts`, `tool-panel.tsx` |
 | CSV export | `exportFilename`, `onExport` | `model.ts` (`toCSV`) |
+| Undo / redo | `history`, `historyDepth`, `onHistoryChange`, `onCellsChange`, `createRow`, `onRowsChange` | `history.ts` |
+| Paste, fill | Ctrl + V, Ctrl + D / R (needs `onCellChange` or `onCellsChange`) | `grid-edit.ts` |
+
+The grid never mutates `data`: edits, paste, fill, undo and redo are reported through
+`onCellChange` (one change) or `onCellsChange` (several) with a `source`, and row changes through
+`onRowsChange`; the parent applies them. Use a stable `getRowId` so history survives row changes.
 
 Server-side mode sends sort, filters and quick search to `dataSource.getRows`; grouping, tree,
 row pinning, pivot and detail rows are off there. Pivot and tree replace grouping.

@@ -20,6 +20,7 @@ import {
   PinOff,
 } from "lucide-react";
 import {
+  type ClipboardEvent,
   type CSSProperties,
   type DragEvent,
   type FocusEvent,
@@ -48,7 +49,30 @@ import {
   type FilterGroup,
 } from "./filter-builder.js";
 import { FilterBuilder } from "./filter-builder-editor.js";
+import {
+  type FillDirection,
+  parseLooseNumber,
+  parseTSV,
+  planFill,
+  planPaste,
+  sameCellValue,
+} from "./grid-edit.js";
 import { GridToolbar } from "./grid-toolbar.js";
+import {
+  type CellDelta,
+  type ChangeSource,
+  commandSize,
+  createHistory,
+  DEFAULT_HISTORY_DEPTH,
+  type HistoryCommand,
+  type HistorySummary,
+  pushCommand,
+  type RowRef,
+  redoCommand,
+  setHistoryDepth,
+  summarizeHistory,
+  undoCommand,
+} from "./history.js";
 import { type DataGridLabels, DEFAULT_DATA_GRID_LABELS } from "./labels.js";
 import {
   aggregateValues,
@@ -125,6 +149,16 @@ export interface CellChange<T> {
   columnId: string;
   value: CellValue;
   previous: CellValue;
+  /** Where the change comes from; `undo` and `redo` replay an earlier change in reverse or again. */
+  source?: ChangeSource;
+}
+
+/** Rows added or removed by the toolbar buttons, or by an undo / redo of them. */
+export interface RowsChange<T> {
+  type: "add" | "remove";
+  /** Ascending by `index` (the position in the `data` the grid was given). */
+  rows: ReadonlyArray<{ row: T; rowId: string; index: number }>;
+  source: "edit" | "undo" | "redo";
 }
 
 export interface RowReorderEvent {
@@ -180,6 +214,20 @@ export interface DataGridProps<T> {
 
   /** Called when an inline edit is committed with a different value. The grid does not mutate `data`. */
   onCellChange?: (change: CellChange<T>) => void;
+  /**
+   * Called once with every cell a paste, fill, undo or redo changes. Without it those changes go to
+   * `onCellChange` one by one, which loses updates if the parent sets state from stale data.
+   */
+  onCellsChange?: (changes: CellChange<T>[]) => void;
+  /** Undo / redo of cell edits, paste, fill and row changes: buttons plus Ctrl / Cmd + Z, Shift + Ctrl / Cmd + Z, Ctrl + Y. */
+  history?: boolean;
+  /** Commands kept for undo (and for redo). 100 by default. */
+  historyDepth?: number;
+  onHistoryChange?: (history: HistorySummary) => void;
+  /** Adds the "add row" button: the new row is appended through `onRowsChange`. */
+  createRow?: () => T;
+  /** Rows added (`createRow`), removed (the toolbar button removes the selected rows) or restored by undo. */
+  onRowsChange?: (change: RowsChange<T>) => void;
 
   /**
    * Server-side rows. Sort, filters and quick search are sent to `getRows` instead of being
@@ -259,6 +307,14 @@ const EMPTY_SORT: readonly SortRule[] = [];
 const EMPTY_FILTERS: Filters = {};
 const EMPTY_LIST: readonly string[] = [];
 const EMPTY_ADVANCED: FilterGroup = emptyGroup("and", "root");
+
+interface CellEdit<T> {
+  row: T;
+  rowId: string;
+  column: DataGridColumn<T>;
+  value: CellValue;
+  previous: CellValue;
+}
 
 type RenderColumn<T> =
   | { kind: "select" }
@@ -380,6 +436,12 @@ export function DataGrid<T>({
   defaultSelectedRowIds = EMPTY_LIST,
   onSelectionChange,
   onCellChange,
+  onCellsChange,
+  history: historyEnabled = false,
+  historyDepth = DEFAULT_HISTORY_DEPTH,
+  onHistoryChange,
+  createRow,
+  onRowsChange,
   dataSource,
   maxBlocks,
   tree,
@@ -1072,6 +1134,205 @@ export function DataGrid<T>({
   };
 
   // ---- editing -----------------------------------------------------------------------------
+  const rawValue = (row: T, column: DataGridColumn<T>): CellValue => getCellValue(row, column);
+  /** Text typed (or pasted) into a cell to the value to store, or the reason it is refused. */
+  const coerceDraft = (
+    column: DataGridColumn<T>,
+    row: T,
+    draft: string,
+    loose = false,
+  ): { value: CellValue } | { error: string } => {
+    let value: CellValue = draft;
+    if (editorOf(column) === "number") {
+      const number = loose ? parseLooseNumber(draft) : Number.parseFloat(draft.replace(",", "."));
+      if (number !== null && Number.isFinite(number)) value = number;
+      else return { error: labels.invalidCell };
+    }
+    const error = column.validate?.(value, row);
+    return error ? { error } : { value };
+  };
+
+  // ---- history -----------------------------------------------------------------------------
+  const historyRef = useRef(createHistory<T>(historyDepth));
+  const [historySummary, setHistorySummary] = useState<HistorySummary>(() =>
+    summarizeHistory(historyRef.current),
+  );
+  const syncHistory = (next: typeof historyRef.current) => {
+    historyRef.current = next;
+    const summary = summarizeHistory(next);
+    setHistorySummary(summary);
+    onHistoryChange?.(summary);
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a new depth trims the stack.
+  useEffect(() => {
+    if (historyRef.current.depth !== Math.max(1, Math.floor(historyDepth))) {
+      syncHistory(setHistoryDepth(historyRef.current, historyDepth));
+    }
+  }, [historyDepth]);
+  const record = (command: HistoryCommand<T>) => {
+    if (historyEnabled) syncHistory(pushCommand(historyRef.current, command));
+  };
+  const canWrite = !!(onCellChange || onCellsChange);
+  /** A single change goes to `onCellChange`; several go to `onCellsChange` when it exists. */
+  const emitChanges = (changes: CellChange<T>[]) => {
+    if (changes.length === 0) return;
+    if (changes.length === 1 && onCellChange) onCellChange(changes[0] as CellChange<T>);
+    else if (onCellsChange) onCellsChange(changes);
+    else for (const change of changes) onCellChange?.(change);
+  };
+  const commitChanges = (items: readonly CellEdit<T>[], source: "edit" | "paste" | "fill") => {
+    if (items.length === 0) return;
+    emitChanges(
+      items.map((item) => ({
+        row: item.row,
+        rowId: item.rowId,
+        columnId: item.column.id,
+        value: item.value,
+        previous: item.previous,
+        source,
+      })),
+    );
+    const deltas: CellDelta[] = items.map((item) => ({
+      rowId: item.rowId,
+      columnId: item.column.id,
+      before: item.previous,
+      after: item.value,
+    }));
+    record({ kind: "cells", source, changes: deltas });
+  };
+  const replay = (command: HistoryCommand<T>, source: "undo" | "redo") => {
+    if (command.kind === "cells") {
+      const changes: CellChange<T>[] = [];
+      for (const delta of command.changes) {
+        const row = rowByKey.get(delta.rowId);
+        const column = byId.get(delta.columnId);
+        if (!row || !column) continue;
+        changes.push({
+          row,
+          rowId: delta.rowId,
+          columnId: delta.columnId,
+          value: delta.after,
+          previous: rawValue(row, column),
+          source,
+        });
+      }
+      emitChanges(changes);
+      return;
+    }
+    const rows = [...command.rows].sort((a, b) => a.index - b.index);
+    onRowsChange?.({ type: command.kind === "rows-add" ? "add" : "remove", rows, source });
+  };
+  const undo = () => {
+    const step = undoCommand(historyRef.current);
+    if (!step) return;
+    syncHistory(step.state);
+    replay(step.apply, "undo");
+    setAnnouncement(labels.undone(commandSize(step.apply)));
+  };
+  const redo = () => {
+    const step = redoCommand(historyRef.current);
+    if (!step) return;
+    syncHistory(step.state);
+    replay(step.apply, "redo");
+    setAnnouncement(labels.redone(commandSize(step.apply)));
+  };
+
+  // ---- row tools ---------------------------------------------------------------------------
+  const addRow = () => {
+    if (!createRow || !onRowsChange) return;
+    const row = createRow();
+    const index = dataProp.length;
+    const ref: RowRef<T> = {
+      row,
+      rowId: getRowIdProp ? getRowIdProp(row, index) : String(index),
+      index,
+    };
+    onRowsChange({ type: "add", rows: [ref], source: "edit" });
+    record({ kind: "rows-add", rows: [ref] });
+  };
+  const removeSelectedRows = () => {
+    if (!onRowsChange || selection.length === 0) return;
+    const positions = new Map<T, number>();
+    dataProp.forEach((row, index) => {
+      positions.set(row, index);
+    });
+    const rows: RowRef<T>[] = [];
+    for (const key of selection) {
+      const row = rowByKey.get(key);
+      const index = row === undefined ? undefined : positions.get(row);
+      if (row !== undefined && index !== undefined) rows.push({ row, rowId: key, index });
+    }
+    rows.sort((a, b) => a.index - b.index);
+    if (rows.length === 0) return;
+    onRowsChange({ type: "remove", rows, source: "edit" });
+    record({ kind: "rows-remove", rows });
+    setSelection([]);
+  };
+
+  // ---- paste and fill ----------------------------------------------------------------------
+  const onPaste = (event: ClipboardEvent<HTMLTableElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      !canWrite ||
+      editingRef.current ||
+      target.closest("input,textarea,select,[data-detail-content]")
+    )
+      return;
+    const text = event.clipboardData.getData("text/plain");
+    if (!text) return;
+    event.preventDefault();
+    const bounds = cellRange ? rangeBounds(cellRange) : null;
+    const origin = bounds ? { r: bounds.r0, c: bounds.c0 } : { r: activeR, c: activeC };
+    const items: CellEdit<T>[] = [];
+    for (const cellTarget of planPaste(parseTSV(text), origin, { maxR, maxC }, bounds)) {
+      const cell = cellAt(cellTarget.r, cellTarget.c);
+      if (!cell || !canEdit(cell.column, cell.row)) continue;
+      const result = coerceDraft(cell.column, cell.row, cellTarget.text, true);
+      const previous = rawValue(cell.row, cell.column);
+      if ("error" in result || sameCellValue(result.value, previous)) continue;
+      items.push({
+        row: cell.row,
+        rowId: keyOf(cell.row),
+        column: cell.column,
+        value: result.value,
+        previous,
+      });
+    }
+    commitChanges(items, "paste");
+    if (items.length > 0) setAnnouncement(labels.pasted(items.length));
+  };
+  const fillRange = (direction: FillDirection) => {
+    if (!canWrite) return;
+    const bounds = cellRange
+      ? rangeBounds(cellRange)
+      : direction === "down"
+        ? { r0: activeR - 1, r1: activeR, c0: activeC, c1: activeC }
+        : { r0: activeR, r1: activeR, c0: activeC - 1, c1: activeC };
+    if (bounds.r0 < 1 || bounds.c0 < 0) return;
+    const items: CellEdit<T>[] = [];
+    for (const step of planFill(bounds, direction)) {
+      const from = cellAt(step.from.r, step.from.c);
+      const to = cellAt(step.r, step.c);
+      if (!from || !to || !canEdit(to.column, to.row)) continue;
+      const source = rawValue(from.row, from.column);
+      const result =
+        typeof source === "string"
+          ? coerceDraft(to.column, to.row, source, true)
+          : { value: source };
+      const previous = rawValue(to.row, to.column);
+      if ("error" in result || sameCellValue(result.value, previous)) continue;
+      items.push({
+        row: to.row,
+        rowId: keyOf(to.row),
+        column: to.column,
+        value: result.value,
+        previous,
+      });
+    }
+    commitChanges(items, "fill");
+    if (items.length > 0) setAnnouncement(labels.filled(items.length));
+  };
+
   const startEdit = (key: string, column: DataGridColumn<T>) => {
     const row = rowByKey.get(key);
     if (!row || !canEdit(column, row)) return false;
@@ -1100,31 +1361,21 @@ export function DataGrid<T>({
       close();
       return true;
     }
-    const previous = getCellValue(row, column);
-    let value: CellValue = current.draft;
-    let error: string | null | undefined;
-    if (editorOf(column) === "number") {
-      const number = Number.parseFloat(current.draft.replace(",", "."));
-      if (Number.isFinite(number)) value = number;
-      else error = labels.invalidCell;
-    }
-    error = error ?? column.validate?.(value, row);
-    if (error) {
+    const previous = rawValue(row, column);
+    const result = coerceDraft(column, row, current.draft);
+    if ("error" in result) {
       if (!strict) {
         close();
         return true;
       }
-      const next = { ...current, error };
+      const next = { ...current, error: result.error };
       editingRef.current = next;
       setEditing(next);
       return false;
     }
     close();
-    const unchanged =
-      value === previous ||
-      (typeof previous !== "number" && String(value) === String(previous ?? ""));
-    if (!unchanged) {
-      onCellChange?.({ row, rowId: current.key, columnId: column.id, value, previous });
+    if (!sameCellValue(result.value, previous)) {
+      commitChanges([{ row, rowId: current.key, column, value: result.value, previous }], "edit");
     }
     return true;
   };
@@ -1191,6 +1442,21 @@ export function DataGrid<T>({
     const row = r > 0 ? bodyRows[r - 1] : undefined;
     const handled = () => event.preventDefault();
     const mod = event.ctrlKey || event.metaKey;
+
+    if (mod && !event.altKey && !target.closest("input,textarea,select")) {
+      const letter = event.key.toLowerCase();
+      if (historyEnabled && (letter === "z" || (letter === "y" && !event.shiftKey))) {
+        handled();
+        if (letter === "y" || event.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (r > 0 && canWrite && !event.shiftKey && (letter === "d" || letter === "r")) {
+        handled();
+        fillRange(letter === "d" ? "down" : "right");
+        return;
+      }
+    }
 
     if (r === 0 && entry?.kind === "data") {
       const id = entry.column.id;
@@ -2345,6 +2611,25 @@ export function DataGrid<T>({
           selectedCount={selectable ? selection.length : null}
           actions={toolbarActions}
           hideColumnPicker={toolPanel}
+          history={
+            historyEnabled
+              ? {
+                  canUndo: historySummary.canUndo,
+                  canRedo: historySummary.canRedo,
+                  onUndo: undo,
+                  onRedo: redo,
+                }
+              : undefined
+          }
+          rowTools={
+            structured && onRowsChange && (createRow || selectable)
+              ? {
+                  onAdd: createRow ? addRow : undefined,
+                  onRemove: selectable ? removeSelectedRows : undefined,
+                  removeDisabled: selection.length === 0,
+                }
+              : undefined
+          }
           toolPanel={
             toolPanel ? { open: panelOpen, onToggle: () => setPanelOpen(!panelOpen) } : undefined
           }
@@ -2430,6 +2715,7 @@ export function DataGrid<T>({
             aria-busy={busy || undefined}
             onKeyDown={onGridKeyDown}
             onFocus={onGridFocus}
+            onPaste={onPaste}
             className={cn(
               "table-fixed border-separate border-spacing-0",
               rangeSelection && "select-none",

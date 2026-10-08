@@ -1,6 +1,17 @@
 "use client";
 
-import { Columns3, Download, ListFilter, PanelRight, Search, X } from "lucide-react";
+import {
+  Columns3,
+  Download,
+  ListFilter,
+  PanelRight,
+  Plus,
+  Redo2,
+  Search,
+  Trash2,
+  Undo2,
+  X,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
@@ -41,6 +52,10 @@ export interface GridToolbarProps<T> {
   exportSelected?: boolean;
   /** Hides the column picker (pivot and tool-panel modes manage columns elsewhere). */
   hideColumnPicker?: boolean;
+  /** Undo / redo buttons; hidden when absent. */
+  history?: { canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void };
+  /** Add / remove row buttons; each is hidden when its handler is absent. */
+  rowTools?: { onAdd?: () => void; onRemove?: () => void; removeDisabled: boolean };
 }
 
 /** Search, filter and grouping chips, column visibility, density and export. Wraps when narrow. */
@@ -68,6 +83,8 @@ export function GridToolbar<T>({
   toolPanel,
   exportSelected = false,
   hideColumnPicker = false,
+  history,
+  rowTools,
 }: GridToolbarProps<T>) {
   const hideable = columns.filter((column) => column.hideable !== false);
   const visibleCount = columns.length - hidden.length;
@@ -150,6 +167,50 @@ export function GridToolbar<T>({
         {labels.rowsCount(rowCount)}
         {selectedCount ? ` · ${labels.selectedCount(selectedCount)}` : ""}
       </p>
+
+      {history ? (
+        <fieldset className="flex items-center gap-1">
+          <legend className="sr-only">{labels.history}</legend>
+          <button
+            type="button"
+            className={cn(buttonClass, "px-2")}
+            disabled={!history.canUndo}
+            title={labels.undo}
+            aria-label={labels.undo}
+            onClick={history.onUndo}
+          >
+            <Undo2 aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className={cn(buttonClass, "px-2")}
+            disabled={!history.canRedo}
+            title={labels.redo}
+            aria-label={labels.redo}
+            onClick={history.onRedo}
+          >
+            <Redo2 aria-hidden="true" />
+          </button>
+        </fieldset>
+      ) : null}
+
+      {rowTools?.onAdd ? (
+        <button type="button" className={buttonClass} onClick={rowTools.onAdd}>
+          <Plus aria-hidden="true" />
+          {labels.addRow}
+        </button>
+      ) : null}
+      {rowTools?.onRemove ? (
+        <button
+          type="button"
+          className={buttonClass}
+          disabled={rowTools.removeDisabled}
+          onClick={rowTools.onRemove}
+        >
+          <Trash2 aria-hidden="true" />
+          {labels.removeRows}
+        </button>
+      ) : null}
 
       {actions}
 
