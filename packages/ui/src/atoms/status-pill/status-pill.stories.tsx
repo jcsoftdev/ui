@@ -1,0 +1,30 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
+import { StatusPill } from "./status-pill.js";
+
+const meta = {
+  title: "Atoms/StatusPill",
+  component: StatusPill,
+  tags: ["autodocs"],
+  args: { status: "success", label: "Caja abierta", onSelect: fn() },
+  argTypes: {
+    status: { control: "inline-radio", options: ["success", "warning", "danger", "idle"] },
+    label: { control: "text" },
+    onSelect: { control: false },
+  },
+} satisfies Meta<typeof StatusPill>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const Warning: Story = { args: { status: "warning", label: "Sincronizando" } };
+
+export const Danger: Story = { args: { status: "danger", label: "Sin conexión" } };
+
+export const Idle: Story = { args: { status: "idle", label: "Inactivo" } };
+
+export const Decorative: Story = {
+  args: { onSelect: undefined, label: "Sucursal Miraflores" },
+};
