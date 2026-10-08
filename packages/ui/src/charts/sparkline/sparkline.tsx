@@ -8,7 +8,7 @@ import { seriesColor } from "../core/palette.js";
 import { areaPath, barPath, linePath, type Point } from "../core/path.js";
 import { bandScale, pointScale } from "../core/scales/band.js";
 import { extent } from "../core/scales/linear.js";
-import { useChartWidth } from "../core/use-chart-size.js";
+import { useChartSize } from "../core/use-chart-size.js";
 
 export type SparklineType = "line" | "area" | "bar";
 
@@ -19,7 +19,8 @@ export interface SparklineProps {
   type?: SparklineType;
   /** CSS color; the brand tone (`accent-word`) by default. */
   color?: string;
-  height?: number;
+  /** Pixels, or "fill" to take the full height of the parent. */
+  height?: number | "fill";
   /** Fixed width; fills the container when omitted. */
   width?: number;
   /** Dot on the last value (lines and areas). */
@@ -46,7 +47,7 @@ export function Sparkline({
   label,
   type = "line",
   color,
-  height = 36,
+  height: heightProp = 36,
   width: fixedWidth,
   showLast = true,
   valueFormat,
@@ -56,8 +57,10 @@ export function Sparkline({
   className,
 }: SparklineProps) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const [ref, measured] = useChartWidth<HTMLDivElement>(fixedWidth ?? 120);
-  const width = fixedWidth ?? measured;
+  const fill = heightProp === "fill";
+  const [ref, size] = useChartSize<HTMLDivElement>({ width: fixedWidth ?? 120, height: 36 });
+  const width = fixedWidth ?? size.width;
+  const height = fill ? size.height : heightProp;
   const svgRef = useRef<SVGSVGElement>(null);
   const [active, setActive] = useState<number | null>(null);
   const stroke = color ?? seriesColor(0);
@@ -157,8 +160,13 @@ export function Sparkline({
   return (
     <div
       ref={ref}
-      className={cn("relative min-w-0", fixedWidth == null && "w-full", className)}
-      style={{ height, width: fixedWidth }}
+      className={cn(
+        "relative min-w-0",
+        fixedWidth == null && "w-full",
+        fill && "h-full",
+        className,
+      )}
+      style={{ height: fill ? undefined : height, width: fixedWidth }}
     >
       <svg
         ref={svgRef}

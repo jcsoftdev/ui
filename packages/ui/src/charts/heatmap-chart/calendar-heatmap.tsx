@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import type { ColorRange, ScaleColors } from "../core/color-scale.js";
 import { ChartDataTable } from "../core/data-table.js";
@@ -9,10 +8,12 @@ import { resolveFormat, type ValueFormat } from "../core/format.js";
 import { formatDate, shortMonth } from "../core/scales/time.js";
 import { type CalendarDay, calendarGrid } from "./calendar-layout.js";
 import {
+  HEATMAP_TOP,
   HeatmapGrid,
   type HeatmapLabels,
   HeatmapLegend,
   resolveHeatmapLabels,
+  rowGutter,
 } from "./heatmap-grid.js";
 import { heatmapScale } from "./heatmap-scale.js";
 
@@ -34,8 +35,13 @@ export interface CalendarHeatmapProps {
   valueFormat?: ValueFormat;
   /** Smallest cell in pixels; narrow containers show only the most recent weeks that fit. */
   minCellSize?: number;
-  /** Height of the drawing (7 rows plus the month header). */
-  height?: number;
+  /**
+   * Height of the drawing in px or "fill". By default it follows the width:
+   * cells are square, so the height is the month header plus seven cell sides.
+   */
+  height?: number | "fill";
+  /** Width / height ratio; overrides the width-derived default height. */
+  aspectRatio?: number;
   gap?: number;
   radius?: number;
   /** Weekday names Monday to Sunday; only Monday, Wednesday and Friday are drawn. */
@@ -47,6 +53,21 @@ export interface CalendarHeatmapProps {
   labels?: Partial<HeatmapLabels>;
   onDayClick?: (day: CalendarDay) => void;
   className?: string;
+}
+
+/** Largest square side when few weeks are shown. */
+const MAX_CELL = 40;
+
+/** How many week columns fit the width at the minimum cell size, and the weekday gutter. */
+function fitWeeks(
+  width: number,
+  totalWeeks: number,
+  minCellSize: number,
+  rowLabels: readonly string[],
+) {
+  const labelWidth = rowGutter(width, rowLabels);
+  const fit = Math.max(1, Math.floor((width - labelWidth) / minCellSize));
+  return { labelWidth, shown: Math.max(1, Math.min(totalWeeks, fit)) };
 }
 
 const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
@@ -68,7 +89,8 @@ export function CalendarHeatmap({
   ranges,
   valueFormat,
   minCellSize = 11,
-  height = 132,
+  height,
+  aspectRatio,
   gap = 3,
   radius = 3,
   weekdays = WEEKDAYS,
@@ -106,14 +128,21 @@ export function CalendarHeatmap({
     [grid],
   );
 
+  const autoHeight = (width: number) => {
+    const { shown, labelWidth } = fitWeeks(width, grid.weeks.length, minCellSize, rowLabels);
+    const side = Math.min(MAX_CELL, (width - labelWidth) / shown);
+    return HEATMAP_TOP + 7 * side;
+  };
+
   return (
     <ChartFrame
-      height={height}
+      height={height ?? autoHeight}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={finite.length === 0}
       skeleton="bars"
-      className={cn("@container/chart", className)}
+      className={className}
       footer={
         legend ? (
           <HeatmapLegend
@@ -143,10 +172,9 @@ export function CalendarHeatmap({
         />
       }
     >
-      {(width) => {
-        const labelWidth = width < 420 ? 34 : 40;
-        const fit = Math.max(1, Math.floor((width - labelWidth) / minCellSize));
-        const firstWeek = Math.max(0, grid.weeks.length - fit);
+      {(width, measuredHeight) => {
+        const { shown } = fitWeeks(width, grid.weeks.length, minCellSize, rowLabels);
+        const firstWeek = Math.max(0, grid.weeks.length - shown);
         const weeks = grid.weeks.slice(firstWeek);
         const columnLabels = weeks.map((_, index) => {
           const start = grid.monthStarts.find((item) => item.week === index + firstWeek);
@@ -158,7 +186,7 @@ export function CalendarHeatmap({
         return (
           <HeatmapGrid
             width={width}
-            height={height}
+            height={measuredHeight}
             title={title}
             rowLabels={rowLabels}
             columnLabels={columnLabels}

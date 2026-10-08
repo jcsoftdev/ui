@@ -27,7 +27,9 @@ export interface CartesianChartProps {
   /** Extra sentence for the hidden data table caption. */
   description?: string;
   /** Height of the plot in pixels, 300 by default. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the plot from the container width (wins over a pixel `height`). */
+  aspectRatio?: number;
   /** "horizontal" lays categories top to bottom (bar charts). */
   orientation?: "vertical" | "horizontal";
   /** Stacks every area and column series. */

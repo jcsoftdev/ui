@@ -39,7 +39,9 @@ export interface PictogramChartProps {
   unitSize?: number;
   /** Gap between icons, as a fraction of the icon size. */
   gap?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   /** What the values count, for the key and the tooltip ("clientes"). */
   unitLabel?: string;
@@ -83,6 +85,7 @@ export function PictogramChart({
   unitSize = 32,
   gap = 0.25,
   height = 200,
+  aspectRatio,
   valueFormat = "integer",
   unitLabel = "units",
   showKey,
@@ -127,6 +130,7 @@ export function PictogramChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -162,10 +166,10 @@ export function PictogramChart({
       }
       className={cn(UNIT_FRAME_CLASS, className)}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <PictogramPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           data={data}
           colors={colors}

@@ -236,10 +236,10 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
     });
 
   const top =
-    14 +
+    8 +
     (dataLabels && !horizontal ? 12 : 0) +
     (input.yAxis.title || input.rightAxis.title ? 16 : 0);
-  const bottom = 28;
+  const bottom = 26;
   const innerHeightGuess = Math.max(40, height - top - bottom);
 
   // Value axis (left) first: its labels decide the left margin.
@@ -255,6 +255,12 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   );
 
   const categoryLabels = categories.map((value) => input.xLabel(value));
+  // The last x label is centred on its tick: only reserve what overhangs the plot.
+  const lastLabelOverhang = clamp(
+    Math.ceil(estimateTextWidth(categoryLabels[categoryLabels.length - 1] ?? "", 12) / 2),
+    6,
+    36,
+  );
   let margin: Margin;
   let valueTickCount: number;
   if (horizontal) {
@@ -264,9 +270,9 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
     );
     margin = {
       top: 8,
-      right: dataLabels ? 52 : 18,
+      right: dataLabels ? 48 : 10,
       bottom,
-      left: clamp(widestCategory + 16, 40, width * 0.36),
+      left: clamp(widestCategory + 10, 32, width * 0.36),
     };
     valueTickCount =
       input.yAxis.tickCount ?? clamp(Math.round((width - margin.left - margin.right) / 96), 2, 8);
@@ -288,9 +294,9 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
       : 0;
     margin = {
       top,
-      right: probeRight ? rightWidth + 16 : 14,
+      right: probeRight ? rightWidth + 10 : lastLabelOverhang,
       bottom,
-      left: Math.max(28, leftWidth + 16),
+      left: Math.max(20, leftWidth + 10),
     };
   }
 

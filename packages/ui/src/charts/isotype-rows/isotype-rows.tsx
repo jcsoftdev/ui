@@ -29,6 +29,8 @@ export interface IsotypeRowsProps {
   color?: string;
   /** Pads every row with empty icons up to the longest one. */
   track?: boolean;
+  /** `"fill"` spreads the rows over the height of the parent instead of using `rowHeight`. */
+  height?: "fill";
   /** Height of one row in pixels; the chart height follows the number of rows. */
   rowHeight?: number;
   /** Gap between icons, as a fraction of the icon size. */
@@ -63,6 +65,7 @@ export function IsotypeRows({
   colorMode = "single",
   color,
   track = false,
+  height: heightMode,
   rowHeight = 34,
   gap = 0.18,
   valueFormat = "integer",
@@ -82,7 +85,7 @@ export function IsotypeRows({
       ? seriesColor(index, item.color)
       : (item.color ?? color ?? seriesColor(0)),
   );
-  const height = Math.max(1, data.length) * rowHeight;
+  const height = heightMode === "fill" ? "fill" : Math.max(1, data.length) * rowHeight;
   const empty = data.length === 0 || data.every((item) => !(item.value > 0));
   const keyShape = resolveUnitShape(icon);
   const keyShown = showKey ?? perIcon !== 1;
@@ -121,10 +124,14 @@ export function IsotypeRows({
       }
       className={cn(UNIT_FRAME_CLASS, className)}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <IsotypePlot
           width={width}
-          rowHeight={rowHeight}
+          rowHeight={
+            heightMode === "fill"
+              ? Math.max(16, measuredHeight / Math.max(1, data.length))
+              : rowHeight
+          }
           title={title}
           data={data}
           colors={colors}

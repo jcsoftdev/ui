@@ -146,3 +146,34 @@ export const Loading: Story = { args: { loading: true } };
 export const Empty: Story = {
   args: { series: [{ id: "ventas", name: "Ventas", data: [] }], categories: [] },
 };
+
+/** Drag the corner: the chart fills the box exactly, width and height. */
+export const FillParent: Story = {
+  args: { height: "fill" },
+  parameters: { layout: "padded" },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          width: 560,
+          height: 360,
+          resize: "both",
+          overflow: "hidden",
+          outline: "1px dashed var(--line-strong)",
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};

@@ -36,7 +36,9 @@ export interface FillGaugeChartProps {
   valueFormat?: ValueFormat;
   /** Smallest width of one gauge; more gauges than fit wrap to new rows. */
   minItemWidth?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the gauges from the container width. */
+  aspectRatio?: number;
   animate?: boolean;
   loading?: boolean;
   labels?: Partial<ChartLabels>;
@@ -61,6 +63,7 @@ export function FillGaugeChart({
   valueFormat,
   minItemWidth = 104,
   height = 200,
+  aspectRatio,
   animate = true,
   loading = false,
   labels: labelsProp,
@@ -79,6 +82,7 @@ export function FillGaugeChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={data.length === 0}
@@ -101,16 +105,22 @@ export function FillGaugeChart({
       }
       className={cn(UNIT_FRAME_CLASS, className)}
     >
-      {(width) => {
+      {(width, measuredHeight) => {
         const columns = Math.max(1, Math.min(data.length, Math.floor(width / minItemWidth)));
         const rows = Math.ceil(data.length / columns);
         const cellWidth = width / columns;
-        const cellHeight = height / rows;
+        const cellHeight = measuredHeight / rows;
         const size = Math.max(16, Math.min(cellWidth * 0.8, cellHeight - NAME_SPACE - 6));
         const blockTop = (row: number) => row * cellHeight + (cellHeight - NAME_SPACE - size) / 2;
         return (
-          <div className="relative" style={{ width, height }}>
-            <svg role="img" aria-label={title} width={width} height={height} className="block">
+          <div className="relative" style={{ width, height: measuredHeight }}>
+            <svg
+              role="img"
+              aria-label={title}
+              width={width}
+              height={measuredHeight}
+              className="block"
+            >
               {data.map((item, index) => {
                 const column = index % columns;
                 const row = Math.floor(index / columns);

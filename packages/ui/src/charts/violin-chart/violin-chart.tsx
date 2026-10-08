@@ -54,7 +54,9 @@ export interface ViolinChartProps {
    * "area": one density scale for all, so a wider violin means a denser peak.
    */
   scale?: "width" | "area";
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   legend?: boolean | "top" | "bottom";
   grid?: boolean;
   tooltip?: boolean;
@@ -106,6 +108,7 @@ export function ViolinChart({
   bandwidth,
   scale = "width",
   height = 340,
+  aspectRatio,
   legend,
   grid = true,
   tooltip = true,
@@ -134,6 +137,7 @@ export function ViolinChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -154,10 +158,10 @@ export function ViolinChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <ViolinPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           categories={categories}
           visible={legendState.visible}

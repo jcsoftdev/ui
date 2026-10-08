@@ -11,7 +11,7 @@ import { PlotOverlay } from "../core/plot-overlay.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels } from "../core/types.js";
 import { useSeriesState } from "../core/use-series-state.js";
-import { assignLanes, clockTicks, formatClock } from "./timeline-lanes.js";
+import { assignLanes, clockTicks, fitLaneHeight, formatClock } from "./timeline-lanes.js";
 
 export interface TimelineRow {
   id: string;
@@ -71,7 +71,14 @@ export interface TimelineChartProps {
   domain?: readonly [Date | number, Date | number];
   /** A "now" marker. "auto" uses the current time; false hides it. */
   now?: Date | number | "auto" | false;
-  /** Height of one lane (a bar) in pixels, 28 by default. */
+  /**
+   * By default the height follows the lanes. `"fill"` stretches the lanes to
+   * the height of the parent; `aspectRatio` does the same from the width.
+   */
+  height?: "fill";
+  /** Width / height ratio; stretches the lanes to fit it. */
+  aspectRatio?: number;
+  /** Height of one lane (a bar) in pixels, 28 by default (the minimum when stretching is 14). */
   laneHeight?: number;
   grid?: boolean;
   legend?: boolean;
@@ -180,6 +187,8 @@ export function TimelineChart({
   description,
   domain,
   now = false,
+  height: heightMode,
+  aspectRatio,
   laneHeight = 28,
   grid = true,
   legend,
@@ -263,7 +272,8 @@ export function TimelineChart({
 
   return (
     <ChartFrame
-      height={Math.max(totalHeight, 120)}
+      height={heightMode === "fill" ? "fill" : Math.max(totalHeight, 120)}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={items.length === 0 || rows.length === 0}
@@ -306,10 +316,11 @@ export function TimelineChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <TimelinePlot
           width={width}
-          height={totalHeight}
+          height={heightMode === "fill" || aspectRatio ? measuredHeight : totalHeight}
+          stretch={heightMode === "fill" || aspectRatio != null}
           rows={rows}
           layout={layout}
           nowValue={nowValue}
@@ -334,7 +345,7 @@ interface PlotProps {
   height: number;
   rows: readonly TimelineRow[];
   layout: {
-    bands: Array<{ row: TimelineRow; top: number; height: number }>;
+    bands: Array<{ row: TimelineRow; top: number; height: number; count: number }>;
     placed: Placed[];
     start: number;
     end: number;
@@ -342,6 +353,8 @@ interface PlotProps {
   };
   nowValue: number | null;
   laneHeight: number;
+  /** Stretch the lanes so the rows fill `height`. */
+  stretch: boolean;
   grid: boolean;
   tooltip: boolean;
   animate: boolean;
@@ -359,7 +372,8 @@ function TimelinePlot({
   rows,
   layout,
   nowValue,
-  laneHeight,
+  laneHeight: baseLaneHeight,
+  stretch,
   grid,
   tooltip,
   animate,
@@ -372,7 +386,26 @@ function TimelinePlot({
 }: PlotProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [active, setActive] = useState<number | null>(null);
-  const { bands, placed, start, end, plotHeight } = layout;
+  const { placed, start, end } = layout;
+  const laneHeight = stretch
+    ? fitLaneHeight({
+        counts: layout.bands.map((band) => band.count),
+        available: height - MARGIN.top - MARGIN.bottom,
+        gap: GAP,
+        rowPad: ROW_PAD,
+      })
+    : baseLaneHeight;
+  const { bands, plotHeight } = useMemo(() => {
+    if (!stretch) return { bands: layout.bands, plotHeight: layout.plotHeight };
+    let top = 0;
+    const next = layout.bands.map((band) => {
+      const bandHeight = band.count * (laneHeight + GAP) - GAP + ROW_PAD * 2;
+      const placedBand = { ...band, top, height: bandHeight };
+      top += bandHeight;
+      return placedBand;
+    });
+    return { bands: next, plotHeight: top };
+  }, [layout.bands, layout.plotHeight, laneHeight, stretch]);
   const narrow = width < 440;
   const left = Math.min(
     narrow ? 78 : 132,

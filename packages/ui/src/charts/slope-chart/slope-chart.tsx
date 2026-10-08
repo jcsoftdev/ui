@@ -38,7 +38,9 @@ export interface SlopeChartProps {
   lowerIsBetter?: boolean;
   valueFormat?: ValueFormat;
   /** Height of the plot; by default it grows with the number of items. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the chart from the container width. */
+  aspectRatio?: number;
   legend?: boolean;
   tooltip?: boolean;
   loading?: boolean;
@@ -119,6 +121,7 @@ export function SlopeChart({
   lowerIsBetter = false,
   valueFormat,
   height,
+  aspectRatio,
   legend,
   tooltip = true,
   loading,
@@ -156,6 +159,7 @@ export function SlopeChart({
   return (
     <ChartFrame
       height={plotHeight}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={items.length === 0}
@@ -194,10 +198,10 @@ export function SlopeChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <SlopePlot
           width={width}
-          height={plotHeight}
+          height={measuredHeight}
           items={items}
           colors={colors}
           fromLabel={fromLabel}

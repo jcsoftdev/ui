@@ -50,7 +50,9 @@ export interface HistogramProps {
   valueFormat?: ValueFormat;
   xAxis?: DistributionAxisOptions;
   yAxis?: DistributionAxisOptions;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   legend?: boolean | "top" | "bottom";
   grid?: boolean;
   tooltip?: boolean;
@@ -85,6 +87,7 @@ export function Histogram({
   xAxis,
   yAxis,
   height = 300,
+  aspectRatio,
   legend,
   grid = true,
   tooltip = true,
@@ -125,6 +128,7 @@ export function Histogram({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={empty}
@@ -144,10 +148,10 @@ export function Histogram({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <HistogramPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           binned={binned.series}
           edges={binned.edges}

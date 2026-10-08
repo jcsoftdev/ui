@@ -79,3 +79,34 @@ export function waterfallLayout(steps: ReadonlyArray<WaterfallStep>): WaterfallL
   });
   return { bars, min, max, final: running };
 }
+
+export interface WaterfallLabelBox {
+  /** Horizontal centre of the label. */
+  center: number;
+  width: number;
+  /** Baseline of the label. */
+  y: number;
+}
+
+/**
+ * Which labels to draw: left to right, a label is kept unless it overlaps an
+ * already kept one horizontally while sitting less than `lineHeight` away
+ * vertically. Labels wider than their bar still show whenever the neighbours
+ * are far enough above or below, or the gap between them is wide enough.
+ */
+export function pickLabels(
+  boxes: readonly WaterfallLabelBox[],
+  gap = 4,
+  lineHeight = 13,
+): boolean[] {
+  const kept: WaterfallLabelBox[] = [];
+  return boxes.map((box) => {
+    const clash = kept.some(
+      (other) =>
+        Math.abs(other.center - box.center) < (other.width + box.width) / 2 + gap &&
+        Math.abs(other.y - box.y) < lineHeight,
+    );
+    if (!clash) kept.push(box);
+    return !clash;
+  });
+}

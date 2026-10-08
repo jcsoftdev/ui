@@ -37,7 +37,9 @@ export interface RadarChartProps {
   showValues?: boolean;
   /** Rotation of the first spoke, in degrees from 12 o'clock. */
   startAngle?: number;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   valueFormat?: ValueFormat;
   legend?: boolean | "top" | "bottom";
   tooltip?: boolean;
@@ -91,6 +93,7 @@ export function RadarChart({
   showValues = true,
   startAngle = 0,
   height = 340,
+  aspectRatio,
   valueFormat,
   legend,
   tooltip = true,
@@ -145,6 +148,8 @@ export function RadarChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
+      legendAside
       labels={labels}
       loading={loading}
       empty={empty}
@@ -163,10 +168,10 @@ export function RadarChart({
       table={table}
       className={className}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <RadarPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           axes={axes}
           items={resolved}

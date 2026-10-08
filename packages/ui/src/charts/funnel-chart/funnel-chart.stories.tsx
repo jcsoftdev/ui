@@ -102,3 +102,24 @@ export const NarrowHorizontal: Story = {
   args: { orientation: "horizontal" },
   decorators: Narrow.decorators,
 };
+
+/** Drag the corner: the chart fills the box exactly, width and height. */
+export const FillParent: Story = {
+  args: { height: "fill" },
+  parameters: { layout: "padded" },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          width: 560,
+          height: 360,
+          resize: "both",
+          overflow: "hidden",
+          outline: "1px dashed var(--line-strong)",
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+};

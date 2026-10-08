@@ -57,7 +57,9 @@ export interface CandlestickChartProps {
   title: string;
   description?: string;
   /** Height of the plot (price and volume), 360 by default. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the chart from the container width. */
+  aspectRatio?: number;
   /** Volume bars below the price, sharing the x axis. Default: shown when any candle has a volume. */
   volume?: boolean;
   /** "filled" paints every body; "hollow" leaves rising candles empty. */
@@ -154,6 +156,7 @@ export function CandlestickChart({
   title,
   description,
   height = 360,
+  aspectRatio,
   volume,
   candleStyle = "filled",
   brush = false,
@@ -177,11 +180,13 @@ export function CandlestickChart({
   const fmt = useMemo(() => resolveFormat(valueFormat), [valueFormat]);
   const vfmt = useMemo(() => resolveFormat(volumeFormat), [volumeFormat]);
   const showVolume = volume ?? data.some((candle) => candle.volume != null);
-  const frameHeight = height + (brush ? BRUSH_HEIGHT + 12 : 0);
+  const brushExtra = brush ? BRUSH_HEIGHT + 12 : 0;
+  const frameHeight = height === "fill" ? height : height + brushExtra;
 
   return (
     <ChartFrame
       height={frameHeight}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={data.length === 0}
@@ -220,10 +225,10 @@ export function CandlestickChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <CandlePlot
           width={width}
-          height={height}
+          height={measuredHeight - brushExtra}
           data={data}
           showVolume={showVolume}
           hollow={candleStyle === "hollow"}

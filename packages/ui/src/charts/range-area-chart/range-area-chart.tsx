@@ -41,7 +41,9 @@ export interface RangeAreaChartProps {
   title: string;
   description?: string;
   /** Height of the plot in pixels. */
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   curve?: Curve;
   /** Draw the central line of bands that provide `mean` (default true). */
   showMean?: boolean;
@@ -384,6 +386,7 @@ export function RangeAreaChart({
   title,
   description,
   height = 300,
+  aspectRatio,
   curve = "smooth",
   showMean = true,
   valueFormat,
@@ -467,6 +470,7 @@ export function RangeAreaChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={!hasData}
@@ -482,10 +486,10 @@ export function RangeAreaChart({
         />
       }
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <Plot
           width={width}
-          height={height}
+          height={measuredHeight}
           categories={categories}
           bands={bands}
           colors={colors}

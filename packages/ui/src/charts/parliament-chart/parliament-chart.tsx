@@ -37,7 +37,9 @@ export interface ParliamentChartProps {
   centerLabel?: string;
   /** Name of the counted thing in the tooltip and data table. */
   seatLabel?: string;
-  height?: number;
+  height?: number | "fill";
+  /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
+  aspectRatio?: number;
   legend?: boolean | "top" | "bottom";
   tooltip?: boolean;
   animate?: boolean;
@@ -64,6 +66,7 @@ export function ParliamentChart({
   centerLabel,
   seatLabel = "Seats",
   height = 260,
+  aspectRatio,
   legend = true,
   tooltip = true,
   animate = true,
@@ -94,6 +97,7 @@ export function ParliamentChart({
   return (
     <ChartFrame
       height={height}
+      aspectRatio={aspectRatio}
       labels={labels}
       loading={loading}
       empty={total === 0}
@@ -132,10 +136,10 @@ export function ParliamentChart({
       }
       className={cn(UNIT_FRAME_CLASS, className)}
     >
-      {(width) => (
+      {(width, measuredHeight) => (
         <ParliamentPlot
           width={width}
-          height={height}
+          height={measuredHeight}
           title={title}
           data={data}
           seats={seats}
