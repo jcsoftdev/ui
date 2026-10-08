@@ -7,6 +7,7 @@ export * from "./chip/index.js";
 export * from "./icon/index.js";
 export * from "./led/index.js";
 export * from "./number-value/index.js";
+export * from "./pressable-feedback/index.js";
 export * from "./progress/index.js";
 export * from "./radio-group/index.js";
 export * from "./status-dot/index.js";

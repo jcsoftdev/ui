@@ -22,6 +22,8 @@ async function load(file) {
 
 const slider = await load("../src/forms/slider/model.ts");
 const rating = await load("../src/forms/rating/model.ts");
+const emoji = await load("../src/forms/emoji-picker/model.ts");
+const emojiData = await load("../src/forms/emoji-picker/emoji-data.ts");
 
 test("slider: snaps to step from min and clamps", () => {
   assert.equal(slider.snapToStep(37, 0, 100, 5), 35);
@@ -93,4 +95,37 @@ test("rating: keyboard", () => {
   assert.equal(rating.ratingKey("ArrowLeft", 0, 5), 0);
   assert.equal(rating.ratingKey("End", 1, 5), 5);
   assert.equal(rating.ratingKey("x", 1, 5), null);
+});
+
+test("emoji: search ignores accents and case, requires every word, dedupes", () => {
+  const cats = emojiData.EMOJI_CATEGORIES;
+  assert.ok(emoji.searchEmojis(cats, "CORAZON").length > 5);
+  assert.deepEqual(
+    emoji.searchEmojis(cats, "barberia poste").map((e) => e.emoji),
+    ["💈"],
+  );
+  assert.deepEqual(emoji.searchEmojis(cats, "   "), []);
+  assert.deepEqual(emoji.searchEmojis(cats, "zzzz"), []);
+  assert.deepEqual(
+    emoji.searchEmojis(cats, "tijeras").map((e) => e.emoji),
+    ["✂️"],
+  );
+  assert.ok(emoji.searchEmojis(cats, "sueño").length >= 1);
+});
+
+test("emoji: dataset has unique emojis", () => {
+  const all = emojiData.EMOJI_CATEGORIES.flatMap((c) => c.emojis.map((e) => e.emoji));
+  assert.equal(new Set(all).size, all.length);
+});
+
+test("emoji: grid navigation stays inside a ragged grid", () => {
+  assert.equal(emoji.gridMove("ArrowRight", 9, 4, 10), 9);
+  assert.equal(emoji.gridMove("ArrowLeft", 0, 4, 10), 0);
+  assert.equal(emoji.gridMove("ArrowDown", 5, 4, 10), 9);
+  assert.equal(emoji.gridMove("ArrowDown", 7, 4, 10), 7);
+  assert.equal(emoji.gridMove("ArrowUp", 2, 4, 10), 2);
+  assert.equal(emoji.gridMove("ArrowUp", 6, 4, 10), 2);
+  assert.equal(emoji.gridMove("End", 0, 4, 10), 9);
+  assert.equal(emoji.gridMove("Home", 5, 4, 10), 0);
+  assert.equal(emoji.gridMove("x", 5, 4, 10), 5);
 });
