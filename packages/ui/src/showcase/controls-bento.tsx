@@ -251,7 +251,7 @@ export function ControlsBento() {
             <DialogTrigger asChild>
               <Button variant="danger">Anular cita</Button>
             </DialogTrigger>
-            <DialogContent closeLabel="Cerrar">
+            <DialogContent closeLabel="Cerrar" container={container}>
               <DialogHeader>
                 <DialogTitle>Anular cita</DialogTitle>
               </DialogHeader>

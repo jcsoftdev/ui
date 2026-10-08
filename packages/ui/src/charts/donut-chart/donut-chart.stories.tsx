@@ -263,3 +263,15 @@ export const FillParent: Story = {
     ),
   ],
 };
+
+/** The centre figure and caption shrink to the hole of a small ring instead of overflowing it. */
+export const SmallRingLongValue: Story = {
+  args: { centerValue: "S/ 29 950.00", centerLabel: "Total del mes", height: 200 },
+  decorators: [
+    (Story) => (
+      <div style={{ width: 240, maxWidth: "100%" }}>
+        <Story />
+      </div>
+    ),
+  ],
+};

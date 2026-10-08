@@ -29,7 +29,7 @@ interface SliderBaseProps {
   disabled?: boolean;
   /** Ticks on the track; a `label` renders as a caption under it. */
   marks?: SliderMark[];
-  /** Shows the current value above a thumb while it is dragged or focused. */
+  /** Shows the current value above each thumb; it is emphasized while dragged or focused. */
   showValue?: boolean;
   formatValue?: (value: number) => string;
   /** Accessible name; thumbs of a range get "mínimo"/"máximo" appended. */
@@ -174,7 +174,7 @@ export function Slider(props: SliderProps) {
         {showValue ? (
           <span
             aria-hidden="true"
-            className="-translate-x-1/2 pointer-events-none absolute bottom-full left-1/2 mb-1.5 hidden whitespace-nowrap rounded-badge bg-ink px-1.5 py-0.5 text-chip-text text-surface group-data-[active=true]/thumb:block"
+            className="-translate-x-1/2 pointer-events-none absolute bottom-full left-1/2 mb-1.5 whitespace-nowrap rounded-badge bg-surface-sunken px-1.5 py-0.5 text-chip-text text-ink-2 tabular-nums group-data-[active=true]/thumb:bg-ink group-data-[active=true]/thumb:text-surface"
           >
             {formatValue(current[index])}
           </span>

@@ -69,7 +69,7 @@ export function NumberStepper({
   return (
     <div
       className={cn(
-        "@container/stepper inline-flex h-input max-w-full items-stretch overflow-hidden rounded-input border-control bg-surface-control",
+        "inline-flex h-input min-w-32 max-w-full items-stretch overflow-hidden rounded-input border-control bg-surface-control",
         disabled && "opacity-60",
         className,
       )}

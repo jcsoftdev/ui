@@ -84,7 +84,7 @@ export function TuningTile({ index }: { index: number }) {
         <div className="flex flex-wrap items-center justify-between gap-density-sm">
           <Rating defaultValue={4} aria-label="Valoración del corte" showValue />
           <NumberStepper
-            className="w-40 shrink-0"
+            className="shrink-0"
             defaultValue={2}
             min={0}
             max={10}
