@@ -34,6 +34,7 @@ import { formatDate, shortMonth } from "../core/scales/time.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, resolveLabels } from "../core/types.js";
 import { useIsomorphicLayoutEffect } from "../core/use-chart-size.js";
+import { buildTaskListSvg } from "./gantt-export.js";
 import {
   AnnotationLayer,
   type BarDraft,
@@ -1030,6 +1031,46 @@ function GanttBody({
                     [],
                 )
               }
+              getLeading={() => {
+                const host = wrapperRef.current;
+                if (!host) return null;
+                const list = buildTaskListSvg({
+                  rows: rows.map((row) => ({
+                    name: row.task.name,
+                    depth: row.depth,
+                    parent: Boolean(row.parent),
+                    collapsed: Boolean(row.collapsed),
+                    cells: visibleColumns.map((column) =>
+                      column === "start"
+                        ? columnDate(row.start)
+                        : row.task.milestone && !row.parent
+                          ? ""
+                          : column === "end"
+                            ? columnDate(withTime ? row.end : displayEnd(row.start, row.end))
+                            : formatPercent(row.progress, { decimals: 0 }),
+                    ),
+                  })),
+                  columns: visibleColumns.map((column) => ({
+                    width: COLUMN_WIDTH[column],
+                    label:
+                      column === "start"
+                        ? texts.start
+                        : column === "end"
+                          ? texts.end
+                          : texts.progress,
+                  })),
+                  tasksLabel: texts.tasks,
+                  width: gridW,
+                  headerHeight: HEADER_HEIGHT,
+                  rowHeight,
+                });
+                list.setAttribute(
+                  "style",
+                  "position:absolute;left:-99999px;top:0;pointer-events:none",
+                );
+                host.appendChild(list);
+                return list;
+              }}
             />
           ) : null}
           {todayX != null && todayTime != null ? (

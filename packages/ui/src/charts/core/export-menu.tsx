@@ -20,12 +20,15 @@ export const DEFAULT_EXPORT_TEXTS: ExportTexts = { export: "Export", svg: "SVG",
 export function ExportMenu({
   title,
   getSvgs,
+  getLeading,
   texts = DEFAULT_EXPORT_TEXTS,
   className,
 }: {
   title: string;
   /** Receives the menu's own element, to find the chart around it. */
   getSvgs: (root: HTMLElement) => SVGSVGElement[];
+  /** A mounted drawing placed left of the others; removed from the page once exported. */
+  getLeading?: (root: HTMLElement) => SVGSVGElement | null;
   texts?: ExportTexts;
   className?: string;
 }) {
@@ -34,8 +37,11 @@ export function ExportMenu({
     const svgs = rootRef.current ? getSvgs(rootRef.current) : [];
     if (svgs.length === 0) return;
     const fileName = exportFileName(title, kind);
-    if (kind === "svg") downloadSvg(svgs, { fileName });
-    else void downloadPng(svgs, { fileName });
+    const leading = rootRef.current ? (getLeading?.(rootRef.current) ?? undefined) : undefined;
+    // Both downloads serialize synchronously, so the helper drawing can go right after.
+    if (kind === "svg") downloadSvg(svgs, { fileName, leading });
+    else void downloadPng(svgs, { fileName, leading });
+    leading?.remove();
   };
   return (
     <fieldset

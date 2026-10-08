@@ -38,6 +38,8 @@ export interface SerializeOptions {
   background?: string;
   /** Gap between stacked drawings, in pixels. */
   gap?: number;
+  /** A drawing placed to the left of the whole stack (e.g. the task list of a Gantt). */
+  leading?: SVGSVGElement;
 }
 
 export interface SerializedSvg {
@@ -100,11 +102,17 @@ function sizeOf(svg: SVGSVGElement): { width: number; height: number } {
 /** Serializes one drawing, or several stacked vertically (e.g. a sticky header and its body). */
 export function serializeSvg(
   input: SVGSVGElement | readonly SVGSVGElement[],
-  { background, gap = 0 }: SerializeOptions = {},
+  { background, gap = 0, leading }: SerializeOptions = {},
 ): SerializedSvg {
   const sources: readonly SVGSVGElement[] = "length" in input ? input : [input];
   const sizes = sources.map(sizeOf);
-  const layout = stackLayout(sizes, gap);
+  const stack = stackLayout(sizes, gap);
+  const lead = leading ? sizeOf(leading) : { width: 0, height: 0 };
+  const layout = {
+    positions: stack.positions.map((position) => ({ x: position.x + lead.width, y: position.y })),
+    width: stack.width + lead.width,
+    height: Math.max(stack.height, lead.height),
+  };
   const root = document.createElementNS(SVG_NS, "svg");
   root.setAttribute("xmlns", SVG_NS);
   root.setAttribute("width", String(layout.width));
@@ -117,20 +125,30 @@ export function serializeSvg(
     rect.setAttribute("fill", background);
     root.appendChild(rect);
   }
-  sources.forEach((source, i) => {
+  const drawings: Array<{ source: SVGSVGElement; x: number; y: number; w: number; h: number }> =
+    sources.map((source, i) => ({
+      source,
+      x: (layout.positions[i] ?? { x: 0 }).x,
+      y: (layout.positions[i] ?? { y: 0 }).y,
+      w: (sizes[i] ?? { width: 0 }).width,
+      h: (sizes[i] ?? { height: 0 }).height,
+    }));
+  if (leading) drawings.unshift({ source: leading, x: 0, y: 0, w: lead.width, h: lead.height });
+  for (const { source, x, y, w, h } of drawings) {
     const clone = source.cloneNode(true) as SVGSVGElement;
     inlinePaint(source, clone);
     for (const skip of clone.querySelectorAll("[data-export-skip]")) skip.remove();
-    const position = layout.positions[i] ?? { x: 0, y: 0 };
-    const size = sizes[i] ?? { width: 0, height: 0 };
-    clone.setAttribute("x", String(position.x));
-    clone.setAttribute("y", String(position.y));
-    clone.setAttribute("width", String(size.width));
-    clone.setAttribute("height", String(size.height));
+    clone.setAttribute("x", String(x));
+    clone.setAttribute("y", String(y));
+    clone.setAttribute("width", String(w));
+    clone.setAttribute("height", String(h));
     clone.removeAttribute("class");
     clone.removeAttribute("aria-hidden");
+    for (const layoutProperty of ["position", "left", "top", "pointer-events"]) {
+      clone.style.removeProperty(layoutProperty);
+    }
     root.appendChild(clone);
-  });
+  }
   return {
     markup: new XMLSerializer().serializeToString(root),
     width: layout.width,
