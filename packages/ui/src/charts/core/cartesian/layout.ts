@@ -539,9 +539,8 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
       const stacked = isStackable(item, stack);
       const floating = item.from != null;
       const pixelDir = pixelSign(
-        item.axis === "right"
-          ? (input.rightAxis.reversed ?? input.yAxis.reversed)
-          : input.yAxis.reversed,
+        axisInfo.find((info) => info.spec.id === axisOf(item.axis))?.spec.options.reversed ??
+          input.yAxis.reversed,
       );
       const bars: BarGeometry[] = [];
       const radius = Math.min(input.barRadius, barThickness / 2);
