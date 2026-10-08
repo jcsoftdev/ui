@@ -2,6 +2,7 @@
 
 import { type ReactNode, useId, useMemo, useState } from "react";
 import { cn } from "../../utils/cn.js";
+import { ChartSyncProvider } from "../core/cartesian/sync.js";
 import { ChartEmpty } from "../core/chart-states.js";
 import { ChartLegend, type LegendItem } from "../core/legend.js";
 import { useChartWidth } from "../core/use-chart-size.js";
@@ -24,9 +25,12 @@ export interface ChartGridContext {
   columns: number;
   /** Panel is narrow: hide secondary decoration (titles, extra ticks). */
   compact: boolean;
-  /** Pixel height the chart of the panel should use (unless `aspectRatio` is set). */
+  /** Pixel height the chart of the panel should use. */
   height: number;
-  aspectRatio?: number;
+  /** Ticks the value axis can afford at that height (3 to 6); also what the shared domain was rounded for. */
+  tickCount: number;
+  /** Pass to the charts' `syncId` when `syncHover` is on: they then share one real crosshair and tooltip. */
+  syncId?: string;
   /** Shared value-axis domain, or undefined when `sharedValueDomain` is off. */
   valueDomain?: readonly [number, number];
   /** Shared x-axis domain, or undefined when `sharedXDomain` is off. */
@@ -45,7 +49,7 @@ export interface ChartGridProps {
   minPanelWidth?: number;
   maxColumns?: number;
   gap?: number;
-  /** Height of every chart in pixels (default 150). */
+  /** Height of every chart in pixels. Default: derived from the panel width (about 1.4:1), at least 180. */
   panelHeight?: number;
   /** Width / height ratio for the charts; wins over `panelHeight`. */
   aspectRatio?: number;
@@ -58,8 +62,9 @@ export interface ChartGridProps {
   /** One legend for all panels (their own legends should be off). */
   legend?: readonly LegendItem[];
   /**
-   * A thin guide in the other panels follows the pointer. Alignment is exact
-   * when the panels share the value domain and format (same left margin).
+   * Hovering a panel shows the real crosshair and tooltip in every other panel.
+   * The charts must receive `context.syncId` as their `syncId`; panels only
+   * react when the hovered category exists in them.
    */
   syncHover?: boolean;
   /** Draw a border around every panel. */
@@ -83,7 +88,7 @@ export function ChartGrid({
   minPanelWidth = 220,
   maxColumns = 6,
   gap = 16,
-  panelHeight = 150,
+  panelHeight,
   aspectRatio,
   sharedValueDomain = true,
   sharedXDomain = false,
@@ -97,18 +102,24 @@ export function ChartGrid({
   const [ref, width] = useChartWidth<HTMLDivElement>();
   const uid = useId();
   const [highlight, setHighlight] = useState<string | null>(null);
-  const [pointer, setPointer] = useState<{ id: string; fraction: number } | null>(null);
   const columns = gridColumns(width, panels.length, { minPanelWidth, maxColumns, gap });
   const eachWidth = panelWidth(width, columns, gap);
+  const chartHeight = Math.max(
+    90,
+    Math.round(
+      aspectRatio ? eachWidth / aspectRatio : (panelHeight ?? Math.max(180, eachWidth / 1.4)),
+    ),
+  );
+  const tickCount = Math.min(6, Math.max(3, Math.round((chartHeight - 60) / 42)));
   const valueDomain = useMemo(
     () =>
       sharedValueDomain
         ? (sharedDomain(
             panels.map((panel) => panel.extent),
-            { includeZero },
+            { includeZero, tickCount },
           ) ?? undefined)
         : undefined,
-    [panels, sharedValueDomain, includeZero],
+    [panels, sharedValueDomain, includeZero, tickCount],
   );
   const xDomain = useMemo(
     () =>
@@ -122,87 +133,65 @@ export function ChartGrid({
   );
 
   return (
-    <section
-      ref={ref}
-      aria-label={title}
-      className={cn("@container/grid flex w-full min-w-0 flex-col gap-3", className)}
-    >
-      {legend && legend.length > 0 ? (
-        <ChartLegend items={legend} onHighlight={setHighlight} className="px-1" />
-      ) : null}
-      {panels.length === 0 ? (
-        <ChartEmpty height={panelHeight} label={emptyLabel} />
-      ) : (
-        <div
-          className="grid"
-          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap }}
-        >
-          {panels.map((panel, index) => {
-            const headingId = `${uid}-${panel.id}`;
-            const guide = syncHover && pointer && pointer.id !== panel.id ? pointer.fraction : null;
-            return (
-              <article
-                key={panel.id}
-                aria-labelledby={headingId}
-                className={cn(
-                  "flex min-w-0 flex-col gap-1.5",
-                  bordered && "rounded-xl border border-line p-3",
-                )}
-                onPointerMove={
-                  syncHover
-                    ? (event) => {
-                        const box = event.currentTarget.getBoundingClientRect();
-                        if (box.width <= 0) return;
-                        setPointer({
-                          id: panel.id,
-                          fraction: Math.min(
-                            1,
-                            Math.max(0, (event.clientX - box.left) / box.width),
-                          ),
-                        });
-                      }
-                    : undefined
-                }
-                onPointerLeave={syncHover ? () => setPointer(null) : undefined}
-              >
-                <header className="flex min-w-0 items-baseline justify-between gap-2">
-                  <h3
-                    id={headingId}
-                    className="m-0 truncate font-bold text-[12.5px] text-ink-2 leading-tight"
-                  >
-                    {panel.title}
-                  </h3>
-                  {panel.subtitle ? (
-                    <span className="shrink-0 font-semibold text-[11.5px] text-ink-3 tabular-nums">
-                      {panel.subtitle}
-                    </span>
-                  ) : null}
-                </header>
-                <div className="relative min-w-0">
-                  {children(panel, {
-                    index,
-                    columns,
-                    compact: eachWidth < COMPACT_BELOW,
-                    height: panelHeight,
-                    aspectRatio,
-                    valueDomain,
-                    xDomain,
-                    highlight,
-                  })}
-                  {guide != null ? (
-                    <span
-                      aria-hidden="true"
-                      data-guide=""
-                      className="pointer-events-none absolute top-0 bottom-0 w-px"
-                      style={{ left: `${guide * 100}%`, background: "var(--line-strong)" }}
-                    />
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </section>
+    <ChartSyncProvider>
+      <section
+        ref={ref}
+        aria-label={title}
+        className={cn("@container/grid flex w-full min-w-0 flex-col gap-3", className)}
+      >
+        {legend && legend.length > 0 ? (
+          <ChartLegend items={legend} onHighlight={setHighlight} className="px-1" />
+        ) : null}
+        {panels.length === 0 ? (
+          <ChartEmpty height={chartHeight} label={emptyLabel} />
+        ) : (
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap }}
+          >
+            {panels.map((panel, index) => {
+              const headingId = `${uid}-${panel.id}`;
+              return (
+                <article
+                  key={panel.id}
+                  aria-labelledby={headingId}
+                  className={cn(
+                    "flex min-w-0 flex-col gap-1.5",
+                    bordered && "rounded-xl border border-line p-3",
+                  )}
+                >
+                  <header className="flex min-w-0 items-baseline justify-between gap-2">
+                    <h3
+                      id={headingId}
+                      className="m-0 truncate font-bold text-[12.5px] text-ink-2 leading-tight"
+                    >
+                      {panel.title}
+                    </h3>
+                    {panel.subtitle ? (
+                      <span className="shrink-0 font-semibold text-[11.5px] text-ink-3 tabular-nums">
+                        {panel.subtitle}
+                      </span>
+                    ) : null}
+                  </header>
+                  <div className="relative min-w-0">
+                    {children(panel, {
+                      index,
+                      columns,
+                      compact: eachWidth < COMPACT_BELOW,
+                      height: chartHeight,
+                      tickCount,
+                      syncId: syncHover ? `${uid}-sync` : undefined,
+                      valueDomain,
+                      xDomain,
+                      highlight,
+                    })}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </ChartSyncProvider>
   );
 }

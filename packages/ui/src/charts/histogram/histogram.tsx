@@ -4,7 +4,6 @@ import { memo, useMemo, useRef, useState } from "react";
 import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
-import { explodeBins } from "../core/distribution/dot-stack.js";
 import { PlotExplorer } from "../core/distribution/explorer.js";
 import { type DistributionLabels, resolveDistributionLabels } from "../core/distribution/labels.js";
 import { type DistributionAxisOptions, tooltipFit, xyLayout } from "../core/distribution/layout.js";
@@ -164,7 +163,7 @@ export function Histogram({
               onClick={() => setExploded(!exploded)}
               className="inline-flex min-h-8 items-center gap-2 rounded-pill border border-line bg-surface px-3 font-semibold text-[12px] text-ink-2 transition-colors hover:bg-surface-2 aria-pressed:border-accent aria-pressed:text-ink"
             >
-              {labels.explode}
+              {exploded ? labels.bars : labels.explode}
             </button>
           </div>
         ) : null
@@ -304,16 +303,30 @@ function HistogramPlot({
       for (const bin of item.bins) top = Math.max(top, heightOf(item, bin.count));
       if (normalCurve && item.sd > 0) top = Math.max(top, curveOf(item, item.mean));
     }
-    const layout = xyLayout({
-      width,
-      height,
-      xExtent: [lo, hi],
-      yExtent: [0, top || 1],
-      xFormat: valueFormat,
-      yFormat,
-      xAxis: { ...xAxis, min: lo, max: hi },
-      yAxis: { ...yAxis, min: 0 },
-    });
+    const lanes = Math.max(1, binned.length);
+    const layoutFor = (yMax?: number) =>
+      xyLayout({
+        width,
+        height,
+        xExtent: [lo, hi],
+        yExtent: [0, top || 1],
+        xFormat: valueFormat,
+        yFormat,
+        xAxis: { ...xAxis, min: lo, max: hi },
+        yAxis: { ...yAxis, min: 0, ...(yMax != null ? { max: yMax } : {}) },
+      });
+    const laneOf = (scaleX: (value: number) => number) =>
+      Math.max(2, (scaleX(lo + binSize) - scaleX(lo) - 2) / lanes);
+    let layout = layoutFor();
+    if (exploded) {
+      // One dot per observation, one column per bin: a dot is one count tall on the
+      // axis. When dots would be taller than the bin is wide, stretch the axis so
+      // they stay round instead of wrapping into extra columns.
+      const unit = Math.max(...binned.map((item) => heightOf(item, 1)), Number.MIN_VALUE);
+      const lane = laneOf(layout.xScale.map);
+      const cell = layout.innerHeight / (layout.yScale.domain[1] / unit);
+      if (cell > lane) layout = layoutFor((layout.innerHeight / lane) * unit);
+    }
     const { xScale, yScale } = layout;
     const baseline = yScale.map(0);
     const paths = binned.map((item) =>
@@ -327,28 +340,16 @@ function HistogramPlot({
         return barPath(x0 + gap / 2, y, w, Math.max(1, baseline - y), Math.min(4, w / 3), "top");
       }),
     );
-    const lanes = Math.max(1, binned.length);
-    const maxRadius = 6;
-    const requests = binned.flatMap((item) =>
-      item.bins.map((bin) => {
-        const x0 = xScale.map(bin.x0);
-        const x1 = xScale.map(bin.x1);
-        return {
-          count: bin.count,
-          width: Math.max(2, (x1 - x0 - 2) / lanes),
-          height: Math.max(baseline - yScale.map(heightOf(item, bin.count)), maxRadius * 2 + 1),
-        };
-      }),
-    );
-    const packed = explodeBins(requests, { maxRadius });
+    const lane = laneOf(xScale.map);
+    const cellOf = (item: Binned) => baseline - yScale.map(heightOf(item, 1));
+    const dotRadius = Math.max(1, Math.min(lane, ...binned.map((item) => cellOf(item))) / 2 - 0.5);
+    // Dot k sits in the k-th unit cell of the axis, so a stack is exactly as tall as its count.
     const dots = binned.map((item, seriesIndex) =>
-      item.bins.map((bin, binIndex) => {
-        const laneWidth = (requests[seriesIndex * item.bins.length + binIndex] as { width: number })
-          .width;
-        const left = xScale.map(bin.x0) + 1 + seriesIndex * laneWidth;
-        return (packed.stacks[seriesIndex * item.bins.length + binIndex] ?? []).map((dot) => ({
-          cx: left + dot.x,
-          cy: baseline - dot.y,
+      item.bins.map((bin) => {
+        const cx = xScale.map(bin.x0) + 1 + seriesIndex * lane + lane / 2;
+        return Array.from({ length: bin.count }, (_unused, k) => ({
+          cx,
+          cy: yScale.map(heightOf(item, k + 0.5)),
         }));
       }),
     );
@@ -362,8 +363,8 @@ function HistogramPlot({
           return linePath(points, "smooth");
         })
       : [];
-    return { layout, paths, curves, heightOf, dots, dotRadius: packed.radius };
-  }, [width, height, edges, binned, density, normalCurve, valueFormat, xAxis, yAxis]);
+    return { layout, paths, curves, heightOf, dots, dotRadius };
+  }, [width, height, edges, binned, density, normalCurve, valueFormat, xAxis, yAxis, exploded]);
 
   const { layout, paths, curves, dots, dotRadius } = geometry;
   const { margin, innerWidth, innerHeight, xScale, yScale } = layout;
