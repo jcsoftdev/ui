@@ -51,6 +51,9 @@ class ThemeColors(
     val chartCat7: Color,
     val chartGrid: Color,
     val chartCrosshair: Color,
+    val chartUp: Color,
+    val chartDown: Color,
+    val chartTotal: Color,
 )
 
 object UiColors {
@@ -96,6 +99,9 @@ object UiColors {
         chartCat7 = Color(0xFF788F22),
         chartGrid = Color(0x0F000000),
         chartCrosshair = Color(0x4D000000),
+        chartUp = Color(0xFF0F8A55),
+        chartDown = Color(0xFFD23B35),
+        chartTotal = Color(0xFF3E4656),
     )
     val Dark = ThemeColors(
         bg = Color(0xFF000000),
@@ -139,6 +145,9 @@ object UiColors {
         chartCat7 = Color(0xFFBCD56B),
         chartGrid = Color(0x12FFFFFF),
         chartCrosshair = Color(0x57FFFFFF),
+        chartUp = Color(0xFF5FD69B),
+        chartDown = Color(0xFFFF8F82),
+        chartTotal = Color(0xFFC3CAD6),
     )
 }
 

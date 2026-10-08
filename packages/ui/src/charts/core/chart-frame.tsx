@@ -47,7 +47,7 @@ export function ChartFrame({
   const [ref, width] = useChartWidth<HTMLDivElement>();
   const ready = !loading && !empty;
   return (
-    <div className={cn("relative flex w-full min-w-0 flex-col gap-2", className)}>
+    <div className={cn("@container/chart relative flex w-full min-w-0 flex-col gap-2", className)}>
       {ready && legend && legendPosition === "top" ? legend : null}
       <div ref={ref} className="relative w-full min-w-0" style={{ height }}>
         {loading ? (
