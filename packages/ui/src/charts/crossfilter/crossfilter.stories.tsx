@@ -175,3 +175,67 @@ export const BrutalPreset: Story = {
     </div>
   ),
 };
+
+function BrushPlot({ initial }: { initial?: boolean }) {
+  return (
+    <CrossfilterProvider
+      data={sales}
+      dimensions={dimensions}
+      initialFilters={
+        initial
+          ? {
+              hora: { kind: "range", min: 13, max: 17 },
+              ticket: { kind: "range", min: 40, max: 80 },
+            }
+          : undefined
+      }
+    >
+      <div className="@container/xf flex min-w-0 flex-col gap-3">
+        <CrossfilterSummary noun="ventas" labels={spanish} />
+        <CrossfilterScatter
+          title="Hora y ticket"
+          x="hora"
+          y="ticket"
+          xLabel="Hora"
+          yLabel="Ticket"
+          jitter={7}
+          xFormat={(hour) => `${Math.round(hour)} h`}
+          yFormat={money}
+          pointLabel={(sale: Venta) => `${sale.cliente} · ${sale.servicio}`}
+          height={280}
+          labels={{
+            ...spanish,
+            brush:
+              "Selección rectangular: las flechas la mueven, Mayús y flechas la redimensionan, Intro aplica y Escape quita",
+          }}
+        />
+      </div>
+    </CrossfilterProvider>
+  );
+}
+
+/**
+ * Pincel rectangular: arrastra sobre el gráfico para filtrar hora y ticket a la vez (un clic lo
+ * quita). Con teclado, enfoca el pincel (la segunda parada de Tab): flechas mueven, Mayús + flechas
+ * redimensionan, Intro aplica y Escape quita.
+ */
+export const PincelRectangular: Story = {
+  args: storyArgs,
+  render: () => <BrushPlot />,
+};
+
+/** Un rectángulo aplicado desde el inicio: de 13 a 17 h y tickets de S/ 40 a S/ 80. */
+export const PincelInicial: Story = {
+  args: storyArgs,
+  render: () => <BrushPlot initial />,
+};
+
+/** 320 px: el pincel funciona igual en un contenedor angosto. */
+export const PincelNarrow: Story = {
+  args: storyArgs,
+  render: () => (
+    <div style={{ width: 320 }}>
+      <BrushPlot initial />
+    </div>
+  ),
+};

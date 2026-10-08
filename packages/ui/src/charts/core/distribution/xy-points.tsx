@@ -1,6 +1,15 @@
 "use client";
 
-import { memo, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  type KeyboardEvent,
+  memo,
+  type PointerEvent,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "../../../utils/cn.js";
 import { estimateTextWidth } from "../axes.js";
 import { ChartFrame } from "../chart-frame.js";
@@ -12,6 +21,15 @@ import { type ChartTone, TONE_COLORS } from "../palette.js";
 import { formatDate } from "../scales/time.js";
 import { ChartTooltip, type TooltipRow } from "../tooltip.js";
 import { useCanvasPaint } from "../use-canvas.js";
+import {
+  type BrushKey,
+  type BrushRect,
+  clampRect,
+  defaultBrush,
+  isClick,
+  rectFromCorners,
+  stepBrush,
+} from "./brush.js";
 import { PlotExplorer } from "./explorer.js";
 import { type DistributionLabels, resolveDistributionLabels } from "./labels.js";
 import { type DistributionAxisOptions, tooltipFit, truncateLabel, xyLayout } from "./layout.js";
@@ -51,6 +69,18 @@ export interface QuadrantOptions {
   tones?: Partial<Record<QuadrantCorner, ChartTone>>;
 }
 
+/** Rectangular selection drawn over the plot: drag with the pointer or use the keyboard. */
+export interface XYBrush {
+  /** Applied rectangle in data units (an infinite edge covers the whole axis); `null` for none. */
+  value: BrushRect | null;
+  /** Called with the finished rectangle (drag released, Enter) or `null` (click, Escape). */
+  onChange: (rect: BrushRect | null) => void;
+  /** Accessible name of the keyboard brush, e.g. "Seleccionar un rectángulo". */
+  label: string;
+  /** Text a screen reader announces for a rectangle while it is moved or applied. */
+  describe?: (rect: BrushRect, applied: boolean) => string;
+}
+
 export interface XYPointChartProps {
   title: string;
   series: readonly XYSeries[];
@@ -82,6 +112,8 @@ export interface XYPointChartProps {
    * carry images or `shading` is "shaded".
    */
   renderer?: "svg" | "canvas";
+  /** Rectangular brush over the plot (pointer drag plus keyboard). */
+  brush?: XYBrush;
   /** "shaded" fills bubbles with an off-centre radial gradient so they read as spheres. */
   shading?: "flat" | "shaded";
   /** Text labels next to (or inside) the points that have a `label`. */
@@ -137,6 +169,7 @@ export function XYPointChart({
   jitter,
   seed = 17,
   renderer = "svg",
+  brush,
   shading = "flat",
   height = 340,
   aspectRatio,
@@ -235,6 +268,7 @@ export function XYPointChart({
           jitter={jitter}
           seed={seed}
           canvas={canvas}
+          brush={brush}
           shading={shading}
           trendLine={trendLine}
           quadrants={quadrants}
@@ -456,6 +490,7 @@ interface PlotProps {
   jitter?: number | { x?: number; y?: number };
   seed: number;
   canvas: boolean;
+  brush?: XYBrush;
   shading: "flat" | "shaded";
   trendLine: boolean;
   quadrants?: QuadrantOptions;
@@ -488,6 +523,7 @@ function XYPointPlot({
   jitter,
   seed,
   canvas,
+  brush,
   shading,
   trendLine,
   quadrants,
@@ -627,6 +663,107 @@ function XYPointPlot({
   const { layout, drawOrder, readOrder, trends, quadrant } = geometry;
   const { margin, innerWidth, innerHeight } = layout;
 
+  const [draft, setDraft] = useState<BrushRect | null>(null);
+  const [spoken, setSpoken] = useState("");
+  const dragFrom = useRef<{ x: number; y: number } | null>(null);
+  const xDomain = layout.xScale.domain;
+  const yDomain = layout.yScale.domain;
+  const applied = brush?.value ? clampRect(brush.value, xDomain, yDomain) : null;
+  const shownBrush = draft ?? applied;
+  const speak = (rect: BrushRect, done: boolean) => {
+    setSpoken(brush?.describe?.(rect, done) ?? "");
+  };
+  const plotPoint = (event: PointerEvent<HTMLDivElement>) => {
+    const box = event.currentTarget.getBoundingClientRect();
+    return {
+      x: Math.min(innerWidth, Math.max(0, event.clientX - box.left - margin.left)),
+      y: Math.min(innerHeight, Math.max(0, event.clientY - box.top - margin.top)),
+    };
+  };
+  const rectAt = (a: { x: number; y: number }, b: { x: number; y: number }) =>
+    clampRect(
+      rectFromCorners(
+        { x: layout.xScale.invert(a.x), y: layout.yScale.invert(a.y) },
+        { x: layout.xScale.invert(b.x), y: layout.yScale.invert(b.y) },
+      ),
+      xDomain,
+      yDomain,
+    );
+  const brushHandlers = brush
+    ? {
+        onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
+          if (event.button !== 0) return;
+          const box = event.currentTarget.getBoundingClientRect();
+          const x = event.clientX - box.left - margin.left;
+          const y = event.clientY - box.top - margin.top;
+          if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          dragFrom.current = { x, y };
+        },
+        onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
+          const from = dragFrom.current;
+          if (!from) return;
+          const to = plotPoint(event);
+          if (!isClick(from, to)) {
+            setActive(null);
+            setDraft(rectAt(from, to));
+          }
+        },
+        onPointerUp: (event: PointerEvent<HTMLDivElement>) => {
+          const from = dragFrom.current;
+          if (!from) return;
+          dragFrom.current = null;
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+          const to = plotPoint(event);
+          setDraft(null);
+          if (isClick(from, to)) {
+            if (brush.value) brush.onChange(null);
+            return;
+          }
+          const rect = rectAt(from, to);
+          brush.onChange(rect);
+          speak(rect, true);
+        },
+        onPointerCancel: () => {
+          dragFrom.current = null;
+          setDraft(null);
+        },
+      }
+    : {};
+  const onBrushKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!brush) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setDraft(null);
+      if (brush.value) brush.onChange(null);
+      setSpoken("");
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (!draft) return;
+      brush.onChange(draft);
+      speak(draft, true);
+      setDraft(null);
+      return;
+    }
+    if (
+      event.key !== "ArrowLeft" &&
+      event.key !== "ArrowRight" &&
+      event.key !== "ArrowUp" &&
+      event.key !== "ArrowDown"
+    ) {
+      return;
+    }
+    event.preventDefault();
+    const base = draft ?? applied ?? defaultBrush(xDomain, yDomain);
+    const next = stepBrush(base, event.key as BrushKey, event.shiftKey, xDomain, yDomain);
+    setDraft(next);
+    speak(next, false);
+  };
+
   useEntryAnimation(
     svgRef,
     (root) => {
@@ -708,8 +845,39 @@ function XYPointPlot({
   const narrow = width < 480;
   const half = (size: number) => size / 2 - 12;
 
+  const brushBox = shownBrush
+    ? (() => {
+        const xa = layout.xScale.map(shownBrush.x0);
+        const xb = layout.xScale.map(shownBrush.x1);
+        const ya = layout.yScale.map(shownBrush.y0);
+        const yb = layout.yScale.map(shownBrush.y1);
+        return {
+          x: Math.min(xa, xb),
+          y: Math.min(ya, yb),
+          width: Math.abs(xb - xa),
+          height: Math.abs(yb - ya),
+        };
+      })()
+    : null;
+
   const over = (
     <>
+      {brushBox ? (
+        <rect
+          data-brush=""
+          pointerEvents="none"
+          x={brushBox.x}
+          y={brushBox.y}
+          width={brushBox.width}
+          height={brushBox.height}
+          strokeWidth={1.5}
+          strokeDasharray={draft ? undefined : "5 3"}
+          style={{
+            fill: "color-mix(in oklab, var(--accent) 12%, transparent)",
+            stroke: "var(--accent)",
+          }}
+        />
+      ) : null}
       {trends.map((trend) => (
         <g key={trend.series.id} data-trend="">
           <line
@@ -784,7 +952,11 @@ function XYPointPlot({
   );
 
   return (
-    <div ref={wrapRef} className="relative h-full w-full">
+    <div
+      ref={wrapRef}
+      className={cn("relative h-full w-full", brush && "touch-none select-none")}
+      {...brushHandlers}
+    >
       <svg
         ref={svgRef}
         role="img"
@@ -913,6 +1085,27 @@ function XYPointPlot({
         width={innerWidth}
         height={innerHeight}
       />
+      {brush ? (
+        <>
+          <div
+            role="slider"
+            aria-label={brush.label}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={draft ? 100 : 0}
+            aria-valuetext={spoken || brush.label}
+            aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Shift+ArrowRight Enter Escape"
+            tabIndex={0}
+            onKeyDown={onBrushKey}
+            onBlur={() => setDraft(null)}
+            className="pointer-events-none absolute rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-4"
+            style={{ left: margin.left, top: margin.top, width: innerWidth, height: innerHeight }}
+          />
+          <span className="sr-only" aria-live="polite">
+            {spoken}
+          </span>
+        </>
+      ) : null}
       {tooltip && current ? (
         <ChartTooltip
           x={margin.left + current.x + current.r}

@@ -4,6 +4,7 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 import { cn } from "../../utils/cn.js";
 import { BarChart } from "../bar-chart/bar-chart.js";
 import type { CartesianChartProps } from "../core/cartesian/types.js";
+import { type BrushRect, rangesToRect, rectToRanges } from "../core/distribution/brush.js";
 import { resolveFormat, type ValueFormat } from "../core/format.js";
 import { ScatterChart } from "../scatter-chart/scatter-chart.js";
 import {
@@ -132,6 +133,10 @@ export interface CrossfilterLabels {
   clearAll: string;
   /** Series of points the filters leave out (scatter). */
   excluded: string;
+  /** Accessible name of the scatter's keyboard brush. */
+  brush: string;
+  /** Spoken range of a scatter brush, given the text of each axis range. */
+  selection: (x: string, y: string) => string;
 }
 
 export const DEFAULT_CROSSFILTER_LABELS: CrossfilterLabels = {
@@ -141,6 +146,9 @@ export const DEFAULT_CROSSFILTER_LABELS: CrossfilterLabels = {
   clear: "Clear",
   clearAll: "Clear all filters",
   excluded: "Filtered out",
+  brush:
+    "Select a rectangle: arrows move it, Shift and arrows resize it, Enter applies, Escape clears",
+  selection: (x, y) => `${x}; ${y}`,
 };
 
 const DIMMED = "color-mix(in oklab, var(--accent) 30%, transparent)";
@@ -152,21 +160,25 @@ function ChartHeader({
   labels,
 }: {
   title: string;
-  dimension: string;
+  /** Dimension (or dimensions, for a 2D brush) this chart filters. */
+  dimension: string | readonly string[];
   records: number;
   labels: CrossfilterLabels;
 }) {
   const xf = useCrossfilter();
-  const own = xf.filters[dimension] != null;
+  const owned = typeof dimension === "string" ? [dimension] : dimension;
+  const own = owned.some((id) => xf.filters[id] != null);
   return (
     <div className="mb-1 flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
       <h3 className="m-0 min-w-0 truncate font-bold text-[13px] text-ink">{title}</h3>
       <div className="flex shrink-0 items-center gap-2 font-semibold text-[12px] text-ink-3 tabular-nums">
-        <span>{labels.count(records, xf.total)}</span>
+        <span aria-live="polite">{labels.count(records, xf.total)}</span>
         {own ? (
           <button
             type="button"
-            onClick={() => xf.clear(dimension)}
+            onClick={() => {
+              for (const id of owned) xf.clear(id);
+            }}
             className="cursor-pointer rounded-button border-0 bg-surface-2 px-2 py-0.5 font-semibold text-[11px] text-ink-2 hover:text-ink"
           >
             {labels.clear}
@@ -335,6 +347,11 @@ export interface CrossfilterScatterProps {
   yFormat?: ValueFormat;
   /** Name of the point in tooltips, e.g. the client. */
   pointLabel?: (record: never) => string;
+  /** Names of the axes in the spoken brush range; the dimension ids by default. */
+  xLabel?: string;
+  yLabel?: string;
+  /** Rectangular brush on both dimensions (drag, or focus the plot and use the keys). On by default. */
+  brush?: boolean;
   /** Pixels of deterministic spread for dimensions with few distinct values. */
   jitter?: number;
   height?: number | "fill";
@@ -345,7 +362,9 @@ export interface CrossfilterScatterProps {
 
 /**
  * One dot per record: accent for the records every filter leaves in, faint for the rest, so the
- * dots you filtered out stay visible as context.
+ * dots you filtered out stay visible as context. Drag a rectangle to filter both dimensions at
+ * once (a click clears it). From the keyboard, focus the brush after the plot: arrows move the
+ * rectangle, Shift and arrows resize it, Enter applies it and Escape clears it.
  */
 export function CrossfilterScatter({
   title,
@@ -354,6 +373,9 @@ export function CrossfilterScatter({
   xFormat,
   yFormat,
   pointLabel,
+  xLabel,
+  yLabel,
+  brush = true,
   labels: labelsProp,
   className,
   ...chart
@@ -394,17 +416,35 @@ export function CrossfilterScatter({
     labels.excluded,
     labels.filtered,
   ]);
+  const fx = resolveFormat(xFormat);
+  const fy = resolveFormat(yFormat);
+  const rangeOf = (id: string) => {
+    const filter = xf.filters[id];
+    return filter?.kind === "range" ? ([filter.min, filter.max] as const) : null;
+  };
+  const brushProp = brush
+    ? {
+        value: rangesToRect(rangeOf(x), rangeOf(y)),
+        onChange: (rect: BrushRect | null) => {
+          const ranges = rect ? rectToRanges(rect) : { x: null, y: null };
+          xf.setRange(x, ranges.x);
+          xf.setRange(y, ranges.y);
+        },
+        label: labels.brush,
+        describe: (rect: BrushRect) =>
+          labels.selection(
+            `${xLabel ?? x} ${fx(rect.x0)} – ${fx(rect.x1)}`,
+            `${yLabel ?? y} ${fy(rect.y0)} – ${fy(rect.y1)}`,
+          ),
+      }
+    : undefined;
   return (
     <figure className={cn("m-0 min-w-0", className)}>
-      <ChartHeader
-        title={title}
-        dimension={`${x}:${y}`}
-        records={xf.filtered.length}
-        labels={labels}
-      />
+      <ChartHeader title={title} dimension={[x, y]} records={xf.filtered.length} labels={labels} />
       <ScatterChart
         title={title}
         series={series}
+        brush={brushProp}
         xFormat={xFormat}
         yFormat={yFormat}
         radius={3.5}
