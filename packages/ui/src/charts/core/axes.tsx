@@ -81,17 +81,32 @@ export interface AxisProps {
   title?: string;
   /** Overrides the label color (a value axis matched to its series). */
   color?: string;
+  /** Tilts the labels by this many degrees (negative reads up and to the right), e.g. -45. */
+  rotate?: number;
 }
 
 /** Category or time labels under the plot. */
-export const AxisBottom = memo(function AxisBottom({ ticks, offset }: AxisProps) {
+export const AxisBottom = memo(function AxisBottom({ ticks, offset, rotate }: AxisProps) {
   return (
     <g transform={`translate(0,${offset})`}>
-      {ticks.map((tick) => (
-        <text key={tick.key} x={tick.position} y={18} textAnchor="middle" className={TEXT}>
-          {tick.label}
-        </text>
-      ))}
+      {ticks.map((tick) =>
+        rotate ? (
+          <text
+            key={tick.key}
+            x={tick.position}
+            y={12}
+            textAnchor={rotate < 0 ? "end" : "start"}
+            transform={`rotate(${rotate} ${tick.position} 12)`}
+            className={TEXT}
+          >
+            {tick.label}
+          </text>
+        ) : (
+          <text key={tick.key} x={tick.position} y={18} textAnchor="middle" className={TEXT}>
+            {tick.label}
+          </text>
+        ),
+      )}
     </g>
   );
 });

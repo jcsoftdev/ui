@@ -32,6 +32,8 @@ export interface WaterfallChartProps {
   aspectRatio?: number;
   valueFormat?: ValueFormat;
   yAxis?: ValueAxisOptions;
+  /** "horizontal" lays the steps top to bottom and the value axis left to right. */
+  orientation?: "vertical" | "horizontal";
   /** Dashed line from each bar to the next (default true). */
   connectors?: boolean;
   /** Values written above the bars (default true). */
@@ -65,11 +67,13 @@ const Bar = memo(function Bar({
   kind,
   active,
   muted,
+  horizontal = false,
 }: {
   path: string;
   kind: WaterfallKind;
   active: boolean;
   muted: boolean;
+  horizontal?: boolean;
 }) {
   return (
     <path
@@ -80,7 +84,7 @@ const Bar = memo(function Bar({
         fill: FILL[kind],
         fillOpacity: muted ? 0.4 : kind === "subtotal" ? 0.62 : active ? 1 : 0.9,
         transformBox: "fill-box",
-        transformOrigin: "center bottom",
+        transformOrigin: horizontal ? "left center" : "center bottom",
       }}
     />
   );
@@ -103,6 +107,7 @@ export function WaterfallChart({
   aspectRatio,
   valueFormat,
   yAxis,
+  orientation = "vertical",
   connectors = true,
   dataLabels = true,
   grid = true,
@@ -161,28 +166,31 @@ export function WaterfallChart({
         />
       }
     >
-      {(width, measuredHeight) => (
-        <WaterfallPlot
-          width={width}
-          height={measuredHeight}
-          bars={layout.bars}
-          min={layout.min}
-          max={layout.max}
-          fmt={fmt}
-          valueFormat={valueFormat}
-          yAxis={yAxis}
-          connectors={connectors}
-          dataLabels={dataLabels}
-          grid={grid}
-          tooltip={tooltip}
-          animate={animate}
-          signed={signed}
-          kindName={kindName}
-          runningLabel={runningLabel}
-          labels={labels}
-          title={title}
-        />
-      )}
+      {(width, measuredHeight) => {
+        const Plot = orientation === "horizontal" ? HorizontalWaterfallPlot : WaterfallPlot;
+        return (
+          <Plot
+            width={width}
+            height={measuredHeight}
+            bars={layout.bars}
+            min={layout.min}
+            max={layout.max}
+            fmt={fmt}
+            valueFormat={valueFormat}
+            yAxis={yAxis}
+            connectors={connectors}
+            dataLabels={dataLabels}
+            grid={grid}
+            tooltip={tooltip}
+            animate={animate}
+            signed={signed}
+            kindName={kindName}
+            runningLabel={runningLabel}
+            labels={labels}
+            title={title}
+          />
+        );
+      }}
     </ChartFrame>
   );
 }
@@ -392,6 +400,210 @@ function WaterfallPlot({
         <ChartTooltip
           x={left + x.center(active)}
           y={MARGIN.top + (shapes[active] as { top: number }).top}
+          containerWidth={width}
+          title={current.label}
+          rows={[
+            {
+              id: "value",
+              name: kindName(current.kind),
+              value: signed(current),
+              color: FILL[current.kind],
+              shape: "square",
+            },
+            {
+              id: "running",
+              name: runningLabel,
+              value: fmt(current.to),
+              color: "var(--ink-3)",
+              shape: "dot",
+            },
+          ]}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+const H_MARGIN = { top: 8, right: 56, bottom: 30 };
+
+function HorizontalWaterfallPlot({
+  width,
+  height,
+  bars,
+  min,
+  max,
+  fmt,
+  valueFormat,
+  yAxis,
+  connectors,
+  dataLabels,
+  grid,
+  tooltip,
+  animate,
+  signed,
+  kindName,
+  runningLabel,
+  labels,
+  title,
+}: PlotProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [active, setActive] = useState<number | null>(null);
+  const innerHeight = Math.max(40, height - H_MARGIN.top - H_MARGIN.bottom);
+
+  const model = useMemo(() => {
+    const left = Math.min(
+      width * 0.36,
+      Math.max(48, ...bars.map((bar) => estimateTextWidth(bar.label, 12))) + 14,
+    );
+    const innerWidth = Math.max(40, width - left - (dataLabels ? H_MARGIN.right : 12));
+    const x = linearScale({
+      domain: [yAxis?.min ?? min, yAxis?.max ?? max],
+      range: [0, innerWidth],
+      tickCount: yAxis?.tickCount ?? Math.max(2, Math.round(innerWidth / 130)),
+    });
+    const axisFormat = resolveAxisFormat(yAxis?.format ?? valueFormat);
+    const xTicks = x
+      .ticks()
+      .map((tick) => ({ key: tick, position: x.map(tick), label: axisFormat(tick) }));
+    const band = bandScale({
+      count: bars.length,
+      range: [0, innerHeight],
+      paddingInner: 0.3,
+      paddingOuter: 0.1,
+    });
+    const maxChars = Math.max(3, Math.floor((left - 14) / 6.6));
+    const yTicks = bars.map((bar, i) => ({
+      key: bar.id,
+      position: band.center(i),
+      label: truncate(bar.label, maxChars),
+    }));
+    const shapes = bars.map((bar, i) => {
+      const a = x.map(Math.min(bar.from, bar.to));
+      const b = x.map(Math.max(bar.from, bar.to));
+      const w = Math.max(1.5, b - a);
+      return {
+        bar,
+        y: band.start(i),
+        left: a,
+        right: a + w,
+        path: roundedRectPath(a, band.start(i), w, band.bandwidth, { tl: 4, tr: 4, br: 4, bl: 4 }),
+      };
+    });
+    return { x, xTicks, yTicks, left, innerWidth, band, shapes };
+  }, [bars, min, max, innerHeight, width, yAxis, valueFormat, dataLabels]);
+  const { x, xTicks, yTicks, left, innerWidth, band, shapes } = model;
+
+  useEntryAnimation(
+    svgRef,
+    (root) => {
+      const list = root.querySelectorAll("[data-bar]");
+      const per = Math.min(60, 520 / Math.max(1, list.length));
+      list.forEach((bar, i) => {
+        bar.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }], {
+          duration: 560,
+          delay: i * per,
+          easing: EASE_OUT,
+          fill: "backwards",
+        });
+      });
+      for (const node of root.querySelectorAll("[data-fade]")) fadeIn(node, 360, 520);
+    },
+    { disabled: !animate },
+  );
+
+  const current = active != null ? (bars[active] as WaterfallBar) : null;
+  const valueText = current
+    ? `${current.label}. ${kindName(current.kind)} ${signed(current)}. ${runningLabel} ${fmt(current.to)}`
+    : labels.explore;
+
+  return (
+    <div className="relative" style={{ width }}>
+      <svg
+        ref={svgRef}
+        role="img"
+        aria-label={title}
+        width={width}
+        height={height}
+        className="block overflow-visible"
+      >
+        <g transform={`translate(${left},${H_MARGIN.top})`}>
+          {grid ? (
+            <GridLines ticks={xTicks} direction="vertical" length={innerHeight} zero={x.map(0)} />
+          ) : null}
+          <AxisLeft ticks={yTicks} offset={0} />
+          <AxisBottom ticks={xTicks} offset={innerHeight} />
+          {connectors
+            ? shapes.slice(0, -1).map((shape, i) => {
+                const next = shapes[i + 1];
+                if (!next) return null;
+                const level = x.map(shape.bar.to);
+                return (
+                  <line
+                    key={shape.bar.id}
+                    data-fade=""
+                    x1={level}
+                    x2={level}
+                    y1={shape.y + band.bandwidth}
+                    y2={next.y}
+                    strokeDasharray="3 3"
+                    shapeRendering="crispEdges"
+                    style={{ stroke: "var(--ink-3)", strokeOpacity: 0.7 }}
+                  />
+                );
+              })
+            : null}
+          {shapes.map((shape, i) => (
+            <Bar
+              key={shape.bar.id}
+              path={shape.path}
+              kind={shape.bar.kind}
+              horizontal
+              active={active === i}
+              muted={active != null && active !== i}
+            />
+          ))}
+          {dataLabels
+            ? shapes.map((shape, i) => (
+                <text
+                  key={shape.bar.id}
+                  data-fade=""
+                  x={shape.right + 6}
+                  y={shape.y + band.bandwidth / 2}
+                  dy="0.34em"
+                  className="font-bold text-[11px] tabular-nums"
+                  style={{
+                    fill:
+                      shape.bar.kind === "increase"
+                        ? DIRECTION_COLORS.up
+                        : shape.bar.kind === "decrease"
+                          ? DIRECTION_COLORS.down
+                          : "var(--ink)",
+                    opacity: active != null && active !== i ? 0.45 : 1,
+                  }}
+                >
+                  {signed(shape.bar)}
+                </text>
+              ))
+            : null}
+        </g>
+      </svg>
+      <PlotOverlay
+        left={0}
+        top={H_MARGIN.top}
+        width={left + innerWidth}
+        height={innerHeight}
+        label={labels.explore}
+        count={bars.length}
+        active={active}
+        valueText={valueText}
+        onActiveChange={setActive}
+        keys="vertical"
+        indexAt={({ y }) => (bars.length ? band.indexAt(y) : null)}
+      />
+      {tooltip && current && active != null ? (
+        <ChartTooltip
+          x={left + (shapes[active] as { right: number }).right}
+          y={H_MARGIN.top + band.center(active)}
           containerWidth={width}
           title={current.label}
           rows={[

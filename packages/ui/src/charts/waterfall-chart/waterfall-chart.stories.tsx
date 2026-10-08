@@ -48,6 +48,7 @@ const meta = {
   argTypes: {
     valueFormat: { control: "select", options: ["number", "integer", "currency", "compact"] },
     steps: { control: false },
+    orientation: { control: "inline-radio", options: ["vertical", "horizontal"] },
     height: { control: { type: "range", min: 200, max: 560, step: 10 } },
   },
   decorators: [
@@ -78,6 +79,10 @@ export const NegativeBalance: Story = {
       { label: "Resultado", type: "total" },
     ],
   },
+};
+
+export const Horizontal: Story = {
+  args: { orientation: "horizontal", height: 380 },
 };
 
 export const Loading: Story = { args: { loading: true } };
