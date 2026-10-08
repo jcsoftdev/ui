@@ -68,6 +68,7 @@ export function filterKindOf<T>(column: DataGridColumn<T>): FilterKind {
     case "date":
       return "dateRange";
     case "status":
+    case "boolean":
       return "select";
     default:
       return "text";
@@ -80,6 +81,21 @@ export function normalizeText(text: string): string {
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
+}
+
+/** Epoch milliseconds of a date-like cell value, null when it is not one. */
+export function cellToTime(value: CellValue): number | null {
+  return toTime(value);
+}
+
+/** Finite number of a numeric-like cell value (dates become their time), null otherwise. */
+export function cellToNumber(value: CellValue): number | null {
+  return toNumber(value);
+}
+
+/** Epoch milliseconds of an ISO `yyyy-mm-dd` day, local midnight or the end of that day. */
+export function isoDayBounds(iso: string, endOfDay: boolean): number | null {
+  return isoDayTime(iso, endOfDay);
 }
 
 function toTime(value: CellValue): number | null {
@@ -225,9 +241,9 @@ export function matchesFilter<T>(
   }
 }
 
-/** Value used by the select filter and by grouping: dates by day, the rest as text. */
+/** Value used by the select filter and by grouping: dates by day, booleans as Sí / No, the rest as text. */
 export function selectKey<T>(value: CellValue, column: DataGridColumn<T>): string {
-  if (value instanceof Date) return formatCellValue(value, column);
+  if (value instanceof Date || typeof value === "boolean") return formatCellValue(value, column);
   return value === null || value === undefined ? "" : String(value);
 }
 
@@ -263,6 +279,44 @@ export function filterRows<T>(
     );
     return words.every((word) => haystack.includes(word));
   });
+}
+
+/** Select-filter value that matches no row: "nothing checked" in a set filter. */
+export const SET_NONE = "\u0000none";
+
+/** Checked values of a set filter: every option while the filter is inactive. */
+export function checkedSetValues(
+  options: readonly string[],
+  filter: FilterValue | undefined,
+): Set<string> {
+  if (filter?.kind !== "select" || filter.values.length === 0) return new Set(options);
+  return new Set(filter.values.filter((value) => value !== SET_NONE));
+}
+
+/**
+ * Checks or unchecks `values` in a set filter and returns the new filter: `undefined` when every
+ * option ends up checked (no filtering), the `SET_NONE` marker when none is.
+ */
+export function toggleSetValues(
+  options: readonly string[],
+  filter: FilterValue | undefined,
+  values: readonly string[],
+  checked: boolean,
+): FilterValue | undefined {
+  const next = checkedSetValues(options, filter);
+  for (const value of values) {
+    if (checked) next.add(value);
+    else next.delete(value);
+  }
+  const kept = options.filter((option) => next.has(option));
+  if (kept.length === options.length) return undefined;
+  return { kind: "select", values: kept.length === 0 ? [SET_NONE] : kept };
+}
+
+/** Options that contain the search text (accents and case ignored). */
+export function searchOptions(options: readonly string[], query: string): string[] {
+  const needle = normalizeText(query.trim());
+  return needle === "" ? [...options] : options.filter((o) => normalizeText(o).includes(needle));
 }
 
 /** Distinct select-filter values of a column, sorted. */

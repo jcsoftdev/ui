@@ -18,11 +18,17 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import { type ReactNode, useId } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";
-import { filterKindOf, isFilterActive } from "./model.js";
+import {
+  checkedSetValues,
+  filterKindOf,
+  isFilterActive,
+  searchOptions,
+  toggleSetValues,
+} from "./model.js";
 import type { DataGridColumn, FilterValue, PinSide, SortDirection } from "./types.js";
 
 export interface ColumnMenuProps<T> {
@@ -94,6 +100,75 @@ function parseNumber(text: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+/** Searchable checkbox list with a select-all control; unchecking values narrows the rows. */
+function SetFilterEditor<T>({
+  column,
+  filter,
+  labels,
+  values,
+  onFilter,
+}: Pick<ColumnMenuProps<T>, "column" | "filter" | "labels" | "values" | "onFilter">) {
+  const id = useId();
+  const [query, setQuery] = useState("");
+  const options = values();
+  const visible = searchOptions(options, query);
+  const checked = checkedSetValues(options, filter);
+  const visibleChecked = visible.filter((value) => checked.has(value)).length;
+  const allVisible = visible.length > 0 && visibleChecked === visible.length;
+  return (
+    <div className="grid gap-1.5">
+      <input
+        type="search"
+        aria-label={`${labels.searchValues}: ${column.header}`}
+        placeholder={labels.searchValues}
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        className={inputClass}
+      />
+      <fieldset className="grid max-h-48 gap-0.5 overflow-y-auto">
+        <legend className="sr-only">{`${labels.filter}: ${column.header}`}</legend>
+        <label className="flex min-h-7 items-center gap-2 border-line border-b px-1 text-[13px] text-ink-2">
+          <input
+            type="checkbox"
+            className="size-4 accent-accent"
+            checked={allVisible}
+            disabled={visible.length === 0}
+            ref={(node) => {
+              if (node) node.indeterminate = visibleChecked > 0 && !allVisible;
+            }}
+            onChange={() => onFilter(toggleSetValues(options, filter, visible, !allVisible))}
+          />
+          <span className="flex-1">{labels.selectAllValues}</span>
+          <span className="text-[11px] text-ink-3 tabular-nums">
+            {labels.valuesChecked(checked.size, options.length)}
+          </span>
+        </label>
+        {visible.length === 0 ? (
+          <p className="px-1 py-1.5 text-[13px] text-ink-3">{labels.noMatches}</p>
+        ) : null}
+        {visible.map((value, index) => (
+          <label
+            key={value}
+            htmlFor={`${id}-${index}`}
+            className="flex min-h-7 items-center gap-2 px-1 text-[13px] text-ink"
+          >
+            <input
+              id={`${id}-${index}`}
+              type="checkbox"
+              className="size-4 accent-accent"
+              checked={checked.has(value)}
+              onChange={(event) =>
+                onFilter(toggleSetValues(options, filter, [value], event.target.checked))
+              }
+            />
+            <span className="truncate">{value || "—"}</span>
+          </label>
+        ))}
+      </fieldset>
+    </div>
+  );
+}
+
 function FilterEditor<T>({
   column,
   filter,
@@ -159,6 +234,18 @@ function FilterEditor<T>({
           </label>
         ))}
       </div>
+    );
+  }
+
+  if (kind === "set") {
+    return (
+      <SetFilterEditor
+        column={column}
+        filter={filter}
+        labels={labels}
+        values={values}
+        onFilter={onFilter}
+      />
     );
   }
 

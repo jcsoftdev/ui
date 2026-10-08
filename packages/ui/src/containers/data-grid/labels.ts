@@ -1,4 +1,5 @@
 import { formatNumber } from "../../charts/core/format.js";
+import type { FilterOperator } from "./filter-builder.js";
 import type { Density } from "./types.js";
 
 /** Every visible or announced string of DataGrid (Spanish by default). */
@@ -54,6 +55,75 @@ export interface DataGridLabels {
   lastPage: string;
   keyboardHelp: string;
   aggregate: Record<"sum" | "avg" | "count" | "min" | "max", string>;
+
+  // set filter
+  searchValues: string;
+  selectAllValues: string;
+  noMatches: string;
+  valuesChecked: (checked: number, total: number) => string;
+  // validation
+  invalidCell: string;
+  // expansion, tree, details
+  rowActions: string;
+  expandRow: string;
+  collapseRow: string;
+  detailOf: (row: string) => string;
+  // row pinning and reordering
+  pinRowTop: string;
+  pinRowBottom: string;
+  unpinRow: string;
+  dragRow: string;
+  moveRowUp: string;
+  moveRowDown: string;
+  moveColumnUp: string;
+  moveColumnDown: string;
+  reorderBlocked: string;
+  rowMoved: (row: string, position: number, total: number) => string;
+  // range selection
+  rangeCells: (count: number) => string;
+  rangeSum: string;
+  rangeAvg: string;
+  rangeCount: string;
+  rangeMin: string;
+  rangeMax: string;
+  rangeCopied: (count: number) => string;
+  rangeHint: string;
+  copyRange: string;
+  // remote data
+  loadError: string;
+  retry: string;
+  loadingRows: string;
+  // advanced filter
+  advancedFilter: string;
+  addCondition: string;
+  addGroup: string;
+  removeNode: string;
+  matchAll: string;
+  matchAny: string;
+  filterAnd: string;
+  filterOr: string;
+  filterColumn: string;
+  filterOperator: string;
+  filterValue: string;
+  filterValueTo: string;
+  filterGroupLabel: string;
+  noConditions: string;
+  clearAdvancedFilter: string;
+  operators: Record<FilterOperator, string>;
+  // tool panel and pivot
+  toolPanel: string;
+  panelColumns: string;
+  panelRowGroups: string;
+  panelPivot: string;
+  pivotMode: string;
+  pivotRows: string;
+  pivotColumn: string;
+  pivotValue: string;
+  pivotAggregate: string;
+  pivotIncomplete: string;
+  noneOption: string;
+  // export
+  exportSelection: string;
 }
 
 const integer = { format: (value: number) => formatNumber(value) };
@@ -111,6 +181,83 @@ export const DEFAULT_DATA_GRID_LABELS: DataGridLabels = {
   nextPage: "Página siguiente",
   lastPage: "Última página",
   keyboardHelp:
-    "Flechas para moverte entre celdas; Inicio y Fin, Re Pág y Av Pág para saltar. En un encabezado: Enter ordena (Mayús + Enter agrega un orden), Alt + Flecha abajo abre sus opciones, Mayús + Flechas cambia el ancho y Ctrl + Mayús + Flechas la mueve. En una fila: Espacio la selecciona y Enter o F2 edita la celda.",
+    "Flechas para moverte entre celdas; Inicio y Fin, Re Pág y Av Pág para saltar. En un encabezado: Enter ordena (Mayús + Enter agrega un orden), Alt + Flecha abajo abre sus opciones, Mayús + Flechas cambia el ancho y Ctrl + Mayús + Flechas la mueve. En una fila: Espacio la selecciona, Enter o F2 edita la celda, Alt + Flecha derecha o izquierda la expande o contrae, Alt + Flecha arriba o abajo la reordena y Alt + Mayús + Flecha arriba o abajo la fija. Con selección de celdas: Mayús + Flechas amplía el rango y Ctrl + C lo copia.",
   aggregate: { sum: "Suma", avg: "Promedio", count: "Cantidad", min: "Mínimo", max: "Máximo" },
+
+  searchValues: "Buscar valores…",
+  selectAllValues: "Seleccionar todo",
+  noMatches: "Sin coincidencias",
+  valuesChecked: (checked, total) => `${checked} de ${total}`,
+  invalidCell: "Valor no válido",
+  rowActions: "Acciones de fila",
+  expandRow: "Expandir fila",
+  collapseRow: "Contraer fila",
+  detailOf: (row) => `Detalle de ${row}`,
+  pinRowTop: "Fijar fila arriba",
+  pinRowBottom: "Fijar fila abajo",
+  unpinRow: "Desfijar fila",
+  dragRow: "Arrastrar para reordenar",
+  moveRowUp: "Subir fila",
+  moveRowDown: "Bajar fila",
+  moveColumnUp: "Subir columna",
+  moveColumnDown: "Bajar columna",
+  reorderBlocked: "Quita el orden, los filtros y la agrupación para reordenar filas.",
+  rowMoved: (row, position, total) => `${row} movida a la posición ${position} de ${total}`,
+  rangeCells: (count) => (count === 1 ? "1 celda" : `${integer.format(count)} celdas`),
+  rangeSum: "Suma",
+  rangeAvg: "Promedio",
+  rangeCount: "Cantidad",
+  rangeMin: "Mínimo",
+  rangeMax: "Máximo",
+  rangeCopied: (count) =>
+    count === 1 ? "1 celda copiada" : `${integer.format(count)} celdas copiadas`,
+  copyRange: "Copiar",
+  rangeHint: "Arrastra o usa Mayús + flechas para seleccionar celdas; Ctrl + C las copia.",
+  loadError: "No se pudieron cargar las filas.",
+  retry: "Reintentar",
+  loadingRows: "Cargando filas…",
+  advancedFilter: "Filtro avanzado",
+  addCondition: "Agregar condición",
+  addGroup: "Agregar grupo",
+  removeNode: "Quitar",
+  matchAll: "Cumple todas (Y)",
+  matchAny: "Cumple alguna (O)",
+  filterAnd: "Y",
+  filterOr: "O",
+  filterColumn: "Columna",
+  filterOperator: "Operador",
+  filterValue: "Valor",
+  filterValueTo: "Hasta",
+  filterGroupLabel: "Grupo de condiciones",
+  noConditions: "Sin condiciones. Agrega una para filtrar.",
+  clearAdvancedFilter: "Limpiar filtro avanzado",
+  operators: {
+    contains: "contiene",
+    notContains: "no contiene",
+    equals: "es igual a",
+    notEquals: "es distinto de",
+    startsWith: "empieza con",
+    endsWith: "termina con",
+    gt: "es mayor que",
+    gte: "es mayor o igual que",
+    lt: "es menor que",
+    lte: "es menor o igual que",
+    between: "está entre",
+    before: "es anterior a",
+    after: "es posterior a",
+    isEmpty: "está vacío",
+    isNotEmpty: "no está vacío",
+  },
+  toolPanel: "Panel de columnas",
+  panelColumns: "Columnas",
+  panelRowGroups: "Agrupar filas",
+  panelPivot: "Tabla dinámica",
+  pivotMode: "Modo dinámico",
+  pivotRows: "Filas",
+  pivotColumn: "Columnas",
+  pivotValue: "Valor",
+  pivotAggregate: "Función",
+  pivotIncomplete: "Elige al menos un campo de fila, la columna y el valor.",
+  noneOption: "Ninguna",
+  exportSelection: "Exportar selección",
 };
