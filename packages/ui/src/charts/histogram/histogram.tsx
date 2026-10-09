@@ -20,7 +20,7 @@ import {
 } from "../core/distribution/stats.js";
 import { type ColoredSeries, useDistributionLegend } from "../core/distribution/use-legend.js";
 import { formatNumber, formatPercent, resolveFormat, type ValueFormat } from "../core/format.js";
-import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
+import { EASE_OUT, fadeKeyframes, useEntryAnimation } from "../core/motion.js";
 import { barPath, linePath } from "../core/path.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 
@@ -400,7 +400,7 @@ function HistogramPlot({
         });
       });
       root.querySelectorAll("[data-curve]").forEach((curve) => {
-        curve.animate([{ opacity: 0 }, { opacity: 1 }], {
+        curve.animate(fadeKeyframes(curve), {
           duration: 500,
           delay: 420,
           easing: "ease-out",

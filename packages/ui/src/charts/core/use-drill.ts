@@ -86,7 +86,7 @@ export function useAnimatedView(
     let frame = 0;
     const start = performance.now();
     const step = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
+      const t = Math.min(1, Math.max(0, (now - start) / duration));
       const next = interpolateView(from, to, easeOutCubic(t));
       current.current = next;
       setView(next);

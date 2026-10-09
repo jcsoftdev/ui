@@ -810,7 +810,7 @@ function useTweenedValues(items: readonly Resolved[], disabled: boolean): number
     const started = performance.now();
     let frame = 0;
     const step = (now: number) => {
-      const t = easeOutCubic(Math.min(1, (now - started) / 700));
+      const t = easeOutCubic(Math.min(1, Math.max(0, (now - started) / 700)));
       const next: Record<string, number> = {};
       for (const id of Object.keys(target)) {
         const start = from[id] ?? 0;

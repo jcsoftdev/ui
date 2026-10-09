@@ -6,7 +6,13 @@ import { DECORATIVE } from "../core/a11y.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
 import { resolveFormat, type ValueFormat } from "../core/format.js";
-import { EASE_OUT, fadeIn, useAnimatedNumber, useEntryAnimation } from "../core/motion.js";
+import {
+  EASE_OUT,
+  fadeIn,
+  fadeKeyframes,
+  useAnimatedNumber,
+  useEntryAnimation,
+} from "../core/motion.js";
 import { type ChartTone, TONE_COLORS } from "../core/palette.js";
 import { arcLine, degToRad, polarPoint, radToDeg } from "../core/polar.js";
 import { ChartTooltip } from "../core/tooltip.js";
@@ -309,7 +315,7 @@ function GaugePlot({
     svgRef,
     (root) => {
       root.querySelectorAll("[data-band]").forEach((node, i) => {
-        node.animate([{ opacity: 0 }, { opacity: 1 }], {
+        node.animate(fadeKeyframes(node), {
           duration: 500,
           delay: i * 90,
           easing: EASE_OUT,

@@ -17,7 +17,7 @@ import { ChartFrame } from "../chart-frame.js";
 import { tint } from "../color-scale.js";
 import { ChartDataTable } from "../data-table.js";
 import { formatNumber, resolveFormat, type ValueFormat } from "../format.js";
-import { useEntryAnimation } from "../motion.js";
+import { fadeKeyframes, useEntryAnimation } from "../motion.js";
 import { type ChartTone, TONE_COLORS } from "../palette.js";
 import { formatDate } from "../scales/time.js";
 import { ChartTooltip, type TooltipRow } from "../tooltip.js";
@@ -858,7 +858,7 @@ function XYPointPlot({
         );
       });
       root.querySelectorAll("[data-trend]").forEach((line) => {
-        line.animate([{ opacity: 0 }, { opacity: 1 }], {
+        line.animate(fadeKeyframes(line), {
           duration: 500,
           delay: 500,
           easing: "ease-out",
@@ -873,7 +873,7 @@ function XYPointPlot({
     wrapRef,
     (root) => {
       root.querySelectorAll("[data-canvas]").forEach((layer) => {
-        layer.animate([{ opacity: 0 }, { opacity: 1 }], {
+        layer.animate(fadeKeyframes(layer), {
           duration: 450,
           easing: "ease-out",
           fill: "backwards",

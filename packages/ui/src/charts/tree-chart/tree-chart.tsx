@@ -12,7 +12,7 @@ import {
 import { cn } from "../../utils/cn.js";
 import { ChartFrame } from "../core/chart-frame.js";
 import { ChartDataTable } from "../core/data-table.js";
-import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
+import { EASE_OUT, fadeKeyframes, useEntryAnimation } from "../core/motion.js";
 import { type TreeFitMode, treeFitView } from "../core/tree-fit.js";
 import {
   type TreeDirection,
@@ -568,7 +568,7 @@ function TreePlot({
         );
       });
       root.querySelectorAll("[data-tree-edges]").forEach((element) => {
-        element.animate([{ opacity: 0 }, { opacity: 1 }], {
+        element.animate(fadeKeyframes(element), {
           duration: 500,
           delay: 160,
           easing: "ease-out",

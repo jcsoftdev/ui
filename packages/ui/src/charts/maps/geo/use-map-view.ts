@@ -90,7 +90,7 @@ export function useMapView<E extends Element>({
       const from = viewRef.current;
       const start = performance.now();
       const step = (now: number) => {
-        const t = Math.min(1, (now - start) / DURATION);
+        const t = Math.min(1, Math.max(0, (now - start) / DURATION));
         const e = easeOut(t);
         // Interpolate zoom geometrically so the speed feels constant.
         const k = from.k * (goal.k / from.k) ** e;

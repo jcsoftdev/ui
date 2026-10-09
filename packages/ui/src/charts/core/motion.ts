@@ -1,6 +1,7 @@
 "use client";
 
 import { type RefObject, useEffect, useRef, useState } from "react";
+import { useIsomorphicLayoutEffect } from "./use-chart-size.js";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -47,8 +48,10 @@ export function useEntryAnimation<T extends Element>(
   play: (root: T) => void,
   { disabled = false, replayKey }: EntryAnimationOptions = {},
 ): void {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: replays only when the key changes.
-  useEffect(() => {
+  // A layout effect starts the animations before the first paint. With a plain
+  // effect the final state paints for one frame, then `fill: "backwards"` hides
+  // it again, which reads as a flicker. Replays only when the key changes.
+  useIsomorphicLayoutEffect(() => {
     const root = ref.current;
     if (disabled || !root || typeof root.animate !== "function" || prefersReducedMotion()) return;
     play(root);
@@ -65,9 +68,19 @@ export function revealClip(element: Element, duration = 900, delay = 0): void {
   });
 }
 
+/**
+ * Fade-in keyframes that end at the element's own opacity. Ending at 1 would
+ * show a translucent element at full strength, then snap it back when the
+ * animation finishes.
+ */
+export function fadeKeyframes(element: Element): Keyframe[] {
+  const resting = typeof getComputedStyle === "function" ? getComputedStyle(element).opacity : "1";
+  return [{ opacity: 0 }, { opacity: resting || "1" }];
+}
+
 /** Fades an element in. */
 export function fadeIn(element: Element, duration = 400, delay = 0): void {
-  element.animate([{ opacity: 0 }, { opacity: 1 }], {
+  element.animate(fadeKeyframes(element), {
     duration,
     delay,
     easing: "ease-out",
@@ -100,7 +113,8 @@ export function useAnimatedNumber(
     const startedAt = performance.now();
     let frame = 0;
     const tick = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration);
+      // rAF timestamps are the frame start and can precede `startedAt`.
+      const progress = Math.min(1, Math.max(0, (now - startedAt) / duration));
       const eased = 1 - (1 - progress) ** 3;
       setValue(start + (target - start) * eased);
       if (progress < 1) frame = requestAnimationFrame(tick);

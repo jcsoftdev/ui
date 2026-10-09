@@ -92,7 +92,7 @@ export function useTreeTransition(
     let frame = 0;
     const start = performance.now();
     const step = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
+      const t = Math.min(1, Math.max(0, (now - start) / duration));
       if (t >= 1) {
         show(final);
         return;

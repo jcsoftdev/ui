@@ -11,7 +11,7 @@ import {
   scaleGradient,
 } from "../core/color-scale.js";
 import type { ValueFormatter } from "../core/format.js";
-import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
+import { EASE_OUT, fadeKeyframes, useEntryAnimation } from "../core/motion.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type ChartLabels, DEFAULT_LABELS } from "../core/types.js";
 import { useCanvasPaint } from "../core/use-canvas.js";
@@ -172,7 +172,7 @@ export function HeatmapGrid({
     svgRef,
     (element) => {
       element.querySelectorAll("[data-column]").forEach((group, index) => {
-        group.animate([{ opacity: 0 }, { opacity: 1 }], {
+        group.animate(fadeKeyframes(group), {
           duration: 420,
           delay: Math.min(index * (360 / Math.max(1, columns)), 360),
           easing: EASE_OUT,
