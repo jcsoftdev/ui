@@ -41,7 +41,7 @@ export interface GaugeChartProps {
   variant?: "semi" | "three-quarter";
   /** Filled arc (`progress`) or a pointer over the bands (`needle`). */
   mode?: "progress" | "needle";
-  /** Colored bands. With `progress` they sit behind the arc and the arc takes the color of the band it is in. */
+  /** Colored bands. With `progress` the track stays neutral, the arc takes the color of the band it is in, and a band shows only while hovered or focused. */
   ranges?: readonly GaugeRange[];
   height?: number | "fill";
   /** Width / height ratio; sizes the drawing from the container width when `height` is not "fill". */
@@ -406,7 +406,7 @@ function GaugePlot({
           </defs>
         ) : null}
 
-        {bands.length === 0 ? (
+        {bands.length === 0 || !needle ? (
           <path
             d={arcLine(cx, cy, mid, a0 + capAngle, a1 - capAngle)}
             fill="none"
@@ -414,7 +414,8 @@ function GaugePlot({
             strokeLinecap={roundedCaps ? "round" : "butt"}
             style={{ stroke: "var(--chart-grid)" }}
           />
-        ) : (
+        ) : null}
+        {bands.length > 0 ? (
           <g mask={roundedCaps ? `url(#${uid}-track)` : undefined}>
             {bandPaths.map((path, index) => {
               const item = bands[index];
@@ -426,15 +427,18 @@ function GaugePlot({
                   d={path}
                   width={band}
                   color={rangeColor(item)}
-                  opacity={needle ? 0.92 : 0.26}
-                  dimmed={focused != null && focused !== index}
+                  // In progress mode the bands behind the arc would show as a
+                  // patchwork of tints next to it, so they stay invisible hit areas
+                  // and only appear while explored.
+                  opacity={needle ? 0.92 : focused === index ? 0.32 : 0}
+                  dimmed={needle && focused != null && focused !== index}
                   onEnter={(event) => nav.hover(index, event)}
                   onLeave={nav.leave}
                 />
               );
             })}
           </g>
-        )}
+        ) : null}
 
         {!needle && fraction > 0 ? (
           <path
