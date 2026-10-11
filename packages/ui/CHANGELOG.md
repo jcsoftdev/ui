@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (draft)
+## 0.2.0 (2026-10-11)
 
 Zero runtime dependencies, a published headless layer, per-part customization and a configurable
 class merge. This release has breaking changes, listed below.
@@ -72,6 +72,23 @@ Props and behavior
   StatusPill `led` is `dot`. `overlayClassName` / `closeClassName` on Dialog and Drawer content
   were never released and are not available; `Carousel.slideClassName` remains.
 - Merge order for `className` against `classNames.root` is now `className` last.
+
+### Migration from 0.1.x
+
+1. Upgrade to `@jcsoftdev/ui@0.2.0`. Your own dependencies on `lucide-react`, `clsx`,
+   `tailwind-merge`, `sonner` or `@radix-ui/*` are no longer pulled in by the kit; keep them only if
+   your app imports them directly.
+2. Replace `import { X } from "lucide-react"` with `import { X } from "@jcsoftdev/ui/icons"` where
+   you pass icons to kit components (the `LucideIcon` type still works as an alias of
+   `IconComponent`).
+3. Search your CSS for `--radix-popover-content-*`, `--radix-dropdown-menu-content-*`,
+   `[data-radix-popper-content-wrapper]`, `--cmdk-list-height` and `[cmdk-*]`, and rename them as
+   listed under "Breaking changes".
+4. If you passed Radix or `sonner` props through `Popover`, menus, `Command.Dialog` or `Toaster`,
+   drop the ones listed as removed; `className` now wins over `classNames.root`.
+5. Check light-theme text that uses `ink-3`: it is darker now (`#666673`).
+6. Optional: use `classNames` per part, `createCn` / `extendCn` for your own tokens, and
+   `@jcsoftdev/ui/primitives` for headless building blocks.
 
 ### Other changes
 

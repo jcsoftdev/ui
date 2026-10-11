@@ -14,7 +14,7 @@ import {
   ToolCall,
 } from "@jcsoftdev/ui/ai";
 import { useMounted } from "./bento";
-import { Paperclip } from "lucide-react";
+import { Paperclip } from "@jcsoftdev/ui/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Stage = "thinking" | "searching" | "answering" | "done";

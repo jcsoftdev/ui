@@ -1,6 +1,6 @@
 import { Segmented, SegmentedItem } from "@jcsoftdev/ui/navigation";
 import { AccentPicker } from "@jcsoftdev/ui/forms";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun } from "@jcsoftdev/ui/icons";
 import { useEffect, useState } from "react";
 import { ACCENTS, applyPreset, applyTheme, STYLES, usePreset } from "./PresetSwitcher";
 

@@ -42,7 +42,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - [x] T12 Command palette replacing `cmdk`: fuzzy scoring with keywords, groups hidden when empty, arrow/Home/End, result count live region, on the new Dialog. Route: delegated.
 - [x] T14 Publish primitives: package.json `exports` subpath `./primitives` (types, ESM), primitives barrel, docs page, tree-shake check that a styled-only import does not pull unrelated primitives. Route: delegated.
 - [x] T15 Customization audit: every styled component exposes className per part (or a classNames object), no hardcoded colours/sizes outside theme tokens, variants overridable; document theming (CSS variables override) for consumers. Route: delegated.
-- [ ] T13 Remove all `dependencies`, update docs/site and changelog, release 0.2.0, bump barber web and smoke-test its screens. Route: delegated.
+- [ ] T13 (prepared 2026-10-11, publish pending) Remove all `dependencies`, update docs/site and changelog, release 0.2.0, bump barber web and smoke-test its screens. Route: delegated.
 
 ## Acceptance criteria
 - `packages/ui/package.json` has no `dependencies`.
@@ -94,3 +94,5 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 
 ## Next step
 T13 last: remove nothing further from `dependencies` (already none), finalize the 0.2.0 changelog date and version bump, release from the chain, bump barber web and smoke-test its screens (update its `--radix-*`/`[cmdk-*]` selectors if any), replace the site's own `lucide-react` use.
+
+- 2026-10-11: T13 prepared on `feat/zero-deps-t13-release` (from T14 tip `40a7273`); publish pending (owner). `packages/ui` bumped to 0.2.0 (only version reference in the repo, as in `26fd3ff`); CHANGELOG 0.2.0 dated 2026-10-11 with a migration section; `lucide-react` removed from `site/` (landing components use `@jcsoftdev/ui/icons`: Moon, Sun, RotateCcw, Paperclip; dropped from `site/package.json`, `astro.config.mjs` ssr.noExternal and the lockfile). `packages/ui/package.json` has no `dependencies`, only react/react-dom 19 peers. Verification: root lint, typecheck, packages/ui lint (0 errors, 10 warnings), typecheck, test (502), build, check:treeshake, check:dist-imports, check:docs-examples, `pnpm build:site` (434 pages), `test:stories` (208 files / 1397 tests), `pnpm pack` (jcsoftdev-ui-0.2.0.tgz, 1.7 MB, 2341 files, no stories or tests inside). Publish: pushing tag `v0.2.0` triggers `.github/workflows/release.yml` (tag must equal package version; runs install --frozen-lockfile, lint, test, build, typecheck, then `npm publish --access public --provenance` via OIDC). Remaining: merge chain, tag, publish, bump barber web and smoke-test its screens.
