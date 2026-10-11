@@ -1,4 +1,16 @@
-import { CONFLICTS, type Def, GROUPS, ORDER_SENSITIVE } from "./class-groups";
+import {
+  CONFLICTS,
+  type Def,
+  GROUPS,
+  type GroupEntry,
+  ORDER_SENSITIVE,
+  RADII,
+  SHADOWS,
+  SPACINGS,
+  TEXT_SIZES,
+  type ThemeKey,
+  type ThemeRef,
+} from "./class-groups";
 import type { Validator } from "./class-validators";
 
 /**
@@ -29,28 +41,42 @@ function child(parent: Node, path: string): Node {
   return cur;
 }
 
-function add(into: Node, group: string, defs: Def[]): void {
+/** Extra theme tokens, without the Tailwind prefix: `text: ["hero"]` teaches `text-hero`. */
+export type ClassMergeTheme = Partial<Record<ThemeKey, readonly string[]>>;
+
+/** Options for {@link createClassMerger}. */
+export interface ClassMergeConfig {
+  /** Extra tokens per theme namespace, added to the kit's own. */
+  theme?: ClassMergeTheme;
+  /** Extra class groups, `[groupId, prefix, values]`. Reusing a kit group id joins that group. */
+  classGroups?: readonly GroupEntry[];
+  /** Extra conflicts: `groupId -> groups it overrides`. Merged with the kit's map. */
+  conflicts?: Readonly<Record<string, readonly string[]>>;
+}
+
+const KIT_THEME: Record<ThemeKey, readonly string[]> = {
+  text: TEXT_SIZES,
+  spacing: SPACINGS,
+  radius: RADII,
+  shadow: SHADOWS,
+  color: [],
+};
+
+const isThemeRef = (def: Def): def is ThemeRef => typeof (def as ThemeRef).$theme === "string";
+
+function add(into: Node, group: string, defs: readonly Def[], tokens: (key: ThemeKey) => string[]) {
   for (const def of defs) {
     if (typeof def === "string") {
       // The empty string means the prefix itself (`rounded`, `border`).
       (def === "" ? into : child(into, def)).group = group;
     } else if (typeof def === "function") {
       into.validators.push([group, def]);
+    } else if (isThemeRef(def)) {
+      for (const token of tokens(def.$theme)) child(into, token).group = group;
     } else {
-      for (const key of Object.keys(def)) add(child(into, key), group, def[key]);
+      for (const key of Object.keys(def)) add(child(into, key), group, def[key], tokens);
     }
   }
-}
-
-let root: Node | undefined;
-
-function table(): Node {
-  if (root) return root;
-  root = node();
-  for (const [group, prefix, values] of GROUPS) {
-    add(prefix ? child(root, prefix) : root, group, values);
-  }
-  return root;
 }
 
 function lookup(parts: string[], at: number, cur: Node): string | undefined {
@@ -66,7 +92,7 @@ function lookup(parts: string[], at: number, cur: Node): string | undefined {
   return undefined;
 }
 
-function groupOf(base: string): string | undefined {
+function groupIn(root: Node, base: string): string | undefined {
   if (base.startsWith("[") && base.endsWith("]")) {
     // Arbitrary property `[mask-type:luminance]` conflicts with itself only.
     const inner = base.slice(1, -1);
@@ -75,7 +101,7 @@ function groupOf(base: string): string | undefined {
   }
   const parts = base.split("-");
   // `-inset-1`: the empty first part marks a negative value.
-  return lookup(parts, parts[0] === "" && parts.length > 1 ? 1 : 0, table());
+  return lookup(parts, parts[0] === "" && parts.length > 1 ? 1 : 0, root);
 }
 
 interface Parsed {
@@ -145,49 +171,78 @@ function variantKey(variants: string[]): string {
 
 const WHITESPACE = /\s+/;
 const CACHE_LIMIT = 500;
-const cache = new Map<string, string>();
 
-/** Resolve conflicts in a space-separated class list; the last conflicting class wins. */
-export function mergeClasses(list: string): string {
-  const hit = cache.get(list);
-  if (hit !== undefined) return hit;
-  const claimed = new Set<string>();
-  const kept: string[] = [];
-  const classes = list.trim().split(WHITESPACE);
-  for (let i = classes.length - 1; i >= 0; i--) {
-    const original = classes[i];
-    const { variants, important, base, slash } = parse(original);
-    let group: string | undefined;
-    let hasSlash = slash !== undefined;
-    if (slash !== undefined) {
-      group = groupOf(base.slice(0, slash));
-      // `@container/name` is the only group where the `/` belongs to the class itself.
-      if (group === "container-type") {
-        const whole = groupOf(base);
-        if (whole && whole !== group) {
-          group = whole;
-          hasSlash = false;
+/**
+ * Build a class resolver. The group trie is built on first use and results are cached per
+ * instance, so create one at module scope and reuse it; instances never share state.
+ */
+export function createClassMerger(config: ClassMergeConfig = {}): (list: string) => string {
+  const extra = config.theme ?? {};
+  const conflicts = config.conflicts;
+  const cache = new Map<string, string>();
+  let root: Node | undefined;
+
+  const table = (): Node => {
+    if (root) return root;
+    const tokens = (key: ThemeKey): string[] => [...KIT_THEME[key], ...(extra[key] ?? [])];
+    root = node();
+    for (const [group, prefix, values] of GROUPS) {
+      add(prefix ? child(root, prefix) : root, group, values, tokens);
+    }
+    for (const [group, prefix, values] of config.classGroups ?? []) {
+      add(prefix ? child(root, prefix) : root, group, values, tokens);
+    }
+    return root;
+  };
+
+  const conflictsOf = (group: string): readonly string[] | undefined => {
+    const own = CONFLICTS[group];
+    const more = conflicts?.[group];
+    return more ? (own ? [...own, ...more] : more) : own;
+  };
+
+  return (list) => {
+    const hit = cache.get(list);
+    if (hit !== undefined) return hit;
+    const trie = table();
+    const claimed = new Set<string>();
+    const kept: string[] = [];
+    const classes = list.trim().split(WHITESPACE);
+    for (let i = classes.length - 1; i >= 0; i--) {
+      const original = classes[i];
+      const { variants, important, base, slash } = parse(original);
+      let group: string | undefined;
+      let hasSlash = slash !== undefined;
+      if (slash !== undefined) {
+        group = groupIn(trie, base.slice(0, slash));
+        // `@container/name` is the only group where the `/` belongs to the class itself.
+        if (group === "container-type") {
+          const whole = groupIn(trie, base);
+          if (whole && whole !== group) {
+            group = whole;
+            hasSlash = false;
+          }
         }
+      } else {
+        group = groupIn(trie, base);
       }
-    } else {
-      group = groupOf(base);
-    }
-    if (!group && hasSlash) {
-      group = groupOf(base);
-      hasSlash = false;
-    }
-    if (!group) {
+      if (!group && hasSlash) {
+        group = groupIn(trie, base);
+        hasSlash = false;
+      }
+      if (!group) {
+        kept.push(original);
+        continue;
+      }
+      const prefix = variantKey(variants) + (important ? "!" : "");
+      if (claimed.has(prefix + group)) continue;
+      claimed.add(prefix + group);
+      for (const other of conflictsOf(group) ?? []) claimed.add(prefix + other);
       kept.push(original);
-      continue;
     }
-    const prefix = variantKey(variants) + (important ? "!" : "");
-    if (claimed.has(prefix + group)) continue;
-    claimed.add(prefix + group);
-    for (const other of CONFLICTS[group] ?? []) claimed.add(prefix + other);
-    kept.push(original);
-  }
-  const result = kept.reverse().join(" ");
-  if (cache.size >= CACHE_LIMIT) cache.clear();
-  cache.set(list, result);
-  return result;
+    const result = kept.reverse().join(" ");
+    if (cache.size >= CACHE_LIMIT) cache.clear();
+    cache.set(list, result);
+    return result;
+  };
 }

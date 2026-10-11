@@ -63,8 +63,9 @@
     }
   },
   "scripts": {
-    "build": "pnpm build:styles && tsup && tsc -p tsconfig.build.json",
+    "build": "pnpm build:styles && pnpm build:class-tokens && tsup && tsc -p tsconfig.build.json",
     "build:icons": "node scripts/build-icons.mjs",
+    "build:class-tokens": "node scripts/build-class-tokens.mjs",
     "build:styles": "node bin/ui-theme.mjs build tokens/default.json --out styles",
     "lint": "biome check .",
     "storybook": "storybook dev -p 6006",
