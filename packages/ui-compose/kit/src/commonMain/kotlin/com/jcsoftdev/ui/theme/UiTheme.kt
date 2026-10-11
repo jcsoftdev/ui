@@ -41,6 +41,10 @@ public object UiTheme {
         @Composable @ReadOnlyComposable
         get() = LocalFontFamily.current
 
+    public val strings: UiStrings
+        @Composable @ReadOnlyComposable
+        get() = LocalUiStrings.current
+
     public val motion: Motion
         @Composable @ReadOnlyComposable
         get() = LocalMotion.current
@@ -62,6 +66,7 @@ public object UiTheme {
  * @param shapes corner shapes by role; pass `ThemeShapes.Default.copy(...)` to change some.
  * @param sizes spacing, control heights, minimum touch target and disabled opacity; pass `ThemeSizes.Default.copy(...)`.
  * @param typography text styles by role; pass `ThemeTypography.Default.copy(...)`. The font family is [fontFamily].
+ * @param strings fallback labels of the kit ([UiStrings.En] or [UiStrings.Es]); an explicit label parameter on a component wins.
  *
  * It also installs the [OverlayHost] that sheets, dialogs and toasts draw in; headless code can use [OverlayHost] without a
  * `UiTheme`.
@@ -80,6 +85,7 @@ public fun UiTheme(
     shapes: ThemeShapes = ThemeShapes.Default,
     sizes: ThemeSizes = ThemeSizes.Default,
     typography: ThemeTypography = ThemeTypography.Default,
+    strings: UiStrings = UiStrings.En,
     content: @Composable () -> Unit,
 ) {
     val themed = remember(colors, accent, dark) { colors.withPalette(resolveAccent(accent, dark, colors.accent)) }
@@ -91,6 +97,7 @@ public fun UiTheme(
         LocalShapes provides shapes,
         LocalSizes provides sizes,
         LocalTypography provides typography,
+        LocalUiStrings provides strings,
     ) {
         OverlayHost(content = content)
     }

@@ -456,7 +456,7 @@ function StreamPlot({
                     y={cy}
                     dy="0.34em"
                     textAnchor="middle"
-                    className="pointer-events-none font-bold text-[12px]"
+                    className="pointer-events-none font-bold text-fs-120"
                     strokeWidth={3}
                     strokeLinejoin="round"
                     style={{

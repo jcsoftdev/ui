@@ -1,5 +1,5 @@
-import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "../../icons/index.js";
 
 export type StatusTone = "info" | "success" | "warning" | "danger";
 

@@ -1,3 +1,4 @@
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { DayChip } from "../day-chip/index.js";
 import { EventBlock } from "../event-block/index.js";
@@ -16,6 +17,16 @@ const DOT_TONE: Record<CalendarTone, string> = {
 };
 
 type DayItem = { kind: "marker"; item: CalendarMarker } | { kind: "event"; item: CalendarEvent };
+
+export type MonthViewPart =
+  | "root"
+  | "weekday"
+  | "day"
+  | "dayNumber"
+  | "items"
+  | "more"
+  | "dots"
+  | "dot";
 
 export interface MonthViewProps {
   /** Any "YYYY-MM-DD" date inside the month to show. */
@@ -37,6 +48,8 @@ export interface MonthViewProps {
   /** Called with the day's date when the overflow button is clicked. */
   onSelectDate?: (date: string) => void;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<MonthViewPart>;
 }
 
 export function MonthView({
@@ -52,17 +65,21 @@ export function MonthView({
   onOpenMarker,
   onSelectDate,
   className,
+  classNames,
 }: MonthViewProps) {
   const monthIndex = parseDate(month).getUTCMonth();
   const days = monthGrid(month, weekStartsOn);
   const shaded = new Set(shadedDates);
 
   return (
-    <div className={cn("@container/month grid min-w-0 grid-cols-7", className)}>
+    <div className={cn("@container/month grid min-w-0 grid-cols-7", classNames?.root, className)}>
       {days.slice(0, 7).map((date) => (
         <div
           key={date}
-          className="min-w-0 truncate border-b-divider px-2.5 py-2 text-overline text-ink-3 @max-[40rem]/month:px-0.5 @max-[40rem]/month:text-center"
+          className={cn(
+            "min-w-0 truncate border-b-divider px-2.5 py-2 text-overline text-ink-3 @max-[40rem]/month:px-0.5 @max-[40rem]/month:text-center",
+            classNames?.weekday,
+          )}
         >
           {formatWeekday(date, locale)}
         </div>
@@ -92,18 +109,26 @@ export function MonthView({
             className={cn(
               "flex min-h-30 min-w-0 flex-col gap-0.75 border-b-divider border-l-divider p-1.5 @max-[40rem]/month:min-h-16 @max-[40rem]/month:items-center @max-[40rem]/month:p-0.5",
               shaded.has(date) && SHADED_DAY_CLASS,
-              outside && "opacity-45",
+              outside && "bg-surface-2/50",
+              classNames?.day,
             )}
           >
             <span
               className={cn(
                 "grid h-5.5 min-w-6 place-items-center self-start rounded-xs font-mono text-chip-text text-ink-2",
                 isToday && "bg-accent text-on-accent",
+                outside && "text-ink-3",
+                classNames?.dayNumber,
               )}
             >
               {parsed.getUTCDate()}
             </span>
-            <div className="flex min-w-0 flex-col gap-0.75 @max-[40rem]/month:hidden">
+            <div
+              className={cn(
+                "flex min-w-0 flex-col gap-0.75 @max-[40rem]/month:hidden",
+                classNames?.items,
+              )}
+            >
               {visible.map(({ kind, item }) =>
                 kind === "marker" ? (
                   <DayChip key={item.id} marker={item} onOpen={onOpenMarker} />
@@ -115,14 +140,19 @@ export function MonthView({
                 <button
                   type="button"
                   onClick={onSelectDate ? () => onSelectDate(date) : undefined}
-                  className="px-1.5 text-left text-chip-text text-ink-3"
+                  className={cn("px-1.5 text-left text-chip-text text-ink-3", classNames?.more)}
                 >
                   {formatMore(hidden)}
                 </button>
               ) : null}
             </div>
             {items.length > 0 ? (
-              <div className="hidden flex-wrap justify-center gap-0.5 @max-[40rem]/month:flex">
+              <div
+                className={cn(
+                  "hidden flex-wrap justify-center gap-0.5 @max-[40rem]/month:flex",
+                  classNames?.dots,
+                )}
+              >
                 {items.map(({ kind, item }) => (
                   <button
                     key={item.id}
@@ -144,6 +174,7 @@ export function MonthView({
                           ? DOT_TONE.danger
                           : DOT_TONE.accent
                         : DOT_TONE[item.tone ?? "accent"],
+                      classNames?.dot,
                     )}
                   />
                 ))}

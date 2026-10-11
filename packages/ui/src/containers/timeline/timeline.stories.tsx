@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CalendarCheck, Package, Star, Wallet, XCircle } from "lucide-react";
 import { Chip } from "../../atoms/chip/chip.js";
+import { CalendarCheck, Package, Star, Wallet, XCircle } from "../../icons/index.js";
 import { Timeline, type TimelineFeedItem } from "./timeline.js";
 
 const items: TimelineFeedItem[] = [

@@ -25,15 +25,16 @@ console.log(`atoms/button: ${single.bytes} bytes, ${single.files.length} modules
 for (const f of single.files) console.log(`  ${f}`);
 for (const banned of [
   "dialog",
+  "primitives/",
   "dropdown-menu",
   "popover",
-  "cmdk",
-  "sonner",
   "lucide",
+  "icons/",
   "checkbox",
   "confirm-action",
   "responsive-list",
   "i18n",
+  "toaster",
   "status-icons",
 ]) {
   assert.ok(
@@ -45,7 +46,14 @@ for (const banned of [
 const confirm = await inputsFor(
   `import { ConfirmAction } from "@jcsoftdev/ui/containers/confirm-action"; console.log(ConfirmAction);`,
 );
-for (const banned of ["responsive-list", "table/", "dialog", "popover", "dropdown-menu", "cmdk"]) {
+for (const banned of [
+  "responsive-list",
+  "table/",
+  "dialog",
+  "popover",
+  "dropdown-menu",
+  "primitives/command",
+]) {
   assert.ok(
     !confirm.files.some((f) => f.includes(banned)),
     `ConfirmAction bundle must not include "${banned}"`,
@@ -161,3 +169,88 @@ console.log(
   `brand generator: ${brandBuild.outputFiles[0].contents.length} bytes, ${brandKept.length} modules`,
 );
 console.log("brand tree-shaking OK");
+
+// Icons: each icon is its own module; a Button bundle has none, a single icon bundles only itself.
+// Dropped modules still appear in `metafile.inputs`; `bytesInOutput` tells what survived.
+async function keptFor(code) {
+  const result = await build({
+    stdin: { contents: code, resolveDir: process.cwd(), loader: "js" },
+    bundle: true,
+    minify: true,
+    format: "esm",
+    write: false,
+    metafile: true,
+    external: ["react", "react-dom", "react/jsx-runtime"],
+  });
+  const [output] = Object.values(result.metafile.outputs);
+  const kept = Object.entries(output.inputs)
+    .filter(([, input]) => input.bytesInOutput > 0)
+    .map(([file]) => file);
+  return { kept, bytes: result.outputFiles[0].contents.length };
+}
+const oneIcon = await keptFor(`import { Check } from "@jcsoftdev/ui/icons"; console.log(Check);`);
+const keptIcons = oneIcon.kept.filter((f) => f.includes("icons/"));
+assert.deepEqual(
+  keptIcons.map((f) => f.split("icons/").pop()).sort(),
+  ["check.js", "icon-base.js"],
+  "a single icon bundles only its own module and the shared base",
+);
+const allIcons = await keptFor(`import * as icons from "@jcsoftdev/ui/icons"; console.log(icons);`);
+assert.ok(
+  allIcons.kept.filter((f) => f.includes("icons/")).length > 100,
+  "the full namespace import keeps every icon",
+);
+console.log(`icons: one icon ${oneIcon.bytes} bytes, full set ${allIcons.bytes} bytes`);
+console.log("icons tree-shaking OK");
+
+// Primitives: each primitive is its own module graph. Dropped modules stay in `inputs`, so check
+// `bytesInOutput`. A single primitive must not drag in its siblings.
+const only = (kept, name) => kept.some((f) => f.includes(`primitives/${name}/`));
+const popover = await keptFor(
+  `import { PopoverPrimitive } from "@jcsoftdev/ui/primitives"; console.log(PopoverPrimitive);`,
+);
+assert.ok(only(popover.kept, "popover") && only(popover.kept, "popper"), "popover bundles popper");
+for (const sibling of ["dialog", "menu", "command"]) {
+  assert.ok(
+    !only(popover.kept, sibling),
+    `PopoverPrimitive must not include primitives/${sibling}`,
+  );
+}
+const dialog = await keptFor(
+  `import { DialogPrimitive } from "@jcsoftdev/ui/primitives"; console.log(DialogPrimitive);`,
+);
+for (const sibling of ["popover", "popper", "menu", "command"]) {
+  assert.ok(!only(dialog.kept, sibling), `DialogPrimitive must not include primitives/${sibling}`);
+}
+const menu = await keptFor(
+  `import { MenuPrimitive } from "@jcsoftdev/ui/primitives"; console.log(MenuPrimitive);`,
+);
+for (const sibling of ["dialog", "popover", "command"]) {
+  assert.ok(!only(menu.kept, sibling), `MenuPrimitive must not include primitives/${sibling}`);
+}
+const scorer = await keptFor(
+  `import { commandScore } from "@jcsoftdev/ui/primitives"; console.log(commandScore);`,
+);
+assert.ok(
+  !scorer.kept.some((f) => /primitives\/(dialog|menu|popover|popper|portal)/.test(f)) &&
+    !scorer.kept.some((f) => f.includes("react")),
+  "commandScore is pure and pulls no component",
+);
+const geometry = await keptFor(
+  `import { computePlacement } from "@jcsoftdev/ui/primitives"; console.log(computePlacement);`,
+);
+assert.ok(
+  !geometry.kept.some((f) => f.includes("popper/popper")),
+  "computePlacement does not pull the popper component",
+);
+// A styled component that wraps a primitive keeps only the primitive it uses.
+const styledPopover = await keptFor(
+  `import { Popover } from "@jcsoftdev/ui/overlays/popover"; console.log(Popover);`,
+);
+for (const sibling of ["dialog", "menu", "command"]) {
+  assert.ok(!only(styledPopover.kept, sibling), `Popover must not include primitives/${sibling}`);
+}
+console.log(
+  `primitives: popover ${popover.bytes}, dialog ${dialog.bytes}, menu ${menu.bytes}, commandScore ${scorer.bytes} bytes`,
+);
+console.log("primitives tree-shaking OK");

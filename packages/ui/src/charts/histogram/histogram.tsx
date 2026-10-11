@@ -161,7 +161,7 @@ export function Histogram({
               type="button"
               aria-pressed={exploded}
               onClick={() => setExploded(!exploded)}
-              className="inline-flex min-h-8 items-center gap-2 rounded-button border-divider bg-surface-control px-3 font-semibold text-[12px] text-ink-2 transition-colors hover:bg-surface-2 aria-pressed:border-accent aria-pressed:text-ink"
+              className="inline-flex min-h-8 items-center gap-2 rounded-button border-divider bg-surface-control px-3 font-semibold text-fs-120 text-ink-2 transition-colors hover:bg-surface-2 aria-pressed:border-accent aria-pressed:text-ink"
             >
               {exploded ? labels.bars : labels.explode}
             </button>

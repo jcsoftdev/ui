@@ -1,5 +1,6 @@
 export {
   RichTextEditor,
+  type RichTextEditorPart,
   type RichTextEditorProps,
   RichTextView,
   type RichTextViewProps,

@@ -324,12 +324,12 @@ function DiffLegend({ labels }: { labels: SankeyLabels }) {
     [labels.previous, "var(--ink-3)", "0.3"],
   ];
   return (
-    <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-0.5 p-0 text-[12px] text-ink-2">
+    <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-0.5 p-0 text-fs-120 text-ink-2">
       {items.map(([name, color, opacity]) => (
         <li key={name} className="flex items-center gap-1.5">
           <span
             aria-hidden="true"
-            className="h-2 w-4 rounded-[3px]"
+            className="h-2 w-4 rounded-xs"
             style={{ background: color, opacity }}
           />
           {name}
@@ -627,7 +627,7 @@ function SankeyPlot({
                   x={x}
                   y={12}
                   textAnchor={anchor}
-                  className="select-none font-bold text-[11px] uppercase tracking-wide"
+                  className="select-none font-bold text-fs-110 uppercase tracking-wide"
                   style={{ fill: "var(--ink-3)" }}
                 >
                   {text}
@@ -1058,7 +1058,7 @@ function SankeyNodeLabels({ graph, format, inside, showValues, room, lit }: Sank
             y={twoLines ? y - 7 : y}
             dominantBaseline="middle"
             textAnchor={end ? "end" : "start"}
-            className="font-semibold text-[12px] motion-safe:transition-opacity motion-safe:duration-150"
+            className="font-semibold text-fs-120 motion-safe:transition-opacity motion-safe:duration-150"
             style={{
               fill: "var(--ink)",
               opacity: lit && !lit.has(node.id) ? 0.4 : 1,
@@ -1074,7 +1074,7 @@ function SankeyNodeLabels({ graph, format, inside, showValues, room, lit }: Sank
               <tspan
                 x={x}
                 dy={15}
-                className="font-bold text-[11px] tabular-nums"
+                className="font-bold text-fs-110 tabular-nums"
                 style={{ fill: inside ? "var(--ink-2)" : "var(--ink-3)" }}
               >
                 {value}

@@ -1,7 +1,5 @@
 "use client";
 
-import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { Slot } from "@radix-ui/react-slot";
 import {
   type ComponentPropsWithoutRef,
   createContext,
@@ -16,7 +14,9 @@ import {
   useRef,
   useState,
 } from "react";
+import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
+import { Slot } from "../../utils/slot.js";
 
 interface HoverCardContextValue {
   contentId: string;
@@ -138,7 +138,7 @@ export function HoverCardTrigger({
 }
 
 export interface HoverCardContentProps
-  extends Omit<ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>, "onOpenAutoFocus"> {
+  extends Omit<PopoverPrimitive.PopoverContentProps, "onOpenAutoFocus"> {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
 }
@@ -176,7 +176,7 @@ export function HoverCardContent({
           card.schedule(false, card.closeDelay);
         }}
         className={cn(
-          "z-85 w-72 max-w-(--radix-popover-content-available-width) rounded-popover border-card surface-overlay bg-surface-overlay p-card text-body text-ink shadow-overlay",
+          "z-85 w-72 max-w-(--ui-popper-available-width) rounded-popover border-card surface-overlay bg-surface-overlay p-card text-body text-ink shadow-overlay",
           className,
         )}
         {...props}

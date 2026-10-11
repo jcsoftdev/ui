@@ -163,12 +163,12 @@ export function ChartGrid({
                   <header className="flex min-w-0 items-baseline justify-between gap-2">
                     <h3
                       id={headingId}
-                      className="m-0 truncate font-bold text-[12.5px] text-ink-2 leading-tight"
+                      className="m-0 truncate font-bold text-fs-125 text-ink-2 leading-tight"
                     >
                       {panel.title}
                     </h3>
                     {panel.subtitle ? (
-                      <span className="shrink-0 font-semibold text-[11.5px] text-ink-3 tabular-nums">
+                      <span className="shrink-0 font-semibold text-fs-115 text-ink-3 tabular-nums">
                         {panel.subtitle}
                       </span>
                     ) : null}

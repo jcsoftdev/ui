@@ -44,7 +44,7 @@ The generated files are git-ignored: they are derived from the library and rebui
 ### Routes
 
 - `/` landing
-- `/docs/` and the guides: `getting-started`, `subpaths`, `theming`, `theming/tokens`, `container-queries`, `accessibility`, `llms`, `reference/exports`
+- `/docs/` and the guides: `getting-started`, `subpaths`, `theming`, `customization`, `theming/tokens`, `container-queries`, `accessibility`, `llms`, `reference/exports`
 - `/docs/components/<slug>/`: one page per component
 - `/docs/<page>.md`: Markdown for every docs page (the docs root is `/docs/index.md`)
 - `/llms.txt`, `/llms-full.txt`, `/manifest.json`

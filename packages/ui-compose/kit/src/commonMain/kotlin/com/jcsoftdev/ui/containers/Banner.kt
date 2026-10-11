@@ -57,9 +57,6 @@ public class BannerColors(
 
 /** Default colors, shape and metrics of [Banner]. */
 public object BannerDefaults {
-    /** English fallback for the dismiss button label; pass a localized `dismissLabel` to [Banner]. */
-    public const val DISMISS_LABEL: String = "Dismiss"
-
     /** The colors of [tone] in the active theme. */
     @Composable
     @ReadOnlyComposable
@@ -143,7 +140,7 @@ public fun Banner(
     title: String? = null,
     icon: ImageVector? = BannerDefaults.icon(tone),
     onDismiss: (() -> Unit)? = null,
-    dismissLabel: String = BannerDefaults.DISMISS_LABEL,
+    dismissLabel: String = UiTheme.strings.dismiss,
     action: (@Composable () -> Unit)? = null,
     colors: BannerColors = BannerDefaults.colors(tone),
     shape: Shape = BannerDefaults.shape,

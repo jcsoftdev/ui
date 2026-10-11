@@ -1,7 +1,11 @@
 export {
   DropdownMenu,
+  DropdownMenuArrow,
+  DropdownMenuCheckboxItem,
+  type DropdownMenuCheckboxItemProps,
   DropdownMenuContent,
   type DropdownMenuContentProps,
+  DropdownMenuGroup,
   DropdownMenuItem,
   type DropdownMenuItemProps,
   DropdownMenuLabel,
@@ -10,5 +14,10 @@ export {
   type DropdownMenuRadioItemProps,
   DropdownMenuSeparator,
   type DropdownMenuSeparatorProps,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  type DropdownMenuSubContentProps,
+  DropdownMenuSubTrigger,
+  type DropdownMenuSubTriggerProps,
   DropdownMenuTrigger,
 } from "./dropdown-menu.js";

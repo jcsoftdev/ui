@@ -5,3 +5,5 @@ export const expect = () => ({});
 export const userEvent = {};
 export const within = () => ({});
 export const waitFor = async () => {};
+export const screen = {};
+export const fireEvent = {};

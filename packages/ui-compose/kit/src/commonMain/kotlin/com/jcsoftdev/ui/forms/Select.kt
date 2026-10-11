@@ -73,7 +73,7 @@ public fun Select(
     isError: Boolean = false,
     placeholder: String? = null,
     contentDescription: String? = null,
-    dismissLabel: String? = null,
+    dismissLabel: String? = UiTheme.strings.close,
     colors: InputColors = InputDefaults.colors(),
     shape: Shape = InputDefaults.shape,
     contentPadding: PaddingValues = InputDefaults.contentPadding,
