@@ -101,6 +101,46 @@ public final class com/jcsoftdev/ui/atoms/TextKt {
 	public static final fun getLocalContentColor ()Landroidx/compose/runtime/ProvidableCompositionLocal;
 }
 
+public final class com/jcsoftdev/ui/forms/ComposableSingletons$NumberStepperKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/forms/ComposableSingletons$NumberStepperKt;
+	public fun <init> ()V
+	public final fun getLambda$-1811581549$kit ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$-938047894$kit ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/jcsoftdev/ui/forms/FieldKt {
+	public static final fun Field (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/String;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/forms/FormattedInputsKt {
+	public static final fun DateInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/runtime/Composer;II)V
+	public static final fun TimeInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/forms/InputKt {
+	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/runtime/Composer;III)V
+	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/forms/NumberStepperKt {
+	public static final fun NumberStepper (ILkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;IIIZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/forms/PinInputKt {
+	public static final fun PinInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;IZZLjava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/forms/SelectKt {
+	public static final fun Select (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/forms/SelectOption {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+}
+
 public final class com/jcsoftdev/ui/foundation/BackDispatcher {
 	public static final field $stable I
 	public fun <init> ()V
@@ -151,6 +191,30 @@ public final class com/jcsoftdev/ui/foundation/PressKt {
 	public static final field PRESSED_SCALE F
 	public static final fun pressScale (Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/interaction/InteractionSource;F)Landroidx/compose/ui/Modifier;
 	public static synthetic fun pressScale$default (Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/interaction/InteractionSource;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+}
+
+public final class com/jcsoftdev/ui/navigation/SegmentedKt {
+	public static final fun Segmented (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/navigation/SegmentedOption {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/navigation/TabItem {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCount ()Ljava/lang/Integer;
+	public final fun getLabel ()Ljava/lang/String;
+	public final fun getValue ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/navigation/TabsKt {
+	public static final fun Tabs (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/theme/AccentPalette {
