@@ -11,12 +11,12 @@ export function Checkbox({ className, ...props }: CheckboxProps) {
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        "inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
+        "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
         className,
       )}
       {...props}
     >
-      <span className="grid size-[18px] place-items-center rounded-pill border-[1.5px] border-line-strong data-[state=checked]:border-success data-[state=checked]:bg-success">
+      <span className="grid size-[18px] place-items-center rounded-pill border-[1.5px] border-line-strong group-data-[state=checked]:border-success group-data-[state=checked]:bg-success group-data-[state=indeterminate]:border-success group-data-[state=indeterminate]:bg-success">
         <CheckboxPrimitive.Indicator>
           <Check aria-hidden="true" className="size-[11px] stroke-[3] text-on-accent" />
         </CheckboxPrimitive.Indicator>
