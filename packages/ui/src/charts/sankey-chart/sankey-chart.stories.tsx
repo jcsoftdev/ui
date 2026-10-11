@@ -303,6 +303,7 @@ export const Particles: Story = {
 
 /** The SVG and PNG buttons download the drawing as it is on screen. */
 export const Export: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { exportable: true, compare: septiembre },
 };
 

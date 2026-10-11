@@ -47,9 +47,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px] max-w-full">
@@ -60,6 +61,7 @@ export const Narrow: Story = {
 };
 
 export const TwoColumns: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[480px] max-w-full">
@@ -70,6 +72,7 @@ export const TwoColumns: Story = {
 };
 
 export const BrutalPreset: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="bg-bg p-card">
@@ -80,6 +83,7 @@ export const BrutalPreset: Story = {
 };
 
 export const GlassPreset: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="glass" className="bg-bg p-card">

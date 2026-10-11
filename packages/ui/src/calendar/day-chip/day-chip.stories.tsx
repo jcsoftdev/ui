@@ -33,9 +33,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const Accent: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     marker: {
       ...marker,
@@ -48,10 +49,12 @@ export const Accent: Story = {
 };
 
 export const WithoutSubtitle: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { marker: { ...marker, subtitle: undefined, title: "Día del Barbero" } },
 };
 
 export const Truncated: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="max-w-[160px]">

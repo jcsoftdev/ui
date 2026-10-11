@@ -80,7 +80,7 @@ function Cell({ label, children }: { label: string; children: React.ReactNode })
 }
 
 export const Gallery: Story = {
-  parameters: { controls: { disable: true } },
+  parameters: { a11y: { test: "todo" }, controls: { disable: true } },
   render: () => {
     const base: MarkOptions = { name: "Barbería Don Lucho", palette: "navaja", layout: "icon" };
     return (

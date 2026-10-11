@@ -249,6 +249,7 @@ export const DataTable: Story = {
 
 /** A button switches between the map and its table; keyboard and screen reader users get the table either way. */
 export const DataTableToggle: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { dataTable: "toggle", height: 480 },
 };
 

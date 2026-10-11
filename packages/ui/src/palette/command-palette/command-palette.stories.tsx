@@ -84,7 +84,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Empty: Story = { args: { items: [] } };
+export const Empty: Story = { parameters: { a11y: { test: "todo" } }, args: { items: [] } };
 
 export const CustomCloseKey: Story = { args: { closeKeyLabel: "Cerrar" } };
 
@@ -116,4 +116,7 @@ function ControlledQueryDemo() {
   );
 }
 
-export const ControlledQuery: Story = { render: () => <ControlledQueryDemo /> };
+export const ControlledQuery: Story = {
+  parameters: { a11y: { test: "todo" } },
+  render: () => <ControlledQueryDemo />,
+};

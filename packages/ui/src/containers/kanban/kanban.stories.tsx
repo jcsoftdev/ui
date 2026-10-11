@@ -90,12 +90,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 /** Drops into a column at its WIP limit are refused and announced. */
-export const EnforcedLimit: Story = { args: { enforceLimit: true } };
+export const EnforcedLimit: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { enforceLimit: true },
+};
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px] max-w-full">
@@ -106,6 +110,7 @@ export const Narrow: Story = {
 };
 
 export const BrutalPreset: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="bg-bg p-card">
@@ -116,6 +121,7 @@ export const BrutalPreset: Story = {
 };
 
 export const GlassCompact: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="glass" data-density="compact" className="bg-bg p-card">

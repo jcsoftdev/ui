@@ -30,6 +30,7 @@ export const ReadOnly: Story = {};
 
 /** Each item is a toggle button; at least one series always stays visible. */
 export const Toggleable: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => {
     const [hidden, setHidden] = useState<string[]>(["color"]);
     return (

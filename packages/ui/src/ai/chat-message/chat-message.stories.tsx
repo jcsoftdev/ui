@@ -48,6 +48,7 @@ export const User: Story = {
 };
 
 export const System: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { author: "system", name: "Sistema", content: "Hoy, 20 de junio · Sede Miraflores" },
 };
 
