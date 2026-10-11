@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Copy, RefreshCw, ThumbsDown, ThumbsUp } from "lucide-react";
 import { type ComponentPropsWithoutRef, useState } from "react";
+import { Check, Copy, RefreshCw, ThumbsDown, ThumbsUp } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 import { useCopy } from "../internal/use-copy.js";

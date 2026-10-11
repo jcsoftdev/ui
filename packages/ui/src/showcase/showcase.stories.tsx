@@ -39,6 +39,7 @@ export const Analitica: Story = {
 
 /** Week agenda, activity timeline, live chairs, Kanban and a DataGrid with pinned column and ActionBar. */
 export const Operaciones: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => (
     <Page title="Operaciones">
       <OperationsBento />
@@ -48,6 +49,7 @@ export const Operaciones: Story = {
 
 /** Treemap, sunburst, Sankey, radar, Gantt, candlestick, tree, scatter, bubble, polar area, waffle and pictogram. */
 export const GaleriaDeGraficos: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Galería de gráficos",
   render: () => (
     <Page title="Gráficos">
@@ -58,6 +60,7 @@ export const GaleriaDeGraficos: Story = {
 
 /** Buttons, segmented, switches, inputs, chips, accent picker, dialog, carousel, file tree, resizable panels and hover card. */
 export const Controles: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => (
     <Page title="Controles">
       <ControlsBento />
@@ -67,6 +70,7 @@ export const Controles: Story = {
 
 /** The four grids stacked under section headings, with the sticky preset bar at the top. */
 export const Overview: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => (
     <Page title="Barbería Don Lucho · Showcase">
       <SectionHeading

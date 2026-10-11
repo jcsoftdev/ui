@@ -55,7 +55,7 @@ export function SettingsLayoutNavItem({
       type={type}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "flex shrink-0 items-center gap-2.5 rounded-control px-2.5 py-[7px] font-medium text-[13px] text-ink-2 hover:bg-surface-2 hover:text-ink",
+        "flex shrink-0 items-center gap-2.5 rounded-control px-2.5 py-1.75 font-medium text-fs-130 text-ink-2 hover:bg-surface-2 hover:text-ink",
         active && "bg-accent-soft font-semibold text-accent-ink",
         className,
       )}

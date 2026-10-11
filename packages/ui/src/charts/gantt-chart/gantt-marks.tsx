@@ -118,7 +118,7 @@ export const TimelineHeader = memo(function TimelineHeader({
                 x={x}
                 y={HEADER_ROW / 2}
                 dy="0.34em"
-                className="fill-ink-2 font-semibold text-[11.5px]"
+                className="fill-ink-2 font-semibold text-fs-115"
               >
                 {cell.label}
               </text>
@@ -150,7 +150,7 @@ export const TimelineHeader = memo(function TimelineHeader({
                 y={HEADER_ROW + HEADER_ROW / 2}
                 dy="0.34em"
                 textAnchor="middle"
-                className="fill-ink-3 font-medium text-[10.5px] tabular-nums"
+                className="fill-ink-3 font-medium text-fs-105 tabular-nums"
               >
                 {cell.label}
               </text>
@@ -172,7 +172,7 @@ export const TimelineHeader = memo(function TimelineHeader({
             y={8}
             dy="0.34em"
             textAnchor="middle"
-            className="font-bold text-[10px]"
+            className="font-bold text-fs-100"
             style={{ fill: "var(--surface)" }}
           >
             {todayLabel}
@@ -512,8 +512,8 @@ function BarLabel({
       textAnchor={end ? "end" : undefined}
       className={
         outside
-          ? `pointer-events-none fill-ink-2 text-[11px] ${strong ? "font-bold" : "font-medium"}`
-          : "pointer-events-none font-semibold text-[11px]"
+          ? `pointer-events-none fill-ink-2 text-fs-110 ${strong ? "font-bold" : "font-medium"}`
+          : "pointer-events-none font-semibold text-fs-110"
       }
       style={outside ? undefined : { fill: onFill ? "var(--surface)" : "var(--ink)" }}
     >
@@ -698,7 +698,7 @@ export const AnnotationLayer = memo(function AnnotationLayer({
               x={item.x0 + 10}
               y={y + 7.5}
               dy="0.34em"
-              className="fill-ink font-semibold text-[10.5px]"
+              className="fill-ink font-semibold text-fs-105"
             >
               {item.label}
             </text>

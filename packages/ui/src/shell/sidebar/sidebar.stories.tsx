@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Boxes, CalendarDays, LayoutDashboard, Scissors, Users } from "lucide-react";
 import { useState } from "react";
+import { Boxes, CalendarDays, LayoutDashboard, Scissors, Users } from "../../icons/index.js";
 import { Sidebar, type SidebarGroup } from "./sidebar.js";
 
 const groups: SidebarGroup[] = [

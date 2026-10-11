@@ -5,4 +5,4 @@ export {
   trendDirection,
   trendTone,
 } from "./trend.js";
-export { TrendChip, type TrendChipProps } from "./trend-chip.js";
+export { TrendChip, type TrendChipPart, type TrendChipProps } from "./trend-chip.js";

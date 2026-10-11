@@ -1,1 +1,1 @@
-export { Topbar, type TopbarProps } from "./topbar.js";
+export { Topbar, type TopbarPart, type TopbarProps } from "./topbar.js";

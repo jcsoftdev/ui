@@ -444,7 +444,7 @@ export function StockChart({
                       setRange(rangeWindow(dates, preset));
                     }}
                     className={cn(
-                      "cursor-pointer rounded-button px-2 py-1 font-semibold text-[11.5px] tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-2.5",
+                      "cursor-pointer rounded-button px-2 py-1 font-semibold text-fs-115 tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-2.5",
                       activePreset?.id === preset.id
                         ? "bg-surface text-ink shadow-xs"
                         : "text-ink-3 hover:text-ink",

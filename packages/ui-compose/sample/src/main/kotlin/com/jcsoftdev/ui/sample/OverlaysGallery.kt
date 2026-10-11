@@ -28,16 +28,17 @@ import com.jcsoftdev.ui.forms.SelectOption
 import com.jcsoftdev.ui.overlays.Dialog
 import com.jcsoftdev.ui.overlays.Menu
 import com.jcsoftdev.ui.overlays.Sheet
-import com.jcsoftdev.ui.overlays.ToastAction
-import com.jcsoftdev.ui.overlays.ToastHostState
 import com.jcsoftdev.ui.overlays.Toaster
+import com.jcsoftdev.ui.primitives.ToastAction
+import com.jcsoftdev.ui.primitives.ToastHostState
+import com.jcsoftdev.ui.theme.UiStrings
 import com.jcsoftdev.ui.theme.UiTheme
 
 private val Barbers = List(12) { SelectOption("b$it", "Barbero ${it + 1}") }
 
 @Composable
 fun OverlaysGallery() {
-    UiTheme(dark = false, accent = "#77D3AD") {
+    UiTheme(dark = false, accent = "#77D3AD", strings = UiStrings.Es) {
         val toasts = remember { ToastHostState() }
         var sheet by remember { mutableStateOf(false) }
         var dialog by remember { mutableStateOf(false) }
@@ -76,7 +77,6 @@ fun OverlaysGallery() {
                 open = sheet,
                 onDismiss = { sheet = false },
                 title = "Agregar a la cola",
-                dismissLabel = "Cerrar",
                 footer = {
                     Button("Agregar", {
                         sheet = false
@@ -92,7 +92,6 @@ fun OverlaysGallery() {
                 onDismissRequest = { dialog = false },
                 title = "¿Cancelar la cita?",
                 description = "El cliente recibirá un aviso.",
-                dismissLabel = "Cerrar",
                 actions = {
                     Button("Volver", { dialog = false })
                     Button("Cancelar cita", {

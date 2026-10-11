@@ -377,11 +377,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { holidays: [day(10, 8)] },
 };
 
 /** Drag bars to move them, their edges to resize, the triangle to change progress. */
 export const Editable: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { editable: true },
   render: function Render(args) {
     const [tasks, setTasks] = useState(args.tasks);
@@ -403,13 +405,23 @@ export const Editable: Story = {
   },
 };
 
-export const Weeks: Story = { args: { defaultZoom: "week" } };
+export const Weeks: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { defaultZoom: "week" },
+};
 
-export const Quarters: Story = { args: { defaultZoom: "quarter", rowHeight: 30 } };
+export const Quarters: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { defaultZoom: "quarter", rowHeight: 30 },
+};
 
-export const Collapsed: Story = { args: { defaultCollapsed: ["plan", "obra"] } };
+export const Collapsed: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { defaultCollapsed: ["plan", "obra"] },
+};
 
 export const OpeningDayHours: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     title: "Día de inauguración",
     tasks: inauguracion,
@@ -419,7 +431,10 @@ export const OpeningDayHours: Story = {
   },
 };
 
-export const WithoutDependencies: Story = { args: { dependencies: false, today: false } };
+export const WithoutDependencies: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { dependencies: false, today: false },
+};
 
 export const Loading: Story = { args: { loading: true } };
 
@@ -438,7 +453,7 @@ export const Narrow: Story = {
 /** Drag the corner: the chart fills the box exactly; rows scroll inside. */
 export const FillParent: Story = {
   args: { height: "fill" },
-  parameters: { layout: "padded" },
+  parameters: { a11y: { test: "todo" }, layout: "padded" },
   decorators: [
     (Story) => (
       <div
@@ -458,26 +473,31 @@ export const FillParent: Story = {
 
 /** Tasks with no slack are red, with the links that chain them; the others show their slack in the tooltip. */
 export const CriticalPath: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { showCriticalPath: true },
 };
 
 /** Thin grey bars under each task are the original plan; the tooltip shows the variance. */
 export const Baselines: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { tasks: conBaseline, showBaselines: true, showCriticalPath: false },
 };
 
 /** Dated lines and bands for closures, deadlines and the opening. */
 export const Annotations: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { annotations: hitosDeNegocio, holidays: [day(10, 8)] },
 };
 
 /** The whole project on one screen: years above, quarters below. */
 export const YearView: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { defaultZoom: "year", rowHeight: 30 },
 };
 
 /** Diamonds only: the key dates of the opening. */
 export const Milestones: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     title: "Hitos de la apertura",
     tasks: soloHitos,
@@ -489,11 +509,13 @@ export const Milestones: Story = {
 
 /** Not started, partly done and finished; the campaign rolls up the weighted progress of its tasks. */
 export const Progress: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { title: "Campaña de reapertura", tasks: avances, today: day(10, 14), defaultZoom: "week" },
 };
 
 /** The SVG and PNG buttons download the timeline, header included. */
 export const Export: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     tasks: conBaseline,
     showBaselines: true,

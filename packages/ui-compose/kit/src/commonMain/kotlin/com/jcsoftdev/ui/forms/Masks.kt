@@ -1,27 +1,13 @@
 package com.jcsoftdev.ui.forms
 
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
+import com.jcsoftdev.ui.primitives.DigitMask
+import com.jcsoftdev.ui.primitives.filterDigits
 
 /** Digits-only editing model: the field stores raw digits and the separators exist only on screen. */
 internal fun digitsOnly(
     text: String,
     maxLength: Int,
-): String {
-    var allDigits = text.length <= maxLength
-    for (ch in text) if (ch !in '0'..'9') allDigits = false
-    if (allDigits) return text
-    val out = StringBuilder(maxLength)
-    for (ch in text) {
-        if (ch in '0'..'9') {
-            out.append(ch)
-            if (out.length == maxLength) break
-        }
-    }
-    return out.toString()
-}
+): String = filterDigits(text, maxLength)
 
 internal object TimeFormat {
     const val DIGITS = 4
@@ -80,39 +66,5 @@ internal object DateFormat {
     fun commit(digits: String): String = if (digits.length == DIGITS) normalize(digits).orEmpty() else ""
 }
 
-/** Inserts [separator] before the raw digit offsets [first] and [second] on screen only. */
-internal class SeparatorTransformation(
-    private val separator: Char,
-    private val first: Int,
-    private val second: Int,
-) : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        val raw = text.text
-        val out = StringBuilder(raw.length + 2)
-        for (i in raw.indices) {
-            if (i == first || i == second) out.append(separator)
-            out.append(raw[i])
-        }
-        return TransformedText(AnnotatedString(out.toString()), mapping)
-    }
-
-    private fun shift(offset: Int): Int = (if (offset > first) 1 else 0) + (if (second != NONE && offset > second) 1 else 0)
-
-    private val mapping =
-        object : OffsetMapping {
-            override fun originalToTransformed(offset: Int): Int = offset + shift(offset)
-
-            override fun transformedToOriginal(offset: Int): Int {
-                val afterFirst = if (offset > first) 1 else 0
-                val afterSecond = if (second != NONE && offset > second + 1) 1 else 0
-                return (offset - afterFirst - afterSecond).coerceAtLeast(0)
-            }
-        }
-
-    companion object {
-        const val NONE = Int.MAX_VALUE
-    }
-}
-
-internal val TimeTransformation = SeparatorTransformation(':', 2, SeparatorTransformation.NONE)
-internal val DateTransformation = SeparatorTransformation('/', 2, 4)
+internal val TimeMask = DigitMask(TimeFormat.DIGITS, ':', listOf(2))
+internal val DateMask = DigitMask(DateFormat.DIGITS, '/', listOf(2, 4))

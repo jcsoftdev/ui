@@ -1,1 +1,9 @@
-export { Toaster, type ToasterProps, toast } from "./toaster.js";
+export {
+  type ToastAction,
+  Toaster,
+  type ToasterPart,
+  type ToasterPosition,
+  type ToasterProps,
+  type ToastOptions,
+  toast,
+} from "./toaster.js";

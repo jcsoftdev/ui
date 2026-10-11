@@ -27,7 +27,7 @@ export function thinTicks(ticks: readonly AxisTick[], gap = 10): AxisTick[] {
   return ticks.filter((_, index) => index % every === 0);
 }
 
-const TEXT = "fill-ink-3 font-medium text-[11px] tabular-nums";
+const TEXT = "fill-ink-3 font-medium text-fs-110 tabular-nums";
 
 export interface GridLinesProps {
   ticks: readonly AxisTick[];
@@ -120,7 +120,7 @@ export const AxisLeft = memo(function AxisLeft({ ticks, offset, title, color }: 
           x={-10}
           y={-16}
           textAnchor="end"
-          className="fill-ink-3 font-bold text-[10.5px]"
+          className="fill-ink-3 font-bold text-fs-105"
           style={color ? { fill: color } : undefined}
         >
           {title}
@@ -152,7 +152,7 @@ export const AxisRight = memo(function AxisRight({ ticks, offset, title, color }
           x={10}
           y={-16}
           textAnchor="start"
-          className="fill-ink-3 font-bold text-[10.5px]"
+          className="fill-ink-3 font-bold text-fs-105"
           style={color ? { fill: color } : undefined}
         >
           {title}

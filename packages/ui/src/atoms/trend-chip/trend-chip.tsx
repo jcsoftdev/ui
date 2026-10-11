@@ -1,5 +1,6 @@
-import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   formatTrend,
@@ -29,6 +30,8 @@ const directionWords: Record<TrendDirection, string> = {
 
 const directionIcons = { up: ArrowUpRight, down: ArrowDownRight, flat: ArrowRight };
 
+export type TrendChipPart = "root" | "arrow" | "value" | "label";
+
 export interface TrendChipProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
   /** Change in percent, e.g. 12.5 for +12.5%. */
   value: number;
@@ -39,6 +42,8 @@ export interface TrendChipProps extends Omit<ComponentPropsWithoutRef<"span">, "
   /** Text after the number, e.g. "vs. semana pasada". */
   label?: string;
   locale?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<TrendChipPart>;
 }
 
 /** Compact change indicator: arrow, signed percent and a good/bad tone, never color alone. */
@@ -49,6 +54,7 @@ export function TrendChip({
   label,
   locale,
   className,
+  classNames,
   ...props
 }: TrendChipProps) {
   const direction = trendDirection(value, epsilon);
@@ -60,14 +66,21 @@ export function TrendChip({
       className={cn(
         "inline-flex h-6 max-w-full items-center gap-1 whitespace-nowrap rounded-badge px-2 font-[650] text-chip-text tabular-nums",
         toneClasses[tone],
+        classNames?.root,
         className,
       )}
       {...props}
     >
-      <Arrow className="size-3 shrink-0" aria-hidden="true" strokeWidth={2.2} />
+      <Arrow
+        className={cn("size-3 shrink-0", classNames?.arrow)}
+        aria-hidden="true"
+        strokeWidth={2.2}
+      />
       <span className="sr-only">{`${directionWords[direction]}, ${toneWords[tone]}: `}</span>
-      <span>{text}</span>
-      {label ? <span className="min-w-0 truncate font-normal opacity-80">{label}</span> : null}
+      <span className={classNames?.value}>{text}</span>
+      {label ? (
+        <span className={cn("min-w-0 truncate font-normal", classNames?.label)}>{label}</span>
+      ) : null}
     </span>
   );
 }

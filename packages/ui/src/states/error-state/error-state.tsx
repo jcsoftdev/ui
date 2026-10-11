@@ -42,14 +42,14 @@ export function ErrorState({
         className,
       )}
     >
-      <p className="max-w-full font-semibold text-[14px] text-ink [overflow-wrap:anywhere]">
+      <p className="max-w-full font-semibold text-fs-140 text-ink [overflow-wrap:anywhere]">
         {headline}
       </p>
       {detail ? (
-        <p className="max-w-[42ch] text-[13px] text-ink-3 [overflow-wrap:anywhere]">{detail}</p>
+        <p className="max-w-[42ch] text-fs-130 text-ink-3 [overflow-wrap:anywhere]">{detail}</p>
       ) : null}
       {correlationId ? (
-        <p className="max-w-full text-[11.5px] text-ink-3 tabular-nums [overflow-wrap:anywhere]">
+        <p className="max-w-full text-fs-115 text-ink-3 tabular-nums [overflow-wrap:anywhere]">
           {correlationLabel ?? strings.correlationPrefix} {correlationId}
         </p>
       ) : null}
@@ -57,7 +57,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={onRetry}
-          className="mt-2 inline-flex h-control-sm cursor-pointer items-center rounded-input border-control bg-surface-control px-3 font-semibold text-[13px] text-ink hover:bg-surface-2"
+          className="mt-2 inline-flex h-control-sm cursor-pointer items-center rounded-input border-control bg-surface-control px-3 font-semibold text-fs-130 text-ink hover:bg-surface-2"
         >
           {retryLabel ?? strings.retry}
         </button>

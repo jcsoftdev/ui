@@ -356,7 +356,7 @@ function LollipopPlot({
                     y={vertical ? cy + (negative ? radius + 14 : -(radius + 6)) : cy}
                     dy={vertical ? undefined : "0.34em"}
                     textAnchor={vertical ? "middle" : negative ? "end" : "start"}
-                    className="font-bold text-[11px] tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{ fill: "var(--ink-2)" }}
                   >
                     {fmt(row.value)}

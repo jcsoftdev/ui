@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -23,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -34,15 +37,20 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.jcsoftdev.ui.atoms.DISABLED_ALPHA
 import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.overlays.Sheet
-import com.jcsoftdev.ui.theme.UiShapes
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
+
+/** Default glyph of [Select]. */
+public object SelectDefaults {
+    /** The chevron at the end of the field, turned upside down while the list is open; [Select]'s `chevron` replaces it. */
+    public val Chevron: @Composable (open: Boolean, color: Color) -> Unit = { open, color -> ChevronGlyph(open, color) }
+}
 
 @Immutable
 public class SelectOption(
@@ -65,9 +73,14 @@ public fun Select(
     isError: Boolean = false,
     placeholder: String? = null,
     contentDescription: String? = null,
-    dismissLabel: String? = null,
+    dismissLabel: String? = UiTheme.strings.close,
+    colors: InputColors = InputDefaults.colors(),
+    shape: Shape = InputDefaults.shape,
+    contentPadding: PaddingValues = InputDefaults.contentPadding,
+    textStyle: TextStyle = InputDefaults.textStyle,
+    chevron: @Composable (open: Boolean, color: Color) -> Unit = SelectDefaults.Chevron,
 ) {
-    val colors = UiTheme.colors
+    val sizes = UiTheme.sizes
     val info = LocalFieldInfo.current
     var expanded by remember { mutableStateOf(false) }
     val selected = options.firstOrNull { it.value == value }
@@ -76,41 +89,42 @@ public fun Select(
     Box(modifier) {
         Row(
             Modifier
-                .graphicsLayer { alpha = if (enabled) 1f else DISABLED_ALPHA }
-                .heightIn(min = 48.dp)
-                .clip(UiShapes.control)
+                .dimWhenDisabled(enabled)
+                .heightIn(min = sizes.minTouchTarget)
+                .clip(shape)
                 .clickable(enabled = enabled, role = Role.DropdownList) { expanded = true }
-                .background(colors.surface)
+                .background(colors.container)
                 .border(
-                    if (hasError) 2.dp else 1.dp,
+                    if (hasError) sizes.focusBorderWidth else sizes.borderWidth,
                     if (hasError) {
-                        colors.danger
+                        colors.errorBorder
                     } else if (expanded) {
-                        colors.accent
+                        colors.focusedBorder
                     } else {
-                        colors.lineControl
+                        colors.border
                     },
-                    UiShapes.control,
+                    shape,
                 ).semantics {
                     if (spoken != null) this.contentDescription = spoken
                     stateDescription = selected?.label ?: placeholder.orEmpty()
-                }.padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                }.padding(contentPadding),
+            horizontalArrangement = Arrangement.spacedBy(InputDefaults.spacing),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 selected?.label ?: placeholder.orEmpty(),
                 modifier = Modifier.weight(1f),
-                color = if (selected == null) colors.ink3 else colors.ink,
+                style = textStyle,
+                color = if (selected == null) colors.placeholder else colors.text,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Chevron(expanded)
+            chevron(expanded, colors.placeholder)
         }
     }
     val sheetTitle = listOfNotNull(spoken, placeholder, selected?.label).firstOrNull { it.isNotBlank() }.orEmpty()
     Sheet(open = expanded, onDismiss = { expanded = false }, title = sheetTitle, dismissLabel = dismissLabel) {
-        Column(Modifier.selectableGroup().padding(bottom = 16.dp)) {
+        Column(Modifier.selectableGroup().padding(bottom = sizes.space16)) {
             options.forEach { option ->
                 val isSelected = option.value == value
                 Box(
@@ -119,13 +133,13 @@ public fun Select(
                         .selectable(isSelected, role = Role.RadioButton) {
                             onValueChange(option.value)
                             expanded = false
-                        }.heightIn(min = 48.dp),
+                        }.heightIn(min = sizes.minTouchTarget),
                     contentAlignment = Alignment.CenterStart,
                 ) {
                     Text(
                         option.label,
-                        style = UiTypography.body.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal),
-                        color = if (isSelected) colors.accentInk else colors.ink,
+                        style = textStyle.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal),
+                        color = if (isSelected) colors.selectedOption else colors.text,
                     )
                 }
             }
@@ -134,8 +148,10 @@ public fun Select(
 }
 
 @Composable
-private fun Chevron(open: Boolean) {
-    val color = UiTheme.colors.ink3
+private fun ChevronGlyph(
+    open: Boolean,
+    color: Color,
+) {
     Box(
         Modifier.size(16.dp).graphicsLayer { rotationZ = if (open) 180f else 0f }.drawBehind {
             val path =

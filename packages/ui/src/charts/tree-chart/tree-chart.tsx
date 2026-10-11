@@ -745,7 +745,7 @@ function TreePlot({
                         event.stopPropagation();
                         if (!panZoom.wasDrag()) toggle(node);
                       }}
-                      className="absolute top-0 left-0 grid h-5 min-w-5 cursor-pointer place-items-center rounded-badge border-divider bg-surface-control px-1 font-bold text-[10px] text-ink-2 tabular-nums shadow-control hover:text-ink"
+                      className="absolute top-0 left-0 grid h-5 min-w-5 cursor-pointer place-items-center rounded-badge border-divider bg-surface-control px-1 font-bold text-fs-100 text-ink-2 tabular-nums shadow-control hover:text-ink"
                       style={{
                         transform: `translate(${tx}px, ${ty}px) translate(-50%, -50%)`,
                         opacity: pose.opacity,
@@ -837,13 +837,13 @@ function TreePlot({
                 stepMatch(event.shiftKey ? -1 : 1);
               } else if (event.key === "Escape") onSearch("");
             }}
-            className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1.5 text-[12px] text-ink outline-none placeholder:text-ink-3"
+            className="h-7 min-w-0 flex-1 border-0 bg-transparent px-1.5 text-fs-120 text-ink outline-none placeholder:text-ink-3"
           />
           {query ? (
             <>
               <span
                 aria-live="polite"
-                className="hidden shrink-0 px-1 text-[11px] text-ink-3 tabular-nums @sm/chart:inline"
+                className="hidden shrink-0 px-1 text-fs-110 text-ink-3 tabular-nums @sm/chart:inline"
               >
                 {matches.length > 0
                   ? `${matchIndex + 1} ${labels.of} ${matches.length}`
@@ -901,7 +901,7 @@ function TreePlot({
           aria-label={labels.controls}
           className="absolute top-2 right-2 flex items-center gap-1 rounded-control border-divider bg-surface-control p-0.5 shadow-control"
         >
-          <span className="hidden px-1.5 font-semibold text-[11px] text-ink-3 tabular-nums @sm/chart:inline">
+          <span className="hidden px-1.5 font-semibold text-fs-110 text-ink-3 tabular-nums @sm/chart:inline">
             {Math.round(view.k * 100)}%
           </span>
           <ToolButton label={labels.zoomOut} onClick={() => panZoom.zoomBy(1 / ZOOM_STEP)}>
@@ -916,7 +916,7 @@ function TreePlot({
         </div>
       ) : null}
       {wheelZoom === "modifier" ? (
-        <p className="pointer-events-none absolute bottom-1.5 left-2 m-0 hidden text-[11px] text-ink-3 @md/chart:block">
+        <p className="pointer-events-none absolute bottom-1.5 left-2 m-0 hidden text-fs-110 text-ink-3 @md/chart:block">
           {labels.zoomHint}
         </p>
       ) : null}

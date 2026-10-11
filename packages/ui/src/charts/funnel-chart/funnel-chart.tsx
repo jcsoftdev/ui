@@ -375,12 +375,12 @@ function FunnelPlot({
                   strokeDasharray="2 3"
                   style={{ stroke: "var(--ink-3)", strokeOpacity: 0.5 }}
                 />
-                <text x={x} y={shape.cy - 3} className="fill-ink-2 font-medium text-[11px]">
+                <text x={x} y={shape.cy - 3} className="fill-ink-2 font-medium text-fs-110">
                   {truncate(datum.name, maxChars)}
                 </text>
-                <text x={x} y={shape.cy + 12} className="text-[12px]">
+                <text x={x} y={shape.cy + 12} className="text-fs-120">
                   <tspan className="fill-ink font-bold tabular-nums">{format(datum.value)}</tspan>
-                  <tspan className="fill-ink-3 text-[11px] tabular-nums">
+                  <tspan className="fill-ink-3 text-fs-110 tabular-nums">
                     {" "}
                     {formatPercent(shape.stage.ofFirst, { decimals: 0 })}
                   </tspan>
@@ -401,7 +401,7 @@ function FunnelPlot({
                 x={shape.cx}
                 y={16}
                 textAnchor="middle"
-                className="fill-ink-2 font-medium text-[11px]"
+                className="fill-ink-2 font-medium text-fs-110"
               >
                 {truncate(datum.name, maxChars)}
               </text>
@@ -409,7 +409,7 @@ function FunnelPlot({
                 x={shape.cx}
                 y={32}
                 textAnchor="middle"
-                className="fill-ink font-bold text-[12px] tabular-nums"
+                className="fill-ink font-bold text-fs-120 tabular-nums"
               >
                 {truncate(format(datum.value), maxChars + 2)}
               </text>
@@ -443,7 +443,7 @@ function FunnelPlot({
                     x={x}
                     y={y + 4}
                     textAnchor="middle"
-                    className={cn("fill-ink-2 font-bold text-[10.5px] tabular-nums")}
+                    className={cn("fill-ink-2 font-bold text-fs-105 tabular-nums")}
                   >
                     {formatPercent(conversion, { decimals: 0 })}
                   </text>

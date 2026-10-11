@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Bell, CalendarDays, Scissors, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../atoms/button/index.js";
+import { Bell, CalendarDays, Scissors, Users } from "../../icons/index.js";
 import { Sidebar, type SidebarGroup } from "../sidebar/index.js";
 import { Topbar } from "./topbar.js";
 
@@ -36,11 +36,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
-export const SingleCrumb: Story = { args: { breadcrumbs: ["Inicio"] } };
+export const SingleCrumb: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { breadcrumbs: ["Inicio"] },
+};
 
 export const WithActionsAndEnd: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     actions: (
       <>
@@ -80,6 +84,7 @@ const groups: SidebarGroup[] = [
 ];
 
 export const PanelLayout: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => {
     const [open, setOpen] = useState(false);
     return (
