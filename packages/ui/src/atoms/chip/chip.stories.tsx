@@ -2,7 +2,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Scissors } from "lucide-react";
 import { Chip, type ChipTone } from "./chip.js";
 
-const tones: ChipTone[] = ["neutral", "danger", "warning", "success", "accent", "solid", "outline"];
+const tones: ChipTone[] = [
+  "neutral",
+  "danger",
+  "warning",
+  "success",
+  "info",
+  "accent",
+  "solid",
+  "outline",
+];
 
 const meta = {
   title: "Atoms/Chip",
@@ -12,6 +21,8 @@ const meta = {
   argTypes: {
     tone: { control: "select", options: tones },
     square: { control: "boolean" },
+    statusIcon: { control: "boolean" },
+    icon: { control: false },
     children: { control: "text" },
   },
 } satisfies Meta<typeof Chip>;
@@ -32,6 +43,22 @@ export const WithIcon: Story = {
       </>
     ),
   },
+};
+
+export const StatusIcon: Story = {
+  render: (args) => (
+    <div className="flex flex-wrap gap-2">
+      {(["info", "success", "warning", "danger"] as const).map((tone) => (
+        <Chip key={tone} {...args} tone={tone} statusIcon>
+          {tone}
+        </Chip>
+      ))}
+    </div>
+  ),
+};
+
+export const IconProp: Story = {
+  args: { tone: "accent", icon: <Scissors aria-hidden />, children: "Corte clásico" },
 };
 
 export const AllTones: Story = {

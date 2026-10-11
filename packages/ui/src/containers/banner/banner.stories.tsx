@@ -65,7 +65,29 @@ export const WithAction: Story = {
   },
 };
 
-export const WithoutIcon: Story = { args: { icon: undefined } };
+export const WithoutIcon: Story = { args: { icon: null } };
+
+/** Without `icon`, each tone gets its own glyph so status never depends on color alone. */
+export const DefaultIcons: Story = {
+  render: (args) => (
+    <div className="flex flex-col gap-2">
+      {(["info", "success", "warning", "danger"] as const).map((tone) => (
+        <Banner key={tone} {...args} tone={tone} icon={undefined}>
+          {tone}
+        </Banner>
+      ))}
+    </div>
+  ),
+};
+
+export const WithTitle: Story = {
+  args: {
+    tone: "danger",
+    icon: undefined,
+    title: "No se pudo registrar el pago",
+    children: "Revisa la conexión del POS e inténtalo de nuevo.",
+  },
+};
 
 /** 320 px container: use it to check the narrow layout without resizing the viewport. */
 export const Narrow: Story = {

@@ -1,10 +1,16 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
+import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 
 export interface ErrorStateProps {
-  message: ReactNode;
+  /** Short headline. Wins over `message` as the headline when both are given. */
+  title?: ReactNode;
+  /** Explanation under the headline, in plain language. */
+  description?: ReactNode;
+  /** Headline when `title` is absent (kept for source compatibility). */
+  message?: ReactNode;
   /** Correlation code for support; never a raw exception. */
   correlationId?: ReactNode;
   /** Prefix shown before the correlation id. */
@@ -15,13 +21,19 @@ export interface ErrorStateProps {
 }
 
 export function ErrorState({
+  title,
+  description,
   message,
   correlationId,
-  correlationLabel = "ID:",
+  correlationLabel,
   onRetry,
-  retryLabel = "Retry",
+  retryLabel,
   className,
 }: ErrorStateProps) {
+  const strings = useUiStrings();
+  const headline = displayable(title) ?? displayable(message) ?? strings.somethingWrong;
+  const detail =
+    displayable(description) ?? (title === undefined ? undefined : displayable(message));
   return (
     <div
       role="alert"
@@ -31,11 +43,14 @@ export function ErrorState({
       )}
     >
       <p className="max-w-full font-semibold text-[14px] text-ink [overflow-wrap:anywhere]">
-        {message}
+        {headline}
       </p>
+      {detail ? (
+        <p className="max-w-[42ch] text-[13px] text-ink-3 [overflow-wrap:anywhere]">{detail}</p>
+      ) : null}
       {correlationId ? (
         <p className="max-w-full text-[11.5px] text-ink-3 tabular-nums [overflow-wrap:anywhere]">
-          {correlationLabel} {correlationId}
+          {correlationLabel ?? strings.correlationPrefix} {correlationId}
         </p>
       ) : null}
       {onRetry ? (
@@ -44,9 +59,17 @@ export function ErrorState({
           onClick={onRetry}
           className="mt-2 inline-flex h-control-sm cursor-pointer items-center rounded-input border-control bg-surface-control px-3 font-semibold text-[13px] text-ink hover:bg-surface-2"
         >
-          {retryLabel}
+          {retryLabel ?? strings.retry}
         </button>
       ) : null}
     </div>
   );
+}
+
+/** Strings, numbers and elements render; an Error or any other object is never shown raw. */
+function displayable(value: ReactNode): ReactNode {
+  if (value === null || value === undefined || typeof value === "boolean") return undefined;
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (isValidElement(value) || Array.isArray(value)) return value;
+  return undefined;
 }

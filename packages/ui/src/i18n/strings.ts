@@ -8,6 +8,7 @@ export interface UiStrings {
   processing: string;
   correlationPrefix: string;
   actionFailed: string;
+  somethingWrong: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -23,6 +24,7 @@ export const uiStrings = {
     processing: "Processing…",
     correlationPrefix: "ID:",
     actionFailed: "The action could not be completed. Try again.",
+    somethingWrong: "Something went wrong. Try again.",
   },
   es: {
     retry: "Reintentar",
@@ -34,5 +36,6 @@ export const uiStrings = {
     processing: "Procesando…",
     correlationPrefix: "ID:",
     actionFailed: "No se pudo completar la acción. Inténtalo de nuevo.",
+    somethingWrong: "Algo salió mal. Inténtalo de nuevo.",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

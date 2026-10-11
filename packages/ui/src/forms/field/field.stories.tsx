@@ -18,6 +18,7 @@ const meta = {
     label: { control: "text" },
     hint: { control: "text" },
     error: { control: "text" },
+    optional: { control: "boolean" },
     id: { control: "text" },
     children: { control: false },
   },
@@ -41,6 +42,10 @@ export const WithError: Story = {
 
 export const HintAndError: Story = {
   args: { label: "Teléfono", hint: "9 dígitos", error: "El teléfono debe tener 9 dígitos" },
+};
+
+export const Optional: Story = {
+  args: { label: "Correo", hint: "Para enviarte el comprobante", optional: true },
 };
 
 export const WithSelect: Story = {

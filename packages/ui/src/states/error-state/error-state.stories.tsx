@@ -13,6 +13,8 @@ const meta = {
     onRetry: () => {},
   },
   argTypes: {
+    title: { control: "text" },
+    description: { control: "text" },
     message: { control: "text" },
     correlationId: { control: "text" },
     correlationLabel: { control: "text" },
@@ -25,6 +27,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const TitleAndDescription: Story = {
+  args: {
+    message: undefined,
+    title: "No pudimos cargar la agenda",
+    description: "Tus citas están a salvo. Revisa tu conexión e inténtalo de nuevo.",
+  },
+};
 
 export const WithoutRetry: Story = { args: { onRetry: undefined } };
 

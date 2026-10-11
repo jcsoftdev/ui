@@ -9,8 +9,10 @@ const meta = {
   args: { children: "Reservar corte", variant: "primary", size: "md" },
   argTypes: {
     variant: { control: "inline-radio", options: ["primary", "secondary", "ghost", "danger"] },
-    size: { control: "inline-radio", options: ["sm", "md"] },
+    size: { control: "inline-radio", options: ["sm", "md", "lg"] },
     loading: { control: "boolean" },
+    loadingLabel: { control: "text" },
+    block: { control: "boolean" },
     disabled: { control: "boolean" },
     asChild: { control: false },
   },
@@ -30,6 +32,23 @@ export const Danger: Story = { args: { variant: "danger", children: "Anular cita
 export const Small: Story = { args: { size: "sm", children: "Cobrar S/ 35" } };
 
 export const Loading: Story = { args: { loading: true, children: "Guardando cliente" } };
+
+export const Large: Story = { args: { size: "lg", children: "Cobrar S/ 35" } };
+
+export const Block: Story = {
+  args: { block: true, size: "lg", children: "Confirmar reserva" },
+  decorators: [
+    (Story) => (
+      <div className="max-w-sm">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const LoadingWithLabel: Story = {
+  args: { loading: true, loadingLabel: "Guardando…", children: "Guardar cliente" },
+};
 
 export const Disabled: Story = { args: { disabled: true, children: "Cobrar" } };
 

@@ -1,5 +1,6 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
+import { type StatusTone, statusIcon } from "../internal/status-icons.js";
 
 export type ChipTone =
   | "neutral"
@@ -7,6 +8,7 @@ export type ChipTone =
   | "warning"
   | "success"
   | "accent"
+  | "info"
   | "solid"
   | "outline";
 
@@ -16,6 +18,7 @@ const toneClasses: Record<ChipTone, string> = {
   warning: "bg-warning-soft text-warning",
   success: "bg-success-soft text-success",
   accent: "bg-accent-soft text-accent-ink",
+  info: "bg-info-soft text-info",
   solid: "bg-accent text-on-accent",
   outline: "bg-transparent text-ink-2 shadow-[inset_0_0_0_1px_var(--line-strong)]",
 };
@@ -24,9 +27,26 @@ export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
   tone?: ChipTone;
   /** Use the smaller chip radius instead of a full pill. */
   square?: boolean;
+  /** Leading decorative icon; wins over `statusIcon`. */
+  icon?: ReactNode;
+  /** Prefix `info`, `success`, `warning` and `danger` chips with their status glyph. */
+  statusIcon?: boolean;
 }
 
-export function Chip({ tone = "neutral", square, className, ...props }: ChipProps) {
+const statusTones = new Set<ChipTone>(["info", "success", "warning", "danger"]);
+
+export function Chip({
+  tone = "neutral",
+  square,
+  icon,
+  statusIcon: withStatusIcon,
+  className,
+  children,
+  ...props
+}: ChipProps) {
+  const leading =
+    icon ??
+    (withStatusIcon && statusTones.has(tone) ? statusIcon(tone as StatusTone, "size-3") : null);
   const interactive = props.onClick !== undefined || props.role === "button";
   return (
     <span
@@ -38,6 +58,9 @@ export function Chip({ tone = "neutral", square, className, ...props }: ChipProp
         className,
       )}
       {...props}
-    />
+    >
+      {leading}
+      {children}
+    </span>
   );
 }

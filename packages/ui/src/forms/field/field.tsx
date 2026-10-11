@@ -1,6 +1,7 @@
 "use client";
 
 import { cloneElement, isValidElement, type ReactElement, useId } from "react";
+import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 import { Label } from "../label/index.js";
 
@@ -13,13 +14,17 @@ interface ControlProps {
 export interface FieldProps {
   label: string;
   hint?: string;
-  error?: string;
+  /** Message under the control; `null` and `undefined` mean no error. */
+  error?: string | null;
+  /** Marks the field as optional by appending the localized marker to the label. */
+  optional?: boolean;
   id?: string;
   children: ReactElement<ControlProps>;
   className?: string;
 }
 
-export function Field({ label, hint, error, id, children, className }: FieldProps) {
+export function Field({ label, hint, error, optional, id, children, className }: FieldProps) {
+  const strings = useUiStrings();
   const generatedId = useId();
   const controlId = id ?? generatedId;
   const hintId = hint ? `${controlId}-hint` : undefined;
@@ -36,7 +41,10 @@ export function Field({ label, hint, error, id, children, className }: FieldProp
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.25", className)}>
-      <Label htmlFor={controlId}>{label}</Label>
+      <Label htmlFor={controlId}>
+        {label}
+        {optional ? <span className="font-normal text-ink-3"> ({strings.optional})</span> : null}
+      </Label>
       {control}
       {hint ? (
         <p id={hintId} className="text-meta text-ink-3">
