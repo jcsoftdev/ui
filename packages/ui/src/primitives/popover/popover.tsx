@@ -16,7 +16,7 @@ import {
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
-import { getTabbables } from "../focusable.js";
+import { getTabbables, resolveTabOut } from "../focusable.js";
 import { hideOthers } from "../hide-others.js";
 import * as PopperPrimitive from "../popper/popper.js";
 import { Portal } from "../portal.js";
@@ -294,15 +294,7 @@ function ContentImpl({
     const leavingBackward = event.shiftKey && (active === first || active === node);
     if (!leavingForward && !leavingBackward) return;
     event.preventDefault();
-    // First tabbable after the trigger in document order; the trigger itself may not be tabbable.
-    const next = leavingForward
-      ? getTabbables(document.body).find(
-          (element) =>
-            !node.contains(element) &&
-            !trigger.contains(element) &&
-            Boolean(trigger.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING),
-        )
-      : undefined;
+    const next = resolveTabOut(trigger, node, !leavingForward);
     interactedOutside.current = true;
     (next ?? trigger).focus({ preventScroll: true });
     setOpen(false);

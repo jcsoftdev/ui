@@ -31,6 +31,7 @@ export {
   type DismissableLayerOptions,
   type FocusOutsideEvent,
   type InteractOutsideEvent,
+  LAYER_BRANCH_ATTRIBUTE,
   type PointerDownOutsideEvent,
   useDismissableLayer,
 } from "./use-dismissable-layer.js";

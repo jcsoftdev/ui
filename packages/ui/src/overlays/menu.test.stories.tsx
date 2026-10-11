@@ -24,6 +24,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "./dropdown-menu/dropdown-menu.js";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover/popover.js";
+import { Toaster, toast } from "./toaster/index.js";
 
 const meta = {
   title: "Tests/Menu",
@@ -520,5 +522,273 @@ export const MenuInsideDialogEscapeClosesOnlyMenu: Story = {
     await expect(screen.queryAllByRole("dialog")).toHaveLength(1);
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryAllByRole("dialog")).toHaveLength(0));
+  },
+};
+
+// --- Layers opened from inside a modal menu -----------------------------------------------
+
+function EditorInsideMenu({ onSave }: { onSave: () => void }) {
+  return (
+    <div className="p-24">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Acciones</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent aria-label="Acciones de cita">
+          <Dialog>
+            <DialogTrigger asChild>
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                Editar
+              </DropdownMenuItem>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Editar cita</DialogTitle>
+              </DialogHeader>
+              <DialogBody>
+                <Button onClick={onSave}>Guardar</Button>
+              </DialogBody>
+            </DialogContent>
+          </Dialog>
+          <DropdownMenuItem>Otra</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+export const DialogOpenedFromModalMenuItemStaysClickable: Story = {
+  render: () => {
+    return <EditorInsideMenu onSave={fn()} />;
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(trigger(canvasElement));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Editar" }));
+    const dialog = await screen.findByRole("dialog", { name: "Editar cita" });
+    const save = within(dialog).getByRole("button", { name: "Guardar" });
+    await expect(getComputedStyle(save).pointerEvents).toBe("auto");
+    // A real hit test: the point lands on the dialog, not on <html>.
+    const box = save.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(save.contains(hit)).toBe(true);
+    await userEvent.click(save);
+    await pause(150);
+    await expect(screen.queryByRole("dialog", { name: "Editar cita" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const PopoverInsideModalMenuStaysClickable: Story = {
+  render: () => (
+    <div className="p-24">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Acciones</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent aria-label="Filtros">
+          <Popover>
+            <PopoverTrigger asChild>
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                Rango
+              </DropdownMenuItem>
+            </PopoverTrigger>
+            <PopoverContent aria-label="Rango de fechas">
+              <Button size="sm">Aplicar</Button>
+            </PopoverContent>
+          </Popover>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(trigger(canvasElement));
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Rango" }));
+    const panel = await screen.findByRole("dialog", { name: "Rango de fechas" });
+    const apply = within(panel).getByRole("button", { name: "Aplicar" });
+    await expect(getComputedStyle(apply).pointerEvents).toBe("auto");
+    await userEvent.click(apply);
+    await pause(150);
+    await expect(screen.queryByRole("dialog", { name: "Rango de fechas" })).toBeInTheDocument();
+    await expect(menus()).toHaveLength(1);
+  },
+};
+
+export const ToastActionStaysClickableWhileModalMenuOpen: Story = {
+  render: () => (
+    <div id="app-root">
+      <Toaster />
+      <Fruits />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    let undone = 0;
+    await userEvent.click(trigger(canvasElement));
+    await screen.findByRole("menu");
+    toast("Cita anulada", {
+      duration: 60000,
+      action: { label: "Deshacer", onClick: () => undone++ },
+    });
+    const action = await screen.findByRole("button", { name: "Deshacer" });
+    const box = action.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(action.contains(hit)).toBe(true);
+    await userEvent.click(action);
+    await expect(undone).toBe(1);
+    await pause(100);
+    await expect(menus()).toHaveLength(1);
+    toast.dismiss();
+  },
+};
+
+// --- Submenu grace area across a sibling sub trigger --------------------------------------
+
+export const GraceAreaSurvivesCrossingSiblingSubTrigger: Story = {
+  render: () => (
+    <div className="p-24">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Acciones</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent aria-label="Cita">
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Compartir</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent aria-label="Compartir con">
+              <DropdownMenuItem>Correo</DropdownMenuItem>
+              <DropdownMenuItem>Enlace</DropdownMenuItem>
+              <DropdownMenuItem>Mensaje</DropdownMenuItem>
+              <DropdownMenuItem>Calendario</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Mover</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent aria-label="Mover a">
+              <DropdownMenuItem>Hoy</DropdownMenuItem>
+              <DropdownMenuItem>Manana</DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+          <DropdownMenuItem>Borrar</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(trigger(canvasElement));
+    const share = await screen.findByRole("menuitem", { name: "Compartir" });
+    const move = screen.getByRole("menuitem", { name: "Mover" });
+    const shareBox = share.getBoundingClientRect();
+    const moveBox = move.getBoundingClientRect();
+    await userEvent.pointer([
+      {
+        target: share,
+        coords: { clientX: shareBox.left + 20, clientY: shareBox.top + shareBox.height / 2 },
+      },
+    ]);
+    await waitFor(() => expect(menus()).toHaveLength(2));
+    await expect(share).toHaveAttribute("aria-expanded", "true");
+    const y = moveBox.top + 4;
+    // user-event does not emit the pointerout/over pair React derives enter and leave from.
+    const fire = (
+      type: string,
+      target: Element,
+      clientX: number,
+      clientY: number,
+      from?: Element,
+    ) =>
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          pointerType: "mouse",
+          clientX,
+          clientY,
+          relatedTarget: from ?? null,
+        }),
+      );
+    const exitX = moveBox.right - 40;
+    fire("pointerout", share, exitX, y, move);
+    fire("pointerover", move, exitX, y, share);
+    for (const [x, dy] of [
+      [exitX, 0],
+      [moveBox.right - 20, 2],
+      [moveBox.right - 4, 3],
+    ] as const) {
+      fire("pointermove", move, x, y + dy);
+    }
+    await pause(400);
+    await expect(share).toHaveAttribute("aria-expanded", "true");
+    await expect(move).toHaveAttribute("aria-expanded", "false");
+    await expect(menus()).toHaveLength(2);
+  },
+};
+
+// --- Keyboard and focus details -----------------------------------------------------------
+
+export const TabMovesFocusToNextTabbableAfterTrigger: Story = {
+  ...fruits,
+  play: async ({ canvasElement }) => {
+    await openWith(canvasElement, "{Enter}");
+    await waitFor(() => expect(activeName()).toBe("Manzana"));
+    await userEvent.keyboard("{Tab}");
+    await waitFor(() => expect(menus()).toHaveLength(0));
+    await waitFor(() => expect(document.activeElement?.textContent).toBe("Despues"));
+  },
+};
+
+export const ShiftTabReturnsToTrigger: Story = {
+  ...fruits,
+  play: async ({ canvasElement }) => {
+    await openWith(canvasElement, "{Enter}");
+    await waitFor(() => expect(activeName()).toBe("Manzana"));
+    await userEvent.keyboard("{Shift>}{Tab}{/Shift}");
+    await waitFor(() => expect(menus()).toHaveLength(0));
+    await waitFor(() => expect(trigger(canvasElement)).toHaveFocus());
+  },
+};
+
+export const KeysInsideItemDescendantsDoNotSelect: Story = {
+  render: () => (
+    <div className="p-24">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Acciones</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent aria-label="Nota">
+          <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+            <input aria-label="Nota rapida" />
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(trigger(canvasElement));
+    const input = await screen.findByRole("textbox", { name: "Nota rapida" });
+    input.focus();
+    await userEvent.keyboard("{Enter}");
+    await pause(100);
+    await expect(menus()).toHaveLength(1);
+  },
+};
+
+export const ForceMountedContentReturnsFocusToTriggerOnClose: Story = {
+  render: () => (
+    <div className="p-24">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button>Acciones</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent aria-label="Siempre montado" forceMount>
+          <DropdownMenuItem>Uno</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await openWith(canvasElement, "{Enter}");
+    await waitFor(() => expect(activeName()).toBe("Uno"));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(trigger(canvasElement)).toHaveFocus());
   },
 };

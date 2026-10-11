@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
 } from "react";
+import { useEnabledPointerEvents } from "./pointer-events-lock.js";
 
 export type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 export type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
@@ -59,6 +60,7 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
     return node?.isConnected === true && document.activeElement === node;
   }, []);
   const { active } = options;
+  useEnabledPointerEvents(options.ref, active);
 
   useEffect(() => {
     if (!active) return;

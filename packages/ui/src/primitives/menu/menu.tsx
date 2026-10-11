@@ -20,6 +20,7 @@ import {
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { resolveTabOut } from "../focusable.js";
 import { hideOthers } from "../hide-others.js";
 import { blockOutsidePointerEvents } from "../pointer-events-lock.js";
 import * as PopperPrimitive from "../popper/popper.js";
@@ -87,6 +88,8 @@ interface MenuContextValue {
   contents: RefObject<Set<HTMLElement>>;
   /** Set when the menu was dismissed by interacting elsewhere: focus then stays where the user put it. */
   interactedOutside: RefObject<boolean>;
+  /** Tab direction that closed the menu; the target is resolved after the page is un-hidden and the trap released. */
+  exitTab: RefObject<"forward" | "backward" | null>;
 }
 
 const MenuContext = createContext<MenuContextValue | null>(null);
@@ -197,6 +200,7 @@ export function Root({
   const focusIntent = useRef<FocusIntent>("none");
   const contents = useRef(new Set<HTMLElement>());
   const interactedOutside = useRef(false);
+  const exitTab = useRef<"forward" | "backward" | null>(null);
   const contentId = useId();
   const triggerId = useId();
   const [hasTrigger, setHasTrigger] = useState(false);
@@ -222,6 +226,7 @@ export function Root({
       focusIntent,
       contents,
       interactedOutside,
+      exitTab,
     }),
     [open, modal, setOpen, getDir, contentId, triggerId, hasTrigger, hasCustomAnchor],
   );
@@ -368,6 +373,7 @@ function ContentImpl({
   onKeyDown,
   onPointerMove,
   style,
+  ref,
   ...props
 }: ContentImplProps) {
   const root = useMenuContext("MenuContent");
@@ -469,6 +475,8 @@ function ContentImpl({
     const target = event.target as HTMLElement;
     if (event.key === "Tab") {
       event.preventDefault();
+      root.interactedOutside.current = true;
+      root.exitTab.current = event.shiftKey ? "backward" : "forward";
       root.setOpen(false);
       return;
     }
@@ -506,7 +514,7 @@ function ContentImpl({
         data-state={stateOf(listening)}
         tabIndex={-1}
         {...props}
-        ref={nodeRef}
+        ref={ref ?? nodeRef}
         style={{ outline: "none", ...(root.modal ? { pointerEvents: "auto" } : null), ...style }}
         onPointerDownCapture={composeHandlers(
           onPointerDownCapture,
@@ -603,11 +611,22 @@ function RootContent({
         onCloseAutoFocus?.(event);
         if (event.defaultPrevented) return;
         event.preventDefault();
-        if (interactedOutside.current) return;
         const trigger = triggerRef.current;
+        const tabbed = root.exitTab.current;
+        root.exitTab.current = null;
+        if (tabbed && trigger && document.contains(trigger)) {
+          const next = resolveTabOut(trigger, nodeRef.current, tabbed === "backward");
+          (next ?? trigger).focus({ preventScroll: true });
+          return;
+        }
+        if (interactedOutside.current) return;
         const active = document.activeElement;
         // Do not steal focus from something that took it meanwhile (a dialog opened by an item).
-        const free = !active || active === document.body || active === document.documentElement;
+        const free =
+          !active ||
+          active === document.body ||
+          active === document.documentElement ||
+          Boolean(nodeRef.current?.contains(active));
         if (trigger && document.contains(trigger) && free) trigger.focus({ preventScroll: true });
       }}
       onEscapeKeyDown={onEscapeKeyDown}
@@ -721,6 +740,7 @@ export function Item({
         if (!pointerDown.current) event.currentTarget.click();
       })}
       onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLDivElement>) => {
+        if (event.target !== event.currentTarget) return;
         const typing = content.searchRef.current !== "";
         if (disabled || (typing && event.key === " ")) return;
         if (SELECT_KEYS.includes(event.key)) {
@@ -931,8 +951,12 @@ export function SubTrigger({
         })}
         onPointerMove={composeHandlers(
           onPointerMove,
-          whenMouse(() => {
-            if (disabled || sub.open || openTimer.current !== undefined) return;
+          whenMouse((event: ReactPointerEvent<HTMLDivElement>) => {
+            if (disabled) return;
+            // Moving across this trigger toward an open submenu keeps that submenu alive.
+            content.onItemEnter(event);
+            if (event.defaultPrevented) return;
+            if (sub.open || openTimer.current !== undefined) return;
             content.graceIntent.current = null;
             openTimer.current = window.setTimeout(() => {
               sub.focusIntent.current = "none";
@@ -963,6 +987,7 @@ export function SubTrigger({
           }),
         )}
         onKeyDown={composeHandlers(onKeyDown, (event: ReactKeyboardEvent<HTMLDivElement>) => {
+          if (event.target !== event.currentTarget) return;
           const typing = content.searchRef.current !== "";
           if (disabled || (typing && event.key === " ")) return;
           if (SUB_OPEN_KEYS[root.getDir()].includes(event.key)) {

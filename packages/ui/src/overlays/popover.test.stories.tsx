@@ -558,3 +558,79 @@ export const TabOutWithNonTabbableTriggerGoesToNextTabbable: Story = {
     await expect(document.activeElement?.textContent).toBe("Siguiente");
   },
 };
+
+export const PortalInsideScrolledTransformedContainerStaysAnchored: Story = {
+  render: function Render() {
+    const [scope, setScope] = useState<HTMLElement | null>(null);
+    return (
+      <div className="p-24">
+        <div
+          ref={(node) => {
+            setScope(node);
+            if (node) node.scrollTop = 120;
+          }}
+          style={{
+            transform: "translate(40px, 30px)",
+            position: "relative",
+            overflow: "auto",
+            height: 200,
+            width: 200,
+          }}
+        >
+          <div style={{ height: 800 }} />
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button>Abrir</Button>
+          </PopoverTrigger>
+          <PopoverContent aria-label="Ficha" container={scope}>
+            Contenido
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await open(canvasElement);
+    const content = await screen.findByRole("dialog", { name: "Ficha" });
+    await pause(100);
+    const trigger = within(canvasElement).getByRole("button", { name: "Abrir" });
+    const container = content.closest("[data-ui-popper-wrapper]")?.parentElement;
+    await expect(container?.scrollTop).toBe(120);
+    const gap = content.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
+    await expect(Math.abs(gap - 6)).toBeLessThan(2);
+  },
+};
+
+export const EscapeClosesOnlyTheTopmostOfDialogAndPopoverOpenTogether: Story = {
+  render: () => (
+    <div className="p-24">
+      <Dialog defaultOpen>
+        <DialogTrigger asChild>
+          <Button>Abrir dialogo</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dialogo</DialogTitle>
+          </DialogHeader>
+          <DialogBody>Cuerpo</DialogBody>
+        </DialogContent>
+      </Dialog>
+      <Popover defaultOpen>
+        <PopoverTrigger asChild>
+          <Button>Abrir</Button>
+        </PopoverTrigger>
+        <PopoverContent aria-label="Ficha">Contenido</PopoverContent>
+      </Popover>
+    </div>
+  ),
+  play: async () => {
+    await screen.findByRole("dialog", { name: "Dialogo", hidden: true });
+    await screen.findByRole("dialog", { name: "Ficha", hidden: true });
+    (document.activeElement as HTMLElement | null)?.blur();
+    await userEvent.keyboard("{Escape}");
+    await pause(300);
+    const open = screen.queryAllByRole("dialog", { hidden: true });
+    await expect(open).toHaveLength(1);
+  },
+};

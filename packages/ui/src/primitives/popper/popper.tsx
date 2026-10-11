@@ -158,7 +158,11 @@ function containingBlockOrigin(node: HTMLElement): { x: number; y: number } {
       (style.containerType !== undefined && !["", "normal"].includes(style.containerType));
     if (creates) {
       const box = parent.getBoundingClientRect();
-      return { x: box.left + parent.clientLeft, y: box.top + parent.clientTop };
+      // A scrolled containing block carries its fixed descendants along with its content.
+      return {
+        x: box.left + parent.clientLeft - parent.scrollLeft,
+        y: box.top + parent.clientTop - parent.scrollTop,
+      };
     }
   }
   return { x: 0, y: 0 };
