@@ -1,8 +1,8 @@
-import { Moon, Sun } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { Switch } from "../atoms/switch/index.js";
 import { AccentPicker } from "../forms/accent-picker/index.js";
 import { Select } from "../forms/select/index.js";
+import { Moon, Sun } from "../icons/index.js";
 import { Segmented, SegmentedItem } from "../navigation/segmented/index.js";
 import { OverlayContainer } from "./bento.js";
 

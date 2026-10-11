@@ -4,10 +4,18 @@ on:
   push:
     paths:
       - "packages/ui-compose/**"
+      - "packages/ui/tokens/**"
+      - "packages/ui/scripts/build-theme.mjs"
+      - "packages/ui/bin/ui-theme.mjs"
+      - "packages/ui/icons/**"
       - ".github/workflows/ui-compose.yml"
   pull_request:
     paths:
       - "packages/ui-compose/**"
+      - "packages/ui/tokens/**"
+      - "packages/ui/scripts/build-theme.mjs"
+      - "packages/ui/bin/ui-theme.mjs"
+      - "packages/ui/icons/**"
       - ".github/workflows/ui-compose.yml"
 
 concurrency:
@@ -31,8 +39,18 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:assembleRelease :sample:assembleRelease
+      # verifyRoborazziJvm re-runs the screenshot tests against the committed goldens in kit/screenshots.
+      - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: roborazzi-diffs
+          path: packages/ui-compose/kit/build/outputs/roborazzi
+          if-no-files-found: ignore
 
   # Kotlin/Native iOS compilation needs Xcode, so it gets its own macOS job limited to the compile task.
   ios-compile:
@@ -43,5 +61,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew :kit:compileKotlinIosSimulatorArm64

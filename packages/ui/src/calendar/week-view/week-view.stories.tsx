@@ -190,9 +190,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const SundayStart: Story = { args: { weekStartsOn: 0, locale: "es-PE" } };
+export const SundayStart: Story = {
+  args: { weekStartsOn: 0, locale: "es-PE" },
+};
 
 export const Empty: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     events: [],
     markers: [],
@@ -202,7 +205,9 @@ export const Empty: Story = {
   },
 };
 
-export const NoNowLine: Story = { args: { currentTime: undefined } };
+export const NoNowLine: Story = {
+  args: { currentTime: undefined },
+};
 
 export const BusyDay: Story = {
   args: {

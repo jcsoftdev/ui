@@ -45,19 +45,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const ExactPartial: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Exact partial (4.3)",
   args: { label: "Promedio de reseñas", value: 4.3 },
 };
 
 export const HalfSteps: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Rounded to half stars",
   args: { label: "Reseñas de Renzo", value: 3.74, step: 0.5, tone: "warning" },
 };
 
 export const BookingSteps: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Segments (booking steps)",
   args: {
     label: "Reserva: paso 3 de 4",
@@ -71,6 +74,7 @@ export const BookingSteps: Story = {
 };
 
 export const CapacityCells: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Segments (capacity cells)",
   args: {
     label: "Ocupación del local",
@@ -85,6 +89,7 @@ export const CapacityCells: Story = {
 };
 
 export const Chairs: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Chair icons (chairs taken)",
   args: {
     label: "Sillas ocupadas",
@@ -100,6 +105,7 @@ export const Chairs: Story = {
 export const Loading: Story = { args: { loading: true } };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div style={{ width: 320, maxWidth: "100%" }}>

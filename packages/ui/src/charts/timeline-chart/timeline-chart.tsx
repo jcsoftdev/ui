@@ -164,7 +164,7 @@ const BarMark = memo(function BarMark({
           x={x + 8}
           y={y + height / 2}
           dy="0.34em"
-          className="pointer-events-none font-bold text-[11px]"
+          className="pointer-events-none font-bold text-fs-110"
           style={{ fill: "var(--surface)" }}
         >
           {text}
@@ -527,7 +527,7 @@ function TimelinePlot({
                 y={band.top + band.height / 2}
                 dy="0.34em"
                 textAnchor="end"
-                className="font-semibold text-[12px]"
+                className="font-semibold text-fs-120"
                 style={{ fill: "var(--ink-2)" }}
               >
                 {fitText(band.row.label, left - 18, 12)}
@@ -574,7 +574,7 @@ function TimelinePlot({
                 y={-MARGIN.top + 10}
                 dy="0.34em"
                 textAnchor="middle"
-                className="font-bold text-[10px]"
+                className="font-bold text-fs-100"
                 style={{ fill: "var(--surface)" }}
               >
                 {texts.now}

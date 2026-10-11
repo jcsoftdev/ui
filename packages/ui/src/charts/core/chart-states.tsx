@@ -48,7 +48,7 @@ export function ChartSkeleton({ height, label, shape = "bars", className }: Char
           {SKELETON_BARS.map((ratio) => (
             <span
               key={ratio}
-              className="flex-1 rounded-t-[6px] bg-surface-2"
+              className="flex-1 rounded-t-chip bg-surface-2"
               style={{ height: `${ratio * 100}%` }}
             />
           ))}
@@ -83,7 +83,7 @@ export function ChartEmpty({ height, label, className }: ChartEmptyProps) {
           strokeLinecap="round"
         />
       </svg>
-      <p className="m-0 font-semibold text-[13px] text-ink-3">{label}</p>
+      <p className="m-0 font-semibold text-fs-130 text-ink-3">{label}</p>
     </div>
   );
 }

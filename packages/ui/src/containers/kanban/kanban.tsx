@@ -1,6 +1,5 @@
 "use client";
 
-import { GripVertical } from "lucide-react";
 import {
   type KeyboardEvent,
   type ReactNode,
@@ -13,6 +12,8 @@ import {
 } from "react";
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import { Chip } from "../../atoms/chip/chip.js";
+import { GripVertical } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   dropIndex,
@@ -25,6 +26,20 @@ import {
   moveCard,
   wipStatus,
 } from "./model.js";
+
+export type KanbanPart =
+  | "root"
+  | "board"
+  | "column"
+  | "columnHeader"
+  | "columnTitle"
+  | "count"
+  | "cards"
+  | "card"
+  | "grip"
+  | "empty"
+  | "indicator"
+  | "ghost";
 
 export interface KanbanProps {
   /** Controlled board. Pair with `onColumnsChange`. */
@@ -39,6 +54,8 @@ export interface KanbanProps {
   emptyLabel?: string;
   "aria-label"?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<KanbanPart>;
 }
 
 const KEYS: readonly string[] = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
@@ -89,6 +106,7 @@ export function Kanban({
   renderCard,
   emptyLabel = "Sin tarjetas",
   className,
+  classNames,
   "aria-label": ariaLabel = "Tablero",
 }: KanbanProps) {
   const [internal, setInternal] = useState(defaultColumns);
@@ -256,7 +274,7 @@ export function Kanban({
     // biome-ignore lint/a11y/noStaticElementInteractions: focus leaving the board cancels a held card
     <div
       ref={rootRef}
-      className={cn("@container/kanban min-w-0", className)}
+      className={cn("@container/kanban min-w-0", classNames?.root, className)}
       onBlur={(event) => {
         const next = event.relatedTarget as Node | null;
         if (grabbedId && next && !rootRef.current?.contains(next)) {
@@ -277,7 +295,10 @@ export function Kanban({
       <div
         role="group"
         aria-label={ariaLabel}
-        className="flex snap-x snap-mandatory items-start gap-density overflow-x-auto pb-2"
+        className={cn(
+          "flex snap-x snap-mandatory items-start gap-density overflow-x-auto pb-2",
+          classNames?.board,
+        )}
       >
         {shown.map((column) => {
           const state = wipStatus(column.cards.length, column.wipLimit);
@@ -288,7 +309,7 @@ export function Kanban({
             <li
               key={key}
               aria-hidden="true"
-              className="h-1 shrink-0 rounded-badge bg-accent"
+              className={cn("h-1 shrink-0 rounded-badge bg-accent", classNames?.indicator)}
               data-drop-indicator=""
             />
           );
@@ -315,12 +336,16 @@ export function Kanban({
                     "pressable relative flex cursor-grab select-none gap-1 rounded-input border-card surface-card p-density shadow-card focus-visible:focus-ring",
                     isDragged && "opacity-40",
                     grabbed && "shadow-selected",
+                    classNames?.card,
                   )}
                 >
                   <span
                     data-grip=""
                     aria-hidden="true"
-                    className="-ml-1 flex w-4 shrink-0 touch-none items-start pt-0.5 text-ink-3"
+                    className={cn(
+                      "-ml-1 flex w-4 shrink-0 touch-none items-start pt-0.5 text-ink-3",
+                      classNames?.grip,
+                    )}
                   >
                     <GripVertical className="size-4" />
                   </span>
@@ -338,11 +363,27 @@ export function Kanban({
               key={column.id}
               data-column-id={column.id}
               aria-label={column.title}
-              className="flex w-[min(18rem,85cqw)] shrink-0 snap-start flex-col gap-density-sm rounded-card bg-surface-sunken p-density-sm @4xl/kanban:w-auto @4xl/kanban:min-w-56 @4xl/kanban:flex-1"
+              className={cn(
+                "flex w-[min(18rem,85cqw)] shrink-0 snap-start flex-col gap-density-sm rounded-card bg-surface-sunken p-density-sm @4xl/kanban:w-auto @4xl/kanban:min-w-56 @4xl/kanban:flex-1",
+                classNames?.column,
+              )}
             >
-              <header className="flex min-w-0 items-center justify-between gap-density-sm px-1 pt-1">
-                <h3 className="min-w-0 truncate text-card-title text-ink">{column.title}</h3>
+              <header
+                className={cn(
+                  "flex min-w-0 items-center justify-between gap-density-sm px-1 pt-1",
+                  classNames?.columnHeader,
+                )}
+              >
+                <h3
+                  className={cn(
+                    "min-w-0 truncate text-card-title text-ink",
+                    classNames?.columnTitle,
+                  )}
+                >
+                  {column.title}
+                </h3>
                 <Chip
+                  className={classNames?.count}
                   tone={state === "over" ? "danger" : state === "at-limit" ? "warning" : "neutral"}
                   aria-label={
                     column.wipLimit === undefined
@@ -355,10 +396,22 @@ export function Kanban({
                     : `${column.cards.length}/${column.wipLimit}`}
                 </Chip>
               </header>
-              <ul className="m-0 flex min-h-16 list-none flex-col gap-density-sm p-0">
+              <ul
+                className={cn(
+                  "m-0 flex min-h-16 list-none flex-col gap-density-sm p-0",
+                  classNames?.cards,
+                )}
+              >
                 {items}
                 {column.cards.length === 0 && targetHere === null ? (
-                  <li className="px-1 py-density text-center text-ink-3 text-meta">{emptyLabel}</li>
+                  <li
+                    className={cn(
+                      "px-1 py-density text-center text-ink-3 text-meta",
+                      classNames?.empty,
+                    )}
+                  >
+                    {emptyLabel}
+                  </li>
                 ) : null}
               </ul>
             </section>
@@ -368,7 +421,10 @@ export function Kanban({
       {drag && dragged ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed z-90 rotate-1 rounded-input border-card surface-card p-density shadow-overlay"
+          className={cn(
+            "pointer-events-none fixed z-90 rotate-1 rounded-input border-card surface-card p-density shadow-overlay",
+            classNames?.ghost,
+          )}
           style={{
             left: drag.x - drag.offsetX,
             top: drag.y - drag.offsetY,

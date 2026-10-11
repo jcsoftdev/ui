@@ -36,12 +36,12 @@ export function FormulaBar({
     <div className="flex min-w-0 items-center gap-2 border-b-divider px-2 py-1.5">
       <span
         title={labels.cell}
-        className="grid h-control-sm min-w-12 shrink-0 place-items-center rounded-xs bg-surface-2 px-2 font-[650] text-[12px] text-ink-2 tabular-nums"
+        className="grid h-control-sm min-w-12 shrink-0 place-items-center rounded-xs bg-surface-2 px-2 font-[650] text-fs-120 text-ink-2 tabular-nums"
       >
         <span className="sr-only">{labels.cell}: </span>
         {address || "—"}
       </span>
-      <span aria-hidden="true" className="shrink-0 font-[650] text-[13px] text-accent-ink italic">
+      <span aria-hidden="true" className="shrink-0 font-[650] text-fs-130 text-accent-ink italic">
         fx
       </span>
       <input
@@ -66,12 +66,12 @@ export function FormulaBar({
           }
         }}
         className={cn(
-          "h-control-sm min-w-0 flex-1 rounded-input border-control bg-surface-control px-2 font-mono text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none disabled:opacity-60",
+          "h-control-sm min-w-0 flex-1 rounded-input border-control bg-surface-control px-2 font-mono text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none disabled:opacity-60",
           error && "border-danger",
         )}
       />
       {error ? (
-        <span role="alert" className="shrink-0 text-[12px] text-danger">
+        <span role="alert" className="shrink-0 text-fs-120 text-danger">
           {error}
         </span>
       ) : null}

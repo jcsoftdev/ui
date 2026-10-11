@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ui-compose"
 
-include(":kit", ":sample")
+include(":kit", ":sample", ":baselineprofile")

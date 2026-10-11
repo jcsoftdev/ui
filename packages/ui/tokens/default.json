@@ -128,10 +128,10 @@
    {
     "name": "ink-3",
     "value": {
-     "light": "#6d6d7a",
+     "light": "#666673",
      "dark": "#8c8c98"
     },
-    "usage": "Metadatos y encabezados de tabla, sobre bg y surface (4.6:1 sobre bg en claro). Sobre surface-2 usa ink-2."
+    "usage": "Metadatos y encabezados de tabla, sobre bg, surface, surface-2 y sunken (4.5:1 o más en claro y oscuro)."
    },
    {
     "name": "accent",
@@ -738,6 +738,22 @@
   "families": {
    "sans": "\"Figtree\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
   },
+  "sizeScale": [
+   { "name": "fs-95", "fontSize": "9.5px" },
+   { "name": "fs-100", "fontSize": "10px" },
+   { "name": "fs-105", "fontSize": "10.5px" },
+   { "name": "fs-110", "fontSize": "11px" },
+   { "name": "fs-115", "fontSize": "11.5px" },
+   { "name": "fs-120", "fontSize": "12px" },
+   { "name": "fs-125", "fontSize": "12.5px" },
+   { "name": "fs-130", "fontSize": "13px" },
+   { "name": "fs-140", "fontSize": "14px" },
+   { "name": "fs-150", "fontSize": "15px" },
+   { "name": "fs-160", "fontSize": "16px" },
+   { "name": "fs-220", "fontSize": "22px" },
+   { "name": "fs-300", "fontSize": "30px" },
+   { "name": "fs-440", "fontSize": "44px" }
+  ],
   "groups": [
    {
     "name": "Títulos",
