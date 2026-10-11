@@ -29,8 +29,8 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - [x] T1 `clsx` inlined into `utils/cn.ts`. Route: inline-sized, delegated with T2.
 - [x] T2 `progress`, `avatar` in-house. Route: delegated.
 - [x] T3 `Slot` / `asChild` (prop, ref and handler merge). Route: delegated.
-- [ ] T4 `switch`, `checkbox`, `radio-group` (+ accent-picker): controllable-state hook, roving focus, hidden form input. Route: delegated.
-- [ ] T5 `tabs`, `segmented` (toggle-group): roving focus, automatic/manual activation. Route: delegated.
+- [x] T4 `switch`, `checkbox`, `radio-group` (+ accent-picker): controllable-state hook, roving focus, hidden form input. Route: delegated.
+- [x] T5 `tabs`, `segmented` (toggle-group): roving focus, automatic/manual activation. Route: delegated.
 - [ ] T6 Icons: vendored SVG set (~112 names), `Icon`/`icon-map`, `IconComponent` type replacing `LucideIcon`. Route: delegated.
 - [ ] T7 Toaster: store, stack of 2, timers with hover pause, action, dismiss, aria-live; same `toast` API. Route: delegated.
 - [ ] T8 `cn` merge engine replacing `tailwind-merge`: parity tests against current output for the custom token groups first, then swap. Route: delegated.
@@ -56,5 +56,9 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - 2026-10-10: T0 follow-ups (`a531d31` on `feat/zero-deps-t3-slot`, stacked on T1/T2): dialog focus-trap baseline asserts the exact Tab/Shift+Tab cycle (Confirmar, Close, Motivo, Confirmar; reverse), `ButtonAsChild` spy cleared at play start, CI caches `~/.cache/ms-playwright` keyed on the installed playwright version and sets `STORYBOOK_DISABLE_TELEMETRY=1`.
 - 2026-10-10: T3 done (`ad89893`): in-house `utils/slot.tsx` mirroring Radix Slot (child handler then slot handler, className concat, style merge child-wins, aria-describedby union, composed refs via React 19 ref prop, throws on non-single-element children; `Slottable` and lazy children dropped since unused). Used by `Button` and `HoverCardTrigger`. `@radix-ui/react-slot` removed. New `utils/slot.test.stories.tsx` (3 stories). Radix popover/dialog still use their own transitive Slot until T9/T10. 200 story files / 1224 tests, 406 node tests pass. Route: delegated.
 
+- 2026-10-10: T4 done (`63780ff` on `feat/zero-deps-t4-toggles`, stacked on T3): in-house `Switch`, `Checkbox` (indeterminate, Enter ignored) and `RadioGroup`/`AccentPicker` (internal `radio-group-primitive.tsx`; `RadioOption.disabled` added). Shared internals in `utils/`: `use-controllable-state`, `roving-focus` (`useRovingFocus({ orientation, dir, loop, activeId })` returns `rootProps` + `getItemProps(id, { disabled, onKeyDown, onFocus, onNavigate })`, DOM-ordered, Home/End/PageUp/PageDown, rtl), `form-bubble` (hidden input + reset), `compose`. Radix switch/checkbox/radio-group removed. 200 story files / 1230 tests, 406 node tests, lint/typecheck/build/treeshake pass. Route: delegated.
+
+- 2026-10-10: T5 done (`402607d` on `feat/zero-deps-t5-tabs`, stacked on T4): in-house `Tabs` (automatic/manual activation, orientation, dir, `forceMount`, inactive panels unmounted like Radix Presence, mousedown selects) and `Segmented` (radiogroup/radio, `data-state` on/off, clicking the active item deselects with `onValueChange("")` like Radix single; `rovingFocus`/`loop`/`dir`/`orientation` kept) on `useRovingFocus`; `TabsTrigger` also gets `data-orientation`. `getRovingIntent`/`findRovingTarget` now covered by `test/roving-focus.test.mjs` (rtl, loop=false). New stories: manual, vertical, disabled skipped, rtl, segmented deselect/disabled. `@radix-ui/react-tabs` and `-toggle-group` removed. 200 story files / 1235 tests, 410 node tests. The `data-[state=checked]:*` classes on the Switch track and Checkbox box spans were already dead under Radix (no data-state on those spans), so no regression; the checked track/box fill is a pre-existing visual gap, left as is. Route: delegated.
+
 ## Next step
-T4 (`switch`, `checkbox`, `radio-group`, accent-picker); T0 baselines must stay green.
+T6 (icons): vendored SVG set, `Icon`/`icon-map`, `IconComponent` replacing `LucideIcon`.

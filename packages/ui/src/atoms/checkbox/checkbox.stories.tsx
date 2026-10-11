@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Checkbox } from "./checkbox.js";
 
 const meta = {
@@ -52,3 +53,48 @@ function ChecklistDemo() {
 }
 
 export const ControlledChecklist: Story = { render: () => <ChecklistDemo /> };
+
+export const Indeterminate: Story = {
+  args: { defaultChecked: "indeterminate" },
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole("checkbox");
+    await expect(box).toHaveAttribute("aria-checked", "mixed");
+    await expect(box).toHaveAttribute("data-state", "indeterminate");
+    await userEvent.click(box);
+    await expect(box).toHaveAttribute("aria-checked", "true");
+  },
+};
+
+export const EnterDoesNotToggle: Story = {
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole("checkbox");
+    box.focus();
+    await userEvent.keyboard("{Enter}");
+    await expect(box).toHaveAttribute("aria-checked", "false");
+    await userEvent.keyboard(" ");
+    await expect(box).toHaveAttribute("aria-checked", "true");
+  },
+};
+
+export const FormSubmitAndReset: Story = {
+  render: () => (
+    <form aria-label="Preferencias">
+      <Checkbox aria-label="Acepto" name="terms" value="si" defaultChecked />
+      <Checkbox aria-label="Boletín" name="news" />
+      <button type="reset">Restablecer</button>
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const form = canvas.getByRole("form") as HTMLFormElement;
+    const [terms, news] = canvas.getAllByRole("checkbox");
+    await expect(Object.fromEntries(new FormData(form))).toEqual({ terms: "si" });
+    await userEvent.click(news);
+    await userEvent.click(terms);
+    await waitFor(() => expect(Object.fromEntries(new FormData(form))).toEqual({ news: "on" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Restablecer" }));
+    await waitFor(() => expect(terms).toHaveAttribute("aria-checked", "true"));
+    await expect(news).toHaveAttribute("aria-checked", "false");
+    await expect(Object.fromEntries(new FormData(form))).toEqual({ terms: "si" });
+  },
+};
