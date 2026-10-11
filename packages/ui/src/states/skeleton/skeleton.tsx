@@ -1,3 +1,6 @@
+"use client";
+
+import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 
 export type SkeletonVariant = "lines" | "table" | "card";
@@ -19,14 +22,15 @@ export function Skeleton({
   variant = "lines",
   lines = 3,
   rows = 4,
-  label = "Loading",
+  label,
   className,
 }: SkeletonProps) {
+  const strings = useUiStrings();
   return (
     <div
       role="status"
       aria-busy="true"
-      aria-label={label}
+      aria-label={label ?? strings.loading}
       className={cn("animate-pulse", className)}
     >
       {variant === "lines" ? (

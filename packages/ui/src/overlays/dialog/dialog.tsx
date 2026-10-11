@@ -3,6 +3,7 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   PreviousFocusProvider,
@@ -56,7 +57,7 @@ export function DialogContent({
   className,
   width = "md",
   blocking = false,
-  closeLabel = "Close",
+  closeLabel,
   container,
   children,
   onEscapeKeyDown,
@@ -66,6 +67,7 @@ export function DialogContent({
   ...props
 }: DialogContentProps) {
   const previousFocusRef = usePreviousFocus();
+  const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
       <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
@@ -96,7 +98,7 @@ export function DialogContent({
         {children}
         {!blocking && (
           <DialogPrimitive.Close
-            aria-label={closeLabel}
+            aria-label={closeLabel ?? strings.close}
             className="absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink"
           >
             <X aria-hidden="true" className="size-4" />
