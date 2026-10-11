@@ -1,7 +1,53 @@
 "use client";
 
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { useEffect, useState } from "react";
 import { cn } from "../../utils/cn.js";
+
+type ImageStatus = "idle" | "loading" | "loaded" | "error";
+
+/** Preloads `src` off-DOM; effects only, so server rendering never touches `window`. */
+function useImageStatus(src: string | undefined): ImageStatus {
+  const [status, setStatus] = useState<ImageStatus>("idle");
+
+  useEffect(() => {
+    if (!src) {
+      setStatus("error");
+      return;
+    }
+    const image = new window.Image();
+    const settle = () =>
+      setStatus(image.complete ? (image.naturalWidth > 0 ? "loaded" : "error") : "loading");
+    const onError = () => setStatus("error");
+    image.addEventListener("load", settle);
+    image.addEventListener("error", onError);
+    image.src = src;
+    settle();
+    return () => {
+      image.removeEventListener("load", settle);
+      image.removeEventListener("error", onError);
+      setStatus("idle");
+    };
+  }, [src]);
+
+  return status;
+}
+
+/** Holds the fallback back for `delayMs` so a fast image never flashes initials. */
+function useDelayElapsed(delayMs: number | undefined): boolean {
+  const [elapsed, setElapsed] = useState(delayMs === undefined);
+
+  useEffect(() => {
+    if (delayMs === undefined) {
+      setElapsed(true);
+      return;
+    }
+    setElapsed(false);
+    const timer = window.setTimeout(() => setElapsed(true), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs]);
+
+  return elapsed;
+}
 
 function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -31,8 +77,11 @@ export interface AvatarProps {
 }
 
 export function Avatar({ name, src, size = "md", highlighted, className }: AvatarProps) {
+  const status = useImageStatus(src);
+  const delayElapsed = useDelayElapsed(src ? 400 : undefined);
+
   return (
-    <AvatarPrimitive.Root
+    <span
       role="img"
       aria-label={name}
       className={cn(
@@ -42,10 +91,10 @@ export function Avatar({ name, src, size = "md", highlighted, className }: Avata
         className,
       )}
     >
-      {src ? <AvatarPrimitive.Image src={src} alt="" /> : null}
-      <AvatarPrimitive.Fallback aria-hidden="true" delayMs={src ? 400 : undefined}>
-        {initials(name)}
-      </AvatarPrimitive.Fallback>
-    </AvatarPrimitive.Root>
+      {src && status === "loaded" ? <img src={src} alt="" /> : null}
+      {delayElapsed && status !== "loaded" ? (
+        <span aria-hidden="true">{initials(name)}</span>
+      ) : null}
+    </span>
   );
 }

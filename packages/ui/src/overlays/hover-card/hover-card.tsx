@@ -1,7 +1,6 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { Slot } from "@radix-ui/react-slot";
 import {
   type ComponentPropsWithoutRef,
   createContext,
@@ -17,6 +16,7 @@ import {
   useState,
 } from "react";
 import { cn } from "../../utils/cn.js";
+import { Slot } from "../../utils/slot.js";
 
 interface HoverCardContextValue {
   contentId: string;

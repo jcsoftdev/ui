@@ -41,15 +41,22 @@ export const DialogFocusAndEscape: Story = {
     await userEvent.click(trigger);
     const dialog = await screen.findByRole("dialog", { name: "Anular cita" });
     await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
-    const inside = () => dialog.contains(document.activeElement);
-    for (let i = 0; i < 6; i++) {
+    const label = () =>
+      document.activeElement?.getAttribute("aria-label") ?? document.activeElement?.textContent;
+    const forward = ["Confirmar", "Close", "Motivo", "Confirmar"];
+    const seen: Array<string | null | undefined> = [];
+    for (let i = 0; i < forward.length; i++) {
       await userEvent.tab();
-      await expect(inside()).toBe(true);
+      seen.push(label());
     }
-    for (let i = 0; i < 6; i++) {
+    await expect(dialog.contains(document.activeElement)).toBe(true);
+    await expect(seen).toEqual(forward);
+    const backward: Array<string | null | undefined> = [];
+    for (let i = 0; i < 3; i++) {
       await userEvent.tab({ shift: true });
-      await expect(inside()).toBe(true);
+      backward.push(label());
     }
+    await expect(backward).toEqual(["Motivo", "Close", "Confirmar"]);
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(trigger).toHaveFocus());

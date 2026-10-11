@@ -101,6 +101,18 @@ export const ProgressAria: Story = {
     await expect(bar).toHaveAttribute("aria-valuenow", "40");
     await expect(bar).toHaveAttribute("aria-valuemax", "80");
     await expect(bar).toHaveAttribute("aria-valuemin", "0");
+    await expect(bar).toHaveAttribute("aria-valuetext", "50%");
+    await expect(bar).toHaveAttribute("data-state", "loading");
+    await expect(bar).toHaveAttribute("data-value", "40");
+    await expect(bar).toHaveAttribute("data-max", "80");
+  },
+};
+
+export const ProgressComplete: Story = {
+  render: () => <Progress aria-label="Listo" value={100} />,
+  play: async ({ canvasElement }) => {
+    const bar = within(canvasElement).getByRole("progressbar", { name: "Listo" });
+    await expect(bar).toHaveAttribute("data-state", "complete");
   },
 };
 
@@ -128,6 +140,7 @@ export const ButtonAsChild: Story = {
     </Button>
   ),
   play: async ({ canvasElement }) => {
+    onLinkClick.mockClear();
     const link = within(canvasElement).getByRole("link", { name: "Ir al destino" });
     await expect(link.tagName).toBe("A");
     await expect(link).toHaveAttribute("href", "#destino");

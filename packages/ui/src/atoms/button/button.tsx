@@ -1,6 +1,5 @@
 "use client";
 
-import { Slot } from "@radix-ui/react-slot";
 import {
   Children,
   type ComponentPropsWithRef,
@@ -9,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "../../utils/cn.js";
+import { Slot } from "../../utils/slot.js";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -34,7 +34,7 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   loadingLabel?: string;
   /** Stretch to the full width of the container. */
   block?: boolean;
-  /** Render the child element (via Radix Slot) instead of a `<button>`, e.g. a link. */
+  /** Render the child element (via Slot) instead of a `<button>`, e.g. a link. */
   asChild?: boolean;
 }
 
