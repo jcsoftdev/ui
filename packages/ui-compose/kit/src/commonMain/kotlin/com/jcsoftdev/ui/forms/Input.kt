@@ -98,6 +98,12 @@ public object InputDefaults {
     public val textStyle: TextStyle
         @Composable @ReadOnlyComposable
         get() = UiTheme.typography.body
+
+    /**
+     * The eye on the [PasswordInput] toggle: `visible` is true while the password is shown, and the eye is then crossed.
+     * Drawn in the surrounding content color; [PasswordInput]'s `visibilityIcon` replaces it.
+     */
+    public val VisibilityIcon: @Composable (visible: Boolean) -> Unit = { visible -> EyeGlyph(visible) }
 }
 
 /**
@@ -163,6 +169,7 @@ public fun PasswordInput(
     shape: Shape = InputDefaults.shape,
     contentPadding: PaddingValues = InputDefaults.contentPadding,
     textStyle: TextStyle = InputDefaults.textStyle,
+    visibilityIcon: @Composable (visible: Boolean) -> Unit = InputDefaults.VisibilityIcon,
 ) {
     var visible by remember { mutableStateOf(false) }
     InputFrame(
@@ -177,7 +184,7 @@ public fun PasswordInput(
         null,
         {
             IconButton({ visible = !visible }, if (visible) hideLabel else showLabel, size = ButtonSize.Sm, enabled = enabled) {
-                EyeGlyph(visible)
+                visibilityIcon(visible)
             }
         },
         PasswordKeyboard,

@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.Role
@@ -50,6 +51,12 @@ public object CheckboxDefaults {
 
     /** Diameter of the mark inside the touch target. */
     public val size: Dp = 18.dp
+
+    /** The check mark of the On state, drawn in the (fading) mark color. Replace it through [Checkbox]'s `checkMark`. */
+    public val CheckMark: DrawScope.(color: Color) -> Unit = { color -> drawCheckGlyph(color, 2.dp.toPx()) }
+
+    /** The dash of the Indeterminate state. Replace it through [Checkbox]'s `indeterminateMark`. */
+    public val IndeterminateMark: DrawScope.(color: Color) -> Unit = { color -> drawMinusGlyph(color, 2.dp.toPx()) }
 }
 
 /** Two-state checkbox; see the [ToggleableState] overload for the indeterminate state. */
@@ -62,6 +69,7 @@ public fun Checkbox(
     contentDescription: String? = null,
     colors: CheckboxColors = CheckboxDefaults.colors(),
     diameter: Dp = CheckboxDefaults.size,
+    checkMark: DrawScope.(color: Color) -> Unit = CheckboxDefaults.CheckMark,
 ) {
     Checkbox(
         state = if (checked) ToggleableState.On else ToggleableState.Off,
@@ -71,6 +79,7 @@ public fun Checkbox(
         contentDescription = contentDescription,
         colors = colors,
         diameter = diameter,
+        checkMark = checkMark,
     )
 }
 
@@ -84,6 +93,8 @@ public fun Checkbox(
     contentDescription: String? = null,
     colors: CheckboxColors = CheckboxDefaults.colors(),
     diameter: Dp = CheckboxDefaults.size,
+    checkMark: DrawScope.(color: Color) -> Unit = CheckboxDefaults.CheckMark,
+    indeterminateMark: DrawScope.(color: Color) -> Unit = CheckboxDefaults.IndeterminateMark,
 ) {
     val source = remember { MutableInteractionSource() }
     val progress = animateFloatAsState(if (state == ToggleableState.Off) 0f else 1f, UiTheme.motion.tween(Motion.FAST), label = "checkbox")
@@ -100,7 +111,7 @@ public fun Checkbox(
                 drawCircle(lerp(colors.border, colors.checked, p), size.minDimension / 2 - stroke / 2, style = Stroke(stroke))
                 drawCircle(colors.checked.copy(alpha = p), size.minDimension / 2 - stroke / 2)
                 val glyph = colors.mark.copy(alpha = p)
-                if (state == ToggleableState.Indeterminate) drawMinusGlyph(glyph, 2.dp.toPx()) else drawCheckGlyph(glyph, 2.dp.toPx())
+                if (state == ToggleableState.Indeterminate) indeterminateMark(glyph) else checkMark(glyph)
             },
     )
 }

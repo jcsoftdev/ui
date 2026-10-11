@@ -48,6 +48,9 @@ public object NumberStepperDefaults {
 
     /** Gap between the buttons and the value. */
     public val spacing: Dp = 4.dp
+
+    /** The minus (`plus` false) and plus glyphs of the buttons, drawn in the button content color; [NumberStepper]'s `stepIcon` replaces them. */
+    public val StepIcon: @Composable (plus: Boolean) -> Unit = { plus -> StepGlyph(plus) }
 }
 
 /** Integer stepper clamped to [min]..[max]; the buttons disable at the limits and need descriptions because they are icon-only. */
@@ -66,6 +69,7 @@ public fun NumberStepper(
     valueStyle: TextStyle = NumberStepperDefaults.valueStyle,
     valueColor: Color = Color.Unspecified,
     buttonShape: Shape = ButtonDefaults.shape,
+    stepIcon: @Composable (plus: Boolean) -> Unit = NumberStepperDefaults.StepIcon,
 ) {
     Row(
         modifier,
@@ -78,7 +82,7 @@ public fun NumberStepper(
             colors = buttonColors,
             shape = buttonShape,
             enabled = enabled && value > min,
-        ) { StepGlyph(plus = false) }
+        ) { stepIcon(false) }
         Text(
             value.toString(),
             modifier = Modifier.widthIn(min = NumberStepperDefaults.valueMinWidth).semantics { liveRegion = LiveRegionMode.Polite },
@@ -92,7 +96,7 @@ public fun NumberStepper(
             colors = buttonColors,
             shape = buttonShape,
             enabled = enabled && value < max,
-        ) { StepGlyph(plus = true) }
+        ) { stepIcon(true) }
     }
 }
 

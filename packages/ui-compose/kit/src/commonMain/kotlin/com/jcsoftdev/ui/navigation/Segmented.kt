@@ -13,6 +13,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.atoms.dimWhenDisabled
+import com.jcsoftdev.ui.primitives.rovingSelection
 import com.jcsoftdev.ui.theme.UiTheme
 
 @Immutable
@@ -78,7 +80,7 @@ public object SegmentedDefaults {
         UiTheme.typography.control.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold)
 }
 
-/** Exclusive selector for 2 to 4 options; one radio group to assistive tech. Each segment is at least 48dp tall. */
+/** Exclusive selector for 2 to 4 options; one radio group to assistive tech, and the arrow keys, Home and End move the selection (see [rovingSelection]). Each segment is at least 48dp tall. */
 @Composable
 public fun Segmented(
     options: List<SegmentedOption>,
@@ -91,6 +93,7 @@ public fun Segmented(
     contentPadding: PaddingValues = SegmentedDefaults.contentPadding,
 ) {
     val minHeight = UiTheme.sizes.minTouchTarget
+    val values = remember(options) { options.map { it.value } }
     Row(
         modifier
             .dimWhenDisabled(enabled)
@@ -98,7 +101,8 @@ public fun Segmented(
             .background(colors.track)
             .padding(SegmentedDefaults.trackPadding)
             .horizontalScroll(rememberScrollState())
-            .selectableGroup(),
+            .selectableGroup()
+            .rovingSelection(values, value, onValueChange, enabled = enabled),
     ) {
         options.forEach { option ->
             val on = option.value == value

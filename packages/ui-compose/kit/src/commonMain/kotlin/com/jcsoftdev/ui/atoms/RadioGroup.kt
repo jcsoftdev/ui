@@ -1,6 +1,7 @@
 package com.jcsoftdev.ui.atoms
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jcsoftdev.ui.primitives.rovingSelection
 import com.jcsoftdev.ui.theme.UiTheme
 
 @Immutable
@@ -89,7 +92,7 @@ public object RadioDefaults {
         get() = UiTheme.typography.meta
 }
 
-/** Controlled single choice list; [value] is the selected [RadioOption.value] or null. Each row is at least 48dp tall. */
+/** Controlled single choice list; [value] is the selected [RadioOption.value] or null. The arrow keys, Home and End move the selection (see [rovingSelection]). Each row is at least 48dp tall. */
 @Composable
 public fun RadioGroup(
     options: List<RadioOption>,
@@ -102,7 +105,11 @@ public fun RadioGroup(
     contentPadding: PaddingValues = RadioDefaults.contentPadding,
     itemSpacing: Dp = RadioDefaults.itemSpacing,
 ) {
-    Column(modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(itemSpacing)) {
+    val values = remember(options) { options.map { it.value } }
+    Column(
+        modifier.selectableGroup().rovingSelection(values, value, onValueChange, Orientation.Vertical, enabled),
+        verticalArrangement = Arrangement.spacedBy(itemSpacing),
+    ) {
         options.forEach { option ->
             RadioRow(option, option.value == value, enabled, colors, shape, contentPadding, onValueChange)
         }

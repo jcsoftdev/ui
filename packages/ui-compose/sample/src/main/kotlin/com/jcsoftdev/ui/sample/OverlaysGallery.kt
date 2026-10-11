@@ -28,9 +28,9 @@ import com.jcsoftdev.ui.forms.SelectOption
 import com.jcsoftdev.ui.overlays.Dialog
 import com.jcsoftdev.ui.overlays.Menu
 import com.jcsoftdev.ui.overlays.Sheet
-import com.jcsoftdev.ui.overlays.ToastAction
-import com.jcsoftdev.ui.overlays.ToastHostState
 import com.jcsoftdev.ui.overlays.Toaster
+import com.jcsoftdev.ui.primitives.ToastAction
+import com.jcsoftdev.ui.primitives.ToastHostState
 import com.jcsoftdev.ui.theme.UiTheme
 
 private val Barbers = List(12) { SelectOption("b$it", "Barbero ${it + 1}") }

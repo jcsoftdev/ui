@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.primitives.rovingSelection
 import com.jcsoftdev.ui.theme.UiTheme
 
 @Immutable
@@ -76,7 +78,8 @@ public object TabsDefaults {
 
 /**
  * Tab strip with an underline on the active tab; scrolls sideways when the tabs do not fit. Panels are the caller's:
- * show the content that matches [value]. Tabs expose `Role.Tab` and selected state.
+ * show the content that matches [value]. Tabs expose `Role.Tab` and selected state, and the arrow keys, Home and End move the
+ * selection (see [rovingSelection]).
  */
 @Composable
 public fun Tabs(
@@ -90,6 +93,7 @@ public fun Tabs(
 ) {
     val sizes = UiTheme.sizes
     val countStyle = UiTheme.typography.count
+    val values = remember(tabs) { tabs.map { it.value } }
     Row(
         modifier
             .drawBehind {
@@ -101,6 +105,7 @@ public fun Tabs(
                 )
             }.horizontalScroll(rememberScrollState())
             .selectableGroup()
+            .rovingSelection(values, value, onValueChange)
             .padding(horizontal = sizes.space8),
         horizontalArrangement = Arrangement.spacedBy(sizes.space2),
     ) {

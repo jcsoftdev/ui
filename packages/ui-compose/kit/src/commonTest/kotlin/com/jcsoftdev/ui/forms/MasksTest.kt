@@ -70,7 +70,7 @@ class MasksTest {
 
     @Test
     fun transformationMapsCursorBothWays() {
-        val t = DateTransformation.filter(AnnotatedString("09032024"))
+        val t = DateMask.visualTransformation.filter(AnnotatedString("09032024"))
         assertEquals("09/03/2024", t.text.text)
         assertEquals(0, t.offsetMapping.originalToTransformed(0))
         assertEquals(2, t.offsetMapping.originalToTransformed(2))
@@ -78,7 +78,7 @@ class MasksTest {
         assertEquals(10, t.offsetMapping.originalToTransformed(8))
         assertEquals(8, t.offsetMapping.transformedToOriginal(10))
         assertEquals(4, t.offsetMapping.transformedToOriginal(5))
-        val time = TimeTransformation.filter(AnnotatedString("0930"))
+        val time = TimeMask.visualTransformation.filter(AnnotatedString("0930"))
         assertEquals("09:30", time.text.text)
         assertEquals(5, time.offsetMapping.originalToTransformed(4))
         assertEquals(4, time.offsetMapping.transformedToOriginal(5))

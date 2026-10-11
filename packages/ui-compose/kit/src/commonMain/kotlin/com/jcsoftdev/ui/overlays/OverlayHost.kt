@@ -24,9 +24,9 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 
-/** A piece of UI drawn above the app content; higher [z] draws later. A [modal] layer hides the content below from accessibility. */
+/** A layer registered in the host: a piece of UI drawn above the app content; higher [z] draws later. A [modal] layer hides the content below from accessibility. */
 @Stable
-internal class OverlayLayer(
+internal class OverlayEntry(
     val z: Int,
     val modal: Boolean,
 ) {
@@ -35,7 +35,7 @@ internal class OverlayLayer(
 
 @Stable
 internal class OverlayHostState {
-    val layers = mutableStateListOf<OverlayLayer>()
+    val layers = mutableStateListOf<OverlayEntry>()
     val contentFocus = FocusRequester()
 }
 
@@ -95,7 +95,7 @@ internal fun OverlayLayerEffect(
         if (active) Box(Modifier.fillMaxSize()) { content() }
         return
     }
-    val layer = remember(host, z, modal) { OverlayLayer(z, modal) }
+    val layer = remember(host, z, modal) { OverlayEntry(z, modal) }
     SideEffect { layer.content = { CompositionLocalProvider(locals) { content() } } }
     DisposableEffect(host, active) {
         if (active) host.layers.add(layer)
