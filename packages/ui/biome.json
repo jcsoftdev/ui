@@ -5,6 +5,9 @@
     "includes": [
       "src/**",
       "!src/charts/maps/data/*/index.ts",
+      "!src/icons",
+      "!src/utils/class-tokens.generated.ts",
+      "src/icons/icon-base.tsx",
       "bin/**",
       "scripts/**",
       "test/*.mjs",

@@ -1,5 +1,6 @@
 "use client";
 
+import { type ReactNode, useId, useState } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -10,15 +11,14 @@ import {
   EllipsisVertical,
   EyeOff,
   Filter,
+  type IconComponent,
   Layers,
-  type LucideIcon,
   Minus,
   MoveHorizontal,
   PinOff,
   Plus,
   X,
-} from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+} from "../../icons/index.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";
@@ -57,10 +57,10 @@ export interface ColumnMenuProps<T> {
 }
 
 const itemClass =
-  "flex min-h-8 w-full items-center gap-2 rounded-xs px-2 text-left text-[13px] text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:bg-surface-2 focus-visible:text-ink disabled:pointer-events-none disabled:opacity-40 aria-pressed:text-accent-ink [&_svg]:size-3.5 [&_svg]:shrink-0";
+  "flex min-h-8 w-full items-center gap-2 rounded-xs px-2 text-left text-fs-130 text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:bg-surface-2 focus-visible:text-ink disabled:pointer-events-none disabled:opacity-40 aria-pressed:text-accent-ink [&_svg]:size-3.5 [&_svg]:shrink-0";
 
 const inputClass =
-  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
+  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
 
 function Item({
   icon: Icon,
@@ -68,7 +68,7 @@ function Item({
   pressed,
   ...props
 }: {
-  icon: LucideIcon;
+  icon: IconComponent;
   children: ReactNode;
   pressed?: boolean;
   onClick: () => void;
@@ -86,7 +86,7 @@ function Section({ children, label }: { children: ReactNode; label?: string }) {
   return (
     <div className="border-t-divider py-1 first:border-t-0 first:pt-0 last:pb-0">
       {label ? (
-        <p className="px-2 pt-1 pb-1.5 font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em]">
+        <p className="px-2 pt-1 pb-1.5 font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em]">
           {label}
         </p>
       ) : null}
@@ -127,7 +127,7 @@ function SetFilterEditor<T>({
       />
       <fieldset className="grid max-h-48 gap-0.5 overflow-y-auto">
         <legend className="sr-only">{`${labels.filter}: ${column.header}`}</legend>
-        <label className="flex min-h-7 items-center gap-2 border-b-divider px-1 text-[13px] text-ink-2">
+        <label className="flex min-h-7 items-center gap-2 border-b-divider px-1 text-fs-130 text-ink-2">
           <input
             type="checkbox"
             className="size-4 accent-accent"
@@ -139,18 +139,18 @@ function SetFilterEditor<T>({
             onChange={() => onFilter(toggleSetValues(options, filter, visible, !allVisible))}
           />
           <span className="flex-1">{labels.selectAllValues}</span>
-          <span className="text-[11px] text-ink-3 tabular-nums">
+          <span className="text-fs-110 text-ink-3 tabular-nums">
             {labels.valuesChecked(checked.size, options.length)}
           </span>
         </label>
         {visible.length === 0 ? (
-          <p className="px-1 py-1.5 text-[13px] text-ink-3">{labels.noMatches}</p>
+          <p className="px-1 py-1.5 text-fs-130 text-ink-3">{labels.noMatches}</p>
         ) : null}
         {visible.map((value, index) => (
           <label
             key={value}
             htmlFor={`${id}-${index}`}
-            className="flex min-h-7 items-center gap-2 px-1 text-[13px] text-ink"
+            className="flex min-h-7 items-center gap-2 px-1 text-fs-130 text-ink"
           >
             <input
               id={`${id}-${index}`}
@@ -222,7 +222,7 @@ function FilterEditor<T>({
       <div className="grid gap-1.5">
         {(["from", "to"] as const).map((end) => (
           <label key={end} className="grid grid-cols-[3.5rem_1fr] items-center gap-1.5">
-            <span className="text-[12px] text-ink-3">{labels[end]}</span>
+            <span className="text-fs-120 text-ink-3">{labels[end]}</span>
             <input
               type="date"
               value={range[end] ?? ""}
@@ -258,7 +258,7 @@ function FilterEditor<T>({
   return (
     <fieldset className="grid max-h-48 gap-0.5 overflow-y-auto">
       <legend className="sr-only">{`${labels.filter}: ${name}`}</legend>
-      <label className="flex min-h-7 items-center gap-2 px-1 text-[13px] text-ink-2">
+      <label className="flex min-h-7 items-center gap-2 px-1 text-fs-130 text-ink-2">
         <input
           type="checkbox"
           className="size-4 accent-accent"
@@ -271,7 +271,7 @@ function FilterEditor<T>({
         <label
           key={value}
           htmlFor={`${id}-${index}`}
-          className="flex min-h-7 items-center gap-2 px-1 text-[13px] text-ink"
+          className="flex min-h-7 items-center gap-2 px-1 text-fs-130 text-ink"
         >
           <input
             id={`${id}-${index}`}

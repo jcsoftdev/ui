@@ -153,7 +153,7 @@ function Field({
 }
 
 const choiceBase =
-  "inline-flex h-control-sm cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-chip px-3 font-semibold text-[12.5px] pressable focus-visible:focus-ring";
+  "inline-flex h-control-sm cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-chip px-3 font-semibold text-fs-125 pressable focus-visible:focus-ring";
 
 function choiceClass(on: boolean) {
   return cn(

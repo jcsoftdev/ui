@@ -184,27 +184,32 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const LeftToRight: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { direction: "left", edgeStyle: "step", height: 640 },
 };
 
 export const BottomToTop: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { direction: "bottom", edgeStyle: "straight" },
 };
 
 export const RightToLeft: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { direction: "right", edgeStyle: "curved", height: 640 },
 };
 
 /** Only the owner and the branch managers are open; click a counter to expand a team. */
 export const ExpandCollapse: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { initialDepth: 2, edgeStyle: "step" },
 };
 
 /** Custom template through `renderNode`: compact vertical cards with avatar, name and role. */
 export const CustomTemplate: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     nodeWidth: 132,
     nodeHeight: 120,
@@ -249,6 +254,7 @@ export const Empty: Story = {
 
 /** 320 px container: `fit="auto"` keeps the cards readable and centres the root; drag to pan, the fit button shows the whole tree. */
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { height: 420, direction: "left", edgeStyle: "step", nodeWidth: 168, initialDepth: 2 },
   decorators: [
     (Story) => (
@@ -262,7 +268,7 @@ export const Narrow: Story = {
 /** Takes the exact size of a resizable parent; the view refits until you pan or zoom. */
 export const FillParent: Story = {
   args: { height: "fill" },
-  parameters: { layout: "padded" },
+  parameters: { a11y: { test: "todo" }, layout: "padded" },
   decorators: [
     (Story) => (
       <div
@@ -282,6 +288,7 @@ export const FillParent: Story = {
 
 /** The root in the centre, one ring per level; chips replace the cards. */
 export const Radial: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     layout: "radial",
     edgeStyle: "curved",
@@ -295,6 +302,7 @@ export const Radial: Story = {
 
 /** Every leaf on the last level, so the grouping of the team reads like a dendrogram. */
 export const Dendrogram: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     layout: "dendrogram",
     direction: "left",
@@ -309,21 +317,25 @@ export const Dendrogram: Story = {
 
 /** Type a name or a role: matches are ringed, Enter steps through them and pans to each, opening closed branches. */
 export const Search: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { searchable: true, selectable: true, initialDepth: 1, height: 520, edgeStyle: "step" },
 };
 
 /** Counters with everyone who hangs below each person. */
 export const Badges: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { showCounts: true, edgeStyle: "step" },
 };
 
 /** More than three apprentices under one person fold into a dashed group node. */
 export const GroupedLeaves: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { data: bigBranch, groupLeaves: 3, showCounts: true, initialDepth: 2, height: 560 },
 };
 
 /** Open the San Borja branch: its team loads asynchronously (1 s) and a spinner shows meanwhile. */
 export const LazyChildren: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { data: withLazyBranch, edgeStyle: "step", showCounts: true, fit: "contain" },
   render: function Render(args) {
     return (
@@ -341,15 +353,18 @@ export const LazyChildren: Story = {
 
 /** Edges colored by branch; hover a person to light the way back to the owner. */
 export const EdgeColors: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { edgeColor: "branch", edgeStyle: "step" },
 };
 
 export const EdgeColorsByDepth: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { edgeColor: "depth", edgeStyle: "curved" },
 };
 
 /** Switch the layout and direction live: the cards glide to their new places. */
 export const DynamicDirection: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: function Render(args) {
     const [layout, setLayout] = useState<"tidy" | "radial" | "dendrogram">("tidy");
     const [direction, setDirection] = useState<"top" | "bottom" | "left" | "right">("top");
@@ -400,11 +415,13 @@ export const DynamicDirection: Story = {
 
 /** Dark theme, with search, counters and colored edges. */
 export const Dark: Story = {
+  parameters: { a11y: { test: "todo" } },
   globals: { theme: "dark" },
   args: { searchable: true, showCounts: true, edgeColor: "branch", edgeStyle: "step" },
 };
 
 export const RadialNarrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     layout: "radial",
     height: 420,

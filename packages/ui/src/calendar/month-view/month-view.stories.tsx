@@ -102,11 +102,17 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const SundayStart: Story = { args: { weekStartsOn: 0 } };
+export const SundayStart: Story = {
+  args: { weekStartsOn: 0 },
+};
 
-export const Empty: Story = { args: { events: [], markers: [], shadedDates: [] } };
+export const Empty: Story = {
+  args: { events: [], markers: [], shadedDates: [] },
+};
 
-export const NextMonth: Story = { args: { month: "2026-11-15", today: "2026-10-08" } };
+export const NextMonth: Story = {
+  args: { month: "2026-11-15", today: "2026-10-08" },
+};
 
 /** 320 px container: use it to check the narrow layout without resizing the viewport. */
 export const Narrow: Story = {

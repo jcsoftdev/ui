@@ -92,7 +92,7 @@ export const catalogoColumns: DataGridColumn<ServicioCatalogo>[] = [
               style={{ width: `${percent}%` }}
             />
           </span>
-          <span className="w-8 text-right text-[12px] text-ink-2 tabular-nums">{percent}%</span>
+          <span className="w-8 text-right text-fs-120 text-ink-2 tabular-nums">{percent}%</span>
         </span>
       );
     },

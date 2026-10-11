@@ -4,8 +4,8 @@ import { cn } from "../../utils/cn.js";
 export type BigDateSize = "normal" | "compact";
 
 const sizeClasses: Record<BigDateSize, string> = {
-  normal: "text-[30px]",
-  compact: "text-[22px]",
+  normal: "text-fs-300",
+  compact: "text-fs-220",
 };
 
 export interface BigDateProps extends ComponentPropsWithoutRef<"div"> {
