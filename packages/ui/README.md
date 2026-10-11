@@ -22,7 +22,7 @@ Set these on `<html>` (or any element to restyle only its subtree); no rebuild i
 | `data-theme="light\|dark"` | Color scheme (omit to follow the OS). |
 | `data-accent="<palette-id>"` | Brand palette. |
 | `data-style="<preset>"` | Style preset (radii, borders, shadows, glass, ...). See https://ui.jcsoftdev.com/docs/theming/. |
-| `data-density="<level>"` | Control and spacing density. |
+| `data-density="<level>"` | Control and spacing density: `compact`, `normal`, `comfortable`, `touch`. |
 | `data-radius="<level>"` | Global corner radius scale. |
 
 ### Subpath exports
@@ -30,6 +30,7 @@ Set these on `<html>` (or any element to restyle only its subtree); no rebuild i
 - Component groups: `@jcsoftdev/ui/atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `dashboards`, `utils`, each also per component (`@jcsoftdev/ui/atoms/button`).
 - `@jcsoftdev/ui/ai`: chat, prompt input, markdown and code block building blocks for AI interfaces.
 - `@jcsoftdev/ui/rich-text`: rich text editor with a sanitizer.
+- `@jcsoftdev/ui/i18n`: `UiStringsProvider`, `useUiStrings` and the `en`/`es` string presets.
 - `@jcsoftdev/ui/xlsx`: dependency-free `.xlsx` writer.
 - `@jcsoftdev/ui/brand`: logo mark and logo forge utilities.
 - `@jcsoftdev/ui/styles/*` and `@jcsoftdev/ui/tokens/*`: CSS and token JSON.
@@ -97,6 +98,88 @@ A custom tokens file must define the same names as `tokens/default.json`; copy i
 
 Switching at runtime: set `data-theme="light|dark"` (remove it for "system") and `data-accent="<palette-id>"` on `<html>`.
 
+## Touch density
+
+`data-density="touch"` is the preset for phones operated with a thumb: controls and small buttons are
+44px tall, large buttons 52px, text inputs 48px, and padding follows `comfortable`. Components with
+fixed hit areas (Checkbox, Switch, RadioGroup rows, an interactive Chip, the Dialog and Drawer close
+buttons) grow to at least 44px under it and are unchanged under every other level.
+
+```html
+<html data-density="touch"> <!-- or any subtree: <main data-density="touch"> -->
+```
+
+Portaled content (Dialog, Drawer) leaves the subtree, so set the attribute on `<html>` or pass the
+`container` prop to keep it inside. Custom token files can declare absolute sizes per level:
+`{ "id": "touch", "density": 1.125, "values": { "control-height": "44px" } }`; the keys must be
+tokens listed in `styles.density.scaled`.
+
+## Localized default strings
+
+Default texts (Retry, Close, Loading, the optional marker, Cancel, Confirm, Processing…) come from
+`UiStringsProvider`. `en` is the default and needs no provider; `es` is neutral Spanish (tú).
+Explicit props such as `retryLabel` or `closeLabel` always win.
+
+```tsx
+import { UiStringsProvider } from "@jcsoftdev/ui/i18n";
+
+<UiStringsProvider locale="es" strings={{ retry: "Probar otra vez" }}>
+  <App />
+</UiStringsProvider>;
+```
+
+`uiStrings.en` and `uiStrings.es` export the presets; `useUiStrings()` reads the active set. A nested
+provider inherits its parent and overrides only the keys it passes. Hard-coded Spanish labels that
+older components already ship (NumberStepper, Carousel, AI set) are not routed through it yet.
+
+## Status, forms and states (additive props)
+
+| Component | Added |
+| --- | --- |
+| `Button` | `loadingLabel` (shown instead of the children while `loading`, announced through a status region), `block` (full width), `size="lg"` (52px at normal density, scaled like the other controls). |
+| `Field` | `optional` appends the localized "(optional)" marker to the label; `error` also accepts `null`. |
+| `Banner` | `title`; a default glyph per tone when `icon` is not passed (`icon={null}` hides it, so status never relies on color alone); only `danger` is `role="alert"`, the rest are `role="status"`; the `info` tone uses the `info` tokens. |
+| `Chip` | `icon`, `statusIcon` (prefixes `info`, `success`, `warning`, `danger` chips with their glyph), and an `info` tone. |
+| `ErrorState` | `title` and `description` (`message` keeps working as the headline); an `Error` or any non-renderable value is never printed, a generic localized sentence is shown instead. |
+
+## ConfirmAction and ResponsiveList
+
+```tsx
+import { ConfirmAction } from "@jcsoftdev/ui/containers/confirm-action";
+
+<ConfirmAction
+  label="Cancel order"
+  consequence="The order of Marco Salazar is cancelled and S/ 45 is refunded."
+  onConfirm={async () => {
+    const res = await cancelOrder(id);
+    return res.ok ? undefined : { ok: false, error: "The payment is already settled." };
+  }}
+/>;
+```
+
+`ConfirmAction` swaps its trigger for the consequence, a danger button and a Cancel button that takes
+focus. While `onConfirm` runs the button shows the localized "Processing…"; a returned
+`{ ok: false, error }` or a thrown error keeps the step open with an inline message.
+
+```tsx
+import { ResponsiveList } from "@jcsoftdev/ui/containers/responsive-list";
+
+<ResponsiveList
+  caption="Today's orders"
+  items={orders}
+  rowKey={(o) => o.id}
+  columns={[
+    { key: "customer", header: "Customer", cell: (o) => o.customer, primary: true },
+    { key: "total", header: "Total", cell: (o) => o.total, align: "end" },
+  ]}
+  renderActions={(o) => <Button size="sm">Open</Button>}
+/>;
+```
+
+A table from `md` up (library `Table` styling) and a stack of cards below it; the `primary` column
+(default: the first) titles each card and the other columns become label/value rows. Every row
+carries `data-row-key`; `rowClassName` applies to both layouts.
+
 ## Install a single component (tree shaking)
 
 The package is unbundled ESM, `"sideEffects": ["**/*.css"]`, and every component has its own entry point:
@@ -128,6 +211,6 @@ The `source` export condition points at `src/*/index.ts` for consumers that want
 
 ## Conventions
 
-- English identifiers; every visible string and aria label is a prop (aria defaults in English).
+- English identifiers; every visible string and aria label is a prop. Defaults are English and can be localized in one place with `UiStringsProvider`.
 - Relative imports use the `.js` extension; components import specific component entries, never group barrels.
 - No literal colors in components, no `dark:` variants; dark mode is a token concern.

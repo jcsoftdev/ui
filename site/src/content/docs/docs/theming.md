@@ -11,7 +11,7 @@ The whole look comes from one tokens file, `tokens/default.json`. A build step t
 | `data-theme`   | `light`, `dark`                                               | follows `prefers-color-scheme` |
 | `data-accent`  | `durazno`, `menta`, `cielo`, `lavanda`, `orquidea`, `grafito` | Coral                          |
 | `data-style`   | `soft`, `bordered`, `elevated`, `flat`, `glass`, `brutal`     | `soft`                         |
-| `data-density` | `compact` (x0.875), `normal`, `comfortable` (x1.125)          | `normal`                       |
+| `data-density` | `compact` (x0.875), `normal`, `comfortable` (x1.125), `touch` | `normal`                       |
 | `data-radius`  | `none`, `sm`, `md`, `lg`, `full`                              | the preset's own radii         |
 
 ```html
@@ -39,6 +39,8 @@ On a single element the order is source order at equal specificity: theme, then 
 ## Density
 
 Density is a unitless `--density` that scales control heights, control and card padding and the `gap-density*` scale with `calc()`. Tailwind's global `--spacing` scale is not scaled.
+
+`touch` is built for thumbs: it also pins absolute sizes (controls 44px, large buttons 52px, inputs 48px) because one multiplier cannot lift 30px and 36px controls to the same 44px target. Fixed-size hit areas (Checkbox, Switch, radio rows, interactive Chip, dialog close buttons) grow to 44px under it. Portaled content leaves the subtree, so set the attribute on `<html>` or pass `container` to keep dialogs inside.
 
 ## Using tokens in your own code
 
