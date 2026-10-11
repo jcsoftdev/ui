@@ -51,8 +51,9 @@ public class SelectOption(
 )
 
 /**
- * Single choice from a list. The list opens in a bottom [Sheet] titled with the field label, so a long list scrolls inside
- * the safe insets and system back closes it through the kit back dispatcher.
+ * Single choice from a list. The list opens in a bottom [Sheet] titled with the field label (the placeholder or the
+ * selected option when there is none), so a long list scrolls inside the safe insets and system back closes it through the
+ * kit back dispatcher. [dismissLabel] (already localized) names the scrim's accessibility action in that sheet.
  */
 @Composable
 public fun Select(
@@ -64,6 +65,7 @@ public fun Select(
     isError: Boolean = false,
     placeholder: String? = null,
     contentDescription: String? = null,
+    dismissLabel: String? = null,
 ) {
     val colors = UiTheme.colors
     val info = LocalFieldInfo.current
@@ -106,7 +108,8 @@ public fun Select(
             Chevron(expanded)
         }
     }
-    Sheet(open = expanded, onDismiss = { expanded = false }, title = spoken ?: placeholder.orEmpty()) {
+    val sheetTitle = listOfNotNull(spoken, placeholder, selected?.label).firstOrNull { it.isNotBlank() }.orEmpty()
+    Sheet(open = expanded, onDismiss = { expanded = false }, title = sheetTitle, dismissLabel = dismissLabel) {
         Column(Modifier.selectableGroup().padding(bottom = 16.dp)) {
             options.forEach { option ->
                 val isSelected = option.value == value

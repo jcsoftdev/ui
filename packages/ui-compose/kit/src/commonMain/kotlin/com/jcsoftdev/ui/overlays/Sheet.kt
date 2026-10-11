@@ -31,7 +31,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +83,8 @@ public fun Sheet(
     val shown = remember { Animatable(0f) }
     val drag = remember { mutableFloatStateOf(0f) }
     val height = remember { mutableFloatStateOf(0f) }
+    val currentDismiss by rememberUpdatedState(onDismiss)
+    val currentOpen by rememberUpdatedState(open)
     var present by remember { mutableStateOf(open) }
     LaunchedEffect(open) {
         if (open) {
@@ -93,7 +97,7 @@ public fun Sheet(
         }
     }
     BackHandler(enabled = open, priority = BackPriority.SHEET) { if (dismissible) onDismiss() }
-    OverlayLayerEffect(active = present) {
+    OverlayLayerEffect(active = present, modal = true) {
         val colors = UiTheme.colors
         Box(Modifier.fillMaxSize()) {
             Box(
@@ -103,7 +107,7 @@ public fun Sheet(
                         val h = height.floatValue
                         alpha = shown.value * (if (h > 0f) 1f - (drag.floatValue / h).coerceIn(0f, 1f) else 1f)
                     }.background(colors.scrim)
-                    .pointerInput(dismissible) { detectTapGestures { if (dismissible) onDismiss() } }
+                    .pointerInput(dismissible) { detectTapGestures { if (dismissible) currentDismiss() } }
                     .semantics {
                         if (dismissible && dismissLabel != null) {
                             contentDescription = dismissLabel
@@ -132,7 +136,7 @@ public fun Sheet(
                             traversalIndex = 1f
                         }.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
                 ) {
-                    SheetHeader(title, dismissible, drag, height, onDismiss)
+                    SheetHeader(title, dismissible, drag, height, { currentOpen }, onDismiss)
                     Column(
                         Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
                         content = content,
@@ -158,6 +162,7 @@ private fun SheetHeader(
     dismissible: Boolean,
     drag: MutableFloatState,
     height: MutableFloatState,
+    isOpen: () -> Boolean,
     onDismiss: () -> Unit,
 ) {
     val colors = UiTheme.colors
@@ -174,7 +179,11 @@ private fun SheetHeader(
                 onDragStopped = { velocity ->
                     if (drag.floatValue > height.floatValue * DISMISS_FRACTION || velocity > DISMISS_VELOCITY) {
                         onDismiss()
-                    } else {
+                        // Two frames let the parent's recomposition land; if it kept the sheet open, bring it back.
+                        withFrameNanos { }
+                        withFrameNanos { }
+                    }
+                    if (isOpen()) {
                         animate(drag.floatValue, 0f, animationSpec = motion.tween(Motion.STANDARD)) { value, _ -> drag.floatValue = value }
                     }
                 },

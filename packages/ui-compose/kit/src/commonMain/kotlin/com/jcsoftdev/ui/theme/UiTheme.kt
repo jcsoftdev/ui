@@ -38,7 +38,7 @@ public object UiTheme {
 
 /**
  * Provides the token theme to [content] and hosts the overlays ([com.jcsoftdev.ui.overlays.Sheet], dialogs, toasts) above it,
- * so give it the whole screen.
+ * so give the outermost one the whole screen. A `UiTheme` nested inside another reuses its overlay host and does not fill.
  *
  * @param colors base colors; pass a [copy] of [UiColors] to override single tokens.
  * @param accent a palette id from [UiPalettes.ids] or a `#rrggbb` brand color, matched to the closest palette. Null keeps the accent of [colors].

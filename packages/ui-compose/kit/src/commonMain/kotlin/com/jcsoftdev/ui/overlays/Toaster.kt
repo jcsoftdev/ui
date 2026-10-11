@@ -31,9 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
@@ -77,6 +79,10 @@ public class ToastHostState(
     private val maxVisible: Int = 2,
     private val defaultDurationMillis: Long = 6000L,
 ) {
+    init {
+        require(maxVisible >= 1) { "maxVisible must be at least 1" }
+    }
+
     private var queue: List<ToastItem> = emptyList()
     private var nextId = 0L
 
@@ -145,8 +151,9 @@ private const val TICK_MILLIS = 100L
 
 /**
  * Draws the toasts of [state] centered above the bottom safe insets (which include the keyboard), lifted by
- * [bottomBarHeight] when the host screen has its own bottom bar. Each toast is a polite live region; touching a toast
- * pauses its countdown. [Toaster] draws above sheets and dialogs.
+ * [bottomBarHeight] when the host screen has its own bottom bar. Each toast is a polite live region; touching or focusing a toast
+ * pauses its countdown, and the system accessibility timeout (when the platform gives one) replaces its duration.
+ * [Toaster] draws above sheets and dialogs.
  */
 @Composable
 public fun Toaster(
@@ -177,10 +184,22 @@ private fun ToastRow(
     state: ToastHostState,
 ) {
     val colors = UiTheme.colors
-    var paused by remember { mutableStateOf(false) }
-    val remaining = remember { mutableLongStateOf(item.durationMillis) }
+    var touched by remember { mutableStateOf(false) }
+    var focused by remember { mutableStateOf(false) }
+    val paused = touched || focused
+    val accessibility = LocalAccessibilityManager.current
+    val total =
+        remember(item.id, accessibility) {
+            accessibility?.calculateRecommendedTimeoutMillis(
+                originalTimeoutMillis = item.durationMillis,
+                containsIcons = false,
+                containsText = true,
+                containsControls = item.action != null,
+            ) ?: item.durationMillis
+        }
+    val remaining = remember(total) { mutableLongStateOf(total) }
     val dismiss by rememberUpdatedState { state.dismiss(item.id) }
-    LaunchedEffect(item.id) {
+    LaunchedEffect(remaining) {
         while (remaining.longValue > 0) {
             delay(TICK_MILLIS)
             if (!paused) remaining.longValue -= TICK_MILLIS
@@ -196,10 +215,11 @@ private fun ToastRow(
                 awaitPointerEventScope {
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
-                        paused = event.changes.any { it.pressed }
+                        touched = event.changes.any { it.pressed }
                     }
                 }
-            }.semantics { liveRegion = LiveRegionMode.Polite }
+            }.onFocusChanged { focused = it.hasFocus }
+            .semantics { liveRegion = LiveRegionMode.Polite }
             .defaultMinSize(minHeight = 48.dp)
             .padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),

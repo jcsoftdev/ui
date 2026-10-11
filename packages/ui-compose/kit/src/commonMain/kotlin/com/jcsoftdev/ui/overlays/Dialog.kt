@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +70,7 @@ public fun Dialog(
 ) {
     val motion = UiTheme.motion
     val shown = remember { Animatable(0f) }
+    val currentDismiss by rememberUpdatedState(onDismissRequest)
     var present by remember { mutableStateOf(open) }
     LaunchedEffect(open) {
         if (open) {
@@ -80,17 +82,17 @@ public fun Dialog(
         }
     }
     BackHandler(enabled = open, priority = BackPriority.SHEET) { if (dismissOnBack) onDismissRequest() }
-    OverlayLayerEffect(active = present) {
+    OverlayLayerEffect(active = present, modal = true) {
         val colors = UiTheme.colors
         val focus = remember { FocusRequester() }
         LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxSize()) {
             Box(
                 Modifier
                     .fillMaxSize()
                     .graphicsLayer { alpha = shown.value }
                     .background(colors.scrim)
-                    .pointerInput(dismissOnScrim) { detectTapGestures { if (dismissOnScrim) onDismissRequest() } }
+                    .pointerInput(dismissOnScrim) { detectTapGestures { if (dismissOnScrim) currentDismiss() } }
                     .semantics {
                         if (dismissOnScrim && dismissLabel != null) {
                             contentDescription = dismissLabel
@@ -101,42 +103,44 @@ public fun Dialog(
                         }
                     },
             )
-            Column(
-                modifier
-                    .padding(horizontal = 20.dp, vertical = 24.dp)
-                    .widthIn(max = 420.dp)
-                    .fillMaxWidth()
-                    .graphicsLayer {
-                        alpha = shown.value
-                        val scale = ENTER_SCALE + (1f - ENTER_SCALE) * shown.value
-                        scaleX = scale
-                        scaleY = scale
-                    }.clip(UiShapes.dialog)
-                    .background(colors.float)
-                    .border(1.dp, colors.hair, UiShapes.dialog)
-                    .pointerInput(Unit) { detectTapGestures { } }
-                    .semantics { paneTitle = title }
-                    .focusRequester(focus)
-                    .focusable()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(title, style = UiTypography.dialogTitle)
-                if (description != null) Text(description, color = colors.ink2)
-                if (content != null) {
-                    Column(
-                        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        content = content,
-                    )
-                }
-                if (actions != null) {
-                    Row(
-                        Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                        verticalAlignment = Alignment.CenterVertically,
-                        content = actions,
-                    )
+            Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
+                Column(
+                    modifier
+                        .padding(horizontal = 20.dp, vertical = 24.dp)
+                        .widthIn(max = 420.dp)
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            alpha = shown.value
+                            val scale = ENTER_SCALE + (1f - ENTER_SCALE) * shown.value
+                            scaleX = scale
+                            scaleY = scale
+                        }.clip(UiShapes.dialog)
+                        .background(colors.float)
+                        .border(1.dp, colors.hair, UiShapes.dialog)
+                        .pointerInput(Unit) { detectTapGestures { } }
+                        .semantics { paneTitle = title }
+                        .focusRequester(focus)
+                        .focusable()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(title, style = UiTypography.dialogTitle)
+                    if (description != null) Text(description, color = colors.ink2)
+                    if (content != null) {
+                        Column(
+                            Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            content = content,
+                        )
+                    }
+                    if (actions != null) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                            verticalAlignment = Alignment.CenterVertically,
+                            content = actions,
+                        )
+                    }
                 }
             }
         }

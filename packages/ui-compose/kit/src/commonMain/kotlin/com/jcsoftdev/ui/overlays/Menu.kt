@@ -45,6 +45,9 @@ import com.jcsoftdev.ui.theme.UiShapes
 import com.jcsoftdev.ui.theme.UiTheme
 import com.jcsoftdev.ui.theme.UiTypography
 
+/** A menu opens above sheets and dialogs (a Select inside a sheet, say), so back closes it first. */
+private const val MENU_BACK_PRIORITY = BackPriority.SHEET + 100
+
 /** Builder for the entries of a [Menu]. */
 public interface MenuScope {
     /** A plain action. [destructive] colors it as dangerous. */
@@ -134,14 +137,14 @@ public fun Menu(
     modifier: Modifier = Modifier,
     content: MenuScope.() -> Unit,
 ) {
-    BackHandler(enabled = expanded, priority = BackPriority.OVERLAY) { onDismissRequest() }
+    BackHandler(enabled = expanded, priority = MENU_BACK_PRIORITY) { onDismissRequest() }
     if (!expanded) return
-    val entries = remember(content) { MenuBuilder().apply(content).entries.toList() }
+    val entries = MenuBuilder().apply(content).entries
     val colors = UiTheme.colors
     Popup(
         popupPositionProvider = remember { BelowAnchorPositionProvider },
         onDismissRequest = onDismissRequest,
-        properties = PopupProperties(focusable = true, dismissOnBackPress = false),
+        properties = PopupProperties(focusable = true, dismissOnBackPress = true),
     ) {
         Column(
             modifier
@@ -229,17 +232,29 @@ private object BelowAnchorPositionProvider : PopupPositionProvider {
         windowSize: IntSize,
         layoutDirection: LayoutDirection,
         popupContentSize: IntSize,
-    ): IntOffset {
-        val x = anchorBounds.left.coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0))
-        val below = anchorBounds.bottom
-        val y =
-            if (below + popupContentSize.height <=
-                windowSize.height
-            ) {
-                below
-            } else {
-                (anchorBounds.top - popupContentSize.height).coerceAtLeast(0)
-            }
-        return IntOffset(x, y)
-    }
+    ): IntOffset = menuPosition(anchorBounds, windowSize, layoutDirection, popupContentSize)
+}
+
+/**
+ * Aligns the menu's start edge with the anchor's (the right edge, minus the width, in right-to-left), keeps it inside the
+ * window, and opens below the anchor, above it when only that fits, or on the side with more room when neither does.
+ */
+internal fun menuPosition(
+    anchor: IntRect,
+    window: IntSize,
+    direction: LayoutDirection,
+    size: IntSize,
+): IntOffset {
+    val start = if (direction == LayoutDirection.Rtl) anchor.right - size.width else anchor.left
+    val x = start.coerceIn(0, (window.width - size.width).coerceAtLeast(0))
+    val below = window.height - anchor.bottom
+    val above = anchor.top
+    val y =
+        when {
+            size.height <= below -> anchor.bottom
+            size.height <= above -> anchor.top - size.height
+            below >= above -> anchor.bottom.coerceAtMost((window.height - size.height).coerceAtLeast(0))
+            else -> (anchor.top - size.height).coerceAtLeast(0)
+        }
+    return IntOffset(x, y)
 }

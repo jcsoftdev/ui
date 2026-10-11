@@ -2,32 +2,47 @@
 
 package com.jcsoftdev.ui.overlays
 
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Button
 import com.jcsoftdev.ui.atoms.Text
@@ -37,7 +52,9 @@ import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class OverlaysUiTest {
@@ -60,10 +77,7 @@ class OverlaysUiTest {
             var open by mutableStateOf(true)
             setContent(screen(back) { Sheet(open, { open = false }, "Servicios", dismissLabel = "Close") { Text("Cuerpo") } })
             onNodeWithText("Cuerpo").assertIsDisplayed()
-            onNodeWithText("Servicios").assert(
-                SemanticsMatcher.keyIsDefined(SemanticsProperties.PaneTitle).not() or
-                    SemanticsMatcher.keyIsDefined(SemanticsProperties.Text),
-            )
+            onNode(SemanticsMatcher.expectValue(SemanticsProperties.PaneTitle, "Servicios")).assertExists()
             assertTrue(back.dispatch())
             waitForIdle()
             assertFalse(open)
@@ -229,4 +243,126 @@ class OverlaysUiTest {
             assertEquals(1, edited)
             assertEquals(3, dismissed)
         }
+
+    @Test
+    fun nestedThemeDoesNotFillOrInstallASecondHost() =
+        runComposeUiTest {
+            var outer: OverlayHostState? = null
+            var inner: OverlayHostState? = null
+            setContent(
+                screen {
+                    outer = LocalOverlayHost.current
+                    Box(Modifier.size(100.dp)) {
+                        UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(0f)) {
+                            inner = LocalOverlayHost.current
+                            Box(Modifier.size(20.dp).testTag("inner"))
+                        }
+                    }
+                },
+            )
+            assertSame(outer, inner)
+            onNodeWithTag("inner").assertWidthIsEqualTo(20.dp).assertHeightIsEqualTo(20.dp)
+        }
+
+    @Test
+    fun sheetContentKeepsTheCompositionLocalsOfItsCallSite() =
+        runComposeUiTest {
+            val local = compositionLocalOf { "default" }
+            setContent(
+                screen {
+                    CompositionLocalProvider(local provides "from call site") {
+                        Sheet(true, {}, "Local") { Text(local.current) }
+                    }
+                },
+            )
+            onNodeWithText("from call site").assertIsDisplayed()
+        }
+
+    @Test
+    fun menuReflectsStateChangesWhileOpen() =
+        runComposeUiTest {
+            var compact by mutableStateOf(false)
+            setContent(screen { Menu(true, {}) { checkboxItem("Compacto", compact, { compact = it }) } })
+            onNodeWithText("Compacto").assertIsOff()
+            onNodeWithText("Compacto").performClick()
+            assertTrue(compact)
+            onNodeWithText("Compacto").assertIsOn()
+            onNodeWithText("Compacto").performClick()
+            onNodeWithText("Compacto").assertIsOff()
+        }
+
+    @Test
+    fun menuBackClosesMenuBeforeSheet() =
+        runComposeUiTest {
+            val back = BackDispatcher()
+            var menus = 0
+            var sheets = 0
+            setContent(
+                screen(back) {
+                    Sheet(true, { sheets++ }, "Hoja") { Menu(true, { menus++ }) { item("Editar", {}) } }
+                },
+            )
+            assertTrue(back.dispatch())
+            assertEquals(1, menus)
+            assertEquals(0, sheets)
+        }
+
+    @Test
+    fun dismissingAQueuedToastRemovesItBeforeItShows() =
+        runComposeUiTest {
+            val state = ToastHostState(maxVisible = 1)
+            setContent(screen { Toaster(state) })
+            val first = state.toast("Uno")
+            val queued = state.toast("Dos")
+            state.toast("Tres")
+            state.dismiss(queued)
+            state.dismiss(first)
+            waitForIdle()
+            onNodeWithText("Dos").assertDoesNotExist()
+            onNodeWithText("Tres").assertIsDisplayed()
+            assertEquals(1, state.toasts.size)
+            assertFailsWith<IllegalArgumentException> { ToastHostState(maxVisible = 0) }
+        }
+
+    @Test
+    fun modalHidesTheContentBehindItAndFocusComesBack() =
+        runComposeUiTest {
+            var open by mutableStateOf(false)
+            val focusField = FocusRequester()
+            val hidden = SemanticsMatcher.keyIsDefined(SemanticsProperties.HideFromAccessibility)
+            setContent(
+                screen {
+                    Box(
+                        Modifier
+                            .size(40.dp)
+                            .testTag("field")
+                            .focusRequester(focusField)
+                            .focusable(),
+                    )
+                    Dialog(open, { open = false }, "Aviso") {}
+                },
+            )
+            runOnIdle { focusField.requestFocus() }
+            onNodeWithTag("field").assertIsFocused()
+            open = true
+            waitForIdle()
+            onNode(hidden).assertExists()
+            open = false
+            waitForIdle()
+            onNode(hidden).assertDoesNotExist()
+            onNodeWithTag("field").assertIsFocused()
+        }
+
+    @Test
+    fun menuPositionHandlesRtlAndTightWindows() {
+        val window = IntSize(400, 800)
+        val size = IntSize(200, 300)
+        val anchor = IntRect(300, 100, 380, 140)
+        assertEquals(IntOffset(200, 140), menuPosition(anchor, window, LayoutDirection.Ltr, size))
+        assertEquals(IntOffset(180, 140), menuPosition(anchor, window, LayoutDirection.Rtl, size))
+        assertEquals(IntOffset(0, 350), menuPosition(IntRect(0, 650, 80, 690), window, LayoutDirection.Ltr, size))
+        val tall = IntSize(200, 500)
+        assertEquals(300, menuPosition(IntRect(0, 300, 80, 340), window, LayoutDirection.Ltr, tall).y)
+        assertEquals(0, menuPosition(IntRect(0, 420, 80, 460), window, LayoutDirection.Ltr, tall).y)
+    }
 }

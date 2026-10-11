@@ -133,7 +133,7 @@ public final class com/jcsoftdev/ui/forms/PinInputKt {
 }
 
 public final class com/jcsoftdev/ui/forms/SelectKt {
-	public static final fun Select (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/runtime/Composer;II)V
+	public static final fun Select (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/forms/SelectOption {
