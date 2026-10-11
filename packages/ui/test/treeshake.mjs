@@ -30,6 +30,7 @@ for (const banned of [
   "cmdk",
   "sonner",
   "lucide",
+  "icons/",
   "checkbox",
   "confirm-action",
   "responsive-list",
@@ -161,3 +162,36 @@ console.log(
   `brand generator: ${brandBuild.outputFiles[0].contents.length} bytes, ${brandKept.length} modules`,
 );
 console.log("brand tree-shaking OK");
+
+// Icons: each icon is its own module; a Button bundle has none, a single icon bundles only itself.
+// Dropped modules still appear in `metafile.inputs`; `bytesInOutput` tells what survived.
+async function keptFor(code) {
+  const result = await build({
+    stdin: { contents: code, resolveDir: process.cwd(), loader: "js" },
+    bundle: true,
+    minify: true,
+    format: "esm",
+    write: false,
+    metafile: true,
+    external: ["react", "react-dom", "react/jsx-runtime"],
+  });
+  const [output] = Object.values(result.metafile.outputs);
+  const kept = Object.entries(output.inputs)
+    .filter(([, input]) => input.bytesInOutput > 0)
+    .map(([file]) => file);
+  return { kept, bytes: result.outputFiles[0].contents.length };
+}
+const oneIcon = await keptFor(`import { Check } from "@jcsoftdev/ui/icons"; console.log(Check);`);
+const keptIcons = oneIcon.kept.filter((f) => f.includes("icons/"));
+assert.deepEqual(
+  keptIcons.map((f) => f.split("icons/").pop()).sort(),
+  ["check.js", "icon-base.js"],
+  "a single icon bundles only its own module and the shared base",
+);
+const allIcons = await keptFor(`import * as icons from "@jcsoftdev/ui/icons"; console.log(icons);`);
+assert.ok(
+  allIcons.kept.filter((f) => f.includes("icons/")).length > 100,
+  "the full namespace import keeps every icon",
+);
+console.log(`icons: one icon ${oneIcon.bytes} bytes, full set ${allIcons.bytes} bytes`);
+console.log("icons tree-shaking OK");
