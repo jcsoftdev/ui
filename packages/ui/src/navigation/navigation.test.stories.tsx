@@ -102,3 +102,139 @@ export const SegmentedArrowKeys: Story = {
     await expect(mes).toHaveAttribute("aria-checked", "true");
   },
 };
+
+const sections = (disabledSecond = false) => (
+  <>
+    <TabsTrigger value="citas">Citas</TabsTrigger>
+    <TabsTrigger value="clientes" disabled={disabledSecond}>
+      Clientes
+    </TabsTrigger>
+    <TabsTrigger value="caja">Caja</TabsTrigger>
+  </>
+);
+
+export const TabsManualActivation: Story = {
+  render: () => (
+    <Tabs defaultValue="citas" activationMode="manual">
+      <TabsList aria-label="Secciones">{sections()}</TabsList>
+      <TabsContent value="citas">Panel de citas</TabsContent>
+      <TabsContent value="clientes">Panel de clientes</TabsContent>
+      <TabsContent value="caja">Panel de caja</TabsContent>
+    </Tabs>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [citas, clientes, caja] = canvas.getAllByRole("tab");
+    citas?.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(clientes).toHaveFocus();
+    await expect(clientes).toHaveAttribute("aria-selected", "false");
+    await expect(canvas.getByRole("tabpanel")).toHaveTextContent("Panel de citas");
+    await userEvent.keyboard("{Enter}");
+    await expect(clientes).toHaveAttribute("aria-selected", "true");
+    await expect(canvas.getByRole("tabpanel")).toHaveTextContent("Panel de clientes");
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(caja).toHaveFocus();
+    await expect(caja).toHaveAttribute("aria-selected", "false");
+    await userEvent.keyboard(" ");
+    await expect(caja).toHaveAttribute("aria-selected", "true");
+    await userEvent.click(citas as HTMLElement);
+    await expect(citas).toHaveAttribute("aria-selected", "true");
+  },
+};
+
+export const TabsVertical: Story = {
+  render: () => (
+    <Tabs defaultValue="citas" orientation="vertical">
+      <TabsList aria-label="Secciones">{sections()}</TabsList>
+      <TabsContent value="citas">Panel de citas</TabsContent>
+      <TabsContent value="clientes">Panel de clientes</TabsContent>
+      <TabsContent value="caja">Panel de caja</TabsContent>
+    </Tabs>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [citas, clientes, caja] = canvas.getAllByRole("tab");
+    await expect(canvas.getByRole("tablist")).toHaveAttribute("aria-orientation", "vertical");
+    citas?.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(citas).toHaveFocus();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(clientes).toHaveFocus();
+    await expect(clientes).toHaveAttribute("data-orientation", "vertical");
+    await userEvent.keyboard("{ArrowUp}{ArrowUp}");
+    await expect(caja).toHaveFocus();
+  },
+};
+
+export const TabsDisabledSkipped: Story = {
+  render: () => (
+    <Tabs defaultValue="citas">
+      <TabsList aria-label="Secciones">{sections(true)}</TabsList>
+      <TabsContent value="citas">Panel de citas</TabsContent>
+      <TabsContent value="clientes" forceMount>
+        Panel de clientes
+      </TabsContent>
+      <TabsContent value="caja">Panel de caja</TabsContent>
+    </Tabs>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [citas, clientes, caja] = canvas.getAllByRole("tab");
+    await expect(clientes).toBeDisabled();
+    await expect(clientes).toHaveAttribute("data-disabled", "");
+    citas?.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(caja).toHaveFocus();
+    await expect(caja).toHaveAttribute("aria-selected", "true");
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(citas).toHaveFocus();
+    await expect(canvas.getByText("Panel de clientes")).toHaveAttribute("data-state", "inactive");
+    await expect(canvas.queryByText("Panel de caja")).not.toBeInTheDocument();
+  },
+};
+
+export const TabsRtlArrows: Story = {
+  render: () => (
+    <Tabs defaultValue="citas" dir="rtl">
+      <TabsList aria-label="Secciones">{sections()}</TabsList>
+      <TabsContent value="citas">Panel de citas</TabsContent>
+      <TabsContent value="clientes">Panel de clientes</TabsContent>
+      <TabsContent value="caja">Panel de caja</TabsContent>
+    </Tabs>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [citas, clientes, caja] = canvas.getAllByRole("tab");
+    citas?.focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    await expect(clientes).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    await expect(caja).toHaveFocus();
+  },
+};
+
+export const SegmentedDeselectAndDisabled: Story = {
+  render: () => (
+    <Segmented aria-label="Vista" defaultValue="dia">
+      <SegmentedItem value="dia">Día</SegmentedItem>
+      <SegmentedItem value="semana" disabled>
+        Semana
+      </SegmentedItem>
+      <SegmentedItem value="mes">Mes</SegmentedItem>
+    </Segmented>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [dia, semana, mes] = canvas.getAllByRole("radio");
+    dia?.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(mes).toHaveFocus();
+    await expect(semana).toHaveAttribute("data-state", "off");
+    await userEvent.keyboard(" ");
+    await expect(mes).toHaveAttribute("data-state", "on");
+    await userEvent.click(mes as HTMLElement);
+    await expect(mes).toHaveAttribute("aria-checked", "false");
+    await expect(dia).toHaveAttribute("data-state", "off");
+  },
+};
