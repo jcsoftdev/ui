@@ -46,6 +46,12 @@ import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.overlays.Sheet
 import com.jcsoftdev.ui.theme.UiTheme
 
+/** Default glyph of [Select]. */
+public object SelectDefaults {
+    /** The chevron at the end of the field, turned upside down while the list is open; [Select]'s `chevron` replaces it. */
+    public val Chevron: @Composable (open: Boolean, color: Color) -> Unit = { open, color -> ChevronGlyph(open, color) }
+}
+
 @Immutable
 public class SelectOption(
     public val value: String,
@@ -67,11 +73,12 @@ public fun Select(
     isError: Boolean = false,
     placeholder: String? = null,
     contentDescription: String? = null,
-    dismissLabel: String? = null,
+    dismissLabel: String? = UiTheme.strings.close,
     colors: InputColors = InputDefaults.colors(),
     shape: Shape = InputDefaults.shape,
     contentPadding: PaddingValues = InputDefaults.contentPadding,
     textStyle: TextStyle = InputDefaults.textStyle,
+    chevron: @Composable (open: Boolean, color: Color) -> Unit = SelectDefaults.Chevron,
 ) {
     val sizes = UiTheme.sizes
     val info = LocalFieldInfo.current
@@ -112,7 +119,7 @@ public fun Select(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Chevron(expanded, colors.placeholder)
+            chevron(expanded, colors.placeholder)
         }
     }
     val sheetTitle = listOfNotNull(spoken, placeholder, selected?.label).firstOrNull { it.isNotBlank() }.orEmpty()
@@ -141,7 +148,7 @@ public fun Select(
 }
 
 @Composable
-private fun Chevron(
+private fun ChevronGlyph(
     open: Boolean,
     color: Color,
 ) {

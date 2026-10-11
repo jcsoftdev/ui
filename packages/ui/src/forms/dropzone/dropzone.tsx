@@ -1,7 +1,8 @@
 "use client";
 
-import { Upload } from "lucide-react";
 import { type ChangeEvent, type DragEvent, useRef, useState } from "react";
+import { Upload } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type DropzoneRejectionReason = "type" | "size";
@@ -10,6 +11,8 @@ export interface DropzoneRejection {
   file: File;
   reason: DropzoneRejectionReason;
 }
+
+export type DropzonePart = "root" | "icon" | "title" | "hint" | "browse";
 
 export interface DropzoneProps {
   onFiles: (files: File[]) => void;
@@ -23,6 +26,8 @@ export interface DropzoneProps {
   hint?: string;
   browseLabel: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<DropzonePart>;
 }
 
 function isTypeAllowed(file: File, acceptedTypes?: string[]) {
@@ -63,6 +68,7 @@ export function Dropzone({
   hint,
   browseLabel,
   className,
+  classNames,
 }: DropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -91,6 +97,7 @@ export function Dropzone({
       className={cn(
         "@container/dropzone flex min-w-0 flex-col items-center gap-1.5 rounded-tile border-[1.5px] border-line-control border-dashed bg-surface-2 p-3 text-center text-ink-2 @min-[360px]/dropzone:p-5.5",
         dragging && "border-accent-ink bg-accent-soft",
+        classNames?.root,
         className,
       )}
       onDragOver={(event) => {
@@ -100,14 +107,29 @@ export function Dropzone({
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
     >
-      <Upload aria-hidden="true" className="size-4.5 @min-[360px]/dropzone:size-5.5" />
-      <b className="max-w-full text-control [overflow-wrap:anywhere]">{title}</b>
+      <Upload
+        aria-hidden="true"
+        className={cn("size-4.5 @min-[360px]/dropzone:size-5.5", classNames?.icon)}
+      />
+      <b className={cn("max-w-full text-control [overflow-wrap:anywhere]", classNames?.title)}>
+        {title}
+      </b>
       {hint ? (
-        <span className="max-w-full text-meta text-ink-3 [overflow-wrap:anywhere]">{hint}</span>
+        <span
+          className={cn(
+            "max-w-full text-meta text-ink-3 [overflow-wrap:anywhere]",
+            classNames?.hint,
+          )}
+        >
+          {hint}
+        </span>
       ) : null}
       <button
         type="button"
-        className="mt-1 inline-flex h-control-sm max-w-full items-center justify-center rounded-input border-control bg-surface-control px-3 font-semibold text-chip-text hover:bg-surface-2"
+        className={cn(
+          "mt-1 inline-flex h-control-sm max-w-full items-center justify-center rounded-input border-control bg-surface-control px-3 font-semibold text-chip-text hover:bg-surface-2",
+          classNames?.browse,
+        )}
         onClick={() => inputRef.current?.click()}
       >
         {browseLabel}

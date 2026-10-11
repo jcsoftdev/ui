@@ -1,5 +1,5 @@
-import { ChevronDown } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import { ChevronDown } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 export interface SelectProps extends ComponentPropsWithoutRef<"select"> {}

@@ -1,6 +1,5 @@
 "use client";
 
-import { Slot } from "@radix-ui/react-slot";
 import {
   Children,
   type ComponentPropsWithRef,
@@ -9,22 +8,57 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "../../utils/cn.js";
+import { Slot } from "../../utils/slot.js";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
-const variantClasses: Record<ButtonVariant, string> = {
+/**
+ * Class map behind each `variant`. Exported so apps can read, extend or reuse it, e.g.
+ * `cn(buttonVariantClasses.primary, "bg-brand")` on a link, or `{ ...buttonVariantClasses, brand: "..." }`.
+ */
+export const buttonVariantClasses: Readonly<Record<ButtonVariant, string>> = {
   primary: "bg-accent text-on-accent font-bold hover:bg-accent-ink",
   secondary: "bg-surface-control text-ink shadow-control hover:bg-surface-2",
   ghost: "bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink",
   danger: "bg-danger-soft text-danger hover:bg-danger-soft/70",
 };
 
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-control-sm px-3 text-[12.5px] [&_svg]:size-3.5",
-  md: "h-control px-control-x text-[13px]",
-  lg: "h-control-lg px-control-x text-[14px]",
+/** Class map behind each `size`; exported like {@link buttonVariantClasses}. */
+export const buttonSizeClasses: Readonly<Record<ButtonSize, string>> = {
+  sm: "h-control-sm px-3 text-fs-125 [&_svg]:size-3.5",
+  md: "h-control px-control-x text-fs-130",
+  lg: "h-control-lg px-control-x text-fs-140",
 };
+
+const baseClasses =
+  "inline-flex min-w-0 max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-button pressable focus-visible:focus-ring font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:shrink-0";
+
+export interface ButtonClassOptions {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  block?: boolean;
+  className?: string;
+}
+
+/**
+ * The exact classes `<Button>` renders, merged with `cn` so `className` wins. Use it to give any
+ * element (a router link, a menu item) the kit's button look without wrapping it in `<Button>`.
+ */
+export function buttonClasses({
+  variant = "secondary",
+  size = "md",
+  block,
+  className,
+}: ButtonClassOptions = {}): string {
+  return cn(
+    baseClasses,
+    buttonVariantClasses[variant],
+    buttonSizeClasses[size],
+    block && "flex w-full",
+    className,
+  );
+}
 
 export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   variant?: ButtonVariant;
@@ -34,7 +68,7 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   loadingLabel?: string;
   /** Stretch to the full width of the container. */
   block?: boolean;
-  /** Render the child element (via Radix Slot) instead of a `<button>`, e.g. a link. */
+  /** Render the child element (via Slot) instead of a `<button>`, e.g. a link. */
   asChild?: boolean;
 }
 
@@ -64,13 +98,7 @@ export function Button({
       {...(asChild ? {} : { type: "button" })}
       aria-busy={loading ? "true" : undefined}
       disabled={disabled || loading}
-      className={cn(
-        "inline-flex min-w-0 max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-button pressable focus-visible:focus-ring font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:shrink-0",
-        variantClasses[variant],
-        sizeClasses[size],
-        block && "flex w-full",
-        className,
-      )}
+      className={buttonClasses({ variant, size, block, className })}
       {...props}
     >
       {content}

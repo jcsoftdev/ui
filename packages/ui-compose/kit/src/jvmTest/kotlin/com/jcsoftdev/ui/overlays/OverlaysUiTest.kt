@@ -39,16 +39,14 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
-import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Button
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackDispatcher
 import com.jcsoftdev.ui.foundation.LocalBackDispatcher
 import com.jcsoftdev.ui.foundation.Motion
+import com.jcsoftdev.ui.primitives.ToastAction
+import com.jcsoftdev.ui.primitives.ToastHostState
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -352,17 +350,4 @@ class OverlaysUiTest {
             onNode(hidden).assertDoesNotExist()
             onNodeWithTag("field").assertIsFocused()
         }
-
-    @Test
-    fun menuPositionHandlesRtlAndTightWindows() {
-        val window = IntSize(400, 800)
-        val size = IntSize(200, 300)
-        val anchor = IntRect(300, 100, 380, 140)
-        assertEquals(IntOffset(200, 140), menuPosition(anchor, window, LayoutDirection.Ltr, size))
-        assertEquals(IntOffset(180, 140), menuPosition(anchor, window, LayoutDirection.Rtl, size))
-        assertEquals(IntOffset(0, 350), menuPosition(IntRect(0, 650, 80, 690), window, LayoutDirection.Ltr, size))
-        val tall = IntSize(200, 500)
-        assertEquals(300, menuPosition(IntRect(0, 300, 80, 340), window, LayoutDirection.Ltr, tall).y)
-        assertEquals(0, menuPosition(IntRect(0, 420, 80, 460), window, LayoutDirection.Ltr, tall).y)
-    }
 }

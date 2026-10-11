@@ -93,7 +93,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** Drops into a column at its WIP limit are refused and announced. */
-export const EnforcedLimit: Story = { args: { enforceLimit: true } };
+export const EnforcedLimit: Story = {
+  args: { enforceLimit: true },
+};
 
 export const Narrow: Story = {
   decorators: [

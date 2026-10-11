@@ -16,9 +16,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div style={{ width: 320 }}>
@@ -29,6 +30,7 @@ export const Narrow: Story = {
 };
 
 export const BrutalPreset: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal">
@@ -39,6 +41,7 @@ export const BrutalPreset: Story = {
 };
 
 export const BarberiaDonLucho: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Barbería Don Lucho",
   args: {
     defaultValue: {

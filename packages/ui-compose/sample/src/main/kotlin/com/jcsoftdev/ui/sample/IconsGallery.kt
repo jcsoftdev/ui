@@ -28,6 +28,7 @@ import com.jcsoftdev.ui.icons.Settings
 import com.jcsoftdev.ui.icons.Trash2
 import com.jcsoftdev.ui.icons.User
 import com.jcsoftdev.ui.icons.X
+import com.jcsoftdev.ui.theme.UiStrings
 import com.jcsoftdev.ui.theme.UiTheme
 
 // Only the icons referenced here survive R8 in the release sample; the rest of the set costs nothing.
@@ -49,7 +50,7 @@ private val Showcase: List<Pair<String, ImageVector>>
 
 @Composable
 fun IconsGallery() {
-    UiTheme(dark = false, accent = "#77D3AD") {
+    UiTheme(dark = false, accent = "#77D3AD", strings = UiStrings.Es) {
         Column(
             Modifier
                 .background(UiTheme.colors.bg)

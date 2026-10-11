@@ -4,15 +4,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.jcsoftdev.ui.primitives.rememberMaskedInputState
 
 private val NumberPad = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done, autoCorrectEnabled = false)
 
@@ -35,26 +32,21 @@ public fun TimeInput(
     contentPadding: PaddingValues = InputDefaults.contentPadding,
     textStyle: TextStyle = InputDefaults.textStyle,
 ) {
-    var digits by remember { mutableStateOf(digitsOnly(value, TimeFormat.DIGITS)) }
-    if (value != TimeFormat.commit(digits)) digits = digitsOnly(value, TimeFormat.DIGITS)
+    val input = rememberMaskedInputState(value, onValueChange, TimeMask, TimeFormat::commit)
     InputFrame(
-        digits,
-        {
-            val next = digitsOnly(it, TimeFormat.DIGITS)
-            digits = next
-            onValueChange(TimeFormat.commit(next))
-        },
+        input.digits,
+        input::onInput,
         modifier,
         enabled,
         false,
-        isError || (digits.length == TimeFormat.DIGITS && value.isEmpty()),
+        isError || (input.isComplete && value.isEmpty()),
         placeholder,
         contentDescription,
         null,
         null,
         NumberPad,
         keyboardActions,
-        TimeTransformation,
+        input.visualTransformation,
         colors,
         shape,
         contentPadding,
@@ -82,26 +74,21 @@ public fun DateInput(
     contentPadding: PaddingValues = InputDefaults.contentPadding,
     textStyle: TextStyle = InputDefaults.textStyle,
 ) {
-    var digits by remember { mutableStateOf(digitsOnly(value, DateFormat.DIGITS)) }
-    if (value != DateFormat.commit(digits)) digits = digitsOnly(value, DateFormat.DIGITS)
+    val input = rememberMaskedInputState(value, onValueChange, DateMask, DateFormat::commit)
     InputFrame(
-        digits,
-        {
-            val next = digitsOnly(it, DateFormat.DIGITS)
-            digits = next
-            onValueChange(DateFormat.commit(next))
-        },
+        input.digits,
+        input::onInput,
         modifier,
         enabled,
         false,
-        isError || (digits.length == DateFormat.DIGITS && value.isEmpty()),
+        isError || (input.isComplete && value.isEmpty()),
         placeholder,
         contentDescription,
         null,
         null,
         NumberPad,
         keyboardActions,
-        DateTransformation,
+        input.visualTransformation,
         colors,
         shape,
         contentPadding,

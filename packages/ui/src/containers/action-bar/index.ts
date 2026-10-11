@@ -1,1 +1,1 @@
-export { ActionBar, type ActionBarProps } from "./action-bar.js";
+export { ActionBar, type ActionBarPart, type ActionBarProps } from "./action-bar.js";

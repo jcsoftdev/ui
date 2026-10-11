@@ -424,7 +424,7 @@ function RadialPlot({
                   textAnchor="end"
                   dominantBaseline="central"
                   {...DECORATIVE}
-                  className="pointer-events-none text-[11px] motion-safe:transition-opacity motion-safe:duration-150"
+                  className="pointer-events-none text-fs-110 motion-safe:transition-opacity motion-safe:duration-150"
                   style={{ opacity: dimmed ? 0.35 : 1 }}
                 >
                   <tspan className="fill-ink-2 font-medium">

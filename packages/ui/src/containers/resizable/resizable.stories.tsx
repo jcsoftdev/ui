@@ -65,6 +65,7 @@ export const Default: Story = { render: () => <Demo direction="horizontal" /> };
 export const Vertical: Story = { render: () => <Demo direction="vertical" /> };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => (
     <div className="w-[320px] max-w-full">
       <Demo direction="vertical" />

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Phone, Search } from "lucide-react";
+import { Phone, Search } from "../../icons/index.js";
 import { InputIcon } from "./input-icon.js";
 
 const meta = {

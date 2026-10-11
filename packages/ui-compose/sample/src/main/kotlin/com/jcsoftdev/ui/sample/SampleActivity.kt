@@ -18,6 +18,8 @@ class SampleActivity : ComponentActivity() {
                     "overlays" -> OverlaysGallery()
                     "icons" -> IconsGallery()
                     "custom" -> CustomThemeGallery()
+                    "headless" -> HeadlessGallery()
+                    "states" -> StatesGallery()
                     else -> AtomsGallery()
                 }
             }

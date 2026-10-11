@@ -1,4 +1,3 @@
-import { CalendarCheck, Package, Star, Wallet, XCircle } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "../atoms/avatar/index.js";
 import { AvatarGroup } from "../atoms/avatar-group/index.js";
@@ -13,6 +12,7 @@ import { DataGrid, type DataGridColumn } from "../containers/data-grid/index.js"
 import { Kanban, type KanbanColumnData } from "../containers/kanban/index.js";
 import { Timeline, type TimelineFeedItem } from "../containers/timeline/index.js";
 import { BARBEROS, CLIENTES, SERVICIOS } from "../dashboards/data.js";
+import { CalendarCheck, Package, Star, Wallet, XCircle } from "../icons/index.js";
 import { BentoGrid, Tile } from "./bento.js";
 
 const events: CalendarEvent[] = [

@@ -183,6 +183,21 @@
   --text-m-meta: 13px;
   --text-m-meta--line-height: 1.4;
   --text-m-meta--font-weight: 400;
+  /* Size-only scale (px x 10, no line-height or weight) for dense UI text that must not inherit a role's weight. */
+  --text-fs-95: 9.5px;
+  --text-fs-100: 10px;
+  --text-fs-105: 10.5px;
+  --text-fs-110: 11px;
+  --text-fs-115: 11.5px;
+  --text-fs-120: 12px;
+  --text-fs-125: 12.5px;
+  --text-fs-130: 13px;
+  --text-fs-140: 14px;
+  --text-fs-150: 15px;
+  --text-fs-160: 16px;
+  --text-fs-220: 22px;
+  --text-fs-300: 30px;
+  --text-fs-440: 44px;
   --radius-button: var(--radius-button);
   --radius-input: var(--radius-input);
   --radius-badge: var(--radius-badge);

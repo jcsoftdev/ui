@@ -97,6 +97,9 @@ public object ButtonDefaults {
         return PaddingValues(horizontal = if (size == ButtonSize.Sm) s.space12 else s.space14)
     }
 
+    /** The default loading indicator: a spinning arc in the label color. Replace it through [Button]'s `loadingIndicator`. */
+    public val LoadingIndicator: @Composable (color: Color) -> Unit = { color -> Spinner(color) }
+
     /** Gap between the spinner or [Button] `leading` slot, the label and `trailing`. */
     public val iconSpacing: Dp = 6.dp
 
@@ -123,7 +126,7 @@ public object ButtonDefaults {
  * (already localized) is announced as the state. The visual height is 30/36/52dp (sm/md/lg) by default, [block] fills the width,
  * the touch target is at least the theme `minTouchTarget` (48dp).
  *
- * Restyle one button through [colors], [shape], [height], [contentPadding] and [textStyle] (start from [ButtonDefaults]), or
+ * Restyle one button through [colors], [shape], [height], [contentPadding], [textStyle] and the [loadingIndicator] glyph (start from [ButtonDefaults]), or
  * every button through the [UiTheme] tokens.
  */
 @Composable
@@ -142,6 +145,7 @@ public fun Button(
     height: Dp = ButtonDefaults.height(size),
     contentPadding: PaddingValues = ButtonDefaults.contentPadding(size),
     textStyle: TextStyle = ButtonDefaults.textStyle(size, variant),
+    loadingIndicator: @Composable (color: Color) -> Unit = ButtonDefaults.LoadingIndicator,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
@@ -163,7 +167,7 @@ public fun Button(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         CompositionLocalProvider(LocalContentColor provides colors.content) {
-            if (loading) Spinner(colors.content) else leading?.invoke()
+            if (loading) loadingIndicator(colors.content) else leading?.invoke()
             Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
             trailing?.invoke()
         }
