@@ -1,3 +1,59 @@
+public final class com/jcsoftdev/ui/foundation/AndroidBackKt {
+	public static final fun ProvideAndroidBack (Lcom/jcsoftdev/ui/foundation/BackDispatcher;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/foundation/BackDispatcher {
+	public static final field $stable I
+	public fun <init> ()V
+	public final fun dispatch ()Z
+	public final fun getHasHandler ()Z
+	public final fun register (ILkotlin/jvm/functions/Function0;)Lkotlin/jvm/functions/Function0;
+}
+
+public final class com/jcsoftdev/ui/foundation/BackKt {
+	public static final fun BackHandler (ZILkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
+	public static final fun getLocalBackDispatcher ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
+public final class com/jcsoftdev/ui/foundation/BackPriority {
+	public static final field $stable I
+	public static final field EDITOR I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/foundation/BackPriority;
+	public static final field OVERLAY I
+	public static final field SHEET I
+	public static final field TAB I
+}
+
+public final class com/jcsoftdev/ui/foundation/Motion {
+	public static final field $stable I
+	public static final field Companion Lcom/jcsoftdev/ui/foundation/Motion$Companion;
+	public static final field FAST I
+	public static final field SLOW I
+	public static final field STANDARD I
+	public fun <init> ()V
+	public fun <init> (F)V
+	public synthetic fun <init> (FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEnabled ()Z
+	public final fun getScale ()F
+	public fun hashCode ()I
+	public final fun tween (ILandroidx/compose/animation/core/Easing;)Landroidx/compose/animation/core/FiniteAnimationSpec;
+	public static synthetic fun tween$default (Lcom/jcsoftdev/ui/foundation/Motion;ILandroidx/compose/animation/core/Easing;ILjava/lang/Object;)Landroidx/compose/animation/core/FiniteAnimationSpec;
+}
+
+public final class com/jcsoftdev/ui/foundation/Motion$Companion {
+}
+
+public final class com/jcsoftdev/ui/foundation/MotionKt {
+	public static final fun getUiEasing ()Landroidx/compose/animation/core/Easing;
+}
+
+public final class com/jcsoftdev/ui/foundation/PressKt {
+	public static final field PRESSED_SCALE F
+	public static final fun pressScale (Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/interaction/InteractionSource;F)Landroidx/compose/ui/Modifier;
+	public static synthetic fun pressScale$default (Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/interaction/InteractionSource;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
+}
+
 public final class com/jcsoftdev/ui/theme/AccentPalette {
 	public static final field $stable I
 	public synthetic fun <init> (JJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V

@@ -60,6 +60,9 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+        }
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
@@ -81,6 +84,7 @@ android {
 }
 
 apiValidation {
+    ignoredPackages.add("com.jcsoftdev.ui.resources")
     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
     klib {
         enabled = true
@@ -96,5 +100,5 @@ composeCompiler {
 compose.resources {
     publicResClass = false
     packageOfResClass = "com.jcsoftdev.ui.resources"
-    generateResClass = never
+    generateResClass = always
 }

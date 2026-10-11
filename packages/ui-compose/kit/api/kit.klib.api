@@ -6,6 +6,38 @@
 // - Show declarations: true
 
 // Library unique name: <com.jcsoftdev:kit>
+final class com.jcsoftdev.ui.foundation/BackDispatcher { // com.jcsoftdev.ui.foundation/BackDispatcher|null[0]
+    constructor <init>() // com.jcsoftdev.ui.foundation/BackDispatcher.<init>|<init>(){}[0]
+
+    final val hasHandler // com.jcsoftdev.ui.foundation/BackDispatcher.hasHandler|{}hasHandler[0]
+        final fun <get-hasHandler>(): kotlin/Boolean // com.jcsoftdev.ui.foundation/BackDispatcher.hasHandler.<get-hasHandler>|<get-hasHandler>(){}[0]
+
+    final fun dispatch(): kotlin/Boolean // com.jcsoftdev.ui.foundation/BackDispatcher.dispatch|dispatch(){}[0]
+    final fun register(kotlin/Int, kotlin/Function0<kotlin/Unit>): kotlin/Function0<kotlin/Unit> // com.jcsoftdev.ui.foundation/BackDispatcher.register|register(kotlin.Int;kotlin.Function0<kotlin.Unit>){}[0]
+}
+
+final class com.jcsoftdev.ui.foundation/Motion { // com.jcsoftdev.ui.foundation/Motion|null[0]
+    constructor <init>(kotlin/Float = ...) // com.jcsoftdev.ui.foundation/Motion.<init>|<init>(kotlin.Float){}[0]
+
+    final val enabled // com.jcsoftdev.ui.foundation/Motion.enabled|{}enabled[0]
+        final fun <get-enabled>(): kotlin/Boolean // com.jcsoftdev.ui.foundation/Motion.enabled.<get-enabled>|<get-enabled>(){}[0]
+    final val scale // com.jcsoftdev.ui.foundation/Motion.scale|{}scale[0]
+        final fun <get-scale>(): kotlin/Float // com.jcsoftdev.ui.foundation/Motion.scale.<get-scale>|<get-scale>(){}[0]
+
+    final fun <#A1: kotlin/Any?> tween(kotlin/Int = ..., androidx.compose.animation.core/Easing = ...): androidx.compose.animation.core/FiniteAnimationSpec<#A1> // com.jcsoftdev.ui.foundation/Motion.tween|tween(kotlin.Int;androidx.compose.animation.core.Easing){0§<kotlin.Any?>}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.jcsoftdev.ui.foundation/Motion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.jcsoftdev.ui.foundation/Motion.hashCode|hashCode(){}[0]
+
+    final object Companion { // com.jcsoftdev.ui.foundation/Motion.Companion|null[0]
+        final const val FAST // com.jcsoftdev.ui.foundation/Motion.Companion.FAST|{}FAST[0]
+            final fun <get-FAST>(): kotlin/Int // com.jcsoftdev.ui.foundation/Motion.Companion.FAST.<get-FAST>|<get-FAST>(){}[0]
+        final const val SLOW // com.jcsoftdev.ui.foundation/Motion.Companion.SLOW|{}SLOW[0]
+            final fun <get-SLOW>(): kotlin/Int // com.jcsoftdev.ui.foundation/Motion.Companion.SLOW.<get-SLOW>|<get-SLOW>(){}[0]
+        final const val STANDARD // com.jcsoftdev.ui.foundation/Motion.Companion.STANDARD|{}STANDARD[0]
+            final fun <get-STANDARD>(): kotlin/Int // com.jcsoftdev.ui.foundation/Motion.Companion.STANDARD.<get-STANDARD>|<get-STANDARD>(){}[0]
+    }
+}
+
 final class com.jcsoftdev.ui.theme/AccentPalette { // com.jcsoftdev.ui.theme/AccentPalette|null[0]
     constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.theme/AccentPalette.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
 
@@ -118,6 +150,17 @@ final class com.jcsoftdev.ui.theme/ThemeColors { // com.jcsoftdev.ui.theme/Theme
         final fun <get-warning>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/ThemeColors.warning.<get-warning>|<get-warning>(){}[0]
     final val warningSoft // com.jcsoftdev.ui.theme/ThemeColors.warningSoft|{}warningSoft[0]
         final fun <get-warningSoft>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/ThemeColors.warningSoft.<get-warningSoft>|<get-warningSoft>(){}[0]
+}
+
+final object com.jcsoftdev.ui.foundation/BackPriority { // com.jcsoftdev.ui.foundation/BackPriority|null[0]
+    final const val EDITOR // com.jcsoftdev.ui.foundation/BackPriority.EDITOR|{}EDITOR[0]
+        final fun <get-EDITOR>(): kotlin/Int // com.jcsoftdev.ui.foundation/BackPriority.EDITOR.<get-EDITOR>|<get-EDITOR>(){}[0]
+    final const val OVERLAY // com.jcsoftdev.ui.foundation/BackPriority.OVERLAY|{}OVERLAY[0]
+        final fun <get-OVERLAY>(): kotlin/Int // com.jcsoftdev.ui.foundation/BackPriority.OVERLAY.<get-OVERLAY>|<get-OVERLAY>(){}[0]
+    final const val SHEET // com.jcsoftdev.ui.foundation/BackPriority.SHEET|{}SHEET[0]
+        final fun <get-SHEET>(): kotlin/Int // com.jcsoftdev.ui.foundation/BackPriority.SHEET.<get-SHEET>|<get-SHEET>(){}[0]
+    final const val TAB // com.jcsoftdev.ui.foundation/BackPriority.TAB|{}TAB[0]
+        final fun <get-TAB>(): kotlin/Int // com.jcsoftdev.ui.foundation/BackPriority.TAB.<get-TAB>|<get-TAB>(){}[0]
 }
 
 final object com.jcsoftdev.ui.theme/UiColors { // com.jcsoftdev.ui.theme/UiColors|null[0]
@@ -246,9 +289,18 @@ final object com.jcsoftdev.ui.theme/UiTypography { // com.jcsoftdev.ui.theme/UiT
         final fun <get-rowTitle>(): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.theme/UiTypography.rowTitle.<get-rowTitle>|<get-rowTitle>(){}[0]
 }
 
+final const val com.jcsoftdev.ui.foundation/PRESSED_SCALE // com.jcsoftdev.ui.foundation/PRESSED_SCALE|{}PRESSED_SCALE[0]
+    final fun <get-PRESSED_SCALE>(): kotlin/Float // com.jcsoftdev.ui.foundation/PRESSED_SCALE.<get-PRESSED_SCALE>|<get-PRESSED_SCALE>(){}[0]
 final const val com.jcsoftdev.ui.theme/UiFontFamilyName // com.jcsoftdev.ui.theme/UiFontFamilyName|{}UiFontFamilyName[0]
     final fun <get-UiFontFamilyName>(): kotlin/String // com.jcsoftdev.ui.theme/UiFontFamilyName.<get-UiFontFamilyName>|<get-UiFontFamilyName>(){}[0]
 
+final val com.jcsoftdev.ui.foundation/LocalBackDispatcher // com.jcsoftdev.ui.foundation/LocalBackDispatcher|{}LocalBackDispatcher[0]
+    final fun <get-LocalBackDispatcher>(): androidx.compose.runtime/ProvidableCompositionLocal<com.jcsoftdev.ui.foundation/BackDispatcher> // com.jcsoftdev.ui.foundation/LocalBackDispatcher.<get-LocalBackDispatcher>|<get-LocalBackDispatcher>(){}[0]
+final val com.jcsoftdev.ui.foundation/UiEasing // com.jcsoftdev.ui.foundation/UiEasing|{}UiEasing[0]
+    final fun <get-UiEasing>(): androidx.compose.animation.core/Easing // com.jcsoftdev.ui.foundation/UiEasing.<get-UiEasing>|<get-UiEasing>(){}[0]
+final val com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackDispatcher$stableprop // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackDispatcher$stableprop|#static{}com_jcsoftdev_ui_foundation_BackDispatcher$stableprop[0]
+final val com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackPriority$stableprop // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackPriority$stableprop|#static{}com_jcsoftdev_ui_foundation_BackPriority$stableprop[0]
+final val com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_Motion$stableprop // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_Motion$stableprop|#static{}com_jcsoftdev_ui_foundation_Motion$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop|#static{}com_jcsoftdev_ui_theme_AccentPalette$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeColors$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop|#static{}com_jcsoftdev_ui_theme_UiColors$stableprop[0]
@@ -257,6 +309,11 @@ final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop // c
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop|#static{}com_jcsoftdev_ui_theme_UiSizes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTypography$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTypography$stableprop|#static{}com_jcsoftdev_ui_theme_UiTypography$stableprop[0]
 
+final fun (androidx.compose.ui/Modifier).com.jcsoftdev.ui.foundation/pressScale(androidx.compose.foundation.interaction/InteractionSource, kotlin/Float = ...): androidx.compose.ui/Modifier // com.jcsoftdev.ui.foundation/pressScale|pressScale@androidx.compose.ui.Modifier(androidx.compose.foundation.interaction.InteractionSource;kotlin.Float){}[0]
+final fun com.jcsoftdev.ui.foundation/BackHandler(kotlin/Boolean, kotlin/Int, kotlin/Function0<kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.foundation/BackHandler|BackHandler(kotlin.Boolean;kotlin.Int;kotlin.Function0<kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackDispatcher$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackDispatcher$stableprop_getter|com_jcsoftdev_ui_foundation_BackDispatcher$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackPriority$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackPriority$stableprop_getter|com_jcsoftdev_ui_foundation_BackPriority$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_Motion$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_Motion$stableprop_getter|com_jcsoftdev_ui_foundation_Motion$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter|com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter|com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop_getter|com_jcsoftdev_ui_theme_UiColors$stableprop_getter(){}[0]
