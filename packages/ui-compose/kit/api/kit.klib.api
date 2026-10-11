@@ -72,6 +72,26 @@ final enum class com.jcsoftdev.ui.atoms/LedStatus : kotlin/Enum<com.jcsoftdev.ui
     final fun values(): kotlin/Array<com.jcsoftdev.ui.atoms/LedStatus> // com.jcsoftdev.ui.atoms/LedStatus.values|values#static(){}[0]
 }
 
+final enum class com.jcsoftdev.ui.overlays/ToastTone : kotlin/Enum<com.jcsoftdev.ui.overlays/ToastTone> { // com.jcsoftdev.ui.overlays/ToastTone|null[0]
+    enum entry Error // com.jcsoftdev.ui.overlays/ToastTone.Error|null[0]
+    enum entry Info // com.jcsoftdev.ui.overlays/ToastTone.Info|null[0]
+    enum entry Neutral // com.jcsoftdev.ui.overlays/ToastTone.Neutral|null[0]
+    enum entry Success // com.jcsoftdev.ui.overlays/ToastTone.Success|null[0]
+
+    final val entries // com.jcsoftdev.ui.overlays/ToastTone.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.overlays/ToastTone> // com.jcsoftdev.ui.overlays/ToastTone.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.overlays/ToastTone // com.jcsoftdev.ui.overlays/ToastTone.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.overlays/ToastTone> // com.jcsoftdev.ui.overlays/ToastTone.values|values#static(){}[0]
+}
+
+abstract interface com.jcsoftdev.ui.overlays/MenuScope { // com.jcsoftdev.ui.overlays/MenuScope|null[0]
+    abstract fun checkboxItem(kotlin/String, kotlin/Boolean, kotlin/Function1<kotlin/Boolean, kotlin/Unit>, kotlin/Boolean = ...) // com.jcsoftdev.ui.overlays/MenuScope.checkboxItem|checkboxItem(kotlin.String;kotlin.Boolean;kotlin.Function1<kotlin.Boolean,kotlin.Unit>;kotlin.Boolean){}[0]
+    abstract fun item(kotlin/String, kotlin/Function0<kotlin/Unit>, kotlin/Boolean = ..., kotlin/Boolean = ...) // com.jcsoftdev.ui.overlays/MenuScope.item|item(kotlin.String;kotlin.Function0<kotlin.Unit>;kotlin.Boolean;kotlin.Boolean){}[0]
+    abstract fun radioItem(kotlin/String, kotlin/Boolean, kotlin/Function0<kotlin/Unit>, kotlin/Boolean = ...) // com.jcsoftdev.ui.overlays/MenuScope.radioItem|radioItem(kotlin.String;kotlin.Boolean;kotlin.Function0<kotlin.Unit>;kotlin.Boolean){}[0]
+    abstract fun separator() // com.jcsoftdev.ui.overlays/MenuScope.separator|separator(){}[0]
+}
+
 final class com.jcsoftdev.ui.atoms/RadioOption { // com.jcsoftdev.ui.atoms/RadioOption|null[0]
     constructor <init>(kotlin/String, kotlin/String, kotlin/String? = ...) // com.jcsoftdev.ui.atoms/RadioOption.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?){}[0]
 
@@ -142,6 +162,41 @@ final class com.jcsoftdev.ui.navigation/TabItem { // com.jcsoftdev.ui.navigation
         final fun <get-label>(): kotlin/String // com.jcsoftdev.ui.navigation/TabItem.label.<get-label>|<get-label>(){}[0]
     final val value // com.jcsoftdev.ui.navigation/TabItem.value|{}value[0]
         final fun <get-value>(): kotlin/String // com.jcsoftdev.ui.navigation/TabItem.value.<get-value>|<get-value>(){}[0]
+}
+
+final class com.jcsoftdev.ui.overlays/ToastAction { // com.jcsoftdev.ui.overlays/ToastAction|null[0]
+    constructor <init>(kotlin/String, kotlin/Function0<kotlin/Unit>) // com.jcsoftdev.ui.overlays/ToastAction.<init>|<init>(kotlin.String;kotlin.Function0<kotlin.Unit>){}[0]
+
+    final val label // com.jcsoftdev.ui.overlays/ToastAction.label|{}label[0]
+        final fun <get-label>(): kotlin/String // com.jcsoftdev.ui.overlays/ToastAction.label.<get-label>|<get-label>(){}[0]
+    final val onClick // com.jcsoftdev.ui.overlays/ToastAction.onClick|{}onClick[0]
+        final fun <get-onClick>(): kotlin/Function0<kotlin/Unit> // com.jcsoftdev.ui.overlays/ToastAction.onClick.<get-onClick>|<get-onClick>(){}[0]
+}
+
+final class com.jcsoftdev.ui.overlays/ToastHostState { // com.jcsoftdev.ui.overlays/ToastHostState|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Long = ...) // com.jcsoftdev.ui.overlays/ToastHostState.<init>|<init>(kotlin.Int;kotlin.Long){}[0]
+
+    final var toasts // com.jcsoftdev.ui.overlays/ToastHostState.toasts|{}toasts[0]
+        final fun <get-toasts>(): kotlin.collections/List<com.jcsoftdev.ui.overlays/ToastItem> // com.jcsoftdev.ui.overlays/ToastHostState.toasts.<get-toasts>|<get-toasts>(){}[0]
+
+    final fun dismiss(kotlin/Long? = ...) // com.jcsoftdev.ui.overlays/ToastHostState.dismiss|dismiss(kotlin.Long?){}[0]
+    final fun error(kotlin/String, com.jcsoftdev.ui.overlays/ToastAction? = ..., kotlin/Long = ...): kotlin/Long // com.jcsoftdev.ui.overlays/ToastHostState.error|error(kotlin.String;com.jcsoftdev.ui.overlays.ToastAction?;kotlin.Long){}[0]
+    final fun info(kotlin/String, com.jcsoftdev.ui.overlays/ToastAction? = ..., kotlin/Long = ...): kotlin/Long // com.jcsoftdev.ui.overlays/ToastHostState.info|info(kotlin.String;com.jcsoftdev.ui.overlays.ToastAction?;kotlin.Long){}[0]
+    final fun success(kotlin/String, com.jcsoftdev.ui.overlays/ToastAction? = ..., kotlin/Long = ...): kotlin/Long // com.jcsoftdev.ui.overlays/ToastHostState.success|success(kotlin.String;com.jcsoftdev.ui.overlays.ToastAction?;kotlin.Long){}[0]
+    final fun toast(kotlin/String, com.jcsoftdev.ui.overlays/ToastAction? = ..., kotlin/Long = ...): kotlin/Long // com.jcsoftdev.ui.overlays/ToastHostState.toast|toast(kotlin.String;com.jcsoftdev.ui.overlays.ToastAction?;kotlin.Long){}[0]
+}
+
+final class com.jcsoftdev.ui.overlays/ToastItem { // com.jcsoftdev.ui.overlays/ToastItem|null[0]
+    final val action // com.jcsoftdev.ui.overlays/ToastItem.action|{}action[0]
+        final fun <get-action>(): com.jcsoftdev.ui.overlays/ToastAction? // com.jcsoftdev.ui.overlays/ToastItem.action.<get-action>|<get-action>(){}[0]
+    final val durationMillis // com.jcsoftdev.ui.overlays/ToastItem.durationMillis|{}durationMillis[0]
+        final fun <get-durationMillis>(): kotlin/Long // com.jcsoftdev.ui.overlays/ToastItem.durationMillis.<get-durationMillis>|<get-durationMillis>(){}[0]
+    final val id // com.jcsoftdev.ui.overlays/ToastItem.id|{}id[0]
+        final fun <get-id>(): kotlin/Long // com.jcsoftdev.ui.overlays/ToastItem.id.<get-id>|<get-id>(){}[0]
+    final val message // com.jcsoftdev.ui.overlays/ToastItem.message|{}message[0]
+        final fun <get-message>(): kotlin/String // com.jcsoftdev.ui.overlays/ToastItem.message.<get-message>|<get-message>(){}[0]
+    final val tone // com.jcsoftdev.ui.overlays/ToastItem.tone|{}tone[0]
+        final fun <get-tone>(): com.jcsoftdev.ui.overlays/ToastTone // com.jcsoftdev.ui.overlays/ToastItem.tone.<get-tone>|<get-tone>(){}[0]
 }
 
 final class com.jcsoftdev.ui.theme/AccentPalette { // com.jcsoftdev.ui.theme/AccentPalette|null[0]
@@ -434,6 +489,11 @@ final val com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_BackPriority$s
 final val com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_Motion$stableprop // com.jcsoftdev.ui.foundation/com_jcsoftdev_ui_foundation_Motion$stableprop|#static{}com_jcsoftdev_ui_foundation_Motion$stableprop[0]
 final val com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_SegmentedOption$stableprop // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_SegmentedOption$stableprop|#static{}com_jcsoftdev_ui_navigation_SegmentedOption$stableprop[0]
 final val com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabItem$stableprop // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabItem$stableprop|#static{}com_jcsoftdev_ui_navigation_TabItem$stableprop[0]
+final val com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayHostState$stableprop // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayHostState$stableprop|#static{}com_jcsoftdev_ui_overlays_OverlayHostState$stableprop[0]
+final val com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayLayer$stableprop // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayLayer$stableprop|#static{}com_jcsoftdev_ui_overlays_OverlayLayer$stableprop[0]
+final val com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastAction$stableprop // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastAction$stableprop|#static{}com_jcsoftdev_ui_overlays_ToastAction$stableprop[0]
+final val com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastHostState$stableprop // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastHostState$stableprop|#static{}com_jcsoftdev_ui_overlays_ToastHostState$stableprop[0]
+final val com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastItem$stableprop // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastItem$stableprop|#static{}com_jcsoftdev_ui_overlays_ToastItem$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop|#static{}com_jcsoftdev_ui_theme_AccentPalette$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeColors$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop|#static{}com_jcsoftdev_ui_theme_UiColors$stableprop[0]
@@ -481,6 +541,15 @@ final fun com.jcsoftdev.ui.navigation/Segmented(kotlin.collections/List<com.jcso
 final fun com.jcsoftdev.ui.navigation/Tabs(kotlin.collections/List<com.jcsoftdev.ui.navigation/TabItem>, kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, androidx.compose.ui/Modifier?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.navigation/Tabs|Tabs(kotlin.collections.List<com.jcsoftdev.ui.navigation.TabItem>;kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;androidx.compose.ui.Modifier?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_SegmentedOption$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_SegmentedOption$stableprop_getter|com_jcsoftdev_ui_navigation_SegmentedOption$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabItem$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabItem$stableprop_getter|com_jcsoftdev_ui_navigation_TabItem$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.overlays/Dialog(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Dialog|Dialog(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.overlays/Menu(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Function1<com.jcsoftdev.ui.overlays/MenuScope, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Menu|Menu(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Function1<com.jcsoftdev.ui.overlays.MenuScope,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.overlays/Sheet(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/String?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Sheet|Sheet(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.String?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.overlays/Toaster(com.jcsoftdev.ui.overlays/ToastHostState, androidx.compose.ui/Modifier?, androidx.compose.ui.unit/Dp, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Toaster|Toaster(com.jcsoftdev.ui.overlays.ToastHostState;androidx.compose.ui.Modifier?;androidx.compose.ui.unit.Dp;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayHostState$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayHostState$stableprop_getter|com_jcsoftdev_ui_overlays_OverlayHostState$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayLayer$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_OverlayLayer$stableprop_getter|com_jcsoftdev_ui_overlays_OverlayLayer$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastAction$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastAction$stableprop_getter|com_jcsoftdev_ui_overlays_ToastAction$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastHostState$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastHostState$stableprop_getter|com_jcsoftdev_ui_overlays_ToastHostState$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastItem$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.overlays/com_jcsoftdev_ui_overlays_ToastItem$stableprop_getter|com_jcsoftdev_ui_overlays_ToastItem$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/UiTheme(kotlin/Boolean, com.jcsoftdev.ui.theme/ThemeColors?, kotlin/String?, androidx.compose.ui.text.font/FontFamily?, com.jcsoftdev.ui.foundation/Motion?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.theme/UiTheme|UiTheme(kotlin.Boolean;com.jcsoftdev.ui.theme.ThemeColors?;kotlin.String?;androidx.compose.ui.text.font.FontFamily?;com.jcsoftdev.ui.foundation.Motion?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter|com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter|com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(){}[0]

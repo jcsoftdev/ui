@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontFamily
 import com.jcsoftdev.ui.foundation.LocalMotion
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.foundation.rememberSystemMotion
+import com.jcsoftdev.ui.overlays.OverlayHost
 
 private val LocalColors = staticCompositionLocalOf { UiColors.Light }
 private val LocalFontFamily = staticCompositionLocalOf<FontFamily> { FontFamily.Default }
@@ -36,7 +37,8 @@ public object UiTheme {
 }
 
 /**
- * Provides the token theme to [content].
+ * Provides the token theme to [content] and hosts the overlays ([com.jcsoftdev.ui.overlays.Sheet], dialogs, toasts) above it,
+ * so give it the whole screen.
  *
  * @param colors base colors; pass a [copy] of [UiColors] to override single tokens.
  * @param accent a palette id from [UiPalettes.ids] or a `#rrggbb` brand color, matched to the closest palette. Null keeps the accent of [colors].
@@ -58,6 +60,7 @@ public fun UiTheme(
         LocalColors provides themed,
         LocalFontFamily provides font,
         LocalMotion provides motion,
-        content = content,
-    )
+    ) {
+        OverlayHost(content)
+    }
 }
