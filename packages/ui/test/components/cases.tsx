@@ -4,6 +4,7 @@ import { Button } from "../../src/atoms/button/button.js";
 import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
 import { Chip } from "../../src/atoms/chip/chip.js";
 import { ConfirmAction } from "../../src/containers/confirm-action/confirm-action.js";
+import { ResponsiveList } from "../../src/containers/responsive-list/responsive-list.js";
 import { Banner } from "../../src/containers/banner/banner.js";
 import { Field } from "../../src/forms/field/field.js";
 import { Input } from "../../src/forms/input/input.js";
@@ -140,5 +141,26 @@ export const html = {
         <ConfirmAction label="Anular" consequence="Se anula." onConfirm={async () => {}} />
       </UiStringsProvider>,
     ),
+  list: (withActions: boolean, locale?: "es") => {
+    const items = [
+      { id: "a1", name: "Marco", total: "S/ 45", city: "Lima" },
+      { id: "b2", name: "Lucía", total: "S/ 80", city: "Cusco" },
+    ];
+    const list = (
+      <ResponsiveList
+        caption="Orders"
+        items={items}
+        rowKey={(item) => item.id}
+        rowClassName={(item) => (item.id === "b2" ? "is-late" : undefined)}
+        columns={[
+          { key: "city", header: "City", cell: (item) => item.city },
+          { key: "name", header: "Customer", cell: (item) => item.name, primary: true },
+          { key: "total", header: "Total", cell: (item) => item.total, align: "end" },
+        ]}
+        renderActions={withActions ? (item) => <button type="button">Open {item.id}</button> : undefined}
+      />
+    );
+    return renderToStaticMarkup(locale ? <UiStringsProvider locale={locale}>{list}</UiStringsProvider> : list);
+  },
 };
 export { runConfirm } from "../../src/containers/confirm-action/model.js";

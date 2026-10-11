@@ -123,3 +123,35 @@ test("runConfirm folds returned failures and thrown errors into one outcome", as
     { status: "failed", message: "fallback" },
   );
 });
+
+test("ResponsiveList renders a table from md up and stacked cards below it", () => {
+  const markup = html.list(true);
+  const [table, cards] = markup.split("<ul");
+  assert.match(table, /class="[^"]*hidden[^"]*md:block/);
+  assert.match(table, /<caption class="sr-only">Orders<\/caption>/);
+  assert.match(table, /<th[^>]*scope="col"[^>]*>City</);
+  assert.match(table, /<th[^>]*scope="col"[^>]*>Actions</);
+  assert.match(cards, /aria-label="Orders"[^>]*md:hidden/);
+});
+
+test("ResponsiveList keys every row in both markups and applies rowClassName", () => {
+  const markup = html.list(false);
+  assert.equal(markup.match(/data-row-key="a1"/g)?.length, 2);
+  assert.equal(markup.match(/data-row-key="b2"/g)?.length, 2);
+  assert.equal(markup.match(/is-late/g)?.length, 2);
+  assert.doesNotMatch(markup, /Actions/);
+});
+
+test("ResponsiveList cards title with the primary column and list the rest as details", () => {
+  const cards = html.list(false).split("<ul")[1];
+  assert.match(cards, /font-semibold[^>]*>Marco</);
+  assert.match(cards, /<dt[^>]*>City<\/dt><dd[^>]*>Lima<\/dd>/);
+  assert.match(cards, /<dt[^>]*>Total<\/dt><dd[^>]*>S\/ 45<\/dd>/);
+  assert.doesNotMatch(cards, /<dt[^>]*>Customer</);
+});
+
+test("ResponsiveList actions go in a last column and under each card, localized", () => {
+  const markup = html.list(true);
+  assert.equal(markup.match(/Open a1/g)?.length, 2);
+  assert.match(html.list(true, "es"), />Acciones</);
+});

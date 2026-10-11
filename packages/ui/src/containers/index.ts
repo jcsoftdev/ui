@@ -19,6 +19,7 @@ export * from "./kpi/index.js";
 export * from "./kpi-group/index.js";
 export * from "./page-header/index.js";
 export * from "./resizable/index.js";
+export * from "./responsive-list/index.js";
 export * from "./scrolly/index.js";
 export * from "./settings-layout/index.js";
 export * from "./settings-row/index.js";

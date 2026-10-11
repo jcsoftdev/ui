@@ -31,12 +31,27 @@ for (const banned of [
   "sonner",
   "lucide",
   "checkbox",
+  "confirm-action",
+  "responsive-list",
+  "i18n",
+  "status-icons",
 ]) {
   assert.ok(
     !single.files.some((f) => f.includes(banned)),
     `single-component bundle must not include "${banned}"`,
   );
 }
+
+const confirm = await inputsFor(
+  `import { ConfirmAction } from "@jcsoftdev/ui/containers/confirm-action"; console.log(ConfirmAction);`,
+);
+for (const banned of ["responsive-list", "table/", "dialog", "popover", "dropdown-menu", "cmdk"]) {
+  assert.ok(
+    !confirm.files.some((f) => f.includes(banned)),
+    `ConfirmAction bundle must not include "${banned}"`,
+  );
+}
+console.log(`containers/confirm-action: ${confirm.bytes} bytes, ${confirm.files.length} modules`);
 
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
