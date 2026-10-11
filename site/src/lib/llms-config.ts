@@ -1,7 +1,7 @@
 export const LLMS_NAME = "@jcsoftdev/ui";
 
 export const LLMS_SUMMARY =
-  "Token-driven React 19 component library (Radix, Tailwind CSS v4, no runtime CSS-in-JS): atoms, forms, containers, overlays, about one hundred pure-SVG charts, a spreadsheet-grade DataGrid, an AI chat kit, rich text, XLSX and brand tools, themed by data-style, data-density, data-radius, data-accent and data-theme attributes.";
+  "Token-driven React 19 component library (zero runtime dependencies, Tailwind CSS v4, no runtime CSS-in-JS): atoms, forms, containers, overlays, about one hundred pure-SVG charts, a spreadsheet-grade DataGrid, an AI chat kit, rich text, XLSX and brand tools, themed by data-style, data-density, data-radius, data-accent and data-theme attributes.";
 
 export const LLMS_DETAILS = `Import a component from its category, for example \`import { Button } from "@jcsoftdev/ui/atoms"\`, or from a single-component entry such as \`@jcsoftdev/ui/containers/data-grid\`. Components adapt to their container width (Tailwind container queries), not the viewport. Component pages are generated from the library source, so prop names, types and defaults are exact. Sample data is Spanish (a barbershop); identifiers and docs are English.`;
 

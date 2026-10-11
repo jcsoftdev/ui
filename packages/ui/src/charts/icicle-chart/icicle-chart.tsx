@@ -445,7 +445,7 @@ function IcicleCell({
         <text
           x={cell.x + 7}
           y={cell.y + 16}
-          className="pointer-events-none select-none font-semibold text-[12px]"
+          className="pointer-events-none select-none font-semibold text-fs-120"
           style={{ fill: ink }}
         >
           {label}
@@ -453,7 +453,7 @@ function IcicleCell({
             <tspan
               x={cell.x + 7}
               dy={16}
-              className="font-bold text-[11px] tabular-nums"
+              className="font-bold text-fs-110 tabular-nums"
               style={{ fill: ink, opacity: 0.78 }}
             >
               {value}

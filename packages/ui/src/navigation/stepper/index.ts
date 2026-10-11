@@ -1,1 +1,1 @@
-export { type Step, Stepper, type StepperProps } from "./stepper.js";
+export { type Step, Stepper, type StepperPart, type StepperProps } from "./stepper.js";

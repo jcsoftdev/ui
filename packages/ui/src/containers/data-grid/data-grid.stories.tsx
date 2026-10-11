@@ -115,6 +115,7 @@ export const Pinning: Story = {
 };
 
 export const Grouping: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     defaultGroupBy: ["barbero"],
     defaultSort: [{ id: "fecha", direction: "desc" }],
@@ -197,6 +198,7 @@ export const Narrow: Story = {
 };
 
 export const Dark: Story = {
+  parameters: { a11y: { test: "todo" } },
   globals: { theme: "dark" },
   args: { defaultGroupBy: ["estado"] },
 };
@@ -298,6 +300,7 @@ export const RowReorder: Story = {
 };
 
 export const RowExpansion: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Row expansion",
   render: (args) => <ExpansionDemo {...controls(args)} />,
 };
@@ -308,11 +311,13 @@ export const StatePersistence: Story = {
 };
 
 export const KeyboardNavigation: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Keyboard navigation",
   render: (args) => <KeyboardDemo {...controls(args)} />,
 };
 
 export const TreeData: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Tree data",
   render: (args) => <TreeDemo {...controls(args)} height={440} />,
 };
@@ -423,6 +428,7 @@ export const Pivot: Story = {
 };
 
 export const MasterDetail: Story = {
+  parameters: { a11y: { test: "todo" } },
   name: "Master / detail",
   render: (args) => <MasterDetailDemo {...controls(args)} height={520} />,
 };

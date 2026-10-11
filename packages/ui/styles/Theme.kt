@@ -75,7 +75,7 @@ object UiColors {
         segOn = Color(0xFFFFFFFF),
         ink = Color(0xFF000000),
         ink2 = Color(0xFF4B4B57),
-        ink3 = Color(0xFF6D6D7A),
+        ink3 = Color(0xFF666673),
         accent = Color(0xFFFAA2A2),
         onAccent = Color(0xFF3F191A),
         accentInk = Color(0xFFA43A41),

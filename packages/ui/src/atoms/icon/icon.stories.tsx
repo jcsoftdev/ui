@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Scissors } from "lucide-react";
+import { Scissors } from "../../icons/index.js";
 import { Icon } from "./icon.js";
 import { icons } from "./icon-map.js";
 
@@ -25,7 +25,7 @@ export const Default: Story = {};
 
 export const WithLabel: Story = { args: { name: "bell", label: "Notificaciones" } };
 
-export const CustomLucideIcon: Story = { args: { icon: Scissors, name: undefined } };
+export const CustomIcon: Story = { args: { icon: Scissors, name: undefined } };
 
 export const Registry: Story = {
   render: (args) => (

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   Columns3,
   Download,
@@ -12,8 +13,7 @@ import {
   Trash2,
   Undo2,
   X,
-} from "lucide-react";
-import type { ReactNode } from "react";
+} from "../../icons/index.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";
@@ -22,7 +22,7 @@ import type { DataGridColumn, Density } from "./types.js";
 const DENSITIES: Density[] = ["compact", "normal", "comfortable"];
 
 const buttonClass =
-  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
+  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-125 text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
 
 export interface GridToolbarProps<T> {
   labels: DataGridLabels;
@@ -106,7 +106,7 @@ export function GridToolbar<T>({
           value={search}
           placeholder={labels.searchPlaceholder}
           onChange={(event) => onSearch(event.target.value)}
-          className="h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control pr-2 pl-8 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none"
+          className="h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control pr-2 pl-8 text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none"
         />
       </label>
 
@@ -167,7 +167,7 @@ export function GridToolbar<T>({
         );
       })}
 
-      <p className="mr-auto text-[12px] text-ink-3" aria-live="polite">
+      <p className="mr-auto text-fs-120 text-ink-3" aria-live="polite">
         {labels.rowsCount(rowCount)}
         {selectedCount ? ` · ${labels.selectedCount(selectedCount)}` : ""}
       </p>
@@ -226,7 +226,7 @@ export function GridToolbar<T>({
             type="button"
             aria-pressed={density === option}
             onClick={() => onDensity(option)}
-            className="h-full rounded-xs px-2 font-[600] text-[12px] text-ink-3 hover:text-ink aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
+            className="h-full rounded-xs px-2 font-[600] text-fs-120 text-ink-3 hover:text-ink aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
           >
             {labels.densities[option]}
           </button>
@@ -247,7 +247,7 @@ export function GridToolbar<T>({
                 return (
                   <label
                     key={column.id}
-                    className="flex min-h-8 items-center gap-2 rounded-xs px-1.5 text-[13px] text-ink hover:bg-surface-2"
+                    className="flex min-h-8 items-center gap-2 rounded-xs px-1.5 text-fs-130 text-ink hover:bg-surface-2"
                   >
                     <input
                       type="checkbox"

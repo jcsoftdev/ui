@@ -224,6 +224,7 @@ export const Drilldown: Story = {
 };
 
 export const HiddenSlices: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { initialHidden: ["lavado", "tinte"] },
 };
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { BarChart2, X } from "lucide-react";
 import { useMemo } from "react";
 import { AreaChart } from "../../charts/area-chart/area-chart.js";
 import { BarChart } from "../../charts/bar-chart/bar-chart.js";
 import type { ValueFormat } from "../../charts/core/format.js";
 import { LineChart } from "../../charts/line-chart/line-chart.js";
 import { PieChart } from "../../charts/pie-chart/pie-chart.js";
+import { BarChart2, X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   availableKinds,
@@ -38,7 +38,7 @@ export interface ChartPanelProps {
 }
 
 const buttonClass =
-  "inline-flex h-7 items-center rounded-xs px-2 font-[600] text-[12px] text-ink-3 hover:text-ink aria-pressed:bg-accent-soft aria-pressed:text-accent-ink";
+  "inline-flex h-7 items-center rounded-xs px-2 font-[600] text-fs-120 text-ink-3 hover:text-ink aria-pressed:bg-accent-soft aria-pressed:text-accent-ink";
 
 /** Chart drawn from a range of grid cells: bars, lines, areas or a pie. Loaded on demand by the grid. */
 export function ChartPanel({
@@ -65,7 +65,7 @@ export function ChartPanel({
     >
       <header className="flex flex-wrap items-center gap-2 px-3 pt-2">
         <BarChart2 aria-hidden="true" className="size-4 shrink-0 text-ink-3" />
-        <h3 className="mr-auto min-w-0 truncate font-[650] text-[13px] text-ink">{labels.title}</h3>
+        <h3 className="mr-auto min-w-0 truncate font-[650] text-fs-130 text-ink">{labels.title}</h3>
         {data ? (
           <fieldset className="flex h-control-sm items-center rounded-control border-divider bg-surface-control p-0.5">
             <legend className="sr-only">{labels.kindGroup}</legend>
@@ -134,7 +134,7 @@ export function ChartPanel({
           )}
         </div>
       ) : (
-        <p className="px-3 py-6 text-center text-[13px] text-ink-3">{labels.noData}</p>
+        <p className="px-3 py-6 text-center text-fs-130 text-ink-3">{labels.noData}</p>
       )}
     </section>
   );

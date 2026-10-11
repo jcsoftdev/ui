@@ -137,7 +137,7 @@ column, the x axis becomes a real time scale (`xScale="auto"`); force it with `x
 ## Theming
 
 Colors only come from CSS variables, applied through `style` (`fill`, `stroke`, `stopColor`) so `var()` resolves; never
-as SVG presentation attributes. Text uses Tailwind token utilities (`fill-ink-3`, `text-[11px]`).
+as SVG presentation attributes. Text uses Tailwind token utilities (`fill-ink-3`, `text-fs-110`).
 
 - Series 1 is always `var(--accent-word)`, so it follows `data-accent`. Series 2-8 use `--chart-cat-1` ... `--chart-cat-7`.
 - `--chart-up`, `--chart-down`, `--chart-total` are the semantic direction tokens (candles, waterfall, slopes, change columns).

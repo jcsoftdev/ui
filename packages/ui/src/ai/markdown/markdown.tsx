@@ -1,20 +1,41 @@
 import { Fragment, type ReactNode } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { CodeBlock } from "../code-block/code-block.js";
 import { AiKeyframes } from "../internal/keyframes.js";
 import { type Block, type Inline, parseMarkdown } from "./parse.js";
 
-function Caret() {
+export type MarkdownPart =
+  | "root"
+  | "heading"
+  | "paragraph"
+  | "list"
+  | "listItem"
+  | "inlineCode"
+  | "link"
+  | "quote"
+  | "rule"
+  | "tableWrapper"
+  | "table"
+  | "tableHead"
+  | "tableHeaderCell"
+  | "tableRow"
+  | "tableCell"
+  | "caret";
+
+type Cx = ClassNames<MarkdownPart>;
+
+function Caret({ cx }: { cx: Cx }) {
   return (
     <span
       aria-hidden
-      className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-current"
+      className={cn("ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-current", cx.caret)}
       style={{ animation: "ui-ai-caret 1s steps(1) infinite" }}
     />
   );
 }
 
-function renderInline(nodes: Inline[]): ReactNode {
+function renderInline(nodes: Inline[], cx: Cx): ReactNode {
   return nodes.map((node, index) => {
     const key = index;
     switch (node.t) {
@@ -26,15 +47,18 @@ function renderInline(nodes: Inline[]): ReactNode {
         return (
           <code
             key={key}
-            className="rounded-badge bg-surface-sunken px-1 py-0.5 font-mono text-[0.9em]"
+            className={cn(
+              "rounded-badge bg-surface-sunken px-1 py-0.5 font-mono text-[0.9em]",
+              cx.inlineCode,
+            )}
           >
             {node.v}
           </code>
         );
       case "strong":
-        return <strong key={key}>{renderInline(node.c)}</strong>;
+        return <strong key={key}>{renderInline(node.c, cx)}</strong>;
       case "em":
-        return <em key={key}>{renderInline(node.c)}</em>;
+        return <em key={key}>{renderInline(node.c, cx)}</em>;
       case "link":
         return node.href ? (
           <a
@@ -42,12 +66,15 @@ function renderInline(nodes: Inline[]): ReactNode {
             href={node.href}
             target="_blank"
             rel="noopener noreferrer nofollow"
-            className="text-accent-ink underline underline-offset-2 focus-visible:focus-ring"
+            className={cn(
+              "text-accent-ink underline underline-offset-2 focus-visible:focus-ring",
+              cx.link,
+            )}
           >
-            {renderInline(node.c)}
+            {renderInline(node.c, cx)}
           </a>
         ) : (
-          <span key={key}>{renderInline(node.c)}</span>
+          <span key={key}>{renderInline(node.c, cx)}</span>
         );
       default:
         return null;
@@ -66,22 +93,22 @@ const HEADINGS = {
 
 const ALIGN = { left: "text-left", center: "text-center", right: "text-right" } as const;
 
-function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
-  const tail = caret ? <Caret /> : null;
+function renderBlock(block: Block, key: number, caret: boolean, cx: Cx): ReactNode {
+  const tail = caret ? <Caret cx={cx} /> : null;
   switch (block.t) {
     case "heading": {
       const Tag = `h${block.level}` as "h1";
       return (
-        <Tag key={key} className={HEADINGS[block.level]}>
-          {renderInline(block.c)}
+        <Tag key={key} className={cn(HEADINGS[block.level], cx.heading)}>
+          {renderInline(block.c, cx)}
           {tail}
         </Tag>
       );
     }
     case "p":
       return (
-        <p key={key}>
-          {renderInline(block.c)}
+        <p key={key} className={cx.paragraph}>
+          {renderInline(block.c, cx)}
           {tail}
         </p>
       );
@@ -91,18 +118,18 @@ function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
         <Tag
           key={key}
           start={block.ordered && block.start !== 1 ? block.start : undefined}
-          className={cn("grid gap-1 pl-5", block.ordered ? "list-decimal" : "list-disc")}
+          className={cn("grid gap-1 pl-5", block.ordered ? "list-decimal" : "list-disc", cx.list)}
         >
           {block.items.map((item, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: list items are positional
-            <li key={index} className="pl-1">
-              {renderInline(item.c)}
+            <li key={index} className={cn("pl-1", cx.listItem)}>
+              {renderInline(item.c, cx)}
               {caret && index === block.items.length - 1 && item.children.length === 0 ? (
-                <Caret />
+                <Caret cx={cx} />
               ) : null}
               {item.children.length > 0 ? (
                 <div className="mt-1 grid gap-1">
-                  {renderBlocks(item.children, caret && index === block.items.length - 1)}
+                  {renderBlocks(item.children, caret && index === block.items.length - 1, cx)}
                 </div>
               ) : null}
             </li>
@@ -119,17 +146,26 @@ function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
       );
     case "quote":
       return (
-        <blockquote key={key} className="grid gap-2 border-l-2 border-accent-line pl-3 text-ink-2">
-          {renderBlocks(block.c, caret)}
+        <blockquote
+          key={key}
+          className={cn("grid gap-2 border-l-2 border-accent-line pl-3 text-ink-2", cx.quote)}
+        >
+          {renderBlocks(block.c, caret, cx)}
         </blockquote>
       );
     case "hr":
-      return <hr key={key} className="border-0 border-t-divider" />;
+      return <hr key={key} className={cn("border-0 border-t-divider", cx.rule)} />;
     case "table":
       return (
-        <div key={key} className="max-w-full overflow-x-auto rounded-card border-card shadow-card">
-          <table className="w-full border-collapse text-meta">
-            <thead className="bg-surface-sunken">
+        <div
+          key={key}
+          className={cn(
+            "max-w-full overflow-x-auto rounded-card border-card shadow-card",
+            cx.tableWrapper,
+          )}
+        >
+          <table className={cn("w-full border-collapse text-meta", cx.table)}>
+            <thead className={cn("bg-surface-sunken", cx.tableHead)}>
               <tr>
                 {block.head.map((cell, col) => (
                   <th
@@ -141,9 +177,10 @@ function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
                       block.align[col]
                         ? ALIGN[block.align[col] as keyof typeof ALIGN]
                         : "text-left",
+                      cx.tableHeaderCell,
                     )}
                   >
-                    {renderInline(cell)}
+                    {renderInline(cell, cx)}
                   </th>
                 ))}
               </tr>
@@ -151,7 +188,7 @@ function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
             <tbody>
               {block.rows.map((row, r) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional
-                <tr key={r} className="border-t-divider">
+                <tr key={r} className={cn("border-t-divider", cx.tableRow)}>
                   {row.map((cell, col) => (
                     <td
                       // biome-ignore lint/suspicious/noArrayIndexKey: columns are positional
@@ -161,9 +198,10 @@ function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
                         block.align[col]
                           ? ALIGN[block.align[col] as keyof typeof ALIGN]
                           : "text-left",
+                        cx.tableCell,
                       )}
                     >
-                      {renderInline(cell)}
+                      {renderInline(cell, cx)}
                     </td>
                   ))}
                 </tr>
@@ -175,9 +213,9 @@ function renderBlock(block: Block, key: number, caret: boolean): ReactNode {
   }
 }
 
-function renderBlocks(blocks: Block[], caret: boolean): ReactNode {
+function renderBlocks(blocks: Block[], caret: boolean, cx: Cx): ReactNode {
   return blocks.map((block, index) =>
-    renderBlock(block, index, caret && index === blocks.length - 1),
+    renderBlock(block, index, caret && index === blocks.length - 1, cx),
   );
 }
 
@@ -187,23 +225,30 @@ export interface MarkdownProps {
   /** Shows a blinking caret after the last character, for streaming answers. */
   streaming?: boolean;
   className?: string;
+  /** Per-element classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<MarkdownPart>;
 }
 
 /**
  * Safe Markdown renderer: headings, lists, emphasis, inline code, code fences, quotes, tables
  * and links. It builds React elements from a parsed AST, so no input ever reaches innerHTML.
  */
-export function Markdown({ children, streaming, className }: MarkdownProps) {
+export function Markdown({ children, streaming, className, classNames }: MarkdownProps) {
+  const cx: Cx = classNames ?? {};
   const blocks = parseMarkdown(children);
   return (
     <div
-      className={cn("grid min-w-0 gap-density break-words text-body leading-relaxed", className)}
+      className={cn(
+        "grid min-w-0 gap-density break-words text-body leading-relaxed",
+        className,
+        cx.root,
+      )}
     >
       {streaming ? <AiKeyframes /> : null}
-      {renderBlocks(blocks, Boolean(streaming))}
+      {renderBlocks(blocks, Boolean(streaming), cx)}
       {streaming && blocks.length === 0 ? (
         <p>
-          <Caret />
+          <Caret cx={cx} />
         </p>
       ) : null}
     </div>

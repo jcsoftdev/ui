@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Scissors } from "lucide-react";
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
+import { Scissors } from "../../icons/index.js";
 import { GenericRow, GenericRowContent, GenericRowMeta, GenericRowTitle } from "./generic-row.js";
 
 const meta = {

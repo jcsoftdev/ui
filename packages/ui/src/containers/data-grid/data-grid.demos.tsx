@@ -30,7 +30,7 @@ export type DemoControls = Pick<
   "density" | "selectable" | "loading" | "hideToolbar" | "height"
 >;
 
-const note = "text-[12.5px] text-ink-3";
+const note = "text-fs-125 text-ink-3";
 
 function Stack({ children }: { children: ReactNode }) {
   return <div className="grid gap-2">{children}</div>;
@@ -131,7 +131,7 @@ export function ExpansionDemo({ density, height }: DemoControls) {
       detailHeight={116}
       defaultExpandedRowIds={["V-1002"]}
       renderDetail={(row) => (
-        <dl className="grid gap-x-6 gap-y-2 text-[13px] @sm/grid:grid-cols-3">
+        <dl className="grid gap-x-6 gap-y-2 text-fs-130 @sm/grid:grid-cols-3">
           {(
             [
               ["Cliente", row.cliente],
@@ -143,7 +143,7 @@ export function ExpansionDemo({ density, height }: DemoControls) {
             ] as const
           ).map(([term, value]) => (
             <div key={term} className="min-w-0">
-              <dt className="text-[11px] text-ink-3 uppercase tracking-[.07em]">{term}</dt>
+              <dt className="text-fs-110 text-ink-3 uppercase tracking-[.07em]">{term}</dt>
               <dd className="truncate font-[600] text-ink">{value}</dd>
             </div>
           ))}
@@ -231,7 +231,7 @@ function PersistenceGrid({ density, height, onReset }: DemoControls & { onReset:
           <button
             type="button"
             onClick={reset}
-            className="inline-flex h-control-sm items-center rounded-control border-divider bg-surface-control px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink"
+            className="inline-flex h-control-sm items-center rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-125 text-ink-2 hover:border-line-strong hover:text-ink"
           >
             Restablecer todo
           </button>
@@ -287,7 +287,7 @@ export function KeyboardDemo({ density }: DemoControls) {
           defaultPinned={{ left: ["producto"] }}
           detailHeight={72}
           renderDetail={(row) => (
-            <p className="text-[13px] text-ink-2">
+            <p className="text-fs-130 text-ink-2">
               {row.producto}: {row.stock} en {row.ubicacion}, proveedor {row.proveedor}.
             </p>
           )}
@@ -305,16 +305,16 @@ export function KeyboardDemo({ density }: DemoControls) {
           }
         />
       </div>
-      <p className="text-[13px] text-ink" aria-live="polite">
+      <p className="text-fs-130 text-ink" aria-live="polite">
         Celda activa: <b className="font-[650]">{where}</b>
       </p>
-      <table className="w-full border-collapse text-left text-[12.5px]">
+      <table className="w-full border-collapse text-left text-fs-125">
         <caption className="sr-only">Atajos de teclado</caption>
         <tbody>
           {SHORTCUTS.map(([keys, action]) => (
             <tr key={keys} className="border-t-divider">
               <th scope="row" className="w-1/2 py-1.5 pr-3 font-[600] text-ink">
-                <kbd className="font-mono text-[12px]">{keys}</kbd>
+                <kbd className="font-mono text-fs-120">{keys}</kbd>
               </th>
               <td className="py-1.5 text-ink-2">{action}</td>
             </tr>
@@ -343,7 +343,7 @@ export function TreeDemo({ density, height }: DemoControls) {
 
 function RequestLog({ entries, label }: { entries: ServerLogEntry[]; label: string }) {
   return (
-    <div className="rounded-card border-card shadow-card p-2 text-[12px] text-ink-2">
+    <div className="rounded-card border-card shadow-card p-2 text-fs-120 text-ink-2">
       <p className="font-[650] text-ink">
         {label}: {entries.length}
       </p>
@@ -388,7 +388,7 @@ export function RemotePaginationDemo({ density, height }: DemoControls) {
         pageSize={20}
         defaultPinned={{ left: ["id"] }}
       />
-      <label className="flex items-center gap-2 text-[13px] text-ink">
+      <label className="flex items-center gap-2 text-fs-130 text-ink">
         <input
           type="checkbox"
           className="size-4 accent-accent"
@@ -429,7 +429,7 @@ export function InfiniteScrollDemo({ density, height }: DemoControls) {
         maxBlocks={12}
         defaultPinned={{ left: ["id"] }}
       />
-      <label className="flex items-center gap-2 text-[13px] text-ink">
+      <label className="flex items-center gap-2 text-fs-130 text-ink">
         <input
           type="checkbox"
           className="size-4 accent-accent"
@@ -487,7 +487,7 @@ export function FilterBuilderDemo({ density, height }: DemoControls) {
             return column ? distinctValues(ventas, column) : [];
           }}
         />
-        <p className="mt-3 border-t-divider pt-2 text-[12.5px] text-ink-3">
+        <p className="mt-3 border-t-divider pt-2 text-fs-125 text-ink-3">
           {text ? `Filtro: ${text}` : "Sin filtro activo."}{" "}
           <button
             type="button"
@@ -556,7 +556,7 @@ export function ExportDemo({ density, height }: DemoControls) {
         defaultPinned={{ left: ["id"] }}
       />
       <div
-        className="rounded-card border-card shadow-card p-2 text-[12px] text-ink-2"
+        className="rounded-card border-card shadow-card p-2 text-fs-120 text-ink-2"
         aria-live="polite"
       >
         {last ? (

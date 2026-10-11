@@ -134,7 +134,7 @@ export function DrawingShape({
         <text
           x={6}
           y={py - 5}
-          className="font-semibold text-[10.5px] tabular-nums"
+          className="font-semibold text-fs-105 tabular-nums"
           style={{ fill: COLORS.horizontal }}
         >
           {fmt(drawing.price)}
@@ -189,7 +189,7 @@ export function DrawingShape({
         <text
           x={left + 6}
           y={top + 14}
-          className="font-bold text-[10.5px] tabular-nums"
+          className="font-bold text-fs-105 tabular-nums"
           style={{ fill: COLORS.range }}
         >
           {change > 0 ? "+" : ""}
@@ -232,7 +232,7 @@ export function DrawingShape({
               x={geometry.innerWidth - 4}
               y={py - 4}
               textAnchor="end"
-              className="font-semibold text-[10px] tabular-nums"
+              className="font-semibold text-fs-100 tabular-nums"
               style={{ fill: COLORS.fib }}
             >
               {level.ratio} · {fmt(level.price)}
@@ -289,7 +289,7 @@ export function MeasureShape({
         y={boxY + 11}
         dy="0.34em"
         textAnchor="middle"
-        className="font-bold text-[10.5px] tabular-nums"
+        className="font-bold text-fs-105 tabular-nums"
         style={{ fill: "var(--surface)" }}
       >
         {label}
