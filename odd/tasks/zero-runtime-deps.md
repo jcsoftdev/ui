@@ -32,7 +32,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - [x] T4 `switch`, `checkbox`, `radio-group` (+ accent-picker): controllable-state hook, roving focus, hidden form input. Route: delegated.
 - [x] T5 `tabs`, `segmented` (toggle-group): roving focus, automatic/manual activation. Route: delegated.
 - [x] T6 Icons: vendored SVG set (~112 names), `Icon`/`icon-map`, `IconComponent` type replacing `LucideIcon`. Route: delegated.
-- [ ] T7 Toaster: store, stack of 2, timers with hover pause, action, dismiss, aria-live; same `toast` API. Route: delegated.
+- [x] T7 Toaster: store, stack of 2, timers with hover pause, action, dismiss, aria-live; same `toast` API. Route: delegated.
 - [ ] T8 `cn` merge engine replacing `tailwind-merge`: parity tests against current output for the custom token groups first, then swap. Route: delegated.
 - [ ] T9 Overlay core + Dialog/Drawer: portal with container, focus trap, scroll lock, aria-hidden siblings, Escape/outside dismiss with the existing callbacks, nested overlays. Route: delegated.
 - [ ] T10 Positioning engine + Popover/HoverCard/emoji picker: side/align/offset, flip, shift, available-size vars, outside dismiss, focus policy. Route: delegated.
@@ -64,5 +64,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 
 - 2026-10-10: rebased the whole chain onto origin/main 26fd3ff (0.1.7); conflicts in button, switch, checkbox, dialog, drawer resolved keeping main's touch density, loadingLabel/block/lg and useUiStrings inside the in-house code; a027075 reduced to its regression stories (main's 2ef9814 carries the fix); `status-icons.tsx` (added in 0.1.6) moved to in-house icons. Pre-rebase tip kept at `backup/zero-deps-t6-pre-rebase`.
 
+- 2026-10-10: T7 done (`5beb06d` on `feat/zero-deps-t7-toaster`, stacked on T6): in-house toaster. `toast-store.ts` (module-level external store, `useSyncExternalStore`, empty server snapshot, toasts published before `<Toaster>` mounts are kept; update-by-id reopens and bumps a revision), `toast.ts` (`toast`, `.success`, `.error`, `.dismiss`; options `id`, `description`, `duration`, `action`, plus `onDismiss`), `toaster.tsx` (`ToasterProps` owned: `position`, `duration`, `visibleToasts`, `className`, `label`; newest N open toasts shown, older wait; timer pauses on hover, focus-within and hidden document; touch swipe 60px; Escape; action runs then dismisses unless `preventDefault`; Alt+T focuses the region; exit via transition then removal, immediate under `prefers-reduced-motion`). Region is a labelled `section` using new UiStrings key `notifications` (en/es); `role=status`/polite, errors `role=alert`/assertive. No `info`/`warning` tones: main 0.1.6 added none. Toasts are plain `div`s, since `role` on `li` fails axe list rules. `sonner` removed from package.json and lockfile; treeshake bans `toaster` from the Button bundle. 203 story files / 1267 tests, 448 node tests (7 new store tests). Route: delegated.
+
 ## Next step
-T7 (toaster): store, stack of 2, timers with hover pause, action, dismiss, aria-live; same `toast` API.
+T8 (`cn` merge engine replacing `tailwind-merge`): parity tests against current output for the custom token groups first, then swap.
