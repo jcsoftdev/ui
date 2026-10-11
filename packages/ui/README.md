@@ -98,6 +98,14 @@ A custom tokens file must define the same names as `tokens/default.json`; copy i
 
 Switching at runtime: set `data-theme="light|dark"` (remove it for "system") and `data-accent="<palette-id>"` on `<html>`.
 
+## Customization
+
+Every styled component can be restyled without forking it: override the CSS variables, pass
+`classNames={{ part: "..." }}` for the inner parts (`className` still targets the root; your
+classes win on conflicts), reuse the exported variant maps (`buttonClasses`, `buttonVariantClasses`,
+`chipToneClasses`, ...), and use `createCn` / `extendCn` for your own theme tokens. Full guide:
+https://ui.jcsoftdev.com/docs/customization/
+
 ## Touch density
 
 `data-density="touch"` is the preset for phones operated with a thumb: controls and small buttons are
