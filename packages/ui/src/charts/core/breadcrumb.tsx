@@ -23,7 +23,7 @@ export interface ChartBreadcrumbProps {
 export function ChartBreadcrumb({ items, onSelect, label, className }: ChartBreadcrumbProps) {
   return (
     <nav aria-label={label} className={cn("min-w-0", className)}>
-      <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0 text-[12px]">
+      <ol className="m-0 flex list-none flex-wrap items-center gap-1 p-0 text-fs-120">
         {items.map((item, index) => {
           const current = index === items.length - 1;
           return (

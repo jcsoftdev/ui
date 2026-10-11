@@ -155,4 +155,6 @@ export const GlassDark: Story = { args: { style: "glass" }, globals: { theme: "d
 export const BrutalDark: Story = { args: { style: "brutal" }, globals: { theme: "dark" } };
 
 /** Six cells, one per preset, in a container-query grid with the snippet to copy. */
-export const PresetGallery: Story = { render: () => <Gallery /> };
+export const PresetGallery: Story = {
+  render: () => <Gallery />,
+};

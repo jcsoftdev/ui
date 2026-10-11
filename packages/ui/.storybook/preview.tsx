@@ -163,6 +163,7 @@ const preview: Preview = {
   },
   parameters: {
     layout: "fullscreen",
+    a11y: { test: "error" },
     controls: { matchers: { color: /(background|color)$/i, date: /Date$/i } },
     backgrounds: { disabled: true },
     docs: { toc: true },

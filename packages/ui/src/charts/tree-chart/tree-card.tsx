@@ -53,7 +53,7 @@ export function TreeCard({ node, state }: TreeCardProps) {
         style={{ background: node.color }}
       />
       <span
-        className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-avatar font-bold text-[12px] text-ink"
+        className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-avatar font-bold text-fs-120 text-ink"
         style={{ background: tint(node.color, 24) }}
       >
         {node.image ? (
@@ -63,19 +63,19 @@ export function TreeCard({ node, state }: TreeCardProps) {
         )}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate font-semibold text-[13px] text-ink leading-tight">
+        <span className="truncate font-semibold text-fs-130 text-ink leading-tight">
           {node.name}
         </span>
         {node.subtitle || node.badge ? (
           <span className="flex min-w-0 items-center gap-1.5">
             {node.subtitle ? (
-              <span className="min-w-0 flex-1 truncate text-[11px] text-ink-3 leading-tight">
+              <span className="min-w-0 flex-1 truncate text-fs-110 text-ink-3 leading-tight">
                 {node.subtitle}
               </span>
             ) : null}
             {node.badge ? (
               <span
-                className="max-w-[60%] shrink-0 truncate rounded-badge px-1.5 font-bold text-[10px] text-ink-2 leading-[16px]"
+                className="max-w-[60%] shrink-0 truncate rounded-badge px-1.5 font-bold text-fs-100 text-ink-2 leading-4"
                 style={{ background: tint(node.color, 16) }}
               >
                 {node.badge}
@@ -94,7 +94,7 @@ function CountBadge({ state, color }: { state: TreeNodeState; color: string }) {
   if (!state.showCount || state.descendants === 0) return null;
   return (
     <span
-      className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-badge px-1 font-bold text-[10px] text-ink tabular-nums"
+      className="grid h-4.5 min-w-4.5 shrink-0 place-items-center rounded-badge px-1 font-bold text-fs-100 text-ink tabular-nums"
       style={{ background: tint(color, 22) }}
       title={`+${state.descendants}`}
     >
@@ -123,7 +123,7 @@ export function TreeChip({ node, state }: TreeCardProps) {
         className="size-2 shrink-0 rounded-pill"
         style={{ background: node.color }}
       />
-      <span className="min-w-0 flex-1 truncate font-semibold text-[11px] text-ink leading-none">
+      <span className="min-w-0 flex-1 truncate font-semibold text-fs-110 text-ink leading-none">
         {node.name}
       </span>
       <CountBadge state={state} color={node.color} />

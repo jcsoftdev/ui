@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { DayChip } from "../day-chip/index.js";
 import { EventBlock } from "../event-block/index.js";
@@ -26,6 +27,20 @@ const COLUMNS = cn(
 );
 const GUTTER = "sticky left-0 z-10 bg-surface";
 
+export type WeekViewPart =
+  | "root"
+  | "scroll"
+  | "header"
+  | "dayHeader"
+  | "allDayRow"
+  | "allDayLabel"
+  | "allDayCell"
+  | "hourLabel"
+  | "column"
+  | "workingHours"
+  | "event"
+  | "nowLine";
+
 export interface WeekViewProps {
   /** Any "YYYY-MM-DD" date inside the week to show. */
   week: string;
@@ -48,6 +63,8 @@ export interface WeekViewProps {
   onOpenEvent?: (id: string) => void;
   onOpenMarker?: (id: string) => void;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<WeekViewPart>;
 }
 
 export function WeekView({
@@ -64,6 +81,7 @@ export function WeekView({
   onOpenEvent,
   onOpenMarker,
   className,
+  classNames,
 }: WeekViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const first = startOfWeek(week, weekStartsOn);
@@ -77,10 +95,14 @@ export function WeekView({
   }, []);
 
   return (
-    <div className={cn("@container/week min-w-0", className)}>
-      <div ref={scrollRef} data-hours-scroll className="max-h-150 overflow-auto">
-        <div className="flex min-w-[820px] flex-col @max-[40rem]/week:min-w-[836px]">
-          <div className={cn("sticky top-0 z-20 grid bg-surface", COLUMNS)}>
+    <div className={cn("@container/week min-w-0", classNames?.root, className)}>
+      <div
+        ref={scrollRef}
+        data-hours-scroll
+        className={cn("max-h-150 overflow-auto", classNames?.scroll)}
+      >
+        <div className="flex min-w-205 flex-col @max-[40rem]/week:min-w-209">
+          <div className={cn("sticky top-0 z-20 grid bg-surface", COLUMNS, classNames?.header)}>
             <div className={GUTTER} />
             {days.map((date) => (
               <div
@@ -90,6 +112,7 @@ export function WeekView({
                 className={cn(
                   "flex h-10 min-w-0 items-center truncate whitespace-nowrap border-b-divider px-2 text-meta text-ink-3",
                   date === today && "text-accent-ink",
+                  classNames?.dayHeader,
                 )}
               >
                 {formatWeekdayAndDay(date, locale)}
@@ -97,11 +120,15 @@ export function WeekView({
             ))}
           </div>
 
-          <div data-all-day-row className={cn("sticky top-10 z-20 grid bg-surface", COLUMNS)}>
+          <div
+            data-all-day-row
+            className={cn("sticky top-10 z-20 grid bg-surface", COLUMNS, classNames?.allDayRow)}
+          >
             <div
               className={cn(
                 GUTTER,
                 "whitespace-nowrap border-b-divider px-1.5 pt-2.5 text-right text-meta text-ink-3",
+                classNames?.allDayLabel,
               )}
             >
               {allDayLabel}
@@ -109,7 +136,10 @@ export function WeekView({
             {days.map((date) => (
               <div
                 key={date}
-                className="flex min-h-10 flex-col gap-1 border-b-divider border-l-divider p-1"
+                className={cn(
+                  "flex min-h-10 flex-col gap-1 border-b-divider border-l-divider p-1",
+                  classNames?.allDayCell,
+                )}
               >
                 {markers
                   .filter((marker) => marker.date === date)
@@ -133,7 +163,10 @@ export function WeekView({
                 {HOURS.map((hour) => (
                   <span
                     key={hour}
-                    className="-translate-y-1/2 absolute right-2 whitespace-nowrap font-mono text-meta text-ink-3"
+                    className={cn(
+                      "-translate-y-1/2 absolute right-2 whitespace-nowrap font-mono text-meta text-ink-3",
+                      classNames?.hourLabel,
+                    )}
                     style={{ top: hour * PX_PER_HOUR }}
                   >
                     {formatHour(hour, locale)}
@@ -159,12 +192,16 @@ export function WeekView({
                       "relative border-l-divider bg-[linear-gradient(to_bottom,var(--line)_1px,transparent_1px)] bg-size-[100%_48px]",
                       isToday && "bg-accent-soft/40",
                       shaded.has(date) && SHADED_DAY_CLASS,
+                      classNames?.column,
                     )}
                   >
                     {workingHours ? (
                       <div
                         data-working-hours
-                        className="pointer-events-none absolute inset-x-0 bg-accent-soft/30"
+                        className={cn(
+                          "pointer-events-none absolute inset-x-0 bg-accent-soft/30",
+                          classNames?.workingHours,
+                        )}
                         style={{
                           top: workingHours[0] * PX_PER_HOUR,
                           height: (workingHours[1] - workingHours[0]) * PX_PER_HOUR,
@@ -179,7 +216,7 @@ export function WeekView({
                         <div
                           key={event.id}
                           data-event={event.id}
-                          className="absolute px-px"
+                          className={cn("absolute px-px", classNames?.event)}
                           style={{
                             top: (start / 60) * PX_PER_HOUR,
                             height: Math.max(((end - start) / 60) * PX_PER_HOUR - 2, 18),
@@ -200,7 +237,10 @@ export function WeekView({
                     {nowMinutes !== undefined ? (
                       <div
                         data-now-line
-                        className="pointer-events-none absolute inset-x-0 h-0.5 bg-danger"
+                        className={cn(
+                          "pointer-events-none absolute inset-x-0 h-0.5 bg-danger",
+                          classNames?.nowLine,
+                        )}
                         style={{ top: (nowMinutes / 60) * PX_PER_HOUR }}
                       />
                     ) : null}

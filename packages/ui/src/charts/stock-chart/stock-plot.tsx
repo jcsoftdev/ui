@@ -803,7 +803,7 @@ export function StockPlot({
                   y={top + 8}
                   dy="0.34em"
                   textAnchor="middle"
-                  className="font-bold text-[10px]"
+                  className="font-bold text-fs-100"
                   style={{ fill: "var(--surface)" }}
                 >
                   {flag.label}
@@ -813,7 +813,7 @@ export function StockPlot({
           })}
           {lower && oscillator ? (
             <g transform={`translate(0,${lowerTop})`}>
-              <text {...DECORATIVE} x={0} y={-7} className="fill-ink-3 font-semibold text-[10.5px]">
+              <text {...DECORATIVE} x={0} y={-7} className="fill-ink-3 font-semibold text-fs-105">
                 {oscillator.name}
                 {(() => {
                   const index = active ?? view.length - 1;
@@ -1123,7 +1123,7 @@ function AxisTag({
         y={0}
         dy="0.34em"
         textAnchor="middle"
-        className="font-bold text-[10.5px] tabular-nums"
+        className="font-bold text-fs-105 tabular-nums"
         style={{ fill: "var(--surface)" }}
       >
         {text}

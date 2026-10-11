@@ -31,7 +31,7 @@ export function CategoryGroupAxis({
             x={span.center}
             y={19}
             textAnchor="middle"
-            className="font-bold text-[12px]"
+            className="font-bold text-fs-120"
             style={{ fill: "var(--ink-2)" }}
           >
             {fit(span.label, span.to - span.from - 8)}

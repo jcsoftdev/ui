@@ -1,0 +1,12 @@
+{
+  "AlertTriangle": "TriangleAlert",
+  "BarChart2": "ChartNoAxesColumn",
+  "BarChart3": "ChartColumn",
+  "CheckCircle2": "CircleCheck",
+  "Filter": "Funnel",
+  "Smile": "FaceSlightlySmiling",
+  "SmilePlus": "FaceSlightlySmilingPlus",
+  "Trash2": "Trash",
+  "XCircle": "CircleX",
+  "XOctagon": "OctagonX"
+}

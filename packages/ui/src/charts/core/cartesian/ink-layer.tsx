@@ -410,7 +410,7 @@ function Ruler({
 }
 
 const buttonClass =
-  "inline-flex h-7 cursor-pointer items-center rounded-button border-0 px-3 font-semibold text-[12px] outline-none focus-visible:outline-2 focus-visible:outline-accent-ink disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex h-7 cursor-pointer items-center rounded-button border-0 px-3 font-semibold text-fs-120 outline-none focus-visible:outline-2 focus-visible:outline-accent-ink disabled:cursor-not-allowed disabled:opacity-40";
 
 /** Buttons for the ruler and pen tools plus undo, redo and clear. Place it next to the chart. */
 export function ChartInkToolbar({ ink, className }: { ink: ChartInk; className?: string }) {

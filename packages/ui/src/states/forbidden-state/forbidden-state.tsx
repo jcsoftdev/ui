@@ -17,11 +17,11 @@ export function ForbiddenState({ title, reason, className }: ForbiddenStateProps
         className,
       )}
     >
-      <p className="max-w-full font-semibold text-[14px] text-ink [overflow-wrap:anywhere]">
+      <p className="max-w-full font-semibold text-fs-140 text-ink [overflow-wrap:anywhere]">
         {title}
       </p>
       {reason ? (
-        <p className="max-w-[42ch] text-[13px] text-ink-3 [overflow-wrap:anywhere]">{reason}</p>
+        <p className="max-w-[42ch] text-fs-130 text-ink-3 [overflow-wrap:anywhere]">{reason}</p>
       ) : null}
     </div>
   );

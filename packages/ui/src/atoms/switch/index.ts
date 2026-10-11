@@ -1,1 +1,1 @@
-export { Switch, type SwitchProps } from "./switch.js";
+export { Switch, type SwitchPart, type SwitchProps } from "./switch.js";
