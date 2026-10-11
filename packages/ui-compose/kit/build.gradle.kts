@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.binaryCompatibilityValidator)
+    alias(libs.plugins.roborazzi)
 }
 
 group = "com.jcsoftdev"
@@ -91,8 +92,15 @@ kotlin {
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
             implementation(compose.uiTest)
             implementation(compose.desktop.currentOs)
+            implementation(libs.roborazzi.compose.desktop)
         }
     }
+}
+
+// Roborazzi 1.43 drags in ui-test-junit4 1.6.2, whose classes clash with the 1.8.2 ui-test the kit tests use.
+configurations.matching { it.name.startsWith("jvmTest") }.configureEach {
+    exclude(group = "org.jetbrains.compose.ui", module = "ui-test-junit4-desktop")
+    exclude(group = "org.jetbrains.compose.ui", module = "ui-test-junit4")
 }
 
 android {
