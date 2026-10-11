@@ -27,12 +27,14 @@ export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
 }
 
 export function Chip({ tone = "neutral", square, className, ...props }: ChipProps) {
+  const interactive = props.onClick !== undefined || props.role === "button";
   return (
     <span
       className={cn(
         "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-[12px] leading-none [&_svg]:size-3",
         square ? "rounded-chip" : "rounded-badge",
         toneClasses[tone],
+        interactive && "in-data-[density=touch]:min-h-11",
         className,
       )}
       {...props}

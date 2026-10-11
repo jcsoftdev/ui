@@ -25,6 +25,7 @@ const DENSITIES = [
   { value: "compact", title: "Compacta" },
   { value: "normal", title: "Normal" },
   { value: "comfortable", title: "Cómoda" },
+  { value: "touch", title: "Táctil" },
 ];
 
 const RADII = [

@@ -9,7 +9,10 @@ export interface SwitchProps extends ComponentPropsWithoutRef<typeof SwitchPrimi
 export function Switch({ className, ...props }: SwitchProps) {
   return (
     <SwitchPrimitive.Root
-      className={cn("inline-flex size-10 shrink-0 items-center justify-center", className)}
+      className={cn(
+        "inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
+        className,
+      )}
       {...props}
     >
       <span className="relative block h-5 w-[34px] rounded-pill bg-line-strong transition-colors data-[state=checked]:bg-accent">

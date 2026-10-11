@@ -1,5 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { Skeleton } from "../../src/states/skeleton/skeleton.js";
+import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
+import { Chip } from "../../src/atoms/chip/chip.js";
+import { RadioGroup } from "../../src/atoms/radio-group/radio-group.js";
+import { Switch } from "../../src/atoms/switch/switch.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 
 export const html = {
@@ -30,4 +34,9 @@ export const html = {
         </UiStringsProvider>
       </UiStringsProvider>,
     ),
+  checkbox: () => renderToStaticMarkup(<Checkbox />),
+  switch: () => renderToStaticMarkup(<Switch />),
+  radio: () => renderToStaticMarkup(<RadioGroup options={[{ value: "a", label: "A" }]} />),
+  chipStatic: () => renderToStaticMarkup(<Chip>Paid</Chip>),
+  chipInteractive: () => renderToStaticMarkup(<Chip onClick={() => {}}>Paid</Chip>),
 };

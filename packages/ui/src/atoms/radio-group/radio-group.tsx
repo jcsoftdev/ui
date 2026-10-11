@@ -31,7 +31,7 @@ export function RadioGroup({ options, className, ...props }: RadioGroupProps) {
           <label
             key={option.value}
             htmlFor={id}
-            className="flex cursor-pointer items-start gap-2 rounded-control border-divider p-2.5 text-body has-[[data-state=checked]]:border-accent has-[[data-state=checked]]:shadow-[inset_0_0_0_1px_var(--accent)]"
+            className="flex cursor-pointer items-start gap-2 rounded-control border-divider p-2.5 text-body in-data-[density=touch]:min-h-11 has-[[data-state=checked]]:border-accent has-[[data-state=checked]]:shadow-[inset_0_0_0_1px_var(--accent)]"
           >
             <RadioGroupPrimitive.Item
               id={id}

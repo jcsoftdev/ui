@@ -85,7 +85,7 @@ export function DrawerContent({
         {!blocking && (
           <DialogPrimitive.Close
             aria-label={closeLabel ?? strings.close}
-            className="absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink"
+            className="absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5"
           >
             <X aria-hidden="true" className="size-4" />
           </DialogPrimitive.Close>
