@@ -116,6 +116,11 @@ public final class com/jcsoftdev/ui/theme/ThemeColors {
 	public final fun getWarningSoft-0d7_KjU ()J
 }
 
+public final class com/jcsoftdev/ui/theme/ThemeColorsCopyKt {
+	public static final fun copy-ejx2SGQ (Lcom/jcsoftdev/ui/theme/ThemeColors;JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ)Lcom/jcsoftdev/ui/theme/ThemeColors;
+	public static synthetic fun copy-ejx2SGQ$default (Lcom/jcsoftdev/ui/theme/ThemeColors;JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJIILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/ThemeColors;
+}
+
 public final class com/jcsoftdev/ui/theme/ThemeKt {
 	public static final field UiFontFamilyName Ljava/lang/String;
 }
@@ -174,6 +179,19 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 	public final fun getSpace6-D9Ej5fM ()F
 	public final fun getSpace8-D9Ej5fM ()F
 	public final fun getTopHeight-D9Ej5fM ()F
+}
+
+public final class com/jcsoftdev/ui/theme/UiTheme {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiTheme;
+	public final fun getColors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeColors;
+	public final fun getFontFamily (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/font/FontFamily;
+	public final fun getMotion (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/foundation/Motion;
+	public final fun text (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/theme/UiThemeKt {
+	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/theme/UiTypography {
