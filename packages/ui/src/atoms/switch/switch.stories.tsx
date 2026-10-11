@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Switch } from "./switch.js";
 
 const meta = {
@@ -39,3 +40,26 @@ function SettingDemo() {
 }
 
 export const Controlled: Story = { render: () => <SettingDemo /> };
+
+export const FormSubmitAndReset: Story = {
+  render: () => (
+    <form aria-label="Ajustes">
+      <Switch aria-label="Reservas" name="booking" defaultChecked />
+      <Switch aria-label="Avisos" name="alerts" value="wa" />
+      <button type="reset">Restablecer</button>
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const form = canvas.getByRole("form") as HTMLFormElement;
+    const [booking, alerts] = canvas.getAllByRole("switch");
+    await expect(Object.fromEntries(new FormData(form))).toEqual({ booking: "on" });
+    await userEvent.click(alerts);
+    await userEvent.click(booking);
+    await waitFor(() => expect(Object.fromEntries(new FormData(form))).toEqual({ alerts: "wa" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Restablecer" }));
+    await waitFor(() => expect(booking).toHaveAttribute("aria-checked", "true"));
+    await expect(alerts).toHaveAttribute("aria-checked", "false");
+    await expect(Object.fromEntries(new FormData(form))).toEqual({ booking: "on" });
+  },
+};

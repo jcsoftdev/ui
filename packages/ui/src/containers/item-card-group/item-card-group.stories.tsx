@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Bell, Calendar, Scissors, Wallet } from "lucide-react";
 import { useState } from "react";
 import { Chip } from "../../atoms/chip/chip.js";
+import { Bell, Calendar, Scissors, Wallet } from "../../icons/index.js";
 import { ItemCardGroup, type ItemCardGroupItem } from "./item-card-group.js";
 
 const items: ItemCardGroupItem[] = [

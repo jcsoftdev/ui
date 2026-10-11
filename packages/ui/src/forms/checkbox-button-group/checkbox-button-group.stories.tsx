@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Scissors, Smile, Sparkles } from "lucide-react";
+import { Scissors, Smile, Sparkles } from "../../icons/index.js";
 import { CheckboxButtonGroup } from "./checkbox-button-group.js";
 
 const options = [
@@ -32,12 +32,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Disabled: Story = { args: { disabled: true } };
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px] max-w-full">
@@ -48,7 +47,6 @@ export const Narrow: Story = {
 };
 
 export const BrutalPreset: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="w-full max-w-xl bg-surface p-card">

@@ -284,6 +284,14 @@ export function buildThemeCss(tokens) {
       lines.push(`  --text-${s.name}--letter-spacing: ${s.letterSpacing};`);
     }
   }
+  if ((tokens.type?.sizeScale ?? []).length > 0) {
+    lines.push(
+      "  /* Size-only scale (px x 10, no line-height or weight) for dense UI text that must not inherit a role's weight. */",
+    );
+  }
+  for (const s of tokens.type?.sizeScale ?? []) {
+    lines.push(`  --text-${s.name}: ${s.fontSize};`);
+  }
   const styles = stylesOf(tokens);
   for (const [themeVar, name] of Object.entries(tokens.styles?.tailwind ?? {})) {
     if (!styles.byName.has(name)) throw new Error(`styles.tailwind: unknown token "${name}"`);

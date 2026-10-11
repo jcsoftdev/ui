@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CalendarClock, Copy, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { CalendarClock, Copy, Pencil, Trash2 } from "../../icons/index.js";
 import {
   ContextMenu,
   ContextMenuCheckboxItem,

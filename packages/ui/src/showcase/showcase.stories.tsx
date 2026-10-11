@@ -30,7 +30,6 @@ type Story = StoryObj<typeof meta>;
 
 /** Hero KPI, 30-day area chart with a record annotation, donut, sparklines, calendar heatmap, gauge, Peru map and ranking. */
 export const Analitica: Story = {
-  parameters: { a11y: { test: "todo" } },
   render: () => (
     <Page title="Analítica">
       <AnalyticsBento />

@@ -194,7 +194,7 @@ function RegionLabels({
           y={y}
           textAnchor="middle"
           dominantBaseline="central"
-          className="fill-ink font-semibold text-[11px]"
+          className="fill-ink font-semibold text-fs-110"
           style={LABEL_STYLE}
         >
           {text}

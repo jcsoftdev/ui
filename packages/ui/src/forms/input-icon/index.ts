@@ -1,1 +1,1 @@
-export { InputIcon, type InputIconProps } from "./input-icon.js";
+export { InputIcon, type InputIconPart, type InputIconProps } from "./input-icon.js";

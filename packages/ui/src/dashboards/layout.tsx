@@ -40,8 +40,8 @@ export interface ChartCardProps {
 function CardTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="min-w-0 flex-1">
-      <h2 className="m-0 break-words font-semibold text-[14px] text-ink">{title}</h2>
-      {subtitle ? <p className="m-0 break-words text-[12px] text-ink-3">{subtitle}</p> : null}
+      <h2 className="m-0 break-words font-semibold text-fs-140 text-ink">{title}</h2>
+      {subtitle ? <p className="m-0 break-words text-fs-120 text-ink-3">{subtitle}</p> : null}
     </div>
   );
 }

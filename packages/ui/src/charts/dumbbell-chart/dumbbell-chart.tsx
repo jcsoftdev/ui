@@ -579,7 +579,7 @@ function DumbbellPlot({
                   {showValues ? (
                     <g
                       data-fade=""
-                      className="font-bold text-[11px] tabular-nums"
+                      className="font-bold text-fs-110 tabular-nums"
                       style={{ fill: "var(--ink-2)", opacity: dimmed ? 0.4 : 1 }}
                     >
                       {row.values.map((value, index) => (
@@ -602,7 +602,7 @@ function DumbbellPlot({
                       x={cx}
                       y={-10}
                       textAnchor="middle"
-                      className="font-bold text-[12px] tabular-nums"
+                      className="font-bold text-fs-120 tabular-nums"
                       style={{ fill: deltaColor(row), opacity: dimmed ? 0.4 : 1 }}
                     >
                       {changeText(row, delta, fmt)}
@@ -632,7 +632,7 @@ function DumbbellPlot({
                   y={cy}
                   dy="0.34em"
                   textAnchor="end"
-                  className="font-semibold text-[12px]"
+                  className="font-semibold text-fs-120"
                   style={{
                     fill: active === i ? "var(--ink)" : "var(--ink-2)",
                     opacity: dimmed ? 0.5 : 1,
@@ -643,7 +643,7 @@ function DumbbellPlot({
                 {showValues ? (
                   <g
                     data-fade=""
-                    className="font-bold text-[11px] tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{ fill: "var(--ink-2)", opacity: dimmed ? 0.4 : 1 }}
                   >
                     {row.values.length === 2 ? (
@@ -681,7 +681,7 @@ function DumbbellPlot({
                     y={cy}
                     dy="0.34em"
                     textAnchor="end"
-                    className="font-bold text-[12px] tabular-nums"
+                    className="font-bold text-fs-120 tabular-nums"
                     style={{ fill: deltaColor(row), opacity: dimmed ? 0.4 : 1 }}
                   >
                     {changeText(row, delta, fmt)}

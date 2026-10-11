@@ -111,7 +111,7 @@ export const Loading: Story = { args: { loading: true } };
 
 export const Empty: Story = { args: { matrix: [] } };
 
-export const Export: Story = { parameters: { a11y: { test: "todo" } }, args: { exportable: true } };
+export const Export: Story = { args: { exportable: true } };
 
 export const Dark: Story = { globals: { theme: "dark" } };
 

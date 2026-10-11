@@ -37,22 +37,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Compact: Story = { args: { variant: "compact" } };
 
 export const WithTrailingAvatar: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { event: { ...cita, trailing: <Avatar name="Diego Quispe" /> } },
 };
 
 export const NoEndTime: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { event: { ...cita, end: undefined, title: "Marco Salas · Perfilado de barba" } },
 };
 
 export const Tones: Story = {
-  parameters: { a11y: { test: "todo" } },
   render: (args) => (
     <div className="flex flex-col gap-2">
       <EventBlock
@@ -88,7 +85,6 @@ export const CompactTones: Story = {
 
 /** 320 px container: use it to check the narrow layout without resizing the viewport. */
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="@container/page w-[320px] max-w-full">

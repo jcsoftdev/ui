@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Boxes, CalendarDays, LayoutDashboard, Scissors, Users } from "lucide-react";
 import { useRef, useState } from "react";
+import { Boxes, CalendarDays, LayoutDashboard, Scissors, Users } from "../icons/index.js";
 import { AppShell } from "../shell/app-shell/index.js";
 import { Sidebar, type SidebarGroup } from "../shell/sidebar/index.js";
 import { Topbar } from "../shell/topbar/index.js";

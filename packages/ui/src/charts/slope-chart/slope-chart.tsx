@@ -355,7 +355,7 @@ function SlopePlot({
         height={height}
         className="block overflow-visible"
       >
-        <g className="font-bold text-[11px]" style={{ fill: "var(--ink-3)" }}>
+        <g className="font-bold text-fs-110" style={{ fill: "var(--ink-3)" }}>
           <text x={xL} y={12} textAnchor="middle">
             {fit(fromLabel, leftWidth + 40, 11)}
           </text>

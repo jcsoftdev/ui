@@ -1,4 +1,3 @@
-import { Banknote, CreditCard, Scissors, Smartphone, Smile, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { ChatMessage } from "../ai/chat-message/index.js";
 import { Conversation } from "../ai/conversation/index.js";
@@ -13,6 +12,7 @@ import { NumberStepper } from "../forms/number-stepper/index.js";
 import { RadioButtonGroup } from "../forms/radio-button-group/index.js";
 import { Rating } from "../forms/rating/index.js";
 import { Slider } from "../forms/slider/index.js";
+import { Banknote, CreditCard, Scissors, Smartphone, Smile, Sparkles } from "../icons/index.js";
 import { RichTextEditor } from "../rich-text/index.js";
 import { Tile, useOverlayContainer } from "./bento.js";
 

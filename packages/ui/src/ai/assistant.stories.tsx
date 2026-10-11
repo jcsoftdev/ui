@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Paperclip } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Paperclip } from "../icons/index.js";
 import { Attachment } from "./attachment/attachment.js";
 import { ChainOfThought } from "./chain-of-thought/chain-of-thought.js";
 import { ChatList, type ChatListItem } from "./chat-list/chat-list.js";
@@ -266,10 +266,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Full chat with simulated streaming: press a suggestion or type a message. */
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -280,7 +279,6 @@ export const Narrow: Story = {
 };
 
 export const PresetBrutal: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal">
