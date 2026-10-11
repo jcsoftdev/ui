@@ -44,6 +44,7 @@ import com.jcsoftdev.ui.primitives.rememberOverlayPresence
 import com.jcsoftdev.ui.primitives.rememberSheetState
 import com.jcsoftdev.ui.primitives.sheetDraggable
 import com.jcsoftdev.ui.primitives.sheetTranslation
+import com.jcsoftdev.ui.theme.UiStrings
 import com.jcsoftdev.ui.theme.UiTheme
 
 private val Ink = Color(0xFF1B1B2F)
@@ -56,7 +57,7 @@ private val TimeMask = DigitMask(4, ':', listOf(2))
 /** A custom sheet, menu, toast and time field built only from the headless primitives; no kit component is used. */
 @Composable
 fun HeadlessGallery() {
-    UiTheme(dark = false) {
+    UiTheme(dark = false, strings = UiStrings.Es) {
         val toasts = remember { ToastHostState() }
         var sheet by remember { mutableStateOf(false) }
         var menu by remember { mutableStateOf(false) }
@@ -137,7 +138,7 @@ private fun CustomSheet(
         open = open,
         present = presence.present,
         onDismissRequest = onClose,
-        dismissLabel = "Close",
+        dismissLabel = UiTheme.strings.close,
         scrim = { tap ->
             Box(tap.fillMaxSize().graphicsLayer { alpha = sheet.scrimAlpha(presence.progress) * 0.6f }.background(Ink))
         },

@@ -120,7 +120,7 @@ public object SheetDefaults {
  *
  * System back (kit back dispatcher, [BackPriority.SHEET]), a tap on the scrim and a downward swipe on the header call
  * [onDismiss] when [dismissible]; it must set [open] to false. [dismissLabel] (already localized) is the scrim's
- * accessibility action name; without it the scrim is not announced. The title is exposed as the pane title. [motion] sets
+ * accessibility action name (the theme's close string by default; null leaves the scrim unannounced). The title is exposed as the pane title. [motion] sets
  * the enter and exit timing and [state] the drag-to-dismiss thresholds.
  */
 @OptIn(ExperimentalComposeUiApi::class)
@@ -131,7 +131,7 @@ public fun Sheet(
     title: String,
     modifier: Modifier = Modifier,
     dismissible: Boolean = true,
-    dismissLabel: String? = null,
+    dismissLabel: String? = UiTheme.strings.close,
     colors: SheetColors = SheetDefaults.colors(),
     shape: CornerBasedShape = SheetDefaults.shape,
     maxWidth: Dp = SheetDefaults.maxWidth,

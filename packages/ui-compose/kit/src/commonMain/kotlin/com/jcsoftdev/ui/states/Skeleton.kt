@@ -41,9 +41,6 @@ public class SkeletonColors(
 
 /** Default colors, shapes and metrics of the skeletons. */
 public object SkeletonDefaults {
-    /** English fallback for the loading announcement; pass a localized `label` to [SkeletonGroup]. */
-    public const val LOADING_LABEL: String = "Loading"
-
     /** Colors in the active theme. */
     @Composable
     @ReadOnlyComposable
@@ -151,7 +148,7 @@ public fun SkeletonText(
 @Composable
 public fun SkeletonGroup(
     modifier: Modifier = Modifier,
-    label: String = SkeletonDefaults.LOADING_LABEL,
+    label: String = UiTheme.strings.loading,
     content: @Composable () -> Unit,
 ) {
     Column(

@@ -288,7 +288,6 @@ public final class com/jcsoftdev/ui/containers/BannerColors {
 
 public final class com/jcsoftdev/ui/containers/BannerDefaults {
 	public static final field $stable I
-	public static final field DISMISS_LABEL Ljava/lang/String;
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/BannerDefaults;
 	public final fun colors (Lcom/jcsoftdev/ui/containers/BannerTone;Landroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/containers/BannerColors;
 	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
@@ -396,7 +395,6 @@ public final class com/jcsoftdev/ui/containers/PageHeaderColors {
 
 public final class com/jcsoftdev/ui/containers/PageHeaderDefaults {
 	public static final field $stable I
-	public static final field BACK_LABEL Ljava/lang/String;
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/PageHeaderDefaults;
 	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/containers/PageHeaderColors;
 	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
@@ -1619,7 +1617,6 @@ public final class com/jcsoftdev/ui/states/EmptyStateKt {
 public final class com/jcsoftdev/ui/states/ErrorStateDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/states/ErrorStateDefaults;
-	public static final field RETRY_LABEL Ljava/lang/String;
 	public final fun getCorrelationStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 
@@ -1650,7 +1647,6 @@ public final class com/jcsoftdev/ui/states/SkeletonDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/states/SkeletonDefaults;
 	public static final field LAST_LINE_FRACTION F
-	public static final field LOADING_LABEL Ljava/lang/String;
 	public static final field SWEEP_MILLIS I
 	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/states/SkeletonColors;
 	public final fun getCircleSize-D9Ej5fM ()F
@@ -1893,6 +1889,41 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 	public final fun getTopHeight-D9Ej5fM ()F
 }
 
+public final class com/jcsoftdev/ui/theme/UiStrings {
+	public static final field $stable I
+	public static final field Companion Lcom/jcsoftdev/ui/theme/UiStrings$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public final fun getActionFailed ()Ljava/lang/String;
+	public final fun getActions ()Ljava/lang/String;
+	public final fun getBack ()Ljava/lang/String;
+	public final fun getCancel ()Ljava/lang/String;
+	public final fun getClose ()Ljava/lang/String;
+	public final fun getConfirm ()Ljava/lang/String;
+	public final fun getCorrelationPrefix ()Ljava/lang/String;
+	public final fun getDecrease ()Ljava/lang/String;
+	public final fun getDismiss ()Ljava/lang/String;
+	public final fun getHidePassword ()Ljava/lang/String;
+	public final fun getIncrease ()Ljava/lang/String;
+	public final fun getLoading ()Ljava/lang/String;
+	public final fun getNotifications ()Ljava/lang/String;
+	public final fun getOptional ()Ljava/lang/String;
+	public final fun getProcessing ()Ljava/lang/String;
+	public final fun getRetry ()Ljava/lang/String;
+	public final fun getShowPassword ()Ljava/lang/String;
+	public final fun getSomethingWrong ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/theme/UiStrings$Companion {
+	public final fun getEn ()Lcom/jcsoftdev/ui/theme/UiStrings;
+	public final fun getEs ()Lcom/jcsoftdev/ui/theme/UiStrings;
+}
+
+public final class com/jcsoftdev/ui/theme/UiStringsKt {
+	public static final fun getLocalUiStrings ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
 public final class com/jcsoftdev/ui/theme/UiTheme {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiTheme;
@@ -1901,12 +1932,13 @@ public final class com/jcsoftdev/ui/theme/UiTheme {
 	public final fun getMotion (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/foundation/Motion;
 	public final fun getShapes (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeShapes;
 	public final fun getSizes (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeSizes;
+	public final fun getStrings (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/UiStrings;
 	public final fun getTypography (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeTypography;
 	public final fun text (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 
 public final class com/jcsoftdev/ui/theme/UiThemeKt {
-	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lcom/jcsoftdev/ui/theme/UiStrings;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/theme/UiTypography {

@@ -43,9 +43,6 @@ public class PageHeaderColors(
 
 /** Default colors and metrics of [PageHeader]. */
 public object PageHeaderDefaults {
-    /** English fallback for the back button label; pass a localized `backLabel` to [PageHeader]. */
-    public const val BACK_LABEL: String = "Back"
-
     /** Colors in the active theme. */
     @Composable
     @ReadOnlyComposable
@@ -103,7 +100,7 @@ public fun PageHeader(
     eyebrow: String? = null,
     lede: String? = null,
     onBack: (() -> Unit)? = null,
-    backLabel: String = PageHeaderDefaults.BACK_LABEL,
+    backLabel: String = UiTheme.strings.back,
     handleSystemBack: Boolean = false,
     actions: (@Composable RowScope.() -> Unit)? = null,
     colors: PageHeaderColors = PageHeaderDefaults.colors(),

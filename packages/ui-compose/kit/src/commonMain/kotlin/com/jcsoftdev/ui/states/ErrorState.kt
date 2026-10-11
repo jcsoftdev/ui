@@ -20,9 +20,6 @@ import com.jcsoftdev.ui.theme.UiTheme
 
 /** Default metrics of [ErrorState]; colors and text styles come from [EmptyStateDefaults]. */
 public object ErrorStateDefaults {
-    /** English fallback for the retry button; pass a localized `retryLabel` to [ErrorState]. */
-    public const val RETRY_LABEL: String = "Retry"
-
     /** Style of the correlation code; the theme `meta`. */
     public val correlationStyle: TextStyle
         @Composable
@@ -55,7 +52,7 @@ public fun ErrorState(
     correlationId: String? = null,
     correlationLabel: String? = null,
     onRetry: (() -> Unit)? = null,
-    retryLabel: String = ErrorStateDefaults.RETRY_LABEL,
+    retryLabel: String = UiTheme.strings.retry,
     colors: EmptyStateColors = EmptyStateDefaults.colors(),
     contentPadding: PaddingValues = EmptyStateDefaults.contentPadding,
     titleStyle: TextStyle = EmptyStateDefaults.titleStyle,

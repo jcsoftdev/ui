@@ -39,6 +39,7 @@ import com.jcsoftdev.ui.states.OfflineBanner
 import com.jcsoftdev.ui.states.SkeletonCircle
 import com.jcsoftdev.ui.states.SkeletonGroup
 import com.jcsoftdev.ui.states.SkeletonText
+import com.jcsoftdev.ui.theme.UiStrings
 import com.jcsoftdev.ui.theme.UiTheme
 
 @Composable
@@ -51,7 +52,7 @@ fun StatesGallery() {
 
 @Composable
 private fun Panel(dark: Boolean) {
-    UiTheme(dark = dark, accent = "#77D3AD") {
+    UiTheme(dark = dark, accent = "#77D3AD", strings = UiStrings.Es) {
         var selected by remember { mutableStateOf("a") }
         var banner by remember { mutableStateOf(true) }
         var taps by remember { mutableStateOf(0) }
@@ -61,7 +62,6 @@ private fun Panel(dark: Boolean) {
                 eyebrow = if (dark) "Oscuro" else "Claro",
                 lede = "Citas de hoy en la sucursal Miraflores",
                 onBack = {},
-                backLabel = "Atrás",
                 actions = { Button("Nueva", {}, variant = ButtonVariant.Primary, size = ButtonSize.Sm) },
             )
             OfflineBanner("Sin conexión. Guardaremos tus cambios.", queuedChanges = 3, queuedLabel = "3 cambios en cola")
@@ -71,7 +71,6 @@ private fun Panel(dark: Boolean) {
                     tone = BannerTone.Success,
                     title = "Listo",
                     onDismiss = { banner = false },
-                    dismissLabel = "Cerrar",
                 )
             }
             Banner("Revisa los datos antes de continuar.", tone = BannerTone.Warning)
@@ -113,7 +112,6 @@ private fun Panel(dark: Boolean) {
                 correlationId = "7f3a-91c2",
                 correlationLabel = "ID:",
                 onRetry = {},
-                retryLabel = "Reintentar",
             )
             SkeletonGroup(label = "Cargando citas") {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

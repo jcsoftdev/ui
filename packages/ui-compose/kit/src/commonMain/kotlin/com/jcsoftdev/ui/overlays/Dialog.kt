@@ -123,7 +123,7 @@ public fun Dialog(
     description: String? = null,
     dismissOnScrim: Boolean = true,
     dismissOnBack: Boolean = true,
-    dismissLabel: String? = null,
+    dismissLabel: String? = UiTheme.strings.close,
     colors: DialogColors = DialogDefaults.colors(),
     shape: Shape = DialogDefaults.shape,
     maxWidth: Dp = DialogDefaults.maxWidth,
