@@ -42,3 +42,33 @@ for (const entry of [
   await import(pathToFileURL(p).href);
   console.log(`  loaded ${entry}`);
 }
+
+// The published `./primitives` entry, resolved the way a consumer (and this package) sees it.
+const barrel = await import("@jcsoftdev/ui/primitives");
+assert.deepEqual(
+  Object.keys(barrel).sort(),
+  [
+    "CommandPrimitive",
+    "DialogPrimitive",
+    "LAYER_BRANCH_ATTRIBUTE",
+    "MenuPrimitive",
+    "PopoverPrimitive",
+    "PopperPrimitive",
+    "Portal",
+    "commandScore",
+    "computePlacement",
+    "useDismissableLayer",
+    "useFocusScope",
+    "useLayer",
+    "usePresence",
+  ],
+  "the primitives barrel exposes exactly the public set",
+);
+for (const deep of ["hide-others", "scroll-lock", "focusable", "menu/typeahead"]) {
+  await assert.rejects(
+    () => import(`@jcsoftdev/ui/primitives/${deep}`),
+    { code: "ERR_PACKAGE_PATH_NOT_EXPORTED" },
+    deep,
+  );
+}
+console.log("  @jcsoftdev/ui/primitives: public set only, internals not importable");

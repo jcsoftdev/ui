@@ -12,6 +12,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "check:treeshake": "pnpm --filter @jcsoftdev/ui check:treeshake",
-    "check:dist-imports": "pnpm --filter @jcsoftdev/ui check:dist-imports"
+    "check:dist-imports": "pnpm --filter @jcsoftdev/ui check:dist-imports",
+    "check:docs-examples": "pnpm --filter @jcsoftdev/ui check:docs-examples"
   }
 }

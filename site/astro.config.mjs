@@ -55,6 +55,7 @@ export default defineConfig({
           items: [
             { slug: "docs/theming" },
             { slug: "docs/customization" },
+            { slug: "docs/primitives" },
             { slug: "docs/theming/tokens" },
           ],
         },
