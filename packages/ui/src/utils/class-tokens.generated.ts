@@ -22,6 +22,20 @@ export const TEXT_SIZES: readonly string[] = [
   "m-body",
   "m-button",
   "m-meta",
+  "fs-95",
+  "fs-100",
+  "fs-105",
+  "fs-110",
+  "fs-115",
+  "fs-120",
+  "fs-125",
+  "fs-130",
+  "fs-140",
+  "fs-150",
+  "fs-160",
+  "fs-220",
+  "fs-300",
+  "fs-440",
 ];
 
 /** `rounded-*` radius tokens (role radii and legacy names). */
