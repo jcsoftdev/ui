@@ -61,3 +61,25 @@ export function resolveTabFromInside(
   }
   return items.find((item) => follows(item)) ?? items[0] ?? null;
 }
+
+/**
+ * Where focus goes when a portaled layer opened from `trigger` is left with Tab: the
+ * first tabbable after the trigger in document order, or with `backwards` the trigger
+ * itself when tabbable, else the closest tabbable before it. Elements inside `exclude`
+ * (the layer) or the trigger are skipped; `null` when nothing qualifies.
+ */
+export function resolveTabOut(
+  trigger: HTMLElement,
+  exclude: HTMLElement | null,
+  backwards: boolean,
+): HTMLElement | null {
+  const items = getTabbables(document.body).filter((element) => !exclude?.contains(element));
+  const follows = (element: HTMLElement) =>
+    Boolean(trigger.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING);
+  if (!backwards) {
+    return items.find((element) => !trigger.contains(element) && follows(element)) ?? null;
+  }
+  if (items.includes(trigger)) return trigger;
+  const before = items.filter((element) => !trigger.contains(element) && !follows(element));
+  return before[before.length - 1] ?? null;
+}

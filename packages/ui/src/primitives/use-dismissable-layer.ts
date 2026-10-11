@@ -8,6 +8,7 @@ import {
   useEffect,
   useRef,
 } from "react";
+import { useEnabledPointerEvents } from "./pointer-events-lock.js";
 
 export type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 export type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
@@ -26,9 +27,18 @@ export interface DismissableLayerOptions {
   onDismiss: () => void;
 }
 
-/** Layers from libraries outside this stack that can be open inside a dialog (removed as T10/T11 migrate them). */
-const FOREIGN_LAYER =
-  "[data-radix-popper-content-wrapper], [role=menu], [role=listbox][data-state=open]";
+/** Layers from libraries outside this stack that can be open inside a dialog (a third-party combobox listbox). */
+const FOREIGN_LAYER = "[role=listbox][data-state=open], [role=combobox][aria-expanded=true]";
+
+/**
+ * Elements carrying this attribute are branches of every layer: pointer and focus
+ * landing inside one never count as outside (the toaster region).
+ */
+export const LAYER_BRANCH_ATTRIBUTE = "data-ui-layer-branch";
+const LAYER_BRANCH = `[${LAYER_BRANCH_ATTRIBUTE}]`;
+
+/** An in-content widget that wants this Escape for itself (a command input with a query to clear). */
+const ESCAPE_CLAIM = "[data-ui-escape-claim]";
 
 /** Owned by something else that handles its own Escape (a toast). */
 const NOT_OURS = '[aria-live]:not([aria-live="off"]), [data-ui-overlay-ignore]';
@@ -53,13 +63,17 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
     return node?.isConnected === true && document.activeElement === node;
   }, []);
   const { active } = options;
+  useEnabledPointerEvents(options.ref, active);
 
   useEffect(() => {
     if (!active) return;
     const isInside = (event: Event) => {
       const node = latest.current.ref.current;
       const target = event.target as Node | null;
-      return !node || (target ? node.contains(target) : false);
+      if (!node) return true;
+      if (!target) return false;
+      if (node.contains(target)) return true;
+      return target instanceof Element && target.closest(LAYER_BRANCH) !== null;
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -76,7 +90,9 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
     // Escape pressed inside a React child rendered in a portal (a Radix menu or popover
     // not yet migrated to this layer stack) belongs to that child, which closes itself.
     const belongsToForeignLayer = (event: KeyboardEvent) => {
-      if (isInside(event)) return false;
+      const node = latest.current.ref.current;
+      if (event.target instanceof Element && event.target.closest(ESCAPE_CLAIM)) return true;
+      if (!node || node.contains(event.target as Node | null)) return false;
       const target = event.target;
       if (
         !(target instanceof Element) ||

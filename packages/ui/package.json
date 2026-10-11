@@ -1,7 +1,7 @@
 {
   "name": "@jcsoftdev/ui",
   "version": "0.1.7",
-  "description": "Token-driven React component library: React 19, Radix, Tailwind v4.",
+  "description": "Token-driven React component library: React 19, Tailwind v4.",
   "author": "jcsoftdev",
   "license": "MIT",
   "homepage": "https://ui.jcsoftdev.com",
@@ -75,10 +75,6 @@
     "test": "node --test \"test/*.test.mjs\"",
     "test:stories": "vitest run --project stories",
     "check:treeshake": "node test/treeshake.mjs"
-  },
-  "dependencies": {
-    "@radix-ui/react-dropdown-menu": "^2.1.24",
-    "cmdk": "^1.1.1"
   },
   "peerDependencies": {
     "react": "^19.0.0",
