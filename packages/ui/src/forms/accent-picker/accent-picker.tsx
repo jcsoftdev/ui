@@ -1,7 +1,11 @@
 "use client";
 
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { type ComponentPropsWithoutRef, useState } from "react";
+import { useState } from "react";
+import {
+  RadioGroupItem,
+  RadioGroupRoot,
+  type RadioGroupRootProps,
+} from "../../atoms/radio-group/radio-group-primitive.js";
 import { cn } from "../../utils/cn.js";
 
 export interface AccentOption {
@@ -12,10 +16,7 @@ export interface AccentOption {
 }
 
 export interface AccentPickerProps
-  extends Omit<
-    ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
-    "value" | "defaultValue" | "onValueChange"
-  > {
+  extends Omit<RadioGroupRootProps, "value" | "defaultValue" | "onValueChange"> {
   options: AccentOption[];
   value?: string;
   defaultValue?: string;
@@ -39,7 +40,7 @@ export function AccentPicker({
   const current = value ?? internal;
 
   return (
-    <RadioGroupPrimitive.Root
+    <RadioGroupRoot
       data-accent={current}
       value={current}
       onValueChange={(next) => {
@@ -50,7 +51,7 @@ export function AccentPicker({
       {...props}
     >
       {options.map((option) => (
-        <RadioGroupPrimitive.Item
+        <RadioGroupItem
           key={option.value}
           value={option.value}
           className="flex items-center gap-2 rounded-control border-divider px-2.5 py-1.75 font-semibold text-chip-text text-ink data-[state=checked]:border-accent-ink data-[state=checked]:shadow-selected"
@@ -61,8 +62,8 @@ export function AccentPicker({
             style={{ background: option.swatch }}
           />
           {option.label}
-        </RadioGroupPrimitive.Item>
+        </RadioGroupItem>
       ))}
-    </RadioGroupPrimitive.Root>
+    </RadioGroupRoot>
   );
 }

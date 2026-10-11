@@ -22,7 +22,7 @@ function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
   else if (ref) (ref as { current: T | null }).current = value;
 }
 
-function composeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<T> {
+export function composeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<T> {
   return (node) => {
     const cleanups: Array<() => void> = [];
     for (const ref of refs) {
