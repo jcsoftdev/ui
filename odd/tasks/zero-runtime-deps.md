@@ -11,6 +11,7 @@ Owner decision 2026-10-10: "quiero tener control de todo. No me importa rehacer 
 - Out: dev tooling (Tailwind, Storybook, Vite, tsup, Biome, test runner) stays; it never ships in the bundle. Barber web's own direct `lucide-react` dependency is a follow-up in the barber repo.
 
 ## Constraints
+- Owner decisions (2026-10-10): "todo debe ser muy customizable para cualquier desarrollador, así no se somete a nuestro look and feel". Consequences: the class merge is configurable by consumers (T8b), the unstyled headless primitives are exposed publicly under `@jcsoftdev/ui/primitives` (T14), and every styled component is customizable per part (T15).
 - Public API stays source-compatible for barber web: same component names, prop names (`open`, `onOpenChange`, `asChild`, `side`, `align`, `sideOffset`, `collisionPadding`, dialog dismiss callbacks), `data-state` / `data-highlighted` / `data-disabled` attributes, and the `toast`, `toast.success`, `toast.error`, `toast.dismiss`, action API.
 - CSS vars `--radix-*-content-available-{width,height}` are renamed to library-owned names, with the styles updated in the same task.
 - Accessibility parity is mandatory: each replaced interactive component gets keyboard and ARIA tests (WAI-ARIA APG patterns) before its dependency is removed.
@@ -22,7 +23,7 @@ Owner decision 2026-10-10: "quiero tener control de todo. No me importa rehacer 
 Disabled (no project or session setting enables it). Tests are written alongside each change. Runner: `pnpm test` (node, logic) plus the new DOM harness from T0.
 
 ## Delivery strategy
-ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each task is a PR into `feat/zero-deps`; 0.2.0 is released once from that branch at T13.
+ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each task is a PR into `feat/zero-deps`; 0.2.0 is released once from that branch at T13, after T14 and T15 (T13 is the last task).
 
 ## Tasks
 - [x] T0 DOM test harness: Storybook stories run as tests in a real browser (Storybook addon-vitest, Chromium) with play functions and the a11y addon failing on violations; wire into CI. Route: delegated.
@@ -35,9 +36,12 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - [x] T7 Toaster: store, stack of 2, timers with hover pause, action, dismiss, aria-live; same `toast` API. Route: delegated.
 - [x] T8 `cn` merge engine replacing `tailwind-merge`: parity tests against current output for the custom token groups first, then swap. Route: delegated.
 - [x] T9 Overlay core + Dialog/Drawer: portal with container, focus trap, scroll lock, aria-hidden siblings, Escape/outside dismiss with the existing callbacks, nested overlays. Route: delegated.
+- [ ] T8b Configurable class merge: kit tokens derived from `styles/theme.css` at build time (generated table, so new theme tokens such as side-width, agenda-hour, control-height-lg, m-button, etc. merge correctly), plus a public API for consumers to extend groups with their own theme tokens (e.g. `createCn({ theme: { text: [...], spacing: [...], radius: [...], shadow: [...], color: [...] }, classGroups?, conflicts? })` / `extendCn(...)`); `cn` stays the default instance. Route: delegated.
 - [ ] T10 Positioning engine + Popover/HoverCard/emoji picker: side/align/offset, flip, shift, available-size vars, outside dismiss, focus policy. Route: delegated.
 - [ ] T11 Menu: DropdownMenu + ContextMenu (items, radio/checkbox items, typeahead, roving focus, modal=false, programmatic x/y open). Route: delegated.
 - [ ] T12 Command palette replacing `cmdk`: fuzzy scoring with keywords, groups hidden when empty, arrow/Home/End, result count live region, on the new Dialog. Route: delegated.
+- [ ] T14 Publish primitives: package.json `exports` subpath `./primitives` (types, ESM), primitives barrel, docs page, tree-shake check that a styled-only import does not pull unrelated primitives. Route: delegated.
+- [ ] T15 Customization audit: every styled component exposes className per part (or a classNames object), no hardcoded colours/sizes outside theme tokens, variants overridable; document theming (CSS variables override) for consumers. Route: delegated.
 - [ ] T13 Remove all `dependencies`, update docs/site and changelog, release 0.2.0, bump barber web and smoke-test its screens. Route: delegated.
 
 ## Acceptance criteria
@@ -72,4 +76,4 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - 2026-10-10: T9 second review fix (`517314e` on `feat/zero-deps-t9-dialog`): opus re-verifier (real Chromium probes) returned FAIL on `11ff29c`; findings verified against the code and fixed. HIGH 1: `hideOthers` only releases what it wrote (per-attribute ownership map, restored only while the value is still ours) and treats elements already `aria-hidden="true"` or `inert` from elsewhere as uncontrolled, so a Radix menu item that opens a controlled Dialog no longer leaves the page `aria-hidden` after Escape. HIGH 2: Escape from `body`/`html` is never foreign; foreign-layer detection uses the event target against the focused React-tree node (cleared on blur, checked against `document.activeElement`), no sticky flag; the focus scope has a MutationObserver that moves focus back to the container when the focused node is removed (`isFocusInTree` stays a function). MEDIUM 3: touch guard allows horizontal scrollers, range/textarea/select/contenteditable and any ancestor that can still scroll along the drag axis; edges and outside drags are cancelled. MEDIUM 4: `aria-labelledby`/`aria-describedby` always rendered like Radix (consumer props override, `aria-describedby={undefined}` opts out); title/description registration state removed. LOW 5: Escape on live-region/`[data-ui-overlay-ignore]` targets (toast) is not ours. LOW 6: `[aria-live]:not([aria-live="off"])` in hide-others and focus scope; listbox foreign layer restricted to `[role=listbox][data-state=open]`. LOW 7: `Toaster` gets `container` (default `document.body`) and `dir` (default `<html dir>`). TSDoc notes that nodes appended to `body` after a modal opens are not hidden (as in Radix). Left as is: toast action click counting as inside the modal (owner decision pending). Tests: 11 stories in `overlays.t9-fix2.test.stories.tsx` (menu to dialog release with and without exit animation, Escape after menu select with and without prevented focus return, touch lock, describedby at first focusin and opt-out, toast Escape, aria-live off and closed listbox, toaster container and dir); against `11ff29c` 9 of 11 failed (the two passing are the normal-focus Escape case and the describedby opt-out). Verification: lint (0 errors, 11 pre-existing warnings), typecheck, build, check:treeshake pass; 456 node tests; 204 story files / 1296 tests. Route: delegated (single writer).
 
 ## Next step
-T10 (positioning engine + Popover/HoverCard/emoji picker) on the `src/primitives/` layer, dismissable layer and presence.
+T8b (configurable class merge), then T10 (positioning engine + Popover/HoverCard/emoji picker) on the `src/primitives/` layer, dismissable layer and presence.
