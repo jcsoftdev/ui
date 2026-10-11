@@ -32,7 +32,7 @@ Disabled (no project or session setting enables it). Runner: Gradle `:ui-compose
 ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each task is a PR into `feat/ui-compose`.
 
 ## Tasks
-- [ ] C0 Gradle KMP library scaffold: targets, `explicitApi()`, `abiValidation`, Compose compiler reports and stability config, empty `consumer-rules.pro`, a minimal sample Android app with R8 + resource shrinking, CI job (build, tests, ABI check, sample release build). Route: delegated.
+- [x] C0 Gradle KMP library scaffold: targets, `explicitApi()`, `abiValidation`, Compose compiler reports and stability config, empty `consumer-rules.pro`, a minimal sample Android app with R8 + resource shrinking, CI job (build, tests, ABI check, sample release build). Route: delegated.
 - [ ] C1 Tokens: `ui-theme` emits the kit's `Theme.kt` (package `com.jcsoftdev.ui.theme`) with `@Immutable` token classes; wired into the build so tokens never drift. Route: delegated.
 - [ ] C2 Theme provider: generic `UiTheme(colors, typography, dark, motion, content)`, Figtree via compose resources, injectable font and brand accent. Route: delegated.
 - [ ] C3 Foundations: `Motion` + reduced motion, `Modifier.Node` press feedback, back-handling contract (`LocalBackDispatcher`) usable outside the barber app. Route: delegated.
@@ -53,6 +53,8 @@ ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each tas
 
 ## Progress
 - 2026-10-10: research (R8/consumer rules, strong skipping, stability, Modifier.Node, icon backing fields, baseline profiles for libraries, ABI validation, Roborazzi) and Android mapping done.
+- 2026-10-10: C0 done on `feat/ui-compose-c0-scaffold` (cfc11b5). Standalone Gradle build at `packages/ui-compose` (`:kit` + `:sample`); spotlessCheck, apiCheck, :kit:allTests (no tests), iOS sim/JVM/Android release compile and :sample:assembleRelease (R8 + shrinkResources, 592170-byte APK) all pass; compose compiler reports generated under `kit/build/compose_compiler`.
+  - Decisions: KGP built-in `abiValidation` is JVM-only in Kotlin 2.1.21 (KMP support arrived in 2.2), so the `binary-compatibility-validator` 0.18.1 plugin with KLib validation is used (`apiCheck`/`apiDump`). jvmTarget 17 for jvm and android (BCV's ASM cannot read JDK 23 class files; CI uses JDK 17). `generateResClass = never` until resources land (C2) because the generated Res leaked `$stableprop` symbols into the klib dump. `compose-stability.conf` empty (strong skipping on). Wrapper lives at `packages/ui-compose/gradlew`, so commands are `packages/ui-compose/gradlew -p packages/ui-compose ...` from the repo root. CI: ubuntu job (spotless, apiCheck, tests, kit and sample release) plus a macOS job limited to `compileKotlinIosSimulatorArm64`, to avoid paying macOS minutes for everything.
 
 ## Next step
-C0 scaffold.
+C1 tokens.
