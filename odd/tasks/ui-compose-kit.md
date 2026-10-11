@@ -37,7 +37,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each tas
 - [x] C2 Theme provider: generic `UiTheme(colors, typography, dark, motion, content)`, Figtree via compose resources, injectable font and brand accent. Route: delegated.
 - [x] C3 Foundations: `Motion` + reduced motion, `Modifier.Node` press feedback, back-handling contract (`LocalBackDispatcher`) usable outside the barber app. Route: delegated.
 - [ ] C4 Icons: generated `ImageVector` set from the same SVG source as the web icons (zero-deps T6), nullable backing fields, same names. Route: delegated.
-- [ ] C5 Atoms: Text, Button (variants, sizes, loading), IconButton, Chip/StatusPill, Avatar, Progress, Switch, Checkbox, RadioGroup, Divider. Route: delegated.
+- [x] C5 Atoms (done before C4, reordered: C4 waits for the web icon source, zero-deps T6): Text, Button (variants, sizes, loading), IconButton, Chip/StatusPill, Avatar, Progress, Switch, Checkbox, RadioGroup, Divider. Route: delegated.
 - [ ] C6 Forms: Field, Input (formatted time/date inputs with suitable keyboards), Select (sheet-based), Segmented, Tabs, PinInput. Route: delegated.
 - [ ] C7 Overlays: Sheet (scrollable body, pinned actions), Dialog, Toaster with the web `toast` API shape, Menu. Route: delegated.
 - [ ] C8 States and containers: EmptyState, ErrorState, OfflineBanner, Skeleton, Card, Cell/ListRow, PageHeader, Banner. Route: delegated.
@@ -62,5 +62,9 @@ ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each tas
   - Not run locally: `:kit:iosSimulatorArm64Test` (no simulator runtime on this machine); the Press node and BackHandler composable lifecycle have no UI test yet (compose ui-test not wired; candidate for C9).
   - Compose reports: UiTheme and BackHandler restartable skippable; ProvideAndroidBack restartable skippable; Motion, BackDispatcher, BackPriority, UiTheme stable; Theme accessors readonly; rememberSystemMotion and rememberFigtree are internal non-restartable.
 
+- 2026-10-10: C5 done on `feat/ui-compose-c5-atoms (7c9371f)`, stacked on C2/C3, executed before C4 (reorder: C4 depends on zero-deps T6 icon source). Package `com.jcsoftdev.ui.atoms`, one file per atom: Text (+ public `LocalContentColor`), Button/ButtonVariant/ButtonSize, IconButton (required contentDescription), Chip/ChipTone, StatusPill/LedStatus, Avatar (image slot drawn over initials), Progress (determinate and indeterminate overloads), Switch, Checkbox (Boolean and ToggleableState overloads), RadioGroup/RadioOption, Divider/VerticalDivider.
+  - Verification: spotlessCheck, apiCheck, :kit:allTests (iOS sim excluded) green; jvm tests 19 (2 logic: initials, progress clamp; 4 Compose UI tests on desktop: switch toggle, tri-state checkbox, radio selection, disabled/loading button ignores clicks); iOS sim compile, kit and sample release builds pass. Sample APK 959035 bytes (was 815859; +143K from foundation text/selection and atoms). Composables report: all 14 public atom composables `restartable skippable`. Screenshot of the sample in light and dark on the emulator at scratchpad `ux/compose/c5-atoms.png`.
+  - Decisions: compose ui-test wired for jvm only (`compose.uiTest` + desktop currentOs in jvmTest; Android unit tests would need Robolectric, left to C9). `kotlin.collections.List` added to compose-stability.conf for `RadioGroup(options)`. 48dp target is an in-house `Modifier.Node` (`minimumTouchTarget`), clicks via `clickable`/`toggleable` with `pressScale`. Visual heights use min height so 200% font does not clip. Loading does not dim (web does, via disabled); `loadingDescription` is the state description. Glyphs (check, minus) and spinner are internal draw helpers pending C4. Switch/Checkbox take optional `contentDescription` because the web atoms have no label either. Focus ring and Meter not ported.
+
 ## Next step
-C4 icons.
+C4 icons once zero-deps T6 lands; otherwise C6 forms.
