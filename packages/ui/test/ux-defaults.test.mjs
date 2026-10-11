@@ -96,3 +96,30 @@ test("ErrorState localizes the retry action and the id prefix", () => {
   assert.match(markup, />Reintentar</);
   assert.match(markup, /ID: x/);
 });
+
+const { runConfirm } = await loadCases("cases.tsx");
+
+test("ConfirmAction starts as a single trigger that names the action, without the consequence", () => {
+  const idle = html.confirmIdle();
+  assert.match(idle, />Cancel order</);
+  assert.doesNotMatch(idle, /The order is cancelled\./);
+  assert.doesNotMatch(idle, /<fieldset/);
+});
+
+test("runConfirm folds returned failures and thrown errors into one outcome", async () => {
+  assert.deepEqual(await runConfirm(async () => {}, "fallback"), { status: "done" });
+  assert.deepEqual(await runConfirm(async () => ({ ok: true }), "fallback"), { status: "done" });
+  assert.deepEqual(
+    await runConfirm(async () => ({ ok: false, error: "Already paid" }), "fallback"),
+    {
+      status: "failed",
+      message: "Already paid",
+    },
+  );
+  assert.deepEqual(
+    await runConfirm(async () => {
+      throw new Error("boom");
+    }, "fallback"),
+    { status: "failed", message: "fallback" },
+  );
+});

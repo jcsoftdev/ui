@@ -3,7 +3,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import {
   Children,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   Fragment,
   isValidElement,
   type ReactNode,
@@ -26,7 +26,7 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "h-control-lg px-control-x text-[14px]",
 };
 
-export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
+export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;

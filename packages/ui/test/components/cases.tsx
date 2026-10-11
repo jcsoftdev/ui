@@ -3,6 +3,7 @@ import { Skeleton } from "../../src/states/skeleton/skeleton.js";
 import { Button } from "../../src/atoms/button/button.js";
 import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
 import { Chip } from "../../src/atoms/chip/chip.js";
+import { ConfirmAction } from "../../src/containers/confirm-action/confirm-action.js";
 import { Banner } from "../../src/containers/banner/banner.js";
 import { Field } from "../../src/forms/field/field.js";
 import { Input } from "../../src/forms/input/input.js";
@@ -129,4 +130,15 @@ export const html = {
         <ErrorState title="No se pudo cargar" onRetry={() => {}} correlationId="x" />
       </UiStringsProvider>,
     ),
+  confirmIdle: () =>
+    renderToStaticMarkup(
+      <ConfirmAction label="Cancel order" consequence="The order is cancelled." onConfirm={async () => {}} />,
+    ),
+  confirmEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <ConfirmAction label="Anular" consequence="Se anula." onConfirm={async () => {}} />
+      </UiStringsProvider>,
+    ),
 };
+export { runConfirm } from "../../src/containers/confirm-action/model.js";
