@@ -76,9 +76,6 @@
     "test:stories": "vitest run --project stories",
     "check:treeshake": "node test/treeshake.mjs"
   },
-  "dependencies": {
-    "cmdk": "^1.1.1"
-  },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

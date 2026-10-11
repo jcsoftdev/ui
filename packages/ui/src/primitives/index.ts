@@ -10,6 +10,8 @@
  * deep paths such as `primitives/hide-others` do not resolve. The documented,
  * explicit entry is defined in T14.
  */
+export * as CommandPrimitive from "./command/command.js";
+export { type CommandFilter, commandScore } from "./command/score.js";
 export * as DialogPrimitive from "./dialog/dialog.js";
 export * as MenuPrimitive from "./menu/menu.js";
 export * as PopoverPrimitive from "./popover/popover.js";
