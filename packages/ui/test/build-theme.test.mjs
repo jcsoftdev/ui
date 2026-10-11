@@ -44,7 +44,9 @@ test("--kotlin-library flavour is explicit-API and immutable; the default stays 
   assert.match(lib, /@Immutable\npublic class AccentPalette\(/);
   assert.match(lib, /@Immutable\npublic object UiPalettes \{/);
   assert.doesNotMatch(lib, /Map</);
-  const declarations = lib.split("\n").filter((l) => /^\s*(val|class|object|const val|fun)\s/.test(l));
+  const declarations = lib
+    .split("\n")
+    .filter((l) => /^\s*(val|class|object|const val|fun)\s/.test(l));
   assert.deepEqual(
     declarations.filter((l) => !/^\s*(private)\s/.test(l)),
     [],
@@ -53,4 +55,28 @@ test("--kotlin-library flavour is explicit-API and immutable; the default stays 
   const plain = buildTheme(tokens)["Theme.kt"];
   assert.equal(plain, buildTheme(tokens, { kotlinLibrary: false })["Theme.kt"]);
   assert.doesNotMatch(plain, /public |@Immutable/);
+});
+
+test("the size-only font scale is emitted as UiFontSizes in both Kotlin flavours", () => {
+  const scaled = {
+    ...tokens,
+    type: {
+      ...tokens.type,
+      sizeScale: [
+        { name: "fs-95", fontSize: "9.5px" },
+        { name: "fs-160", fontSize: "16px" },
+        { name: "fs-440", fontSize: "44px" },
+      ],
+    },
+  };
+  const lib = buildTheme(scaled, { kotlinPackage: "com.jcsoftdev.ui.theme", kotlinLibrary: true })[
+    "Theme.kt"
+  ];
+  assert.match(lib, /public object UiFontSizes \{/);
+  assert.match(lib, /public val fs95: TextUnit = 9\.5\.sp/);
+  assert.match(lib, /public val fs440: TextUnit = 44\.sp/);
+  assert.doesNotMatch(buildTheme(tokens, { kotlinLibrary: true })["Theme.kt"], /UiFontSizes/);
+  const plain = buildTheme(scaled)["Theme.kt"];
+  assert.match(plain, /object UiFontSizes \{/);
+  assert.match(plain, /val fs160 = 16\.sp/);
 });

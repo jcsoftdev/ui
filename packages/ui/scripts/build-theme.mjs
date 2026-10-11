@@ -425,9 +425,15 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme", { library =
     out.push(`    val ${camel(s.name)} = TextStyle(${parts.join(", ")})`);
   }
   out.push("}", "");
+  const sizeScale = tokens.type?.sizeScale ?? [];
+  if (sizeScale.length > 0) {
+    out.push("object UiFontSizes {");
+    for (const s of sizeScale)
+      out.push(`    val ${camel(s.name)} = ${Number.parseFloat(s.fontSize)}.sp`);
+    out.push("}", "");
+  }
   return out.join("\n");
 }
-
 
 /**
  * Library flavour of Theme.kt: explicit `public` + types (the kit compiles with explicitApi),
@@ -449,6 +455,7 @@ function buildLibraryThemeKt(tokens, pkg) {
     "import androidx.compose.ui.text.TextStyle",
     "import androidx.compose.ui.text.font.FontWeight",
     "import androidx.compose.ui.unit.Dp",
+    "import androidx.compose.ui.unit.TextUnit",
     "import androidx.compose.ui.unit.dp",
     "import androidx.compose.ui.unit.em",
     "import androidx.compose.ui.unit.sp",
@@ -489,7 +496,11 @@ function buildLibraryThemeKt(tokens, pkg) {
         });
         out.push(`    private val ${camel(`${theme}-${id}`)} = AccentPalette(${args.join(", ")})`);
       }
-      out.push("", `    public fun ${camel(theme)}(id: String): AccentPalette? =`, "        when (id) {");
+      out.push(
+        "",
+        `    public fun ${camel(theme)}(id: String): AccentPalette? =`,
+        "        when (id) {",
+      );
       for (const id of palettes.keys()) {
         out.push(`            "${id}" -> ${camel(`${theme}-${id}`)}`);
       }
@@ -502,7 +513,9 @@ function buildLibraryThemeKt(tokens, pkg) {
   for (const t of tokens.radius?.tokens ?? []) {
     const n = camel(stripPrefix(t.name, "radius"));
     const pill = Number.parseFloat(t.value) >= 999;
-    out.push(`    public val ${n}: RoundedCornerShape = RoundedCornerShape(${pill ? "50" : px(t.value)})`);
+    out.push(
+      `    public val ${n}: RoundedCornerShape = RoundedCornerShape(${pill ? "50" : px(t.value)})`,
+    );
   }
   out.push("}", "", "public object UiSizes {");
   for (const t of [...(tokens.spacing?.tokens ?? []), ...(tokens.size?.tokens ?? [])]) {
@@ -511,7 +524,11 @@ function buildLibraryThemeKt(tokens, pkg) {
   out.push("}", "");
 
   const family = (tokens.type?.fonts ?? [])[0]?.family ?? "";
-  out.push(`public const val UiFontFamilyName: String = "${family}"`, "", "public object UiTypography {");
+  out.push(
+    `public const val UiFontFamilyName: String = "${family}"`,
+    "",
+    "public object UiTypography {",
+  );
   for (const s of typeStyles(tokens)) {
     const size = Number.parseFloat(s.fontSize);
     const parts = [`fontSize = ${size}.sp`];
@@ -526,6 +543,13 @@ function buildLibraryThemeKt(tokens, pkg) {
     out.push(`    public val ${camel(s.name)}: TextStyle = TextStyle(${parts.join(", ")})`);
   }
   out.push("}", "");
+  const sizeScale = tokens.type?.sizeScale ?? [];
+  if (sizeScale.length > 0) {
+    out.push("public object UiFontSizes {");
+    for (const s of sizeScale)
+      out.push(`    public val ${camel(s.name)}: TextUnit = ${Number.parseFloat(s.fontSize)}.sp`);
+    out.push("}", "");
+  }
   return out.join("\n");
 }
 
