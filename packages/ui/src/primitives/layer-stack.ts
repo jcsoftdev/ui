@@ -1,3 +1,5 @@
+import { globalSingleton } from "./global-singleton.js";
+
 /** Ordered stack of open overlay layers; only the topmost reacts to Escape and outside presses. */
 export interface LayerStack<T extends object = object> {
   push(layer: T): () => void;
@@ -20,4 +22,6 @@ export function createLayerStack<T extends object = object>(): LayerStack<T> {
   };
 }
 
-export const overlayLayers = createLayerStack();
+export const overlayLayers = globalSingleton("@jcsoftdev/ui/overlay-layers", () =>
+  createLayerStack(),
+);

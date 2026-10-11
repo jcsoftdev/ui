@@ -3,14 +3,15 @@
  * parts forward props and refs, expose `data-state`, and take `asChild` where a
  * trigger makes sense. Styled components in `overlays/` are built on top of them.
  *
- * Not yet published as a subpath; the `exports` entry is added by a later task.
+ * Only the building blocks meant for consumers are exported. Internals (layer
+ * stack singleton, scroll lock, `hideOthers`, tab helpers) are imported by file
+ * from inside the package. The package `./*` wildcard export already resolves
+ * `@jcsoftdev/ui/primitives` to this barrel (built as `dist/primitives/index.js`);
+ * deep paths such as `primitives/hide-others` do not resolve. The documented,
+ * explicit entry is defined in T14.
  */
 export * as DialogPrimitive from "./dialog/dialog.js";
-export { getTabbables, resolveTabWrap } from "./focusable.js";
-export { hideOthers } from "./hide-others.js";
-export { createLayerStack, type LayerStack, overlayLayers } from "./layer-stack.js";
 export { Portal } from "./portal.js";
-export { createRefCountedLock, lockBodyScroll } from "./scroll-lock.js";
 export {
   type DismissableLayerOptions,
   type FocusOutsideEvent,

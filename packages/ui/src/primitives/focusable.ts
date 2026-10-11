@@ -41,3 +41,23 @@ export function resolveTabWrap<T>(items: readonly T[], active: T | null, shift: 
   if (shift && active === first) return last;
   return null;
 }
+
+/**
+ * Tab target when focus sits on a non-tabbable node inside the container (a
+ * `tabindex="-1"` region): the neighbouring tabbable in document order, wrapping
+ * at the ends. Mirrors the browser's own sequential navigation start point.
+ */
+export function resolveTabFromInside(
+  items: readonly HTMLElement[],
+  active: HTMLElement,
+  shift: boolean,
+): HTMLElement | null {
+  if (items.length === 0) return null;
+  const follows = (item: HTMLElement) =>
+    Boolean(active.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING);
+  if (shift) {
+    const before = items.filter((item) => !follows(item));
+    return before[before.length - 1] ?? items[items.length - 1] ?? null;
+  }
+  return items.find((item) => follows(item)) ?? items[0] ?? null;
+}

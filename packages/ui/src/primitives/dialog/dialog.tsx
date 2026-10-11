@@ -8,6 +8,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -147,7 +148,7 @@ export function Close({ asChild, onClick, ...props }: ButtonProps) {
 
 export function Title({ asChild, ...props }: ComponentProps<"h2"> & { asChild?: boolean }) {
   const { titleId, registerTitle } = useDialogContext("DialogTitle");
-  useEffect(() => {
+  useLayoutEffect(() => {
     registerTitle(true);
     return () => registerTitle(false);
   }, [registerTitle]);
@@ -157,7 +158,7 @@ export function Title({ asChild, ...props }: ComponentProps<"h2"> & { asChild?: 
 
 export function Description({ asChild, ...props }: ComponentProps<"p"> & { asChild?: boolean }) {
   const { descriptionId, registerDescription } = useDialogContext("DialogDescription");
-  useEffect(() => {
+  useLayoutEffect(() => {
     registerDescription(true);
     return () => registerDescription(false);
   }, [registerDescription]);
@@ -233,6 +234,12 @@ function ContentImpl({
   const { open, modal, setOpen, triggerRef, overlayRef } = context;
   const listening = open && engaged;
   const isTop = useLayer(listening);
+  const interactedOutside = useRef(false);
+  const focusInTree = useRef<() => boolean>(() => false);
+
+  useEffect(() => {
+    if (listening) interactedOutside.current = false;
+  }, [listening]);
 
   useEffect(() => {
     if (!engaged || !modal) return;
@@ -249,11 +256,19 @@ function ContentImpl({
     active: engaged,
     trapped: modal && open,
     isTop,
+    // Portaled React children (menus, popovers) own focus while they are open.
+    allowFocus: () => focusInTree.current(),
     onMountAutoFocus: onOpenAutoFocus,
     onUnmountAutoFocus: (event) => {
       onCloseAutoFocus?.(event);
+      if (event.defaultPrevented) return;
+      // A non-modal dialog closed by pressing elsewhere leaves focus where the user put it.
+      if (!modal && interactedOutside.current) {
+        event.preventDefault();
+        return;
+      }
       const trigger = triggerRef.current;
-      if (!event.defaultPrevented && trigger && document.contains(trigger)) {
+      if (trigger && document.contains(trigger)) {
         event.preventDefault();
         trigger.focus({ preventScroll: true });
       }
@@ -280,13 +295,18 @@ function ContentImpl({
       onInteractOutside?.(event);
       const target = event.detail.originalEvent.target as Node | null;
       if (!modal && target && triggerRef.current?.contains(target)) event.preventDefault();
+      if (!event.defaultPrevented) interactedOutside.current = true;
     },
     onDismiss: () => setOpen(false),
   });
 
+  focusInTree.current = layerProps.isFocusInTree;
+
   const ariaLabel = props["aria-label"];
   const ariaLabelledBy = props["aria-labelledby"];
-  const nameId = ariaLabelledBy ?? (context.hasTitle ? context.titleId : undefined);
+  // Rendered from the first paint so the name exists when focus first lands in the dialog;
+  // an explicit aria-label alone wins unless a DialogTitle is also present.
+  const nameId = ariaLabelledBy ?? (ariaLabel && !context.hasTitle ? undefined : context.titleId);
   useEffect(() => {
     if (isProduction() || !engaged) return;
     if (!ariaLabel && !ariaLabelledBy && !document.getElementById(context.titleId)) {

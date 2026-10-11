@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useUiStrings } from "../../i18n/ui-strings-provider.js";
+import { Portal } from "../../primitives/portal.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import {
@@ -227,29 +228,31 @@ export function Toaster({
   }, []);
 
   return (
-    <section
-      ref={regionRef}
-      data-ui-overlay-ignore=""
-      aria-label={label ?? strings.notifications}
-      tabIndex={-1}
-      className={cn(
-        "pointer-events-none fixed z-[1000] flex outline-none",
-        POSITION[position],
-        className,
-      )}
-    >
-      <div
-        className={cn("m-0 flex list-none gap-2 p-0", fromTop ? "flex-col-reverse" : "flex-col")}
+    <Portal>
+      <section
+        ref={regionRef}
+        data-ui-overlay-ignore=""
+        aria-label={label ?? strings.notifications}
+        tabIndex={-1}
+        className={cn(
+          "pointer-events-none fixed z-[1000] flex outline-none",
+          POSITION[position],
+          className,
+        )}
       >
-        {shown.map((record) => (
-          <ToastItem
-            key={record.id}
-            record={record}
-            duration={duration}
-            reducedMotion={reducedMotion}
-          />
-        ))}
-      </div>
-    </section>
+        <div
+          className={cn("m-0 flex list-none gap-2 p-0", fromTop ? "flex-col-reverse" : "flex-col")}
+        >
+          {shown.map((record) => (
+            <ToastItem
+              key={record.id}
+              record={record}
+              duration={duration}
+              reducedMotion={reducedMotion}
+            />
+          ))}
+        </div>
+      </section>
+    </Portal>
   );
 }

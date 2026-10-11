@@ -1,7 +1,7 @@
 "use client";
 
 import { type RefObject, useEffect, useRef } from "react";
-import { getTabbables, resolveTabWrap } from "./focusable.js";
+import { getTabbables, resolveTabFromInside, resolveTabWrap } from "./focusable.js";
 
 export interface FocusScopeOptions {
   ref: RefObject<HTMLElement | null>;
@@ -10,6 +10,11 @@ export interface FocusScopeOptions {
   /** Keep Tab and Shift+Tab inside while true and this scope is on top. */
   trapped: boolean;
   isTop?: (() => boolean) | undefined;
+  /**
+   * While trapped, focus that lands outside the container is pulled back unless this
+   * returns true for the new target. Live regions and `[data-ui-overlay-ignore]` are always allowed.
+   */
+  allowFocus?: ((target: Element) => boolean) | undefined;
   onMountAutoFocus?: ((event: Event) => void) | undefined;
   onUnmountAutoFocus?: ((event: Event) => void) | undefined;
 }
@@ -63,25 +68,48 @@ export function useFocusScope(options: FocusScopeOptions) {
   useEffect(() => {
     const container = latest.current.ref.current;
     if (!active || !trapped || !container) return;
+    const isActiveScope = () => !latest.current.isTop || latest.current.isTop();
+    let lastFocused: HTMLElement | null = container.contains(document.activeElement)
+      ? (document.activeElement as HTMLElement)
+      : null;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Tab" || event.altKey || event.ctrlKey || event.metaKey) return;
-      if (latest.current.isTop && !latest.current.isTop()) return;
+      if (!isActiveScope()) return;
       const items = getTabbables(container);
       if (items.length === 0) {
         event.preventDefault();
         return;
       }
-      const target = resolveTabWrap(
-        items,
-        document.activeElement as HTMLElement | null,
-        event.shiftKey,
-      );
+      const active = document.activeElement as HTMLElement | null;
+      const target =
+        active && active !== container && container.contains(active) && !items.includes(active)
+          ? resolveTabFromInside(items, active, event.shiftKey)
+          : resolveTabWrap(items, active, event.shiftKey);
       if (target) {
         event.preventDefault();
         focusWithoutScroll(target);
       }
     };
+
+    const onFocusIn = (event: FocusEvent) => {
+      const target = event.target as Element | null;
+      if (!target || !(target instanceof Element)) return;
+      if (container.contains(target)) {
+        lastFocused = target as HTMLElement;
+        return;
+      }
+      if (!isActiveScope() || target.closest("[aria-live], [data-ui-overlay-ignore]")) return;
+      if (latest.current.allowFocus?.(target)) return;
+      const fallback = getTabbables(container)[0] ?? container;
+      focusWithoutScroll(lastFocused && container.contains(lastFocused) ? lastFocused : fallback);
+    };
+
     container.addEventListener("keydown", onKeyDown);
-    return () => container.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("focusin", onFocusIn);
+    return () => {
+      container.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("focusin", onFocusIn);
+    };
   }, [active, trapped]);
 }

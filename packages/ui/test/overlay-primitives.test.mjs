@@ -67,3 +67,27 @@ test("resolveTabWrap wraps at the ends and enters from the matching end", () => 
   assert.equal(resolveTabWrap(items, "container", true), "c");
   assert.equal(resolveTabWrap([], "x", false), null);
 });
+
+test("global singleton returns one shared instance per key across module copies", async () => {
+  const bundleSingleton = await build({
+    stdin: {
+      contents: `export { globalSingleton } from "./global-singleton.ts";`,
+      resolveDir: join(here, "../src/primitives"),
+      loader: "ts",
+    },
+    bundle: true,
+    format: "esm",
+    platform: "node",
+    write: false,
+  });
+  const source = Buffer.from(bundleSingleton.outputFiles[0].contents).toString();
+  const copy = async (tag) =>
+    import(`data:text/javascript;base64,${Buffer.from(`${source}\n// ${tag}`).toString("base64")}`);
+  const first = (await copy("one")).globalSingleton;
+  const second = (await copy("two")).globalSingleton;
+  const shared = first("test/shared", () => ({}));
+  assert.equal(
+    second("test/shared", () => ({ other: true })),
+    shared,
+  );
+});

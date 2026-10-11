@@ -25,6 +25,9 @@ export interface DismissableLayerOptions {
   onDismiss: () => void;
 }
 
+/** Layers from libraries outside this stack that can be open inside a dialog (removed as T10/T11 migrate them). */
+const FOREIGN_LAYER = "[data-radix-popper-content-wrapper], [role=menu], [role=listbox]";
+
 function outsideEvent<E extends Event>(name: string, originalEvent: E) {
   return new CustomEvent(name, { cancelable: true, detail: { originalEvent } });
 }
@@ -51,12 +54,23 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
 
     const onKeyDown = (event: KeyboardEvent) => {
       const o = latest.current;
-      if (event.key !== "Escape" || !o.isTop()) return;
+      if (event.key !== "Escape" || event.isComposing || event.keyCode === 229) return;
+      if (event.defaultPrevented || !o.isTop() || belongsToForeignLayer(event)) return;
       o.onEscapeKeyDown?.(event);
       if (!event.defaultPrevented) {
         event.preventDefault();
         o.onDismiss();
       }
+    };
+
+    // Escape pressed inside a React child rendered in a portal (a Radix menu or popover
+    // not yet migrated to this layer stack) belongs to that child, which closes itself.
+    const belongsToForeignLayer = (event: KeyboardEvent) => {
+      if (isInside(event)) return false;
+      const target = event.target as Element | null;
+      return (
+        insideFocus.current || (target instanceof Element && target.closest(FOREIGN_LAYER) !== null)
+      );
     };
 
     const dispatchOutside = (
@@ -109,6 +123,8 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
   }, [active]);
 
   return {
+    /** True while focus is inside this layer's React subtree, including portaled children. */
+    isFocusInTree: () => insideFocus.current,
     onPointerDownCapture: (_event: ReactPointerEvent) => {
       insidePointer.current = true;
     },

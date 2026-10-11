@@ -13,17 +13,56 @@ function toMs(value: string): number[] {
   });
 }
 
-/** Longest animation or transition (duration + delay) on the node, in ms. */
+/** Properties whose transition can be an exit effect; colour transitions (hover styles) are not. */
+const EXIT_PROPERTIES = new Set([
+  "all",
+  "opacity",
+  "transform",
+  "translate",
+  "scale",
+  "rotate",
+  "filter",
+  "backdrop-filter",
+  "clip-path",
+  "visibility",
+  "width",
+  "height",
+  "max-width",
+  "max-height",
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "inset",
+]);
+
+const cycle = (list: number[], index: number) => list[index % list.length] ?? 0;
+
+/**
+ * Longest exit effect on the node, in ms: its own animation (when `animation-name`
+ * is set) or a transition of an exit-relevant property. Unrelated transitions such
+ * as `transition-colors` are ignored so unmounting never waits for the safety timeout.
+ */
 export function exitDuration(node: Element): number {
   const style = getComputedStyle(node);
-  const total = (durations: string, delays: string): number => {
-    const d = toMs(durations);
-    const delay = toMs(delays);
-    return Math.max(0, ...d.map((value, i) => value + (delay[i % delay.length] ?? 0)));
-  };
+  const total = (durations: string, delays: string, index = 0): number =>
+    cycle(toMs(durations), index) + cycle(toMs(delays), index);
   const animated =
-    style.animationName === "none" ? 0 : total(style.animationDuration, style.animationDelay);
-  const transitioned = total(style.transitionDuration, style.transitionDelay);
+    style.animationName === "none"
+      ? 0
+      : Math.max(
+          0,
+          ...toMs(style.animationDuration).map((_, i) =>
+            total(style.animationDuration, style.animationDelay, i),
+          ),
+        );
+  const properties = style.transitionProperty.split(",").map((part) => part.trim());
+  const transitioned = Math.max(
+    0,
+    ...properties.map((property, i) =>
+      EXIT_PROPERTIES.has(property) ? total(style.transitionDuration, style.transitionDelay, i) : 0,
+    ),
+  );
   return Math.max(animated, transitioned);
 }
 
@@ -53,7 +92,10 @@ export function usePresence(present: boolean, ref: RefObject<HTMLElement | null>
     }
     const finish = () => setMounted(false);
     const onEnd = (event: Event) => {
-      if (event.target === node) finish();
+      if (event.target !== node) return;
+      const property = (event as TransitionEvent).propertyName;
+      if (event.type === "transitionend" && !EXIT_PROPERTIES.has(property)) return;
+      finish();
     };
     node.addEventListener("animationend", onEnd);
     node.addEventListener("transitionend", onEnd);

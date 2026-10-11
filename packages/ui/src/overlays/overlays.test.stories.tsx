@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
 import { UiStringsProvider } from "../i18n/index.js";
@@ -11,6 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./dialog/dialog.js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./dropdown-menu/dropdown-menu.js";
+import { Toaster, toast } from "./toaster/index.js";
 
 const meta = {
   title: "Tests/Overlays",
@@ -282,5 +290,257 @@ export const DialogCloseLabelOverride: Story = {
     await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
     const dialog = await screen.findByRole("dialog");
     await expect(within(dialog).getByRole("button", { name: "Salir" })).toBeInTheDocument();
+  },
+};
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const DialogEscapeInsideRadixMenuClosesOnlyMenu: Story = {
+  render: () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Abrir</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Con menu</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>Acciones</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>Reprogramar</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    const dialog = await screen.findByRole("dialog", { name: "Con menu" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Acciones" }));
+    await screen.findByRole("menu");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
+    await pause(100);
+    await expect(dialogs()).toHaveLength(1);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(dialogs()).toHaveLength(0));
+  },
+};
+
+export const ToasterStaysReachableWhileModalOpen: Story = {
+  render: () => (
+    <div id="app-root">
+      <Toaster />
+      <Simple />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    let undone = false;
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    toast("Cita anulada", { action: { label: "Deshacer", onClick: () => (undone = true) } });
+    const action = await screen.findByRole("button", { name: "Deshacer" });
+    await expect(action.closest("[inert]")).toBeNull();
+    await expect(action.closest("[aria-hidden=true]")).toBeNull();
+    await userEvent.click(action);
+    await expect(undone).toBe(true);
+    toast.dismiss();
+  },
+};
+
+export const NonModalOutsideInputKeepsFocus: Story = {
+  render: () => (
+    <div>
+      <input aria-label="Fuera" />
+      <Dialog modal={false}>
+        <DialogTrigger asChild>
+          <Button>Abrir</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>No modal</DialogTitle>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    const outside = within(canvasElement).getByLabelText("Fuera");
+    await userEvent.click(outside);
+    await waitFor(() => expect(dialogs()).toHaveLength(0));
+    await pause(50);
+    await expect(outside).toHaveFocus();
+  },
+};
+
+export const DialogNamedAtFirstFocusin: Story = {
+  render: () => <Simple />,
+  play: async ({ canvasElement }) => {
+    const seen: Array<{ labelledBy: string | null; named: boolean }> = [];
+    const onFocusIn = (event: FocusEvent) => {
+      const dialog = (event.target as Element).closest("[role=dialog]");
+      if (!dialog) return;
+      const id = dialog.getAttribute("aria-labelledby");
+      seen.push({ labelledBy: id, named: Boolean(id && document.getElementById(id)) });
+    };
+    document.addEventListener("focusin", onFocusIn, true);
+    try {
+      await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+      await screen.findByRole("dialog", { name: "Anular cita" });
+      await expect(seen.length).toBeGreaterThan(0);
+      await expect(seen[0]?.named).toBe(true);
+    } finally {
+      document.removeEventListener("focusin", onFocusIn, true);
+    }
+  },
+};
+
+function NestedInRootContainer() {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  return (
+    <div>
+      <div ref={setContainer} data-testid="slot" />
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button>Abrir A</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Dialogo A</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>Abrir B</Button>
+              </DialogTrigger>
+              <DialogContent container={container}>
+                <DialogHeader>
+                  <DialogTitle>Dialogo B</DialogTitle>
+                </DialogHeader>
+                <DialogClose asChild>
+                  <Button>Cerrar B</Button>
+                </DialogClose>
+              </DialogContent>
+            </Dialog>
+          </DialogBody>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export const NestedDialogInContainerInsideRootIsUsable: Story = {
+  render: () => <NestedInRootContainer />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir A" }));
+    const a = await screen.findByRole("dialog", { name: "Dialogo A" });
+    await userEvent.click(within(a).getByRole("button", { name: "Abrir B" }));
+    const b = await screen.findByRole("dialog", { name: "Dialogo B" });
+    await expect(canvasElement.contains(b)).toBe(true);
+    await expect(b.closest("[inert]")).toBeNull();
+    await expect(b.closest("[aria-hidden=true]")).toBeNull();
+    await waitFor(() => expect(b.contains(document.activeElement)).toBe(true));
+    await userEvent.click(within(b).getByRole("button", { name: "Cerrar B" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Dialogo B" })).toBeNull());
+    await expect(a.closest("[inert]")).toBeNull();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(dialogs()).toHaveLength(0));
+    await expect(canvasElement.closest("[inert]")).toBeNull();
+  },
+};
+
+export const TabFromNonTabbableRegionGoesToNextTabbable: Story = {
+  render: () => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Abrir</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Con zona</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <button type="button">Uno</button>
+          <div tabIndex={-1} data-testid="zona">
+            zona
+          </div>
+          <button type="button">Dos</button>
+          <button type="button">Tres</button>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    const zone = screen.getByTestId("zona");
+    zone.focus();
+    await userEvent.tab();
+    await expect(screen.getByRole("button", { name: "Dos" })).toHaveFocus();
+    zone.focus();
+    await userEvent.tab({ shift: true });
+    await expect(screen.getByRole("button", { name: "Uno" })).toHaveFocus();
+  },
+};
+
+export const FocusMovedOutsideIsPulledBack: Story = {
+  render: () => <Simple />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    const field = screen.getByLabelText("Motivo");
+    await waitFor(() => expect(field).toHaveFocus());
+    const stray = document.createElement("button");
+    stray.textContent = "Intruso";
+    document.body.append(stray);
+    try {
+      stray.focus();
+      await waitFor(() => expect(field).toHaveFocus());
+    } finally {
+      stray.remove();
+    }
+  },
+};
+
+export const EscapeDuringImeCompositionIsIgnored: Story = {
+  render: () => <Simple />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    const field = screen.getByLabelText("Motivo");
+    field.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Escape",
+        isComposing: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    await pause(100);
+    await expect(dialogs()).toHaveLength(1);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(dialogs()).toHaveLength(0));
+  },
+};
+
+export const ColorTransitionDoesNotDelayUnmount: Story = {
+  render: () => (
+    <>
+      <style>{".t9-colors { transition: background-color 3s, color 3s; }"}</style>
+      <Simple className="t9-colors" />
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(dialogs()).toHaveLength(0), { timeout: 500 });
   },
 };
