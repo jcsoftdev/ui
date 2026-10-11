@@ -1,21 +1,22 @@
 import { globalSingleton } from "./global-singleton.js";
 
 /** Never hidden: scripts and styles, live regions (toaster) and explicit opt-outs. */
-const IGNORED = "[aria-live], [data-ui-overlay-ignore]";
+const IGNORED = '[aria-live]:not([aria-live="off"]), [data-ui-overlay-ignore]';
 const SKIP = `script, style, template, ${IGNORED}`;
 
 interface Instance {
   hide: ReadonlySet<Element>;
 }
 
-interface Saved {
-  ariaHidden: string | null;
-  inert: string | null;
+/** Attributes this module wrote on an element, with the value to put back. Absent means not ours. */
+interface Owned {
+  ariaHidden?: { previous: string | null };
+  inert?: { previous: string | null };
 }
 
 interface HideState {
   instances: Instance[];
-  applied: Map<Element, Saved>;
+  applied: Map<Element, Owned>;
 }
 
 const state = globalSingleton<HideState>("@jcsoftdev/ui/hide-others", () => ({
@@ -23,27 +24,40 @@ const state = globalSingleton<HideState>("@jcsoftdev/ui/hide-others", () => ({
   applied: new Map(),
 }));
 
-function restore(element: Element, saved: Saved) {
-  if (saved.ariaHidden === null) element.removeAttribute("aria-hidden");
-  else element.setAttribute("aria-hidden", saved.ariaHidden);
-  if (saved.inert === null) element.removeAttribute("inert");
-  else element.setAttribute("inert", saved.inert);
+function put(element: Element, name: string, previous: string | null) {
+  if (previous === null) element.removeAttribute(name);
+  else element.setAttribute(name, previous);
+}
+
+/** Releases only what we wrote and only while it is still ours: values changed or removed by others stay as they are. */
+function release(element: Element, owned: Owned) {
+  if (owned.ariaHidden && element.getAttribute("aria-hidden") === "true") {
+    put(element, "aria-hidden", owned.ariaHidden.previous);
+  }
+  if (owned.inert && element.hasAttribute("inert")) {
+    put(element, "inert", owned.inert.previous);
+  }
 }
 
 /** Only the most recently opened modal decides what is hidden; releasing it re-applies the one below. */
 function reconcile() {
-  for (const [element, saved] of state.applied) restore(element, saved);
+  for (const [element, owned] of state.applied) release(element, owned);
   state.applied.clear();
   const top = state.instances[state.instances.length - 1];
   if (!top) return;
   for (const element of top.hide) {
     if (!element.isConnected) continue;
-    state.applied.set(element, {
-      ariaHidden: element.getAttribute("aria-hidden"),
-      inert: element.getAttribute("inert"),
-    });
-    element.setAttribute("aria-hidden", "true");
-    element.setAttribute("inert", "");
+    const owned: Owned = {};
+    // Already hidden by someone else (e.g. a Radix menu's own hider): uncontrolled, never touched or restored.
+    if (element.getAttribute("aria-hidden") !== "true") {
+      owned.ariaHidden = { previous: element.getAttribute("aria-hidden") };
+      element.setAttribute("aria-hidden", "true");
+    }
+    if (!element.hasAttribute("inert")) {
+      owned.inert = { previous: null };
+      element.setAttribute("inert", "");
+    }
+    if (owned.ariaHidden || owned.inert) state.applied.set(element, owned);
   }
 }
 
@@ -80,6 +94,11 @@ function computeHidden(kept: readonly Element[]): Set<Element> {
  * inside an otherwise hidden subtree. The most recent call wins, so a nested modal
  * portaled into a container that an outer modal hid is still usable, and releases
  * can happen in any order.
+ *
+ * Only attributes written here are released, and only while they still hold our
+ * value; an element already `aria-hidden="true"` or `inert` from elsewhere is left
+ * alone. Like Radix, nodes appended to `body` after a modal opens (and not kept)
+ * are not hidden until the modal is reopened.
  */
 export function hideOthers(keep: ReadonlyArray<Element | null | undefined>): () => void {
   const kept = keep.filter((node): node is Element => Boolean(node));

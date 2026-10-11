@@ -4,6 +4,7 @@ import {
   type FocusEvent as ReactFocusEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
+  useCallback,
   useEffect,
   useRef,
 } from "react";
@@ -26,7 +27,11 @@ export interface DismissableLayerOptions {
 }
 
 /** Layers from libraries outside this stack that can be open inside a dialog (removed as T10/T11 migrate them). */
-const FOREIGN_LAYER = "[data-radix-popper-content-wrapper], [role=menu], [role=listbox]";
+const FOREIGN_LAYER =
+  "[data-radix-popper-content-wrapper], [role=menu], [role=listbox][data-state=open]";
+
+/** Owned by something else that handles its own Escape (a toast). */
+const NOT_OURS = '[aria-live]:not([aria-live="off"]), [data-ui-overlay-ignore]';
 
 function outsideEvent<E extends Event>(name: string, originalEvent: E) {
   return new CustomEvent(name, { cancelable: true, detail: { originalEvent } });
@@ -41,7 +46,12 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
   const latest = useRef(options);
   latest.current = options;
   const insidePointer = useRef(false);
-  const insideFocus = useRef(false);
+  const focusedNode = useRef<Element | null>(null);
+  /** Focus is inside this layer's React subtree right now; derived from the live active element, never sticky. */
+  const focusInTree = useCallback(() => {
+    const node = focusedNode.current;
+    return node?.isConnected === true && document.activeElement === node;
+  }, []);
   const { active } = options;
 
   useEffect(() => {
@@ -67,9 +77,16 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
     // not yet migrated to this layer stack) belongs to that child, which closes itself.
     const belongsToForeignLayer = (event: KeyboardEvent) => {
       if (isInside(event)) return false;
-      const target = event.target as Element | null;
+      const target = event.target;
+      if (
+        !(target instanceof Element) ||
+        target === document.body ||
+        target === document.documentElement
+      ) {
+        return false;
+      }
       return (
-        insideFocus.current || (target instanceof Element && target.closest(FOREIGN_LAYER) !== null)
+        target === focusedNode.current || target.closest(`${FOREIGN_LAYER}, ${NOT_OURS}`) !== null
       );
     };
 
@@ -102,7 +119,7 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
     };
 
     const onFocusIn = (event: FocusEvent) => {
-      const inside = insideFocus.current || isInside(event);
+      const inside = focusInTree() || isInside(event);
       if (inside || !latest.current.isTop()) return;
       dispatchOutside("ui.focusOutside", event, latest.current.onFocusOutside);
     };
@@ -120,19 +137,19 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("focusin", onFocusIn);
     };
-  }, [active]);
+  }, [active, focusInTree]);
 
   return {
-    /** True while focus is inside this layer's React subtree, including portaled children. */
-    isFocusInTree: () => insideFocus.current,
+    /** Whether focus is inside this layer's React subtree right now, including portaled children. */
+    isFocusInTree: focusInTree,
     onPointerDownCapture: (_event: ReactPointerEvent) => {
       insidePointer.current = true;
     },
-    onFocusCapture: (_event: ReactFocusEvent) => {
-      insideFocus.current = true;
+    onFocusCapture: (event: ReactFocusEvent) => {
+      focusedNode.current = event.target as Element;
     },
     onBlurCapture: (_event: ReactFocusEvent) => {
-      insideFocus.current = false;
+      focusedNode.current = null;
     },
   };
 }

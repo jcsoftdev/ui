@@ -8,10 +8,8 @@ import {
   useContext,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
-  useState,
 } from "react";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
@@ -43,10 +41,6 @@ interface DialogContextValue {
   contentId: string;
   titleId: string;
   descriptionId: string;
-  hasTitle: boolean;
-  hasDescription: boolean;
-  registerTitle: (present: boolean) => void;
-  registerDescription: (present: boolean) => void;
 }
 
 const DialogContext = createContext<DialogContextValue | null>(null);
@@ -86,8 +80,6 @@ export function Root({
   });
   const triggerRef = useRef<HTMLElement | null>(null);
   const overlayRef = useRef<HTMLElement | null>(null);
-  const [hasTitle, setHasTitle] = useState(false);
-  const [hasDescription, setHasDescription] = useState(false);
   const contentId = useId();
   const titleId = useId();
   const descriptionId = useId();
@@ -101,12 +93,8 @@ export function Root({
       contentId,
       titleId,
       descriptionId,
-      hasTitle,
-      hasDescription,
-      registerTitle: setHasTitle,
-      registerDescription: setHasDescription,
     }),
-    [open, modal, setOpen, contentId, titleId, descriptionId, hasTitle, hasDescription],
+    [open, modal, setOpen, contentId, titleId, descriptionId],
   );
   return <DialogContext.Provider value={value}>{children}</DialogContext.Provider>;
 }
@@ -147,21 +135,13 @@ export function Close({ asChild, onClick, ...props }: ButtonProps) {
 }
 
 export function Title({ asChild, ...props }: ComponentProps<"h2"> & { asChild?: boolean }) {
-  const { titleId, registerTitle } = useDialogContext("DialogTitle");
-  useLayoutEffect(() => {
-    registerTitle(true);
-    return () => registerTitle(false);
-  }, [registerTitle]);
+  const { titleId } = useDialogContext("DialogTitle");
   const Comp = asChild ? Slot : "h2";
   return <Comp id={titleId} {...props} />;
 }
 
 export function Description({ asChild, ...props }: ComponentProps<"p"> & { asChild?: boolean }) {
-  const { descriptionId, registerDescription } = useDialogContext("DialogDescription");
-  useLayoutEffect(() => {
-    registerDescription(true);
-    return () => registerDescription(false);
-  }, [registerDescription]);
+  const { descriptionId } = useDialogContext("DialogDescription");
   const Comp = asChild ? Slot : "p";
   return <Comp id={descriptionId} {...props} />;
 }
@@ -304,9 +284,9 @@ function ContentImpl({
 
   const ariaLabel = props["aria-label"];
   const ariaLabelledBy = props["aria-labelledby"];
-  // Rendered from the first paint so the name exists when focus first lands in the dialog;
-  // an explicit aria-label alone wins unless a DialogTitle is also present.
-  const nameId = ariaLabelledBy ?? (ariaLabel && !context.hasTitle ? undefined : context.titleId);
+  // Like Radix, the ids are always rendered so the name and description exist from the
+  // first focusin once Title/Description mount. A dangling reference is ignored by
+  // assistive tech; pass `aria-describedby={undefined}` (or your own id) to opt out.
   useEffect(() => {
     if (isProduction() || !engaged) return;
     if (!ariaLabel && !ariaLabelledBy && !document.getElementById(context.titleId)) {
@@ -321,8 +301,8 @@ function ContentImpl({
       id={context.contentId}
       role="dialog"
       aria-modal={modal ? true : undefined}
-      aria-labelledby={nameId}
-      aria-describedby={context.hasDescription ? context.descriptionId : undefined}
+      aria-labelledby={context.titleId}
+      aria-describedby={context.descriptionId}
       data-state={stateOf(open)}
       tabIndex={-1}
       {...props}

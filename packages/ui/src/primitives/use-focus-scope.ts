@@ -19,6 +19,8 @@ export interface FocusScopeOptions {
   onUnmountAutoFocus?: ((event: Event) => void) | undefined;
 }
 
+const LIVE_OR_IGNORED = '[aria-live]:not([aria-live="off"]), [data-ui-overlay-ignore]';
+
 function focusWithoutScroll(element: HTMLElement | null | undefined) {
   element?.focus({ preventScroll: true });
 }
@@ -99,15 +101,25 @@ export function useFocusScope(options: FocusScopeOptions) {
         lastFocused = target as HTMLElement;
         return;
       }
-      if (!isActiveScope() || target.closest("[aria-live], [data-ui-overlay-ignore]")) return;
+      if (!isActiveScope() || target.closest(LIVE_OR_IGNORED)) return;
       if (latest.current.allowFocus?.(target)) return;
       const fallback = getTabbables(container)[0] ?? container;
       focusWithoutScroll(lastFocused && container.contains(lastFocused) ? lastFocused : fallback);
     };
 
+    // The focused node was removed (a menu closed without returning focus): bring focus back to the container.
+    const observer = new MutationObserver((mutations) => {
+      if (document.activeElement !== document.body || !isActiveScope()) return;
+      if (mutations.some((mutation) => mutation.removedNodes.length > 0)) {
+        focusWithoutScroll(container);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
     container.addEventListener("keydown", onKeyDown);
     document.addEventListener("focusin", onFocusIn);
     return () => {
+      observer.disconnect();
       container.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("focusin", onFocusIn);
     };
