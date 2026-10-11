@@ -9,6 +9,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { useUiStrings } from "../../i18n/ui-strings-provider.js";
+import { Portal } from "../../primitives/portal.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import {
@@ -41,6 +42,13 @@ export interface ToasterProps {
   className?: string;
   /** Accessible name of the region. Defaults to the `notifications` UI string. */
   label?: string;
+  /**
+   * Element the region is portaled into. Defaults to `document.body`, which sits outside
+   * wrapper-scoped CSS variables, theme classes and `dir`; pass the themed root to inherit them.
+   */
+  container?: HTMLElement | null;
+  /** Text direction of the region. Defaults to the `dir` of the `<html>` element. */
+  dir?: "ltr" | "rtl";
 }
 
 const EXIT_MS = 200;
@@ -54,6 +62,12 @@ const POSITION: Record<ToasterPosition, string> = {
   "bottom-center": "bottom-4 left-1/2 -translate-x-1/2 items-center",
   "bottom-right": "bottom-4 right-4 items-end",
 };
+
+function documentDir(): "ltr" | "rtl" | undefined {
+  if (typeof document === "undefined") return undefined;
+  const value = document.documentElement.getAttribute("dir");
+  return value === "rtl" || value === "ltr" ? value : undefined;
+}
 
 function useDocumentHidden() {
   const [hidden, setHidden] = useState(false);
@@ -210,6 +224,8 @@ export function Toaster({
   visibleToasts = 2,
   className,
   label,
+  container,
+  dir,
 }: ToasterProps) {
   const strings = useUiStrings();
   const reducedMotion = usePrefersReducedMotion();
@@ -227,28 +243,32 @@ export function Toaster({
   }, []);
 
   return (
-    <section
-      ref={regionRef}
-      aria-label={label ?? strings.notifications}
-      tabIndex={-1}
-      className={cn(
-        "pointer-events-none fixed z-[1000] flex outline-none",
-        POSITION[position],
-        className,
-      )}
-    >
-      <div
-        className={cn("m-0 flex list-none gap-2 p-0", fromTop ? "flex-col-reverse" : "flex-col")}
+    <Portal container={container}>
+      <section
+        ref={regionRef}
+        dir={dir ?? documentDir()}
+        data-ui-overlay-ignore=""
+        aria-label={label ?? strings.notifications}
+        tabIndex={-1}
+        className={cn(
+          "pointer-events-none fixed z-[1000] flex outline-none",
+          POSITION[position],
+          className,
+        )}
       >
-        {shown.map((record) => (
-          <ToastItem
-            key={record.id}
-            record={record}
-            duration={duration}
-            reducedMotion={reducedMotion}
-          />
-        ))}
-      </div>
-    </section>
+        <div
+          className={cn("m-0 flex list-none gap-2 p-0", fromTop ? "flex-col-reverse" : "flex-col")}
+        >
+          {shown.map((record) => (
+            <ToastItem
+              key={record.id}
+              record={record}
+              duration={duration}
+              reducedMotion={reducedMotion}
+            />
+          ))}
+        </div>
+      </section>
+    </Portal>
   );
 }
