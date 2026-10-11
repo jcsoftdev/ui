@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.baselineProfile)
 }
 
 android {
@@ -38,6 +39,8 @@ dependencies {
     implementation(compose.runtime)
     implementation(compose.foundation)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.profileinstaller)
+    "baselineProfile"(project(":baselineprofile"))
 }
 
 kotlin {
