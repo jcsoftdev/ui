@@ -19,6 +19,7 @@ class SampleActivity : ComponentActivity() {
                     "icons" -> IconsGallery()
                     "custom" -> CustomThemeGallery()
                     "headless" -> HeadlessGallery()
+                    "states" -> StatesGallery()
                     else -> AtomsGallery()
                 }
             }
