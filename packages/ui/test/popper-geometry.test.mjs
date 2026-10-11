@@ -155,7 +155,9 @@ test("RTL: start and end follow the reading direction", () => {
   assert.equal(rtl({ side: "bottom", align: "end" }).x, 400);
   assert.equal(rtl({ side: "bottom", align: "start", alignOffset: 10 }).x, 290);
   assert.equal(rtl({ side: "bottom", align: "end", alignOffset: 10 }).x, 410);
-  assert.equal(rtl({ side: "bottom", align: "center", alignOffset: 10 }).x, 340);
+  // alignOffset has no meaning when centred.
+  assert.equal(rtl({ side: "bottom", align: "center", alignOffset: 10 }).x, 350);
+  assert.equal(place({ side: "bottom", align: "center", alignOffset: 10 }).x, 350);
   // The vertical axis does not depend on direction.
   assert.equal(rtl({ side: "right", align: "start" }).y, 300);
 });
@@ -234,4 +236,27 @@ test("helpers: padding normalisation and rect intersection", () => {
     ]),
     { x: 50, y: 50, width: 0, height: 0 },
   );
+});
+
+test("arrow is flagged to hide when it cannot point at the anchor centre", () => {
+  const arrow = { width: 10, height: 5, padding: 4 };
+  assert.equal(place({ side: "bottom", arrow }).arrow.shouldHide, false);
+  const cornered = place({
+    side: "bottom",
+    align: "start",
+    arrow,
+    anchor: { x: 400, y: 300, width: 4, height: 40 },
+  });
+  assert.equal(cornered.arrow.shouldHide, true);
+  const narrow = place({ side: "bottom", content: { width: 12, height: 40 }, arrow });
+  assert.equal(narrow.arrow.shouldHide, true);
+});
+
+test("available size can go negative instead of clamping to zero", () => {
+  const cramped = place({
+    side: "bottom",
+    anchor: { x: 400, y: 790, width: 100, height: 40 },
+    avoidCollisions: false,
+  });
+  assert.ok(cramped.availableHeight < 0);
 });

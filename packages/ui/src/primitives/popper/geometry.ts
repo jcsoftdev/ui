@@ -61,7 +61,7 @@ export interface Placement {
   /** The anchor is entirely outside the boundary (scrolled out of view). */
   anchorHidden: boolean;
   /** Arrow offset along the content edge (`x` for top/bottom, `y` for left/right). */
-  arrow?: { x?: number; y?: number; centerOffset: number };
+  arrow?: { x?: number; y?: number; centerOffset: number; shouldHide: boolean };
 }
 
 const OPPOSITE: Record<Side, Side> = { top: "bottom", bottom: "top", left: "right", right: "left" };
@@ -106,6 +106,8 @@ function coordsFor(
   dir: Direction,
 ): { x: number; y: number } {
   const rtl = dir === "rtl";
+  // A centred content has no edge to offset from.
+  if (align === "center") alignOffset = 0;
   if (side === "top" || side === "bottom") {
     // Along the inline axis, `start` follows the reading direction.
     let x: number;
@@ -216,19 +218,16 @@ export function computePlacement(input: PlacementInput): Placement {
   let arrowResult: Placement["arrow"];
   if (arrow) {
     const edgePadding = arrow.padding ?? 0;
-    if (horizontal) {
-      const max = Math.max(edgePadding, content.width - arrow.width - edgePadding);
-      arrowResult = {
-        x: clamp(centerX - x - arrow.width / 2, edgePadding, max),
-        centerOffset: centerX - x - content.width / 2,
-      };
-    } else {
-      const max = Math.max(edgePadding, content.height - arrow.width - edgePadding);
-      arrowResult = {
-        y: clamp(centerY - y - arrow.width / 2, edgePadding, max),
-        centerOffset: centerY - y - content.height / 2,
-      };
-    }
+    const length = horizontal ? content.width : content.height;
+    const wanted = (horizontal ? centerX - x : centerY - y) - arrow.width / 2;
+    const max = Math.max(edgePadding, length - arrow.width - edgePadding);
+    const placed = clamp(wanted, edgePadding, max);
+    arrowResult = {
+      ...(horizontal ? { x: placed } : { y: placed }),
+      centerOffset: (horizontal ? centerX - x : centerY - y) - length / 2,
+      // The arrow cannot point at the anchor centre (clamped to a corner or content too short).
+      shouldHide: placed !== wanted || length < arrow.width + 2 * edgePadding,
+    };
   }
 
   const anchorHidden =
@@ -242,8 +241,8 @@ export function computePlacement(input: PlacementInput): Placement {
     y,
     side,
     align,
-    availableWidth: Math.max(0, availableWidth),
-    availableHeight: Math.max(0, availableHeight),
+    availableWidth,
+    availableHeight,
     transformOrigin,
     anchorHidden,
     ...(arrowResult ? { arrow: arrowResult } : {}),

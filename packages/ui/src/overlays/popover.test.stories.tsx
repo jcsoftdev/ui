@@ -431,3 +431,130 @@ export const ControlledWithCustomAnchor: Story = {
     );
   },
 };
+
+const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const translateOf = (transform: string): number[] | null => {
+  const match = transform.match(/translate3d\((-?[\d.]+)px,\s*(-?[\d.]+)px/);
+  return match ? [Number(match[1]), Number(match[2])] : null;
+};
+
+export const SizeLimitedContentIsPlacedCorrectlyOnFirstFrame: Story = {
+  render: () => (
+    <div className="fixed inset-0">
+      <div style={{ position: "absolute", top: window.innerHeight - 80, left: 100 }}>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button>Abrir</Button>
+          </PopoverTrigger>
+          <PopoverContent
+            aria-label="Ficha"
+            className="max-h-(--ui-popper-available-height) overflow-auto"
+          >
+            <div style={{ height: 3000 }}>Largo</div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const seen: number[] = [];
+    const record = () => {
+      for (const wrapper of document.querySelectorAll<HTMLElement>("[data-ui-popper-wrapper]")) {
+        const at = translateOf(wrapper.style.transform);
+        if (at) seen.push(at[1] as number);
+      }
+    };
+    const observer = new MutationObserver(record);
+    observer.observe(document.body, { subtree: true, childList: true, attributes: true });
+    await open(canvasElement);
+    await screen.findByRole("dialog", { name: "Ficha" });
+    await pause(100);
+    observer.disconnect();
+    await expect(seen.length).toBeGreaterThan(0);
+    // Every written position keeps the content on screen: none computed for the unlimited height.
+    await expect(Math.min(...seen)).toBeGreaterThanOrEqual(0);
+  },
+};
+
+export const PortalInsideTransformedAncestorStaysAnchored: Story = {
+  render: function Render() {
+    const [scope, setScope] = useState<HTMLElement | null>(null);
+    return (
+      <div className="p-24">
+        <div
+          ref={setScope}
+          style={{ transform: "translate(40px, 30px)", position: "relative", padding: 10 }}
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button>Abrir</Button>
+          </PopoverTrigger>
+          <PopoverContent aria-label="Ficha" container={scope}>
+            Contenido
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await open(canvasElement);
+    const content = await screen.findByRole("dialog", { name: "Ficha" });
+    await pause(100);
+    const trigger = within(canvasElement).getByRole("button", { name: "Abrir" });
+    const gap = content.getBoundingClientRect().top - trigger.getBoundingClientRect().bottom;
+    await expect(Math.abs(gap - 6)).toBeLessThan(2);
+    const wrapper = content.closest("[data-ui-popper-wrapper]");
+    await expect(wrapper?.getAttribute("dir")).toBe("ltr");
+  },
+};
+
+export const ClickingTriggerWhileOpenClosesEvenIfAncestorTakesFocus: Story = {
+  render: () => (
+    <div tabIndex={-1} data-testid="ancestor" className="p-24">
+      <Popover>
+        <PopoverTrigger asChild>
+          {/* biome-ignore lint/a11y/useSemanticElements lint/a11y/useFocusableInteractive: a non-focusable trigger is the scenario under test */}
+          <span role="button" className="inline-block p-2">
+            Abrir
+          </span>
+        </PopoverTrigger>
+        <PopoverContent aria-label="Ficha">Contenido</PopoverContent>
+      </Popover>
+    </div>
+  ),
+  parameters: { a11y: { test: "todo" } },
+  play: async ({ canvasElement }) => {
+    await open(canvasElement);
+    await screen.findByRole("dialog", { name: "Ficha" });
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await waitFor(() => expect(popover()).toBeNull());
+    await pause(200);
+    await expect(popover()).toBeNull();
+  },
+};
+
+export const TabOutWithNonTabbableTriggerGoesToNextTabbable: Story = {
+  render: () => (
+    <div className="p-24">
+      <button type="button">Primero</button>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button tabIndex={-1}>Abrir</Button>
+        </PopoverTrigger>
+        <PopoverContent aria-label="Ficha">
+          <button type="button">Dentro</button>
+        </PopoverContent>
+      </Popover>
+      <button type="button">Siguiente</button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await open(canvasElement);
+    await screen.findByRole("dialog", { name: "Ficha" });
+    await waitFor(() => expect(document.activeElement?.textContent).toBe("Dentro"));
+    await userEvent.tab();
+    await waitFor(() => expect(popover()).toBeNull());
+    await expect(document.activeElement?.textContent).toBe("Siguiente");
+  },
+};

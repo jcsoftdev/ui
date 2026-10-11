@@ -16,6 +16,7 @@ export * as PopoverPrimitive from "./popover/popover.js";
 export type {
   Align,
   ArrowGeometry,
+  Direction,
   Padding,
   Placement,
   PlacementInput,

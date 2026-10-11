@@ -197,6 +197,9 @@ function ContentImpl({
   const listening = open && engaged;
   const isTop = useLayer(listening);
   const interactedOutside = useRef(false);
+  /** A press that landed on the trigger a moment ago: the focus it causes elsewhere is not a dismissal. */
+  const pressedTrigger = useRef(false);
+  const pressedTriggerTimer = useRef<number | undefined>(undefined);
   const focusInTree = useRef<() => boolean>(() => false);
 
   useEffect(() => {
@@ -249,20 +252,32 @@ function ContentImpl({
     },
     onFocusOutside: (event) => {
       onFocusOutside?.(event);
-      // A modal traps focus, so a stray focus event must not close it.
-      if (modal) event.preventDefault();
+      // A modal traps focus, so a stray focus event must not close it. Pressing the trigger
+      // can focus a focusable ancestor (Safari buttons, a tabindex container): the trigger's
+      // own click closes the popover, so closing here too would reopen it.
+      if (modal || pressedTrigger.current) event.preventDefault();
     },
     onInteractOutside: (event) => {
       onInteractOutside?.(event);
       const target = event.detail.originalEvent.target as Node | null;
       // The trigger toggles on its own click; closing here too would reopen it.
-      if (target && triggerRef.current?.contains(target)) event.preventDefault();
+      if (target && triggerRef.current?.contains(target)) {
+        event.preventDefault();
+        if (event.detail.originalEvent.type === "pointerdown") {
+          pressedTrigger.current = true;
+          window.clearTimeout(pressedTriggerTimer.current);
+          pressedTriggerTimer.current = window.setTimeout(() => {
+            pressedTrigger.current = false;
+          }, 300);
+        }
+      }
       if (!event.defaultPrevented) interactedOutside.current = true;
     },
     onDismiss: () => setOpen(false),
   });
 
   focusInTree.current = layerProps.isFocusInTree;
+  useEffect(() => () => window.clearTimeout(pressedTriggerTimer.current), []);
 
   // A non-modal popover is portaled to the end of <body>, so the browser would send Tab off
   // the page. Hand focus to the neighbours of the trigger and close instead.
@@ -279,10 +294,14 @@ function ContentImpl({
     const leavingBackward = event.shiftKey && (active === first || active === node);
     if (!leavingForward && !leavingBackward) return;
     event.preventDefault();
+    // First tabbable after the trigger in document order; the trigger itself may not be tabbable.
     const next = leavingForward
-      ? getTabbables(document.body)
-          .slice(getTabbables(document.body).indexOf(trigger) + 1)
-          .find((element) => !node.contains(element))
+      ? getTabbables(document.body).find(
+          (element) =>
+            !node.contains(element) &&
+            !trigger.contains(element) &&
+            Boolean(trigger.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING),
+        )
       : undefined;
     interactedOutside.current = true;
     (next ?? trigger).focus({ preventScroll: true });

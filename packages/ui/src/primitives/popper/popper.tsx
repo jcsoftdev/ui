@@ -71,6 +71,7 @@ interface ContentContextValue {
   side: Side;
   arrowX: number | undefined;
   arrowY: number | undefined;
+  arrowHidden: boolean;
 }
 
 const ContentContext = createContext<ContentContextValue | null>(null);
@@ -104,6 +105,7 @@ interface Placed {
   positioned: boolean;
   arrowX: number | undefined;
   arrowY: number | undefined;
+  arrowHidden: boolean;
 }
 
 const samePlaced = (a: Placed, b: Placed) =>
@@ -111,7 +113,8 @@ const samePlaced = (a: Placed, b: Placed) =>
   a.align === b.align &&
   a.positioned === b.positioned &&
   a.arrowX === b.arrowX &&
-  a.arrowY === b.arrowY;
+  a.arrowY === b.arrowY &&
+  a.arrowHidden === b.arrowHidden;
 
 function paddingKey(padding: Padding): string {
   return typeof padding === "number" ? String(padding) : JSON.stringify(padding);
@@ -119,13 +122,46 @@ function paddingKey(padding: Padding): string {
 
 function boundaryRect(boundary: PopperContentProps["collisionBoundary"]): Rect {
   const root = document.documentElement;
-  const rects: Rect[] = [{ x: 0, y: 0, width: root.clientWidth, height: root.clientHeight }];
+  const viewport = window.visualViewport;
+  const rects: Rect[] = [
+    viewport
+      ? {
+          x: viewport.offsetLeft,
+          y: viewport.offsetTop,
+          width: viewport.width,
+          height: viewport.height,
+        }
+      : { x: 0, y: 0, width: root.clientWidth, height: root.clientHeight },
+  ];
   for (const element of [boundary].flat()) {
     if (!element) continue;
     const { left, top, width, height } = element.getBoundingClientRect();
     rects.push({ x: left, y: top, width, height });
   }
   return intersectRects(rects);
+}
+
+/**
+ * Top-left of the closest ancestor that becomes the containing block of fixed
+ * descendants (transform, filter, contain, will-change...), in viewport coordinates.
+ */
+function containingBlockOrigin(node: HTMLElement): { x: number; y: number } {
+  for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+    const style = getComputedStyle(parent);
+    const creates =
+      style.transform !== "none" ||
+      style.perspective !== "none" ||
+      style.filter !== "none" ||
+      (style.backdropFilter !== undefined && style.backdropFilter !== "none") ||
+      /paint|layout|strict|content/.test(style.contain) ||
+      /transform|perspective|filter/.test(style.willChange) ||
+      (style.containerType !== undefined && !["", "normal"].includes(style.containerType));
+    if (creates) {
+      const box = parent.getBoundingClientRect();
+      return { x: box.left + parent.clientLeft, y: box.top + parent.clientTop };
+    }
+  }
+  return { x: 0, y: 0 };
 }
 
 export function Content({
@@ -154,6 +190,7 @@ export function Content({
     positioned: false,
     arrowX: undefined,
     arrowY: undefined,
+    arrowHidden: false,
   });
   const boundaryRef = useRef(collisionBoundary);
   boundaryRef.current = collisionBoundary;
@@ -182,30 +219,47 @@ export function Content({
         width: anchorBox.width,
         height: anchorBox.height,
       };
-      const result = computePlacement({
-        anchor: anchorRect,
-        content: { width: content.offsetWidth, height: content.offsetHeight },
-        boundary: boundaryRect(boundaryRef.current),
-        side,
-        align,
-        sideOffset,
-        alignOffset,
-        collisionPadding: paddingRef.current,
-        avoidCollisions,
-        sticky,
-        // The content is portaled, so the anchor is the one that sits inside the app's `dir`.
-        dir: dir ?? (getComputedStyle(anchor).direction === "rtl" ? "rtl" : "ltr"),
-        ...(arrow ? { arrow: { ...arrow, padding: arrowPadding } } : {}),
-      });
+      // The content is portaled, so the anchor is the one that sits inside the app's `dir`.
+      const direction = dir ?? (getComputedStyle(anchor).direction === "rtl" ? "rtl" : "ltr");
+      wrapper.setAttribute("dir", direction);
+      const boundary = boundaryRect(boundaryRef.current);
+      const place = () =>
+        computePlacement({
+          anchor: anchorRect,
+          content: { width: content.offsetWidth, height: content.offsetHeight },
+          boundary,
+          side,
+          align,
+          sideOffset,
+          alignOffset,
+          collisionPadding: paddingRef.current,
+          avoidCollisions,
+          sticky,
+          dir: direction,
+          ...(arrow ? { arrow: { ...arrow, padding: arrowPadding } } : {}),
+        });
+      const set = (name: string, value: string) => wrapper.style.setProperty(name, value);
+      const publish = (placement: ReturnType<typeof place>) => {
+        set("--ui-popper-available-width", `${placement.availableWidth}px`);
+        set("--ui-popper-available-height", `${placement.availableHeight}px`);
+        set("--ui-popper-anchor-width", `${anchorRect.width}px`);
+        set("--ui-popper-anchor-height", `${anchorRect.height}px`);
+        set("--ui-popper-transform-origin", placement.transformOrigin);
+      };
+      let result = place();
+      publish(result);
+      // The available-size variables usually drive max-height/max-width: measure again
+      // with them applied so the first frame is not placed for the unlimited size.
+      for (let pass = 0; pass < 2; pass++) {
+        const again = place();
+        if (again.x === result.x && again.y === result.y && again.side === result.side) break;
+        result = again;
+        publish(result);
+      }
       const ratio = window.devicePixelRatio || 1;
       const snap = (value: number) => Math.round(value * ratio) / ratio;
-      wrapper.style.transform = `translate3d(${snap(result.x)}px, ${snap(result.y)}px, 0)`;
-      const set = (name: string, value: string) => wrapper.style.setProperty(name, value);
-      set("--ui-popper-available-width", `${result.availableWidth}px`);
-      set("--ui-popper-available-height", `${result.availableHeight}px`);
-      set("--ui-popper-anchor-width", `${anchorRect.width}px`);
-      set("--ui-popper-anchor-height", `${anchorRect.height}px`);
-      set("--ui-popper-transform-origin", result.transformOrigin);
+      const origin = containingBlockOrigin(wrapper);
+      wrapper.style.transform = `translate3d(${snap(result.x - origin.x)}px, ${snap(result.y - origin.y)}px, 0)`;
       const hidden = hideWhenDetached && result.anchorHidden;
       wrapper.style.visibility = hidden ? "hidden" : "";
       wrapper.style.pointerEvents = hidden ? "none" : "";
@@ -215,6 +269,7 @@ export function Content({
         positioned: true,
         arrowX: result.arrow?.x,
         arrowY: result.arrow?.y,
+        arrowHidden: result.arrow?.shouldHide ?? false,
       };
       setPlaced((current) => (samePlaced(current, next) ? current : next));
     };
@@ -233,7 +288,8 @@ export function Content({
     const viewport = window.visualViewport;
     viewport?.addEventListener("resize", schedule);
     viewport?.addEventListener("scroll", schedule);
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    const observer =
+      typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => update());
     observer?.observe(anchor);
     observer?.observe(content);
     return () => {
@@ -261,8 +317,13 @@ export function Content({
   ]);
 
   const contentValue = useMemo(
-    () => ({ side: placed.side, arrowX: placed.arrowX, arrowY: placed.arrowY }),
-    [placed.side, placed.arrowX, placed.arrowY],
+    () => ({
+      side: placed.side,
+      arrowX: placed.arrowX,
+      arrowY: placed.arrowY,
+      arrowHidden: placed.arrowHidden,
+    }),
+    [placed.side, placed.arrowX, placed.arrowY, placed.arrowHidden],
   );
 
   return (
@@ -332,7 +393,7 @@ export function Arrow({ width = 10, height = 5, children, style, ...props }: Pop
     return () => setArrow(null);
   }, [width, height, setArrow]);
   if (!content) throw new Error("<PopperArrow> must be rendered inside <Popper.Content>");
-  const { side, arrowX, arrowY } = content;
+  const { side, arrowX, arrowY, arrowHidden } = content;
   const vertical = side === "top" || side === "bottom";
   const base = BASE_SIDE[side];
   const boxWidth = vertical ? width : height;
@@ -348,6 +409,7 @@ export function Arrow({ width = 10, height = 5, children, style, ...props }: Pop
         transform: OUTWARD[base],
         lineHeight: 0,
         pointerEvents: "none",
+        ...(arrowHidden ? { visibility: "hidden" } : null),
         ...style,
       }}
     >
