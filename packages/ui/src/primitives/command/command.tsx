@@ -282,7 +282,12 @@ export function Input({ value, onValueChange, onKeyDown, ref, ...props }: Comman
   };
   // An inline command inside another dialog clears its query on Escape before the dialog
   // sees the key; `data-ui-escape-claim` tells the layer stack to leave it alone.
-  const claimsEscape = !inDialog && search !== "";
+  // A controlled query that ignores `onValueChange("")` cannot be cleared, so after one
+  // Escape that changed nothing the claim is dropped and the next Escape reaches the dialog.
+  const [released, setReleased] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new query re-arms the claim
+  useEffect(() => setReleased(false), [search]);
+  const claimsEscape = !inDialog && search !== "" && !released;
 
   return (
     <input
@@ -306,7 +311,11 @@ export function Input({ value, onValueChange, onKeyDown, ref, ...props }: Comman
       onKeyDown={composeHandlers(onKeyDown, (event) => {
         if (event.key === "Escape" && claimsEscape && !event.nativeEvent.isComposing) {
           event.preventDefault();
+          const before = store.getState().search;
           change("");
+          setTimeout(() => {
+            if (store.getState().search === before) setReleased(true);
+          }, 0);
         }
       })}
     />
@@ -379,8 +388,10 @@ export function Item({
   const group = useContext(GroupContext);
   const id = useId();
   const elementRef = useRef<HTMLDivElement | null>(null);
-  const [derived, setDerived] = useState("");
-  const value = valueProp !== undefined ? valueProp.trim() : derived;
+  // `null` until the text content was read; the element stays mounted (hidden) until then so it can be measured.
+  const [derived, setDerived] = useState<string | null>(null);
+  const value = valueProp !== undefined ? valueProp.trim() : (derived ?? "");
+  const measuring = valueProp === undefined && derived === null;
   const onSelectRef = useRef(onSelect);
   const keywordsKey = keywords?.join("\u0001") ?? "";
   const groupId = group?.id;
@@ -427,7 +438,7 @@ export function Item({
     (node: HTMLDivElement | null) => store.setItemElement(id, node),
   );
 
-  if (!visible) return null;
+  if (!visible && !measuring) return null;
   return (
     // biome-ignore lint/a11y/useFocusableInteractive lint/a11y/useKeyWithClickEvents: options are driven through aria-activedescendant and the root key handler
     <div
@@ -436,6 +447,7 @@ export function Item({
       aria-selected={selected}
       aria-disabled={disabled || undefined}
       data-ui-command-item=""
+      hidden={!visible || undefined}
       data-selected={selected}
       data-disabled={disabled ? "" : undefined}
       data-value={value}

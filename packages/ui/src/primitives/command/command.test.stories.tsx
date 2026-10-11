@@ -653,3 +653,67 @@ export const CommandStateHookReportsCount: Story = {
     await waitFor(() => expect(screen.getByTestId("count")).toHaveTextContent("1"));
   },
 };
+
+function GrowingList() {
+  const [fruits, setFruits] = useState(["apple"]);
+  return (
+    <div className="p-6">
+      <Button onClick={() => setFruits(["apple", "avocado", "banana"])}>Cargar</Button>
+      <Command.Root label="Frutas">
+        <Command.Input placeholder="Buscar..." />
+        <Command.List>
+          {fruits.map((fruit) => (
+            <Command.Item key={fruit}>{fruit}</Command.Item>
+          ))}
+        </Command.List>
+      </Command.Root>
+    </div>
+  );
+}
+
+export const ItemsWithoutValueMountedMidSearchAppearAndFilter: Story = {
+  render: () => <GrowingList />,
+  play: async ({ canvasElement }) => {
+    await userEvent.type(input(), "a");
+    await waitFor(() => expect(names()).toEqual(["apple"]));
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Cargar" }));
+    await waitFor(() => expect(names()).toEqual(["apple", "avocado", "banana"]));
+    await userEvent.type(input(), "v");
+    await waitFor(() => expect(names()).toEqual(["avocado"]));
+  },
+};
+
+function StuckQueryInDialog() {
+  return (
+    <UiDialog>
+      <DialogTrigger asChild>
+        <Button>Abrir</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Buscar</DialogTitle>
+        </DialogHeader>
+        <Command.Root label="Frutas">
+          <Command.Input placeholder="Buscar..." value="ap" onValueChange={() => {}} />
+          <Command.List>
+            <Command.Item value="apple">apple</Command.Item>
+          </Command.List>
+        </Command.Root>
+      </DialogContent>
+    </UiDialog>
+  );
+}
+
+export const ControlledQueryThatCannotClearReleasesEscape: Story = {
+  render: () => <StuckQueryInDialog />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(input());
+    await userEvent.keyboard("{Escape}");
+    await pause(80);
+    await expect(screen.queryAllByRole("dialog")).toHaveLength(1);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryAllByRole("dialog")).toHaveLength(0));
+  },
+};
