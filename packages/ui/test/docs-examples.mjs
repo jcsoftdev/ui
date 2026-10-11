@@ -22,7 +22,11 @@ assert.ok(blocks.length >= 6, "the page must show the primitive examples");
 const seen = new Set();
 for (const [, , name, body] of blocks) {
   assert.ok(name, "every tsx block needs a region=<name> marker");
-  assert.equal(body.trim(), regions.get(name), `tsx block "${name}" drifted from test/docs/primitives.tsx`);
+  assert.equal(
+    body.trim(),
+    regions.get(name),
+    `tsx block "${name}" drifted from test/docs/primitives.tsx`,
+  );
   seen.add(name);
 }
 for (const name of ["dialog", "popover", "menu", "command", "command-dialog"]) {

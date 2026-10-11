@@ -130,7 +130,11 @@ export function Tooltipish() {
     <PopperPrimitive.Root>
       <PopperPrimitive.Anchor>Anchor</PopperPrimitive.Anchor>
       <Portal>
-        <PopperPrimitive.Content side="top" sideOffset={8} style={{ maxHeight: "var(--ui-popper-available-height)" }}>
+        <PopperPrimitive.Content
+          side="top"
+          sideOffset={8}
+          style={{ maxHeight: "var(--ui-popper-available-height)" }}
+        >
           Hint
           <PopperPrimitive.Arrow />
         </PopperPrimitive.Content>

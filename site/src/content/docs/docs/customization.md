@@ -151,4 +151,4 @@ Use that instance in your own components and wrappers. The kit's internal merge 
 
 ## 5. Headless primitives
 
-When classes are not enough, build on the same behavior without the kit's markup: focus management, dismissal, roving focus, positioning and ARIA are in the unstyled primitives (dialog, popover, menu, command and more) that the styled components are made of. They are published under `@jcsoftdev/ui/primitives` in the release that follows this one, with their own page. Until then, the styled components are the only supported entry point.
+When classes are not enough, build on the same behavior without the kit's markup: focus management, dismissal, roving focus, positioning and ARIA are in the unstyled primitives (dialog, popover, menu, command and more) that the styled components are made of. They are published under `@jcsoftdev/ui/primitives`; see [Headless primitives](/docs/primitives) for the full list, a minimal unstyled example of each, data attributes and CSS variables.

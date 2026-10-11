@@ -211,7 +211,10 @@ const popover = await keptFor(
 );
 assert.ok(only(popover.kept, "popover") && only(popover.kept, "popper"), "popover bundles popper");
 for (const sibling of ["dialog", "menu", "command"]) {
-  assert.ok(!only(popover.kept, sibling), `PopoverPrimitive must not include primitives/${sibling}`);
+  assert.ok(
+    !only(popover.kept, sibling),
+    `PopoverPrimitive must not include primitives/${sibling}`,
+  );
 }
 const dialog = await keptFor(
   `import { DialogPrimitive } from "@jcsoftdev/ui/primitives"; console.log(DialogPrimitive);`,
