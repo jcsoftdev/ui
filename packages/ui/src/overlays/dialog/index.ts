@@ -4,6 +4,7 @@ export {
   DialogClose,
   DialogContent,
   type DialogContentProps,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,

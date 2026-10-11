@@ -229,6 +229,7 @@ export function Toaster({
   return (
     <section
       ref={regionRef}
+      data-ui-overlay-ignore=""
       aria-label={label ?? strings.notifications}
       tabIndex={-1}
       className={cn(
