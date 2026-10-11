@@ -75,7 +75,7 @@ export default defineConfig({
         ),
       },
     },
-    ssr: { noExternal: ["@jcsoftdev/ui", "lucide-react"] },
+    ssr: { noExternal: ["@jcsoftdev/ui"] },
     server: { fs: { allow: [fileURLToPath(new URL("..", import.meta.url))] } },
   },
 });

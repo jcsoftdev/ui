@@ -2,7 +2,7 @@ import { Button } from "@jcsoftdev/ui/atoms";
 import { Switch } from "@jcsoftdev/ui/atoms";
 import { AccentPicker } from "@jcsoftdev/ui/forms";
 import { Segmented, SegmentedItem } from "@jcsoftdev/ui/navigation";
-import { Moon, RotateCcw, Sun } from "lucide-react";
+import { Moon, RotateCcw, Sun } from "@jcsoftdev/ui/icons";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { PRESET_STORAGE_KEY, THEME_STORAGE_KEY } from "../../lib/preset-script.mjs";
 

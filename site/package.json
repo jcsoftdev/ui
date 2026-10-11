@@ -26,7 +26,6 @@
     "@jcsoftdev/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.8",
-    "lucide-react": "^1.47.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tailwindcss": "^4.3.3"
