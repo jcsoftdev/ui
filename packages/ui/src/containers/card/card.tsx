@@ -19,7 +19,7 @@ export function CardHeader({ className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        "flex min-h-[50px] flex-wrap items-center gap-2.5 border-b-divider px-card py-3",
+        "flex min-h-12.5 flex-wrap items-center gap-2.5 border-b-divider px-card py-3",
         className,
       )}
       {...props}

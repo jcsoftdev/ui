@@ -1,12 +1,15 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import { CircleAlert } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { Loader } from "../loader/loader.js";
 import { Markdown } from "../markdown/markdown.js";
 
 export type ChatRole = "user" | "assistant" | "system";
 export type ChatMessageStatus = "sending" | "streaming" | "done" | "error";
+
+export type ChatMessagePart = "root" | "avatar" | "content" | "bubble" | "error" | "time";
 
 export interface ChatMessageProps extends Omit<ComponentPropsWithoutRef<"article">, "content"> {
   author: ChatRole;
@@ -25,6 +28,8 @@ export interface ChatMessageProps extends Omit<ComponentPropsWithoutRef<"article
   footer?: ReactNode;
   /** Text of the failure line when `status` is `error`. */
   errorText?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<ChatMessagePart>;
 }
 
 /** One chat turn: avatar, bubble, status, streaming caret and an optional footer slot. */
@@ -39,6 +44,7 @@ export function ChatMessage({
   footer,
   errorText = "No se pudo enviar el mensaje.",
   className,
+  classNames,
   ...props
 }: ChatMessageProps) {
   const streaming = status === "streaming";
@@ -46,11 +52,16 @@ export function ChatMessage({
   if (author === "system") {
     return (
       <article
-        className={cn("flex justify-center", className)}
+        className={cn("flex justify-center", className, classNames?.root)}
         aria-label={name ?? "Sistema"}
         {...props}
       >
-        <p className="max-w-full rounded-badge bg-surface-sunken px-3 py-1 text-center text-meta text-ink-3">
+        <p
+          className={cn(
+            "max-w-full rounded-badge bg-surface-sunken px-3 py-1 text-center text-meta text-ink-3",
+            classNames?.bubble,
+          )}
+        >
           {children ?? content}
         </p>
       </article>
@@ -75,6 +86,7 @@ export function ChatMessage({
         "@container/message flex min-w-0 gap-density-sm",
         user ? "flex-row-reverse" : "flex-row",
         className,
+        classNames?.root,
       )}
       {...props}
     >
@@ -82,12 +94,13 @@ export function ChatMessage({
         name={name ?? (user ? "Tú" : "Asistente")}
         src={avatarSrc}
         highlighted={!user}
-        className="mt-0.5"
+        className={cn("mt-0.5", classNames?.avatar)}
       />
       <div
         className={cn(
           "grid min-w-0 max-w-[92%] gap-1 @md/message:max-w-[80%]",
           user && "justify-items-end",
+          classNames?.content,
         )}
       >
         <div
@@ -96,18 +109,24 @@ export function ChatMessage({
             user ? "bg-accent-soft text-ink" : "bg-surface-card text-ink border-card shadow-card",
             status === "error" && "bg-danger-soft",
             status === "sending" && "opacity-70",
+            classNames?.bubble,
           )}
         >
           {waiting ? <Loader size="sm" label="El asistente está escribiendo" /> : body}
         </div>
         {status === "error" ? (
-          <p role="alert" className="flex items-center gap-1 text-meta text-danger">
+          <p
+            role="alert"
+            className={cn("flex items-center gap-1 text-meta text-danger", classNames?.error)}
+          >
             <CircleAlert aria-hidden className="size-3.5 shrink-0" />
             {errorText}
           </p>
         ) : null}
         {time || status === "sending" ? (
-          <p className="text-meta text-ink-3">{status === "sending" ? "Enviando…" : time}</p>
+          <p className={cn("text-meta text-ink-3", classNames?.time)}>
+            {status === "sending" ? "Enviando…" : time}
+          </p>
         ) : null}
         {footer}
       </div>

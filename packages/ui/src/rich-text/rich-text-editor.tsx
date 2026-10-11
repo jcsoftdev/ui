@@ -21,6 +21,7 @@ import {
   Underline,
   Unlink,
 } from "../icons/index.js";
+import type { ClassNames } from "../utils/class-names.js";
 import { cn } from "../utils/cn.js";
 import { htmlToText, isSafeUrl, sanitizeHtml } from "./sanitize.js";
 
@@ -29,6 +30,18 @@ export const richTextContentClass =
   "text-body text-ink [&_a]:text-accent-ink [&_a]:underline [&_blockquote]:border-line-strong [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_blockquote]:text-ink-2 [&_h2]:font-semibold [&_h2]:text-card-title [&_h3]:font-semibold [&_h3]:text-row-title [&_li]:my-0.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_ul]:list-disc [&_ul]:pl-5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [overflow-wrap:anywhere]";
 
 type Command = "bold" | "italic" | "underline" | "ul" | "ol" | "h2";
+
+export type RichTextEditorPart =
+  | "root"
+  | "toolbar"
+  | "tool"
+  | "linkForm"
+  | "linkInput"
+  | "linkApply"
+  | "linkRemove"
+  | "body"
+  | "placeholder"
+  | "content";
 
 export interface RichTextEditorProps {
   /** Controlled HTML. It is sanitized before it reaches the editor. */
@@ -43,6 +56,8 @@ export interface RichTextEditorProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<RichTextEditorPart>;
 }
 
 const COMMANDS: Record<
@@ -123,6 +138,7 @@ export function RichTextEditor({
   disabled,
   minHeightRem = 8,
   className,
+  classNames,
   ...aria
 }: RichTextEditorProps) {
   const baseId = useId();
@@ -304,6 +320,7 @@ export function RichTextEditor({
         "@container/rte flex w-full min-w-0 flex-col overflow-hidden rounded-input border-control bg-surface-control focus-within:outline-2 focus-within:outline-accent-ink focus-within:-outline-offset-1",
         disabled && "opacity-60",
         className,
+        classNames?.root,
       )}
     >
       <div
@@ -312,7 +329,10 @@ export function RichTextEditor({
         aria-label="Formato"
         aria-controls={`${baseId}-editor`}
         onKeyDown={onToolbarKeyDown}
-        className="flex flex-wrap items-center gap-0.5 border-b-divider p-1"
+        className={cn(
+          "flex flex-wrap items-center gap-0.5 border-b-divider p-1",
+          classNames?.toolbar,
+        )}
       >
         {tools.map((tool, index) => (
           <button
@@ -328,14 +348,20 @@ export function RichTextEditor({
             // Keep the editor selection while pressing a toolbar button.
             onMouseDown={(event) => event.preventDefault()}
             onClick={tool.run}
-            className="pressable grid size-8 place-items-center rounded-button text-ink-2 hover:bg-surface-sunken hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:size-4"
+            className={cn(
+              "pressable grid size-8 place-items-center rounded-button text-ink-2 hover:bg-surface-sunken hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:size-4",
+              classNames?.tool,
+            )}
           >
             {tool.icon}
           </button>
         ))}
         {linkOpen ? (
           <form
-            className="flex min-w-0 basis-full items-center gap-1 pt-1 @md/rte:basis-auto @md/rte:flex-1 @md/rte:pt-0"
+            className={cn(
+              "flex min-w-0 basis-full items-center gap-1 pt-1 @md/rte:basis-auto @md/rte:flex-1 @md/rte:pt-0",
+              classNames?.linkForm,
+            )}
             onSubmit={(event) => {
               event.preventDefault();
               applyLink();
@@ -357,11 +383,17 @@ export function RichTextEditor({
                   closeLink();
                 }
               }}
-              className="h-control-sm min-w-0 flex-1 rounded-input border-control bg-surface-control px-2 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger"
+              className={cn(
+                "h-control-sm min-w-0 flex-1 rounded-input border-control bg-surface-control px-2 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
+                classNames?.linkInput,
+              )}
             />
             <button
               type="submit"
-              className="h-control-sm rounded-button bg-accent px-2.5 font-semibold text-control text-on-accent focus-visible:focus-ring"
+              className={cn(
+                "h-control-sm rounded-button bg-accent px-2.5 font-semibold text-control text-on-accent focus-visible:focus-ring",
+                classNames?.linkApply,
+              )}
             >
               Aplicar
             </button>
@@ -370,18 +402,24 @@ export function RichTextEditor({
               title="Quitar enlace"
               aria-label="Quitar enlace"
               onClick={removeLink}
-              className="grid size-8 place-items-center rounded-button text-ink-2 hover:bg-surface-sunken focus-visible:focus-ring [&_svg]:size-4"
+              className={cn(
+                "grid size-8 place-items-center rounded-button text-ink-2 hover:bg-surface-sunken focus-visible:focus-ring [&_svg]:size-4",
+                classNames?.linkRemove,
+              )}
             >
               <Unlink />
             </button>
           </form>
         ) : null}
       </div>
-      <div className="relative">
+      <div className={cn("relative", classNames?.body)}>
         {empty ? (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-0 left-0 px-3 py-2 text-body text-ink-3"
+            className={cn(
+              "pointer-events-none absolute top-0 left-0 px-3 py-2 text-body text-ink-3",
+              classNames?.placeholder,
+            )}
           >
             {placeholder}
           </span>
@@ -404,7 +442,7 @@ export function RichTextEditor({
           onKeyDown={onEditorKeyDown}
           onBlur={emit}
           style={{ minHeight: `${minHeightRem}rem` }}
-          className={cn("w-full px-3 py-2 outline-none", richTextContentClass)}
+          className={cn("w-full px-3 py-2 outline-none", richTextContentClass, classNames?.content)}
         />
       </div>
     </div>

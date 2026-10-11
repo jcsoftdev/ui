@@ -1,10 +1,20 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { CircleAlert, FileText, X } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 
 export type AttachmentStatus = "done" | "uploading" | "error";
 export type AttachmentVariant = "chip" | "preview";
+
+export type AttachmentPart =
+  | "root"
+  | "thumbnail"
+  | "text"
+  | "name"
+  | "detail"
+  | "progress"
+  | "remove";
 
 export interface AttachmentProps extends Omit<ComponentPropsWithoutRef<"fieldset">, "children"> {
   name: string;
@@ -19,6 +29,8 @@ export interface AttachmentProps extends Omit<ComponentPropsWithoutRef<"fieldset
   variant?: AttachmentVariant;
   /** Shows the remove button. */
   onRemove?: () => void;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<AttachmentPart>;
 }
 
 /** File chip or preview tile for prompt attachments, with an optional remove button. */
@@ -31,6 +43,7 @@ export function Attachment({
   variant = "chip",
   onRemove,
   className,
+  classNames,
   ...props
 }: AttachmentProps) {
   const preview = variant === "preview";
@@ -58,6 +71,7 @@ export function Attachment({
           : "h-control-sm rounded-button pl-1.5 pr-1",
         status === "error" && "text-danger",
         className,
+        classNames?.root,
       )}
       {...props}
     >
@@ -65,15 +79,20 @@ export function Attachment({
         className={cn(
           "grid shrink-0 place-items-center overflow-hidden rounded-badge bg-surface-sunken",
           preview ? "h-20 w-full" : "size-6",
+          classNames?.thumbnail,
         )}
       >
         {thumb}
       </span>
-      <span className="grid min-w-0 flex-1 leading-tight">
-        <span className="truncate text-meta font-medium">{name}</span>
+      <span className={cn("grid min-w-0 flex-1 leading-tight", classNames?.text)}>
+        <span className={cn("truncate text-meta font-medium", classNames?.name)}>{name}</span>
         {detail && (preview || status !== "done") ? (
           <span
-            className={cn("truncate text-meta", status === "error" ? "text-danger" : "text-ink-3")}
+            className={cn(
+              "truncate text-meta",
+              status === "error" ? "text-danger" : "text-ink-3",
+              classNames?.detail,
+            )}
           >
             {detail}
           </span>
@@ -86,7 +105,10 @@ export function Attachment({
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(progress)}
-          className="absolute inset-x-1.5 bottom-0.5 h-0.5 overflow-hidden rounded-badge bg-track"
+          className={cn(
+            "absolute inset-x-1.5 bottom-0.5 h-0.5 overflow-hidden rounded-badge bg-track",
+            classNames?.progress,
+          )}
         >
           <span
             className="block h-full bg-accent"
@@ -101,6 +123,7 @@ export function Attachment({
           className={cn(
             "size-5",
             preview && "absolute right-2.5 top-2.5 bg-surface-overlay shadow-control",
+            classNames?.remove,
           )}
         >
           <X aria-hidden />

@@ -1,3 +1,4 @@
+export type { ClassNames } from "./class-names.js";
 export {
   type ClassMergeConfig,
   type ClassMergeTheme,

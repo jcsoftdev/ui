@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type ButtonOption, OptionShell, optionGridClass } from "../internal/button-option.js";
+import {
+  type ButtonOption,
+  type ButtonOptionPart,
+  OptionShell,
+  optionGridClass,
+} from "../internal/button-option.js";
 
 export type CheckboxButtonOption = ButtonOption;
+
+export type CheckboxButtonGroupPart = "root" | ButtonOptionPart;
 
 export interface CheckboxButtonGroupProps {
   options: CheckboxButtonOption[];
@@ -17,6 +25,8 @@ export interface CheckboxButtonGroupProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<CheckboxButtonGroupPart>;
 }
 
 /** Multi-select where each option is a button-like card; native checkboxes underneath. */
@@ -28,6 +38,7 @@ export function CheckboxButtonGroup({
   name,
   disabled,
   className,
+  classNames,
   ...aria
 }: CheckboxButtonGroupProps) {
   const [inner, setInner] = useState(defaultValue);
@@ -41,13 +52,19 @@ export function CheckboxButtonGroup({
 
   return (
     <fieldset
-      className={cn("@container/options m-0 min-w-0 border-0 p-0", optionGridClass, className)}
+      className={cn(
+        "@container/options m-0 min-w-0 border-0 p-0",
+        optionGridClass,
+        className,
+        classNames?.root,
+      )}
       {...aria}
     >
       {options.map((option) => (
         <OptionShell
           key={option.value}
           option={option}
+          classNames={classNames}
           input={
             <input
               type="checkbox"

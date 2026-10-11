@@ -1,3 +1,5 @@
+import type { ComponentPropsWithRef } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type StatusDotTone = "danger" | "warning" | "success" | "accent" | "neutral";
@@ -14,10 +16,14 @@ export type StatusDotShape = "dot" | "square";
 
 const shapeClasses: Record<StatusDotShape, string> = {
   dot: "size-1.5 rounded-pill",
-  square: "size-[9px] rounded-xs",
+  square: "size-2.25 rounded-xs",
 };
 
-export interface StatusDotProps {
+export type StatusDotPart = "root" | "dot" | "label";
+
+export interface StatusDotProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<StatusDotPart>;
   tone: StatusDotTone;
   /** Text describing the status: color is never the only signal. */
   label: string;
@@ -25,7 +31,6 @@ export interface StatusDotProps {
   shape?: StatusDotShape;
   /** Hollow variant: transparent fill with an accent inner ring. */
   hollow?: boolean;
-  className?: string;
 }
 
 export function StatusDot({
@@ -35,18 +40,26 @@ export function StatusDot({
   shape = "dot",
   hollow,
   className,
+  classNames,
+  ...props
 }: StatusDotProps) {
   return (
-    <span className={cn("inline-flex max-w-full items-center gap-1.5", className)}>
+    <span
+      {...props}
+      className={cn("inline-flex max-w-full items-center gap-1.5", className, classNames?.root)}
+    >
       <span
         aria-hidden="true"
         className={cn(
           "shrink-0",
           shapeClasses[shape],
           hollow ? "bg-transparent shadow-[inset_0_0_0_2px_var(--accent)]" : toneClasses[tone],
+          classNames?.dot,
         )}
       />
-      <span className={showLabel ? "min-w-0 truncate" : "sr-only"}>{label}</span>
+      <span className={cn(showLabel ? "min-w-0 truncate" : "sr-only", classNames?.label)}>
+        {label}
+      </span>
     </span>
   );
 }

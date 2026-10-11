@@ -2110,7 +2110,7 @@ export function DataGrid<T>({
         className={cn(
           cellBase,
           sticky,
-          "select-none whitespace-nowrap font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em]",
+          "select-none whitespace-nowrap font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em]",
           sortable && "cursor-pointer hover:text-ink",
           drop === "before" && "shadow-[inset_2px_0_0_var(--accent)]",
           drop === "after" && "shadow-[inset_-2px_0_0_var(--accent)]",
@@ -2125,7 +2125,7 @@ export function DataGrid<T>({
             {formulasOn ? (
               <span
                 aria-hidden="true"
-                className="shrink-0 rounded-xs bg-surface-2 px-1 font-[650] text-[10px] text-ink-3 normal-case tracking-normal"
+                className="shrink-0 rounded-xs bg-surface-2 px-1 font-[650] text-fs-100 text-ink-3 normal-case tracking-normal"
               >
                 {cellLetter(column.id)}
               </span>
@@ -2141,7 +2141,7 @@ export function DataGrid<T>({
                   <ArrowDown aria-hidden="true" className="size-3" />
                 )}
                 {sort.length > 1 ? (
-                  <span className="text-[10px] tabular-nums">{state.index + 1}</span>
+                  <span className="text-fs-100 tabular-nums">{state.index + 1}</span>
                 ) : null}
                 {state.index > 0 ? (
                   <span className="sr-only">
@@ -2252,7 +2252,7 @@ export function DataGrid<T>({
     if (!editing) return null;
     const errorId = `${helpId}-error`;
     const editorClass = cn(
-      "h-[calc(100%-6px)] w-full min-w-0 rounded-xs border bg-surface px-1.5 text-[13px] text-ink outline-none",
+      "h-[calc(100%-6px)] w-full min-w-0 rounded-xs border bg-surface px-1.5 text-fs-130 text-ink outline-none",
       editing.error ? "border-danger" : "border-accent",
     );
     const common = {
@@ -2299,7 +2299,7 @@ export function DataGrid<T>({
           <span
             id={errorId}
             role="alert"
-            className="absolute top-full left-1 z-5 mt-0.5 flex max-w-64 items-center gap-1.5 rounded-xs border border-danger bg-surface px-2 py-1 text-[12px] text-danger shadow-overlay"
+            className="absolute top-full left-1 z-5 mt-0.5 flex max-w-64 items-center gap-1.5 rounded-xs border border-danger bg-surface px-2 py-1 text-fs-120 text-danger shadow-overlay"
           >
             <CircleAlert aria-hidden="true" className="size-3.5 shrink-0" />
             {editing.error}
@@ -2335,7 +2335,7 @@ export function DataGrid<T>({
             tabIndex={labelActive ? 0 : -1}
             role="gridcell"
             aria-expanded={!row.collapsed}
-            className={cn(cellBase, "cursor-pointer overflow-visible text-[13px]")}
+            className={cn(cellBase, "cursor-pointer overflow-visible text-fs-130")}
           >
             <span
               className="sticky left-3 flex w-fit max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap font-[650] text-ink"
@@ -2354,7 +2354,7 @@ export function DataGrid<T>({
               </span>
               <span className="shrink-0 font-normal text-ink-3">{header}:</span>
               <span className="min-w-0 truncate">{row.label}</span>
-              <Chip className="h-5 shrink-0 px-2 text-[11px]">{row.count}</Chip>
+              <Chip className="h-5 shrink-0 px-2 text-fs-110">{row.count}</Chip>
             </span>
           </td>
         );
@@ -2372,7 +2372,7 @@ export function DataGrid<T>({
           style={pinStyle(position)}
           className={cn(
             cellBase,
-            "cursor-pointer text-[13px]",
+            "cursor-pointer text-fs-130",
             position && "sticky z-1 bg-surface-2",
             pinShadow(position),
             column && alignClass[columnAlign(column)],
@@ -2702,7 +2702,7 @@ export function DataGrid<T>({
         onDragOver={reorderAllowed ? (event) => onRowDragOver(event, row.key) : undefined}
         onDrop={reorderAllowed ? (event) => onRowDrop(event, row.key) : undefined}
         className={cn(
-          "group/row text-[13px] text-ink hover:bg-surface-2 aria-selected:bg-accent-soft",
+          "group/row text-fs-130 text-ink hover:bg-surface-2 aria-selected:bg-accent-soft",
           "data-[drop=before]:[&>td]:shadow-[inset_0_2px_0_var(--accent)] data-[drop=after]:[&>td]:shadow-[inset_0_-2px_0_var(--accent)]",
           "data-[divider=top]:[&>td]:border-b-line-strong",
         )}
@@ -2781,7 +2781,7 @@ export function DataGrid<T>({
         key={idOfColumn(entry)}
         style={pinStyle(position)}
         className={cn(
-          "sticky bottom-0 overflow-hidden border-t-divider bg-surface px-3 font-[650] text-[13px] text-ink @max-sm/grid:px-2",
+          "sticky bottom-0 overflow-hidden border-t-divider bg-surface px-3 font-[650] text-fs-130 text-ink @max-sm/grid:px-2",
           position ? "z-3" : "z-2",
           pinShadow(position),
           column && alignClass[columnAlign(column)],
@@ -2794,7 +2794,7 @@ export function DataGrid<T>({
             {formatAggregate(value, column.aggregate, column)}
           </span>
         ) : c === firstDataIndex ? (
-          <span className="text-[11px] text-ink-3 uppercase tracking-[.07em]">{labels.total}</span>
+          <span className="text-fs-110 text-ink-3 uppercase tracking-[.07em]">{labels.total}</span>
         ) : null}
       </td>
     );
@@ -2858,7 +2858,7 @@ export function DataGrid<T>({
           role={cell.label ? "columnheader" : "presentation"}
           colSpan={cell.span}
           className={cn(
-            "sticky overflow-clip border-b-divider bg-surface px-3 text-center font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
+            "sticky overflow-clip border-b-divider bg-surface px-3 text-center font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em] @max-sm/grid:px-2",
             zone === "center" ? "z-2" : "z-3",
             cell.label && "border-x",
           )}
@@ -3074,13 +3074,13 @@ export function DataGrid<T>({
       {sourceActive && remote.failed && remote.total !== null ? (
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-2 border-b-divider bg-danger-soft px-3 py-2 text-[13px] text-danger"
+          className="flex flex-wrap items-center gap-2 border-b-divider bg-danger-soft px-3 py-2 text-fs-130 text-danger"
         >
           <CircleAlert aria-hidden="true" className="size-4 shrink-0" />
           <span className="min-w-0 flex-1">{labels.loadError}</span>
           <button
             type="button"
-            className="rounded-control border border-danger px-2.5 py-1 font-[600] text-[12.5px] hover:bg-surface"
+            className="rounded-control border border-danger px-2.5 py-1 font-[600] text-fs-125 hover:bg-surface"
             onClick={remote.retry}
           >
             {labels.retry}
@@ -3171,7 +3171,7 @@ export function DataGrid<T>({
                 ))
               ) : bodyLength === 0 ? (
                 <tr aria-rowindex={groupLevels + 2}>
-                  <td colSpan={colSpan} className="px-4 py-10 text-center text-[13px] text-ink-3">
+                  <td colSpan={colSpan} className="px-4 py-10 text-center text-fs-130 text-ink-3">
                     <div className="sticky left-0 inline-flex max-w-[calc(100cqw-2rem)] flex-col items-center gap-2">
                       <span>
                         {sourceActive && remote.failed
@@ -3183,7 +3183,7 @@ export function DataGrid<T>({
                       {sourceActive && remote.failed ? (
                         <button
                           type="button"
-                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
+                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-fs-125 text-ink-2 hover:text-ink"
                           onClick={remote.retry}
                         >
                           {labels.retry}
@@ -3191,7 +3191,7 @@ export function DataGrid<T>({
                       ) : emptyFiltered ? (
                         <button
                           type="button"
-                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-[12.5px] text-ink-2 hover:text-ink"
+                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-fs-125 text-ink-2 hover:text-ink"
                           onClick={() => {
                             setFiltersState({});
                             setSearch("");
@@ -3230,7 +3230,7 @@ export function DataGrid<T>({
         </div>
       </div>
       {rangeSelection ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-divider px-3 py-1.5 text-[12.5px] text-ink-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-divider px-3 py-1.5 text-fs-125 text-ink-2">
           {stats && cellRange ? (
             <>
               <span className="font-[650] text-ink">{labels.rangeCells(rangeCellCount)}</span>
@@ -3262,7 +3262,7 @@ export function DataGrid<T>({
                 <button
                   type="button"
                   onClick={openChart}
-                  className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
+                  className="ml-auto inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-fs-120 text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5"
                 >
                   <BarChart3 aria-hidden="true" />
                   {labels.chart}
@@ -3272,7 +3272,7 @@ export function DataGrid<T>({
                 type="button"
                 onClick={copyRange}
                 className={cn(
-                  "inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-[12px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5",
+                  "inline-flex h-7 items-center gap-1.5 rounded-control border-divider bg-surface-control px-2 font-[600] text-fs-120 text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5",
                   !charts && "ml-auto",
                 )}
               >
@@ -3355,14 +3355,14 @@ function Pagination({
   return (
     <nav
       aria-label={labels.rowsPerPage}
-      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-t-divider px-2 py-1.5 text-[12.5px] text-ink-2"
+      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-t-divider px-2 py-1.5 text-fs-125 text-ink-2"
     >
       <label className="flex items-center gap-2">
         <span>{labels.rowsPerPage}</span>
         <select
           value={pageSize}
           onChange={(event) => onPageSize(Number(event.target.value))}
-          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-[12.5px] text-ink"
+          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-fs-125 text-ink"
         >
           {[...new Set([...options, pageSize])]
             .sort((a, b) => a - b)

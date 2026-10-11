@@ -2,9 +2,22 @@
 
 import { type KeyboardEvent, useId, useMemo, useRef, useState } from "react";
 import { Search } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { EMOJI_CATEGORIES, type EmojiCategory, type EmojiEntry } from "./emoji-data.js";
 import { gridMove, searchEmojis } from "./model.js";
+
+export type EmojiPickerPart =
+  | "root"
+  | "search"
+  | "searchIcon"
+  | "searchInput"
+  | "categories"
+  | "category"
+  | "title"
+  | "grid"
+  | "emoji"
+  | "empty";
 
 export interface EmojiPickerProps {
   onSelect?: (emoji: string) => void;
@@ -14,6 +27,8 @@ export interface EmojiPickerProps {
   defaultCategory?: string;
   searchPlaceholder?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<EmojiPickerPart>;
 }
 
 /**
@@ -27,6 +42,7 @@ export function EmojiPicker({
   defaultCategory,
   searchPlaceholder = "Buscar emoji",
   className,
+  classNames,
 }: EmojiPickerProps) {
   const baseId = useId();
   const grid = useRef<HTMLDivElement>(null);
@@ -65,13 +81,17 @@ export function EmojiPicker({
       className={cn(
         "@container/emoji flex w-full max-w-xs min-w-0 flex-col gap-density-sm rounded-popover border-card bg-surface-overlay p-card text-ink",
         className,
+        classNames?.root,
       )}
     >
-      <label className="relative flex items-center">
+      <label className={cn("relative flex items-center", classNames?.search)}>
         <span className="sr-only">{searchPlaceholder}</span>
         <Search
           aria-hidden="true"
-          className="pointer-events-none absolute left-2.5 size-3.5 text-ink-3"
+          className={cn(
+            "pointer-events-none absolute left-2.5 size-3.5 text-ink-3",
+            classNames?.searchIcon,
+          )}
         />
         <input
           type="search"
@@ -81,12 +101,19 @@ export function EmojiPicker({
             setQuery(event.target.value);
             setActive(0);
           }}
-          className="h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control pr-2 pl-8 text-control text-ink placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1"
+          className={cn(
+            "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control pr-2 pl-8 text-control text-ink placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1",
+            classNames?.searchInput,
+          )}
         />
       </label>
 
       {searching ? null : (
-        <div role="toolbar" aria-label="Categorías" className="flex flex-wrap gap-0.5">
+        <div
+          role="toolbar"
+          aria-label="Categorías"
+          className={cn("flex flex-wrap gap-0.5", classNames?.categories)}
+        >
           {categories.map((c) => (
             <button
               key={c.id}
@@ -98,7 +125,10 @@ export function EmojiPicker({
                 setCategoryId(c.id);
                 setActive(0);
               }}
-              className="pressable grid size-8 place-items-center rounded-button text-base hover:bg-surface-sunken aria-pressed:bg-accent-soft focus-visible:focus-ring"
+              className={cn(
+                "pressable grid size-8 place-items-center rounded-button text-base hover:bg-surface-sunken aria-pressed:bg-accent-soft focus-visible:focus-ring",
+                classNames?.category,
+              )}
             >
               <span aria-hidden="true">{c.icon}</span>
             </button>
@@ -106,7 +136,7 @@ export function EmojiPicker({
         </div>
       )}
 
-      <p id={`${baseId}-title`} className="text-ink-3 text-overline">
+      <p id={`${baseId}-title`} className={cn("text-ink-3 text-overline", classNames?.title)}>
         {searching ? `Resultados (${entries.length})` : category?.label}
       </p>
 
@@ -116,7 +146,10 @@ export function EmojiPicker({
         role="group"
         aria-labelledby={`${baseId}-title`}
         onKeyDown={onKeyDown}
-        className="grid max-h-48 gap-0.5 overflow-y-auto [grid-template-columns:repeat(auto-fill,minmax(2rem,1fr))]"
+        className={cn(
+          "grid max-h-48 gap-0.5 overflow-y-auto [grid-template-columns:repeat(auto-fill,minmax(2rem,1fr))]",
+          classNames?.grid,
+        )}
       >
         {entries.map((entry, index) => (
           <button
@@ -128,13 +161,20 @@ export function EmojiPicker({
             title={entry.name.split(" ").slice(0, 3).join(" ")}
             onFocus={() => setActive(index)}
             onClick={() => onSelect?.(entry.emoji)}
-            className="pressable grid size-8 place-items-center rounded-button text-lg hover:bg-surface-sunken focus-visible:focus-ring"
+            className={cn(
+              "pressable grid size-8 place-items-center rounded-button text-lg hover:bg-surface-sunken focus-visible:focus-ring",
+              classNames?.emoji,
+            )}
           >
             <span aria-hidden="true">{entry.emoji}</span>
           </button>
         ))}
         {entries.length === 0 ? (
-          <p className="col-span-full py-3 text-center text-ink-3 text-meta">Sin resultados</p>
+          <p
+            className={cn("col-span-full py-3 text-center text-ink-3 text-meta", classNames?.empty)}
+          >
+            Sin resultados
+          </p>
         ) : null}
       </div>
     </div>

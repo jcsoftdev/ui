@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { statusIcon } from "../../atoms/internal/status-icons.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type BannerTone = "info" | "success" | "warning" | "danger";
@@ -29,6 +30,8 @@ const toneRole: Record<BannerTone, "status" | "alert"> = {
   danger: "alert",
 };
 
+export type BannerPart = "root" | "icon" | "body" | "title" | "action";
+
 export interface BannerProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "title"> {
   tone?: BannerTone;
   /** Bold first line above the content. */
@@ -37,6 +40,8 @@ export interface BannerProps extends Omit<ComponentPropsWithoutRef<"div">, "role
   icon?: ReactNode;
   /** Actions on the right, e.g. a retry button. */
   action?: ReactNode;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<BannerPart>;
 }
 
 export function Banner({
@@ -45,6 +50,7 @@ export function Banner({
   icon,
   action,
   className,
+  classNames,
   children,
   ...props
 }: BannerProps) {
@@ -53,23 +59,31 @@ export function Banner({
     <div
       role={toneRole[tone]}
       className={cn(
-        "flex flex-wrap items-start gap-x-3 gap-y-2 rounded-banner px-3.5 py-3 text-[13px] text-ink",
+        "flex flex-wrap items-start gap-x-3 gap-y-2 rounded-banner px-3.5 py-3 text-fs-130 text-ink",
         toneClasses[tone],
         className,
+        classNames?.root,
       )}
       {...props}
     >
       {resolvedIcon ? (
-        <span aria-hidden="true" className={cn("mt-0.5 shrink-0", toneIconClasses[tone])}>
+        <span
+          aria-hidden="true"
+          className={cn("mt-0.5 shrink-0", toneIconClasses[tone], classNames?.icon)}
+        >
           {resolvedIcon}
         </span>
       ) : null}
-      <div className="min-w-0 flex-[1_1_14rem] break-words">
-        {title ? <p className="font-semibold">{title}</p> : null}
+      <div className={cn("min-w-0 flex-[1_1_14rem] break-words", classNames?.body)}>
+        {title ? <p className={cn("font-semibold", classNames?.title)}>{title}</p> : null}
         {children}
       </div>
       {action ? (
-        <div className="ml-auto flex shrink-0 flex-wrap items-center gap-1.5">{action}</div>
+        <div
+          className={cn("ml-auto flex shrink-0 flex-wrap items-center gap-1.5", classNames?.action)}
+        >
+          {action}
+        </div>
       ) : null}
     </div>
   );

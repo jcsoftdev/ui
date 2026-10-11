@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   PreviousFocusProvider,
@@ -40,20 +41,25 @@ export function DrawerDescription({
   return <DialogPrimitive.Description className={cn("m-0 text-ink-2", className)} {...props} />;
 }
 
+export type DrawerContentPart = "content" | "overlay" | "close";
+
 export interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content. */
+  classNames?: ClassNames<DrawerContentPart>;
   /** Same semantics as `DialogContentProps.blocking`. */
   blocking?: boolean;
   /** Accessible label of the close button. */
   closeLabel?: string;
-  /** Classes merged onto the scrim; consumer classes win. */
+  /** @deprecated Use `classNames.overlay`. */
   overlayClassName?: string;
-  /** Classes merged onto the built-in close button; consumer classes win. */
+  /** @deprecated Use `classNames.close`. */
   closeClassName?: string;
 }
 
 /** Right-anchored side panel for secondary flows. */
 export function DrawerContent({
   className,
+  classNames,
   blocking = false,
   closeLabel,
   overlayClassName,
@@ -69,11 +75,14 @@ export function DrawerContent({
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", overlayClassName)} />
+      <DialogPrimitive.Overlay
+        className={cn("fixed inset-0 z-70 bg-scrim", overlayClassName, classNames?.overlay)}
+      />
       <DialogPrimitive.Content
         className={cn(
           "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto outline-none surface-overlay shadow-overlay",
           className,
+          classNames?.content,
         )}
         onEscapeKeyDown={(event) => {
           if (blocking) event.preventDefault();
@@ -100,6 +109,7 @@ export function DrawerContent({
             className={cn(
               "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
               closeClassName,
+              classNames?.close,
             )}
           >
             <X aria-hidden="true" className="size-4" />

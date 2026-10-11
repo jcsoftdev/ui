@@ -256,7 +256,7 @@ export function ControlsBento() {
                 <DialogTitle>Anular cita</DialogTitle>
               </DialogHeader>
               <DialogBody>
-                <p className="m-0 text-[13px] text-ink-2">
+                <p className="m-0 text-fs-130 text-ink-2">
                   Vas a anular la cita de Luis Ramírez (Corte + barba, sábado 11:30 con Diego
                   Quispe). El horario quedará libre.
                 </p>

@@ -983,7 +983,7 @@ function GanttBody({
               aria-label={texts.zoomLevels[level]}
               onClick={() => onZoom(level)}
               className={cn(
-                "cursor-pointer rounded-button px-2 py-1 font-semibold text-[11.5px] outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-3",
+                "cursor-pointer rounded-button px-2 py-1 font-semibold text-fs-115 outline-none focus-visible:outline-2 focus-visible:outline-accent-ink @md/chart:px-3",
                 zoom === level ? "bg-surface text-ink shadow-xs" : "text-ink-3 hover:text-ink",
               )}
             >
@@ -997,7 +997,7 @@ function GanttBody({
           ))}
         </fieldset>
         {critical || baselines ? (
-          <ul className="m-0 hidden min-w-0 list-none items-center gap-3 p-0 text-[11.5px] text-ink-3 @xl/chart:flex">
+          <ul className="m-0 hidden min-w-0 list-none items-center gap-3 p-0 text-fs-115 text-ink-3 @xl/chart:flex">
             {critical ? (
               <li className="flex items-center gap-1.5 whitespace-nowrap">
                 <span
@@ -1077,7 +1077,7 @@ function GanttBody({
             <button
               type="button"
               onClick={() => scrollToTime(todayTime, true)}
-              className="shrink-0 cursor-pointer rounded-button border-divider bg-surface-control px-3 py-1 font-semibold text-[11.5px] text-ink-2 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent-ink"
+              className="shrink-0 cursor-pointer rounded-button border-divider bg-surface-control px-3 py-1 font-semibold text-fs-115 text-ink-2 outline-none hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-accent-ink"
             >
               {texts.today}
             </button>
@@ -1109,7 +1109,7 @@ function GanttBody({
             >
               <div
                 aria-hidden="true"
-                className="flex w-full items-center font-semibold text-[11px] text-ink-3"
+                className="flex w-full items-center font-semibold text-fs-110 text-ink-3"
                 style={{ height: HEADER_HEIGHT / 2 }}
               >
                 <span className="min-w-0 flex-1 truncate px-3">{texts.tasks}</span>
@@ -1174,7 +1174,7 @@ function GanttBody({
                     }
                   }}
                   className={cn(
-                    "flex items-center text-[12px] outline-none focus-visible:bg-accent-soft focus-visible:shadow-[inset_2px_0_0_var(--accent-word)]",
+                    "flex items-center text-fs-120 outline-none focus-visible:bg-accent-soft focus-visible:shadow-[inset_2px_0_0_var(--accent-word)]",
                     activeIndex === i && "bg-[var(--chart-grid)]",
                   )}
                   style={{ height: rowHeight, boxShadow: "inset 0 -1px 0 var(--chart-grid)" }}
@@ -1218,7 +1218,7 @@ function GanttBody({
                     {row.task.milestone && !row.parent ? (
                       <span
                         aria-hidden="true"
-                        className="size-2 shrink-0 rotate-45 rounded-[1px]"
+                        className="size-2 shrink-0 rotate-45 rounded-xs"
                         style={{ background: row.task.color ?? "var(--ink)" }}
                       />
                     ) : null}
@@ -1235,7 +1235,7 @@ function GanttBody({
                     <span
                       key={column}
                       aria-hidden="true"
-                      className="shrink-0 truncate pr-3 text-right text-[11.5px] text-ink-3 tabular-nums"
+                      className="shrink-0 truncate pr-3 text-right text-fs-115 text-ink-3 tabular-nums"
                       style={{ width: COLUMN_WIDTH[column] }}
                     >
                       {column === "start"

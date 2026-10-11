@@ -1,16 +1,21 @@
 "use client";
 
 import { type ComponentProps, useRef } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+
+export type SwitchPart = "root" | "track" | "thumb";
 
 export interface SwitchProps
   extends Omit<
     ComponentProps<"button">,
     "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
   > {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<SwitchPart>;
   checked?: boolean;
   defaultChecked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
@@ -23,6 +28,7 @@ export interface SwitchProps
 
 export function Switch({
   className,
+  classNames,
   checked: checkedProp,
   defaultChecked,
   onCheckedChange,
@@ -64,17 +70,26 @@ export function Switch({
         className={cn(
           "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
           className,
+          classNames?.root,
         )}
         onClick={composeHandlers(onClick, (event) => {
           setChecked((prev) => !prev);
           bubble.onControlClick(event);
         })}
       >
-        <span className="relative block h-5 w-[34px] rounded-pill bg-line-strong transition-colors group-data-[state=checked]:bg-accent">
+        <span
+          className={cn(
+            "relative block h-5 w-8.5 rounded-pill bg-line-strong transition-colors group-data-[state=checked]:bg-accent",
+            classNames?.track,
+          )}
+        >
           <span
             data-state={state}
             data-disabled={disabledAttr}
-            className="absolute top-[3px] left-[3px] block size-3.5 rounded-pill bg-surface transition-transform data-[state=checked]:translate-x-3.5"
+            className={cn(
+              "absolute top-0.75 left-0.75 block size-3.5 rounded-pill bg-surface transition-transform data-[state=checked]:translate-x-3.5",
+              classNames?.thumb,
+            )}
           />
         </span>
       </button>

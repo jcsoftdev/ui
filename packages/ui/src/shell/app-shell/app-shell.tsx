@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type ComponentPropsWithRef,
   createContext,
   type ReactNode,
   type RefObject,
@@ -11,6 +12,7 @@ import {
   useState,
 } from "react";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 /** Container width (px) below which the shell is compact: the sidebar becomes a drawer. */
 export const APP_SHELL_BREAKPOINT = 900;
@@ -53,9 +55,8 @@ export function useAppShell(): AppShellState | null {
   return useContext(AppShellContext);
 }
 
-export interface AppShellProps {
+export interface AppShellProps extends ComponentPropsWithRef<"div"> {
   children: ReactNode;
-  className?: string;
 }
 
 /**
@@ -63,12 +64,13 @@ export interface AppShellProps {
  * into a drawer and the topbar shows its menu button when the SHELL is under 900 px wide,
  * whatever the viewport is, so the same shell works in a full page, a preview or a story.
  */
-export function AppShell({ children, className }: AppShellProps) {
+export function AppShell({ children, className, ref: forwardedRef, ...props }: AppShellProps) {
   const ref = useRef<HTMLDivElement>(null);
   const compact = useCompactContainer(ref);
+  const composedRef = useComposedRefs(ref, forwardedRef);
   return (
     <AppShellContext.Provider value={{ compact }}>
-      <div ref={ref} className={cn("@container/app flex min-w-0", className)}>
+      <div ref={composedRef} {...props} className={cn("@container/app flex min-w-0", className)}>
         {children}
       </div>
     </AppShellContext.Provider>

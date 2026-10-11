@@ -2,8 +2,11 @@
 
 import { type KeyboardEvent, type PointerEvent, useState } from "react";
 import { Star } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { ratingFromPointer, ratingKey, roundRating, starFill } from "./model.js";
+
+export type RatingPart = "root" | "stars" | "star" | "icon" | "fill" | "value";
 
 export interface RatingProps {
   value?: number;
@@ -19,6 +22,8 @@ export interface RatingProps {
   showValue?: boolean;
   "aria-label"?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<RatingPart>;
 }
 
 const sizes = { sm: "size-4", md: "size-5", lg: "size-7" } as const;
@@ -38,6 +43,7 @@ export function Rating({
   size = "md",
   showValue,
   className,
+  classNames,
   ...aria
 }: RatingProps) {
   const [inner, setInner] = useState(defaultValue);
@@ -75,7 +81,11 @@ export function Rating({
       <span
         // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length list
         key={index}
-        className={cn("relative inline-flex", interactive && "pressable cursor-pointer")}
+        className={cn(
+          "relative inline-flex",
+          interactive && "pressable cursor-pointer",
+          classNames?.star,
+        )}
         onPointerMove={interactive ? (event) => setHover(pointerValue(event, index)) : undefined}
         onPointerUp={
           interactive
@@ -87,13 +97,16 @@ export function Rating({
             : undefined
         }
       >
-        <Star aria-hidden="true" className={cn(sizes[size], "text-line-strong")} />
+        <Star
+          aria-hidden="true"
+          className={cn(sizes[size], "text-line-strong", classNames?.icon)}
+        />
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 overflow-hidden"
+          className={cn("absolute inset-y-0 left-0 overflow-hidden", classNames?.fill)}
           style={{ width: `${fill * 100}%` }}
         >
-          <Star className={cn(sizes[size], "fill-warning text-warning")} />
+          <Star className={cn(sizes[size], "fill-warning text-warning", classNames?.icon)} />
         </span>
       </span>
     );
@@ -106,6 +119,7 @@ export function Rating({
       className={cn(
         "@container/rating inline-flex max-w-full items-center gap-density-sm",
         className,
+        classNames?.root,
       )}
     >
       {interactive ? (
@@ -119,7 +133,10 @@ export function Rating({
           aria-valuetext={text}
           onKeyDown={onKeyDown}
           onPointerLeave={() => setHover(null)}
-          className="inline-flex gap-0.5 rounded-chip outline-none focus-visible:focus-ring"
+          className={cn(
+            "inline-flex gap-0.5 rounded-chip outline-none focus-visible:focus-ring",
+            classNames?.stars,
+          )}
         >
           {stars}
         </div>
@@ -128,12 +145,14 @@ export function Rating({
           role="img"
           aria-label={`${label}: ${text}`}
           aria-disabled={disabled || undefined}
-          className={cn("inline-flex gap-0.5", disabled && "opacity-50")}
+          className={cn("inline-flex gap-0.5", disabled && "opacity-50", classNames?.stars)}
         >
           {stars}
         </div>
       )}
-      {showValue ? <span className="text-ink-2 text-meta tabular-nums">{value}</span> : null}
+      {showValue ? (
+        <span className={cn("text-ink-2 text-meta tabular-nums", classNames?.value)}>{value}</span>
+      ) : null}
     </div>
   );
 }

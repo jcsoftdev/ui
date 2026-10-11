@@ -11,15 +11,29 @@ import {
   useState,
 } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { nearestIndex, stepIndex } from "./model.js";
+
+export type CarouselPart =
+  | "root"
+  | "track"
+  | "slide"
+  | "controls"
+  | "previous"
+  | "next"
+  | "playPause"
+  | "dots"
+  | "dot";
 
 export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"section">, "children"> {
   children: ReactNode;
   /** Accessible name of the carousel. */
   label: string;
-  /** Classes for each slide's width. Default: 1 per view, 2 from 32rem, 3 from 48rem. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<CarouselPart>;
+  /** Classes for each slide's width. Default: 1 per view, 2 from 32rem, 3 from 48rem. Prefer `classNames.slide` to add classes without replacing this default. */
   slideClassName?: string;
   /** Wrap around at the ends. */
   loop?: boolean;
@@ -45,6 +59,7 @@ export function Carousel({
   showDots = true,
   showArrows = true,
   className,
+  classNames,
   ...props
 }: CarouselProps) {
   const slides = Children.toArray(children);
@@ -115,7 +130,11 @@ export function Carousel({
     <section
       aria-roledescription="carrusel"
       aria-label={label}
-      className={cn("@container/carousel flex min-w-0 flex-col gap-density", className)}
+      className={cn(
+        "@container/carousel flex min-w-0 flex-col gap-density",
+        className,
+        classNames?.root,
+      )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setFocused(true)}
@@ -130,7 +149,10 @@ export function Carousel({
         aria-label={`${label}: usa las flechas para cambiar de diapositiva`}
         onScroll={syncIndex}
         onKeyDown={onKeyDown}
-        className="relative flex snap-x snap-mandatory gap-density overflow-x-auto scroll-smooth rounded-card outline-none [scrollbar-width:none] focus-visible:focus-ring motion-reduce:scroll-auto [&::-webkit-scrollbar]:hidden"
+        className={cn(
+          "relative flex snap-x snap-mandatory gap-density overflow-x-auto scroll-smooth rounded-card outline-none [scrollbar-width:none] focus-visible:focus-ring motion-reduce:scroll-auto [&::-webkit-scrollbar]:hidden",
+          classNames?.track,
+        )}
       >
         {slides.map((slide, i) => (
           // biome-ignore lint/a11y/useSemanticElements: slide of a carousel, not a form group
@@ -141,7 +163,7 @@ export function Carousel({
             role="group"
             aria-roledescription="diapositiva"
             aria-label={`${i + 1} de ${count}`}
-            className={cn("min-w-0 shrink-0 snap-start", slideClassName)}
+            className={cn("min-w-0 shrink-0 snap-start", slideClassName, classNames?.slide)}
           >
             {slide}
           </div>
@@ -149,7 +171,7 @@ export function Carousel({
       </section>
 
       {count > 1 && (showArrows || showDots || interval > 0) ? (
-        <div className="flex items-center justify-between gap-density">
+        <div className={cn("flex items-center justify-between gap-density", classNames?.controls)}>
           <div className="flex items-center gap-density-sm">
             {showArrows ? (
               <button
@@ -157,7 +179,7 @@ export function Carousel({
                 aria-label="Diapositiva anterior"
                 disabled={!loop && index === 0}
                 onClick={() => step(-1)}
-                className={iconButton}
+                className={cn(iconButton, classNames?.previous)}
               >
                 <ChevronLeft className="size-4" aria-hidden="true" />
               </button>
@@ -170,7 +192,7 @@ export function Carousel({
                 }
                 aria-pressed={userPaused}
                 onClick={() => setUserPaused((paused) => !paused)}
-                className={iconButton}
+                className={cn(iconButton, classNames?.playPause)}
               >
                 {userPaused ? (
                   <Play className="size-4" aria-hidden="true" />
@@ -181,7 +203,12 @@ export function Carousel({
             ) : null}
           </div>
           {showDots ? (
-            <div className="flex min-w-0 flex-wrap items-center justify-center gap-1.5">
+            <div
+              className={cn(
+                "flex min-w-0 flex-wrap items-center justify-center gap-1.5",
+                classNames?.dots,
+              )}
+            >
               {slides.map((_, i) => (
                 <button
                   // biome-ignore lint/suspicious/noArrayIndexKey: positional dots
@@ -193,6 +220,7 @@ export function Carousel({
                   className={cn(
                     "h-2 cursor-pointer rounded-badge transition-all duration-(--motion-duration) ease-style focus-visible:focus-ring",
                     i === index ? "w-5 bg-accent" : "w-2 bg-line-strong hover:bg-ink-3",
+                    classNames?.dot,
                   )}
                 />
               ))}
@@ -204,7 +232,7 @@ export function Carousel({
               aria-label="Diapositiva siguiente"
               disabled={!loop && index >= count - 1}
               onClick={() => step(1)}
-              className={iconButton}
+              className={cn(iconButton, classNames?.next)}
             >
               <ChevronRight className="size-4" aria-hidden="true" />
             </button>

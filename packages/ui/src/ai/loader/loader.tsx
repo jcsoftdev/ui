@@ -1,11 +1,14 @@
 "use client";
 
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { AiKeyframes } from "../internal/keyframes.js";
 
 export type LoaderVariant = "dots" | "typing";
 export type LoaderSize = "sm" | "md";
+
+export type LoaderPart = "root" | "dots" | "dot" | "label";
 
 export interface LoaderProps {
   /** `dots` is the bare indicator; `typing` wraps it in a bubble with a label. */
@@ -14,6 +17,8 @@ export interface LoaderProps {
   /** Spoken label (`role="status"`); shown as text in the `typing` variant. */
   label?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<LoaderPart>;
 }
 
 const dotSize: Record<LoaderSize, string> = { sm: "size-1", md: "size-1.5" };
@@ -24,14 +29,15 @@ export function Loader({
   size = "md",
   label = "Escribiendo…",
   className,
+  classNames,
 }: LoaderProps) {
   const reduced = usePrefersReducedMotion();
   const dots = (
-    <span aria-hidden className="inline-flex items-center gap-1">
+    <span aria-hidden className={cn("inline-flex items-center gap-1", classNames?.dots)}>
       {[0, 1, 2].map((n) => (
         <span
           key={n}
-          className={cn("rounded-full bg-current opacity-60", dotSize[size])}
+          className={cn("rounded-full bg-current opacity-60", dotSize[size], classNames?.dot)}
           style={
             reduced
               ? undefined
@@ -50,11 +56,16 @@ export function Loader({
         variant === "typing" &&
           "rounded-card bg-surface-card px-control-x py-2 text-meta shadow-card border-card",
         className,
+        classNames?.root,
       )}
     >
       <AiKeyframes />
       {dots}
-      {variant === "typing" ? <span>{label}</span> : <span className="sr-only">{label}</span>}
+      {variant === "typing" ? (
+        <span className={classNames?.label}>{label}</span>
+      ) : (
+        <span className={cn("sr-only", classNames?.label)}>{label}</span>
+      )}
     </span>
   );
 }

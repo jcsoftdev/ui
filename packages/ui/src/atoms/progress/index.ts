@@ -1,1 +1,1 @@
-export { Meter, Progress, type ProgressProps } from "./progress.js";
+export { Meter, Progress, type ProgressPart, type ProgressProps } from "./progress.js";

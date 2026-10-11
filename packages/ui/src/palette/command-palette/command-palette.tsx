@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Search } from "../../icons/index.js";
 import * as Command from "../../primitives/command/command.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export interface CommandPaletteItem {
@@ -16,6 +17,20 @@ export interface CommandPaletteItem {
   keywords?: string[];
   onSelect: () => void;
 }
+
+export type CommandPalettePart =
+  | "root"
+  | "overlay"
+  | "header"
+  | "searchIcon"
+  | "input"
+  | "closeKey"
+  | "list"
+  | "empty"
+  | "group"
+  | "item"
+  | "itemLabel"
+  | "itemHint";
 
 export interface CommandPaletteProps {
   open: boolean;
@@ -34,6 +49,8 @@ export interface CommandPaletteProps {
   query?: string;
   onQueryChange?: (query: string) => void;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<CommandPalettePart>;
 }
 
 function groupItems(items: CommandPaletteItem[]): [string, CommandPaletteItem[]][] {
@@ -68,6 +85,7 @@ export function CommandPalette({
   query,
   onQueryChange,
   className,
+  classNames,
 }: CommandPaletteProps) {
   return (
     <Command.Dialog
@@ -76,32 +94,56 @@ export function CommandPalette({
         if (!next) onClose();
       }}
       label={label}
-      overlayClassName="fixed inset-0 z-50 bg-scrim"
+      overlayClassName={cn("fixed inset-0 z-50 bg-scrim", classNames?.overlay)}
       contentClassName={cn(
         "@container/palette fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,calc(100vw-1rem))] -translate-x-1/2 flex-col overflow-hidden rounded-dialog surface-overlay shadow-overlay",
         className,
+        classNames?.root,
       )}
     >
-      <div className="flex items-center gap-2.5 border-b-divider px-3 py-3 @min-[420px]/palette:px-4 @min-[420px]/palette:py-3.5">
-        <Search className="size-4.5 shrink-0 text-ink-3" aria-hidden="true" />
+      <div
+        className={cn(
+          "flex items-center gap-2.5 border-b-divider px-3 py-3 @min-[420px]/palette:px-4 @min-[420px]/palette:py-3.5",
+          classNames?.header,
+        )}
+      >
+        <Search
+          className={cn("size-4.5 shrink-0 text-ink-3", classNames?.searchIcon)}
+          aria-hidden="true"
+        />
         <Command.Input
           autoFocus
           placeholder={placeholder}
-          className="min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3"
+          className={cn(
+            "min-w-0 flex-1 bg-transparent text-body text-ink outline-none placeholder:text-ink-3",
+            classNames?.input,
+          )}
           {...(onQueryChange ? { value: query ?? "", onValueChange: onQueryChange } : {})}
         />
-        <span className="shrink-0 rounded-xs border-divider bg-surface-2 px-1.25 py-1 font-mono @max-[360px]/palette:hidden text-count text-ink-2">
+        <span
+          className={cn(
+            "shrink-0 rounded-xs border-divider bg-surface-2 px-1.25 py-1 font-mono @max-[360px]/palette:hidden text-count text-ink-2",
+            classNames?.closeKey,
+          )}
+        >
           {closeKeyLabel}
         </span>
       </div>
       <ResultCount format={formatResultCount} />
-      <Command.List className="overflow-y-auto p-1.5 @min-[420px]/palette:p-2">
-        <Command.Empty className="p-4 text-center text-ink-3 text-meta">{emptyLabel}</Command.Empty>
+      <Command.List
+        className={cn("overflow-y-auto p-1.5 @min-[420px]/palette:p-2", classNames?.list)}
+      >
+        <Command.Empty className={cn("p-4 text-center text-ink-3 text-meta", classNames?.empty)}>
+          {emptyLabel}
+        </Command.Empty>
         {groupItems(items).map(([group, groupItemsList]) => (
           <Command.Group
             key={group}
             heading={group}
-            className="[&_[data-ui-command-group-heading]]:px-2.5 [&_[data-ui-command-group-heading]]:pt-1.5 [&_[data-ui-command-group-heading]]:pb-1 [&_[data-ui-command-group-heading]]:text-meta [&_[data-ui-command-group-heading]]:text-ink-3"
+            className={cn(
+              "[&_[data-ui-command-group-heading]]:px-2.5 [&_[data-ui-command-group-heading]]:pt-1.5 [&_[data-ui-command-group-heading]]:pb-1 [&_[data-ui-command-group-heading]]:text-meta [&_[data-ui-command-group-heading]]:text-ink-3",
+              classNames?.group,
+            )}
           >
             {groupItemsList.map((item) => (
               <Command.Item
@@ -112,12 +154,20 @@ export function CommandPalette({
                   item.onSelect();
                   onClose();
                 }}
-                className="flex w-full cursor-pointer items-center gap-2.5 rounded-control px-2.5 py-2 text-ink text-meta data-[selected=true]:bg-surface-2 [&_svg]:size-4 [&_svg]:text-ink-3"
+                className={cn(
+                  "flex w-full cursor-pointer items-center gap-2.5 rounded-control px-2.5 py-2 text-ink text-meta data-[selected=true]:bg-surface-2 [&_svg]:size-4 [&_svg]:text-ink-3",
+                  classNames?.item,
+                )}
               >
                 {item.icon}
-                <span className="min-w-0 truncate">{item.label}</span>
+                <span className={cn("min-w-0 truncate", classNames?.itemLabel)}>{item.label}</span>
                 {item.hint ? (
-                  <span className="ml-auto max-w-[40%] shrink-0 truncate text-ink-3 text-meta @max-[360px]/palette:hidden">
+                  <span
+                    className={cn(
+                      "ml-auto max-w-[40%] shrink-0 truncate text-ink-3 text-meta in-data-[selected=true]:text-ink-2 @max-[360px]/palette:hidden",
+                      classNames?.itemHint,
+                    )}
+                  >
                     {item.hint}
                   </span>
                 ) : null}

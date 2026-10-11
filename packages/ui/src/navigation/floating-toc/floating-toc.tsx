@@ -1,12 +1,17 @@
 "use client";
 
 import { type ComponentPropsWithoutRef, type RefObject, useEffect, useRef, useState } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { pickActive, type TocItem } from "./model.js";
 
+export type FloatingTocPart = "root" | "title" | "list" | "item" | "link" | "label";
+
 export interface FloatingTocProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
   items: TocItem[];
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<FloatingTocPart>;
   /** Heading shown above the list. */
   title?: string;
   /**
@@ -33,6 +38,7 @@ export function FloatingToc({
   onActiveChange,
   offsetTop = 0,
   className,
+  classNames,
   ...props
 }: FloatingTocProps) {
   const reduced = usePrefersReducedMotion();
@@ -82,13 +88,24 @@ export function FloatingToc({
   };
 
   return (
-    <nav aria-label={title} className={cn("@container/toc min-w-0", className)} {...props}>
-      <p className="m-0 pb-density-sm text-ink-3 text-overline uppercase">{title}</p>
-      <ol className="m-0 flex list-none flex-col border-s-2 border-divider p-0">
+    <nav
+      aria-label={title}
+      className={cn("@container/toc min-w-0", className, classNames?.root)}
+      {...props}
+    >
+      <p className={cn("m-0 pb-density-sm text-ink-3 text-overline uppercase", classNames?.title)}>
+        {title}
+      </p>
+      <ol
+        className={cn(
+          "m-0 flex list-none flex-col border-s-2 border-divider p-0",
+          classNames?.list,
+        )}
+      >
         {items.map((item) => {
           const current = item.id === active;
           return (
-            <li key={item.id} className="min-w-0">
+            <li key={item.id} className={cn("min-w-0", classNames?.item)}>
               <a
                 href={`#${item.id}`}
                 aria-current={current ? "location" : undefined}
@@ -102,9 +119,12 @@ export function FloatingToc({
                   current
                     ? "border-accent font-semibold text-accent-ink"
                     : "border-transparent text-ink-3 hover:text-ink",
+                  classNames?.link,
                 )}
               >
-                <span className={cn("block truncate", indent[item.level ?? 1])}>{item.label}</span>
+                <span className={cn("block truncate", indent[item.level ?? 1], classNames?.label)}>
+                  {item.label}
+                </span>
               </a>
             </li>
           );

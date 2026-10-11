@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Check, Copy } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 import { useCopy } from "../internal/use-copy.js";
@@ -29,6 +30,8 @@ const LABELS = {
   sql: "SQL",
 };
 
+export type CodeBlockPart = "root" | "header" | "title" | "actions" | "pre" | "code";
+
 export interface CodeBlockProps {
   code: string;
   /** `ts`, `js`, `json`, `bash`, `go` or `sql` (aliases like `typescript` work); anything else is plain. */
@@ -38,10 +41,19 @@ export interface CodeBlockProps {
   /** Wrap long lines instead of scrolling horizontally. */
   wrap?: boolean;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<CodeBlockPart>;
 }
 
 /** Code with a language label, a copy button and a dependency-free syntax highlighter. */
-export function CodeBlock({ code, language, filename, wrap, className }: CodeBlockProps) {
+export function CodeBlock({
+  code,
+  language,
+  filename,
+  wrap,
+  className,
+  classNames,
+}: CodeBlockProps) {
   const { copied, copy } = useCopy();
   const tokens = useMemo(() => tokenize(code, language), [code, language]);
   const resolved = resolveLanguage(language);
@@ -52,11 +64,19 @@ export function CodeBlock({ code, language, filename, wrap, className }: CodeBlo
       className={cn(
         "@container/code m-0 min-w-0 max-w-full overflow-hidden rounded-card bg-surface-sunken text-ink border-card shadow-card",
         className,
+        classNames?.root,
       )}
     >
-      <figcaption className="flex items-center justify-between gap-density-sm border-b-divider px-3 py-1">
-        <span className="min-w-0 truncate font-mono text-meta text-ink-3">{title}</span>
-        <span aria-live="polite" className="flex items-center gap-1">
+      <figcaption
+        className={cn(
+          "flex items-center justify-between gap-density-sm border-b-divider px-3 py-1",
+          classNames?.header,
+        )}
+      >
+        <span className={cn("min-w-0 truncate font-mono text-meta text-ink-3", classNames?.title)}>
+          {title}
+        </span>
+        <span aria-live="polite" className={cn("flex items-center gap-1", classNames?.actions)}>
           {copied ? <span className="text-meta text-success">Copiado</span> : null}
           <IconAction
             label={copied ? "Código copiado" : "Copiar código"}
@@ -70,11 +90,12 @@ export function CodeBlock({ code, language, filename, wrap, className }: CodeBlo
         // biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable region must be keyboard reachable
         tabIndex={0}
         className={cn(
-          "m-0 p-3 font-mono text-[12.5px] leading-relaxed focus-visible:focus-ring",
+          "m-0 p-3 font-mono text-fs-125 leading-relaxed focus-visible:focus-ring",
           wrap ? "whitespace-pre-wrap break-words" : "overflow-x-auto",
+          classNames?.pre,
         )}
       >
-        <code>
+        <code className={classNames?.code}>
           {tokens.map((token, index) => (
             <span
               // biome-ignore lint/suspicious/noArrayIndexKey: tokens are positional and never reorder

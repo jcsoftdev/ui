@@ -11,6 +11,7 @@ import {
   FolderOpen,
   type IconComponent,
 } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   type FileTreeNode,
@@ -20,6 +21,8 @@ import {
   treeStep,
   typeahead,
 } from "./model.js";
+
+export type FileTreePart = "root" | "tree" | "item" | "chevron" | "icon" | "name";
 
 export interface FileTreeProps {
   nodes: FileTreeNode[];
@@ -32,6 +35,8 @@ export interface FileTreeProps {
   defaultExpandedIds?: string[];
   onExpandedChange?: (ids: string[]) => void;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<FileTreePart>;
 }
 
 const TREE_KEYS: readonly string[] = [
@@ -65,6 +70,7 @@ export function FileTree({
   defaultExpandedIds = [],
   onExpandedChange,
   className,
+  classNames,
 }: FileTreeProps) {
   const [selectedState, setSelectedState] = useState(defaultSelectedId);
   const [expandedState, setExpandedState] = useState(defaultExpandedIds);
@@ -127,8 +133,13 @@ export function FileTree({
   };
 
   return (
-    <div className={cn("@container/tree min-w-0", className)}>
-      <div ref={listRef} role="tree" aria-label={label} className="flex flex-col gap-0.5">
+    <div className={cn("@container/tree min-w-0", className, classNames?.root)}>
+      <div
+        ref={listRef}
+        role="tree"
+        aria-label={label}
+        className={cn("flex flex-col gap-0.5", classNames?.tree)}
+      >
         {rows.map((row) => {
           const isSelected = row.node.id === selected;
           const Icon = row.isFolder ? (row.expanded ? FolderOpen : Folder) : iconFor(row.node.name);
@@ -158,9 +169,15 @@ export function FileTree({
               className={cn(
                 "pressable flex min-h-control-sm min-w-0 cursor-pointer items-center gap-density-sm rounded-button pe-control-x text-body text-ink outline-none hover:bg-surface-2 focus-visible:focus-ring",
                 isSelected && "bg-accent-soft font-semibold text-accent-ink shadow-selected",
+                classNames?.item,
               )}
             >
-              <span className="flex size-4 shrink-0 items-center justify-center text-ink-3">
+              <span
+                className={cn(
+                  "flex size-4 shrink-0 items-center justify-center text-ink-3",
+                  classNames?.chevron,
+                )}
+              >
                 {row.isFolder ? (
                   <ChevronRight
                     aria-hidden="true"
@@ -173,9 +190,13 @@ export function FileTree({
               </span>
               <Icon
                 aria-hidden="true"
-                className={cn("size-4 shrink-0", row.isFolder ? "text-accent-ink" : "text-ink-3")}
+                className={cn(
+                  "size-4 shrink-0",
+                  row.isFolder ? "text-accent-ink" : "text-ink-3",
+                  classNames?.icon,
+                )}
               />
-              <span className="min-w-0 truncate">{row.node.name}</span>
+              <span className={cn("min-w-0 truncate", classNames?.name)}>{row.node.name}</span>
             </div>
           );
         })}

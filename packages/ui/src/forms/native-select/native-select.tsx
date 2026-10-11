@@ -1,5 +1,6 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { ChevronDown } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export interface NativeSelectOption {
@@ -13,6 +14,8 @@ export interface NativeSelectGroup {
   options: NativeSelectOption[];
 }
 
+export type NativeSelectPart = "root" | "select" | "icon";
+
 export interface NativeSelectProps extends Omit<ComponentPropsWithoutRef<"select">, "size"> {
   /** Data-driven alternative to `<option>` children; groups render as `<optgroup>`. */
   options?: (NativeSelectOption | NativeSelectGroup)[];
@@ -20,6 +23,8 @@ export interface NativeSelectProps extends Omit<ComponentPropsWithoutRef<"select
   placeholder?: string;
   size?: "sm" | "md";
   invalid?: boolean;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the `<select>`. */
+  classNames?: ClassNames<NativeSelectPart>;
 }
 
 function isGroup(item: NativeSelectOption | NativeSelectGroup): item is NativeSelectGroup {
@@ -36,6 +41,7 @@ export function NativeSelect({
   size = "md",
   invalid,
   className,
+  classNames,
   children,
   defaultValue,
   value,
@@ -44,7 +50,7 @@ export function NativeSelect({
   const fallbackDefault =
     placeholder && value === undefined && defaultValue === undefined ? "" : defaultValue;
   return (
-    <span className="relative flex w-full min-w-0 items-center">
+    <span className={cn("relative flex w-full min-w-0 items-center", classNames?.root)}>
       <select
         value={value}
         defaultValue={fallbackDefault}
@@ -53,6 +59,7 @@ export function NativeSelect({
           "w-full min-w-0 appearance-none rounded-input border-control bg-surface-control py-0 pl-3 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
           size === "sm" ? "h-control-sm pr-7" : "h-input pr-8",
           className,
+          classNames?.select,
         )}
         {...props}
       >
@@ -80,7 +87,10 @@ export function NativeSelect({
       </select>
       <ChevronDown
         aria-hidden="true"
-        className="pointer-events-none absolute right-2.5 size-3.5 text-ink-3"
+        className={cn(
+          "pointer-events-none absolute right-2.5 size-3.5 text-ink-3",
+          classNames?.icon,
+        )}
       />
     </span>
   );

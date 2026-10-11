@@ -1,1 +1,1 @@
-export { WeekView, type WeekViewProps } from "./week-view.js";
+export { WeekView, type WeekViewPart, type WeekViewProps } from "./week-view.js";

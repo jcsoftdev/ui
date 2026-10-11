@@ -2,6 +2,7 @@
 
 import { type ComponentProps, useRef } from "react";
 import { Check } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
@@ -9,11 +10,15 @@ import { useControllableState } from "../../utils/use-controllable-state.js";
 
 export type CheckedState = boolean | "indeterminate";
 
+export type CheckboxPart = "root" | "box" | "indicator" | "icon";
+
 export interface CheckboxProps
   extends Omit<
     ComponentProps<"button">,
     "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
   > {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  classNames?: ClassNames<CheckboxPart>;
   checked?: CheckedState;
   defaultChecked?: CheckedState;
   onCheckedChange?: (checked: CheckedState) => void;
@@ -30,6 +35,7 @@ function getState(checked: CheckedState) {
 
 export function Checkbox({
   className,
+  classNames,
   checked: checkedProp,
   defaultChecked,
   onCheckedChange,
@@ -72,6 +78,7 @@ export function Checkbox({
         className={cn(
           "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
           className,
+          classNames?.root,
         )}
         onKeyDown={composeHandlers(onKeyDown, (event) => {
           // WAI-ARIA: checkboxes toggle with Space only; Enter must not submit or toggle.
@@ -82,10 +89,23 @@ export function Checkbox({
           bubble.onControlClick(event);
         })}
       >
-        <span className="grid size-[18px] place-items-center rounded-pill border-[1.5px] border-line-strong group-data-[state=checked]:border-success group-data-[state=checked]:bg-success group-data-[state=indeterminate]:border-success group-data-[state=indeterminate]:bg-success">
+        <span
+          className={cn(
+            "grid size-4.5 place-items-center rounded-pill border-[1.5px] border-line-strong group-data-[state=checked]:border-success group-data-[state=checked]:bg-success group-data-[state=indeterminate]:border-success group-data-[state=indeterminate]:bg-success",
+            classNames?.box,
+          )}
+        >
           {checked === false ? null : (
-            <span data-state={state} data-disabled={disabledAttr} style={{ pointerEvents: "none" }}>
-              <Check aria-hidden="true" className="size-[11px] stroke-[3] text-on-accent" />
+            <span
+              data-state={state}
+              data-disabled={disabledAttr}
+              style={{ pointerEvents: "none" }}
+              className={classNames?.indicator}
+            >
+              <Check
+                aria-hidden="true"
+                className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
+              />
             </span>
           )}
         </span>
