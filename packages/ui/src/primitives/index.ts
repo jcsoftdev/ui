@@ -11,6 +11,19 @@
  * explicit entry is defined in T14.
  */
 export * as DialogPrimitive from "./dialog/dialog.js";
+export * as PopoverPrimitive from "./popover/popover.js";
+export type {
+  Align,
+  ArrowGeometry,
+  Padding,
+  Placement,
+  PlacementInput,
+  Rect,
+  Side,
+  Size,
+} from "./popper/geometry.js";
+export { computePlacement } from "./popper/geometry.js";
+export * as PopperPrimitive from "./popper/popper.js";
 export { Portal } from "./portal.js";
 export {
   type DismissableLayerOptions,
