@@ -26,13 +26,14 @@ import com.jcsoftdev.ui.theme.UiSizes
 import com.jcsoftdev.ui.theme.UiTheme
 import com.jcsoftdev.ui.theme.UiTypography
 
-public enum class ChipTone { Neutral, Danger, Warning, Success, Accent, Solid, Outline }
+public enum class ChipTone { Neutral, Info, Danger, Warning, Success, Accent, Solid, Outline }
 
 public enum class LedStatus { Success, Warning, Danger, Idle }
 
 private fun ChipTone.container(c: ThemeColors): Color =
     when (this) {
         ChipTone.Neutral -> c.surface2
+        ChipTone.Info -> c.infoSoft
         ChipTone.Danger -> c.dangerSoft
         ChipTone.Warning -> c.warningSoft
         ChipTone.Success -> c.successSoft
@@ -44,6 +45,7 @@ private fun ChipTone.container(c: ThemeColors): Color =
 private fun ChipTone.content(c: ThemeColors): Color =
     when (this) {
         ChipTone.Neutral, ChipTone.Outline -> c.ink2
+        ChipTone.Info -> c.info
         ChipTone.Danger -> c.danger
         ChipTone.Warning -> c.warning
         ChipTone.Success -> c.success

@@ -35,7 +35,7 @@ import com.jcsoftdev.ui.theme.UiTheme
 import com.jcsoftdev.ui.theme.UiTypography
 
 private val Branches = listOf(SelectOption("a", "Miraflores"), SelectOption("b", "San Isidro"), SelectOption("c", "Surco"))
-private val Modes = listOf(SegmentedOption("day", "Dia"), SegmentedOption("week", "Semana"), SegmentedOption("month", "Mes"))
+private val Modes = listOf(SegmentedOption("day", "Día"), SegmentedOption("week", "Semana"), SegmentedOption("month", "Mes"))
 private val Sections = listOf(TabItem("a", "Citas", 3), TabItem("b", "Clientes"), TabItem("c", "Stock", 12))
 
 @Composable
@@ -64,13 +64,13 @@ fun FormsGallery() {
             Field("Nombre", required = true, error = if (name.isBlank()) "Obligatorio" else null) {
                 Input(name, { name = it }, placeholder = "Juan Carlos")
             }
-            Field("Contrasena") { PasswordInput(password, { password = it }, "Mostrar", "Ocultar") }
-            Field("Apertura", description = "Teclado numerico, los dos puntos se agregan solos", optionalLabel = "opcional") {
+            Field("Contraseña") { PasswordInput(password, { password = it }, "Mostrar", "Ocultar") }
+            Field("Apertura", description = "Teclado numérico, los dos puntos se agregan solos", optionalLabel = "opcional") {
                 TimeInput(time, { time = it }, placeholder = "HH:mm")
             }
             Field("Vencimiento") { DateInput(date, { date = it }, placeholder = "dd/MM/yyyy") }
             Field("Sede") { Select(Branches, branch, { branch = it }, placeholder = "Elegir sede") }
-            Field("Codigo") { PinInput(pin, { pin = it }, contentDescription = "Codigo de verificacion") }
+            Field("Código") { PinInput(pin, { pin = it }, contentDescription = "Código de verificación") }
             Field("Cantidad") { NumberStepper(qty, { qty = it }, "Menos", "Mas", max = 10) }
             Segmented(Modes, mode, { mode = it })
             Text("time=$time date=$date pin=$pin", style = UiTypography.meta, color = UiTheme.colors.ink3)

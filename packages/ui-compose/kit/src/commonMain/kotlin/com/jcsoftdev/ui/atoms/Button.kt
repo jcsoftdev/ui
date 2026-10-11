@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -39,7 +40,7 @@ import com.jcsoftdev.ui.theme.UiTypography
 
 public enum class ButtonVariant { Primary, Secondary, Ghost, Danger }
 
-public enum class ButtonSize { Sm, Md }
+public enum class ButtonSize { Sm, Md, Lg }
 
 internal fun ButtonVariant.container(c: ThemeColors): Color =
     when (this) {
@@ -57,14 +58,20 @@ internal fun ButtonVariant.content(c: ThemeColors): Color =
         ButtonVariant.Danger -> c.danger
     }
 
-internal fun ButtonSize.height(): Dp = if (this == ButtonSize.Sm) UiSizes.controlHeightSm else UiSizes.controlHeight
+internal fun ButtonSize.height(): Dp =
+    when (this) {
+        ButtonSize.Sm -> UiSizes.controlHeightSm
+        ButtonSize.Md -> UiSizes.controlHeight
+        ButtonSize.Lg -> UiSizes.controlHeightLg
+    }
 
 private val SmallLabel = UiTypography.control.copy(fontSize = 12.5.sp)
+private val LargeLabel = UiTypography.control.copy(fontSize = 14.sp)
 private val PrimaryWeight = FontWeight.Bold
 
 /**
  * Action button. [loading] swaps [leading] for a spinner and ignores taps without dimming; [loadingDescription]
- * (already localized) is announced as the state. The visual height is 30/36dp, the touch target is at least 48dp.
+ * (already localized) is announced as the state. The visual height is 30/36/52dp (sm/md/lg), [block] fills the width, the touch target is at least 48dp.
  */
 @Composable
 public fun Button(
@@ -73,6 +80,7 @@ public fun Button(
     modifier: Modifier = Modifier,
     variant: ButtonVariant = ButtonVariant.Secondary,
     size: ButtonSize = ButtonSize.Md,
+    block: Boolean = false,
     enabled: Boolean = true,
     loading: Boolean = false,
     loadingDescription: String? = null,
@@ -82,11 +90,17 @@ public fun Button(
     val colors = UiTheme.colors
     val source = remember { MutableInteractionSource() }
     val contentColor = variant.content(colors)
-    val base = if (size == ButtonSize.Sm) SmallLabel else UiTypography.control
+    val base =
+        when (size) {
+            ButtonSize.Sm -> SmallLabel
+            ButtonSize.Md -> UiTypography.control
+            ButtonSize.Lg -> LargeLabel
+        }
     val style = if (variant == ButtonVariant.Primary) base.copy(fontWeight = PrimaryWeight) else base
     Row(
         modifier =
             modifier
+                .then(if (block) Modifier.fillMaxWidth() else Modifier)
                 .pressableTarget(onClick, enabled && !loading, Role.Button, source)
                 .semantics { if (loading && loadingDescription != null) stateDescription = loadingDescription }
                 .graphicsLayer { alpha = if (enabled) 1f else DISABLED_ALPHA }
