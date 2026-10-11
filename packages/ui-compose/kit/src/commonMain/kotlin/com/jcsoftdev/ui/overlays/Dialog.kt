@@ -25,8 +25,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -111,6 +113,7 @@ public object DialogDefaults {
  * [open] to false; a dialog can therefore require an explicit choice. [dismissLabel] (already localized) is the scrim's
  * accessibility action name. [motion] sets the enter and exit timing and [enterScale] the size the card grows from.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 public fun Dialog(
     open: Boolean,
@@ -177,7 +180,7 @@ public fun Dialog(
                 if (description != null) Text(description, style = descriptionStyle, color = colors.description)
                 if (content != null) {
                     Column(
-                        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                        Modifier.weight(1f, fill = false).focusRestorer().verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(sizes.space8),
                         content = content,
                     )

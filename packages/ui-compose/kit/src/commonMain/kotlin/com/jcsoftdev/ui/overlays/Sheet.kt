@@ -24,14 +24,17 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -120,6 +123,7 @@ public object SheetDefaults {
  * accessibility action name; without it the scrim is not announced. The title is exposed as the pane title. [motion] sets
  * the enter and exit timing and [state] the drag-to-dismiss thresholds.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 public fun Sheet(
     open: Boolean,
@@ -142,6 +146,7 @@ public fun Sheet(
 ) {
     val presence = rememberOverlayPresence(open, motion)
     val currentOpen by rememberUpdatedState(open)
+    LaunchedEffect(open) { if (open) state.reset() }
     ModalLayer(
         open = open,
         present = presence.present,
@@ -181,7 +186,11 @@ public fun Sheet(
             ) {
                 SheetHeader(title, titleStyle, colors, handleSize, contentPadding, dismissible, state, { currentOpen }, onDismiss)
                 Column(
-                    Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(contentPadding),
+                    Modifier
+                        .weight(1f, fill = false)
+                        .focusRestorer()
+                        .verticalScroll(rememberScrollState())
+                        .padding(contentPadding),
                     content = content,
                 )
                 if (footer != null) {

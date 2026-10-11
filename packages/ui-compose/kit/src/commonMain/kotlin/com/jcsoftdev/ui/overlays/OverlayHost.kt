@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
@@ -53,6 +54,14 @@ internal class OverlayHostState {
 
     /** Where focus goes when the topmost modal layer leaves: the next modal layer below it, else the app content. */
     fun focusTarget(): FocusRequester = topModal()?.focus ?: contentFocus
+
+    /** Gives focus to the first modal layer, from the top, that has something to focus, else to the app content. */
+    @OptIn(ExperimentalComposeUiApi::class)
+    fun restoreFocus() {
+        val layers = ordered().filter { it.modal }.asReversed()
+        for (layer in layers) if (runCatching { layer.focus.requestFocus(FocusDirection.Enter) }.getOrDefault(false)) return
+        runCatching { contentFocus.requestFocus(FocusDirection.Enter) }
+    }
 }
 
 internal val LocalOverlayHost = staticCompositionLocalOf<OverlayHostState?> { null }
@@ -149,7 +158,7 @@ internal fun OverlayLayerEffect(
         onDispose {
             val restore = active && layer.modal && host.topModal() === layer
             host.layers.remove(layer)
-            if (restore) runCatching { host.focusTarget().requestFocus() }
+            if (restore) host.restoreFocus()
         }
     }
 }

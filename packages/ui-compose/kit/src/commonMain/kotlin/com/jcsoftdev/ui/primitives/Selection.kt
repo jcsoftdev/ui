@@ -2,6 +2,7 @@ package com.jcsoftdev.ui.primitives
 
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -74,7 +76,24 @@ public fun <T : Any> rememberSingleSelectionState(initial: T? = null): SingleSel
 public class RovingFocus<T : Any> internal constructor() {
     private val requesters = HashMap<T, FocusRequester>()
 
+    internal var focusedValue: T? = null
+
     internal fun requesterFor(value: T): FocusRequester = requesters.getOrPut(value) { FocusRequester() }
+
+    internal fun retain(values: List<T>) {
+        requesters.keys.retainAll(values.toSet())
+    }
+
+    internal fun focusChanged(
+        value: T,
+        focused: Boolean,
+    ) {
+        if (focused) {
+            focusedValue = value
+        } else if (focusedValue == value) {
+            focusedValue = null
+        }
+    }
 
     /** Moves focus to the item of [value]; false when no such item is composed. */
     public fun requestFocus(value: T): Boolean = requesters[value]?.let { runCatching { it.requestFocus() }.isSuccess } ?: false
@@ -97,7 +116,10 @@ public fun <T : Any> rememberRovingFocus(): RovingFocus<T> = remember { RovingFo
 public fun <T : Any> Modifier.rovingItem(
     focus: RovingFocus<T>,
     value: T,
-): Modifier = this.focusRequester(focus.requesterFor(value))
+): Modifier =
+    this
+        .focusRequester(focus.requesterFor(value))
+        .onFocusChanged { focus.focusChanged(value, it.isFocused) }
 
 /** A keyboard or D-pad move inside a selection group; see [Roving.moveFor] and [Roving.target]. */
 public enum class RovingMove { Previous, Next, First, Last }
@@ -199,11 +221,12 @@ public fun <T : Any> Modifier.rovingSelection(
     val currentValues by rememberUpdatedState(values)
     val select by rememberUpdatedState(onSelect)
     val skip by rememberUpdatedState(isEnabled)
+    SideEffect { focus?.retain(values) }
     return this.onPreviewKeyEvent { event ->
         if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
         val move = Roving.moveFor(event.key, orientation, direction) ?: return@onPreviewKeyEvent false
         val list = currentValues
-        val from = list.indexOf(current)
+        val from = list.indexOf(current).takeIf { it >= 0 } ?: focus?.focusedValue?.let { list.indexOf(it) } ?: -1
         val to = Roving.target(list.size, from, move, wrap) { skip(list[it]) }
         if (to == from || to !in list.indices) return@onPreviewKeyEvent false
         select(list[to])
