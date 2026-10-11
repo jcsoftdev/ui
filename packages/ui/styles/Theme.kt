@@ -251,3 +251,20 @@ object UiTypography {
     val mButton = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight(700), lineHeight = 15.5.sp)
     val mMeta = TextStyle(fontSize = 13.sp, fontWeight = FontWeight(400), lineHeight = 18.2.sp)
 }
+
+object UiFontSizes {
+    val fs95 = 9.5.sp
+    val fs100 = 10.sp
+    val fs105 = 10.5.sp
+    val fs110 = 11.sp
+    val fs115 = 11.5.sp
+    val fs120 = 12.sp
+    val fs125 = 12.5.sp
+    val fs130 = 13.sp
+    val fs140 = 14.sp
+    val fs150 = 15.sp
+    val fs160 = 16.sp
+    val fs220 = 22.sp
+    val fs300 = 30.sp
+    val fs440 = 44.sp
+}
