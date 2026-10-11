@@ -41,19 +41,15 @@ export function DrawerDescription({
   return <DialogPrimitive.Description className={cn("m-0 text-ink-2", className)} {...props} />;
 }
 
-export type DrawerContentPart = "content" | "overlay" | "close";
+export type DrawerContentPart = "root" | "overlay" | "close";
 
 export interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content and is merged last. */
   classNames?: ClassNames<DrawerContentPart>;
   /** Same semantics as `DialogContentProps.blocking`. */
   blocking?: boolean;
   /** Accessible label of the close button. */
   closeLabel?: string;
-  /** @deprecated Use `classNames.overlay`. */
-  overlayClassName?: string;
-  /** @deprecated Use `classNames.close`. */
-  closeClassName?: string;
 }
 
 /** Right-anchored side panel for secondary flows. */
@@ -62,8 +58,6 @@ export function DrawerContent({
   classNames,
   blocking = false,
   closeLabel,
-  overlayClassName,
-  closeClassName,
   children,
   onEscapeKeyDown,
   onPointerDownOutside,
@@ -75,14 +69,12 @@ export function DrawerContent({
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay
-        className={cn("fixed inset-0 z-70 bg-scrim", overlayClassName, classNames?.overlay)}
-      />
+      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
       <DialogPrimitive.Content
         className={cn(
           "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto outline-none surface-overlay shadow-overlay",
+          classNames?.root,
           className,
-          classNames?.content,
         )}
         onEscapeKeyDown={(event) => {
           if (blocking) event.preventDefault();
@@ -108,7 +100,6 @@ export function DrawerContent({
             aria-label={closeLabel ?? strings.close}
             className={cn(
               "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
-              closeClassName,
               classNames?.close,
             )}
           >

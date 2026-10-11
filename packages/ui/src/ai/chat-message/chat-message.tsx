@@ -28,7 +28,7 @@ export interface ChatMessageProps extends Omit<ComponentPropsWithoutRef<"article
   footer?: ReactNode;
   /** Text of the failure line when `status` is `error`. */
   errorText?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ChatMessagePart>;
 }
 
@@ -52,7 +52,7 @@ export function ChatMessage({
   if (author === "system") {
     return (
       <article
-        className={cn("flex justify-center", className, classNames?.root)}
+        className={cn("flex justify-center", classNames?.root, className)}
         aria-label={name ?? "Sistema"}
         {...props}
       >
@@ -85,8 +85,8 @@ export function ChatMessage({
       className={cn(
         "@container/message flex min-w-0 gap-density-sm",
         user ? "flex-row-reverse" : "flex-row",
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

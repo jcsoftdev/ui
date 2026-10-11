@@ -10,7 +10,7 @@ export type ProgressPart = "root" | "indicator";
 
 export interface ProgressProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   value: number;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ProgressPart>;
   max?: number;
   /** Text announced as `aria-valuetext`; defaults to the rounded percentage. */
@@ -51,7 +51,7 @@ export function Progress({
       data-state={state}
       data-value={current ?? undefined}
       data-max={max}
-      className={cn("h-1.5 overflow-hidden rounded-pill bg-track", className, classNames?.root)}
+      className={cn("h-1.5 overflow-hidden rounded-pill bg-track", classNames?.root, className)}
       {...props}
     >
       <div

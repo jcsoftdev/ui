@@ -16,7 +16,7 @@ export interface KpiProps extends Omit<ComponentPropsWithoutRef<"div">, "childre
   /** Optional subtext. */
   description?: ReactNode;
   variant?: KpiVariant;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<KpiPart>;
 }
 
@@ -35,8 +35,8 @@ export function Kpi({
       {...props}
       className={cn(
         "@container/kpi flex min-w-0 flex-col gap-0.5 bg-surface px-4.5 py-3.5",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <span className={cn("break-words font-semibold text-fs-120 text-ink-2", classNames?.label)}>

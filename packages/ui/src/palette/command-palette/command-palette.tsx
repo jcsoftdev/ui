@@ -49,7 +49,7 @@ export interface CommandPaletteProps {
   query?: string;
   onQueryChange?: (query: string) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CommandPalettePart>;
 }
 
@@ -97,8 +97,8 @@ export function CommandPalette({
       overlayClassName={cn("fixed inset-0 z-50 bg-scrim", classNames?.overlay)}
       contentClassName={cn(
         "@container/palette fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,calc(100vw-1rem))] -translate-x-1/2 flex-col overflow-hidden rounded-dialog surface-overlay shadow-overlay",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <div

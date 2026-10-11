@@ -225,7 +225,7 @@ export interface MarkdownProps {
   /** Shows a blinking caret after the last character, for streaming answers. */
   streaming?: boolean;
   className?: string;
-  /** Per-element classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-element classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<MarkdownPart>;
 }
 

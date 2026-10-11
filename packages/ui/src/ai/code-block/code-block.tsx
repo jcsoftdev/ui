@@ -41,7 +41,7 @@ export interface CodeBlockProps {
   /** Wrap long lines instead of scrolling horizontally. */
   wrap?: boolean;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CodeBlockPart>;
 }
 
@@ -63,8 +63,8 @@ export function CodeBlock({
     <figure
       className={cn(
         "@container/code m-0 min-w-0 max-w-full overflow-hidden rounded-card bg-surface-sunken text-ink border-card shadow-card",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <figcaption

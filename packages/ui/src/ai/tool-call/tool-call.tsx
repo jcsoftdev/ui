@@ -24,6 +24,7 @@ function StatusIcon({ status }: { status: ToolCallStatus }) {
 
 export type ToolCallPart =
   | "root"
+  | "header"
   | "body"
   | "name"
   | "status"
@@ -47,7 +48,7 @@ export interface ToolCallProps {
   duration?: string;
   defaultOpen?: boolean;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ToolCallPart>;
 }
 
@@ -74,12 +75,13 @@ export function ToolCall({
     <div
       className={cn(
         "@container/tool min-w-0 rounded-card bg-surface-card p-2 text-ink border-card shadow-card",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <Disclosure
         defaultOpen={defaultOpen}
+        triggerClassName={classNames?.header}
         header={
           <>
             <Wrench aria-hidden className="size-3.5 shrink-0 text-ink-3" />

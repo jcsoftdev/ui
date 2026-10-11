@@ -56,7 +56,7 @@ export interface RichTextEditorProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<RichTextEditorPart>;
 }
 
@@ -319,8 +319,8 @@ export function RichTextEditor({
       className={cn(
         "@container/rte flex w-full min-w-0 flex-col overflow-hidden rounded-input border-control bg-surface-control focus-within:outline-2 focus-within:outline-accent-ink focus-within:-outline-offset-1",
         disabled && "opacity-60",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <div

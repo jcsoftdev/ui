@@ -25,7 +25,7 @@ export interface KpiGroupProps extends Omit<ComponentPropsWithoutRef<"dl">, "chi
   items: KpiGroupItem[];
   /** Animate numeric values counting up. */
   animate?: boolean;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root wrapper. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root wrapper and is merged last. */
   classNames?: ClassNames<KpiGroupPart>;
 }
 
@@ -41,7 +41,7 @@ export function KpiGroup({
   ...props
 }: KpiGroupProps) {
   return (
-    <div className={cn("@container/kpi-group min-w-0", className, classNames?.root)}>
+    <div className={cn("@container/kpi-group min-w-0", classNames?.root, className)}>
       <dl
         {...props}
         className={cn(

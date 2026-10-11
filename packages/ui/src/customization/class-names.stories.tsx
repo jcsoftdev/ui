@@ -41,6 +41,19 @@ export const BannerParts: Story = {
   },
 };
 
+export const ClassNameBeatsRoot: Story = {
+  render: () => (
+    <Banner tone="info" title="Order" classNames={{ root: "p-2" }} className="p-6">
+      Body
+    </Banner>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByText("Order").parentElement?.parentElement;
+    await expect(root).toHaveClass("p-6");
+    await expect(root).not.toHaveClass("p-2");
+  },
+};
+
 export const SwitchParts: Story = {
   render: () => (
     <Switch
@@ -83,7 +96,7 @@ export const DialogParts: Story = {
     <Dialog defaultOpen>
       <DialogContent
         closeLabel="Close"
-        classNames={{ content: "cx-content", overlay: "cx-overlay bg-danger", close: "cx-close" }}
+        classNames={{ root: "cx-content", overlay: "cx-overlay bg-danger", close: "cx-close" }}
       >
         <DialogTitle>Portaled</DialogTitle>
         <DialogBody>Body</DialogBody>

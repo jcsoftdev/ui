@@ -13,7 +13,7 @@ export type ChipTone =
   | "outline";
 
 /** Class map behind each `tone`; exported so apps can extend or reuse it. */
-export const chipToneClasses: Record<ChipTone, string> = {
+export const chipToneClasses: Readonly<Record<ChipTone, string>> = {
   neutral: "bg-surface-2 text-ink-2",
   danger: "bg-danger-soft text-danger",
   warning: "bg-warning-soft text-warning",

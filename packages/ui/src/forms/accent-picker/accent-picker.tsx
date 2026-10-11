@@ -24,7 +24,7 @@ export interface AccentPickerProps
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<AccentPickerPart>;
 }
 
@@ -53,7 +53,7 @@ export function AccentPicker({
         setInternal(next);
         onValueChange?.(next);
       }}
-      className={cn("flex flex-wrap gap-2", className, classNames?.root)}
+      className={cn("flex flex-wrap gap-2", classNames?.root, className)}
       {...props}
     >
       {options.map((option) => (

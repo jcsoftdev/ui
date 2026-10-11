@@ -42,7 +42,7 @@ export interface TrendChipProps extends Omit<ComponentPropsWithoutRef<"span">, "
   /** Text after the number, e.g. "vs. semana pasada". */
   label?: string;
   locale?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<TrendChipPart>;
 }
 
@@ -66,8 +66,8 @@ export function TrendChip({
       className={cn(
         "inline-flex h-6 max-w-full items-center gap-1 whitespace-nowrap rounded-badge px-2 font-[650] text-chip-text tabular-nums",
         toneClasses[tone],
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

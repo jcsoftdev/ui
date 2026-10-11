@@ -22,7 +22,7 @@ export interface RatingProps {
   showValue?: boolean;
   "aria-label"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<RatingPart>;
 }
 
@@ -118,8 +118,8 @@ export function Rating({
     <div
       className={cn(
         "@container/rating inline-flex max-w-full items-center gap-density-sm",
-        className,
         classNames?.root,
+        className,
       )}
     >
       {interactive ? (

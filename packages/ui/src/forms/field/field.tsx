@@ -29,7 +29,7 @@ export interface FieldProps extends Omit<ComponentPropsWithoutRef<"div">, "child
   optional?: boolean;
   id?: string;
   children: ReactElement<ControlProps>;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<FieldPart>;
 }
 
@@ -60,7 +60,7 @@ export function Field({
     : children;
 
   return (
-    <div {...props} className={cn("flex min-w-0 flex-col gap-1.25", className, classNames?.root)}>
+    <div {...props} className={cn("flex min-w-0 flex-col gap-1.25", classNames?.root, className)}>
       <Label htmlFor={controlId} className={classNames?.label}>
         {label}
         {optional ? (

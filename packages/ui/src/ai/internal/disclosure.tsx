@@ -13,6 +13,8 @@ export interface DisclosureProps {
   onOpenChange?: (open: boolean) => void;
   className?: string;
   panelClassName?: string;
+  /** Classes for the header button. */
+  triggerClassName?: string;
 }
 
 /** Header button + animated panel. Closed content is `inert`, so it leaves the tab order. */
@@ -24,6 +26,7 @@ export function Disclosure({
   onOpenChange,
   className,
   panelClassName,
+  triggerClassName,
 }: DisclosureProps) {
   const [state, setState] = useState(defaultOpen);
   const open = openProp ?? state;
@@ -39,7 +42,10 @@ export function Disclosure({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={toggle}
-        className="flex w-full min-w-0 cursor-pointer items-center gap-density-sm rounded-button text-left focus-visible:focus-ring"
+        className={cn(
+          "flex w-full min-w-0 cursor-pointer items-center gap-density-sm rounded-button text-left focus-visible:focus-ring",
+          triggerClassName,
+        )}
       >
         <span className="flex min-w-0 flex-1 items-center gap-density-sm">{header}</span>
         <ChevronDown

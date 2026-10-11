@@ -22,7 +22,7 @@ const shapeClasses: Record<StatusDotShape, string> = {
 export type StatusDotPart = "root" | "dot" | "label";
 
 export interface StatusDotProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<StatusDotPart>;
   tone: StatusDotTone;
   /** Text describing the status: color is never the only signal. */
@@ -46,7 +46,7 @@ export function StatusDot({
   return (
     <span
       {...props}
-      className={cn("inline-flex max-w-full items-center gap-1.5", className, classNames?.root)}
+      className={cn("inline-flex max-w-full items-center gap-1.5", classNames?.root, className)}
     >
       <span
         aria-hidden="true"

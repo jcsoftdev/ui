@@ -18,7 +18,7 @@ export interface LedProps extends Omit<ComponentPropsWithRef<"span">, "children"
   /** Text describing the status: color is never the only signal. */
   label: string;
   showLabel?: boolean;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<LedPart>;
 }
 
@@ -33,7 +33,7 @@ export function Led({
   return (
     <span
       {...props}
-      className={cn("inline-flex items-center gap-1.5", className, classNames?.root)}
+      className={cn("inline-flex items-center gap-1.5", classNames?.root, className)}
     >
       <span
         aria-hidden="true"

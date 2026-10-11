@@ -63,7 +63,7 @@ export interface WeekViewProps {
   onOpenEvent?: (id: string) => void;
   onOpenMarker?: (id: string) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<WeekViewPart>;
 }
 
@@ -95,7 +95,7 @@ export function WeekView({
   }, []);
 
   return (
-    <div className={cn("@container/week min-w-0", className, classNames?.root)}>
+    <div className={cn("@container/week min-w-0", classNames?.root, className)}>
       <div
         ref={scrollRef}
         data-hours-scroll

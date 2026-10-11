@@ -59,7 +59,7 @@ export interface SidebarProps {
   open?: boolean;
   onClose?: () => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SidebarPart>;
 }
 
@@ -126,8 +126,8 @@ export function Sidebar({
                 closedOnMobile ? "-translate-x-full" : "translate-x-0",
               ),
           openOnMobile && "shadow-overlay",
-          className,
           classNames?.root,
+          className,
         )}
       >
         {header}

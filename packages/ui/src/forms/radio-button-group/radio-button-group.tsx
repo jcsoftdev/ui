@@ -24,7 +24,7 @@ export interface RadioButtonGroupProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<RadioButtonGroupPart>;
 }
 
@@ -51,7 +51,7 @@ export function RadioButtonGroup({
   return (
     <div
       role="radiogroup"
-      className={cn("@container/options", optionGridClass, className, classNames?.root)}
+      className={cn("@container/options", optionGridClass, classNames?.root, className)}
       {...aria}
     >
       {options.map((option) => (

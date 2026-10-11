@@ -35,7 +35,7 @@ export interface FileTreeProps {
   defaultExpandedIds?: string[];
   onExpandedChange?: (ids: string[]) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<FileTreePart>;
 }
 
@@ -133,7 +133,7 @@ export function FileTree({
   };
 
   return (
-    <div className={cn("@container/tree min-w-0", className, classNames?.root)}>
+    <div className={cn("@container/tree min-w-0", classNames?.root, className)}>
       <div
         ref={listRef}
         role="tree"

@@ -17,7 +17,7 @@ export type ButtonSize = "sm" | "md" | "lg";
  * Class map behind each `variant`. Exported so apps can read, extend or reuse it, e.g.
  * `cn(buttonVariantClasses.primary, "bg-brand")` on a link, or `{ ...buttonVariantClasses, brand: "..." }`.
  */
-export const buttonVariantClasses: Record<ButtonVariant, string> = {
+export const buttonVariantClasses: Readonly<Record<ButtonVariant, string>> = {
   primary: "bg-accent text-on-accent font-bold hover:bg-accent-ink",
   secondary: "bg-surface-control text-ink shadow-control hover:bg-surface-2",
   ghost: "bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink",
@@ -25,7 +25,7 @@ export const buttonVariantClasses: Record<ButtonVariant, string> = {
 };
 
 /** Class map behind each `size`; exported like {@link buttonVariantClasses}. */
-export const buttonSizeClasses: Record<ButtonSize, string> = {
+export const buttonSizeClasses: Readonly<Record<ButtonSize, string>> = {
   sm: "h-control-sm px-3 text-fs-125 [&_svg]:size-3.5",
   md: "h-control px-control-x text-fs-130",
   lg: "h-control-lg px-control-x text-fs-140",

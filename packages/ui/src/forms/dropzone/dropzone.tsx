@@ -26,7 +26,7 @@ export interface DropzoneProps {
   hint?: string;
   browseLabel: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<DropzonePart>;
 }
 
@@ -97,8 +97,8 @@ export function Dropzone({
       className={cn(
         "@container/dropzone flex min-w-0 flex-col items-center gap-1.5 rounded-tile border-[1.5px] border-line-control border-dashed bg-surface-2 p-3 text-center text-ink-2 @min-[360px]/dropzone:p-5.5",
         dragging && "border-accent-ink bg-accent-soft",
-        className,
         classNames?.root,
+        className,
       )}
       onDragOver={(event) => {
         event.preventDefault();

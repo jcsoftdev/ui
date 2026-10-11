@@ -35,7 +35,7 @@ export interface ChainOfThoughtProps {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ChainOfThoughtPart>;
 }
 
@@ -55,8 +55,8 @@ export function ChainOfThought({
     <div
       className={cn(
         "@container/thought min-w-0 rounded-card bg-surface-sunken p-2 text-ink",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <Disclosure

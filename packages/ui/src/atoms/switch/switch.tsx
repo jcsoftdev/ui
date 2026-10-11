@@ -14,7 +14,7 @@ export interface SwitchProps
     ComponentProps<"button">,
     "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
   > {
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SwitchPart>;
   checked?: boolean;
   defaultChecked?: boolean;
@@ -69,8 +69,8 @@ export function Switch({
         ref={composedRef}
         className={cn(
           "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
-          className,
           classNames?.root,
+          className,
         )}
         onClick={composeHandlers(onClick, (event) => {
           setChecked((prev) => !prev);

@@ -30,8 +30,8 @@ export function OptionShell({ option, input, className, classNames }: OptionShel
     <label
       className={cn(
         "pressable relative flex min-w-0 cursor-pointer items-center gap-2 rounded-button border-control bg-surface-control px-control-x py-2 text-control text-ink has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:shadow-selected has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 has-[:focus-visible]:focus-ring",
-        className,
         classNames?.option,
+        className,
       )}
     >
       {input}

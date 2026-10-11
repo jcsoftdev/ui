@@ -40,7 +40,7 @@ export interface BannerProps extends Omit<ComponentPropsWithoutRef<"div">, "role
   icon?: ReactNode;
   /** Actions on the right, e.g. a retry button. */
   action?: ReactNode;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<BannerPart>;
 }
 
@@ -61,8 +61,8 @@ export function Banner({
       className={cn(
         "flex flex-wrap items-start gap-x-3 gap-y-2 rounded-banner px-3.5 py-3 text-fs-130 text-ink",
         toneClasses[tone],
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

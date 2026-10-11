@@ -37,7 +37,7 @@ export interface ItemCardGroupProps extends Omit<ComponentPropsWithoutRef<"secti
   items: ItemCardGroupItem[];
   /** Id of the highlighted row. */
   selectedId?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ItemCardGroupPart>;
 }
 
@@ -56,8 +56,8 @@ export function ItemCardGroup({
       {...props}
       className={cn(
         "@container/item-group flex min-w-0 flex-col gap-density-sm",
-        className,
         classNames?.root,
+        className,
       )}
     >
       {title || description ? (

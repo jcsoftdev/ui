@@ -43,7 +43,7 @@ export interface ChatListProps {
   label?: string;
   emptyText?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ChatListPart>;
 }
 
@@ -67,8 +67,8 @@ export function ChatList({
       aria-label={label}
       className={cn(
         "@container/chatlist grid min-w-0 content-start gap-density",
-        className,
         classNames?.root,
+        className,
       )}
     >
       {onNew ? (

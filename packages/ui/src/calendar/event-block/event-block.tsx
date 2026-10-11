@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn.js";
 import type { CalendarEvent, CalendarTone } from "../internal/types.js";
 
 /** Class map behind each event `tone`; exported so apps can extend or reuse it. */
-export const eventToneClasses: Record<CalendarTone, string> = {
+export const eventToneClasses: Readonly<Record<CalendarTone, string>> = {
   accent: "bg-accent-soft border-accent-line",
   neutral: "bg-surface-2 border-line-strong",
   success: "bg-success-soft border-success/35",
@@ -28,7 +28,7 @@ export interface EventBlockProps
   variant?: "detailed" | "compact";
   onOpen?: (id: string) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<EventBlockPart>;
 }
 
@@ -54,8 +54,8 @@ export function EventBlock({
         className={cn(
           "block w-full truncate rounded-xs border px-1.5 py-0.5 text-left text-chip-text text-ink",
           tone,
-          className,
           classNames?.root,
+          className,
         )}
       >
         {srLabel}
@@ -72,8 +72,8 @@ export function EventBlock({
       className={cn(
         "@container/event block w-full min-w-0 overflow-hidden rounded-event border px-2.5 py-2 text-left",
         tone,
-        className,
         classNames?.root,
+        className,
       )}
     >
       {srLabel}

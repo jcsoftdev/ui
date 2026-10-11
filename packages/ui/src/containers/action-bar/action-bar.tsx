@@ -21,7 +21,7 @@ export interface ActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "c
    * ancestor (a card, a table wrapper); `static` renders inline.
    */
   position?: "fixed" | "absolute" | "static";
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ActionBarPart>;
 }
 
@@ -61,8 +61,8 @@ export function ActionBar({
       className={cn(
         "@container/action-bar z-40 flex w-fit max-w-[calc(100%-1rem)] flex-wrap items-center gap-density rounded-popover border-card surface-overlay bg-surface-overlay px-control-x py-density-sm shadow-overlay",
         positionClasses[position],
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

@@ -46,7 +46,7 @@ export interface ResponsiveListProps<T> {
   actionsHeader?: string;
   rowClassName?: (item: T) => string | undefined;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ResponsiveListPart>;
 }
 
@@ -67,7 +67,7 @@ export function ResponsiveList<T>({
   const details = columns.filter((column) => column !== primary);
 
   return (
-    <div className={cn("min-w-0", className, classNames?.root)}>
+    <div className={cn("min-w-0", classNames?.root, className)}>
       <div
         className={cn(
           "hidden rounded-card border-card shadow-card surface-card md:block",

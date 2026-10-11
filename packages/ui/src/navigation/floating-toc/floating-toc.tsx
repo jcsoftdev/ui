@@ -10,7 +10,7 @@ export type FloatingTocPart = "root" | "title" | "list" | "item" | "link" | "lab
 
 export interface FloatingTocProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
   items: TocItem[];
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<FloatingTocPart>;
   /** Heading shown above the list. */
   title?: string;
@@ -90,7 +90,7 @@ export function FloatingToc({
   return (
     <nav
       aria-label={title}
-      className={cn("@container/toc min-w-0", className, classNames?.root)}
+      className={cn("@container/toc min-w-0", classNames?.root, className)}
       {...props}
     >
       <p className={cn("m-0 pb-density-sm text-ink-3 text-overline uppercase", classNames?.title)}>

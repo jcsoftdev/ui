@@ -25,7 +25,7 @@ export interface CheckboxButtonGroupProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CheckboxButtonGroupPart>;
 }
 
@@ -55,8 +55,8 @@ export function CheckboxButtonGroup({
       className={cn(
         "@container/options m-0 min-w-0 border-0 p-0",
         optionGridClass,
-        className,
         classNames?.root,
+        className,
       )}
       {...aria}
     >

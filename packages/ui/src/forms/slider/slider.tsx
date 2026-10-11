@@ -49,7 +49,7 @@ interface SliderBaseProps {
   /** Form field name; a range submits `${name}-min` and `${name}-max`. */
   name?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SliderPart>;
 }
 
@@ -210,8 +210,8 @@ export function Slider(props: SliderProps) {
         showValue && "pt-8",
         marks?.some((m) => m.label) && "pb-7",
         disabled && "opacity-50",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <div

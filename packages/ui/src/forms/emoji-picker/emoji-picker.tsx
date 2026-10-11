@@ -27,7 +27,7 @@ export interface EmojiPickerProps {
   defaultCategory?: string;
   searchPlaceholder?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<EmojiPickerPart>;
 }
 
@@ -80,8 +80,8 @@ export function EmojiPicker({
     <div
       className={cn(
         "@container/emoji flex w-full max-w-xs min-w-0 flex-col gap-density-sm rounded-popover border-card bg-surface-overlay p-card text-ink",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <label className={cn("relative flex items-center", classNames?.search)}>

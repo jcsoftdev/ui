@@ -14,7 +14,7 @@ export interface ConversationProps extends Omit<ComponentPropsWithoutRef<"div">,
   label?: string;
   /** Label of the "jump to latest" button. */
   jumpLabel?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ConversationPart>;
 }
 
@@ -68,8 +68,8 @@ export function Conversation({
       {...props}
       className={cn(
         "@container/conversation relative h-full min-h-0 min-w-0",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <div

@@ -27,7 +27,7 @@ export type RadioGroupPart =
   | "description";
 
 export interface RadioGroupProps extends RadioGroupRootProps {
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<RadioGroupPart>;
   options: RadioOption[];
 }
@@ -39,8 +39,8 @@ export function RadioGroup({ options, className, classNames, ...props }: RadioGr
     <RadioGroupRoot
       className={cn(
         "grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr))]",
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

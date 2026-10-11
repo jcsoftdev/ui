@@ -23,7 +23,7 @@ export interface NativeSelectProps extends Omit<ComponentPropsWithoutRef<"select
   placeholder?: string;
   size?: "sm" | "md";
   invalid?: boolean;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the `<select>`. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the `<select>` and is merged last. */
   classNames?: ClassNames<NativeSelectPart>;
 }
 
@@ -58,8 +58,8 @@ export function NativeSelect({
         className={cn(
           "w-full min-w-0 appearance-none rounded-input border-control bg-surface-control py-0 pl-3 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
           size === "sm" ? "h-control-sm pr-7" : "h-input pr-8",
-          className,
           classNames?.select,
+          className,
         )}
         {...props}
       >

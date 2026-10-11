@@ -12,7 +12,7 @@ export type StepperPart = "root" | "step" | "current" | "marker" | "label" | "co
 export interface StepperProps extends Omit<ComponentPropsWithRef<"ol">, "children"> {
   steps: Step[];
   currentStepId: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<StepperPart>;
 }
 
@@ -23,8 +23,8 @@ export function Stepper({ steps, currentStepId, className, classNames, ...props 
       {...props}
       className={cn(
         "@container/stepper flex min-w-0 flex-wrap items-center gap-1.5 text-meta text-ink-3",
-        className,
         classNames?.root,
+        className,
       )}
     >
       {steps.map((step, index) => {

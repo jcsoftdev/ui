@@ -11,7 +11,7 @@ export interface SettingsRowProps extends Omit<ComponentPropsWithoutRef<"div">, 
   control?: ReactNode;
   /** Id for the title element, so the control can reference it with `aria-labelledby`. */
   titleId?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SettingsRowPart>;
 }
 
@@ -28,8 +28,8 @@ export function SettingsRow({
     <div
       className={cn(
         "flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-t-divider px-4 py-3.25 first:border-t-0",
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

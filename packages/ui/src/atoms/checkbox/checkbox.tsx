@@ -17,7 +17,7 @@ export interface CheckboxProps
     ComponentProps<"button">,
     "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
   > {
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CheckboxPart>;
   checked?: CheckedState;
   defaultChecked?: CheckedState;
@@ -77,8 +77,8 @@ export function Checkbox({
         ref={composedRef}
         className={cn(
           "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
-          className,
           classNames?.root,
+          className,
         )}
         onKeyDown={composeHandlers(onKeyDown, (event) => {
           // WAI-ARIA: checkboxes toggle with Space only; Enter must not submit or toggle.

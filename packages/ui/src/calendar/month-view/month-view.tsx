@@ -48,7 +48,7 @@ export interface MonthViewProps {
   /** Called with the day's date when the overflow button is clicked. */
   onSelectDate?: (date: string) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<MonthViewPart>;
 }
 
@@ -72,7 +72,7 @@ export function MonthView({
   const shaded = new Set(shadedDates);
 
   return (
-    <div className={cn("@container/month grid min-w-0 grid-cols-7", className, classNames?.root)}>
+    <div className={cn("@container/month grid min-w-0 grid-cols-7", classNames?.root, className)}>
       {days.slice(0, 7).map((date) => (
         <div
           key={date}

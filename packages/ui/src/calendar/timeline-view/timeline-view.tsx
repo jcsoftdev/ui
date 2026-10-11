@@ -23,7 +23,7 @@ export interface TimelineViewProps {
   onOpenEvent?: (id: string) => void;
   onOpenMarker?: (id: string) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<TimelineViewPart>;
 }
 
@@ -58,7 +58,7 @@ export function TimelineView({
   const dates = visibleDates(today, events, markers, hiddenDates);
 
   return (
-    <div className={cn("@container/timeline flex min-w-0 flex-col", className, classNames?.root)}>
+    <div className={cn("@container/timeline flex min-w-0 flex-col", classNames?.root, className)}>
       {dates.map((date) => {
         const isToday = date === today;
         const dayMarkers = markers.filter((marker) => marker.date === date);

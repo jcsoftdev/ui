@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn.js";
 import type { CalendarMarker } from "../internal/types.js";
 
 /** Class map behind each marker `tone`; exported so apps can extend or reuse it. */
-export const dayChipToneClasses: Record<NonNullable<CalendarMarker["tone"]>, string> = {
+export const dayChipToneClasses: Readonly<Record<NonNullable<CalendarMarker["tone"]>, string>> = {
   danger: "bg-danger text-surface",
   accent: "bg-accent-soft text-accent-ink shadow-inset-accent",
 };
@@ -16,7 +16,7 @@ export interface DayChipProps
   marker: CalendarMarker;
   onOpen?: (id: string) => void;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<DayChipPart>;
 }
 
@@ -30,8 +30,8 @@ export function DayChip({ marker, onOpen, className, classNames, ...props }: Day
       className={cn(
         "block w-full truncate rounded-xs px-1.5 py-0.5 text-left text-chip-text",
         dayChipToneClasses[marker.tone ?? "accent"],
-        className,
         classNames?.root,
+        className,
       )}
     >
       {marker.srLabel ? <span className="sr-only">{marker.srLabel} </span> : null}

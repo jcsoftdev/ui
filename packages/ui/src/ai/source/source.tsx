@@ -25,7 +25,7 @@ export interface SourceProps extends Omit<ComponentPropsWithoutRef<"a">, "href" 
   url: string;
   /** Short excerpt shown in the hover preview. */
   snippet?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SourcePart>;
 }
 
@@ -51,8 +51,8 @@ export function Source({
   const host = hostOf(url);
   const chipClass = cn(
     "inline-flex h-control-sm min-w-0 max-w-full items-center gap-1.5 rounded-badge bg-surface-control px-2 text-meta text-ink-2 no-underline border-control shadow-control pressable hover:text-ink focus-visible:focus-ring",
-    className,
     classNames?.root,
+    className,
   );
   const chip = (
     <>

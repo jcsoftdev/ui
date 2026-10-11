@@ -29,7 +29,7 @@ export interface ConfirmActionProps {
   onConfirm: () => Promise<ConfirmResult> | Promise<void>;
   triggerVariant?: ButtonVariant;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ConfirmActionPart>;
 }
 
@@ -68,7 +68,7 @@ export function ConfirmAction({
 
   if (!confirming) {
     return (
-      <div className={cn("flex flex-col gap-2", className, classNames?.root)}>
+      <div className={cn("flex flex-col gap-2", classNames?.root, className)}>
         {failure === null ? null : (
           <Banner tone="danger" className={classNames?.error}>
             {failure}
@@ -89,7 +89,7 @@ export function ConfirmAction({
   return (
     <fieldset
       aria-describedby={consequenceId}
-      className={cn("m-0 flex min-w-0 flex-col gap-3 border-0 p-0", className, classNames?.root)}
+      className={cn("m-0 flex min-w-0 flex-col gap-3 border-0 p-0", classNames?.root, className)}
     >
       <legend className="sr-only">{label}</legend>
       <p id={consequenceId} className={cn("text-body text-ink", classNames?.consequence)}>

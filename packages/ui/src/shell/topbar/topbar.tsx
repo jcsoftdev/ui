@@ -41,7 +41,7 @@ export interface TopbarProps {
   /** Slot at the far end (e.g. the account menu). */
   end?: ReactNode;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<TopbarPart>;
 }
 
@@ -82,8 +82,8 @@ export function Topbar({
     <header
       className={cn(
         "@container/topbar sticky top-0 z-30 h-top-height border-b-divider bg-bg",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <div

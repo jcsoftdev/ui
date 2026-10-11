@@ -22,7 +22,7 @@ export interface NumberStepperProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<NumberStepperPart>;
 }
 
@@ -77,8 +77,8 @@ export function NumberStepper({
       className={cn(
         "inline-flex h-input min-w-32 max-w-full items-stretch overflow-hidden rounded-input border-control bg-surface-control",
         disabled && "opacity-60",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <button

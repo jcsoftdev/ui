@@ -54,7 +54,7 @@ export interface KanbanProps {
   emptyLabel?: string;
   "aria-label"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<KanbanPart>;
 }
 
@@ -274,7 +274,7 @@ export function Kanban({
     // biome-ignore lint/a11y/noStaticElementInteractions: focus leaving the board cancels a held card
     <div
       ref={rootRef}
-      className={cn("@container/kanban min-w-0", className, classNames?.root)}
+      className={cn("@container/kanban min-w-0", classNames?.root, className)}
       onBlur={(event) => {
         const next = event.relatedTarget as Node | null;
         if (grabbedId && next && !rootRef.current?.contains(next)) {

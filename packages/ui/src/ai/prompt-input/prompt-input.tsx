@@ -46,7 +46,7 @@ export interface PromptInputProps {
   /** Hint line under the field. */
   hint?: ReactNode;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<PromptInputPart>;
 }
 
@@ -123,7 +123,7 @@ export function PromptInput({
   return (
     <form
       onSubmit={onFormSubmit}
-      className={cn("@container/prompt grid min-w-0 gap-1", className, classNames?.root)}
+      className={cn("@container/prompt grid min-w-0 gap-1", classNames?.root, className)}
     >
       <div
         className={cn(

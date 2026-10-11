@@ -29,7 +29,7 @@ export interface AttachmentProps extends Omit<ComponentPropsWithoutRef<"fieldset
   variant?: AttachmentVariant;
   /** Shows the remove button. */
   onRemove?: () => void;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<AttachmentPart>;
 }
 
@@ -70,8 +70,8 @@ export function Attachment({
           ? "w-40 flex-col items-stretch rounded-card p-1.5"
           : "h-control-sm rounded-button pl-1.5 pr-1",
         status === "error" && "text-danger",
-        className,
         classNames?.root,
+        className,
       )}
       {...props}
     >

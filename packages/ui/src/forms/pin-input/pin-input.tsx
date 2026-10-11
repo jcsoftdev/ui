@@ -16,7 +16,7 @@ export interface PinInputProps {
   /** Builds the polite live-region announcement. */
   statusLabel?: (entered: number, length: number) => string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<PinInputPart>;
 }
 
@@ -51,8 +51,8 @@ export function PinInput({
     <div
       className={cn(
         "@container/pin flex min-w-0 flex-col items-center gap-3",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <div

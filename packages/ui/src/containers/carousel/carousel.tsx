@@ -31,7 +31,7 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"section">,
   children: ReactNode;
   /** Accessible name of the carousel. */
   label: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CarouselPart>;
   /** Classes for each slide's width. Default: 1 per view, 2 from 32rem, 3 from 48rem. Prefer `classNames.slide` to add classes without replacing this default. */
   slideClassName?: string;
@@ -132,8 +132,8 @@ export function Carousel({
       aria-label={label}
       className={cn(
         "@container/carousel flex min-w-0 flex-col gap-density",
-        className,
         classNames?.root,
+        className,
       )}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

@@ -5,7 +5,7 @@ import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { Led, type LedStatus } from "../led/index.js";
 
-export type StatusPillPart = "root" | "led" | "label";
+export type StatusPillPart = "root" | "dot" | "label";
 
 export interface StatusPillProps
   extends Omit<ComponentPropsWithRef<"button">, "children" | "onSelect"> {
@@ -13,7 +13,7 @@ export interface StatusPillProps
   label: string;
   /** Without this the pill is decorative (disabled). */
   onSelect?: () => void;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<StatusPillPart>;
 }
 
@@ -34,11 +34,11 @@ export function StatusPill({
       {...props}
       className={cn(
         "flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge border-divider bg-surface-control px-2.5 font-semibold text-fs-120 text-ink-2 hover:enabled:border-line-strong disabled:cursor-default",
-        className,
         classNames?.root,
+        className,
       )}
     >
-      <Led status={status} label={label} className={classNames?.led} />
+      <Led status={status} label={label} classNames={{ dot: classNames?.dot }} />
       <span aria-hidden="true" className={cn("@max-[700px]:hidden", classNames?.label)}>
         {label}
       </span>

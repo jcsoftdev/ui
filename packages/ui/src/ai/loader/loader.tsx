@@ -17,7 +17,7 @@ export interface LoaderProps {
   /** Spoken label (`role="status"`); shown as text in the `typing` variant. */
   label?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<LoaderPart>;
 }
 
@@ -55,8 +55,8 @@ export function Loader({
         "inline-flex items-center gap-density-sm text-ink-3",
         variant === "typing" &&
           "rounded-card bg-surface-card px-control-x py-2 text-meta shadow-card border-card",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <AiKeyframes />

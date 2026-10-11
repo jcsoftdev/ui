@@ -76,7 +76,7 @@ export interface AvatarProps extends Omit<ComponentPropsWithRef<"span">, "childr
   size?: AvatarSize;
   /** Fills the avatar with the accent color (e.g. the current user). */
   highlighted?: boolean;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<AvatarPart>;
 }
 
@@ -101,8 +101,8 @@ export function Avatar({
         "inline-grid shrink-0 place-items-center overflow-hidden rounded-avatar font-bold tracking-[.02em]",
         highlighted ? "bg-accent text-on-accent" : "bg-sunken text-ink-2",
         sizeClasses[size],
-        className,
         classNames?.root,
+        className,
       )}
     >
       {src && status === "loaded" ? <img src={src} alt="" className={classNames?.image} /> : null}

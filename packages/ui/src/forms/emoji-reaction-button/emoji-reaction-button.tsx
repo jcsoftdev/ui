@@ -17,7 +17,7 @@ export interface EmojiReactionButtonProps {
   onToggle?: (reacted: boolean) => void;
   disabled?: boolean;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<EmojiReactionButtonPart>;
 }
 
@@ -40,8 +40,8 @@ export function EmojiReactionButton({
       onClick={() => onToggle?.(!reacted)}
       className={cn(
         "pressable inline-flex h-control-sm items-center gap-1.5 rounded-badge border-control bg-surface-control px-2.5 text-control text-ink-2 tabular-nums hover:bg-surface-sunken focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent-ink",
-        className,
         classNames?.root,
+        className,
       )}
     >
       <span aria-hidden="true" className={classNames?.emoji}>
@@ -71,7 +71,7 @@ export interface EmojiReactionBarProps {
   addLabel?: string;
   disabled?: boolean;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<EmojiReactionBarPart>;
 }
 
@@ -90,8 +90,8 @@ export function EmojiReactionBar({
     <div
       className={cn(
         "@container/reactions flex flex-wrap items-center gap-density-sm",
-        className,
         classNames?.root,
+        className,
       )}
     >
       {reactions.map((reaction) => (

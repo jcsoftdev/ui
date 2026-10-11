@@ -40,7 +40,7 @@ export type TimelinePart =
 
 export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "children"> {
   items: TimelineFeedItem[];
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<TimelinePart>;
 }
 
@@ -55,7 +55,7 @@ const markerClasses: Record<TimelineFeedTone, string> = {
 /** Vertical activity feed: marker rail on the left, grouped by day, newest first by convention. */
 export function Timeline({ items, className, classNames, ...props }: TimelineProps) {
   return (
-    <div className={cn("@container/timeline min-w-0", className, classNames?.root)}>
+    <div className={cn("@container/timeline min-w-0", classNames?.root, className)}>
       <ol {...props} className={cn("m-0 flex list-none flex-col p-0", classNames?.list)}>
         {items.map((item, index) => {
           const previous = items[index - 1];

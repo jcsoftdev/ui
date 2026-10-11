@@ -34,10 +34,10 @@ export type ToasterPosition =
   | "bottom-center"
   | "bottom-right";
 
-export type ToasterPart = "root" | "list" | "toast" | "message" | "description" | "action";
+export type ToasterPart = "root" | "list" | "toast" | "title" | "description" | "action";
 
 export interface ToasterProps {
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ToasterPart>;
   position?: ToasterPosition;
   /** Default auto dismiss delay in ms; `Infinity` disables it. */
@@ -202,7 +202,7 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
       )}
     >
       <div className="min-w-0 flex-1">
-        <div className={classNames?.message}>{record.message}</div>
+        <div className={classNames?.title}>{record.message}</div>
         {record.description ? (
           <div className={cn("opacity-70", classNames?.description)}>{record.description}</div>
         ) : null}
@@ -267,8 +267,8 @@ export function Toaster({
         className={cn(
           "pointer-events-none fixed z-[1000] flex outline-none",
           POSITION[position],
-          className,
           classNames?.root,
+          className,
         )}
       >
         <div
