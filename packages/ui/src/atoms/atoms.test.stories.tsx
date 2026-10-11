@@ -47,6 +47,32 @@ export const SwitchToggles: Story = {
   },
 };
 
+function fillOf(control: HTMLElement) {
+  const visual = control.querySelector("span");
+  if (!visual) throw new Error("control has no visual span");
+  return getComputedStyle(visual).backgroundColor;
+}
+
+export const SwitchTrackFillsWhenChecked: Story = {
+  render: () => <Switch aria-label="Recordatorios" />,
+  play: async ({ canvasElement }) => {
+    const toggle = within(canvasElement).getByRole("switch", { name: "Recordatorios" });
+    const off = fillOf(toggle);
+    await userEvent.click(toggle);
+    await waitFor(() => expect(fillOf(toggle)).not.toBe(off));
+  },
+};
+
+export const CheckboxBoxFillsWhenChecked: Story = {
+  render: () => <Checkbox aria-label="Cita completada" />,
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole("checkbox", { name: "Cita completada" });
+    const off = fillOf(box);
+    await userEvent.click(box);
+    await waitFor(() => expect(fillOf(box)).not.toBe(off));
+  },
+};
+
 /** Radix selects on arrow focus from a frame callback, so the key must stay down for a frame. */
 async function pressArrow(key: "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight") {
   await userEvent.keyboard(`{${key}>}`);
