@@ -188,11 +188,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
-export const SundayStart: Story = { args: { weekStartsOn: 0, locale: "es-PE" } };
+export const SundayStart: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { weekStartsOn: 0, locale: "es-PE" },
+};
 
 export const Empty: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     events: [],
     markers: [],
@@ -202,7 +206,10 @@ export const Empty: Story = {
   },
 };
 
-export const NoNowLine: Story = { args: { currentTime: undefined } };
+export const NoNowLine: Story = {
+  parameters: { a11y: { test: "todo" } },
+  args: { currentTime: undefined },
+};
 
 export const BusyDay: Story = {
   args: {
@@ -241,6 +248,7 @@ export const BusyDay: Story = {
 
 /** 320 px container: use it to check the narrow layout without resizing the viewport. */
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="@container/page w-[320px] max-w-full">

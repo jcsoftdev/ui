@@ -28,5 +28,9 @@ jobs:
       - name: Typecheck (the site resolves the built library)
         run: pnpm typecheck
       - run: pnpm check:treeshake
+      - name: Install Playwright Chromium
+        run: pnpm --filter @jcsoftdev/ui exec playwright install --with-deps chromium
+      - name: Storybook stories as browser tests
+        run: pnpm --filter @jcsoftdev/ui test:stories
       - name: Build site
         run: pnpm build:site

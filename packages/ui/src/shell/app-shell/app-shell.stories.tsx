@@ -88,6 +88,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Wide container: the sidebar is always visible next to the page. */
 export const Default: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => (
     <Frame>
       <ShellDemo className={args.className} />

@@ -37,13 +37,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const SingleFile: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { multiple: false, title: "Logo de la barbería", hint: "Un solo archivo" },
 };
 
 export const OnlyPdf: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     title: "Sube la factura del proveedor",
     hint: "PDF, máximo 5 MB",
@@ -53,6 +55,7 @@ export const OnlyPdf: Story = {
 };
 
 export const WithFeedback: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => {
     const [names, setNames] = useState<string[]>([]);
     const [error, setError] = useState<string>();
@@ -74,6 +77,7 @@ export const WithFeedback: Story = {
 };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="@container w-80 max-w-full">

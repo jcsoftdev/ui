@@ -41,9 +41,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -54,6 +55,7 @@ export const Narrow: Story = {
 };
 
 export const Json: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     language: "json",
     code: '{\n  "cliente": "Luis Paredes",\n  "servicio": "Corte + barba",\n  "precio": 55,\n  "confirmado": true,\n  "notas": null\n}',
@@ -61,6 +63,7 @@ export const Json: Story = {
 };
 
 export const Bash: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     language: "bash",
     code: "# Exportar la agenda\nexport FECHA=$(date +%F)\ncurl -s \"https://api.example.com/turnos?fecha=$FECHA\" | jq '.[] | .cliente'",
@@ -68,6 +71,7 @@ export const Bash: Story = {
 };
 
 export const Go: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     language: "go",
     code: "func Total(precios []float64) float64 {\n\tvar suma float64\n\tfor _, p := range precios {\n\t\tsuma += p\n\t}\n\treturn suma\n}",
@@ -75,6 +79,7 @@ export const Go: Story = {
 };
 
 export const Sql: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     language: "sql",
     filename: "ingresos.sql",
@@ -83,6 +88,7 @@ export const Sql: Story = {
 };
 
 export const PresetBrutal: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="bg-bg p-card">

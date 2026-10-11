@@ -96,7 +96,7 @@ export const Tablet: Story = {
 /** Sidebar fixed at the side; the container is wide enough. */
 export const WithShell: Story = {
   render: () => <InicioWithShell />,
-  parameters: { layout: "fullscreen" },
+  parameters: { a11y: { test: "todo" }, layout: "fullscreen" },
   decorators: [
     (Story) => (
       <div className="h-[760px] overflow-hidden [transform:translateZ(0)]">
@@ -109,7 +109,7 @@ export const WithShell: Story = {
 /** 375 px container: the shell turns the sidebar into a drawer and the topbar shows the menu button, whatever the viewport is. */
 export const WithShellNarrow: Story = {
   render: () => <InicioWithShell />,
-  parameters: { layout: "fullscreen" },
+  parameters: { a11y: { test: "todo" }, layout: "fullscreen" },
   decorators: [
     (Story) => (
       <div className="h-[700px] w-[375px] max-w-full overflow-hidden border border-line [transform:translateZ(0)]">

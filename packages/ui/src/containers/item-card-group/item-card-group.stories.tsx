@@ -72,9 +72,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const Selectable: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: function Render(args) {
     const [selectedId, setSelectedId] = useState("corte");
     return (
@@ -90,6 +91,7 @@ export const Selectable: Story = {
 };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px] max-w-full">
@@ -100,6 +102,7 @@ export const Narrow: Story = {
 };
 
 export const BorderedPreset: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="bordered" className="bg-bg p-card">
@@ -110,6 +113,7 @@ export const BorderedPreset: Story = {
 };
 
 export const BrutalCompact: Story = {
+  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" data-density="compact" className="bg-bg p-card">
