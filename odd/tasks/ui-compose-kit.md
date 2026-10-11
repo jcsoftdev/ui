@@ -128,3 +128,5 @@ ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each tas
 
 ## Next step
 C11 publish 0.1.0 to a Maven repository and migrate the barber app `app/ui` components to the kit (barber repo). The chain still needs the C7, C4, CX1, CX2, C8, C9 and C10 branches pushed and PRs retargeted after the rebase.
+- 2026-10-11: golden policy. CI `:kit:verifyRoborazziJvm` failed on ubuntu against the macOS goldens (buttonVariants, statusPills, radioGroup, text, chips, banner, card, listRow, pageHeader, tabs, ...). Decision: goldens of record are Linux ones, recorded in CI (run 38171588724 of `ui-compose-record`, a workflow_dispatch workflow that runs `:kit:recordRoborazziJvm` on ubuntu/temurin 17 and uploads `roborazzi-goldens`; it was first triggered by a temporary push trigger, now removed). 99 PNGs replaced; the existing 0.03 changeThreshold stays so a local macOS verify is only a rough check. Re-record procedure is in `packages/ui-compose/docs/parity.md`. Docker was not used (arm64 images would not match the x86_64 runner).
+

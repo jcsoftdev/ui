@@ -154,3 +154,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 - No styled popover, no `Textarea`, `Slider`, `Rating`, `Stepper`.
 - The kit is checked on JVM only for pixels: Roborazzi goldens are recorded and verified on desktop (Skia), not through
   Robolectric on Android.
+
+## Re-recording screenshot goldens
+
+The goldens in `kit/screenshots` are the Linux ones and CI verifies them on ubuntu. Skia text rendering differs on macOS, so never commit goldens recorded locally. To re-record after an intended visual change, run the `ui-compose-record` workflow (`gh workflow run ui-compose-record.yml --ref <branch>`, available once the file is on the default branch), then `gh run download <id> -n roborazzi-goldens -D packages/ui-compose/kit/screenshots` and commit the PNGs. Before the workflow is on the default branch, temporarily add a `push` trigger for your branch to it. A local `verifyRoborazziJvm` on macOS can report small glyph differences; treat CI as authoritative.

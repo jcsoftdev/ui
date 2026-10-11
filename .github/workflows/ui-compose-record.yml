@@ -1,13 +1,10 @@
 name: ui-compose-record
 
 # Re-records the Roborazzi goldens on ubuntu (the platform of record) and uploads them as an artifact.
-# Run from the Actions tab (workflow_dispatch) once this file exists on the default branch.
+# Run from the Actions tab (or `gh workflow run ui-compose-record.yml --ref <branch>`); it is only listed once
+# this file is on the default branch. Download with `gh run download <id> -n roborazzi-goldens`.
 on:
   workflow_dispatch:
-  push:
-    branches: [feat/ui-compose-c10-baseline]
-    paths:
-      - ".github/workflows/ui-compose-record.yml"
 
 permissions:
   contents: read
