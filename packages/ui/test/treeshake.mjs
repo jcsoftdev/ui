@@ -202,3 +202,52 @@ assert.ok(
 );
 console.log(`icons: one icon ${oneIcon.bytes} bytes, full set ${allIcons.bytes} bytes`);
 console.log("icons tree-shaking OK");
+
+// Primitives: each primitive is its own module graph. Dropped modules stay in `inputs`, so check
+// `bytesInOutput`. A single primitive must not drag in its siblings.
+const only = (kept, name) => kept.some((f) => f.includes(`primitives/${name}/`));
+const popover = await keptFor(
+  `import { PopoverPrimitive } from "@jcsoftdev/ui/primitives"; console.log(PopoverPrimitive);`,
+);
+assert.ok(only(popover.kept, "popover") && only(popover.kept, "popper"), "popover bundles popper");
+for (const sibling of ["dialog", "menu", "command"]) {
+  assert.ok(!only(popover.kept, sibling), `PopoverPrimitive must not include primitives/${sibling}`);
+}
+const dialog = await keptFor(
+  `import { DialogPrimitive } from "@jcsoftdev/ui/primitives"; console.log(DialogPrimitive);`,
+);
+for (const sibling of ["popover", "popper", "menu", "command"]) {
+  assert.ok(!only(dialog.kept, sibling), `DialogPrimitive must not include primitives/${sibling}`);
+}
+const menu = await keptFor(
+  `import { MenuPrimitive } from "@jcsoftdev/ui/primitives"; console.log(MenuPrimitive);`,
+);
+for (const sibling of ["dialog", "popover", "command"]) {
+  assert.ok(!only(menu.kept, sibling), `MenuPrimitive must not include primitives/${sibling}`);
+}
+const scorer = await keptFor(
+  `import { commandScore } from "@jcsoftdev/ui/primitives"; console.log(commandScore);`,
+);
+assert.ok(
+  !scorer.kept.some((f) => /primitives\/(dialog|menu|popover|popper|portal)/.test(f)) &&
+    !scorer.kept.some((f) => f.includes("react")),
+  "commandScore is pure and pulls no component",
+);
+const geometry = await keptFor(
+  `import { computePlacement } from "@jcsoftdev/ui/primitives"; console.log(computePlacement);`,
+);
+assert.ok(
+  !geometry.kept.some((f) => f.includes("popper/popper")),
+  "computePlacement does not pull the popper component",
+);
+// A styled component that wraps a primitive keeps only the primitive it uses.
+const styledPopover = await keptFor(
+  `import { Popover } from "@jcsoftdev/ui/overlays/popover"; console.log(Popover);`,
+);
+for (const sibling of ["dialog", "menu", "command"]) {
+  assert.ok(!only(styledPopover.kept, sibling), `Popover must not include primitives/${sibling}`);
+}
+console.log(
+  `primitives: popover ${popover.bytes}, dialog ${dialog.bytes}, menu ${menu.bytes}, commandScore ${scorer.bytes} bytes`,
+);
+console.log("primitives tree-shaking OK");
