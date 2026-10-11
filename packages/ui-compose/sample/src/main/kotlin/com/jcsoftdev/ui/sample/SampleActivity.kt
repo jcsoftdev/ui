@@ -12,7 +12,17 @@ class SampleActivity : ComponentActivity() {
         enableEdgeToEdge()
         val screen = intent.getStringExtra("screen")
         setContent {
-            ProvideAndroidBack { if (screen == "forms") FormsGallery() else AtomsGallery() }
+            ProvideAndroidBack {
+                when (screen) {
+                    "forms" -> FormsGallery()
+                    "overlays" -> OverlaysGallery()
+                    "icons" -> IconsGallery()
+                    "custom" -> CustomThemeGallery()
+                    "headless" -> HeadlessGallery()
+                    "states" -> StatesGallery()
+                    else -> AtomsGallery()
+                }
+            }
         }
     }
 }

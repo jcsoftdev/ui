@@ -74,7 +74,7 @@ export function MapDataTable({
         className="inline-flex cursor-pointer items-center gap-1 rounded-xs border-0 bg-transparent p-0 font-bold text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
       >
         {text}
-        <span aria-hidden="true" className="text-[10px] text-ink-3">
+        <span aria-hidden="true" className="text-fs-100 text-ink-3">
           {sort.key === key ? (sort.direction === "asc" ? "▲" : "▼") : ""}
         </span>
       </button>
@@ -82,7 +82,7 @@ export function MapDataTable({
   );
   return (
     <div className="@container/table overflow-auto rounded-event border-divider" style={{ height }}>
-      <table className="w-full border-collapse text-[12.5px]">
+      <table className="w-full border-collapse text-fs-125">
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b-divider">
@@ -107,7 +107,7 @@ export function MapDataTable({
                 <span className="inline-flex items-center gap-2">
                   <span
                     aria-hidden="true"
-                    className="size-2.5 shrink-0 rounded-[3px] border border-line"
+                    className="size-2.5 shrink-0 rounded-xs border border-line"
                     style={{ background: row.color }}
                   />
                   {row.name}

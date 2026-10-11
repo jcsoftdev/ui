@@ -13,5 +13,6 @@ export {
   type SingleSliderProps,
   Slider,
   type SliderMark,
+  type SliderPart,
   type SliderProps,
 } from "./slider.js";

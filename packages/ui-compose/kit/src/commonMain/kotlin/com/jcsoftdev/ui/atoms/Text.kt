@@ -11,7 +11,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
 /** Color that [Text] and icon slots use when none is given; atoms with a colored surface provide their own. */
 public val LocalContentColor: ProvidableCompositionLocal<Color> = compositionLocalOf { Color.Unspecified }
@@ -21,7 +20,7 @@ public val LocalContentColor: ProvidableCompositionLocal<Color> = compositionLoc
 public fun Text(
     text: String,
     modifier: Modifier = Modifier,
-    style: TextStyle = UiTypography.body,
+    style: TextStyle = UiTheme.typography.body,
     color: Color = Color.Unspecified,
     textAlign: TextAlign = TextAlign.Unspecified,
     maxLines: Int = Int.MAX_VALUE,

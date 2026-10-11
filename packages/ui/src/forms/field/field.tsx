@@ -1,7 +1,14 @@
 "use client";
 
-import { cloneElement, isValidElement, type ReactElement, useId } from "react";
+import {
+  type ComponentPropsWithoutRef,
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  useId,
+} from "react";
 import { useUiStrings } from "../../i18n/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { Label } from "../label/index.js";
 
@@ -11,7 +18,9 @@ interface ControlProps {
   "aria-invalid"?: boolean;
 }
 
-export interface FieldProps {
+export type FieldPart = "root" | "label" | "optional" | "hint" | "error";
+
+export interface FieldProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "id"> {
   label: string;
   hint?: string;
   /** Message under the control; `null` and `undefined` mean no error. */
@@ -20,10 +29,21 @@ export interface FieldProps {
   optional?: boolean;
   id?: string;
   children: ReactElement<ControlProps>;
-  className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<FieldPart>;
 }
 
-export function Field({ label, hint, error, optional, id, children, className }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  error,
+  optional,
+  id,
+  children,
+  className,
+  classNames,
+  ...props
+}: FieldProps) {
   const strings = useUiStrings();
   const generatedId = useId();
   const controlId = id ?? generatedId;
@@ -40,19 +60,28 @@ export function Field({ label, hint, error, optional, id, children, className }:
     : children;
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-1.25", className)}>
-      <Label htmlFor={controlId}>
+    <div {...props} className={cn("flex min-w-0 flex-col gap-1.25", classNames?.root, className)}>
+      <Label htmlFor={controlId} className={classNames?.label}>
         {label}
-        {optional ? <span className="font-normal text-ink-3"> ({strings.optional})</span> : null}
+        {optional ? (
+          <span className={cn("font-normal text-ink-3", classNames?.optional)}>
+            {" "}
+            ({strings.optional})
+          </span>
+        ) : null}
       </Label>
       {control}
       {hint ? (
-        <p id={hintId} className="text-meta text-ink-3">
+        <p id={hintId} className={cn("text-meta text-ink-3", classNames?.hint)}>
           {hint}
         </p>
       ) : null}
       {error ? (
-        <p id={errorId} className="font-semibold text-danger text-meta" role="alert">
+        <p
+          id={errorId}
+          className={cn("font-semibold text-danger text-meta", classNames?.error)}
+          role="alert"
+        >
           {error}
         </p>
       ) : null}

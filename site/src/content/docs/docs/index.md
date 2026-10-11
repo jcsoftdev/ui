@@ -4,7 +4,7 @@ description: What @jcsoftdev/ui is, what it ships and how this documentation is 
 section: Guides
 ---
 
-`@jcsoftdev/ui` is a token-driven React 19 component library built on Radix primitives and Tailwind CSS v4. There is no runtime CSS-in-JS: the whole look comes from one tokens file that is compiled to CSS variables, and a handful of `data-*` attributes restyle everything at runtime.
+`@jcsoftdev/ui` is a token-driven React 19 component library with zero runtime dependencies, built on Tailwind CSS v4. There is no runtime CSS-in-JS: the whole look comes from one tokens file that is compiled to CSS variables, and a handful of `data-*` attributes restyle everything at runtime.
 
 ## What is inside
 

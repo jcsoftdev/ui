@@ -10,7 +10,7 @@ section: Guides
 pnpm add @jcsoftdev/ui
 ```
 
-Peer dependencies are `react` and `react-dom` (19) and `tailwindcss` v4. Radix, `lucide-react`, `cmdk` and `sonner` are regular dependencies of the package.
+Peer dependencies are `react` and `react-dom` (19) and `tailwindcss` v4. The package has no runtime dependencies of its own.
 
 ## Import the styles
 

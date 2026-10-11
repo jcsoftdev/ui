@@ -1,1 +1,1 @@
-export { Led, type LedProps, type LedStatus } from "./led.js";
+export { Led, type LedPart, type LedProps, type LedStatus } from "./led.js";

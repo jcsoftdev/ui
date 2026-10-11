@@ -1,4 +1,4 @@
-export { Kanban, type KanbanProps } from "./kanban.js";
+export { Kanban, type KanbanPart, type KanbanProps } from "./kanban.js";
 export {
   dropIndex,
   type KanbanCardData,
