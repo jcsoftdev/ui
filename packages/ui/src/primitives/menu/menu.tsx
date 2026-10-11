@@ -626,7 +626,9 @@ function RootContent({
           !active ||
           active === document.body ||
           active === document.documentElement ||
-          Boolean(nodeRef.current?.contains(active));
+          Boolean(nodeRef.current?.contains(active)) ||
+          // A surrounding dialog's focus scope grabs focus when the menu node is removed.
+          Boolean(trigger && active.contains(trigger));
         if (trigger && document.contains(trigger) && free) trigger.focus({ preventScroll: true });
       }}
       onEscapeKeyDown={onEscapeKeyDown}
@@ -971,6 +973,8 @@ export function SubTrigger({
             clearOpenTimer();
             const rect = sub.contentRef.current?.getBoundingClientRect();
             if (!rect) {
+              // A sibling's open submenu may still be the destination of this crossing.
+              if (content.isMovingToSubmenu(event)) return;
               content.graceIntent.current = null;
               return;
             }

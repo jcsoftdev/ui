@@ -723,6 +723,48 @@ export const GraceAreaSurvivesCrossingSiblingSubTrigger: Story = {
   },
 };
 
+export const GraceAreaSurvivesLeavingClosedSiblingTrigger: Story = {
+  ...GraceAreaSurvivesCrossingSiblingSubTrigger,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(trigger(canvasElement));
+    const share = await screen.findByRole("menuitem", { name: "Compartir" });
+    const move = screen.getByRole("menuitem", { name: "Mover" });
+    const shareBox = share.getBoundingClientRect();
+    const moveBox = move.getBoundingClientRect();
+    await userEvent.pointer([
+      {
+        target: share,
+        coords: { clientX: shareBox.left + 20, clientY: shareBox.top + shareBox.height / 2 },
+      },
+    ]);
+    await waitFor(() => expect(menus()).toHaveLength(2));
+    const submenu = menus()[1] as HTMLElement;
+    const fire = (type: string, target: Element, x: number, y: number, from?: Element) =>
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          pointerType: "mouse",
+          clientX: x,
+          clientY: y,
+          relatedTarget: from ?? null,
+        }),
+      );
+    const y = moveBox.top + 4;
+    const exitX = moveBox.right - 40;
+    fire("pointerout", share, exitX, y, move);
+    fire("pointerover", move, exitX, y, share);
+    // Real pointerout on the closed sibling trigger as the pointer leaves its right edge.
+    for (const x of [exitX, moveBox.right - 20]) fire("pointermove", move, x, y);
+    fire("pointerout", move, moveBox.right - 2, y, submenu);
+    fire("pointerover", submenu, moveBox.right - 2, y, move);
+    await pause(400);
+    await expect(share).toHaveAttribute("aria-expanded", "true");
+    await expect(menus()).toHaveLength(2);
+  },
+};
+
 // --- Keyboard and focus details -----------------------------------------------------------
 
 export const TabMovesFocusToNextTabbableAfterTrigger: Story = {
@@ -790,5 +832,115 @@ export const ForceMountedContentReturnsFocusToTriggerOnClose: Story = {
     await waitFor(() => expect(activeName()).toBe("Uno"));
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(trigger(canvasElement)).toHaveFocus());
+  },
+};
+
+// --- Focus return from a menu inside a dialog ---------------------------------------------
+
+function MenuInDialog({ onSelect }: { onSelect?: () => void }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>Abrir</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Con menu</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>Acciones</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent aria-label="Cita">
+              <DropdownMenuItem onSelect={onSelect}>Editar</DropdownMenuItem>
+              <DropdownMenuItem>Borrar</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const openMenuInDialog = async (canvasElement: HTMLElement) => {
+  await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+  const dialog = await screen.findByRole("dialog");
+  const menuTrigger = within(dialog).getByRole("button", { name: "Acciones" });
+  await userEvent.click(menuTrigger);
+  await screen.findByRole("menu");
+  return { dialog, menuTrigger };
+};
+
+export const MenuInDialogEscapeReturnsFocusToTrigger: Story = {
+  render: () => <MenuInDialog />,
+  play: async ({ canvasElement }) => {
+    const { menuTrigger } = await openMenuInDialog(canvasElement);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(menus()).toHaveLength(0));
+    await waitFor(() => expect(document.activeElement).toBe(menuTrigger));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryAllByRole("dialog")).toHaveLength(0));
+  },
+};
+
+export const MenuInDialogEnterSelectReturnsFocusToTrigger: Story = {
+  render: () => <MenuInDialog />,
+  play: async ({ canvasElement }) => {
+    const { menuTrigger } = await openMenuInDialog(canvasElement);
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    await waitFor(() => expect(menus()).toHaveLength(0));
+    await waitFor(() => expect(document.activeElement).toBe(menuTrigger));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryAllByRole("dialog")).toHaveLength(0));
+  },
+};
+
+export const MenuInDialogPointerSelectReturnsFocusToTrigger: Story = {
+  render: () => <MenuInDialog />,
+  play: async ({ canvasElement }) => {
+    const { menuTrigger } = await openMenuInDialog(canvasElement);
+    await userEvent.click(screen.getByRole("menuitem", { name: "Borrar" }));
+    await waitFor(() => expect(menus()).toHaveLength(0));
+    await waitFor(() => expect(document.activeElement).toBe(menuTrigger));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryAllByRole("dialog")).toHaveLength(0));
+  },
+};
+
+export const DialogFocusScopeRecoversWhenFocusedNodeIsRemoved: Story = {
+  render: () => {
+    function Removable() {
+      const [shown, setShown] = useState(true);
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>Abrir</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Quitar</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              {shown ? (
+                <button type="button" onClick={() => setShown(false)}>
+                  Quitar nodo
+                </button>
+              ) : null}
+            </DialogBody>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+    return <Removable />;
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    const dialog = await screen.findByRole("dialog");
+    const node = within(dialog).getByRole("button", { name: "Quitar nodo" });
+    node.focus();
+    await userEvent.click(node);
+    await waitFor(() => expect(within(dialog).queryByText("Quitar nodo")).toBeNull());
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
   },
 };
