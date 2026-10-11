@@ -1,0 +1,36 @@
+name: ui-compose-record
+
+# Re-records the Roborazzi goldens on ubuntu (the platform of record) and uploads them as an artifact.
+# Run from the Actions tab (workflow_dispatch) once this file exists on the default branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/ui-compose-c10-baseline]
+    paths:
+      - ".github/workflows/ui-compose-record.yml"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: packages/ui-compose
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :kit:recordRoborazziJvm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: roborazzi-goldens
+          path: packages/ui-compose/kit/screenshots
