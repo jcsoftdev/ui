@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -20,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -33,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalAccessibilityManager
@@ -40,14 +43,13 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.theme.UiColors
-import com.jcsoftdev.ui.theme.UiShapes
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 import kotlinx.coroutines.delay
 
 public enum class ToastTone { Neutral, Success, Error, Info }
@@ -147,6 +149,63 @@ public class ToastHostState(
     }
 }
 
+/** Colors of the [Toaster]: surface, text and the status dot of each tone (the neutral tone has no dot). */
+@Immutable
+public class ToastColors(
+    public val container: Color,
+    public val content: Color,
+    public val success: Color,
+    public val error: Color,
+    public val info: Color,
+) {
+    /** Copy with selected colors replaced. */
+    public fun copy(
+        container: Color = this.container,
+        content: Color = this.content,
+        success: Color = this.success,
+        error: Color = this.error,
+        info: Color = this.info,
+    ): ToastColors = ToastColors(container, content, success, error, info)
+
+    internal fun dot(tone: ToastTone): Color? =
+        when (tone) {
+            ToastTone.Neutral -> null
+            ToastTone.Success -> success
+            ToastTone.Error -> error
+            ToastTone.Info -> info
+        }
+}
+
+/** Default colors, shape and metrics of the [Toaster]. */
+public object ToasterDefaults {
+    /** Colors in the active theme; the surface is dark in both themes, so the dots use the dark palette. */
+    @Composable
+    @ReadOnlyComposable
+    public fun colors(): ToastColors {
+        val c = UiTheme.colors
+        return ToastColors(c.toastBg, c.toastInk, UiColors.Dark.success, UiColors.Dark.danger, UiColors.Dark.info)
+    }
+
+    /** Shape of a toast; the theme `control` shape. */
+    public val shape: Shape
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.shapes.control
+
+    /** Widest a toast grows. */
+    public val maxWidth: Dp = 420.dp
+
+    /** Padding inside a toast. */
+    public val contentPadding: PaddingValues = PaddingValues(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp)
+
+    /** Diameter of the tone dot. */
+    public val dotSize: Dp = 8.dp
+
+    /** Message style; the theme `control`. */
+    public val textStyle: TextStyle
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.typography.control
+}
+
 private const val TICK_MILLIS = 100L
 
 /**
@@ -160,17 +219,23 @@ public fun Toaster(
     state: ToastHostState,
     modifier: Modifier = Modifier,
     bottomBarHeight: Dp = 0.dp,
+    colors: ToastColors = ToasterDefaults.colors(),
+    shape: Shape = ToasterDefaults.shape,
+    maxWidth: Dp = ToasterDefaults.maxWidth,
+    contentPadding: PaddingValues = ToasterDefaults.contentPadding,
+    textStyle: TextStyle = ToasterDefaults.textStyle,
 ) {
+    val sizes = UiTheme.sizes
     OverlayLayerEffect(active = true, z = TOAST_Z) {
         Box(
             modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                .padding(start = 12.dp, end = 12.dp, bottom = bottomBarHeight + 12.dp),
+                .padding(start = sizes.space12, end = sizes.space12, bottom = bottomBarHeight + sizes.space12),
             contentAlignment = Alignment.BottomCenter,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                state.toasts.forEach { item -> key(item.id) { ToastRow(item, state) } }
+            Column(verticalArrangement = Arrangement.spacedBy(sizes.space8), horizontalAlignment = Alignment.CenterHorizontally) {
+                state.toasts.forEach { item -> key(item.id) { ToastRow(item, state, colors, shape, maxWidth, contentPadding, textStyle) } }
             }
         }
     }
@@ -182,8 +247,13 @@ private const val TOAST_Z = 10
 private fun ToastRow(
     item: ToastItem,
     state: ToastHostState,
+    colors: ToastColors,
+    shape: Shape,
+    maxWidth: Dp,
+    contentPadding: PaddingValues,
+    textStyle: TextStyle,
 ) {
-    val colors = UiTheme.colors
+    val sizes = UiTheme.sizes
     var touched by remember { mutableStateOf(false) }
     var focused by remember { mutableStateOf(false) }
     val paused = touched || focused
@@ -208,9 +278,9 @@ private fun ToastRow(
     }
     Row(
         Modifier
-            .widthIn(max = 420.dp)
-            .clip(UiShapes.control)
-            .background(colors.toastBg)
+            .widthIn(max = maxWidth)
+            .clip(shape)
+            .background(colors.container)
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
@@ -220,37 +290,28 @@ private fun ToastRow(
                 }
             }.onFocusChanged { focused = it.hasFocus }
             .semantics { liveRegion = LiveRegionMode.Polite }
-            .defaultMinSize(minHeight = 48.dp)
-            .padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+            .defaultMinSize(minHeight = sizes.minTouchTarget)
+            .padding(contentPadding),
+        horizontalArrangement = Arrangement.spacedBy(sizes.space10),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val dot = item.tone.dot()
-        if (dot != null) Box(Modifier.size(8.dp).background(dot, CircleShape))
-        Text(item.message, Modifier.weight(1f, fill = false), style = UiTypography.control, color = colors.toastInk)
+        val dot = colors.dot(item.tone)
+        if (dot != null) Box(Modifier.size(ToasterDefaults.dotSize).background(dot, CircleShape))
+        Text(item.message, Modifier.weight(1f, fill = false), style = textStyle, color = colors.content)
         val action = item.action
         if (action != null) {
             Box(
                 Modifier
-                    .defaultMinSize(minHeight = 48.dp)
-                    .clip(UiShapes.control)
+                    .defaultMinSize(minHeight = sizes.minTouchTarget)
+                    .clip(shape)
                     .clickable(role = Role.Button) {
                         action.onClick()
                         dismiss()
-                    }.padding(horizontal = 12.dp),
+                    }.padding(horizontal = sizes.space12),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(action.label, style = UiTypography.control.copy(fontWeight = FontWeight.Bold), color = colors.toastInk)
+                Text(action.label, style = textStyle.copy(fontWeight = FontWeight.Bold), color = colors.content)
             }
         }
     }
 }
-
-/** The toast surface is dark in both themes, so the dot uses the dark palette. */
-private fun ToastTone.dot(): Color? =
-    when (this) {
-        ToastTone.Neutral -> null
-        ToastTone.Success -> UiColors.Dark.success
-        ToastTone.Error -> UiColors.Dark.danger
-        ToastTone.Info -> UiColors.Dark.info
-    }

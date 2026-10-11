@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,14 +21,18 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -36,14 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
-import com.jcsoftdev.ui.atoms.DISABLED_ALPHA
 import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.atoms.drawCheckGlyph
 import com.jcsoftdev.ui.foundation.BackHandler
 import com.jcsoftdev.ui.foundation.BackPriority
-import com.jcsoftdev.ui.theme.UiShapes
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
 /** A menu opens above sheets and dialogs (a Select inside a sheet, say), so back closes it first. */
 private const val MENU_BACK_PRIORITY = BackPriority.SHEET + 100
@@ -124,6 +127,66 @@ private class MenuBuilder : MenuScope {
     }
 }
 
+/** Colors of a [Menu]: surface, outline, separators, entries, destructive entries and the chosen radio entry. */
+@Immutable
+public class MenuColors(
+    public val container: Color,
+    public val border: Color,
+    public val separator: Color,
+    public val content: Color,
+    public val destructive: Color,
+    public val selected: Color,
+) {
+    /** Copy with selected colors replaced. */
+    public fun copy(
+        container: Color = this.container,
+        border: Color = this.border,
+        separator: Color = this.separator,
+        content: Color = this.content,
+        destructive: Color = this.destructive,
+        selected: Color = this.selected,
+    ): MenuColors = MenuColors(container, border, separator, content, destructive, selected)
+}
+
+/** Default colors, shapes and metrics of [Menu]. */
+public object MenuDefaults {
+    /** Colors in the active theme. */
+    @Composable
+    @ReadOnlyComposable
+    public fun colors(): MenuColors {
+        val c = UiTheme.colors
+        return MenuColors(c.float, c.hair, c.hair, c.ink, c.danger, c.accentInk)
+    }
+
+    /** Shape of the menu surface; the theme `card` shape. */
+    public val shape: Shape
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.shapes.card
+
+    /** Shape of one entry; the theme `event` shape. */
+    public val itemShape: Shape
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.shapes.event
+
+    /** Fixed menu width. */
+    public val width: Dp = 220.dp
+
+    /** Tallest the menu grows before it scrolls. */
+    public val maxHeight: Dp = 360.dp
+
+    /** Padding between the surface and the entries. */
+    public val contentPadding: PaddingValues = PaddingValues(6.dp)
+
+    /** Padding inside one entry. */
+    public val itemPadding: PaddingValues = PaddingValues(horizontal = 10.dp)
+
+    /** Entry text style (the chosen radio entry is bold); the theme `body`. */
+    @Composable
+    @ReadOnlyComposable
+    public fun textStyle(bold: Boolean = false): TextStyle =
+        UiTheme.typography.body.copy(fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
+}
+
 /**
  * Dropdown anchored to the layout it is declared in (put it in the same `Box` as the trigger). It opens below the
  * anchor, flips above when there is no room and stays inside the window. Choosing an entry runs its callback and then
@@ -135,12 +198,18 @@ public fun Menu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: MenuColors = MenuDefaults.colors(),
+    shape: Shape = MenuDefaults.shape,
+    itemShape: Shape = MenuDefaults.itemShape,
+    width: Dp = MenuDefaults.width,
+    maxHeight: Dp = MenuDefaults.maxHeight,
+    contentPadding: PaddingValues = MenuDefaults.contentPadding,
     content: MenuScope.() -> Unit,
 ) {
     BackHandler(enabled = expanded, priority = MENU_BACK_PRIORITY) { onDismissRequest() }
     if (!expanded) return
     val entries = MenuBuilder().apply(content).entries
-    val colors = UiTheme.colors
+    val borderWidth = UiTheme.sizes.borderWidth
     Popup(
         popupPositionProvider = remember { BelowAnchorPositionProvider },
         onDismissRequest = onDismissRequest,
@@ -148,16 +217,16 @@ public fun Menu(
     ) {
         Column(
             modifier
-                .width(220.dp)
-                .heightIn(max = 360.dp)
-                .clip(UiShapes.card)
-                .background(colors.float)
-                .border(1.dp, colors.hair, UiShapes.card)
+                .width(width)
+                .heightIn(max = maxHeight)
+                .clip(shape)
+                .background(colors.container)
+                .border(borderWidth, colors.border, shape)
                 .verticalScroll(rememberScrollState())
                 .selectableGroup()
-                .padding(6.dp),
+                .padding(contentPadding),
         ) {
-            entries.forEach { MenuRow(it, onDismissRequest) }
+            entries.forEach { MenuRow(it, colors, itemShape, onDismissRequest) }
         }
     }
 }
@@ -165,16 +234,18 @@ public fun Menu(
 @Composable
 private fun MenuRow(
     entry: MenuEntry,
+    colors: MenuColors,
+    itemShape: Shape,
     dismiss: () -> Unit,
 ) {
-    val colors = UiTheme.colors
+    val sizes = UiTheme.sizes
     if (entry.kind == MenuEntry.Kind.Separator) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .padding(vertical = 6.dp)
-                .height(1.dp)
-                .background(colors.hair),
+                .padding(vertical = sizes.space6)
+                .height(sizes.borderWidth)
+                .background(colors.separator),
         )
         return
     }
@@ -190,34 +261,24 @@ private fun MenuRow(
         }
     val tint =
         when {
-            entry.destructive -> colors.danger
-            entry.kind == MenuEntry.Kind.Radio && entry.checked -> colors.accentInk
-            else -> colors.ink
+            entry.destructive -> colors.destructive
+            entry.kind == MenuEntry.Kind.Radio && entry.checked -> colors.selected
+            else -> colors.content
         }
     Row(
         Modifier
             .fillMaxWidth()
-            .graphicsLayer { alpha = if (entry.enabled) 1f else DISABLED_ALPHA }
-            .clip(UiShapes.event)
+            .dimWhenDisabled(entry.enabled)
+            .clip(itemShape)
             .then(click)
-            .defaultMinSize(minHeight = 48.dp)
-            .padding(horizontal = 10.dp),
+            .defaultMinSize(minHeight = sizes.minTouchTarget)
+            .padding(MenuDefaults.itemPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             entry.label,
             Modifier.weight(1f),
-            style =
-                UiTypography.body.copy(
-                    fontWeight =
-                        if (entry.kind == MenuEntry.Kind.Radio &&
-                            entry.checked
-                        ) {
-                            FontWeight.Bold
-                        } else {
-                            FontWeight.Normal
-                        },
-                ),
+            style = MenuDefaults.textStyle(entry.kind == MenuEntry.Kind.Radio && entry.checked),
             color = tint,
         )
         if (entry.kind != MenuEntry.Kind.Item && entry.checked) {

@@ -1,5 +1,6 @@
 package com.jcsoftdev.ui.forms
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -8,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 
@@ -27,6 +30,10 @@ public fun TimeInput(
     placeholder: String? = null,
     contentDescription: String? = null,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    colors: InputColors = InputDefaults.colors(),
+    shape: Shape = InputDefaults.shape,
+    contentPadding: PaddingValues = InputDefaults.contentPadding,
+    textStyle: TextStyle = InputDefaults.textStyle,
 ) {
     var digits by remember { mutableStateOf(digitsOnly(value, TimeFormat.DIGITS)) }
     if (value != TimeFormat.commit(digits)) digits = digitsOnly(value, TimeFormat.DIGITS)
@@ -48,6 +55,10 @@ public fun TimeInput(
         NumberPad,
         keyboardActions,
         TimeTransformation,
+        colors,
+        shape,
+        contentPadding,
+        textStyle,
     )
 }
 
@@ -66,6 +77,10 @@ public fun DateInput(
     placeholder: String? = null,
     contentDescription: String? = null,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    colors: InputColors = InputDefaults.colors(),
+    shape: Shape = InputDefaults.shape,
+    contentPadding: PaddingValues = InputDefaults.contentPadding,
+    textStyle: TextStyle = InputDefaults.textStyle,
 ) {
     var digits by remember { mutableStateOf(digitsOnly(value, DateFormat.DIGITS)) }
     if (value != DateFormat.commit(digits)) digits = digitsOnly(value, DateFormat.DIGITS)
@@ -87,5 +102,9 @@ public fun DateInput(
         NumberPad,
         keyboardActions,
         DateTransformation,
+        colors,
+        shape,
+        contentPadding,
+        textStyle,
     )
 }

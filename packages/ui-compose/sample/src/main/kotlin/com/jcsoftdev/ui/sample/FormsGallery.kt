@@ -32,7 +32,6 @@ import com.jcsoftdev.ui.navigation.SegmentedOption
 import com.jcsoftdev.ui.navigation.TabItem
 import com.jcsoftdev.ui.navigation.Tabs
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
 private val Branches = listOf(SelectOption("a", "Miraflores"), SelectOption("b", "San Isidro"), SelectOption("c", "Surco"))
 private val Modes = listOf(SegmentedOption("day", "Día"), SegmentedOption("week", "Semana"), SegmentedOption("month", "Mes"))
@@ -59,7 +58,7 @@ fun FormsGallery() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("Forms", style = UiTypography.pageTitle)
+            Text("Forms", style = UiTheme.typography.pageTitle)
             Tabs(Sections, tab, { tab = it }, Modifier.fillMaxWidth())
             Field("Nombre", required = true, error = if (name.isBlank()) "Obligatorio" else null) {
                 Input(name, { name = it }, placeholder = "Juan Carlos")
@@ -73,7 +72,7 @@ fun FormsGallery() {
             Field("Código") { PinInput(pin, { pin = it }, contentDescription = "Código de verificación") }
             Field("Cantidad") { NumberStepper(qty, { qty = it }, "Menos", "Mas", max = 10) }
             Segmented(Modes, mode, { mode = it })
-            Text("time=$time date=$date pin=$pin", style = UiTypography.meta, color = UiTheme.colors.ink3)
+            Text("time=$time date=$date pin=$pin", style = UiTheme.typography.meta, color = UiTheme.colors.ink3)
         }
     }
 }

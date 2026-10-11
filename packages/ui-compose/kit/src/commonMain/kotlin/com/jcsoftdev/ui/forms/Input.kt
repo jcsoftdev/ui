@@ -1,7 +1,10 @@
 package com.jcsoftdev.ui.forms
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -10,6 +13,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,31 +24,81 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.ButtonSize
-import com.jcsoftdev.ui.atoms.DISABLED_ALPHA
 import com.jcsoftdev.ui.atoms.IconButton
 import com.jcsoftdev.ui.atoms.LocalContentColor
 import com.jcsoftdev.ui.atoms.Text
-import com.jcsoftdev.ui.theme.UiShapes
+import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
-internal const val DISABLED_ALPHA = 0.45f
+/** Colors of the text-like controls ([Input], [PasswordInput], [TimeInput], [DateInput], [Select], [PinInput]); [selectedOption] colors the chosen option in the [Select] list. */
+@Immutable
+public class InputColors(
+    public val container: Color,
+    public val border: Color,
+    public val focusedBorder: Color,
+    public val errorBorder: Color,
+    public val text: Color,
+    public val placeholder: Color,
+    public val cursor: Color,
+    public val selectedOption: Color = Color.Unspecified,
+) {
+    /** Copy with selected colors replaced. */
+    public fun copy(
+        container: Color = this.container,
+        border: Color = this.border,
+        focusedBorder: Color = this.focusedBorder,
+        errorBorder: Color = this.errorBorder,
+        text: Color = this.text,
+        placeholder: Color = this.placeholder,
+        cursor: Color = this.cursor,
+        selectedOption: Color = this.selectedOption,
+    ): InputColors = InputColors(container, border, focusedBorder, errorBorder, text, placeholder, cursor, selectedOption)
+}
+
+/** Default colors, shape and metrics shared by the text-like controls; read the theme, so a custom [UiTheme] flows through. */
+public object InputDefaults {
+    /** Colors in the active theme; focus uses the accent, errors the danger color. */
+    @Composable
+    @ReadOnlyComposable
+    public fun colors(): InputColors {
+        val c = UiTheme.colors
+        return InputColors(c.surface, c.lineControl, c.accent, c.danger, c.ink, c.ink3, c.accent, c.accentInk)
+    }
+
+    /** Corner shape; the theme `control` shape. */
+    public val shape: Shape
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.shapes.control
+
+    /** Padding between the outline and the content. */
+    public val contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp)
+
+    /** Gap between the leading slot, the text and the trailing slot. */
+    public val spacing: Dp = 8.dp
+
+    /** Text and placeholder style; the theme `body`. */
+    public val textStyle: TextStyle
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.typography.body
+}
 
 /**
  * Single-line text input (a `BasicTextField` with `value` / `onValueChange`: the `TextFieldState` API is stable in
@@ -65,6 +120,10 @@ public fun Input(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    colors: InputColors = InputDefaults.colors(),
+    shape: Shape = InputDefaults.shape,
+    contentPadding: PaddingValues = InputDefaults.contentPadding,
+    textStyle: TextStyle = InputDefaults.textStyle,
 ) {
     InputFrame(
         value,
@@ -80,6 +139,10 @@ public fun Input(
         keyboardOptions,
         keyboardActions,
         visualTransformation,
+        colors,
+        shape,
+        contentPadding,
+        textStyle,
     )
 }
 
@@ -96,6 +159,10 @@ public fun PasswordInput(
     placeholder: String? = null,
     contentDescription: String? = null,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    colors: InputColors = InputDefaults.colors(),
+    shape: Shape = InputDefaults.shape,
+    contentPadding: PaddingValues = InputDefaults.contentPadding,
+    textStyle: TextStyle = InputDefaults.textStyle,
 ) {
     var visible by remember { mutableStateOf(false) }
     InputFrame(
@@ -116,6 +183,10 @@ public fun PasswordInput(
         PasswordKeyboard,
         keyboardActions,
         if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        colors,
+        shape,
+        contentPadding,
+        textStyle,
     )
 }
 
@@ -164,11 +235,15 @@ internal fun InputFrame(
     keyboardOptions: KeyboardOptions,
     keyboardActions: KeyboardActions,
     visualTransformation: VisualTransformation,
+    colors: InputColors,
+    shape: Shape,
+    contentPadding: PaddingValues,
+    textStyle: TextStyle,
 ) {
-    val colors = UiTheme.colors
+    val sizes = UiTheme.sizes
     val info = LocalFieldInfo.current
     val hasError = isError || info?.error != null
-    val textStyle = UiTheme.text(UiTypography.body).let { remember(it, colors.ink) { it.copy(color = colors.ink) } }
+    val fieldStyle = UiTheme.text(textStyle).let { remember(it, colors.text) { it.copy(color = colors.text) } }
     var focused by remember { mutableStateOf(false) }
     val spoken = contentDescription ?: info?.spoken
     val errorText = info?.error
@@ -184,39 +259,35 @@ internal fun InputFrame(
                 },
         enabled = enabled,
         readOnly = readOnly,
-        textStyle = textStyle,
+        textStyle = fieldStyle,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
         singleLine = true,
         visualTransformation = visualTransformation,
-        cursorBrush = SolidColor(colors.accent),
+        cursorBrush = SolidColor(colors.cursor),
         decorationBox = { inner ->
+            val line =
+                if (hasError) {
+                    colors.errorBorder
+                } else if (focused) {
+                    colors.focusedBorder
+                } else {
+                    colors.border
+                }
             Row(
                 Modifier
-                    .graphicsLayer { alpha = if (enabled) 1f else DISABLED_ALPHA }
-                    .heightIn(min = 48.dp)
-                    .clip(UiShapes.control)
-                    .drawBehind {
-                        val radius = CornerRadius(12.dp.toPx())
-                        drawRoundRect(colors.surface, cornerRadius = radius)
-                        val line =
-                            if (hasError) {
-                                colors.danger
-                            } else if (focused) {
-                                colors.accent
-                            } else {
-                                colors.lineControl
-                            }
-                        val width = if (focused || hasError) 2.dp.toPx() else 1.dp.toPx()
-                        val inset = width / 2
-                        drawRoundRect(line, Offset(inset, inset), Size(size.width - width, size.height - width), radius, Stroke(width))
-                    }.padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .dimWhenDisabled(enabled)
+                    .heightIn(min = sizes.minTouchTarget)
+                    .clip(shape)
+                    .background(colors.container)
+                    .border(if (focused || hasError) sizes.focusBorderWidth else sizes.borderWidth, line, shape)
+                    .padding(contentPadding),
+                horizontalArrangement = Arrangement.spacedBy(InputDefaults.spacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (leading != null) leading()
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (value.isEmpty() && placeholder != null) Text(placeholder, style = UiTypography.body, color = colors.ink3)
+                    if (value.isEmpty() && placeholder != null) Text(placeholder, style = textStyle, color = colors.placeholder)
                     inner()
                 }
                 if (trailing != null) trailing()

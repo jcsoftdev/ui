@@ -3,6 +3,7 @@ package com.jcsoftdev.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -11,24 +12,71 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.jcsoftdev.ui.atoms.DISABLED_ALPHA
 import com.jcsoftdev.ui.atoms.Text
-import com.jcsoftdev.ui.theme.UiShapes
+import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
 @Immutable
 public class SegmentedOption(
     public val value: String,
     public val label: String,
 )
+
+/** Colors of [Segmented]: track, selected segment and the labels. */
+@Immutable
+public class SegmentedColors(
+    public val track: Color,
+    public val selected: Color,
+    public val selectedContent: Color,
+    public val content: Color,
+) {
+    /** Copy with selected colors replaced. */
+    public fun copy(
+        track: Color = this.track,
+        selected: Color = this.selected,
+        selectedContent: Color = this.selectedContent,
+        content: Color = this.content,
+    ): SegmentedColors = SegmentedColors(track, selected, selectedContent, content)
+}
+
+/** Default colors, shape and metrics of [Segmented]. */
+public object SegmentedDefaults {
+    /** Colors in the active theme. */
+    @Composable
+    @ReadOnlyComposable
+    public fun colors(): SegmentedColors {
+        val c = UiTheme.colors
+        return SegmentedColors(c.segTrack, c.segOn, c.ink, c.ink2)
+    }
+
+    /** Shape of the track and of each segment; the theme `control` shape. */
+    public val shape: Shape
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.shapes.control
+
+    /** Padding between the track edge and the segments. */
+    public val trackPadding: Dp = 3.dp
+
+    /** Padding inside a segment. */
+    public val contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp)
+
+    /** Label style (selected labels are bold); the theme `control`. */
+    @Composable
+    @ReadOnlyComposable
+    public fun textStyle(selected: Boolean): TextStyle =
+        UiTheme.typography.control.copy(fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold)
+}
 
 /** Exclusive selector for 2 to 4 options; one radio group to assistive tech. Each segment is at least 48dp tall. */
 @Composable
@@ -38,14 +86,17 @@ public fun Segmented(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    colors: SegmentedColors = SegmentedDefaults.colors(),
+    shape: Shape = SegmentedDefaults.shape,
+    contentPadding: PaddingValues = SegmentedDefaults.contentPadding,
 ) {
-    val colors = UiTheme.colors
+    val minHeight = UiTheme.sizes.minTouchTarget
     Row(
         modifier
-            .graphicsLayer { alpha = if (enabled) 1f else DISABLED_ALPHA }
-            .clip(UiShapes.control)
-            .background(colors.segTrack)
-            .padding(3.dp)
+            .dimWhenDisabled(enabled)
+            .clip(shape)
+            .background(colors.track)
+            .padding(SegmentedDefaults.trackPadding)
             .horizontalScroll(rememberScrollState())
             .selectableGroup(),
     ) {
@@ -53,17 +104,17 @@ public fun Segmented(
             val on = option.value == value
             Box(
                 Modifier
-                    .clip(UiShapes.control)
+                    .clip(shape)
                     .selectable(on, enabled = enabled, role = Role.RadioButton) { onValueChange(option.value) }
-                    .background(if (on) colors.segOn else androidx.compose.ui.graphics.Color.Transparent)
-                    .heightIn(min = 48.dp)
-                    .padding(horizontal = 14.dp),
+                    .background(if (on) colors.selected else Color.Transparent)
+                    .heightIn(min = minHeight)
+                    .padding(contentPadding),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     option.label,
-                    style = UiTypography.control.copy(fontWeight = if (on) FontWeight.Bold else FontWeight.SemiBold),
-                    color = if (on) colors.ink else colors.ink2,
+                    style = SegmentedDefaults.textStyle(on),
+                    color = if (on) colors.selectedContent else colors.content,
                     maxLines = 1,
                 )
             }

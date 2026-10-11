@@ -14,6 +14,9 @@ import com.jcsoftdev.ui.foundation.rememberSystemMotion
 import com.jcsoftdev.ui.overlays.OverlayHost
 
 private val LocalColors = staticCompositionLocalOf { UiColors.Light }
+internal val LocalShapes = staticCompositionLocalOf { ThemeShapes.Default }
+internal val LocalSizes = staticCompositionLocalOf { ThemeSizes.Default }
+private val LocalTypography = staticCompositionLocalOf { ThemeTypography.Default }
 private val LocalFontFamily = staticCompositionLocalOf<FontFamily> { FontFamily.Default }
 
 /** Reads the active theme the way the web reads its CSS variables. */
@@ -21,6 +24,18 @@ public object UiTheme {
     public val colors: ThemeColors
         @Composable @ReadOnlyComposable
         get() = LocalColors.current
+
+    public val shapes: ThemeShapes
+        @Composable @ReadOnlyComposable
+        get() = LocalShapes.current
+
+    public val sizes: ThemeSizes
+        @Composable @ReadOnlyComposable
+        get() = LocalSizes.current
+
+    public val typography: ThemeTypography
+        @Composable @ReadOnlyComposable
+        get() = LocalTypography.current
 
     public val fontFamily: FontFamily
         @Composable @ReadOnlyComposable
@@ -44,6 +59,13 @@ public object UiTheme {
  * @param accent a palette id from [UiPalettes.ids] or a `#rrggbb` brand color, matched to the closest palette. Null keeps the accent of [colors].
  * @param fontFamily replaces the bundled Figtree family.
  * @param motion defaults to the system animator duration scale; scale 0 turns every transition into a jump cut.
+ * @param shapes corner shapes by role; pass `ThemeShapes.Default.copy(...)` to change some.
+ * @param sizes spacing, control heights, minimum touch target and disabled opacity; pass `ThemeSizes.Default.copy(...)`.
+ * @param typography text styles by role; pass `ThemeTypography.Default.copy(...)`. The font family is [fontFamily].
+ *
+ * Every group is independent, so overriding one (for example only `colors.accent`) leaves the rest of the kit look unchanged.
+ * Single components can still deviate through their `XDefaults` parameters. The small glyphs drawn inside components (spinner,
+ * check mark, chevron, eye, plus/minus) keep fixed proportions and take the content color.
  */
 @Composable
 public fun UiTheme(
@@ -52,6 +74,9 @@ public fun UiTheme(
     accent: String? = null,
     fontFamily: FontFamily? = null,
     motion: Motion = rememberSystemMotion(),
+    shapes: ThemeShapes = ThemeShapes.Default,
+    sizes: ThemeSizes = ThemeSizes.Default,
+    typography: ThemeTypography = ThemeTypography.Default,
     content: @Composable () -> Unit,
 ) {
     val themed = remember(colors, accent, dark) { colors.withPalette(resolveAccent(accent, dark, colors.accent)) }
@@ -60,6 +85,9 @@ public fun UiTheme(
         LocalColors provides themed,
         LocalFontFamily provides font,
         LocalMotion provides motion,
+        LocalShapes provides shapes,
+        LocalSizes provides sizes,
+        LocalTypography provides typography,
     ) {
         OverlayHost(content)
     }

@@ -29,7 +29,6 @@ import com.jcsoftdev.ui.icons.Trash2
 import com.jcsoftdev.ui.icons.User
 import com.jcsoftdev.ui.icons.X
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
 // Only the icons referenced here survive R8 in the release sample; the rest of the set costs nothing.
 private val Showcase: List<Pair<String, ImageVector>>
@@ -59,12 +58,12 @@ fun IconsGallery() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Icons", style = UiTypography.pageTitle)
+            Text("Icons", style = UiTheme.typography.pageTitle)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Showcase.forEach { (name, icon) ->
                     Column(Modifier.width(96.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(icon, contentDescription = null)
-                        Text(name, style = UiTypography.meta, color = UiTheme.colors.ink3)
+                        Text(name, style = UiTheme.typography.meta, color = UiTheme.colors.ink3)
                     }
                 }
             }

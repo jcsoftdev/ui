@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -21,7 +22,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,22 +35,78 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackHandler
 import com.jcsoftdev.ui.foundation.BackPriority
 import com.jcsoftdev.ui.foundation.Motion
-import com.jcsoftdev.ui.theme.UiShapes
 import com.jcsoftdev.ui.theme.UiTheme
-import com.jcsoftdev.ui.theme.UiTypography
 
 private const val ENTER_SCALE = 0.96f
+
+/** Colors of a [Dialog]: surface, outline, scrim, title and description. */
+@Immutable
+public class DialogColors(
+    public val container: Color,
+    public val border: Color,
+    public val scrim: Color,
+    public val title: Color,
+    public val description: Color,
+) {
+    /** Copy with selected colors replaced. */
+    public fun copy(
+        container: Color = this.container,
+        border: Color = this.border,
+        scrim: Color = this.scrim,
+        title: Color = this.title,
+        description: Color = this.description,
+    ): DialogColors = DialogColors(container, border, scrim, title, description)
+}
+
+/** Default colors, shape and metrics of [Dialog]. */
+public object DialogDefaults {
+    /** Colors in the active theme. */
+    @Composable
+    @ReadOnlyComposable
+    public fun colors(): DialogColors {
+        val c = UiTheme.colors
+        return DialogColors(c.float, c.hair, c.scrim, c.ink, c.ink2)
+    }
+
+    /** Shape; the theme `dialog` shape. */
+    public val shape: Shape
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.shapes.dialog
+
+    /** Widest the dialog grows. */
+    public val maxWidth: Dp = 420.dp
+
+    /** Padding inside the card. */
+    public val contentPadding: PaddingValues = PaddingValues(20.dp)
+
+    /** Margin between the card and the window edges. */
+    public val margin: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 24.dp)
+
+    /** Title style; the theme `dialogTitle`. */
+    public val titleStyle: TextStyle
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.typography.dialogTitle
+
+    /** Description style; the theme `body`. */
+    public val descriptionStyle: TextStyle
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.typography.body
+}
 
 /**
  * Centered modal dialog. Focus moves into it when it opens, [title] is the pane title, and [description] and [content]
@@ -65,6 +124,12 @@ public fun Dialog(
     dismissOnScrim: Boolean = true,
     dismissOnBack: Boolean = true,
     dismissLabel: String? = null,
+    colors: DialogColors = DialogDefaults.colors(),
+    shape: Shape = DialogDefaults.shape,
+    maxWidth: Dp = DialogDefaults.maxWidth,
+    contentPadding: PaddingValues = DialogDefaults.contentPadding,
+    titleStyle: TextStyle = DialogDefaults.titleStyle,
+    descriptionStyle: TextStyle = DialogDefaults.descriptionStyle,
     actions: (@Composable RowScope.() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
@@ -83,7 +148,7 @@ public fun Dialog(
     }
     BackHandler(enabled = open, priority = BackPriority.SHEET) { if (dismissOnBack) onDismissRequest() }
     OverlayLayerEffect(active = present, modal = true) {
-        val colors = UiTheme.colors
+        val sizes = UiTheme.sizes
         val focus = remember { FocusRequester() }
         LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
         Box(Modifier.fillMaxSize()) {
@@ -106,37 +171,37 @@ public fun Dialog(
             Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
                 Column(
                     modifier
-                        .padding(horizontal = 20.dp, vertical = 24.dp)
-                        .widthIn(max = 420.dp)
+                        .padding(DialogDefaults.margin)
+                        .widthIn(max = maxWidth)
                         .fillMaxWidth()
                         .graphicsLayer {
                             alpha = shown.value
                             val scale = ENTER_SCALE + (1f - ENTER_SCALE) * shown.value
                             scaleX = scale
                             scaleY = scale
-                        }.clip(UiShapes.dialog)
-                        .background(colors.float)
-                        .border(1.dp, colors.hair, UiShapes.dialog)
+                        }.clip(shape)
+                        .background(colors.container)
+                        .border(sizes.borderWidth, colors.border, shape)
                         .pointerInput(Unit) { detectTapGestures { } }
                         .semantics { paneTitle = title }
                         .focusRequester(focus)
                         .focusable()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(contentPadding),
+                    verticalArrangement = Arrangement.spacedBy(sizes.space8),
                 ) {
-                    Text(title, style = UiTypography.dialogTitle)
-                    if (description != null) Text(description, color = colors.ink2)
+                    Text(title, style = titleStyle, color = colors.title)
+                    if (description != null) Text(description, style = descriptionStyle, color = colors.description)
                     if (content != null) {
                         Column(
                             Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(sizes.space8),
                             content = content,
                         )
                     }
                     if (actions != null) {
                         Row(
-                            Modifier.fillMaxWidth().padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                            Modifier.fillMaxWidth().padding(top = sizes.space8),
+                            horizontalArrangement = Arrangement.spacedBy(sizes.space8, Alignment.End),
                             verticalAlignment = Alignment.CenterVertically,
                             content = actions,
                         )
