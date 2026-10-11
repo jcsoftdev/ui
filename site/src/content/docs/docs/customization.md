@@ -34,13 +34,21 @@ Components only read semantic tokens (`bg`, `surface`, `ink`, `accent`, `--radiu
 }
 ```
 
-Density and touch sizing work the same way. `data-density="touch"` (or `compact`, `comfortable`) rescales `--control-height`, `--input-height` and the paddings; override a single size inside a density block:
+Density and touch sizing work the same way. `data-density="touch"` (or `compact`, `comfortable`) rescales `--control-height`, `--input-height` and the paddings.
+
+Specificity matters: the kit sets density, accent and style values on attribute selectors such as `:root[data-density="touch"]`, which beat a plain `:root` or `[data-density="touch"]` rule. Match the kit's selector (or higher) and load your CSS after the kit's:
 
 ```css
-[data-density="touch"] {
+/* loaded after the kit's styles */
+:root[data-density="touch"] {
   --control-height: 48px;
 }
 ```
+
+Two caveats:
+
+- **`data-accent`**: when an `<html data-accent="menta">` (or any accent preset) is set, the preset's `:root[data-accent="menta"]` rule beats a plain `:root { --accent }`. Override with the same selector (`:root[data-accent="menta"] { --accent: ... }`) or drop the attribute and use your own value only.
+- **`data-style` presets** set `--radius-*` through `--radius-*-override` variables. To change a radius under a preset, set the override, for example `:root[data-style] { --radius-card-override: 6px; }`; a plain `--radius-card` is replaced by the preset.
 
 For a whole new look, copy `tokens/default.json`, edit it and run `npx ui-theme build my-tokens.json --out src/theme`. See [Theming and presets](/docs/theming/) for presets, precedence and the token file shape.
 
@@ -58,10 +66,10 @@ Dense UI text uses a size-only scale: `text-fs-95`, `text-fs-100`, `text-fs-105`
 
 Components made of more than one styled element accept the same two props:
 
-- `className` targets the **root** element, as before.
+- `className` targets the **root** element, as before. It is merged last, so it beats `classNames.root` on a conflicting utility (order: kit < `classNames.root` < `className`).
 - `classNames={{ part: "..." }}` targets any other part. The part names are exported as a type per component (`ToasterPart`, `DialogContentPart`, `FieldPart`, ...), so your editor completes them.
 
-Classes are merged with `cn`, so on a conflicting utility **yours wins** over the kit's:
+Classes are merged with `cn`, so on a conflicting utility **yours wins** over the kit's (`classNames.<part>` beats the kit; `className` beats `classNames.root`):
 
 ```tsx
 <Switch
@@ -81,7 +89,24 @@ Rules that hold across the kit:
 - Single-part components forward `className`, the rest of the DOM props and the `ref`.
 - Compound components (`Card`, `CardHeader`, `Tabs`, `TabsTrigger`, `DropdownMenuItem`, ...) take `className` on each piece instead of a `classNames` object.
 - Portaled parts (dialog scrim, close button, toast list) are reached through `classNames` too, since they live outside the root.
-- The older per-part props keep working and are marked `@deprecated`: `overlayClassName` and `closeClassName` on `DialogContent` and `DrawerContent` map to `classNames.overlay` and `classNames.close`; `slideClassName` on `Carousel` still sets the default slide width, and `classNames.slide` adds to it.
+- `slideClassName` on `Carousel` (from earlier releases) still sets the default slide width, and `classNames.slide` adds to it. `DialogContent` and `DrawerContent` use `classNames.overlay` and `classNames.close`; `className` targets the content element (`classNames.root`).
+
+### Part names
+
+The same part keeps the same name across components:
+
+| Part               | Meaning                                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `root`             | The outermost element, the same node `className` targets (for `DialogContent` and `DrawerContent`, the content panel) |
+| `title`            | Heading text (`Banner`, `Toaster`, `Dropzone`, `FloatingToc` ...)                                                     |
+| `description`      | Secondary text below a title                                                                                          |
+| `label`            | Short text beside a control or marker                                                                                 |
+| `icon`             | A leading or decorative icon                                                                                          |
+| `dot`              | The coloured dot (`Led`, `StatusDot`, `StatusPill`)                                                                   |
+| `header`           | The clickable header row of `ToolCall`, or the heading row of `CodeBlock`                                             |
+| `body`             | The content area                                                                                                      |
+| `overlay`, `close` | Scrim and close button of overlays                                                                                    |
+| `action`           | An action slot                                                                                                        |
 
 `Command.Group` headings are rendered by the primitive; style them from the group with a child selector, for example `classNames={{ group: "[&_[data-ui-command-group-heading]]:uppercase" }}` on `CommandPalette`.
 
@@ -93,14 +118,19 @@ The classes behind a variant are plain exported objects, so you can read them, e
 import { Button, buttonClasses, buttonVariantClasses } from "@jcsoftdev/ui/atoms/button";
 
 // the kit's look on a router link, without wrapping it in <Button>
-<Link className={buttonClasses({ variant: "primary", size: "sm" })} to="/new">New</Link>
+<Link className={buttonClasses({ variant: "primary", size: "sm" })} to="/new">
+  New
+</Link>;
 
 // a custom variant next to the built-in ones
-const variants = { ...buttonVariantClasses, brand: "bg-fuchsia-600 text-white hover:bg-fuchsia-700" };
-<Button className={variants.brand}>Brand</Button>
+const variants = {
+  ...buttonVariantClasses,
+  brand: "bg-fuchsia-600 text-white hover:bg-fuchsia-700",
+};
+<Button className={variants.brand}>Brand</Button>;
 ```
 
-Also exported: `buttonSizeClasses`, `chipToneClasses` (Chip), `eventToneClasses` (EventBlock), `dayChipToneClasses` (DayChip). For any other `variant` or `tone` you can always pass `className`: it is merged last, so it overrides the variant's classes.
+Also exported: `buttonSizeClasses`, `chipToneClasses` (Chip), `eventToneClasses` (EventBlock), `dayChipToneClasses` (DayChip). For any other `variant` or `tone` you can always pass `className`: it is merged last, so it overrides the variant's classes. The maps are typed `Readonly<Record<...>>`; spread them into a new object to extend them.
 
 ## 4. Custom tokens in your own class merging
 
