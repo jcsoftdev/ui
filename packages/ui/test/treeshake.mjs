@@ -28,13 +28,13 @@ for (const banned of [
   "dropdown-menu",
   "popover",
   "cmdk",
-  "sonner",
   "lucide",
   "icons/",
   "checkbox",
   "confirm-action",
   "responsive-list",
   "i18n",
+  "toaster",
   "status-icons",
 ]) {
   assert.ok(
