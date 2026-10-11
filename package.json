@@ -11,6 +11,7 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "check:treeshake": "pnpm --filter @jcsoftdev/ui check:treeshake"
+    "check:treeshake": "pnpm --filter @jcsoftdev/ui check:treeshake",
+    "check:dist-imports": "pnpm --filter @jcsoftdev/ui check:dist-imports"
   }
 }

@@ -74,7 +74,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test \"test/*.test.mjs\"",
     "test:stories": "vitest run --project stories",
-    "check:treeshake": "node test/treeshake.mjs"
+    "check:treeshake": "node test/treeshake.mjs",
+    "check:dist-imports": "node test/dist-imports.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",

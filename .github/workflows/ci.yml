@@ -28,6 +28,7 @@ jobs:
       - name: Typecheck (the site resolves the built library)
         run: pnpm typecheck
       - run: pnpm check:treeshake
+      - run: pnpm check:dist-imports
       - name: Resolve Playwright version
         id: playwright
         run: echo "version=$(node -p "require('./packages/ui/node_modules/playwright/package.json').version")" >> "$GITHUB_OUTPUT"
