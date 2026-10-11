@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Check, CircleAlert, Clock, LoaderCircle, Wrench } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { CodeBlock } from "../code-block/code-block.js";
 import { Disclosure } from "../internal/disclosure.js";
@@ -21,6 +22,18 @@ function StatusIcon({ status }: { status: ToolCallStatus }) {
   return <Clock aria-hidden className={cls} />;
 }
 
+export type ToolCallPart =
+  | "root"
+  | "header"
+  | "body"
+  | "name"
+  | "status"
+  | "panel"
+  | "section"
+  | "sectionTitle"
+  | "code"
+  | "error";
+
 export interface ToolCallProps {
   /** Tool identifier, e.g. `buscar_turnos`. */
   name: string;
@@ -35,6 +48,8 @@ export interface ToolCallProps {
   duration?: string;
   defaultOpen?: boolean;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<ToolCallPart>;
 }
 
 const pretty = (value: unknown) =>
@@ -50,6 +65,7 @@ export function ToolCall({
   duration,
   defaultOpen = false,
   className,
+  classNames,
 }: ToolCallProps) {
   const info = STATUS[status];
   const argsText = useMemo(() => (args === undefined ? null : pretty(args)), [args]);
@@ -59,16 +75,28 @@ export function ToolCall({
     <div
       className={cn(
         "@container/tool min-w-0 rounded-card bg-surface-card p-2 text-ink border-card shadow-card",
+        classNames?.root,
         className,
       )}
     >
       <Disclosure
         defaultOpen={defaultOpen}
+        triggerClassName={classNames?.header}
         header={
           <>
             <Wrench aria-hidden className="size-3.5 shrink-0 text-ink-3" />
-            <span className="min-w-0 truncate font-mono text-meta font-medium">{name}</span>
-            <span className={cn("ml-auto flex shrink-0 items-center gap-1 text-meta", info.tone)}>
+            <span
+              className={cn("min-w-0 truncate font-mono text-meta font-medium", classNames?.name)}
+            >
+              {name}
+            </span>
+            <span
+              className={cn(
+                "ml-auto flex shrink-0 items-center gap-1 text-meta",
+                info.tone,
+                classNames?.status,
+              )}
+            >
               <StatusIcon status={status} />
               <span className="hidden @xs/tool:inline">{info.label}</span>
               <span className="sr-only @xs/tool:hidden">{info.label}</span>
@@ -78,27 +106,34 @@ export function ToolCall({
             </span>
           </>
         }
-        panelClassName="grid gap-density-sm"
+        panelClassName={cn("grid gap-density-sm", classNames?.panel)}
       >
-        <div className="grid gap-density-sm pt-density-sm">
+        <div className={cn("grid gap-density-sm pt-density-sm", classNames?.body)}>
           {argsText ? (
-            <section aria-label="Argumentos" className="grid gap-1">
-              <h4 className="text-meta font-semibold text-ink-2">Argumentos</h4>
-              <CodeBlock code={argsText} language="json" />
+            <section aria-label="Argumentos" className={cn("grid gap-1", classNames?.section)}>
+              <h4 className={cn("text-meta font-semibold text-ink-2", classNames?.sectionTitle)}>
+                Argumentos
+              </h4>
+              <CodeBlock code={argsText} language="json" className={classNames?.code} />
             </section>
           ) : null}
           {status === "error" && error ? (
             <p
               role="alert"
-              className="rounded-badge bg-danger-soft px-2 py-1 text-meta text-danger"
+              className={cn(
+                "rounded-badge bg-danger-soft px-2 py-1 text-meta text-danger",
+                classNames?.error,
+              )}
             >
               {error}
             </p>
           ) : null}
           {resultText ? (
-            <section aria-label="Resultado" className="grid gap-1">
-              <h4 className="text-meta font-semibold text-ink-2">Resultado</h4>
-              <CodeBlock code={resultText} language="json" />
+            <section aria-label="Resultado" className={cn("grid gap-1", classNames?.section)}>
+              <h4 className={cn("text-meta font-semibold text-ink-2", classNames?.sectionTitle)}>
+                Resultado
+              </h4>
+              <CodeBlock code={resultText} language="json" className={classNames?.code} />
             </section>
           ) : null}
         </div>

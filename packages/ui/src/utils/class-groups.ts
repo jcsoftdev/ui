@@ -25,7 +25,7 @@ import {
   isPercent,
   isTshirtSize,
   type Validator,
-} from "./class-validators";
+} from "./class-validators.js";
 
 /** A class group value: a literal, a validator, a theme scale reference, or a nested `{ part: values }` branch. */
 export type Def = string | Validator | ThemeRef | { [part: string]: Def[] };
@@ -40,7 +40,7 @@ export interface ThemeRef {
   $theme: ThemeKey;
 }
 
-export { RADII, SHADOWS, SPACINGS, TEXT_SIZES } from "./class-tokens.generated";
+export { RADII, SHADOWS, SPACINGS, TEXT_SIZES } from "./class-tokens.generated.js";
 
 const theme = (key: ThemeKey): ThemeRef => ({ $theme: key });
 

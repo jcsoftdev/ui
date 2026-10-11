@@ -2,6 +2,7 @@ export {
   Drawer,
   DrawerClose,
   DrawerContent,
+  type DrawerContentPart,
   type DrawerContentProps,
   DrawerDescription,
   DrawerTitle,

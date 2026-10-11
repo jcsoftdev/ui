@@ -197,7 +197,7 @@ export function Table({
       >
         <table
           ref={tableRef}
-          className={cn("w-full border-collapse text-[13px]", className)}
+          className={cn("w-full border-collapse text-fs-130", className)}
           {...props}
         />
       </div>
@@ -302,7 +302,7 @@ export function TableHeaderCell({
   return (
     <th
       className={cn(
-        "whitespace-nowrap border-b-divider px-4 py-2.5 text-left font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em] @max-sm/table:px-2.5",
+        "whitespace-nowrap border-b-divider px-4 py-2.5 text-left font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em] @max-sm/table:px-2.5",
         alignRight && "text-right",
         pinned.className,
         className,
@@ -343,7 +343,7 @@ export function TableCell({
   return (
     <td
       className={cn(
-        "px-4 py-[11px] align-middle @max-sm/table:px-2.5",
+        "px-4 py-2.75 align-middle @max-sm/table:px-2.5",
         alignRight && "text-right",
         pinned.className,
         className,
@@ -395,7 +395,7 @@ export function TableLinkRow({
       >
         <a
           href={href}
-          className="block px-4 py-[11px] font-[650] text-ink no-underline before:absolute before:inset-0 before:content-[''] @max-sm/table:px-2.5"
+          className="block px-4 py-2.75 font-[650] text-ink no-underline before:absolute before:inset-0 before:content-[''] @max-sm/table:px-2.5"
         >
           {primary}
         </a>

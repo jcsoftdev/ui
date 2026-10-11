@@ -1,12 +1,17 @@
 "use client";
 
 import type { ComponentPropsWithoutRef } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 const DEFAULT_MAX = 100;
 
+export type ProgressPart = "root" | "indicator";
+
 export interface ProgressProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   value: number;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<ProgressPart>;
   max?: number;
   /** Text announced as `aria-valuetext`; defaults to the rounded percentage. */
   getValueLabel?: (value: number, max: number) => string;
@@ -29,6 +34,7 @@ export function Progress({
   max: maxProp = DEFAULT_MAX,
   getValueLabel = defaultGetValueLabel,
   className,
+  classNames,
   ...props
 }: ProgressProps) {
   const max = isValidMax(maxProp) ? maxProp : DEFAULT_MAX;
@@ -45,14 +51,14 @@ export function Progress({
       data-state={state}
       data-value={current ?? undefined}
       data-max={max}
-      className={cn("h-1.5 overflow-hidden rounded-pill bg-track", className)}
+      className={cn("h-1.5 overflow-hidden rounded-pill bg-track", classNames?.root, className)}
       {...props}
     >
       <div
         data-state={state}
         data-value={current ?? undefined}
         data-max={max}
-        className="block h-full bg-accent transition-transform"
+        className={cn("block h-full bg-accent transition-transform", classNames?.indicator)}
         style={{ transform: `translateX(-${100 - ((current ?? 0) / max) * 100}%)` }}
       />
     </div>
@@ -61,5 +67,5 @@ export function Progress({
 
 /** Thinner progress bar. */
 export function Meter({ className, ...props }: ProgressProps) {
-  return <Progress className={cn("h-[5px]", className)} {...props} />;
+  return <Progress className={cn("h-1.25", className)} {...props} />;
 }

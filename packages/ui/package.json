@@ -20,7 +20,8 @@
     "component-library",
     "design-system",
     "design-tokens",
-    "radix-ui",
+    "headless",
+    "primitives",
     "tailwindcss",
     "tailwind-v4",
     "charts",
@@ -45,6 +46,8 @@
     "icons",
     "scripts/build-theme.mjs",
     "README.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md",
     "LICENSE"
   ],
   "exports": {
@@ -56,6 +59,12 @@
       "source": "./src/rich-text/index.ts",
       "import": "./dist/rich-text/index.js"
     },
+    "./primitives": {
+      "types": "./dist/primitives/index.d.ts",
+      "source": "./src/primitives/index.ts",
+      "import": "./dist/primitives/index.js"
+    },
+    "./primitives/*": null,
     "./*": {
       "types": "./dist/*/index.d.ts",
       "source": "./src/*/index.ts",
@@ -74,7 +83,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test \"test/*.test.mjs\"",
     "test:stories": "vitest run --project stories",
-    "check:treeshake": "node test/treeshake.mjs"
+    "check:treeshake": "node test/treeshake.mjs",
+    "check:dist-imports": "node test/dist-imports.mjs",
+    "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",

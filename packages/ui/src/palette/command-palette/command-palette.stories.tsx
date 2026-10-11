@@ -117,13 +117,10 @@ function ControlledQueryDemo() {
 }
 
 export const ControlledQuery: Story = {
-  parameters: { a11y: { test: "todo" } },
   render: () => <ControlledQueryDemo />,
 };
 
 export const TypeSelectAndClose: Story = {
-  // The highlighted row's hint (text-ink-3 on surface-2) is below the contrast threshold; pre-existing token pairing.
-  parameters: { a11y: { test: "todo" } },
   args: { onClose: fn() },
   play: async ({ args }) => {
     const box = await screen.findByRole("combobox");

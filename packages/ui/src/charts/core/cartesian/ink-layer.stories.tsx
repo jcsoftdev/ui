@@ -117,14 +117,12 @@ const placeholder = {} as never;
  * salen en la exportación SVG/PNG.
  */
 export const Default: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => <InkDemo kind="line" tool="ruler" />,
 };
 
 /** Con el lápiz activo, sobre barras: la regla mide en barberos (eje categórico) y en cortes. */
 export const OnBars: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => <InkDemo kind="bars" tool="ink" />,
 };
@@ -135,14 +133,12 @@ export const OnBars: Story = {
  * el valor; arriba y abajo cambian de barbero.
  */
 export const OnHorizontalBars: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => <InkDemo kind="hbars" tool="ruler" />,
 };
 
 /** 320 px: la barra de herramientas se parte en filas y el gráfico llena el ancho. */
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => (
     <div style={{ width: 320 }}>
@@ -153,7 +149,6 @@ export const Narrow: Story = {
 
 /** Mismo gráfico con el preset `brutal`. */
 export const BrutalPreset: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => (
     <div data-style="brutal" className="bg-bg p-card">
@@ -168,14 +163,12 @@ export const BrutalPreset: Story = {
  * lápiz, Espacio añade vértices e Intro termina. Escape cancela. La medida se anuncia en voz alta.
  */
 export const Keyboard: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => <InkDemo kind="line" tool="ruler" />,
 };
 
 /** 4 000 puntos por hora reducidos a 240: la regla sigue midiendo en tiempo real, no en muestras. */
 export const Downsampled: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { ink: placeholder },
   render: () => <InkDemo kind="dense" tool="ruler" />,
 };

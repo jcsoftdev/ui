@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   PreviousFocusProvider,
@@ -35,7 +36,11 @@ const widthClasses: Record<DialogWidth, string> = {
   lg: "w-[min(780px,100%)]",
 };
 
+export type DialogContentPart = "root" | "overlay" | "close";
+
 export interface DialogContentProps extends DialogPrimitive.DialogContentProps {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content and is merged last. */
+  classNames?: ClassNames<DialogContentPart>;
   width?: DialogWidth;
   /**
    * While a mutation is in flight: `Escape`, outside click and the close button
@@ -44,21 +49,16 @@ export interface DialogContentProps extends DialogPrimitive.DialogContentProps {
   blocking?: boolean;
   /** Accessible label of the close button. */
   closeLabel?: string;
-  /** Classes merged onto the scrim; consumer classes win. */
-  overlayClassName?: string;
-  /** Classes merged onto the built-in close button; consumer classes win. */
-  closeClassName?: string;
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
 }
 
 export function DialogContent({
   className,
+  classNames,
   width = "md",
   blocking = false,
   closeLabel,
-  overlayClassName,
-  closeClassName,
   container,
   children,
   onEscapeKeyDown,
@@ -71,11 +71,12 @@ export function DialogContent({
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
-      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", overlayClassName)} />
+      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
       <DialogPrimitive.Content
         className={cn(
           "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
           widthClasses[width],
+          classNames?.root,
           className,
         )}
         onEscapeKeyDown={(event) => {
@@ -102,7 +103,7 @@ export function DialogContent({
             aria-label={closeLabel ?? strings.close}
             className={cn(
               "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
-              closeClassName,
+              classNames?.close,
             )}
           >
             <X aria-hidden="true" className="size-4" />

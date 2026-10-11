@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/ui-strings-provider.js";
 import { Portal } from "../../primitives/portal.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import {
@@ -33,7 +34,11 @@ export type ToasterPosition =
   | "bottom-center"
   | "bottom-right";
 
+export type ToasterPart = "root" | "list" | "toast" | "title" | "description" | "action";
+
 export interface ToasterProps {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<ToasterPart>;
   position?: ToasterPosition;
   /** Default auto dismiss delay in ms; `Infinity` disables it. */
   duration?: number;
@@ -102,12 +107,13 @@ function useDismissTimer(record: ToastRecord, duration: number, paused: boolean)
 }
 
 interface ToastItemProps {
+  classNames?: ClassNames<ToasterPart>;
   record: ToastRecord;
   duration: number;
   reducedMotion: boolean;
 }
 
-function ToastItem({ record, duration, reducedMotion }: ToastItemProps) {
+function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemProps) {
   const { id, state, tone } = record;
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -192,16 +198,22 @@ function ToastItem({ record, duration, reducedMotion }: ToastItemProps) {
         !entered && "opacity-0 data-[state=open]:translate-y-2",
         closed && "opacity-0",
         closed && !reducedMotion && "scale-95",
+        classNames?.toast,
       )}
     >
       <div className="min-w-0 flex-1">
-        <div>{record.message}</div>
-        {record.description ? <div className="opacity-70">{record.description}</div> : null}
+        <div className={classNames?.title}>{record.message}</div>
+        {record.description ? (
+          <div className={cn("opacity-70", classNames?.description)}>{record.description}</div>
+        ) : null}
       </div>
       {record.action ? (
         <button
           type="button"
-          className="h-8 shrink-0 rounded-button bg-toast-ink/18 px-3 font-bold text-toast-ink focus-ring"
+          className={cn(
+            "h-8 shrink-0 rounded-button bg-toast-ink/18 px-3 font-bold text-toast-ink focus-ring",
+            classNames?.action,
+          )}
           onClick={(event) => {
             record.action?.onClick(event);
             if (!event.defaultPrevented) dismiss(id);
@@ -223,6 +235,7 @@ export function Toaster({
   duration = 6000,
   visibleToasts = 2,
   className,
+  classNames,
   label,
   container,
   dir,
@@ -254,11 +267,16 @@ export function Toaster({
         className={cn(
           "pointer-events-none fixed z-[1000] flex outline-none",
           POSITION[position],
+          classNames?.root,
           className,
         )}
       >
         <div
-          className={cn("m-0 flex list-none gap-2 p-0", fromTop ? "flex-col-reverse" : "flex-col")}
+          className={cn(
+            "m-0 flex list-none gap-2 p-0",
+            fromTop ? "flex-col-reverse" : "flex-col",
+            classNames?.list,
+          )}
         >
           {shown.map((record) => (
             <ToastItem
@@ -266,6 +284,7 @@ export function Toaster({
               record={record}
               duration={duration}
               reducedMotion={reducedMotion}
+              classNames={classNames}
             />
           ))}
         </div>

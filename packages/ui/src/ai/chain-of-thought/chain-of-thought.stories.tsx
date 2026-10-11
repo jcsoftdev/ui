@@ -45,10 +45,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Thinking: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: {
     duration: undefined,
     steps: [
@@ -65,12 +64,10 @@ export const Thinking: Story = {
 };
 
 export const Collapsed: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { defaultOpen: false },
 };
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -81,7 +78,6 @@ export const Narrow: Story = {
 };
 
 export const PresetBrutal: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="bg-bg p-card">

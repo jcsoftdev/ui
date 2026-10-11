@@ -18,20 +18,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
-export const Down: Story = { parameters: { a11y: { test: "todo" } }, args: { value: -8.2 } };
+export const Down: Story = { args: { value: -8.2 } };
 
 export const Flat: Story = { args: { value: 0.2, epsilon: 0.5, label: undefined } };
 
 /** Cancelaciones: a drop is good news, so `invert` flips the tone but not the arrow. */
 export const LowerIsBetter: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { value: -15, invert: true, label: "cancelaciones" },
 };
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="@container/page w-[320px] max-w-full">
@@ -43,7 +41,6 @@ export const Narrow: Story = {
 };
 
 export const BrutalPreset: Story = {
-  parameters: { a11y: { test: "todo" } },
   render: (args) => (
     <div data-style="brutal" className="flex flex-wrap gap-density bg-surface-card p-card">
       <TrendChip {...args} />

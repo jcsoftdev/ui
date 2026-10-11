@@ -10,8 +10,8 @@ import {
   TEXT_SIZES,
   type ThemeKey,
   type ThemeRef,
-} from "./class-groups";
-import type { Validator } from "./class-validators";
+} from "./class-groups.js";
+import type { Validator } from "./class-validators.js";
 
 /**
  * Tailwind class conflict resolver (Tailwind v4 conventions). Derived from the MIT-licensed

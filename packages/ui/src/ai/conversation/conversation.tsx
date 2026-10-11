@@ -2,15 +2,20 @@
 
 import { type ComponentPropsWithoutRef, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { nextStuck, showJumpToLatest } from "./stick.js";
+
+export type ConversationPart = "root" | "scroller" | "content" | "jump";
 
 export interface ConversationProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
   /** Accessible name of the message log. */
   label?: string;
   /** Label of the "jump to latest" button. */
   jumpLabel?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<ConversationPart>;
 }
 
 /**
@@ -21,6 +26,7 @@ export function Conversation({
   label = "Conversación",
   jumpLabel = "Ir al último mensaje",
   className,
+  classNames,
   children,
   ...props
 }: ConversationProps) {
@@ -59,8 +65,12 @@ export function Conversation({
 
   return (
     <div
-      className={cn("@container/conversation relative h-full min-h-0 min-w-0", className)}
       {...props}
+      className={cn(
+        "@container/conversation relative h-full min-h-0 min-w-0",
+        classNames?.root,
+        className,
+      )}
     >
       <div
         ref={scroller}
@@ -71,9 +81,15 @@ export function Conversation({
         // biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable log must be keyboard reachable
         tabIndex={0}
         onScroll={onScroll}
-        className="h-full overflow-y-auto overscroll-contain focus-visible:focus-ring"
+        className={cn(
+          "h-full overflow-y-auto overscroll-contain focus-visible:focus-ring",
+          classNames?.scroller,
+        )}
       >
-        <div ref={content} className="mx-auto grid w-full max-w-3xl gap-density-lg p-card">
+        <div
+          ref={content}
+          className={cn("mx-auto grid w-full max-w-3xl gap-density-lg p-card", classNames?.content)}
+        >
           {children}
         </div>
       </div>
@@ -86,7 +102,10 @@ export function Conversation({
             setJump(false);
             toBottom(!reduced);
           }}
-          className="absolute bottom-3 left-1/2 inline-flex h-control-sm -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-button bg-surface-overlay px-3 text-meta text-ink shadow-overlay border-control surface-overlay pressable focus-visible:focus-ring"
+          className={cn(
+            "absolute bottom-3 left-1/2 inline-flex h-control-sm -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-button bg-surface-overlay px-3 text-meta text-ink shadow-overlay border-control surface-overlay pressable focus-visible:focus-ring",
+            classNames?.jump,
+          )}
         >
           <ArrowDown aria-hidden className="size-3.5" />
           <span className="truncate">Más reciente</span>

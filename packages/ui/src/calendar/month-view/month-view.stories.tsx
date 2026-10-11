@@ -100,26 +100,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const SundayStart: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { weekStartsOn: 0 },
 };
 
 export const Empty: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { events: [], markers: [], shadedDates: [] },
 };
 
 export const NextMonth: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { month: "2026-11-15", today: "2026-10-08" },
 };
 
 /** 320 px container: use it to check the narrow layout without resizing the viewport. */
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="@container/page w-[320px] max-w-full">

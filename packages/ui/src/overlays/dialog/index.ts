@@ -3,6 +3,7 @@ export {
   DialogBody,
   DialogClose,
   DialogContent,
+  type DialogContentPart,
   type DialogContentProps,
   DialogDescription,
   DialogFooter,

@@ -523,7 +523,7 @@ function BulletPlot({
                     x={centre}
                     y={-8}
                     textAnchor="middle"
-                    className="font-bold text-[11px] tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{ fill: "var(--ink-2)" }}
                   >
                     {fmt(item.actual)}
@@ -535,7 +535,7 @@ function BulletPlot({
                     x={innerWidth + 10}
                     y={centre}
                     dy="0.34em"
-                    className="font-bold text-[11px] tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{ fill: "var(--ink-2)" }}
                   >
                     {item.target == null

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { Plus, Trash2 } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 import { groupByDate } from "./group.js";
@@ -15,6 +16,19 @@ export interface ChatListItem {
   preview?: string;
   unread?: boolean;
 }
+
+export type ChatListPart =
+  | "root"
+  | "newButton"
+  | "empty"
+  | "group"
+  | "groupTitle"
+  | "list"
+  | "item"
+  | "row"
+  | "title"
+  | "preview"
+  | "delete";
 
 export interface ChatListProps {
   items: ChatListItem[];
@@ -29,6 +43,8 @@ export interface ChatListProps {
   label?: string;
   emptyText?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<ChatListPart>;
 }
 
 /** Sidebar list of conversations grouped by date (Hoy, Ayer, Últimos 7 días…). */
@@ -42,34 +58,53 @@ export function ChatList({
   label = "Conversaciones",
   emptyText = "Aún no hay conversaciones.",
   className,
+  classNames,
 }: ChatListProps) {
   const groups = useMemo(() => groupByDate(items, now ?? Date.now()), [items, now]);
 
   return (
     <nav
       aria-label={label}
-      className={cn("@container/chatlist grid min-w-0 content-start gap-density", className)}
+      className={cn(
+        "@container/chatlist grid min-w-0 content-start gap-density",
+        classNames?.root,
+        className,
+      )}
     >
       {onNew ? (
-        <Button variant="primary" size="sm" onClick={onNew} className="w-full">
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={onNew}
+          className={cn("w-full", classNames?.newButton)}
+        >
           <Plus aria-hidden />
           Nueva conversación
         </Button>
       ) : null}
-      {groups.length === 0 ? <p className="px-2 text-meta text-ink-3">{emptyText}</p> : null}
+      {groups.length === 0 ? (
+        <p className={cn("px-2 text-meta text-ink-3", classNames?.empty)}>{emptyText}</p>
+      ) : null}
       {groups.map((group) => (
-        <section key={group.id} aria-labelledby={`chat-group-${group.id}`} className="grid gap-0.5">
+        <section
+          key={group.id}
+          aria-labelledby={`chat-group-${group.id}`}
+          className={cn("grid gap-0.5", classNames?.group)}
+        >
           <h3
             id={`chat-group-${group.id}`}
-            className="px-2 text-overline font-semibold uppercase text-ink-3"
+            className={cn(
+              "px-2 text-overline font-semibold uppercase text-ink-3",
+              classNames?.groupTitle,
+            )}
           >
             {group.label}
           </h3>
-          <ul className="grid gap-0.5">
+          <ul className={cn("grid gap-0.5", classNames?.list)}>
             {group.items.map((item) => {
               const active = item.id === activeId;
               return (
-                <li key={item.id} className="group/row relative">
+                <li key={item.id} className={cn("group/row relative", classNames?.item)}>
                   <button
                     type="button"
                     aria-current={active ? "true" : undefined}
@@ -80,6 +115,7 @@ export function ChatList({
                       active
                         ? "bg-accent-soft text-ink"
                         : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                      classNames?.row,
                     )}
                   >
                     <span className="flex min-w-0 items-center gap-1.5">
@@ -93,13 +129,19 @@ export function ChatList({
                         className={cn(
                           "truncate text-body",
                           item.unread || active ? "font-semibold" : "font-medium",
+                          classNames?.title,
                         )}
                       >
                         {item.title}
                       </span>
                     </span>
                     {item.preview ? (
-                      <span className="hidden truncate text-meta text-ink-3 @xs/chatlist:block">
+                      <span
+                        className={cn(
+                          "hidden truncate text-meta text-ink-3 @xs/chatlist:block",
+                          classNames?.preview,
+                        )}
+                      >
                         {item.preview}
                       </span>
                     ) : null}
@@ -108,7 +150,10 @@ export function ChatList({
                     <IconAction
                       label={`Eliminar ${item.title}`}
                       onClick={() => onDelete(item.id)}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100 group-focus-within/row:opacity-100"
+                      className={cn(
+                        "absolute right-1 top-1/2 -translate-y-1/2 opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100 group-focus-within/row:opacity-100",
+                        classNames?.delete,
+                      )}
                     >
                       <Trash2 aria-hidden />
                     </IconAction>

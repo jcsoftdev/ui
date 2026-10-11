@@ -20,7 +20,7 @@ export function PageHeader({ className, ...props }: PageHeaderProps) {
 export type PageHeaderEyebrowProps = ComponentPropsWithoutRef<"div">;
 
 export function PageHeaderEyebrow({ className, ...props }: PageHeaderEyebrowProps) {
-  return <div className={cn("mb-1 font-semibold text-[12px] text-ink-3", className)} {...props} />;
+  return <div className={cn("mb-1 font-semibold text-fs-120 text-ink-3", className)} {...props} />;
 }
 
 export type PageHeaderTitleProps = ComponentPropsWithoutRef<"h1">;
@@ -40,7 +40,7 @@ export type PageHeaderLedeProps = ComponentPropsWithoutRef<"p">;
 export function PageHeaderLede({ className, ...props }: PageHeaderLedeProps) {
   return (
     <p
-      className={cn("mt-[5px] max-w-[68ch] break-words text-lede text-ink-2", className)}
+      className={cn("mt-1.25 max-w-[68ch] break-words text-lede text-ink-2", className)}
       {...props}
     />
   );

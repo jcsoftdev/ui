@@ -9,8 +9,20 @@ import {
   useState,
 } from "react";
 import { ArrowUp, Square } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { shouldSubmit } from "./keys.js";
+
+export type PromptInputPart =
+  | "root"
+  | "box"
+  | "attachments"
+  | "textarea"
+  | "toolbar"
+  | "actions"
+  | "send"
+  | "stop"
+  | "hint";
 
 export interface PromptInputProps {
   value?: string;
@@ -34,6 +46,8 @@ export interface PromptInputProps {
   /** Hint line under the field. */
   hint?: ReactNode;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<PromptInputPart>;
 }
 
 /**
@@ -55,6 +69,7 @@ export function PromptInput({
   actions,
   hint,
   className,
+  classNames,
 }: PromptInputProps) {
   const [state, setState] = useState(defaultValue);
   const value = valueProp ?? state;
@@ -106,9 +121,21 @@ export function PromptInput({
   const canSend = value.trim().length > 0 && !disabled;
 
   return (
-    <form onSubmit={onFormSubmit} className={cn("@container/prompt grid min-w-0 gap-1", className)}>
-      <div className="grid gap-density-sm rounded-card bg-surface-control p-2 text-ink border-control shadow-control focus-within:focus-ring">
-        {attachments ? <div className="flex flex-wrap gap-density-sm">{attachments}</div> : null}
+    <form
+      onSubmit={onFormSubmit}
+      className={cn("@container/prompt grid min-w-0 gap-1", classNames?.root, className)}
+    >
+      <div
+        className={cn(
+          "grid gap-density-sm rounded-card bg-surface-control p-2 text-ink border-control shadow-control focus-within:focus-ring",
+          classNames?.box,
+        )}
+      >
+        {attachments ? (
+          <div className={cn("flex flex-wrap gap-density-sm", classNames?.attachments)}>
+            {attachments}
+          </div>
+        ) : null}
         <textarea
           ref={area}
           rows={1}
@@ -118,15 +145,25 @@ export function PromptInput({
           placeholder={placeholder}
           onChange={(event) => set(event.target.value)}
           onKeyDown={onKeyDown}
-          className="block max-h-none w-full min-w-0 resize-none bg-transparent px-1 py-1 text-body leading-normal text-ink outline-none placeholder:text-ink-3 disabled:cursor-not-allowed"
+          className={cn(
+            "block max-h-none w-full min-w-0 resize-none bg-transparent px-1 py-1 text-body leading-normal text-ink outline-none placeholder:text-ink-3 disabled:cursor-not-allowed",
+            classNames?.textarea,
+          )}
         />
-        <div className="flex items-center justify-between gap-density-sm">
-          <div className="flex min-w-0 items-center gap-density-sm">{actions}</div>
+        <div
+          className={cn("flex items-center justify-between gap-density-sm", classNames?.toolbar)}
+        >
+          <div className={cn("flex min-w-0 items-center gap-density-sm", classNames?.actions)}>
+            {actions}
+          </div>
           {streaming ? (
             <button
               type="submit"
               aria-label="Detener respuesta"
-              className="inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button bg-ink text-bg pressable focus-visible:focus-ring"
+              className={cn(
+                "inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button bg-ink text-bg pressable focus-visible:focus-ring",
+                classNames?.stop,
+              )}
             >
               <Square aria-hidden className="size-3.5 fill-current" />
             </button>
@@ -135,14 +172,17 @@ export function PromptInput({
               type="submit"
               aria-label="Enviar mensaje"
               disabled={!canSend}
-              className="inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button bg-accent text-on-accent pressable focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-45"
+              className={cn(
+                "inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button bg-accent text-on-accent pressable focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-45",
+                classNames?.send,
+              )}
             >
               <ArrowUp aria-hidden className="size-4" />
             </button>
           )}
         </div>
       </div>
-      {hint ? <p className="px-1 text-meta text-ink-3">{hint}</p> : null}
+      {hint ? <p className={cn("px-1 text-meta text-ink-3", classNames?.hint)}>{hint}</p> : null}
     </form>
   );
 }

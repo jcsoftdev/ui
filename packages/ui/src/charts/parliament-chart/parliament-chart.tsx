@@ -348,7 +348,7 @@ function ParliamentPlot({
               x={cx}
               y={cy - radius * (1 + geometry.sr) - 8}
               textAnchor="middle"
-              className="fill-ink-2 font-semibold text-[11px]"
+              className="fill-ink-2 font-semibold text-fs-110"
             >
               {majorityLabel}: {formatNumber(majorityAt)}
             </text>
@@ -365,7 +365,7 @@ function ParliamentPlot({
             >
               {formatNumber(total)}
             </text>
-            <text x={cx} y={cy - 1} textAnchor="middle" className="fill-ink-3 text-[11px]">
+            <text x={cx} y={cy - 1} textAnchor="middle" className="fill-ink-3 text-fs-110">
               {centerLabel}
             </text>
           </g>

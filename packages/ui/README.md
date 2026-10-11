@@ -1,6 +1,6 @@
 # @jcsoftdev/ui
 
-Token-driven React 19 component library: Radix primitives, Tailwind CSS v4, no runtime CSS-in-JS.
+Token-driven React 19 component library: zero runtime dependencies, Tailwind CSS v4, no runtime CSS-in-JS.
 The whole look (colors for light/dark themes, brand palettes, type, radius, shadows, font) comes from
 **one tokens JSON file**. Change the file, rebuild the theme, and every component follows.
 
@@ -98,6 +98,14 @@ A custom tokens file must define the same names as `tokens/default.json`; copy i
 
 Switching at runtime: set `data-theme="light|dark"` (remove it for "system") and `data-accent="<palette-id>"` on `<html>`.
 
+## Customization
+
+Every styled component can be restyled without forking it: override the CSS variables, pass
+`classNames={{ part: "..." }}` for the inner parts (`className` still targets the root; your
+classes win on conflicts), reuse the exported variant maps (`buttonClasses`, `buttonVariantClasses`,
+`chipToneClasses`, ...), and use `createCn` / `extendCn` for your own theme tokens. Full guide:
+https://ui.jcsoftdev.com/docs/customization/
+
 ## Touch density
 
 `data-density="touch"` is the preset for phones operated with a thumb: controls and small buttons are
@@ -185,8 +193,8 @@ carries `data-row-key`; `rowClassName` applies to both layouts.
 The package is unbundled ESM, `"sideEffects": ["**/*.css"]`, and every component has its own entry point:
 
 ```ts
-import { Button } from "@jcsoftdev/ui/atoms/button";   // only Button + Radix Slot + cn()
-import { Dialog } from "@jcsoftdev/ui/overlays/dialog"; // only the Dialog + @radix-ui/react-dialog
+import { Button } from "@jcsoftdev/ui/atoms/button";   // only Button + Slot + cn()
+import { Dialog } from "@jcsoftdev/ui/overlays/dialog"; // only the Dialog + the dialog primitive
 import { Chip, Avatar } from "@jcsoftdev/ui/atoms";     // group entry: still tree-shakes
 ```
 
@@ -216,6 +224,14 @@ The `source` export condition points at `src/*/index.ts` for consumers that want
 - No literal colors in components, no `dark:` variants; dark mode is a token concern.
 
 
+## Headless primitives
+
+`@jcsoftdev/ui/primitives` publishes the unstyled behavior under the overlays (`DialogPrimitive`, `PopoverPrimitive`, `PopperPrimitive`, `MenuPrimitive`, `CommandPrimitive`, `Portal` and the layer hooks) so you can bring your own markup and styles. Importing one primitive does not bundle the others. See the [guide](https://ui.jcsoftdev.com/docs/primitives).
+
 ## Icons
 
 `@jcsoftdev/ui/icons` exports every icon as its own tree-shakeable component (`import { Check } from "@jcsoftdev/ui/icons"`). The SVG sources in `icons/svg` are vendored from [Lucide](https://lucide.dev) (ISC, see `icons/LICENSE-lucide`); regenerate the components with `pnpm build:icons`.
+
+## Third-party notices
+
+The package has no runtime dependencies. Icon sources are vendored from Lucide (ISC, with Feather MIT portions), and the class merge engine, command scorer and overlay behavior are derived from or modeled on tailwind-merge, cmdk and Radix UI (MIT). Attributions and license texts are in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).

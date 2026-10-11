@@ -2,12 +2,25 @@
 
 import { type ReactNode, type Ref, useEffect, useState } from "react";
 import { Menu, Search } from "../../icons/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 function isApplePlatform(): boolean {
   if (typeof navigator === "undefined") return false;
   return /Mac|iPhone|iPod|iPad/.test(navigator.platform || navigator.userAgent || "");
 }
+
+export type TopbarPart =
+  | "root"
+  | "inner"
+  | "menuButton"
+  | "breadcrumbs"
+  | "crumb"
+  | "separator"
+  | "current"
+  | "search"
+  | "searchText"
+  | "shortcut";
 
 export interface TopbarProps {
   /** Breadcrumb trail in order; the last entry is the current view. */
@@ -28,6 +41,8 @@ export interface TopbarProps {
   /** Slot at the far end (e.g. the account menu). */
   end?: ReactNode;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<TopbarPart>;
 }
 
 export function Topbar({
@@ -42,6 +57,7 @@ export function Topbar({
   actions,
   end,
   className,
+  classNames,
 }: TopbarProps) {
   const [shortcut, setShortcut] = useState("Ctrl+K");
 
@@ -66,17 +82,26 @@ export function Topbar({
     <header
       className={cn(
         "@container/topbar sticky top-0 z-30 h-top-height border-b-divider bg-bg",
+        classNames?.root,
         className,
       )}
     >
-      <div className="flex h-full min-w-0 items-center gap-2.5 px-4 @min-[640px]/topbar:px-7">
+      <div
+        className={cn(
+          "flex h-full min-w-0 items-center gap-2.5 px-4 @min-[640px]/topbar:px-7",
+          classNames?.inner,
+        )}
+      >
         {onOpenMenu ? (
           <button
             ref={menuButtonRef}
             type="button"
             aria-label={menuLabel}
             onClick={onOpenMenu}
-            className="hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink @max-[900px]/app:inline-flex"
+            className={cn(
+              "hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink @max-[900px]/app:inline-flex",
+              classNames?.menuButton,
+            )}
           >
             <Menu className="size-5" aria-hidden="true" />
           </button>
@@ -84,17 +109,29 @@ export function Topbar({
 
         <nav
           aria-label={breadcrumbsLabel}
-          className="flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta"
+          className={cn(
+            "flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta",
+            classNames?.breadcrumbs,
+          )}
         >
           {previous.map((crumb) => (
-            <span key={crumb} className="flex items-center gap-2 @max-[560px]/topbar:hidden">
+            <span
+              key={crumb}
+              className={cn(
+                "flex items-center gap-2 @max-[560px]/topbar:hidden",
+                classNames?.crumb,
+              )}
+            >
               <span>{crumb}</span>
-              <span aria-hidden="true" className="text-line-control">
+              <span aria-hidden="true" className={cn("text-line-control", classNames?.separator)}>
                 /
               </span>
             </span>
           ))}
-          <strong aria-current="page" className="min-w-0 truncate font-semibold text-ink">
+          <strong
+            aria-current="page"
+            className={cn("min-w-0 truncate font-semibold text-ink", classNames?.current)}
+          >
             {current}
           </strong>
         </nav>
@@ -103,11 +140,21 @@ export function Topbar({
           type="button"
           aria-label={searchLabel}
           onClick={onSearch}
-          className="ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0"
+          className={cn(
+            "ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
+            classNames?.search,
+          )}
         >
           <Search className="size-4 shrink-0" aria-hidden="true" />
-          <span className="truncate @max-[700px]/topbar:hidden">{searchPlaceholder}</span>
-          <span className="ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden">
+          <span className={cn("truncate @max-[700px]/topbar:hidden", classNames?.searchText)}>
+            {searchPlaceholder}
+          </span>
+          <span
+            className={cn(
+              "ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden",
+              classNames?.shortcut,
+            )}
+          >
             {shortcut}
           </span>
         </button>

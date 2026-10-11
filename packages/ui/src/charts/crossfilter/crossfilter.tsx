@@ -170,8 +170,8 @@ function ChartHeader({
   const own = owned.some((id) => xf.filters[id] != null);
   return (
     <div className="mb-1 flex min-w-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-      <h3 className="m-0 min-w-0 truncate font-bold text-[13px] text-ink">{title}</h3>
-      <div className="flex shrink-0 items-center gap-2 font-semibold text-[12px] text-ink-3 tabular-nums">
+      <h3 className="m-0 min-w-0 truncate font-bold text-fs-130 text-ink">{title}</h3>
+      <div className="flex shrink-0 items-center gap-2 font-semibold text-fs-120 text-ink-3 tabular-nums">
         <span aria-live="polite">{labels.count(records, xf.total)}</span>
         {own ? (
           <button
@@ -179,7 +179,7 @@ function ChartHeader({
             onClick={() => {
               for (const id of owned) xf.clear(id);
             }}
-            className="cursor-pointer rounded-button border-0 bg-surface-2 px-2 py-0.5 font-semibold text-[11px] text-ink-2 hover:text-ink"
+            className="cursor-pointer rounded-button border-0 bg-surface-2 px-2 py-0.5 font-semibold text-fs-110 text-ink-2 hover:text-ink"
           >
             {labels.clear}
           </button>
@@ -484,7 +484,7 @@ export function CrossfilterSummary({
         <button
           type="button"
           onClick={() => xf.clear()}
-          className="cursor-pointer rounded-button border-0 bg-surface-2 px-3 py-1 font-semibold text-[12px] text-ink-2 hover:text-ink"
+          className="cursor-pointer rounded-button border-0 bg-surface-2 px-3 py-1 font-semibold text-fs-120 text-ink-2 hover:text-ink"
         >
           {labels.clearAll}
         </button>

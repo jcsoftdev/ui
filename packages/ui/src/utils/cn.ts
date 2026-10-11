@@ -1,6 +1,6 @@
-import { type ClassMergeConfig, createClassMerger } from "./class-merge";
+import { type ClassMergeConfig, createClassMerger } from "./class-merge.js";
 
-export type { ClassMergeConfig, ClassMergeTheme } from "./class-merge";
+export type { ClassMergeConfig, ClassMergeTheme } from "./class-merge.js";
 
 export type ClassValue =
   | string

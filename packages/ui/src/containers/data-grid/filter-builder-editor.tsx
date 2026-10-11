@@ -30,9 +30,9 @@ export interface FilterBuilderProps<T> {
 }
 
 const fieldClass =
-  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-[13px] text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
+  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
 const buttonClass =
-  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-[12.5px] text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
+  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-125 text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
 
 /**
  * Builds a filter of nested AND / OR groups of conditions (column, operator, value). It is a
@@ -98,7 +98,7 @@ function GroupEditor<T>({
               onClick={() =>
                 onChange(updateNode(root, group.id, (n) => ({ ...n, logic }) as FilterNode))
               }
-              className="h-full rounded-xs px-2 font-[600] text-[12px] text-ink-3 hover:text-ink aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
+              className="h-full rounded-xs px-2 font-[600] text-fs-120 text-ink-3 hover:text-ink aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
             >
               {logic === "and" ? labels.matchAll : labels.matchAny}
             </button>
@@ -136,13 +136,13 @@ function GroupEditor<T>({
         )}
       </div>
       {group.children.length === 0 ? (
-        <p className="px-1 text-[12.5px] text-ink-3">{labels.noConditions}</p>
+        <p className="px-1 text-fs-125 text-ink-3">{labels.noConditions}</p>
       ) : (
         <ul className="grid gap-2">
           {group.children.map((child, index) => (
             <li key={child.id} className="grid gap-1">
               {index > 0 ? (
-                <span className="font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em]">
+                <span className="font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em]">
                   {group.logic === "and" ? labels.filterAnd : labels.filterOr}
                 </span>
               ) : null}

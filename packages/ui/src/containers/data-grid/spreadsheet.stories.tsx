@@ -166,7 +166,6 @@ export const IntegratedChartsNarrow: Story = {
 };
 
 export const IntegratedChartsPreset: Story = {
-  parameters: { a11y: { test: "todo" } },
   name: "Integrated charts (flat preset)",
   decorators: [
     (Story) => (
