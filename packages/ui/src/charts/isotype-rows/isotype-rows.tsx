@@ -99,7 +99,7 @@ export function IsotypeRows({
       skeleton="bars"
       footer={
         keyShown ? (
-          <p className="m-0 flex items-center gap-1.5 text-[12px] text-ink-3">
+          <p className="m-0 flex items-center gap-1.5 text-fs-120 text-ink-3">
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24">
               <path
                 d={keyShape.path}
@@ -242,7 +242,7 @@ function IsotypePlot({
           key={item.id}
           aria-hidden="true"
           className={cn(
-            "absolute left-0 truncate font-semibold text-[12px] text-ink-2 transition-opacity duration-150",
+            "absolute left-0 truncate font-semibold text-fs-120 text-ink-2 transition-opacity duration-150",
             activeItem && activeItem.id !== item.id && "opacity-40",
           )}
           style={{
@@ -298,7 +298,7 @@ function IsotypePlot({
                   x={(track ? geometry.trackEnd : row.end) + 8}
                   y={row.center}
                   dominantBaseline="central"
-                  className="fill-ink font-bold text-[12px] tabular-nums"
+                  className="fill-ink font-bold text-fs-120 tabular-nums"
                 >
                   {format(item.value)}
                 </text>

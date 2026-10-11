@@ -17,6 +17,9 @@ class SampleActivity : ComponentActivity() {
                     "forms" -> FormsGallery()
                     "overlays" -> OverlaysGallery()
                     "icons" -> IconsGallery()
+                    "custom" -> CustomThemeGallery()
+                    "headless" -> HeadlessGallery()
+                    "states" -> StatesGallery()
                     else -> AtomsGallery()
                 }
             }

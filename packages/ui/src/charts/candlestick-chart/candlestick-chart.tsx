@@ -416,7 +416,7 @@ function CandlePlot({
                 y={4}
                 dy="0.34em"
                 textAnchor="end"
-                className="fill-ink-3 font-medium text-[10.5px] tabular-nums"
+                className="fill-ink-3 font-medium text-fs-105 tabular-nums"
               >
                 {vfmt(maxVolume)}
               </text>
@@ -499,7 +499,7 @@ function CandlePlot({
                     y={0}
                     dy="0.34em"
                     textAnchor="middle"
-                    className="font-bold text-[10.5px] tabular-nums"
+                    className="font-bold text-fs-105 tabular-nums"
                     style={{ fill: "var(--surface)" }}
                   >
                     {fmt(last.close)}
@@ -526,7 +526,7 @@ function CandlePlot({
         <button
           type="button"
           onClick={() => setRange([0, data.length - 1])}
-          className="absolute top-0 right-0 z-10 cursor-pointer rounded-button border-divider bg-surface-control px-2.5 py-1 font-semibold text-[11px] text-ink-2 hover:bg-surface-2"
+          className="absolute top-0 right-0 z-10 cursor-pointer rounded-button border-divider bg-surface-control px-2.5 py-1 font-semibold text-fs-110 text-ink-2 hover:bg-surface-2"
         >
           {labels.resetZoom}
         </button>

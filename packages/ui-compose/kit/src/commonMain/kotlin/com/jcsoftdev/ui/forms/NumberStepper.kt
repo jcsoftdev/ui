@@ -6,56 +6,97 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jcsoftdev.ui.atoms.ButtonColors
+import com.jcsoftdev.ui.atoms.ButtonDefaults
 import com.jcsoftdev.ui.atoms.ButtonVariant
 import com.jcsoftdev.ui.atoms.IconButton
 import com.jcsoftdev.ui.atoms.LocalContentColor
 import com.jcsoftdev.ui.atoms.Text
-import com.jcsoftdev.ui.theme.UiTypography
+import com.jcsoftdev.ui.theme.UiTheme
+
+/** Default colors and metrics of [NumberStepper]. */
+public object NumberStepperDefaults {
+    /** Colors of the two buttons; the secondary button variant. */
+    @Composable
+    @ReadOnlyComposable
+    public fun buttonColors(): ButtonColors = ButtonDefaults.colors(ButtonVariant.Secondary)
+
+    /** Style of the value; the theme `rowTitle`, bold. */
+    public val valueStyle: TextStyle
+        @Composable @ReadOnlyComposable
+        get() = UiTheme.typography.rowTitle.copy(fontWeight = FontWeight.Bold)
+
+    /** Minimum width of the value so the buttons do not jump. */
+    public val valueMinWidth: Dp = 40.dp
+
+    /** Gap between the buttons and the value. */
+    public val spacing: Dp = 4.dp
+
+    /** The minus (`plus` false) and plus glyphs of the buttons, drawn in the button content color; [NumberStepper]'s `stepIcon` replaces them. */
+    public val StepIcon: @Composable (plus: Boolean) -> Unit = { plus -> StepGlyph(plus) }
+}
 
 /** Integer stepper clamped to [min]..[max]; the buttons disable at the limits and need descriptions because they are icon-only. */
 @Composable
 public fun NumberStepper(
     value: Int,
     onValueChange: (Int) -> Unit,
-    decrementDescription: String,
-    incrementDescription: String,
+    decrementDescription: String = UiTheme.strings.decrease,
+    incrementDescription: String = UiTheme.strings.increase,
     modifier: Modifier = Modifier,
     min: Int = 0,
     max: Int = Int.MAX_VALUE,
     step: Int = 1,
     enabled: Boolean = true,
+    buttonColors: ButtonColors = NumberStepperDefaults.buttonColors(),
+    valueStyle: TextStyle = NumberStepperDefaults.valueStyle,
+    valueColor: Color = Color.Unspecified,
+    buttonShape: Shape = ButtonDefaults.shape,
+    stepIcon: @Composable (plus: Boolean) -> Unit = NumberStepperDefaults.StepIcon,
 ) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier,
+        horizontalArrangement = Arrangement.spacedBy(NumberStepperDefaults.spacing),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         IconButton(
             { onValueChange((value - step).coerceAtLeast(min)) },
             decrementDescription,
-            variant = ButtonVariant.Secondary,
+            colors = buttonColors,
+            shape = buttonShape,
             enabled = enabled && value > min,
-        ) { StepGlyph(plus = false) }
+        ) { stepIcon(false) }
         Text(
             value.toString(),
-            modifier = Modifier.widthIn(min = 40.dp).semantics { liveRegion = LiveRegionMode.Polite },
-            style = UiTypography.rowTitle.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.widthIn(min = NumberStepperDefaults.valueMinWidth).semantics { liveRegion = LiveRegionMode.Polite },
+            style = valueStyle,
+            color = valueColor,
             textAlign = TextAlign.Center,
         )
         IconButton(
             { onValueChange((value + step).coerceAtMost(max)) },
             incrementDescription,
-            variant = ButtonVariant.Secondary,
+            colors = buttonColors,
+            shape = buttonShape,
             enabled = enabled && value < max,
-        ) { StepGlyph(plus = true) }
+        ) { stepIcon(true) }
     }
 }
 

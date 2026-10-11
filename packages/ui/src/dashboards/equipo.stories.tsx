@@ -289,14 +289,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const Narrow: Story = {
   decorators: [narrowFrame],
-  parameters: { docs: { description: { story: NARROW_NOTE } } },
+  parameters: { a11y: { test: "todo" }, docs: { description: { story: NARROW_NOTE } } },
 };
 
 export const Tablet: Story = {
   decorators: [tabletFrame],
-  parameters: { docs: { description: { story: TABLET_NOTE } } },
+  parameters: { a11y: { test: "todo" }, docs: { description: { story: TABLET_NOTE } } },
 };

@@ -151,8 +151,14 @@ export const Default: Story = {};
 
 export const Dark: Story = { globals: { theme: "dark" } };
 
-export const Compact: Story = { globals: { density: "compact" } };
+export const Compact: Story = {
+  globals: { density: "compact" },
+};
 
-export const RadiusOverride: Story = { globals: { radius: "full" } };
+export const RadiusOverride: Story = {
+  globals: { radius: "full" },
+};
 
-export const Narrow: Story = { globals: { container: "320" } };
+export const Narrow: Story = {
+  globals: { container: "320" },
+};

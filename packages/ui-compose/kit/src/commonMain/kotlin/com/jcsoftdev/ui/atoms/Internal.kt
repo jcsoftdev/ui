@@ -20,27 +20,32 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
-import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.foundation.pressScale
+import com.jcsoftdev.ui.theme.LocalSizes
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.math.max
 
-/** Web `disabled:opacity-45`. */
-internal const val DISABLED_ALPHA = 0.45f
+/** Dims the content to [com.jcsoftdev.ui.theme.ThemeSizes.disabledAlpha] (web `disabled:opacity-45`) unless [enabled]. */
+@Composable
+internal fun Modifier.dimWhenDisabled(enabled: Boolean): Modifier {
+    val dimmed = UiTheme.sizes.disabledAlpha
+    return graphicsLayer { alpha = if (enabled) 1f else dimmed }
+}
 
-private val MinTouchTarget = 48.dp
-
-/** Grows the measured size to at least 48dp in each axis and centers the content, so the hit area stays accessible. */
+/** Grows the measured size to at least [com.jcsoftdev.ui.theme.ThemeSizes.minTouchTarget] (48dp by default) in each axis and centers the content, so the hit area stays accessible. */
 internal fun Modifier.minimumTouchTarget(): Modifier = this then MinTouchTargetElement
 
 private object MinTouchTargetElement : ModifierNodeElement<MinTouchTargetNode>() {
@@ -59,13 +64,14 @@ private object MinTouchTargetElement : ModifierNodeElement<MinTouchTargetNode>()
 
 private class MinTouchTargetNode :
     Modifier.Node(),
-    LayoutModifierNode {
+    LayoutModifierNode,
+    CompositionLocalConsumerModifierNode {
     override fun MeasureScope.measure(
         measurable: Measurable,
         constraints: Constraints,
     ): MeasureResult {
         val placeable = measurable.measure(constraints)
-        val min = MinTouchTarget.roundToPx()
+        val min = currentValueOf(LocalSizes).minTouchTarget.roundToPx()
         val width = constraints.constrainWidth(max(placeable.width, min))
         val height = constraints.constrainHeight(max(placeable.height, min))
         return layout(width, height) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useEffect, useRef } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
@@ -33,6 +34,17 @@ export interface SidebarGroup {
   items: SidebarItem[];
 }
 
+export type SidebarPart =
+  | "root"
+  | "group"
+  | "groupLabel"
+  | "item"
+  | "link"
+  | "label"
+  | "badge"
+  | "footer"
+  | "scrim";
+
 export interface SidebarProps {
   groups: SidebarGroup[];
   /** Accessible name of the sidebar landmark. */
@@ -47,6 +59,8 @@ export interface SidebarProps {
   open?: boolean;
   onClose?: () => void;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<SidebarPart>;
 }
 
 const defaultRenderLink: SidebarRenderLink = ({ children, ...props }) => (
@@ -68,6 +82,7 @@ export function Sidebar({
   open = false,
   onClose,
   className,
+  classNames,
 }: SidebarProps) {
   const shell = useAppShell();
   const asideRef = useRef<HTMLElement>(null);
@@ -111,36 +126,47 @@ export function Sidebar({
                 closedOnMobile ? "-translate-x-full" : "translate-x-0",
               ),
           openOnMobile && "shadow-overlay",
+          classNames?.root,
           className,
         )}
       >
         {header}
         {groups.map((group) => (
-          <nav key={group.id} aria-label={group.label} className="flex flex-col gap-px">
-            <div className="px-2.5 pb-1.5 text-overline text-ink-3">{group.label}</div>
+          <nav
+            key={group.id}
+            aria-label={group.label}
+            className={cn("flex flex-col gap-px", classNames?.group)}
+          >
+            <div className={cn("px-2.5 pb-1.5 text-overline text-ink-3", classNames?.groupLabel)}>
+              {group.label}
+            </div>
             {group.items.map((item) => {
               const badgeTone =
                 item.badgeTone === "danger"
                   ? "bg-danger-soft text-danger"
                   : "bg-surface-2 text-ink-2";
               return (
-                <div key={item.id}>
+                <div key={item.id} className={classNames?.item}>
                   {renderLink({
                     href: item.href,
                     "aria-current": item.active ? "page" : undefined,
                     className: cn(
                       "flex items-center gap-2.5 rounded-control px-2.5 py-2 text-control text-ink-2 hover:bg-surface-2 hover:text-ink [&_svg]:size-4.25 [&_svg]:shrink-0",
                       item.active && "bg-accent-soft font-bold text-accent-ink",
+                      classNames?.link,
                     ),
                     children: (
                       <>
                         {item.icon}
-                        <span className="min-w-0 truncate">{item.label}</span>
+                        <span className={cn("min-w-0 truncate", classNames?.label)}>
+                          {item.label}
+                        </span>
                         {item.badge !== undefined ? (
                           <span
                             className={cn(
                               "ml-auto shrink-0 rounded-chip px-1.5 py-0.75 text-count",
                               badgeTone,
+                              classNames?.badge,
                             )}
                           >
                             {item.badge}
@@ -157,14 +183,14 @@ export function Sidebar({
             })}
           </nav>
         ))}
-        {footer ? <div className="mt-auto">{footer}</div> : null}
+        {footer ? <div className={cn("mt-auto", classNames?.footer)}>{footer}</div> : null}
       </aside>
       {openOnMobile ? (
         <div
           data-sidebar-scrim
           aria-hidden="true"
           onClick={onClose}
-          className="fixed inset-0 z-44 bg-scrim"
+          className={cn("fixed inset-0 z-44 bg-scrim", classNames?.scrim)}
         />
       ) : null}
     </>

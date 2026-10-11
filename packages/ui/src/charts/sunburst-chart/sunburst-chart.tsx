@@ -549,7 +549,7 @@ function SegmentLabel({
       transform={`rotate(${rotate.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)})`}
       textAnchor="middle"
       dominantBaseline="central"
-      className="pointer-events-none select-none font-semibold text-[11px]"
+      className="pointer-events-none select-none font-semibold text-fs-110"
       style={{ fill: ink, opacity: dimmed ? 0.4 : 1, transition: "opacity 150ms ease-out" }}
     >
       {name}

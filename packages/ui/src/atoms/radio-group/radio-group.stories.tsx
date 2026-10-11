@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { RadioGroup } from "./radio-group.js";
 
 const options = [
@@ -58,3 +59,41 @@ function ControlledDemo() {
 }
 
 export const Controlled: Story = { render: () => <ControlledDemo /> };
+
+export const DisabledItemSkippedByArrows: Story = {
+  args: {
+    options: [
+      { value: "efectivo", label: "Efectivo" },
+      { value: "yape", label: "Yape", disabled: true },
+      { value: "tarjeta", label: "Tarjeta" },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const [efectivo, yape, tarjeta] = within(canvasElement).getAllByRole("radio");
+    efectivo.focus();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(tarjeta).toHaveFocus();
+    await waitFor(() => expect(tarjeta).toHaveAttribute("aria-checked", "true"));
+    await expect(yape).toHaveAttribute("aria-checked", "false");
+  },
+};
+
+export const FormSubmitAndReset: Story = {
+  render: () => (
+    <form aria-label="Pago">
+      <RadioGroup aria-label="Método" name="metodo" defaultValue="efectivo" options={options} />
+      <button type="reset">Restablecer</button>
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const form = canvas.getByRole("form") as HTMLFormElement;
+    const [efectivo, yape] = canvas.getAllByRole("radio");
+    await expect(Object.fromEntries(new FormData(form))).toEqual({ metodo: "efectivo" });
+    await userEvent.click(yape);
+    await waitFor(() => expect(Object.fromEntries(new FormData(form))).toEqual({ metodo: "yape" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Restablecer" }));
+    await waitFor(() => expect(efectivo).toHaveAttribute("aria-checked", "true"));
+    await expect(Object.fromEntries(new FormData(form))).toEqual({ metodo: "efectivo" });
+  },
+};

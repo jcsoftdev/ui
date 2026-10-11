@@ -58,7 +58,7 @@ export function ExportMenu({
           type="button"
           aria-label={`${texts.export} ${texts[kind]}`}
           onClick={() => run(kind)}
-          className="cursor-pointer rounded-button px-2 py-1 font-semibold text-[11.5px] text-ink-3 outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
+          className="cursor-pointer rounded-button px-2 py-1 font-semibold text-fs-115 text-ink-3 outline-none hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
         >
           {texts[kind]}
         </button>

@@ -472,7 +472,7 @@ function ChordPlot({
                     x={at.x}
                     y={at.y + (cos > 0.4 ? -2 : cos < -0.4 ? 10 : 4)}
                     textAnchor={sin > 0.25 ? "start" : sin < -0.25 ? "end" : "middle"}
-                    className="pointer-events-none select-none fill-ink-2 font-semibold text-[11.5px]"
+                    className="pointer-events-none select-none fill-ink-2 font-semibold text-fs-115"
                     style={{ opacity: dim ? 0.4 : 1, transition: "opacity 150ms" }}
                   >
                     {groups[group.index]?.name}
