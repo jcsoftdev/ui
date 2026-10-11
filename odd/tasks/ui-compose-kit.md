@@ -33,7 +33,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each tas
 
 ## Tasks
 - [x] C0 Gradle KMP library scaffold: targets, `explicitApi()`, `abiValidation`, Compose compiler reports and stability config, empty `consumer-rules.pro`, a minimal sample Android app with R8 + resource shrinking, CI job (build, tests, ABI check, sample release build). Route: delegated.
-- [ ] C1 Tokens: `ui-theme` emits the kit's `Theme.kt` (package `com.jcsoftdev.ui.theme`) with `@Immutable` token classes; wired into the build so tokens never drift. Route: delegated.
+- [x] C1 Tokens: `ui-theme` emits the kit's `Theme.kt` (package `com.jcsoftdev.ui.theme`) with `@Immutable` token classes; wired into the build so tokens never drift. Route: delegated.
 - [ ] C2 Theme provider: generic `UiTheme(colors, typography, dark, motion, content)`, Figtree via compose resources, injectable font and brand accent. Route: delegated.
 - [ ] C3 Foundations: `Motion` + reduced motion, `Modifier.Node` press feedback, back-handling contract (`LocalBackDispatcher`) usable outside the barber app. Route: delegated.
 - [ ] C4 Icons: generated `ImageVector` set from the same SVG source as the web icons (zero-deps T6), nullable backing fields, same names. Route: delegated.
@@ -55,6 +55,8 @@ ask-on-risk, chain strategy `feature-branch-chain` (same as zero-deps): each tas
 - 2026-10-10: research (R8/consumer rules, strong skipping, stability, Modifier.Node, icon backing fields, baseline profiles for libraries, ABI validation, Roborazzi) and Android mapping done.
 - 2026-10-10: C0 done on `feat/ui-compose-c0-scaffold` (cfc11b5). Standalone Gradle build at `packages/ui-compose` (`:kit` + `:sample`); spotlessCheck, apiCheck, :kit:allTests (no tests), iOS sim/JVM/Android release compile and :sample:assembleRelease (R8 + shrinkResources, 592170-byte APK) all pass; compose compiler reports generated under `kit/build/compose_compiler`.
   - Decisions: KGP built-in `abiValidation` is JVM-only in Kotlin 2.1.21 (KMP support arrived in 2.2), so the `binary-compatibility-validator` 0.18.1 plugin with KLib validation is used (`apiCheck`/`apiDump`). jvmTarget 17 for jvm and android (BCV's ASM cannot read JDK 23 class files; CI uses JDK 17). `generateResClass = never` until resources land (C2) because the generated Res leaked `$stableprop` symbols into the klib dump. `compose-stability.conf` empty (strong skipping on). Wrapper lives at `packages/ui-compose/gradlew`, so commands are `packages/ui-compose/gradlew -p packages/ui-compose ...` from the repo root. CI: ubuntu job (spotless, apiCheck, tests, kit and sample release) plus a macOS job limited to `compileKotlinIosSimulatorArm64`, to avoid paying macOS minutes for everything.
+- 2026-10-10: C1 done on `feat/ui-compose-c1-tokens` (a4196f8), stacked on C0. `ui-theme build --kotlin-library [--no-css]` emits explicit-`public`, `@Immutable` Theme.kt; default (barber) output byte-identical (diffed). Kit task `generateUiTokens` (Exec, cacheable, inputs = tokens.json + generator) feeds commonMain from `build/generated`; nothing committed. Compose reports: ThemeColors, AccentPalette, UiColors, UiPalettes, UiShapes, UiSizes, UiTypography all stable.
+  - Decisions: `UiPalettes` drops the exposed `Map` for per-theme `when` lookups (`UiPalettes.light(id)`) plus `ids: List<String>`; the object is annotated `@Immutable` because List is otherwise inferred unstable. CI jobs gained `actions/setup-node@v4` (Node 22) and the workflow path filters include the generator inputs. Worktree needed `pnpm install --offline` for the full node suite (405 pass).
 
 ## Next step
-C1 tokens.
+C2 theme provider.
