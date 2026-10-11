@@ -297,6 +297,6 @@ export function tooltipFit(width: number): { containerWidth: number; className?:
   if (width >= 480) return { containerWidth: width };
   return {
     containerWidth: width * 1.2,
-    className: "min-w-[112px] max-w-[calc(50cqw-16px)]",
+    className: "min-w-28 max-w-[calc(50cqw-16px)]",
   };
 }

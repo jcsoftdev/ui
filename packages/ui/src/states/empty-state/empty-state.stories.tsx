@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CalendarX, Package } from "lucide-react";
 import { Button } from "../../atoms/button/index.js";
+import { CalendarX, Package } from "../../icons/index.js";
 import { EmptyState } from "./empty-state.js";
 
 const meta = {

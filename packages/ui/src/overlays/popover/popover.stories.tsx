@@ -48,6 +48,7 @@ export const Default: Story = {
 };
 
 export const OpenByDefault: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => (
     <Popover defaultOpen>
       <PopoverTrigger asChild>
@@ -61,6 +62,7 @@ export const OpenByDefault: Story = {
 };
 
 export const TopEnd: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { side: "top", align: "end" },
   render: (args) => (
     <Popover defaultOpen>

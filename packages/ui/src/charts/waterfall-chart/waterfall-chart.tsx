@@ -366,7 +366,7 @@ function WaterfallPlot({
                     x={shape.x + x.bandwidth / 2}
                     y={shape.top - 6}
                     textAnchor="middle"
-                    className="font-bold text-[11px] tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{
                       fill:
                         shape.bar.kind === "increase"
@@ -570,7 +570,7 @@ function HorizontalWaterfallPlot({
                   x={shape.right + 6}
                   y={shape.y + band.bandwidth / 2}
                   dy="0.34em"
-                  className="font-bold text-[11px] tabular-nums"
+                  className="font-bold text-fs-110 tabular-nums"
                   style={{
                     fill:
                       shape.bar.kind === "increase"

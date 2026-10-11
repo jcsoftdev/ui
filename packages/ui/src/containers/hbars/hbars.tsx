@@ -110,10 +110,10 @@ export function HBars({
       >
         {rows.map((row) => (
           <Fragment key={row.id}>
-            <span className="truncate font-semibold text-[12.5px]">{row.name}</span>
-            <div className="relative flex h-[22px] items-center border-r-divider bg-[linear-gradient(to_right,var(--line)_1px,transparent_1px)] [background-size:20%_100%]">
+            <span className="truncate font-semibold text-fs-125">{row.name}</span>
+            <div className="relative flex h-5.5 items-center border-r-divider bg-[linear-gradient(to_right,var(--line)_1px,transparent_1px)] [background-size:20%_100%]">
               {paired ? (
-                <div className="flex h-[26px] w-full flex-col items-start justify-center gap-[3px]">
+                <div className="flex h-6.5 w-full flex-col items-start justify-center gap-0.75">
                   {row.values.map((value, index) => (
                     <div
                       key={series[index]?.id ?? index}
@@ -148,7 +148,7 @@ export function HBars({
             </div>
             <span
               className={cn(
-                "text-right font-semibold text-[12px] leading-none tabular-nums",
+                "text-right font-semibold text-fs-120 leading-none tabular-nums",
                 paired && "leading-[1.25]",
                 row.tone === "danger" && "text-danger",
               )}
@@ -164,7 +164,7 @@ export function HBars({
               {ticks.map((tick) => (
                 <span
                   key={tick.position}
-                  className="-translate-x-1/2 absolute font-medium text-[10.5px] text-ink-3 leading-none tabular-nums"
+                  className="-translate-x-1/2 absolute font-medium text-fs-105 text-ink-3 leading-none tabular-nums"
                   style={{ left: `${tick.position}%` }}
                 >
                   {tick.label}

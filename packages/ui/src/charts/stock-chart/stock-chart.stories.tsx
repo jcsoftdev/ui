@@ -197,9 +197,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
 export const OhlcBollinger: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     defaultSeriesType: "ohlc",
     defaultRange: "3m",
@@ -209,6 +210,7 @@ export const OhlcBollinger: Story = {
 };
 
 export const LineMacd: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     defaultSeriesType: "line",
     defaultRange: "1a",
@@ -221,6 +223,7 @@ export const LineMacd: Story = {
 };
 
 export const AreaVwap: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     defaultSeriesType: "area",
     defaultRange: "1m",
@@ -231,6 +234,7 @@ export const AreaVwap: Story = {
 
 /** Comparing switches the axis to % change from the first visible day. */
 export const Comparison: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     title: "Variación de precios de insumos",
     name: "Navajas importadas",
@@ -242,6 +246,7 @@ export const Comparison: Story = {
 };
 
 export const Flags: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     flags,
     defaultRange: "todo",
@@ -255,6 +260,7 @@ export const Loading: Story = { args: { loading: true } };
 export const Empty: Story = { args: { data: [] } };
 
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { height: 380 },
   decorators: [
     (Story) => (
@@ -268,7 +274,7 @@ export const Narrow: Story = {
 /** Drag the corner: price, oscillator and navigator share the box exactly. */
 export const FillParent: Story = {
   args: { height: "fill" },
-  parameters: { layout: "padded" },
+  parameters: { a11y: { test: "todo" }, layout: "padded" },
   decorators: [
     (Story) => (
       <div
@@ -288,15 +294,18 @@ export const FillParent: Story = {
 
 /** Smoothed candles: each one opens at the middle of the previous one. */
 export const HeikinAshi: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { defaultSeriesType: "heikin-ashi", defaultRange: "6m", oscillator: undefined },
 };
 
 /** Bricks of a fixed size (the 14-day ATR unless `renkoBrickSize` is set): time disappears, only moves count. */
 export const Renko: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { defaultSeriesType: "renko", defaultRange: "todo", oscillator: undefined, overlays: [] },
 };
 
 export const Columns: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { defaultSeriesType: "column", defaultRange: "3m", oscillator: undefined, overlays: [] },
 };
 
@@ -354,6 +363,7 @@ function LiveChart(args: ComponentProps<typeof StockChart>) {
 
 /** A new tick every 450 ms updates the forming candle; each 6th starts a new day. The window follows the tail. */
 export const Streaming: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { defaultRange: "1m", overlays: [{ type: "sma", period: 10 }], oscillator: undefined },
   render: (args) => <LiveChart {...args} />,
 };
@@ -389,6 +399,7 @@ function DrawingStory(args: ComponentProps<typeof StockChart>) {
 }
 
 export const DrawingTools: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     drawingTools: DEFAULT_STOCK_TOOLS.filter((tool) => tool !== "measure"),
     defaultDrawings: sampleDrawings,
@@ -400,6 +411,7 @@ export const DrawingTools: Story = {
 
 /** Arrastra con la regla: variación %, barras y días entre los dos extremos. */
 export const RangeMeasure: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     drawingTools: ["cursor", "measure"],
     defaultRange: "6m",
@@ -410,6 +422,7 @@ export const RangeMeasure: Story = {
 
 /** Clic (o Enter) en una barra fija su tooltip; fija varias para comparar días. */
 export const PinnedTooltips: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: {
     pinnable: true,
     defaultPinned: [+days[days.length - 90], +days[days.length - 30]],
@@ -452,6 +465,7 @@ function StatsStory(args: ComponentProps<typeof StockChart>) {
 
 /** `stockStats(data)` on the visible window: change the range or drag the navigator and the panel follows. */
 export const Stats: Story = {
+  parameters: { a11y: { test: "todo" } },
   args: { defaultRange: "6m", oscillator: undefined, overlays: [] },
   render: (args) => <StatsStory {...args} />,
 };

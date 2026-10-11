@@ -173,7 +173,7 @@ export function BarRaceChart({
             }}
             className="h-1.5 min-w-0 flex-1 cursor-pointer accent-(--accent)"
           />
-          <span className="min-w-12 text-right font-bold text-[12px] text-ink-2 tabular-nums">
+          <span className="min-w-12 text-right font-bold text-fs-120 text-ink-2 tabular-nums">
             {caption}
           </span>
         </div>
@@ -254,7 +254,7 @@ function RacePlot({
         x={width - 2}
         y={height - 6}
         textAnchor="end"
-        className="pointer-events-none font-extrabold text-[44px] tabular-nums"
+        className="pointer-events-none font-extrabold text-fs-440 tabular-nums"
         style={{ fill: "var(--ink-3)", fillOpacity: 0.22 }}
       >
         {caption}
@@ -280,7 +280,7 @@ function RacePlot({
                   y={barHeight / 2}
                   dy="0.34em"
                   textAnchor="end"
-                  className="font-semibold text-[12px]"
+                  className="font-semibold text-fs-120"
                   style={{ fill: "var(--ink-2)" }}
                 >
                   {entity.name}
@@ -289,7 +289,7 @@ function RacePlot({
                   x={length + 8}
                   y={barHeight / 2}
                   dy="0.34em"
-                  className="font-bold text-[11px] tabular-nums"
+                  className="font-bold text-fs-110 tabular-nums"
                   style={{ fill: "var(--ink-2)" }}
                 >
                   {fmt(item.value)}

@@ -408,7 +408,7 @@ function RosePlot({
             x={cx + 4}
             y={cy - ring.r - 3}
             {...DECORATIVE}
-            className="pointer-events-none fill-ink-3 text-[9.5px] tabular-nums"
+            className="pointer-events-none fill-ink-3 text-fs-95 tabular-nums"
             style={{ paintOrder: "stroke", stroke: "var(--surface)", strokeWidth: 3 }}
           >
             {axisFormat(ring.value)}
@@ -431,7 +431,7 @@ function RosePlot({
                   textAnchor={sin > 0.25 ? "start" : sin < -0.25 ? "end" : "middle"}
                   {...DECORATIVE}
                   className={cn(
-                    "pointer-events-none text-[11px] motion-safe:transition-opacity motion-safe:duration-150",
+                    "pointer-events-none text-fs-110 motion-safe:transition-opacity motion-safe:duration-150",
                     focusIndex === sector.index ? "fill-ink font-bold" : "fill-ink-2 font-semibold",
                   )}
                   style={{ opacity: focusIndex != null && focusIndex !== sector.index ? 0.4 : 1 }}

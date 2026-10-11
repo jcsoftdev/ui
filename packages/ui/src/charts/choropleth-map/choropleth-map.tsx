@@ -163,7 +163,7 @@ export function ChoroplethMap({
             aria-pressed={tableOpen}
             onClick={() => setTableOpen((open) => !open)}
             className={cn(
-              "cursor-pointer rounded-button border-0 px-3 py-1 font-semibold text-[12px] outline-none focus-visible:outline-2 focus-visible:outline-accent-ink",
+              "cursor-pointer rounded-button border-0 px-3 py-1 font-semibold text-fs-120 outline-none focus-visible:outline-2 focus-visible:outline-accent-ink",
               tableOpen ? "bg-surface-2 text-ink" : "bg-surface-2 text-ink-3 hover:text-ink",
             )}
           >

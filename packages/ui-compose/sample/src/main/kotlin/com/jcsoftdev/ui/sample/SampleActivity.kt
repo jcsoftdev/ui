@@ -3,17 +3,26 @@ package com.jcsoftdev.ui.sample
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.activity.enableEdgeToEdge
+import com.jcsoftdev.ui.foundation.ProvideAndroidBack
 
 class SampleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        val screen = intent.getStringExtra("screen")
         setContent {
-            Box(Modifier.fillMaxSize().background(Color.White))
+            ProvideAndroidBack {
+                when (screen) {
+                    "forms" -> FormsGallery()
+                    "overlays" -> OverlaysGallery()
+                    "icons" -> IconsGallery()
+                    "custom" -> CustomThemeGallery()
+                    "headless" -> HeadlessGallery()
+                    "states" -> StatesGallery()
+                    else -> AtomsGallery()
+                }
+            }
         }
     }
 }

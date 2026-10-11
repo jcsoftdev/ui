@@ -1,10 +1,18 @@
 "use client";
 
 import { useId, useState } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type ButtonOption, OptionShell, optionGridClass } from "../internal/button-option.js";
+import {
+  type ButtonOption,
+  type ButtonOptionPart,
+  OptionShell,
+  optionGridClass,
+} from "../internal/button-option.js";
 
 export type RadioButtonOption = ButtonOption;
+
+export type RadioButtonGroupPart = "root" | ButtonOptionPart;
 
 export interface RadioButtonGroupProps {
   options: RadioButtonOption[];
@@ -16,6 +24,8 @@ export interface RadioButtonGroupProps {
   "aria-label"?: string;
   "aria-labelledby"?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<RadioButtonGroupPart>;
 }
 
 /**
@@ -31,6 +41,7 @@ export function RadioButtonGroup({
   name,
   disabled,
   className,
+  classNames,
   ...aria
 }: RadioButtonGroupProps) {
   const generated = useId();
@@ -40,13 +51,14 @@ export function RadioButtonGroup({
   return (
     <div
       role="radiogroup"
-      className={cn("@container/options", optionGridClass, className)}
+      className={cn("@container/options", optionGridClass, classNames?.root, className)}
       {...aria}
     >
       {options.map((option) => (
         <OptionShell
           key={option.value}
           option={option}
+          classNames={classNames}
           input={
             <input
               type="radio"

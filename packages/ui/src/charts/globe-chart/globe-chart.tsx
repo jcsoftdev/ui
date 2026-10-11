@@ -547,7 +547,7 @@ function GlobePlot({
   const activeRegion = hover?.kind === "region" ? regions[hover.index] : undefined;
   const activePoint = hover?.kind === "point" ? points[hover.index] : undefined;
   const buttonClass =
-    "inline-flex h-7 cursor-pointer items-center rounded-button border-0 bg-surface-2 px-3 font-semibold text-[12px] text-ink-2 outline-none hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink";
+    "inline-flex h-7 cursor-pointer items-center rounded-button border-0 bg-surface-2 px-3 font-semibold text-fs-120 text-ink-2 outline-none hover:bg-sunken hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink";
 
   return (
     <div className="relative" style={{ width, height }}>
