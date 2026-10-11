@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Paperclip } from "lucide-react";
 import { useState } from "react";
+import { Paperclip } from "../../icons/index.js";
 import { Attachment } from "../attachment/attachment.js";
 import { PromptInput } from "./prompt-input.js";
 

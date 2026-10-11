@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AlertTriangle, CheckCircle2, Info, XOctagon } from "lucide-react";
 import { Button } from "../../atoms/button/button.js";
+import { AlertTriangle, CheckCircle2, Info, XOctagon } from "../../icons/index.js";
 import { Banner } from "./banner.js";
 
 const meta = {

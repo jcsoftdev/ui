@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Scissors } from "lucide-react";
+import { Scissors } from "../../icons/index.js";
 import { Chip, type ChipTone } from "./chip.js";
 
 const tones: ChipTone[] = [

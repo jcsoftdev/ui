@@ -1,4 +1,3 @@
-import { Plus, Scissors, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "../atoms/avatar/index.js";
 import { Button } from "../atoms/button/index.js";
@@ -16,6 +15,7 @@ import { AccentPicker } from "../forms/accent-picker/index.js";
 import { Input } from "../forms/input/index.js";
 import { Select } from "../forms/select/index.js";
 import { Textarea } from "../forms/textarea/index.js";
+import { Plus, Scissors, Trash2 } from "../icons/index.js";
 import { Segmented, SegmentedItem } from "../navigation/segmented/index.js";
 import {
   Dialog,

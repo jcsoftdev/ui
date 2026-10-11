@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   Columns3,
   Download,
@@ -12,8 +13,7 @@ import {
   Trash2,
   Undo2,
   X,
-} from "lucide-react";
-import type { ReactNode } from "react";
+} from "../../icons/index.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";

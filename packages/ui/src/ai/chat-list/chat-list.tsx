@@ -1,8 +1,8 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { Button } from "../../atoms/button/button.js";
+import { Plus, Trash2 } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 import { groupByDate } from "./group.js";

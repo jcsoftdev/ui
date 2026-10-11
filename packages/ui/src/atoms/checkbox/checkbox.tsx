@@ -1,7 +1,7 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { type ComponentProps, useRef } from "react";
+import { Check } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";

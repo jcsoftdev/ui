@@ -3,7 +3,7 @@ import { cn } from "../../utils/cn.js";
 import { Input, type InputProps } from "../input/index.js";
 
 export interface InputIconProps extends InputProps {
-  /** Leading icon element (e.g. a lucide-react icon). */
+  /** Leading icon element (e.g. an `@jcsoftdev/ui/icons` icon). */
   icon: ReactNode;
 }
 

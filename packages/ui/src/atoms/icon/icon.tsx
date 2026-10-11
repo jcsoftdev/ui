@@ -1,11 +1,11 @@
-import type { LucideIcon } from "lucide-react";
+import type { IconComponent } from "../../icons/index.js";
 import { type IconName, icons } from "./icon-map.js";
 
 export interface IconProps {
   /** Registry name; ignored when `icon` is provided. */
   name?: IconName;
-  /** Any lucide icon component. */
-  icon?: LucideIcon;
+  /** Any icon component (see `@jcsoftdev/ui/icons`). */
+  icon?: IconComponent;
   /** Accessible label. Without it the icon is decorative (aria-hidden). */
   label?: string;
   className?: string;

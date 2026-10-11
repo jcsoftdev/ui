@@ -1,6 +1,6 @@
-import { CircleAlert } from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Avatar } from "../../atoms/avatar/avatar.js";
+import { CircleAlert } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { Loader } from "../loader/loader.js";
 import { Markdown } from "../markdown/markdown.js";

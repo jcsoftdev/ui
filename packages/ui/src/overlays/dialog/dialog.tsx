@@ -1,9 +1,9 @@
 "use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { useUiStrings } from "../../i18n/index.js";
+import { X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   PreviousFocusProvider,

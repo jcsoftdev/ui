@@ -1,7 +1,7 @@
 "use client";
 
-import { Upload } from "lucide-react";
 import { type ChangeEvent, type DragEvent, useRef, useState } from "react";
+import { Upload } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 export type DropzoneRejectionReason = "type" | "size";

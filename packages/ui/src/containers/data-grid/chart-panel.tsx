@@ -1,12 +1,12 @@
 "use client";
 
-import { BarChart2, X } from "lucide-react";
 import { useMemo } from "react";
 import { AreaChart } from "../../charts/area-chart/area-chart.js";
 import { BarChart } from "../../charts/bar-chart/bar-chart.js";
 import type { ValueFormat } from "../../charts/core/format.js";
 import { LineChart } from "../../charts/line-chart/line-chart.js";
 import { PieChart } from "../../charts/pie-chart/pie-chart.js";
+import { BarChart2, X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   availableKinds,

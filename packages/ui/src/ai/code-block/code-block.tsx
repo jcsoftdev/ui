@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
 import { useMemo } from "react";
+import { Check, Copy } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 import { useCopy } from "../internal/use-copy.js";

@@ -1,5 +1,5 @@
-import { ChevronsUpDown } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import { ChevronsUpDown } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 export interface InlineSelectOption {

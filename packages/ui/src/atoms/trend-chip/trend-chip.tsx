@@ -1,5 +1,5 @@
-import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   formatTrend,

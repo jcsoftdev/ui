@@ -1,5 +1,6 @@
 "use client";
 
+import { type KeyboardEvent, useMemo, useRef, useState } from "react";
 import {
   ChevronRight,
   File,
@@ -8,9 +9,8 @@ import {
   FileText,
   Folder,
   FolderOpen,
-  type LucideIcon,
-} from "lucide-react";
-import { type KeyboardEvent, useMemo, useRef, useState } from "react";
+  type IconComponent,
+} from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   type FileTreeNode,
@@ -43,7 +43,7 @@ const TREE_KEYS: readonly string[] = [
   "End",
 ];
 
-function iconFor(name: string): LucideIcon {
+function iconFor(name: string): IconComponent {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
   if (["png", "jpg", "jpeg", "gif", "svg", "webp"].includes(ext)) return FileImage;
   if (["ts", "tsx", "js", "jsx", "json", "css", "html"].includes(ext)) return FileCode;

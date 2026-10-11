@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Banknote, CreditCard, Smartphone } from "lucide-react";
+import { Banknote, CreditCard, Smartphone } from "../../icons/index.js";
 import { RadioButtonGroup } from "./radio-button-group.js";
 
 const options = [

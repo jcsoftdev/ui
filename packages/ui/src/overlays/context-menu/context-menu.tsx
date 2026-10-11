@@ -1,7 +1,6 @@
 "use client";
 
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { Check } from "lucide-react";
 import {
   type ComponentPropsWithoutRef,
   createContext,
@@ -16,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Check } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 interface ContextMenuState {

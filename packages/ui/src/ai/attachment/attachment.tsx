@@ -1,5 +1,5 @@
-import { CircleAlert, FileText, X } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import { CircleAlert, FileText, X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
 

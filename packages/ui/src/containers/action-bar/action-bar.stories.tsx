@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Archive, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../atoms/button/button.js";
+import { Archive, Send, Trash2 } from "../../icons/index.js";
 import { ActionBar } from "./action-bar.js";
 
 const clientes = [

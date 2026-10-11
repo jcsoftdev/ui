@@ -1,6 +1,5 @@
 "use client";
 
-import { Bold, Heading2, Italic, Link2, List, ListOrdered, Underline, Unlink } from "lucide-react";
 import {
   type ClipboardEvent,
   type KeyboardEvent,
@@ -12,6 +11,16 @@ import {
   useRef,
   useState,
 } from "react";
+import {
+  Bold,
+  Heading2,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Underline,
+  Unlink,
+} from "../icons/index.js";
 import { cn } from "../utils/cn.js";
 import { htmlToText, isSafeUrl, sanitizeHtml } from "./sanitize.js";
 

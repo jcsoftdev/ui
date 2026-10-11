@@ -1,6 +1,5 @@
 "use client";
 
-import { GripVertical } from "lucide-react";
 import {
   type KeyboardEvent,
   type ReactNode,
@@ -13,6 +12,7 @@ import {
 } from "react";
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import { Chip } from "../../atoms/chip/chip.js";
+import { GripVertical } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   dropIndex,
