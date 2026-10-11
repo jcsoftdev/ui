@@ -147,21 +147,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Compact: Story = {
-  parameters: { a11y: { test: "todo" } },
   globals: { density: "compact" },
 };
 
 export const RadiusOverride: Story = {
-  parameters: { a11y: { test: "todo" } },
   globals: { radius: "full" },
 };
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   globals: { container: "320" },
 };

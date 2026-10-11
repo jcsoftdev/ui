@@ -38,9 +38,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Downloads the sibling drawing as SVG or PNG. */
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Spanish: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { texts: { export: "Exportar", svg: "SVG", png: "PNG" } },
 };

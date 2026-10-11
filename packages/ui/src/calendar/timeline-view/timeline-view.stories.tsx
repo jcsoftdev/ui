@@ -121,20 +121,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const EmptyToday: Story = { args: { events: [], markers: [] } };
 
 export const HiddenDates: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: { hiddenDates: ["2026-10-09", "2026-10-10"] },
 };
 
-export const MarkersOnly: Story = { parameters: { a11y: { test: "todo" } }, args: { events: [] } };
+export const MarkersOnly: Story = { args: { events: [] } };
 
 /** 320 px container: use it to check the narrow layout without resizing the viewport. */
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="@container/page w-[320px] max-w-full">

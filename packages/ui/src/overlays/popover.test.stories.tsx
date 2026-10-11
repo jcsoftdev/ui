@@ -523,7 +523,6 @@ export const ClickingTriggerWhileOpenClosesEvenIfAncestorTakesFocus: Story = {
       </Popover>
     </div>
   ),
-  parameters: { a11y: { test: "todo" } },
   play: async ({ canvasElement }) => {
     await open(canvasElement);
     await screen.findByRole("dialog", { name: "Ficha" });

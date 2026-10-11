@@ -48,10 +48,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -76,7 +75,6 @@ export const SafeByDefault: Story = {
 };
 
 export const PresetBrutal: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="bg-bg p-card">

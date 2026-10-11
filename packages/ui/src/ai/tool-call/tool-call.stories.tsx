@@ -34,14 +34,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Running: Story = {
   args: { status: "running", result: undefined, duration: undefined, defaultOpen: false },
 };
 
 export const Failed: Story = {
-  parameters: { a11y: { test: "todo" } },
   args: {
     status: "error",
     error: "No se pudo conectar con la agenda. Inténtalo de nuevo.",
@@ -50,7 +49,6 @@ export const Failed: Story = {
 };
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -61,7 +59,6 @@ export const Narrow: Story = {
 };
 
 export const PresetBrutal: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal" className="bg-bg p-card">

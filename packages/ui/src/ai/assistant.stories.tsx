@@ -266,10 +266,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Full chat with simulated streaming: press a suggestion or type a message. */
-export const Default: Story = { parameters: { a11y: { test: "todo" } } };
+export const Default: Story = {};
 
 export const Narrow: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div className="w-[320px]">
@@ -280,7 +279,6 @@ export const Narrow: Story = {
 };
 
 export const PresetBrutal: Story = {
-  parameters: { a11y: { test: "todo" } },
   decorators: [
     (Story) => (
       <div data-style="brutal">

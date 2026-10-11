@@ -143,7 +143,7 @@ type Story = StoryObj<typeof meta>;
 export const Soft: Story = { args: { style: "soft" } };
 export const Bordered: Story = { args: { style: "bordered" } };
 export const Elevated: Story = { args: { style: "elevated" } };
-export const Flat: Story = { parameters: { a11y: { test: "todo" } }, args: { style: "flat" } };
+export const Flat: Story = { args: { style: "flat" } };
 export const Glass: Story = { args: { style: "glass" } };
 export const Brutal: Story = { args: { style: "brutal" } };
 
@@ -156,6 +156,5 @@ export const BrutalDark: Story = { args: { style: "brutal" }, globals: { theme: 
 
 /** Six cells, one per preset, in a container-query grid with the snippet to copy. */
 export const PresetGallery: Story = {
-  parameters: { a11y: { test: "todo" } },
   render: () => <Gallery />,
 };
