@@ -27,7 +27,7 @@ export interface DismissableLayerOptions {
   onDismiss: () => void;
 }
 
-/** Layers from libraries outside this stack that can be open inside a dialog (the command palette listbox, until T12). */
+/** Layers from libraries outside this stack that can be open inside a dialog (a third-party combobox listbox). */
 const FOREIGN_LAYER = "[role=listbox][data-state=open], [role=combobox][aria-expanded=true]";
 
 /**
@@ -36,6 +36,9 @@ const FOREIGN_LAYER = "[role=listbox][data-state=open], [role=combobox][aria-exp
  */
 export const LAYER_BRANCH_ATTRIBUTE = "data-ui-layer-branch";
 const LAYER_BRANCH = `[${LAYER_BRANCH_ATTRIBUTE}]`;
+
+/** An in-content widget that wants this Escape for itself (a command input with a query to clear). */
+const ESCAPE_CLAIM = "[data-ui-escape-claim]";
 
 /** Owned by something else that handles its own Escape (a toast). */
 const NOT_OURS = '[aria-live]:not([aria-live="off"]), [data-ui-overlay-ignore]';
@@ -88,6 +91,7 @@ export function useDismissableLayer(options: DismissableLayerOptions) {
     // not yet migrated to this layer stack) belongs to that child, which closes itself.
     const belongsToForeignLayer = (event: KeyboardEvent) => {
       const node = latest.current.ref.current;
+      if (event.target instanceof Element && event.target.closest(ESCAPE_CLAIM)) return true;
       if (!node || node.contains(event.target as Node | null)) return false;
       const target = event.target;
       if (

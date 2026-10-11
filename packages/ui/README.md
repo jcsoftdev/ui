@@ -191,9 +191,9 @@ import { Chip, Avatar } from "@jcsoftdev/ui/atoms";     // group entry: still tr
 ```
 
 Entries: `atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `utils`, `icons`
-(each also as `<group>/<component>`), plus `styles/*` and `tokens/*`. Runtime dependencies (Radix,
-cmdk, sonner) are regular `dependencies`, so a consumer that imports one component only bundles that component's
-dependencies. Components that need state are marked `"use client"`.
+(each also as `<group>/<component>`), plus `styles/*` and `tokens/*`. The package has no runtime
+dependencies (only the `react` and `react-dom` peers), so a consumer that imports one component only bundles that
+component's own code. Components that need state are marked `"use client"`.
 
 Tailwind needs to see the class names inside the package: add `@source "…/node_modules/@jcsoftdev/ui/dist";`
 (see Quickstart). Each component's styling is plain Tailwind classes over tokens; there are no per-component CSS files.
