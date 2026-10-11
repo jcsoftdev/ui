@@ -40,3 +40,17 @@ test("preset edges keep their color override", () => {
   assert.equal(cn("border-control", "border-accent"), "border-control border-accent");
   assert.equal(cn("border-card", "border-0"), "border-0");
 });
+
+test("joins clsx input shapes and skips falsy values", () => {
+  assert.equal(cn("a", 0, 1, null, undefined, false, true, "", "b"), "a 1 b");
+  assert.equal(cn(["a", ["b", [null, "c"]]], "d"), "a b c d");
+  assert.equal(cn({ a: true, b: false, c: 1, d: 0, e: "x", f: null }), "a c e");
+  assert.equal(cn("a", { b: true }, ["c", { d: false, e: true }]), "a b c e");
+  assert.equal(cn(), "");
+  assert.equal(cn(10n, "x"), "10 x");
+});
+
+test("still resolves conflicts across object and array inputs", () => {
+  assert.equal(cn("p-2", { "p-4": true }, ["p-6"]), "p-6");
+  assert.equal(cn("p-2", { "p-4": false }), "p-2");
+});
