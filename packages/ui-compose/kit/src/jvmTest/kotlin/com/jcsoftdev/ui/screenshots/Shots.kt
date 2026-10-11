@@ -40,8 +40,9 @@ internal enum class Look(
 
 private const val SHOT_DENSITY = 1.5f
 
-// Goldens are recorded on one OS and verified on another in CI; glyph rasterization differs slightly between them, so a
-// small share of changed pixels is tolerated. Layout, color and size changes move far more than that.
+// The goldens of record are Linux ones, recorded by the `ui-compose-record` workflow on ubuntu (CI is the source of
+// truth). A local run on macOS differs by glyph rasterization, which this small share of changed pixels tolerates
+// when only checking roughly; CI verifies the same goldens with the same threshold.
 private val Options =
     RoborazziOptions(compareOptions = RoborazziOptions.CompareOptions(changeThreshold = 0.03f))
 

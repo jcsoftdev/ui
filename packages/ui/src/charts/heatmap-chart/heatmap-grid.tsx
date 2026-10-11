@@ -338,7 +338,7 @@ export function HeatmapGrid({
             textAnchor="end"
             dominantBaseline="central"
             className={cn(
-              "select-none text-[11px] transition-[fill] duration-150",
+              "select-none text-fs-110 transition-[fill] duration-150",
               lit?.row === row ? "fill-ink font-bold" : "fill-ink-3 font-semibold",
             )}
           >
@@ -354,7 +354,7 @@ export function HeatmapGrid({
             y={TOP - 8}
             textAnchor={square && !honeycomb ? "start" : "middle"}
             className={cn(
-              "select-none text-[11px] transition-[fill] duration-150",
+              "select-none text-fs-110 transition-[fill] duration-150",
               lit?.column === index ? "fill-ink font-bold" : "fill-ink-3 font-semibold",
             )}
           >
@@ -393,7 +393,7 @@ export function HeatmapGrid({
                             y={c.y}
                             textAnchor="middle"
                             dominantBaseline="central"
-                            className="pointer-events-none select-none font-bold text-[11px] tabular-nums"
+                            className="pointer-events-none select-none font-bold text-fs-110 tabular-nums"
                             style={{ fill: inkOn(stop?.strength ?? 0) }}
                           >
                             {text}
@@ -428,7 +428,7 @@ export function HeatmapGrid({
                           y={y + ch / 2}
                           textAnchor="middle"
                           dominantBaseline="central"
-                          className="pointer-events-none select-none font-bold text-[11px] tabular-nums"
+                          className="pointer-events-none select-none font-bold text-fs-110 tabular-nums"
                           style={{
                             fill: inkOn(stop?.strength ?? 0),
                             opacity: dimmed ? 0.5 : 1,
@@ -550,7 +550,7 @@ export function HeatmapLegend({
 }: HeatmapLegendProps) {
   if (ranges && ranges.length > 0) {
     return (
-      <ul className="@md/chart:-order-1 m-0 flex list-none flex-wrap @md/chart:justify-end gap-x-3 gap-y-1 p-0 text-[12px]">
+      <ul className="@md/chart:-order-1 m-0 flex list-none flex-wrap @md/chart:justify-end gap-x-3 gap-y-1 p-0 text-fs-120">
         {ranges.map((range, index) => (
           <li
             key={range.label}
@@ -558,7 +558,7 @@ export function HeatmapLegend({
           >
             <span
               aria-hidden="true"
-              className="size-2.5 shrink-0 rounded-[3px]"
+              className="size-2.5 shrink-0 rounded-xs"
               style={{
                 background: rangeColor(range, index, ranges.length).color,
               }}
@@ -572,7 +572,7 @@ export function HeatmapLegend({
   return (
     <div
       aria-hidden="true"
-      className="@md/chart:-order-1 flex w-full max-w-[260px] @md/chart:self-end flex-col gap-1 text-[11px] text-ink-3 tabular-nums"
+      className="@md/chart:-order-1 flex w-full max-w-[260px] @md/chart:self-end flex-col gap-1 text-fs-110 text-ink-3 tabular-nums"
     >
       <span
         className="h-2 w-full rounded-pill"

@@ -28,5 +28,21 @@ jobs:
       - name: Typecheck (the site resolves the built library)
         run: pnpm typecheck
       - run: pnpm check:treeshake
+      - run: pnpm check:dist-imports
+      - run: pnpm check:docs-examples
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('./packages/ui/node_modules/playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Playwright Chromium
+        run: pnpm --filter @jcsoftdev/ui exec playwright install --with-deps chromium
+      - name: Storybook stories as browser tests
+        env:
+          STORYBOOK_DISABLE_TELEMETRY: "1"
+        run: pnpm --filter @jcsoftdev/ui test:stories
       - name: Build site
         run: pnpm build:site

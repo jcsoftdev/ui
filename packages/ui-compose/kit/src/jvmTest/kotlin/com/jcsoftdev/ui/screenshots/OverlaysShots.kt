@@ -31,7 +31,7 @@ class OverlaysShots {
         }
 
     @Test fun dialog() =
-        shoot("overlays", "dialog", height = 360.dp) {
+        shoot("overlays", "dialog", height = 440.dp) {
             Dialog(
                 open = true,
                 onDismissRequest = {},

@@ -397,7 +397,7 @@ const TreemapCells = memo(function TreemapCells({
               <text
                 x={cell.x0 + 8}
                 y={cell.y0 + 16}
-                className="pointer-events-none select-none font-bold text-[12px]"
+                className="pointer-events-none select-none font-bold text-fs-120"
                 style={{ fill: "var(--ink)" }}
               >
                 {label}
@@ -411,7 +411,7 @@ const TreemapCells = memo(function TreemapCells({
               <text
                 x={cell.x0 + 8}
                 y={cell.y0 + 18}
-                className="pointer-events-none select-none font-semibold text-[12px]"
+                className="pointer-events-none select-none font-semibold text-fs-120"
                 style={{ fill: ink }}
               >
                 {label}
@@ -419,7 +419,7 @@ const TreemapCells = memo(function TreemapCells({
                   <tspan
                     x={cell.x0 + 8}
                     dy={17}
-                    className="font-bold text-[11px] tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{ fill: ink, opacity: 0.78 }}
                   >
                     {value}
