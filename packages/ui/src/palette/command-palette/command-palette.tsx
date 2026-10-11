@@ -1,8 +1,8 @@
 "use client";
 
-import { Command, useCommandState } from "cmdk";
 import type { ReactNode } from "react";
 import { Search } from "../../icons/index.js";
+import * as Command from "../../primitives/command/command.js";
 import { cn } from "../../utils/cn.js";
 
 export interface CommandPaletteItem {
@@ -47,7 +47,7 @@ function groupItems(items: CommandPaletteItem[]): [string, CommandPaletteItem[]]
 }
 
 function ResultCount({ format }: { format: (count: number) => string }) {
-  const count = useCommandState((state) => state.filtered.count);
+  const count = Command.useCommandState((state) => state.filtered.count);
   return (
     <span data-palette-results aria-live="polite" className="sr-only">
       {format(count)}
@@ -55,7 +55,7 @@ function ResultCount({ format }: { format: (count: number) => string }) {
   );
 }
 
-/** Global search/command palette built on `cmdk`, shown in a modal dialog. */
+/** Global search/command palette built on the in-house command primitive, shown in a modal dialog. */
 export function CommandPalette({
   open,
   onClose,
@@ -101,7 +101,7 @@ export function CommandPalette({
           <Command.Group
             key={group}
             heading={group}
-            className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-1.5 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-meta [&_[cmdk-group-heading]]:text-ink-3"
+            className="[&_[data-ui-command-group-heading]]:px-2.5 [&_[data-ui-command-group-heading]]:pt-1.5 [&_[data-ui-command-group-heading]]:pb-1 [&_[data-ui-command-group-heading]]:text-meta [&_[data-ui-command-group-heading]]:text-ink-3"
           >
             {groupItemsList.map((item) => (
               <Command.Item

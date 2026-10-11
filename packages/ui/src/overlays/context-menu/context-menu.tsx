@@ -1,6 +1,5 @@
 "use client";
 
-import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import {
   type ComponentPropsWithoutRef,
   createContext,
@@ -16,6 +15,7 @@ import {
   useState,
 } from "react";
 import { Check } from "../../icons/index.js";
+import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
 
 interface ContextMenuState {
@@ -73,7 +73,7 @@ export function ContextMenu({
   return (
     <ContextMenuContext.Provider value={state}>
       <MenuPrimitive.Root open={open} onOpenChange={change} modal={false}>
-        <MenuPrimitive.Trigger asChild>
+        <MenuPrimitive.Anchor asChild>
           <span
             aria-hidden="true"
             tabIndex={-1}
@@ -86,7 +86,7 @@ export function ContextMenu({
               pointerEvents: "none",
             }}
           />
-        </MenuPrimitive.Trigger>
+        </MenuPrimitive.Anchor>
         {children}
       </MenuPrimitive.Root>
     </ContextMenuContext.Provider>
@@ -157,7 +157,7 @@ export function ContextMenuTrigger({
 }
 
 export interface ContextMenuContentProps
-  extends Omit<ComponentPropsWithoutRef<typeof MenuPrimitive.Content>, "side" | "align"> {
+  extends Omit<MenuPrimitive.MenuContentProps, "side" | "align"> {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
 }
@@ -182,7 +182,7 @@ export function ContextMenuContent({
           event.preventDefault();
         }}
         className={cn(
-          "z-85 max-h-(--radix-dropdown-menu-content-available-height) min-w-48 max-w-(--radix-dropdown-menu-content-available-width) overflow-y-auto rounded-popover border-card surface-overlay bg-surface-overlay p-1.5 text-ink shadow-overlay",
+          "z-85 max-h-(--ui-popper-available-height) min-w-48 max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover border-card surface-overlay bg-surface-overlay p-1.5 text-ink shadow-overlay",
           className,
         )}
         {...props}
@@ -194,7 +194,7 @@ export function ContextMenuContent({
 const itemBase =
   "relative flex min-h-control-sm w-full cursor-pointer select-none items-center gap-density-sm rounded-button px-control-x text-body outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-surface-2 [&_svg]:size-4 [&_svg]:shrink-0";
 
-export interface ContextMenuItemProps extends ComponentPropsWithoutRef<typeof MenuPrimitive.Item> {
+export interface ContextMenuItemProps extends MenuPrimitive.MenuItemProps {
   /** Destructive action styling. */
   tone?: "default" | "danger";
 }
@@ -208,9 +208,7 @@ export function ContextMenuItem({ className, tone = "default", ...props }: Conte
   );
 }
 
-export type ContextMenuCheckboxItemProps = ComponentPropsWithoutRef<
-  typeof MenuPrimitive.CheckboxItem
->;
+export type ContextMenuCheckboxItemProps = MenuPrimitive.MenuCheckboxItemProps;
 
 export function ContextMenuCheckboxItem({
   className,
@@ -238,10 +236,7 @@ export function ContextMenuLabel({ className, ...props }: HTMLAttributes<HTMLDiv
   );
 }
 
-export function ContextMenuSeparator({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<typeof MenuPrimitive.Separator>) {
+export function ContextMenuSeparator({ className, ...props }: ComponentPropsWithoutRef<"div">) {
   return <MenuPrimitive.Separator className={cn("my-1 h-px bg-divider", className)} {...props} />;
 }
 

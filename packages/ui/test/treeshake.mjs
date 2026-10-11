@@ -28,7 +28,6 @@ for (const banned of [
   "primitives/",
   "dropdown-menu",
   "popover",
-  "cmdk",
   "lucide",
   "icons/",
   "checkbox",
@@ -47,7 +46,14 @@ for (const banned of [
 const confirm = await inputsFor(
   `import { ConfirmAction } from "@jcsoftdev/ui/containers/confirm-action"; console.log(ConfirmAction);`,
 );
-for (const banned of ["responsive-list", "table/", "dialog", "popover", "dropdown-menu", "cmdk"]) {
+for (const banned of [
+  "responsive-list",
+  "table/",
+  "dialog",
+  "popover",
+  "dropdown-menu",
+  "primitives/command",
+]) {
   assert.ok(
     !confirm.files.some((f) => f.includes(banned)),
     `ConfirmAction bundle must not include "${banned}"`,

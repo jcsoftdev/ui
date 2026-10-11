@@ -27,95 +27,31 @@ import {
   type Validator,
 } from "./class-validators";
 
-/** A class group value: a literal, a validator, or a nested `{ part: values }` branch. */
-export type Def = string | Validator | { [part: string]: Def[] };
+/** A class group value: a literal, a validator, a theme scale reference, or a nested `{ part: values }` branch. */
+export type Def = string | Validator | ThemeRef | { [part: string]: Def[] };
 /** `[groupId, prefix, values]`: `prefix-value` joins to `groupId`; an empty prefix means a bare class. */
 export type GroupEntry = [id: string, prefix: string, values: Def[]];
 
-/** Custom `text-*` size tokens from theme.css; without them they would read as colors. */
-export const TEXT_SIZES = [
-  "kpi-number",
-  "page-title",
-  "dialog-title",
-  "card-title",
-  "lede",
-  "body",
-  "row-title",
-  "control",
-  "meta",
-  "chip-text",
-  "overline",
-  "clock",
-  "data",
-  "count",
-  "m-title",
-  "m-card-title",
-  "m-row-title",
-  "m-body",
-  "m-button",
-  "m-meta",
-];
+/** Theme namespaces consumers can extend with their own tokens. */
+export type ThemeKey = "text" | "spacing" | "radius" | "shadow" | "color";
 
-/** Role radii and legacy radius names from theme.css (`rounded-*`). */
-export const RADII = [
-  "xs",
-  "chip",
-  "event",
-  "control",
-  "tile",
-  "banner",
-  "card",
-  "dialog",
-  "sheet",
-  "pill",
-  "button",
-  "input",
-  "badge",
-  "avatar",
-  "popover",
-];
+/** Placeholder for a theme scale; resolved per merger so each instance sees its own tokens. */
+export interface ThemeRef {
+  $theme: ThemeKey;
+}
 
-/** Role shadows and legacy shadow names from theme.css (`shadow-*`). */
-export const SHADOWS = [
-  "flat",
-  "hero",
-  "cta",
-  "sel",
-  "pop",
-  "card",
-  "raised",
-  "overlay",
-  "control",
-  "selected",
-  "inset",
-  "inset-accent",
-  "pinned-start",
-  "pinned-end",
-];
+export { RADII, SHADOWS, SPACINGS, TEXT_SIZES } from "./class-tokens.generated";
 
-/** Density-aware sizes from theme.css, used by `h-*`, `p-*`, `px-*` and `gap-*`. */
-export const SPACINGS = [
-  "control",
-  "control-sm",
-  "input",
-  "control-x",
-  "card",
-  "density-sm",
-  "density",
-  "density-lg",
-  "control-height",
-  "control-height-sm",
-  "input-height",
-];
+const theme = (key: ThemeKey): ThemeRef => ({ $theme: key });
 
 // Theme scales (Tailwind v4 namespaces). Only the namespaces the kit extends take tokens.
-const color: Def[] = [isAny];
+const color: Def[] = [isAny, theme("color")];
 const container: Def[] = [isTshirtSize];
 const breakpoint: Def[] = [isTshirtSize];
-const spacingScale: Def[] = ["px", isNumber, ...SPACINGS];
-const textScale: Def[] = [isTshirtSize, ...TEXT_SIZES];
-const radiusScale: Def[] = [isTshirtSize, ...RADII];
-const shadowScale: Def[] = [isTshirtSize, ...SHADOWS];
+const spacingScale: Def[] = ["px", isNumber, theme("spacing")];
+const textScale: Def[] = [isTshirtSize, theme("text")];
+const radiusScale: Def[] = [isTshirtSize, theme("radius")];
+const shadowScale: Def[] = [isTshirtSize, theme("shadow")];
 
 const unambiguousSpacing: Def[] = [isArbitraryVariable, isArbitraryValue, ...spacingScale];
 const inset: Def[] = [isFraction, "full", "auto", ...unambiguousSpacing];

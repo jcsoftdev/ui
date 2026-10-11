@@ -3,6 +3,9 @@
 // (extended with the kit's tokens): every distinct cn(...) call in src, hand-picked edge cases,
 // and seeded random mixes of the class vocabulary used across src. The rows were also run
 // against the new implementation over a 44k case superset before tailwind-merge was removed.
+// T8b deliberately changed exactly two rows: `h-control-lg` is a theme token (--spacing-control-lg)
+// the hand-written list had missed, so it now conflicts with other heights instead of passing
+// through (`h-16 h-control-lg` -> `h-control-lg`, `h-control-lg h-2` -> `h-2`).
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -24,7 +27,7 @@ const load = async (entry) => {
   );
 };
 const { cn } = await load("../src/utils/cn.ts");
-const { TEXT_SIZES, RADII, SHADOWS } = await load("../src/utils/class-groups.ts");
+const { TEXT_SIZES, RADII, SHADOWS, SPACINGS } = await load("../src/utils/class-groups.ts");
 
 const rows = readFileSync(join(here, "golden/class-merge.jsonl"), "utf8")
   .trim()
@@ -60,4 +63,12 @@ test("theme.css tokens are known to the merge table", () => {
   assert.deepEqual(missing(names("text", /^$/), TEXT_SIZES), []);
   assert.deepEqual(missing(names("radius", /^$/), RADII), []);
   assert.deepEqual(missing(names("shadow", /^$/), SHADOWS), []);
+  assert.deepEqual(missing(names("spacing", /^$/), SPACINGS), []);
+});
+
+test("generated token file is in sync with theme.css", async () => {
+  const { render } = await import("../scripts/build-class-tokens.mjs");
+  const css = readFileSync(join(here, "../styles/theme.css"), "utf8");
+  const file = readFileSync(join(here, "../src/utils/class-tokens.generated.ts"), "utf8");
+  assert.equal(file, render(css), "run `pnpm build:class-tokens`");
 });
