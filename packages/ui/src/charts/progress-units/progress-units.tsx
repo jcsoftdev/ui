@@ -200,7 +200,7 @@ function ProgressRow({
         ))}
       </svg>
       {showValue ? (
-        <span aria-hidden="true" className="truncate font-bold text-[13px] text-ink tabular-nums">
+        <span aria-hidden="true" className="truncate font-bold text-fs-130 text-ink tabular-nums">
           {text}
         </span>
       ) : null}

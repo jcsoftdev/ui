@@ -1,26 +1,45 @@
 "use client";
 
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { type ComponentPropsWithoutRef, useId } from "react";
+import { useId } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import {
+  RadioGroupIndicator,
+  RadioGroupItem,
+  RadioGroupRoot,
+  type RadioGroupRootProps,
+} from "./radio-group-primitive.js";
 
 export interface RadioOption {
   value: string;
   label: string;
   description?: string;
+  disabled?: boolean;
 }
 
-export interface RadioGroupProps extends ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> {
+export type RadioGroupPart =
+  | "root"
+  | "option"
+  | "radio"
+  | "indicator"
+  | "text"
+  | "label"
+  | "description";
+
+export interface RadioGroupProps extends RadioGroupRootProps {
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<RadioGroupPart>;
   options: RadioOption[];
 }
 
-export function RadioGroup({ options, className, ...props }: RadioGroupProps) {
+export function RadioGroup({ options, className, classNames, ...props }: RadioGroupProps) {
   const baseId = useId();
 
   return (
-    <RadioGroupPrimitive.Root
+    <RadioGroupRoot
       className={cn(
         "grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(min(170px,100%),1fr))]",
+        classNames?.root,
         className,
       )}
       {...props}
@@ -31,22 +50,37 @@ export function RadioGroup({ options, className, ...props }: RadioGroupProps) {
           <label
             key={option.value}
             htmlFor={id}
-            className="flex cursor-pointer items-start gap-2 rounded-control border-divider p-2.5 text-body in-data-[density=touch]:min-h-11 has-[[data-state=checked]]:border-accent has-[[data-state=checked]]:shadow-[inset_0_0_0_1px_var(--accent)]"
+            className={cn(
+              "flex cursor-pointer items-start gap-2 rounded-control border-divider p-2.5 text-body in-data-[density=touch]:min-h-11 has-[[data-state=checked]]:border-accent has-[[data-state=checked]]:shadow-[inset_0_0_0_1px_var(--accent)]",
+              classNames?.option,
+            )}
           >
-            <RadioGroupPrimitive.Item
+            <RadioGroupItem
               id={id}
               value={option.value}
-              className="mt-0.5 grid size-4 shrink-0 place-items-center rounded-pill border-[1.5px] border-line-strong data-[state=checked]:border-accent"
+              disabled={option.disabled}
+              className={cn(
+                "mt-0.5 grid size-4 shrink-0 place-items-center rounded-pill border-[1.5px] border-line-strong data-[state=checked]:border-accent",
+                classNames?.radio,
+              )}
             >
-              <RadioGroupPrimitive.Indicator className="size-2 rounded-pill bg-accent" />
-            </RadioGroupPrimitive.Item>
-            <span className="flex min-w-0 flex-col [overflow-wrap:anywhere]">
-              <b className="font-semibold text-[13px]">{option.label}</b>
-              {option.description ? <span className="text-ink-3">{option.description}</span> : null}
+              <RadioGroupIndicator
+                className={cn("size-2 rounded-pill bg-accent", classNames?.indicator)}
+              />
+            </RadioGroupItem>
+            <span
+              className={cn("flex min-w-0 flex-col [overflow-wrap:anywhere]", classNames?.text)}
+            >
+              <b className={cn("font-semibold text-fs-130", classNames?.label)}>{option.label}</b>
+              {option.description ? (
+                <span className={cn("text-ink-3", classNames?.description)}>
+                  {option.description}
+                </span>
+              ) : null}
             </span>
           </label>
         );
       })}
-    </RadioGroupPrimitive.Root>
+    </RadioGroupRoot>
   );
 }

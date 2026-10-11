@@ -316,7 +316,7 @@ function SizeKey({
   }));
   const box = maxRadius * 2 + 2;
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-2 text-[12px] text-ink-3">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-2 text-fs-120 text-ink-3">
       <span className="font-semibold">{label}</span>
       <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
         {steps.map((step) => (
@@ -980,7 +980,7 @@ function XYPointPlot({
               x={Math.min(trend.x2, innerWidth) - 4}
               y={trend.y2 - 8}
               textAnchor="end"
-              className="font-bold text-[10.5px] tabular-nums"
+              className="font-bold text-fs-105 tabular-nums"
               style={{ fill: trend.series.color }}
             >
               {`R² ${formatNumber(trend.fit.r2, { maximumFractionDigits: 2 })}`}
@@ -1004,7 +1004,7 @@ function XYPointPlot({
                 dy="0.34em"
                 textAnchor={inside ? "middle" : "start"}
                 className={cn(
-                  "pointer-events-none font-semibold text-[11px] transition-opacity duration-150",
+                  "pointer-events-none font-semibold text-fs-110 transition-opacity duration-150",
                   inside ? "fill-ink" : "fill-ink-2",
                 )}
                 style={{ opacity: isDimmed(point.series.id) ? 0.2 : 1 }}
@@ -1107,7 +1107,7 @@ function XYPointPlot({
                     x={left ? 8 : innerWidth - 8}
                     y={top ? 16 : innerHeight - 8}
                     textAnchor={left ? "start" : "end"}
-                    className="font-bold text-[11px]"
+                    className="font-bold text-fs-110"
                     style={{ fill: tone ? TONE_COLORS[tone].ink : "var(--ink-3)" }}
                   >
                     {truncateLabel(text, half(innerWidth))}

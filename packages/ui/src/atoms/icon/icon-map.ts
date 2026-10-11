@@ -19,11 +19,11 @@ import {
   ExternalLink,
   FileText,
   Folder,
+  type IconComponent,
   LayoutGrid,
   List,
   ListChecks,
   Lock,
-  type LucideIcon,
   Menu,
   MessageSquare,
   PenLine,
@@ -37,9 +37,9 @@ import {
   Users,
   Video,
   X,
-} from "lucide-react";
+} from "../../icons/index.js";
 
-/** Optional name registry for `<Icon name>`. Pass any lucide component via `icon` to bypass it. */
+/** Optional name registry for `<Icon name>`. Pass any icon component via `icon` to bypass it. */
 export const icons = {
   grid: LayoutGrid,
   calendar: Calendar,
@@ -78,6 +78,6 @@ export const icons = {
   book: BookOpen,
   external: ExternalLink,
   video: Video,
-} satisfies Record<string, LucideIcon>;
+} satisfies Record<string, IconComponent>;
 
 export type IconName = keyof typeof icons;

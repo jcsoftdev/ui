@@ -1,6 +1,6 @@
 # @jcsoftdev/ui
 
-Token-driven React 19 component library built on Radix primitives and Tailwind CSS v4. The whole look comes from one tokens JSON file, with runtime presets (`data-style`, `data-density`, `data-radius`, `data-accent`, `data-theme`).
+Token-driven React 19 component library with zero runtime dependencies, built on Tailwind CSS v4. The whole look comes from one tokens JSON file, with runtime presets (`data-style`, `data-density`, `data-radius`, `data-accent`, `data-theme`).
 
 ```bash
 pnpm add @jcsoftdev/ui

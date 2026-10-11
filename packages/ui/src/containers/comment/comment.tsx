@@ -39,7 +39,7 @@ export function Comment({
       role="note"
       aria-label={label}
       className={cn(
-        "mx-4 mb-3.5 break-words rounded-control px-3 py-2.5 text-[12.5px]",
+        "mx-4 mb-3.5 break-words rounded-control px-3 py-2.5 text-fs-125",
         toneClasses[tone],
         className,
       )}

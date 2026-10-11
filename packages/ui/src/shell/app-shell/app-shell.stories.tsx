@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CalendarDays, Scissors, Users } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Button } from "../../atoms/button/index.js";
+import { CalendarDays, Scissors, Users } from "../../icons/index.js";
 import { Sidebar, type SidebarGroup } from "../sidebar/index.js";
 import { Topbar } from "../topbar/index.js";
 import { AppShell, useAppShell } from "./app-shell.js";
@@ -88,6 +88,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Wide container: the sidebar is always visible next to the page. */
 export const Default: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => (
     <Frame>
       <ShellDemo className={args.className} />

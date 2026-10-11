@@ -1,7 +1,12 @@
 "use client";
 
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { type ComponentPropsWithoutRef, useState } from "react";
+import { useState } from "react";
+import {
+  RadioGroupItem,
+  RadioGroupRoot,
+  type RadioGroupRootProps,
+} from "../../atoms/radio-group/radio-group-primitive.js";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export interface AccentOption {
@@ -11,15 +16,16 @@ export interface AccentOption {
   swatch: string;
 }
 
+export type AccentPickerPart = "root" | "option" | "swatch";
+
 export interface AccentPickerProps
-  extends Omit<
-    ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>,
-    "value" | "defaultValue" | "onValueChange"
-  > {
+  extends Omit<RadioGroupRootProps, "value" | "defaultValue" | "onValueChange"> {
   options: AccentOption[];
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<AccentPickerPart>;
 }
 
 /**
@@ -33,36 +39,40 @@ export function AccentPicker({
   defaultValue,
   onValueChange,
   className,
+  classNames,
   ...props
 }: AccentPickerProps) {
   const [internal, setInternal] = useState(() => defaultValue ?? options[0]?.value);
   const current = value ?? internal;
 
   return (
-    <RadioGroupPrimitive.Root
+    <RadioGroupRoot
       data-accent={current}
       value={current}
       onValueChange={(next) => {
         setInternal(next);
         onValueChange?.(next);
       }}
-      className={cn("flex flex-wrap gap-2", className)}
+      className={cn("flex flex-wrap gap-2", classNames?.root, className)}
       {...props}
     >
       {options.map((option) => (
-        <RadioGroupPrimitive.Item
+        <RadioGroupItem
           key={option.value}
           value={option.value}
-          className="flex items-center gap-2 rounded-control border-divider px-2.5 py-1.75 font-semibold text-chip-text text-ink data-[state=checked]:border-accent-ink data-[state=checked]:shadow-selected"
+          className={cn(
+            "flex items-center gap-2 rounded-control border-divider px-2.5 py-1.75 font-semibold text-chip-text text-ink data-[state=checked]:border-accent-ink data-[state=checked]:shadow-selected",
+            classNames?.option,
+          )}
         >
           <span
             aria-hidden="true"
-            className="size-3.5 shrink-0 rounded-xs"
+            className={cn("size-3.5 shrink-0 rounded-xs", classNames?.swatch)}
             style={{ background: option.swatch }}
           />
           {option.label}
-        </RadioGroupPrimitive.Item>
+        </RadioGroupItem>
       ))}
-    </RadioGroupPrimitive.Root>
+    </RadioGroupRoot>
   );
 }

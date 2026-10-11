@@ -1,1 +1,1 @@
-export { TimelineView, type TimelineViewProps } from "./timeline-view.js";
+export { TimelineView, type TimelineViewPart, type TimelineViewProps } from "./timeline-view.js";

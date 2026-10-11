@@ -252,7 +252,7 @@ export function Sparkline({
       {activePoint && activeValue != null ? (
         <div
           aria-hidden="true"
-          className="-translate-x-1/2 pointer-events-none absolute bottom-full z-10 mb-1.5 whitespace-nowrap rounded-popover surface-overlay px-2 py-1 font-bold text-[11px] text-ink tabular-nums shadow-overlay"
+          className="-translate-x-1/2 pointer-events-none absolute bottom-full z-10 mb-1.5 whitespace-nowrap rounded-popover surface-overlay px-2 py-1 font-bold text-fs-110 text-ink tabular-nums shadow-overlay"
           style={{ left: Math.min(Math.max(activePoint.x, 24), width - 24) }}
         >
           {categories?.[active as number] ? (
