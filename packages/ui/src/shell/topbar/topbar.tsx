@@ -1,7 +1,7 @@
 "use client";
 
-import { Menu, Search } from "lucide-react";
 import { type ReactNode, type Ref, useEffect, useState } from "react";
+import { Menu, Search } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 function isApplePlatform(): boolean {

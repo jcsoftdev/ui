@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowLeftToLine, ArrowRightToLine, PinOff } from "lucide-react";
 import {
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -13,6 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ArrowLeftToLine, ArrowRightToLine, PinOff } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   computePinOffsets,

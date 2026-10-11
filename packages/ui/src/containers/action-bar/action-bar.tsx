@@ -1,7 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import { X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 export interface ActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {

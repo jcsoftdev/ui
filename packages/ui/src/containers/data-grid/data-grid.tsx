@@ -5,22 +5,6 @@
 "use client";
 
 import {
-  ArrowDown,
-  ArrowDownToLine,
-  ArrowUp,
-  ArrowUpToLine,
-  BarChart3,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  CircleAlert,
-  Copy,
-  GripVertical,
-  PinOff,
-} from "lucide-react";
-import {
   type ClipboardEvent,
   type CSSProperties,
   type DragEvent,
@@ -41,6 +25,22 @@ import {
 import { Chip } from "../../atoms/chip/chip.js";
 import { formatCurrency, formatNumber } from "../../charts/core/format.js";
 import { Sparkline } from "../../charts/sparkline/sparkline.js";
+import {
+  ArrowDown,
+  ArrowDownToLine,
+  ArrowUp,
+  ArrowUpToLine,
+  BarChart3,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  CircleAlert,
+  Copy,
+  GripVertical,
+  PinOff,
+} from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { computePinOffsets, type PinPosition, sanitizePinned } from "../table/pin.js";
 import { type GridChartKind, type RangeChartData, rangeToChart } from "./chart-range.js";

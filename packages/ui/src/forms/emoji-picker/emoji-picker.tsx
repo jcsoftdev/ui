@@ -1,7 +1,7 @@
 "use client";
 
-import { Search } from "lucide-react";
 import { type KeyboardEvent, useId, useMemo, useRef, useState } from "react";
+import { Search } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { EMOJI_CATEGORIES, type EmojiCategory, type EmojiEntry } from "./emoji-data.js";
 import { gridMove, searchEmojis } from "./model.js";

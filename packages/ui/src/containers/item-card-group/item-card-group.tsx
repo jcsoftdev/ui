@@ -1,5 +1,5 @@
-import { ChevronRight } from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { ChevronRight } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 export interface ItemCardGroupItem {

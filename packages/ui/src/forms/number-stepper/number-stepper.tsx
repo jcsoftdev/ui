@@ -1,7 +1,7 @@
 "use client";
 
-import { Minus, Plus } from "lucide-react";
 import { type ChangeEvent, type KeyboardEvent, useId, useState } from "react";
+import { Minus, Plus } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { snapToStep } from "../slider/model.js";
 

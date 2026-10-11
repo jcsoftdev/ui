@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   addChild,

@@ -1,9 +1,9 @@
 "use client";
 
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { useUiStrings } from "../../i18n/index.js";
+import { X } from "../../icons/index.js";
+import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import { cn } from "../../utils/cn.js";
 import {
   PreviousFocusProvider,
@@ -16,11 +16,7 @@ import {
  * Wraps `DialogPrimitive.Root` so focus is restored on close even when the
  * dialog is opened in a controlled way, without its own `DialogTrigger`.
  */
-export function Dialog({
-  open,
-  children,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) {
+export function Dialog({ open, children, ...props }: DialogPrimitive.DialogRootProps) {
   const focusRef = useCapturePreviousFocus(open);
   return (
     <DialogPrimitive.Root open={open} {...props}>
@@ -39,8 +35,7 @@ const widthClasses: Record<DialogWidth, string> = {
   lg: "w-[min(780px,100%)]",
 };
 
-export interface DialogContentProps
-  extends ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+export interface DialogContentProps extends DialogPrimitive.DialogContentProps {
   width?: DialogWidth;
   /**
    * While a mutation is in flight: `Escape`, outside click and the close button
@@ -49,6 +44,10 @@ export interface DialogContentProps
   blocking?: boolean;
   /** Accessible label of the close button. */
   closeLabel?: string;
+  /** Classes merged onto the scrim; consumer classes win. */
+  overlayClassName?: string;
+  /** Classes merged onto the built-in close button; consumer classes win. */
+  closeClassName?: string;
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
 }
@@ -58,6 +57,8 @@ export function DialogContent({
   width = "md",
   blocking = false,
   closeLabel,
+  overlayClassName,
+  closeClassName,
   container,
   children,
   onEscapeKeyDown,
@@ -70,10 +71,10 @@ export function DialogContent({
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
+      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", overlayClassName)} />
       <DialogPrimitive.Content
         className={cn(
-          "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog surface-overlay shadow-overlay",
+          "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
           widthClasses[width],
           className,
         )}
@@ -99,7 +100,10 @@ export function DialogContent({
         {!blocking && (
           <DialogPrimitive.Close
             aria-label={closeLabel ?? strings.close}
-            className="absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5"
+            className={cn(
+              "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
+              closeClassName,
+            )}
           >
             <X aria-hidden="true" className="size-4" />
           </DialogPrimitive.Close>
@@ -128,6 +132,13 @@ export function DialogTitle({
       {...props}
     />
   );
+}
+
+export function DialogDescription({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+  return <DialogPrimitive.Description className={cn("m-0 text-ink-2", className)} {...props} />;
 }
 
 export function DialogBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {

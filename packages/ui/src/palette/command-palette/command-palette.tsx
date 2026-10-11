@@ -1,8 +1,8 @@
 "use client";
 
 import { Command, useCommandState } from "cmdk";
-import { Search } from "lucide-react";
 import type { ReactNode } from "react";
+import { Search } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 
 export interface CommandPaletteItem {

@@ -1,5 +1,5 @@
-import { Check, CircleAlert, Clock, LoaderCircle, Wrench } from "lucide-react";
 import { useMemo } from "react";
+import { Check, CircleAlert, Clock, LoaderCircle, Wrench } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { CodeBlock } from "../code-block/code-block.js";
 import { Disclosure } from "../internal/disclosure.js";

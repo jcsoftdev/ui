@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowUp } from "lucide-react";
 import { type ReactNode, useId } from "react";
+import { ArrowDown, ArrowUp } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";
 import type { PivotConfig } from "./pivot.js";

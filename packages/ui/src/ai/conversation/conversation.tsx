@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowDown } from "lucide-react";
 import { type ComponentPropsWithoutRef, useCallback, useEffect, useRef, useState } from "react";
+import { ArrowDown } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { nextStuck, showJumpToLatest } from "./stick.js";

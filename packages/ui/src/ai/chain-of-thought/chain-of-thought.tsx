@@ -1,5 +1,5 @@
-import { Brain, Check } from "lucide-react";
 import type { ReactNode } from "react";
+import { Brain, Check } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { Disclosure } from "../internal/disclosure.js";
 import { TextShimmer } from "../text-shimmer/text-shimmer.js";

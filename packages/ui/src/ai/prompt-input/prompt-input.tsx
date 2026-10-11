@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowUp, Square } from "lucide-react";
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -9,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ArrowUp, Square } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { shouldSubmit } from "./keys.js";
 

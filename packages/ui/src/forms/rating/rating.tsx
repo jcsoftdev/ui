@@ -1,7 +1,7 @@
 "use client";
 
-import { Star } from "lucide-react";
 import { type KeyboardEvent, type PointerEvent, useState } from "react";
+import { Star } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { ratingFromPointer, ratingKey, roundRating, starFill } from "./model.js";
 

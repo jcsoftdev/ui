@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import {
   Children,
   type ComponentPropsWithoutRef,
@@ -11,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { nearestIndex, stepIndex } from "./model.js";

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Calendar, Package, Scissors, UserRound } from "lucide-react";
 import { useState } from "react";
 import { fn } from "storybook/test";
+import { Calendar, Package, Scissors, UserRound } from "../../icons/index.js";
 import { CommandPalette, type CommandPaletteItem } from "./command-palette.js";
 
 const items: CommandPaletteItem[] = [

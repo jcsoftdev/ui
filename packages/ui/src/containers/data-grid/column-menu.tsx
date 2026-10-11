@@ -1,5 +1,6 @@
 "use client";
 
+import { type ReactNode, useId, useState } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -10,15 +11,14 @@ import {
   EllipsisVertical,
   EyeOff,
   Filter,
+  type IconComponent,
   Layers,
-  type LucideIcon,
   Minus,
   MoveHorizontal,
   PinOff,
   Plus,
   X,
-} from "lucide-react";
-import { type ReactNode, useId, useState } from "react";
+} from "../../icons/index.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../../overlays/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";
@@ -68,7 +68,7 @@ function Item({
   pressed,
   ...props
 }: {
-  icon: LucideIcon;
+  icon: IconComponent;
   children: ReactNode;
   pressed?: boolean;
   onClick: () => void;

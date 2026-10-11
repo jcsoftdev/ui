@@ -190,8 +190,8 @@ import { Dialog } from "@jcsoftdev/ui/overlays/dialog"; // only the Dialog + @ra
 import { Chip, Avatar } from "@jcsoftdev/ui/atoms";     // group entry: still tree-shakes
 ```
 
-Entries: `atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `utils`
-(each also as `<group>/<component>`), plus `styles/*` and `tokens/*`. Runtime dependencies (Radix, lucide-react,
+Entries: `atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `utils`, `icons`
+(each also as `<group>/<component>`), plus `styles/*` and `tokens/*`. Runtime dependencies (Radix,
 cmdk, sonner) are regular `dependencies`, so a consumer that imports one component only bundles that component's
 dependencies. Components that need state are marked `"use client"`.
 
@@ -214,3 +214,8 @@ The `source` export condition points at `src/*/index.ts` for consumers that want
 - English identifiers; every visible string and aria label is a prop. Defaults are English and can be localized in one place with `UiStringsProvider`.
 - Relative imports use the `.js` extension; components import specific component entries, never group barrels.
 - No literal colors in components, no `dark:` variants; dark mode is a token concern.
+
+
+## Icons
+
+`@jcsoftdev/ui/icons` exports every icon as its own tree-shakeable component (`import { Check } from "@jcsoftdev/ui/icons"`). The SVG sources in `icons/svg` are vendored from [Lucide](https://lucide.dev) (ISC, see `icons/LICENSE-lucide`); regenerate the components with `pnpm build:icons`.

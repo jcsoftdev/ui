@@ -1,8 +1,8 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { SmilePlus } from "lucide-react";
 import { useState } from "react";
+import { SmilePlus } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { EmojiPicker } from "../emoji-picker/emoji-picker.js";
 
