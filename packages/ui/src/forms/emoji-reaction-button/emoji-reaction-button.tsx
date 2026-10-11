@@ -1,8 +1,8 @@
 "use client";
 
-import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { useState } from "react";
 import { SmilePlus } from "../../icons/index.js";
+import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import { EmojiPicker } from "../emoji-picker/emoji-picker.js";
 
@@ -94,7 +94,7 @@ export function EmojiReactionBar({
           <PopoverPrimitive.Content
             sideOffset={6}
             collisionPadding={8}
-            className="z-85 w-72 max-w-(--radix-popover-content-available-width) rounded-popover shadow-overlay"
+            className="z-85 w-72 max-w-(--ui-popper-available-width) rounded-popover shadow-overlay"
           >
             <EmojiPicker
               className="max-w-none surface-overlay"

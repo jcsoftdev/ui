@@ -10,12 +10,30 @@
  * deep paths such as `primitives/hide-others` do not resolve. The documented,
  * explicit entry is defined in T14.
  */
+export * as CommandPrimitive from "./command/command.js";
+export { type CommandFilter, commandScore } from "./command/score.js";
 export * as DialogPrimitive from "./dialog/dialog.js";
+export * as MenuPrimitive from "./menu/menu.js";
+export * as PopoverPrimitive from "./popover/popover.js";
+export type {
+  Align,
+  ArrowGeometry,
+  Direction,
+  Padding,
+  Placement,
+  PlacementInput,
+  Rect,
+  Side,
+  Size,
+} from "./popper/geometry.js";
+export { computePlacement } from "./popper/geometry.js";
+export * as PopperPrimitive from "./popper/popper.js";
 export { Portal } from "./portal.js";
 export {
   type DismissableLayerOptions,
   type FocusOutsideEvent,
   type InteractOutsideEvent,
+  LAYER_BRANCH_ATTRIBUTE,
   type PointerDownOutsideEvent,
   useDismissableLayer,
 } from "./use-dismissable-layer.js";

@@ -248,6 +248,7 @@ export function Toaster({
         ref={regionRef}
         dir={dir ?? documentDir()}
         data-ui-overlay-ignore=""
+        data-ui-layer-branch=""
         aria-label={label ?? strings.notifications}
         tabIndex={-1}
         className={cn(

@@ -15,6 +15,7 @@ import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { hideOthers } from "../hide-others.js";
+import { useEnabledPointerEvents } from "../pointer-events-lock.js";
 import { Portal } from "../portal.js";
 import { lockBodyScroll } from "../scroll-lock.js";
 import {
@@ -160,6 +161,7 @@ export function Overlay({ forceMount, ref, ...props }: DialogOverlayProps) {
     overlayRef as RefObject<HTMLDivElement | null>,
   );
   const mounted = usePresence(present, overlayRef);
+  useEnabledPointerEvents(overlayRef, mounted);
   if (!mounted) return null;
   return <div data-state={stateOf(open)} aria-hidden="true" {...props} ref={composedRef} />;
 }

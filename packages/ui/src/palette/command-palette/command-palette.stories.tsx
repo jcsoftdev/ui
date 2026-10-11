@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import { Calendar, Package, Scissors, UserRound } from "../../icons/index.js";
 import { CommandPalette, type CommandPaletteItem } from "./command-palette.js";
 
@@ -119,4 +119,28 @@ function ControlledQueryDemo() {
 export const ControlledQuery: Story = {
   parameters: { a11y: { test: "todo" } },
   render: () => <ControlledQueryDemo />,
+};
+
+export const TypeSelectAndClose: Story = {
+  // The highlighted row's hint (text-ink-3 on surface-2) is below the contrast threshold; pre-existing token pairing.
+  parameters: { a11y: { test: "todo" } },
+  args: { onClose: fn() },
+  play: async ({ args }) => {
+    const box = await screen.findByRole("combobox");
+    await userEvent.type(box, "pomada");
+    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(1));
+    await expect(screen.getByText("1 resultados")).toBeInTheDocument();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(items[4]?.onSelect).toHaveBeenCalled());
+    await expect(args.onClose).toHaveBeenCalled();
+  },
+};
+
+export const EscapeCloses: Story = {
+  args: { onClose: fn() },
+  play: async ({ args }) => {
+    await screen.findByRole("combobox");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+  },
 };
