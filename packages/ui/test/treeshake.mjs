@@ -25,16 +25,17 @@ console.log(`atoms/button: ${single.bytes} bytes, ${single.files.length} modules
 for (const f of single.files) console.log(`  ${f}`);
 for (const banned of [
   "dialog",
+  "primitives/",
   "dropdown-menu",
   "popover",
   "cmdk",
-  "sonner",
   "lucide",
   "icons/",
   "checkbox",
   "confirm-action",
   "responsive-list",
   "i18n",
+  "toaster",
   "status-icons",
 ]) {
   assert.ok(
