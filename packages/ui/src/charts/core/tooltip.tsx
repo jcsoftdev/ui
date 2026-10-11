@@ -65,7 +65,7 @@ export function ChartTooltip({
       ref={ref}
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute top-0 left-0 z-10 min-w-[120px] rounded-popover surface-overlay px-3 py-2.5 text-[12px] shadow-overlay",
+        "pointer-events-none absolute top-0 left-0 z-10 min-w-30 rounded-popover surface-overlay px-3 py-2.5 text-fs-120 shadow-overlay",
         "motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out",
         className,
       )}
@@ -74,7 +74,7 @@ export function ChartTooltip({
         transform: `translate3d(${Math.round(left)}px, ${Math.round(y)}px, 0) translateY(-50%)`,
       }}
     >
-      {title ? <div className="mb-1.5 font-bold text-[12px] text-ink">{title}</div> : null}
+      {title ? <div className="mb-1.5 font-bold text-fs-120 text-ink">{title}</div> : null}
       {body ? <div className="text-ink-2 leading-snug">{body}</div> : null}
       <div className="flex flex-col gap-1">
         {rows.map((row) => (
@@ -93,7 +93,7 @@ export function ChartTooltip({
                   "size-2.5 shrink-0",
                   row.shape === "line" || row.shape === "dashed" || row.shape === "dot"
                     ? "rounded-pill"
-                    : "rounded-[3px]",
+                    : "rounded-xs",
                 )}
                 style={{ background: row.color }}
               />

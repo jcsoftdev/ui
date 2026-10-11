@@ -22,7 +22,7 @@ export function OfflineBanner({
       className={className}
       action={
         queuedChanges > 0 ? (
-          <span className="font-semibold text-[12px] tabular-nums">
+          <span className="font-semibold text-fs-120 tabular-nums">
             <span aria-hidden="true">{queuedChanges}</span>
             <span className="sr-only">{queuedLabel ?? String(queuedChanges)}</span>
           </span>

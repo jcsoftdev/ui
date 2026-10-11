@@ -1,6 +1,7 @@
 "use client";
 
 import { type KeyboardEvent, type PointerEvent, useCallback, useRef, useState } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   clampValue,
@@ -17,6 +18,16 @@ export interface SliderMark {
   value: number;
   label?: string;
 }
+
+export type SliderPart =
+  | "root"
+  | "track"
+  | "range"
+  | "rail"
+  | "thumb"
+  | "value"
+  | "mark"
+  | "markLabel";
 
 interface SliderBaseProps {
   min?: number;
@@ -38,6 +49,8 @@ interface SliderBaseProps {
   /** Form field name; a range submits `${name}-min` and `${name}-max`. */
   name?: string;
   className?: string;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<SliderPart>;
 }
 
 export interface SingleSliderProps extends SliderBaseProps {
@@ -71,6 +84,7 @@ export function Slider(props: SliderProps) {
     formatValue = String,
     name,
     className,
+    classNames,
   } = props;
   const seed = props.value ?? props.defaultValue;
   const range = Array.isArray(seed);
@@ -169,12 +183,18 @@ export function Slider(props: SliderProps) {
           if (dragging.current === null) setActive(null);
         }}
         style={{ left: `${ratioOf(current[index], min, max) * 100}%` }}
-        className="group/thumb -translate-x-1/2 -translate-y-1/2 absolute top-1/2 size-5 touch-none rounded-pill border-control bg-surface-control shadow-control outline-none focus-visible:focus-ring data-[active=true]:shadow-selected"
+        className={cn(
+          "group/thumb -translate-x-1/2 -translate-y-1/2 absolute top-1/2 size-5 touch-none rounded-pill border-control bg-surface-control shadow-control outline-none focus-visible:focus-ring data-[active=true]:shadow-selected",
+          classNames?.thumb,
+        )}
       >
         {showValue ? (
           <span
             aria-hidden="true"
-            className="-translate-x-1/2 pointer-events-none absolute bottom-full left-1/2 mb-1.5 whitespace-nowrap rounded-badge bg-surface-sunken px-1.5 py-0.5 text-chip-text text-ink-2 tabular-nums group-data-[active=true]/thumb:bg-ink group-data-[active=true]/thumb:text-surface"
+            className={cn(
+              "-translate-x-1/2 pointer-events-none absolute bottom-full left-1/2 mb-1.5 whitespace-nowrap rounded-badge bg-surface-sunken px-1.5 py-0.5 text-chip-text text-ink-2 tabular-nums group-data-[active=true]/thumb:bg-ink group-data-[active=true]/thumb:text-surface",
+              classNames?.value,
+            )}
           >
             {formatValue(current[index])}
           </span>
@@ -190,6 +210,7 @@ export function Slider(props: SliderProps) {
         showValue && "pt-8",
         marks?.some((m) => m.label) && "pb-7",
         disabled && "opacity-50",
+        classNames?.root,
         className,
       )}
     >
@@ -198,15 +219,24 @@ export function Slider(props: SliderProps) {
         className={cn(
           "relative h-5 w-full touch-none select-none",
           disabled ? "cursor-not-allowed" : "cursor-pointer",
+          classNames?.track,
         )}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
       >
-        <div className="-translate-y-1/2 absolute inset-x-0 top-1/2 h-1.5 rounded-pill bg-line-strong" />
         <div
-          className="-translate-y-1/2 absolute top-1/2 h-1.5 rounded-pill bg-accent"
+          className={cn(
+            "-translate-y-1/2 absolute inset-x-0 top-1/2 h-1.5 rounded-pill bg-line-strong",
+            classNames?.rail,
+          )}
+        />
+        <div
+          className={cn(
+            "-translate-y-1/2 absolute top-1/2 h-1.5 rounded-pill bg-accent",
+            classNames?.range,
+          )}
           style={{ left: `${start * 100}%`, width: `${(end - start) * 100}%` }}
         />
         {marks?.map((mark) => (
@@ -216,9 +246,19 @@ export function Slider(props: SliderProps) {
             className="absolute top-1/2"
             style={{ left: `${ratioOf(mark.value, min, max) * 100}%` }}
           >
-            <span className="-translate-x-1/2 -translate-y-1/2 absolute size-1 rounded-pill bg-surface" />
+            <span
+              className={cn(
+                "-translate-x-1/2 -translate-y-1/2 absolute size-1 rounded-pill bg-surface",
+                classNames?.mark,
+              )}
+            />
             {mark.label ? (
-              <span className="-translate-x-1/2 absolute top-3.5 whitespace-nowrap text-ink-3 text-meta">
+              <span
+                className={cn(
+                  "-translate-x-1/2 absolute top-3.5 whitespace-nowrap text-ink-3 text-meta",
+                  classNames?.markLabel,
+                )}
+              >
                 {mark.label}
               </span>
             ) : null}

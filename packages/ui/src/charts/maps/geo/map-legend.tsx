@@ -33,10 +33,10 @@ export function MapLegend({
   noData,
 }: MapLegendProps) {
   const missing = noData ? (
-    <span className="inline-flex items-center gap-1.5 font-semibold text-[12px] text-ink-2">
+    <span className="inline-flex items-center gap-1.5 font-semibold text-fs-120 text-ink-2">
       <span
         aria-hidden="true"
-        className="size-2.5 shrink-0 rounded-[3px] border border-line"
+        className="size-2.5 shrink-0 rounded-xs border border-line"
         style={{ background: "var(--surface-2)" }}
       />
       {noData}
@@ -45,7 +45,7 @@ export function MapLegend({
   return (
     <div className="@md/chart:-order-1 flex flex-wrap items-end gap-x-4 gap-y-2 @md/chart:justify-end">
       {ranges && ranges.length > 0 ? (
-        <ul className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-[12px]">
+        <ul className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-fs-120">
           {ranges.map((range, index) => (
             <li
               key={range.label}
@@ -53,7 +53,7 @@ export function MapLegend({
             >
               <span
                 aria-hidden="true"
-                className="size-2.5 shrink-0 rounded-[3px]"
+                className="size-2.5 shrink-0 rounded-xs"
                 style={{ background: rangeColor(range, index, ranges.length).color }}
               />
               <span className="truncate">{range.label}</span>
@@ -63,7 +63,7 @@ export function MapLegend({
       ) : (
         <div
           aria-hidden="true"
-          className="flex w-full max-w-[220px] flex-col gap-1 text-[11px] text-ink-3 tabular-nums"
+          className="flex w-full max-w-[220px] flex-col gap-1 text-fs-110 text-ink-3 tabular-nums"
         >
           <span
             className="h-2 w-full rounded-pill"

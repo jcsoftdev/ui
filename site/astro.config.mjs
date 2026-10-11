@@ -52,7 +52,12 @@ export default defineConfig({
         },
         {
           label: "Theming",
-          items: [{ slug: "docs/theming" }, { slug: "docs/theming/tokens" }],
+          items: [
+            { slug: "docs/theming" },
+            { slug: "docs/customization" },
+            { slug: "docs/primitives" },
+            { slug: "docs/theming/tokens" },
+          ],
         },
         { label: "Components", items: componentGroups },
         { label: "Reference", items: [{ slug: "docs/reference/exports" }, { slug: "docs/llms" }] },

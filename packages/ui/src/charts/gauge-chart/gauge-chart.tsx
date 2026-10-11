@@ -472,7 +472,7 @@ function GaugePlot({
             textAnchor="middle"
             dominantBaseline="central"
             {...DECORATIVE}
-            className="fill-ink-3 font-medium text-[10px] tabular-nums"
+            className="fill-ink-3 font-medium text-fs-100 tabular-nums"
           >
             {format(tick.v)}
           </text>
@@ -501,7 +501,7 @@ function GaugePlot({
               x={minPoint.x}
               y={minPoint.y + band / 2 + 15}
               textAnchor="middle"
-              className="fill-ink-3 font-semibold text-[11px] tabular-nums"
+              className="fill-ink-3 font-semibold text-fs-110 tabular-nums"
             >
               {format(min)}
             </text>
@@ -509,7 +509,7 @@ function GaugePlot({
               x={maxPoint.x}
               y={maxPoint.y + band / 2 + 15}
               textAnchor="middle"
-              className="fill-ink-3 font-semibold text-[11px] tabular-nums"
+              className="fill-ink-3 font-semibold text-fs-110 tabular-nums"
             >
               {format(max)}
             </text>
@@ -540,7 +540,7 @@ function GaugePlot({
               <text
                 x={cx}
                 y={labelY}
-                className="font-bold text-[11px]"
+                className="font-bold text-fs-110"
                 style={{ fill: valueColor }}
               >
                 {active.label}

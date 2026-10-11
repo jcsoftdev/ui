@@ -147,7 +147,7 @@ export function FillGaugeChart({
                 <div
                   key={item.id}
                   aria-hidden="true"
-                  className="absolute truncate px-1 text-center font-semibold text-[12px] text-ink-2"
+                  className="absolute truncate px-1 text-center font-semibold text-fs-120 text-ink-2"
                   style={{
                     left: column * cellWidth,
                     top: blockTop(row) + size + 2,

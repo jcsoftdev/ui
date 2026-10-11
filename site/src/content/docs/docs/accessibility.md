@@ -8,7 +8,7 @@ Accessibility is part of each component, not an add-on.
 
 ## Keyboard and semantics
 
-- Interactive primitives (dialogs, menus, popovers, tabs, radio groups, switches, checkboxes) come from Radix, which implements the WAI-ARIA patterns.
+- Interactive primitives (dialogs, menus, popovers, tabs, radio groups, switches, checkboxes) are built in-house on the WAI-ARIA authoring patterns, with keyboard and ARIA tests for each; the same behavior is published unstyled as [headless primitives](/docs/primitives).
 - `DataGrid` follows the ARIA grid pattern with a roving tabindex and full keyboard navigation (arrows, Home/End, Enter/F2 to edit, Escape to cancel, Ctrl+Z/Y for undo and redo, Ctrl+V and Ctrl+D/R to paste and fill).
 - Overlays return focus to the element that opened them.
 - The AI `Conversation` is a `role="log"` region that follows new content until the user scrolls up, then offers a "jump to latest" button.

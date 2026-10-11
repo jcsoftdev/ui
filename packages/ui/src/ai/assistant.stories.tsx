@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Paperclip } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Paperclip } from "../icons/index.js";
 import { Attachment } from "./attachment/attachment.js";
 import { ChainOfThought } from "./chain-of-thought/chain-of-thought.js";
 import { ChatList, type ChatListItem } from "./chat-list/chat-list.js";

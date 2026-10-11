@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowUp } from "lucide-react";
 import { type ReactNode, useId } from "react";
+import { ArrowDown, ArrowUp } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import type { DataGridLabels } from "./labels.js";
 import type { PivotConfig } from "./pivot.js";
@@ -41,14 +41,14 @@ export interface GridToolPanelProps<T> {
 }
 
 const selectClass =
-  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-[13px] text-ink focus-visible:border-accent focus-visible:outline-none";
+  "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-fs-130 text-ink focus-visible:border-accent focus-visible:outline-none";
 const iconButton =
   "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface hover:text-ink disabled:pointer-events-none disabled:opacity-30 [&_svg]:size-3.5";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="grid gap-1 border-b-divider p-2 last:border-b-0">
-      <h3 className="px-1 pb-0.5 font-[650] text-[11px] text-ink-3 uppercase tracking-[.07em]">
+      <h3 className="px-1 pb-0.5 font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em]">
         {title}
       </h3>
       {children}
@@ -68,7 +68,7 @@ function Check({
   children: ReactNode;
 }) {
   return (
-    <label className="flex min-h-7 min-w-0 flex-1 items-center gap-2 text-[13px] text-ink">
+    <label className="flex min-h-7 min-w-0 flex-1 items-center gap-2 text-fs-130 text-ink">
       <input
         type="checkbox"
         className="size-4 shrink-0 accent-accent"
@@ -122,7 +122,7 @@ export function GridToolPanel<T>({
       aria-label={labels.toolPanel}
       style={maxHeight ? { maxHeight } : undefined}
       className={cn(
-        "min-h-0 min-w-0 overflow-y-auto bg-surface-2/40 text-[13px] @max-2xl/grid:max-h-72 @max-2xl/grid:border-b-divider @2xl/grid:w-64 @2xl/grid:shrink-0 @2xl/grid:border-l-divider",
+        "min-h-0 min-w-0 overflow-y-auto bg-surface-2/40 text-fs-130 @max-2xl/grid:max-h-72 @max-2xl/grid:border-b-divider @2xl/grid:w-64 @2xl/grid:shrink-0 @2xl/grid:border-l-divider",
         className,
       )}
     >
@@ -181,7 +181,7 @@ export function GridToolPanel<T>({
                   {column.header}
                 </Check>
                 {groupBy.includes(column.id) ? (
-                  <span className="text-[11px] text-ink-3 tabular-nums">
+                  <span className="text-fs-110 text-ink-3 tabular-nums">
                     {groupBy.indexOf(column.id) + 1}
                   </span>
                 ) : null}
@@ -203,7 +203,7 @@ export function GridToolPanel<T>({
           {pivotOn ? (
             <div className="grid gap-2 pt-1">
               <fieldset className="grid gap-0.5 border-0 p-0">
-                <legend className="px-1 pb-0.5 text-[12px] text-ink-3">{labels.pivotRows}</legend>
+                <legend className="px-1 pb-0.5 text-fs-120 text-ink-3">{labels.pivotRows}</legend>
                 {dimensions
                   .filter((column) => column.id !== pivot.column)
                   .map((column) => (
@@ -224,7 +224,7 @@ export function GridToolPanel<T>({
                   ))}
               </fieldset>
               <label className="grid gap-1" htmlFor={`${id}-column`}>
-                <span className="px-1 text-[12px] text-ink-3">{labels.pivotColumn}</span>
+                <span className="px-1 text-fs-120 text-ink-3">{labels.pivotColumn}</span>
                 <select
                   id={`${id}-column`}
                   className={selectClass}
@@ -245,7 +245,7 @@ export function GridToolPanel<T>({
                 </select>
               </label>
               <label className="grid gap-1" htmlFor={`${id}-value`}>
-                <span className="px-1 text-[12px] text-ink-3">{labels.pivotValue}</span>
+                <span className="px-1 text-fs-120 text-ink-3">{labels.pivotValue}</span>
                 <select
                   id={`${id}-value`}
                   className={selectClass}
@@ -261,7 +261,7 @@ export function GridToolPanel<T>({
                 </select>
               </label>
               <label className="grid gap-1" htmlFor={`${id}-aggregate`}>
-                <span className="px-1 text-[12px] text-ink-3">{labels.pivotAggregate}</span>
+                <span className="px-1 text-fs-120 text-ink-3">{labels.pivotAggregate}</span>
                 <select
                   id={`${id}-aggregate`}
                   className={selectClass}
@@ -276,7 +276,7 @@ export function GridToolPanel<T>({
                 </select>
               </label>
               {pivotValid ? null : (
-                <p role="status" className="px-1 text-[12px] text-ink-3">
+                <p role="status" className="px-1 text-fs-120 text-ink-3">
                   {labels.pivotIncomplete}
                 </p>
               )}
