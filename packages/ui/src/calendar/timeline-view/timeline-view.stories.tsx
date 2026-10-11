@@ -125,7 +125,9 @@ export const Default: Story = {};
 
 export const EmptyToday: Story = { args: { events: [], markers: [] } };
 
-export const HiddenDates: Story = { args: { hiddenDates: ["2026-10-09", "2026-10-10"] } };
+export const HiddenDates: Story = {
+  args: { hiddenDates: ["2026-10-09", "2026-10-10"] },
+};
 
 export const MarkersOnly: Story = { args: { events: [] } };
 

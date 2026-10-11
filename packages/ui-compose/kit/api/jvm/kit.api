@@ -276,6 +276,138 @@ public final class com/jcsoftdev/ui/atoms/TextKt {
 	public static final fun getLocalContentColor ()Landroidx/compose/runtime/ProvidableCompositionLocal;
 }
 
+public final class com/jcsoftdev/ui/containers/BannerColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/containers/BannerColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/containers/BannerColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/containers/BannerColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getContent-0d7_KjU ()J
+	public final fun getIcon-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/containers/BannerDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/BannerDefaults;
+	public final fun colors (Lcom/jcsoftdev/ui/containers/BannerTone;Landroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/containers/BannerColors;
+	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getDismissIconSize-D9Ej5fM ()F
+	public final fun getIconSize-D9Ej5fM ()F
+	public final fun getIconTopPadding-D9Ej5fM ()F
+	public final fun getMessageStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getSpacing (Landroidx/compose/runtime/Composer;I)F
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun icon (Lcom/jcsoftdev/ui/containers/BannerTone;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/containers/BannerKt {
+	public static final fun Banner (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/containers/BannerTone;Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lcom/jcsoftdev/ui/containers/BannerColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/containers/BannerTone : java/lang/Enum {
+	public static final field Danger Lcom/jcsoftdev/ui/containers/BannerTone;
+	public static final field Info Lcom/jcsoftdev/ui/containers/BannerTone;
+	public static final field Success Lcom/jcsoftdev/ui/containers/BannerTone;
+	public static final field Warning Lcom/jcsoftdev/ui/containers/BannerTone;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/containers/BannerTone;
+	public static fun values ()[Lcom/jcsoftdev/ui/containers/BannerTone;
+}
+
+public final class com/jcsoftdev/ui/containers/CardColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-jRlVdoo (JJJJ)Lcom/jcsoftdev/ui/containers/CardColors;
+	public static synthetic fun copy-jRlVdoo$default (Lcom/jcsoftdev/ui/containers/CardColors;JJJJILjava/lang/Object;)Lcom/jcsoftdev/ui/containers/CardColors;
+	public final fun getBorder-0d7_KjU ()J
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getDivider-0d7_KjU ()J
+	public final fun getFooterContent-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/containers/CardDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/CardDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/containers/CardColors;
+	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getFooterPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getHeaderMinHeight-D9Ej5fM ()F
+	public final fun getHeaderPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getSlotSpacing (Landroidx/compose/runtime/Composer;I)F
+}
+
+public final class com/jcsoftdev/ui/containers/CardKt {
+	public static final fun Card (Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function0;ZLjava/lang/String;Lcom/jcsoftdev/ui/containers/CardColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/containers/ComposableSingletons$BannerKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ComposableSingletons$BannerKt;
+	public fun <init> ()V
+	public final fun getLambda$-1192661801$kit ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/jcsoftdev/ui/containers/ComposableSingletons$PageHeaderKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ComposableSingletons$PageHeaderKt;
+	public fun <init> ()V
+	public final fun getLambda$-143045464$kit ()Lkotlin/jvm/functions/Function2;
+}
+
+public final class com/jcsoftdev/ui/containers/ListRowColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-t635Npw (JJJJJ)Lcom/jcsoftdev/ui/containers/ListRowColors;
+	public static synthetic fun copy-t635Npw$default (Lcom/jcsoftdev/ui/containers/ListRowColors;JJJJJILjava/lang/Object;)Lcom/jcsoftdev/ui/containers/ListRowColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getMeta-0d7_KjU ()J
+	public final fun getSelectedContainer-0d7_KjU ()J
+	public final fun getSubtitle-0d7_KjU ()J
+	public final fun getTitle-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/containers/ListRowDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ListRowDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/containers/ListRowColors;
+	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getMetaStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getMinHeight (Landroidx/compose/runtime/Composer;I)F
+	public final fun getShape ()Landroidx/compose/ui/graphics/Shape;
+	public final fun getSpacing (Landroidx/compose/runtime/Composer;I)F
+	public final fun getSubtitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/containers/ListRowKt {
+	public static final fun ListRow-9rhh4-4 (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function0;ZZLjava/lang/String;Lcom/jcsoftdev/ui/containers/ListRowColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/containers/PageHeaderColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/containers/PageHeaderColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/containers/PageHeaderColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/containers/PageHeaderColors;
+	public final fun getEyebrow-0d7_KjU ()J
+	public final fun getLede-0d7_KjU ()J
+	public final fun getTitle-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/containers/PageHeaderDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/PageHeaderDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/containers/PageHeaderColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getEyebrowStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getLedeStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getSpacing (Landroidx/compose/runtime/Composer;I)F
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/containers/PageHeaderKt {
+	public static final fun PageHeader (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/lang/String;ZLkotlin/jvm/functions/Function3;Lcom/jcsoftdev/ui/containers/PageHeaderColors;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+}
+
 public final class com/jcsoftdev/ui/forms/ComposableSingletons$InputKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/forms/ComposableSingletons$InputKt;
 	public fun <init> ()V
@@ -1454,6 +1586,78 @@ public final class com/jcsoftdev/ui/primitives/ToastTone : java/lang/Enum {
 	public static fun values ()[Lcom/jcsoftdev/ui/primitives/ToastTone;
 }
 
+public final class com/jcsoftdev/ui/states/EmptyStateColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/states/EmptyStateColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/states/EmptyStateColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/states/EmptyStateColors;
+	public final fun getDescription-0d7_KjU ()J
+	public final fun getIcon-0d7_KjU ()J
+	public final fun getTitle-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/states/EmptyStateDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/states/EmptyStateDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/states/EmptyStateColors;
+	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getDescriptionStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getSpacing (Landroidx/compose/runtime/Composer;I)F
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/states/EmptyStateKt {
+	public static final fun EmptyState (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lcom/jcsoftdev/ui/states/EmptyStateColors;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/states/ErrorStateDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/states/ErrorStateDefaults;
+	public final fun getCorrelationStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/states/ErrorStateKt {
+	public static final fun ErrorState (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lcom/jcsoftdev/ui/states/EmptyStateColors;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/states/OfflineBannerDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/states/OfflineBannerDefaults;
+	public final fun getCounterStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/states/OfflineBannerKt {
+	public static final fun OfflineBanner (Ljava/lang/String;Landroidx/compose/ui/Modifier;ILjava/lang/String;Lcom/jcsoftdev/ui/containers/BannerColors;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/states/SkeletonColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy--OWjLjI (JJ)Lcom/jcsoftdev/ui/states/SkeletonColors;
+	public static synthetic fun copy--OWjLjI$default (Lcom/jcsoftdev/ui/states/SkeletonColors;JJILjava/lang/Object;)Lcom/jcsoftdev/ui/states/SkeletonColors;
+	public final fun getBase-0d7_KjU ()J
+	public final fun getHighlight-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/states/SkeletonDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/states/SkeletonDefaults;
+	public static final field LAST_LINE_FRACTION F
+	public static final field SWEEP_MILLIS I
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/states/SkeletonColors;
+	public final fun getCircleSize-D9Ej5fM ()F
+	public final fun getHeight-D9Ej5fM ()F
+	public final fun getLineSpacing (Landroidx/compose/runtime/Composer;I)F
+	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+}
+
+public final class com/jcsoftdev/ui/states/SkeletonKt {
+	public static final fun Skeleton (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Lcom/jcsoftdev/ui/states/SkeletonColors;Landroidx/compose/runtime/Composer;II)V
+	public static final fun SkeletonCircle-uFdPcIQ (Landroidx/compose/ui/Modifier;FLcom/jcsoftdev/ui/states/SkeletonColors;Landroidx/compose/runtime/Composer;II)V
+	public static final fun SkeletonGroup (Landroidx/compose/ui/Modifier;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun SkeletonText (Landroidx/compose/ui/Modifier;IFLandroidx/compose/ui/graphics/Shape;Lcom/jcsoftdev/ui/states/SkeletonColors;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/theme/AccentPalette {
 	public static final field $stable I
 	public synthetic fun <init> (JJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1631,6 +1835,25 @@ public final class com/jcsoftdev/ui/theme/UiColors {
 	public final fun getLight ()Lcom/jcsoftdev/ui/theme/ThemeColors;
 }
 
+public final class com/jcsoftdev/ui/theme/UiFontSizes {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiFontSizes;
+	public final fun getFs100-XSAIIZE ()J
+	public final fun getFs105-XSAIIZE ()J
+	public final fun getFs110-XSAIIZE ()J
+	public final fun getFs115-XSAIIZE ()J
+	public final fun getFs120-XSAIIZE ()J
+	public final fun getFs125-XSAIIZE ()J
+	public final fun getFs130-XSAIIZE ()J
+	public final fun getFs140-XSAIIZE ()J
+	public final fun getFs150-XSAIIZE ()J
+	public final fun getFs160-XSAIIZE ()J
+	public final fun getFs220-XSAIIZE ()J
+	public final fun getFs300-XSAIIZE ()J
+	public final fun getFs440-XSAIIZE ()J
+	public final fun getFs95-XSAIIZE ()J
+}
+
 public final class com/jcsoftdev/ui/theme/UiPalettes {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiPalettes;
@@ -1681,6 +1904,41 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 	public final fun getTopHeight-D9Ej5fM ()F
 }
 
+public final class com/jcsoftdev/ui/theme/UiStrings {
+	public static final field $stable I
+	public static final field Companion Lcom/jcsoftdev/ui/theme/UiStrings$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public final fun getActionFailed ()Ljava/lang/String;
+	public final fun getActions ()Ljava/lang/String;
+	public final fun getBack ()Ljava/lang/String;
+	public final fun getCancel ()Ljava/lang/String;
+	public final fun getClose ()Ljava/lang/String;
+	public final fun getConfirm ()Ljava/lang/String;
+	public final fun getCorrelationPrefix ()Ljava/lang/String;
+	public final fun getDecrease ()Ljava/lang/String;
+	public final fun getDismiss ()Ljava/lang/String;
+	public final fun getHidePassword ()Ljava/lang/String;
+	public final fun getIncrease ()Ljava/lang/String;
+	public final fun getLoading ()Ljava/lang/String;
+	public final fun getNotifications ()Ljava/lang/String;
+	public final fun getOptional ()Ljava/lang/String;
+	public final fun getProcessing ()Ljava/lang/String;
+	public final fun getRetry ()Ljava/lang/String;
+	public final fun getShowPassword ()Ljava/lang/String;
+	public final fun getSomethingWrong ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/theme/UiStrings$Companion {
+	public final fun getEn ()Lcom/jcsoftdev/ui/theme/UiStrings;
+	public final fun getEs ()Lcom/jcsoftdev/ui/theme/UiStrings;
+}
+
+public final class com/jcsoftdev/ui/theme/UiStringsKt {
+	public static final fun getLocalUiStrings ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+}
+
 public final class com/jcsoftdev/ui/theme/UiTheme {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiTheme;
@@ -1689,12 +1947,13 @@ public final class com/jcsoftdev/ui/theme/UiTheme {
 	public final fun getMotion (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/foundation/Motion;
 	public final fun getShapes (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeShapes;
 	public final fun getSizes (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeSizes;
+	public final fun getStrings (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/UiStrings;
 	public final fun getTypography (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeTypography;
 	public final fun text (Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 
 public final class com/jcsoftdev/ui/theme/UiThemeKt {
-	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lcom/jcsoftdev/ui/theme/UiStrings;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/theme/UiTypography {

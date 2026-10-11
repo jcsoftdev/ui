@@ -42,7 +42,7 @@ function Swatch({ color, shape = "square" }: { color: string; shape?: LegendShap
   return (
     <span
       aria-hidden="true"
-      className={cn("size-2.5 shrink-0", shape === "dot" ? "rounded-pill" : "rounded-[3px]")}
+      className={cn("size-2.5 shrink-0", shape === "dot" ? "rounded-pill" : "rounded-xs")}
       style={{ background: color }}
     />
   );
@@ -78,7 +78,7 @@ export function ChartLegend({
           </>
         );
         const itemClass = cn(
-          "inline-flex max-w-[220px] items-center gap-1.5 rounded-pill px-2 py-1 font-semibold text-[12px] text-ink-2 transition-[opacity,background-color] duration-150",
+          "inline-flex max-w-[220px] items-center gap-1.5 rounded-pill px-2 py-1 font-semibold text-fs-120 text-ink-2 transition-[opacity,background-color] duration-150",
           item.hidden && "opacity-45 [&>span:last-child]:line-through",
         );
         return (

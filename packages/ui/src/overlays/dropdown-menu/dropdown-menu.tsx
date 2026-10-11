@@ -1,45 +1,55 @@
 "use client";
 
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import { Check, ChevronRight } from "../../icons/index.js";
+import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
 
-export const DropdownMenu = DropdownMenuPrimitive.Root;
-export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
-export const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
+export const DropdownMenu = MenuPrimitive.Root;
+export const DropdownMenuTrigger = MenuPrimitive.Trigger;
+export const DropdownMenuRadioGroup = MenuPrimitive.RadioGroup;
+export const DropdownMenuGroup = MenuPrimitive.Group;
+export const DropdownMenuSub = MenuPrimitive.Sub;
+export const DropdownMenuArrow = MenuPrimitive.Arrow;
 
-export interface DropdownMenuContentProps
-  extends ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> {}
+const surface =
+  "z-85 min-w-[min(14.375rem,var(--ui-popper-available-width))] max-h-(--ui-popper-available-height) max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover surface-overlay p-1.5 shadow-overlay";
+
+const itemBase =
+  "flex w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2";
+
+export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps {
+  /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
+  container?: HTMLElement | null;
+}
 
 export function DropdownMenuContent({
   className,
   sideOffset = 6,
   collisionPadding = 8,
+  container,
   ...props
 }: DropdownMenuContentProps) {
   return (
-    <DropdownMenuPrimitive.Portal>
-      <DropdownMenuPrimitive.Content
+    <MenuPrimitive.Portal container={container}>
+      <MenuPrimitive.Content
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
-        className={cn(
-          "z-85 min-w-[min(14.375rem,var(--radix-dropdown-menu-content-available-width))] max-h-(--radix-dropdown-menu-content-available-height) max-w-(--radix-dropdown-menu-content-available-width) overflow-y-auto rounded-popover surface-overlay p-1.5 shadow-overlay",
-          className,
-        )}
+        className={cn(surface, className)}
         {...props}
       />
-    </DropdownMenuPrimitive.Portal>
+    </MenuPrimitive.Portal>
   );
 }
 
-export interface DropdownMenuItemProps
-  extends ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> {}
+export interface DropdownMenuItemProps extends MenuPrimitive.MenuItemProps {}
 
 export function DropdownMenuItem({ className, ...props }: DropdownMenuItemProps) {
   return (
-    <DropdownMenuPrimitive.Item
+    <MenuPrimitive.Item
       className={cn(
-        "flex w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2 data-disabled:pointer-events-none data-disabled:opacity-50",
+        itemBase,
+        "data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
       {...props}
@@ -47,15 +57,41 @@ export function DropdownMenuItem({ className, ...props }: DropdownMenuItemProps)
   );
 }
 
-export interface DropdownMenuRadioItemProps
-  extends ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem> {}
+export interface DropdownMenuCheckboxItemProps extends MenuPrimitive.MenuCheckboxItemProps {}
 
-/** Radix sets `role="menuitemradio"` and `aria-checked`: use it for single-value filters. */
+export function DropdownMenuCheckboxItem({
+  className,
+  children,
+  ...props
+}: DropdownMenuCheckboxItemProps) {
+  return (
+    <MenuPrimitive.CheckboxItem
+      className={cn(
+        itemBase,
+        "relative ps-8 data-disabled:pointer-events-none data-disabled:opacity-50",
+        className,
+      )}
+      {...props}
+    >
+      <span className="absolute inset-s-2 flex size-4 items-center justify-center">
+        <MenuPrimitive.ItemIndicator>
+          <Check aria-hidden="true" className="size-4" />
+        </MenuPrimitive.ItemIndicator>
+      </span>
+      {children}
+    </MenuPrimitive.CheckboxItem>
+  );
+}
+
+export interface DropdownMenuRadioItemProps extends MenuPrimitive.MenuRadioItemProps {}
+
+/** Exposes `role="menuitemradio"` and `aria-checked`: use it for single-value filters. */
 export function DropdownMenuRadioItem({ className, ...props }: DropdownMenuRadioItemProps) {
   return (
-    <DropdownMenuPrimitive.RadioItem
+    <MenuPrimitive.RadioItem
       className={cn(
-        "flex w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2 data-[state=checked]:font-bold data-[state=checked]:text-accent-ink",
+        itemBase,
+        "data-[state=checked]:font-bold data-[state=checked]:text-accent-ink",
         className,
       )}
       {...props}
@@ -65,18 +101,61 @@ export function DropdownMenuRadioItem({ className, ...props }: DropdownMenuRadio
 
 export function DropdownMenuLabel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("px-2.5 pt-1.5 pb-1 text-overline text-ink-3", className)} {...props} />
+    <MenuPrimitive.Label
+      className={cn("px-2.5 pt-1.5 pb-1 text-overline text-ink-3", className)}
+      {...props}
+    />
   );
 }
 
-export interface DropdownMenuSeparatorProps
-  extends ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator> {}
+export interface DropdownMenuSeparatorProps extends ComponentPropsWithoutRef<"div"> {}
 
 export function DropdownMenuSeparator({ className, ...props }: DropdownMenuSeparatorProps) {
   return (
-    <DropdownMenuPrimitive.Separator
-      className={cn("my-1.25 border-t-divider", className)}
+    <MenuPrimitive.Separator className={cn("my-1.25 border-t-divider", className)} {...props} />
+  );
+}
+
+export interface DropdownMenuSubTriggerProps extends MenuPrimitive.MenuSubTriggerProps {}
+
+/** Item that opens a nested menu; the chevron is added after the children. */
+export function DropdownMenuSubTrigger({
+  className,
+  children,
+  ...props
+}: DropdownMenuSubTriggerProps) {
+  return (
+    <MenuPrimitive.SubTrigger
+      className={cn(
+        itemBase,
+        "data-disabled:pointer-events-none data-disabled:opacity-50 data-[state=open]:bg-surface-2",
+        className,
+      )}
       {...props}
-    />
+    >
+      {children}
+      <ChevronRight aria-hidden="true" className="ms-auto size-4 rtl:rotate-180" />
+    </MenuPrimitive.SubTrigger>
+  );
+}
+
+export interface DropdownMenuSubContentProps extends MenuPrimitive.MenuSubContentProps {
+  container?: HTMLElement | null;
+}
+
+export function DropdownMenuSubContent({
+  className,
+  collisionPadding = 8,
+  container,
+  ...props
+}: DropdownMenuSubContentProps) {
+  return (
+    <MenuPrimitive.Portal container={container}>
+      <MenuPrimitive.SubContent
+        collisionPadding={collisionPadding}
+        className={cn(surface, className)}
+        {...props}
+      />
+    </MenuPrimitive.Portal>
   );
 }

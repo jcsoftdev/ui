@@ -12,7 +12,8 @@ export type ChipTone =
   | "solid"
   | "outline";
 
-const toneClasses: Record<ChipTone, string> = {
+/** Class map behind each `tone`; exported so apps can extend or reuse it. */
+export const chipToneClasses: Readonly<Record<ChipTone, string>> = {
   neutral: "bg-surface-2 text-ink-2",
   danger: "bg-danger-soft text-danger",
   warning: "bg-warning-soft text-warning",
@@ -51,9 +52,9 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-[12px] leading-none [&_svg]:size-3",
+        "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-fs-120 leading-none [&_svg]:size-3",
         square ? "rounded-chip" : "rounded-badge",
-        toneClasses[tone],
+        chipToneClasses[tone],
         interactive && "in-data-[density=touch]:min-h-11",
         className,
       )}

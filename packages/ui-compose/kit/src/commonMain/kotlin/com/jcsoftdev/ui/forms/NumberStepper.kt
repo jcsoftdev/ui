@@ -58,8 +58,8 @@ public object NumberStepperDefaults {
 public fun NumberStepper(
     value: Int,
     onValueChange: (Int) -> Unit,
-    decrementDescription: String,
-    incrementDescription: String,
+    decrementDescription: String = UiTheme.strings.decrease,
+    incrementDescription: String = UiTheme.strings.increase,
     modifier: Modifier = Modifier,
     min: Int = 0,
     max: Int = Int.MAX_VALUE,

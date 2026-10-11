@@ -63,7 +63,9 @@ export const Thinking: Story = {
   },
 };
 
-export const Collapsed: Story = { args: { defaultOpen: false } };
+export const Collapsed: Story = {
+  args: { defaultOpen: false },
+};
 
 export const Narrow: Story = {
   decorators: [

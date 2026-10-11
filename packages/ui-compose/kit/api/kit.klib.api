@@ -72,6 +72,19 @@ final enum class com.jcsoftdev.ui.atoms/LedStatus : kotlin/Enum<com.jcsoftdev.ui
     final fun values(): kotlin/Array<com.jcsoftdev.ui.atoms/LedStatus> // com.jcsoftdev.ui.atoms/LedStatus.values|values#static(){}[0]
 }
 
+final enum class com.jcsoftdev.ui.containers/BannerTone : kotlin/Enum<com.jcsoftdev.ui.containers/BannerTone> { // com.jcsoftdev.ui.containers/BannerTone|null[0]
+    enum entry Danger // com.jcsoftdev.ui.containers/BannerTone.Danger|null[0]
+    enum entry Info // com.jcsoftdev.ui.containers/BannerTone.Info|null[0]
+    enum entry Success // com.jcsoftdev.ui.containers/BannerTone.Success|null[0]
+    enum entry Warning // com.jcsoftdev.ui.containers/BannerTone.Warning|null[0]
+
+    final val entries // com.jcsoftdev.ui.containers/BannerTone.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.containers/BannerTone> // com.jcsoftdev.ui.containers/BannerTone.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.containers/BannerTone // com.jcsoftdev.ui.containers/BannerTone.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.containers/BannerTone> // com.jcsoftdev.ui.containers/BannerTone.values|values#static(){}[0]
+}
+
 final enum class com.jcsoftdev.ui.primitives/RovingMove : kotlin/Enum<com.jcsoftdev.ui.primitives/RovingMove> { // com.jcsoftdev.ui.primitives/RovingMove|null[0]
     enum entry First // com.jcsoftdev.ui.primitives/RovingMove.First|null[0]
     enum entry Last // com.jcsoftdev.ui.primitives/RovingMove.Last|null[0]
@@ -236,6 +249,64 @@ final class com.jcsoftdev.ui.atoms/SwitchColors { // com.jcsoftdev.ui.atoms/Swit
         final fun <get-trackOn>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.atoms/SwitchColors.trackOn.<get-trackOn>|<get-trackOn>(){}[0]
 
     final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.atoms/SwitchColors // com.jcsoftdev.ui.atoms/SwitchColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.containers/BannerColors { // com.jcsoftdev.ui.containers/BannerColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.containers/BannerColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val container // com.jcsoftdev.ui.containers/BannerColors.container|{}container[0]
+        final fun <get-container>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/BannerColors.container.<get-container>|<get-container>(){}[0]
+    final val content // com.jcsoftdev.ui.containers/BannerColors.content|{}content[0]
+        final fun <get-content>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/BannerColors.content.<get-content>|<get-content>(){}[0]
+    final val icon // com.jcsoftdev.ui.containers/BannerColors.icon|{}icon[0]
+        final fun <get-icon>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/BannerColors.icon.<get-icon>|<get-icon>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.containers/BannerColors // com.jcsoftdev.ui.containers/BannerColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.containers/CardColors { // com.jcsoftdev.ui.containers/CardColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.containers/CardColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val border // com.jcsoftdev.ui.containers/CardColors.border|{}border[0]
+        final fun <get-border>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/CardColors.border.<get-border>|<get-border>(){}[0]
+    final val container // com.jcsoftdev.ui.containers/CardColors.container|{}container[0]
+        final fun <get-container>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/CardColors.container.<get-container>|<get-container>(){}[0]
+    final val divider // com.jcsoftdev.ui.containers/CardColors.divider|{}divider[0]
+        final fun <get-divider>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/CardColors.divider.<get-divider>|<get-divider>(){}[0]
+    final val footerContent // com.jcsoftdev.ui.containers/CardColors.footerContent|{}footerContent[0]
+        final fun <get-footerContent>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/CardColors.footerContent.<get-footerContent>|<get-footerContent>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.containers/CardColors // com.jcsoftdev.ui.containers/CardColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.containers/ListRowColors { // com.jcsoftdev.ui.containers/ListRowColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.containers/ListRowColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val container // com.jcsoftdev.ui.containers/ListRowColors.container|{}container[0]
+        final fun <get-container>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/ListRowColors.container.<get-container>|<get-container>(){}[0]
+    final val meta // com.jcsoftdev.ui.containers/ListRowColors.meta|{}meta[0]
+        final fun <get-meta>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/ListRowColors.meta.<get-meta>|<get-meta>(){}[0]
+    final val selectedContainer // com.jcsoftdev.ui.containers/ListRowColors.selectedContainer|{}selectedContainer[0]
+        final fun <get-selectedContainer>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/ListRowColors.selectedContainer.<get-selectedContainer>|<get-selectedContainer>(){}[0]
+    final val subtitle // com.jcsoftdev.ui.containers/ListRowColors.subtitle|{}subtitle[0]
+        final fun <get-subtitle>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/ListRowColors.subtitle.<get-subtitle>|<get-subtitle>(){}[0]
+    final val title // com.jcsoftdev.ui.containers/ListRowColors.title|{}title[0]
+        final fun <get-title>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/ListRowColors.title.<get-title>|<get-title>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.containers/ListRowColors // com.jcsoftdev.ui.containers/ListRowColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.containers/PageHeaderColors { // com.jcsoftdev.ui.containers/PageHeaderColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.containers/PageHeaderColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val eyebrow // com.jcsoftdev.ui.containers/PageHeaderColors.eyebrow|{}eyebrow[0]
+        final fun <get-eyebrow>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/PageHeaderColors.eyebrow.<get-eyebrow>|<get-eyebrow>(){}[0]
+    final val lede // com.jcsoftdev.ui.containers/PageHeaderColors.lede|{}lede[0]
+        final fun <get-lede>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/PageHeaderColors.lede.<get-lede>|<get-lede>(){}[0]
+    final val title // com.jcsoftdev.ui.containers/PageHeaderColors.title|{}title[0]
+        final fun <get-title>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.containers/PageHeaderColors.title.<get-title>|<get-title>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.containers/PageHeaderColors // com.jcsoftdev.ui.containers/PageHeaderColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
 }
 
 final class com.jcsoftdev.ui.forms/FieldColors { // com.jcsoftdev.ui.forms/FieldColors|null[0]
@@ -576,6 +647,30 @@ final class com.jcsoftdev.ui.primitives/ToastItem { // com.jcsoftdev.ui.primitiv
         final fun <get-tone>(): com.jcsoftdev.ui.primitives/ToastTone // com.jcsoftdev.ui.primitives/ToastItem.tone.<get-tone>|<get-tone>(){}[0]
 }
 
+final class com.jcsoftdev.ui.states/EmptyStateColors { // com.jcsoftdev.ui.states/EmptyStateColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.states/EmptyStateColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val description // com.jcsoftdev.ui.states/EmptyStateColors.description|{}description[0]
+        final fun <get-description>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.states/EmptyStateColors.description.<get-description>|<get-description>(){}[0]
+    final val icon // com.jcsoftdev.ui.states/EmptyStateColors.icon|{}icon[0]
+        final fun <get-icon>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.states/EmptyStateColors.icon.<get-icon>|<get-icon>(){}[0]
+    final val title // com.jcsoftdev.ui.states/EmptyStateColors.title|{}title[0]
+        final fun <get-title>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.states/EmptyStateColors.title.<get-title>|<get-title>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.states/EmptyStateColors // com.jcsoftdev.ui.states/EmptyStateColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.states/SkeletonColors { // com.jcsoftdev.ui.states/SkeletonColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.states/SkeletonColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val base // com.jcsoftdev.ui.states/SkeletonColors.base|{}base[0]
+        final fun <get-base>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.states/SkeletonColors.base.<get-base>|<get-base>(){}[0]
+    final val highlight // com.jcsoftdev.ui.states/SkeletonColors.highlight|{}highlight[0]
+        final fun <get-highlight>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.states/SkeletonColors.highlight.<get-highlight>|<get-highlight>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.states/SkeletonColors // com.jcsoftdev.ui.states/SkeletonColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
 final class com.jcsoftdev.ui.theme/AccentPalette { // com.jcsoftdev.ui.theme/AccentPalette|null[0]
     constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.theme/AccentPalette.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
 
@@ -842,6 +937,56 @@ final class com.jcsoftdev.ui.theme/ThemeTypography { // com.jcsoftdev.ui.theme/T
     }
 }
 
+final class com.jcsoftdev.ui.theme/UiStrings { // com.jcsoftdev.ui.theme/UiStrings|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String, kotlin/String) // com.jcsoftdev.ui.theme/UiStrings.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val actionFailed // com.jcsoftdev.ui.theme/UiStrings.actionFailed|{}actionFailed[0]
+        final fun <get-actionFailed>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.actionFailed.<get-actionFailed>|<get-actionFailed>(){}[0]
+    final val actions // com.jcsoftdev.ui.theme/UiStrings.actions|{}actions[0]
+        final fun <get-actions>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.actions.<get-actions>|<get-actions>(){}[0]
+    final val back // com.jcsoftdev.ui.theme/UiStrings.back|{}back[0]
+        final fun <get-back>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.back.<get-back>|<get-back>(){}[0]
+    final val cancel // com.jcsoftdev.ui.theme/UiStrings.cancel|{}cancel[0]
+        final fun <get-cancel>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.cancel.<get-cancel>|<get-cancel>(){}[0]
+    final val close // com.jcsoftdev.ui.theme/UiStrings.close|{}close[0]
+        final fun <get-close>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.close.<get-close>|<get-close>(){}[0]
+    final val confirm // com.jcsoftdev.ui.theme/UiStrings.confirm|{}confirm[0]
+        final fun <get-confirm>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.confirm.<get-confirm>|<get-confirm>(){}[0]
+    final val correlationPrefix // com.jcsoftdev.ui.theme/UiStrings.correlationPrefix|{}correlationPrefix[0]
+        final fun <get-correlationPrefix>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.correlationPrefix.<get-correlationPrefix>|<get-correlationPrefix>(){}[0]
+    final val decrease // com.jcsoftdev.ui.theme/UiStrings.decrease|{}decrease[0]
+        final fun <get-decrease>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.decrease.<get-decrease>|<get-decrease>(){}[0]
+    final val dismiss // com.jcsoftdev.ui.theme/UiStrings.dismiss|{}dismiss[0]
+        final fun <get-dismiss>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.dismiss.<get-dismiss>|<get-dismiss>(){}[0]
+    final val hidePassword // com.jcsoftdev.ui.theme/UiStrings.hidePassword|{}hidePassword[0]
+        final fun <get-hidePassword>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.hidePassword.<get-hidePassword>|<get-hidePassword>(){}[0]
+    final val increase // com.jcsoftdev.ui.theme/UiStrings.increase|{}increase[0]
+        final fun <get-increase>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.increase.<get-increase>|<get-increase>(){}[0]
+    final val loading // com.jcsoftdev.ui.theme/UiStrings.loading|{}loading[0]
+        final fun <get-loading>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.loading.<get-loading>|<get-loading>(){}[0]
+    final val notifications // com.jcsoftdev.ui.theme/UiStrings.notifications|{}notifications[0]
+        final fun <get-notifications>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.notifications.<get-notifications>|<get-notifications>(){}[0]
+    final val optional // com.jcsoftdev.ui.theme/UiStrings.optional|{}optional[0]
+        final fun <get-optional>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.optional.<get-optional>|<get-optional>(){}[0]
+    final val processing // com.jcsoftdev.ui.theme/UiStrings.processing|{}processing[0]
+        final fun <get-processing>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.processing.<get-processing>|<get-processing>(){}[0]
+    final val retry // com.jcsoftdev.ui.theme/UiStrings.retry|{}retry[0]
+        final fun <get-retry>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.retry.<get-retry>|<get-retry>(){}[0]
+    final val showPassword // com.jcsoftdev.ui.theme/UiStrings.showPassword|{}showPassword[0]
+        final fun <get-showPassword>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.showPassword.<get-showPassword>|<get-showPassword>(){}[0]
+    final val somethingWrong // com.jcsoftdev.ui.theme/UiStrings.somethingWrong|{}somethingWrong[0]
+        final fun <get-somethingWrong>(): kotlin/String // com.jcsoftdev.ui.theme/UiStrings.somethingWrong.<get-somethingWrong>|<get-somethingWrong>(){}[0]
+
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): com.jcsoftdev.ui.theme/UiStrings // com.jcsoftdev.ui.theme/UiStrings.copy|copy(kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final object Companion { // com.jcsoftdev.ui.theme/UiStrings.Companion|null[0]
+        final val En // com.jcsoftdev.ui.theme/UiStrings.Companion.En|{}En[0]
+            final fun <get-En>(): com.jcsoftdev.ui.theme/UiStrings // com.jcsoftdev.ui.theme/UiStrings.Companion.En.<get-En>|<get-En>(){}[0]
+        final val Es // com.jcsoftdev.ui.theme/UiStrings.Companion.Es|{}Es[0]
+            final fun <get-Es>(): com.jcsoftdev.ui.theme/UiStrings // com.jcsoftdev.ui.theme/UiStrings.Companion.Es.<get-Es>|<get-Es>(){}[0]
+    }
+}
+
 final object com.jcsoftdev.ui.atoms/AvatarDefaults { // com.jcsoftdev.ui.atoms/AvatarDefaults|null[0]
     final fun colors(kotlin/Boolean, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): com.jcsoftdev.ui.atoms/AvatarColors // com.jcsoftdev.ui.atoms/AvatarDefaults.colors|colors(kotlin.Boolean;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
     final fun diameter(com.jcsoftdev.ui.atoms/AvatarSize = ...): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.atoms/AvatarDefaults.diameter|diameter(com.jcsoftdev.ui.atoms.AvatarSize){}[0]
@@ -934,6 +1079,79 @@ final object com.jcsoftdev.ui.atoms/SwitchDefaults { // com.jcsoftdev.ui.atoms/S
         final fun <get-trackSize>(): androidx.compose.ui.unit/DpSize // com.jcsoftdev.ui.atoms/SwitchDefaults.trackSize.<get-trackSize>|<get-trackSize>(){}[0]
 
     final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.atoms/SwitchColors // com.jcsoftdev.ui.atoms/SwitchDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.containers/BannerDefaults { // com.jcsoftdev.ui.containers/BannerDefaults|null[0]
+    final val contentPadding // com.jcsoftdev.ui.containers/BannerDefaults.contentPadding|{}contentPadding[0]
+        final fun <get-contentPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/BannerDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val dismissIconSize // com.jcsoftdev.ui.containers/BannerDefaults.dismissIconSize|{}dismissIconSize[0]
+        final fun <get-dismissIconSize>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/BannerDefaults.dismissIconSize.<get-dismissIconSize>|<get-dismissIconSize>(){}[0]
+    final val iconSize // com.jcsoftdev.ui.containers/BannerDefaults.iconSize|{}iconSize[0]
+        final fun <get-iconSize>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/BannerDefaults.iconSize.<get-iconSize>|<get-iconSize>(){}[0]
+    final val iconTopPadding // com.jcsoftdev.ui.containers/BannerDefaults.iconTopPadding|{}iconTopPadding[0]
+        final fun <get-iconTopPadding>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/BannerDefaults.iconTopPadding.<get-iconTopPadding>|<get-iconTopPadding>(){}[0]
+    final val messageStyle // com.jcsoftdev.ui.containers/BannerDefaults.messageStyle|{}messageStyle[0]
+        final fun <get-messageStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/BannerDefaults.messageStyle.<get-messageStyle>|<get-messageStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val shape // com.jcsoftdev.ui.containers/BannerDefaults.shape|{}shape[0]
+        final fun <get-shape>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.graphics/Shape // com.jcsoftdev.ui.containers/BannerDefaults.shape.<get-shape>|<get-shape>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val spacing // com.jcsoftdev.ui.containers/BannerDefaults.spacing|{}spacing[0]
+        final fun <get-spacing>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/BannerDefaults.spacing.<get-spacing>|<get-spacing>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val titleStyle // com.jcsoftdev.ui.containers/BannerDefaults.titleStyle|{}titleStyle[0]
+        final fun <get-titleStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/BannerDefaults.titleStyle.<get-titleStyle>|<get-titleStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(com.jcsoftdev.ui.containers/BannerTone?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): com.jcsoftdev.ui.containers/BannerColors // com.jcsoftdev.ui.containers/BannerDefaults.colors|colors(com.jcsoftdev.ui.containers.BannerTone?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+    final fun icon(com.jcsoftdev.ui.containers/BannerTone): androidx.compose.ui.graphics.vector/ImageVector // com.jcsoftdev.ui.containers/BannerDefaults.icon|icon(com.jcsoftdev.ui.containers.BannerTone){}[0]
+}
+
+final object com.jcsoftdev.ui.containers/CardDefaults { // com.jcsoftdev.ui.containers/CardDefaults|null[0]
+    final val contentPadding // com.jcsoftdev.ui.containers/CardDefaults.contentPadding|{}contentPadding[0]
+        final fun <get-contentPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/CardDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val footerPadding // com.jcsoftdev.ui.containers/CardDefaults.footerPadding|{}footerPadding[0]
+        final fun <get-footerPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/CardDefaults.footerPadding.<get-footerPadding>|<get-footerPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val headerMinHeight // com.jcsoftdev.ui.containers/CardDefaults.headerMinHeight|{}headerMinHeight[0]
+        final fun <get-headerMinHeight>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/CardDefaults.headerMinHeight.<get-headerMinHeight>|<get-headerMinHeight>(){}[0]
+    final val headerPadding // com.jcsoftdev.ui.containers/CardDefaults.headerPadding|{}headerPadding[0]
+        final fun <get-headerPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/CardDefaults.headerPadding.<get-headerPadding>|<get-headerPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val shape // com.jcsoftdev.ui.containers/CardDefaults.shape|{}shape[0]
+        final fun <get-shape>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.graphics/Shape // com.jcsoftdev.ui.containers/CardDefaults.shape.<get-shape>|<get-shape>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val slotSpacing // com.jcsoftdev.ui.containers/CardDefaults.slotSpacing|{}slotSpacing[0]
+        final fun <get-slotSpacing>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/CardDefaults.slotSpacing.<get-slotSpacing>|<get-slotSpacing>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.containers/CardColors // com.jcsoftdev.ui.containers/CardDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.containers/ListRowDefaults { // com.jcsoftdev.ui.containers/ListRowDefaults|null[0]
+    final val contentPadding // com.jcsoftdev.ui.containers/ListRowDefaults.contentPadding|{}contentPadding[0]
+        final fun <get-contentPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/ListRowDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val metaStyle // com.jcsoftdev.ui.containers/ListRowDefaults.metaStyle|{}metaStyle[0]
+        final fun <get-metaStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/ListRowDefaults.metaStyle.<get-metaStyle>|<get-metaStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val minHeight // com.jcsoftdev.ui.containers/ListRowDefaults.minHeight|{}minHeight[0]
+        final fun <get-minHeight>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/ListRowDefaults.minHeight.<get-minHeight>|<get-minHeight>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val shape // com.jcsoftdev.ui.containers/ListRowDefaults.shape|{}shape[0]
+        final fun <get-shape>(): androidx.compose.ui.graphics/Shape // com.jcsoftdev.ui.containers/ListRowDefaults.shape.<get-shape>|<get-shape>(){}[0]
+    final val spacing // com.jcsoftdev.ui.containers/ListRowDefaults.spacing|{}spacing[0]
+        final fun <get-spacing>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/ListRowDefaults.spacing.<get-spacing>|<get-spacing>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val subtitleStyle // com.jcsoftdev.ui.containers/ListRowDefaults.subtitleStyle|{}subtitleStyle[0]
+        final fun <get-subtitleStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/ListRowDefaults.subtitleStyle.<get-subtitleStyle>|<get-subtitleStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val titleStyle // com.jcsoftdev.ui.containers/ListRowDefaults.titleStyle|{}titleStyle[0]
+        final fun <get-titleStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/ListRowDefaults.titleStyle.<get-titleStyle>|<get-titleStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.containers/ListRowColors // com.jcsoftdev.ui.containers/ListRowDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.containers/PageHeaderDefaults { // com.jcsoftdev.ui.containers/PageHeaderDefaults|null[0]
+    final val contentPadding // com.jcsoftdev.ui.containers/PageHeaderDefaults.contentPadding|{}contentPadding[0]
+        final fun <get-contentPadding>(): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/PageHeaderDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(){}[0]
+    final val eyebrowStyle // com.jcsoftdev.ui.containers/PageHeaderDefaults.eyebrowStyle|{}eyebrowStyle[0]
+        final fun <get-eyebrowStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/PageHeaderDefaults.eyebrowStyle.<get-eyebrowStyle>|<get-eyebrowStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val ledeStyle // com.jcsoftdev.ui.containers/PageHeaderDefaults.ledeStyle|{}ledeStyle[0]
+        final fun <get-ledeStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/PageHeaderDefaults.ledeStyle.<get-ledeStyle>|<get-ledeStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val spacing // com.jcsoftdev.ui.containers/PageHeaderDefaults.spacing|{}spacing[0]
+        final fun <get-spacing>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.containers/PageHeaderDefaults.spacing.<get-spacing>|<get-spacing>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val titleStyle // com.jcsoftdev.ui.containers/PageHeaderDefaults.titleStyle|{}titleStyle[0]
+        final fun <get-titleStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.containers/PageHeaderDefaults.titleStyle.<get-titleStyle>|<get-titleStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.containers/PageHeaderColors // com.jcsoftdev.ui.containers/PageHeaderDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 }
 
 final object com.jcsoftdev.ui.forms/FieldDefaults { // com.jcsoftdev.ui.forms/FieldDefaults|null[0]
@@ -1113,11 +1331,83 @@ final object com.jcsoftdev.ui.primitives/Roving { // com.jcsoftdev.ui.primitives
     final fun target(kotlin/Int, kotlin/Int, com.jcsoftdev.ui.primitives/RovingMove, kotlin/Boolean = ..., kotlin/Function1<kotlin/Int, kotlin/Boolean> = ...): kotlin/Int // com.jcsoftdev.ui.primitives/Roving.target|target(kotlin.Int;kotlin.Int;com.jcsoftdev.ui.primitives.RovingMove;kotlin.Boolean;kotlin.Function1<kotlin.Int,kotlin.Boolean>){}[0]
 }
 
+final object com.jcsoftdev.ui.states/EmptyStateDefaults { // com.jcsoftdev.ui.states/EmptyStateDefaults|null[0]
+    final val contentPadding // com.jcsoftdev.ui.states/EmptyStateDefaults.contentPadding|{}contentPadding[0]
+        final fun <get-contentPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.states/EmptyStateDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val descriptionStyle // com.jcsoftdev.ui.states/EmptyStateDefaults.descriptionStyle|{}descriptionStyle[0]
+        final fun <get-descriptionStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.states/EmptyStateDefaults.descriptionStyle.<get-descriptionStyle>|<get-descriptionStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val spacing // com.jcsoftdev.ui.states/EmptyStateDefaults.spacing|{}spacing[0]
+        final fun <get-spacing>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.states/EmptyStateDefaults.spacing.<get-spacing>|<get-spacing>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val titleStyle // com.jcsoftdev.ui.states/EmptyStateDefaults.titleStyle|{}titleStyle[0]
+        final fun <get-titleStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.states/EmptyStateDefaults.titleStyle.<get-titleStyle>|<get-titleStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.states/EmptyStateColors // com.jcsoftdev.ui.states/EmptyStateDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.states/ErrorStateDefaults { // com.jcsoftdev.ui.states/ErrorStateDefaults|null[0]
+    final val correlationStyle // com.jcsoftdev.ui.states/ErrorStateDefaults.correlationStyle|{}correlationStyle[0]
+        final fun <get-correlationStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.states/ErrorStateDefaults.correlationStyle.<get-correlationStyle>|<get-correlationStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.states/OfflineBannerDefaults { // com.jcsoftdev.ui.states/OfflineBannerDefaults|null[0]
+    final val counterStyle // com.jcsoftdev.ui.states/OfflineBannerDefaults.counterStyle|{}counterStyle[0]
+        final fun <get-counterStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.states/OfflineBannerDefaults.counterStyle.<get-counterStyle>|<get-counterStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.states/SkeletonDefaults { // com.jcsoftdev.ui.states/SkeletonDefaults|null[0]
+    final const val LAST_LINE_FRACTION // com.jcsoftdev.ui.states/SkeletonDefaults.LAST_LINE_FRACTION|{}LAST_LINE_FRACTION[0]
+        final fun <get-LAST_LINE_FRACTION>(): kotlin/Float // com.jcsoftdev.ui.states/SkeletonDefaults.LAST_LINE_FRACTION.<get-LAST_LINE_FRACTION>|<get-LAST_LINE_FRACTION>(){}[0]
+    final const val SWEEP_MILLIS // com.jcsoftdev.ui.states/SkeletonDefaults.SWEEP_MILLIS|{}SWEEP_MILLIS[0]
+        final fun <get-SWEEP_MILLIS>(): kotlin/Int // com.jcsoftdev.ui.states/SkeletonDefaults.SWEEP_MILLIS.<get-SWEEP_MILLIS>|<get-SWEEP_MILLIS>(){}[0]
+
+    final val circleSize // com.jcsoftdev.ui.states/SkeletonDefaults.circleSize|{}circleSize[0]
+        final fun <get-circleSize>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.states/SkeletonDefaults.circleSize.<get-circleSize>|<get-circleSize>(){}[0]
+    final val height // com.jcsoftdev.ui.states/SkeletonDefaults.height|{}height[0]
+        final fun <get-height>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.states/SkeletonDefaults.height.<get-height>|<get-height>(){}[0]
+    final val lineSpacing // com.jcsoftdev.ui.states/SkeletonDefaults.lineSpacing|{}lineSpacing[0]
+        final fun <get-lineSpacing>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.states/SkeletonDefaults.lineSpacing.<get-lineSpacing>|<get-lineSpacing>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val shape // com.jcsoftdev.ui.states/SkeletonDefaults.shape|{}shape[0]
+        final fun <get-shape>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.graphics/Shape // com.jcsoftdev.ui.states/SkeletonDefaults.shape.<get-shape>|<get-shape>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.states/SkeletonColors // com.jcsoftdev.ui.states/SkeletonDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
 final object com.jcsoftdev.ui.theme/UiColors { // com.jcsoftdev.ui.theme/UiColors|null[0]
     final val Dark // com.jcsoftdev.ui.theme/UiColors.Dark|{}Dark[0]
         final fun <get-Dark>(): com.jcsoftdev.ui.theme/ThemeColors // com.jcsoftdev.ui.theme/UiColors.Dark.<get-Dark>|<get-Dark>(){}[0]
     final val Light // com.jcsoftdev.ui.theme/UiColors.Light|{}Light[0]
         final fun <get-Light>(): com.jcsoftdev.ui.theme/ThemeColors // com.jcsoftdev.ui.theme/UiColors.Light.<get-Light>|<get-Light>(){}[0]
+}
+
+final object com.jcsoftdev.ui.theme/UiFontSizes { // com.jcsoftdev.ui.theme/UiFontSizes|null[0]
+    final val fs100 // com.jcsoftdev.ui.theme/UiFontSizes.fs100|{}fs100[0]
+        final fun <get-fs100>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs100.<get-fs100>|<get-fs100>(){}[0]
+    final val fs105 // com.jcsoftdev.ui.theme/UiFontSizes.fs105|{}fs105[0]
+        final fun <get-fs105>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs105.<get-fs105>|<get-fs105>(){}[0]
+    final val fs110 // com.jcsoftdev.ui.theme/UiFontSizes.fs110|{}fs110[0]
+        final fun <get-fs110>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs110.<get-fs110>|<get-fs110>(){}[0]
+    final val fs115 // com.jcsoftdev.ui.theme/UiFontSizes.fs115|{}fs115[0]
+        final fun <get-fs115>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs115.<get-fs115>|<get-fs115>(){}[0]
+    final val fs120 // com.jcsoftdev.ui.theme/UiFontSizes.fs120|{}fs120[0]
+        final fun <get-fs120>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs120.<get-fs120>|<get-fs120>(){}[0]
+    final val fs125 // com.jcsoftdev.ui.theme/UiFontSizes.fs125|{}fs125[0]
+        final fun <get-fs125>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs125.<get-fs125>|<get-fs125>(){}[0]
+    final val fs130 // com.jcsoftdev.ui.theme/UiFontSizes.fs130|{}fs130[0]
+        final fun <get-fs130>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs130.<get-fs130>|<get-fs130>(){}[0]
+    final val fs140 // com.jcsoftdev.ui.theme/UiFontSizes.fs140|{}fs140[0]
+        final fun <get-fs140>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs140.<get-fs140>|<get-fs140>(){}[0]
+    final val fs150 // com.jcsoftdev.ui.theme/UiFontSizes.fs150|{}fs150[0]
+        final fun <get-fs150>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs150.<get-fs150>|<get-fs150>(){}[0]
+    final val fs160 // com.jcsoftdev.ui.theme/UiFontSizes.fs160|{}fs160[0]
+        final fun <get-fs160>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs160.<get-fs160>|<get-fs160>(){}[0]
+    final val fs220 // com.jcsoftdev.ui.theme/UiFontSizes.fs220|{}fs220[0]
+        final fun <get-fs220>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs220.<get-fs220>|<get-fs220>(){}[0]
+    final val fs300 // com.jcsoftdev.ui.theme/UiFontSizes.fs300|{}fs300[0]
+        final fun <get-fs300>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs300.<get-fs300>|<get-fs300>(){}[0]
+    final val fs440 // com.jcsoftdev.ui.theme/UiFontSizes.fs440|{}fs440[0]
+        final fun <get-fs440>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs440.<get-fs440>|<get-fs440>(){}[0]
+    final val fs95 // com.jcsoftdev.ui.theme/UiFontSizes.fs95|{}fs95[0]
+        final fun <get-fs95>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs95.<get-fs95>|<get-fs95>(){}[0]
 }
 
 final object com.jcsoftdev.ui.theme/UiPalettes { // com.jcsoftdev.ui.theme/UiPalettes|null[0]
@@ -1209,6 +1499,8 @@ final object com.jcsoftdev.ui.theme/UiTheme { // com.jcsoftdev.ui.theme/UiTheme|
         final fun <get-shapes>(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.theme/ThemeShapes // com.jcsoftdev.ui.theme/UiTheme.shapes.<get-shapes>|<get-shapes>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
     final val sizes // com.jcsoftdev.ui.theme/UiTheme.sizes|{}sizes[0]
         final fun <get-sizes>(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.theme/ThemeSizes // com.jcsoftdev.ui.theme/UiTheme.sizes.<get-sizes>|<get-sizes>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val strings // com.jcsoftdev.ui.theme/UiTheme.strings|{}strings[0]
+        final fun <get-strings>(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.theme/UiStrings // com.jcsoftdev.ui.theme/UiTheme.strings.<get-strings>|<get-strings>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
     final val typography // com.jcsoftdev.ui.theme/UiTheme.typography|{}typography[0]
         final fun <get-typography>(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.theme/ThemeTypography // com.jcsoftdev.ui.theme/UiTheme.typography.<get-typography>|<get-typography>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 
@@ -1285,6 +1577,14 @@ final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillColors$stablep
 final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop|#static{}com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop[0]
 final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop|#static{}com_jcsoftdev_ui_atoms_SwitchColors$stableprop[0]
 final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop|#static{}com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerColors$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerColors$stableprop|#static{}com_jcsoftdev_ui_containers_BannerColors$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerDefaults$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerDefaults$stableprop|#static{}com_jcsoftdev_ui_containers_BannerDefaults$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardColors$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardColors$stableprop|#static{}com_jcsoftdev_ui_containers_CardColors$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardDefaults$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardDefaults$stableprop|#static{}com_jcsoftdev_ui_containers_CardDefaults$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowColors$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowColors$stableprop|#static{}com_jcsoftdev_ui_containers_ListRowColors$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowDefaults$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowDefaults$stableprop|#static{}com_jcsoftdev_ui_containers_ListRowDefaults$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderColors$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderColors$stableprop|#static{}com_jcsoftdev_ui_containers_PageHeaderColors$stableprop[0]
+final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderDefaults$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderDefaults$stableprop|#static{}com_jcsoftdev_ui_containers_PageHeaderDefaults$stableprop[0]
 final val com.jcsoftdev.ui.forms/com_jcsoftdev_ui_forms_DateFormat$stableprop // com.jcsoftdev.ui.forms/com_jcsoftdev_ui_forms_DateFormat$stableprop|#static{}com_jcsoftdev_ui_forms_DateFormat$stableprop[0]
 final val com.jcsoftdev.ui.forms/com_jcsoftdev_ui_forms_FieldColors$stableprop // com.jcsoftdev.ui.forms/com_jcsoftdev_ui_forms_FieldColors$stableprop|#static{}com_jcsoftdev_ui_forms_FieldColors$stableprop[0]
 final val com.jcsoftdev.ui.forms/com_jcsoftdev_ui_forms_FieldDefaults$stableprop // com.jcsoftdev.ui.forms/com_jcsoftdev_ui_forms_FieldDefaults$stableprop|#static{}com_jcsoftdev_ui_forms_FieldDefaults$stableprop[0]
@@ -1622,15 +1922,25 @@ final val com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastHostState
 final val com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastItem$stableprop // com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastItem$stableprop|#static{}com_jcsoftdev_ui_primitives_ToastItem$stableprop[0]
 final val com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastQueue$stableprop // com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastQueue$stableprop|#static{}com_jcsoftdev_ui_primitives_ToastQueue$stableprop[0]
 final val com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastTimer$stableprop // com.jcsoftdev.ui.primitives/com_jcsoftdev_ui_primitives_ToastTimer$stableprop|#static{}com_jcsoftdev_ui_primitives_ToastTimer$stableprop[0]
+final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateColors$stableprop // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateColors$stableprop|#static{}com_jcsoftdev_ui_states_EmptyStateColors$stableprop[0]
+final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateDefaults$stableprop // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateDefaults$stableprop|#static{}com_jcsoftdev_ui_states_EmptyStateDefaults$stableprop[0]
+final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_ErrorStateDefaults$stableprop // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_ErrorStateDefaults$stableprop|#static{}com_jcsoftdev_ui_states_ErrorStateDefaults$stableprop[0]
+final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_OfflineBannerDefaults$stableprop // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_OfflineBannerDefaults$stableprop|#static{}com_jcsoftdev_ui_states_OfflineBannerDefaults$stableprop[0]
+final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonColors$stableprop // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonColors$stableprop|#static{}com_jcsoftdev_ui_states_SkeletonColors$stableprop[0]
+final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stableprop // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stableprop|#static{}com_jcsoftdev_ui_states_SkeletonDefaults$stableprop[0]
+final val com.jcsoftdev.ui.theme/LocalUiStrings // com.jcsoftdev.ui.theme/LocalUiStrings|{}LocalUiStrings[0]
+    final fun <get-LocalUiStrings>(): androidx.compose.runtime/ProvidableCompositionLocal<com.jcsoftdev.ui.theme/UiStrings> // com.jcsoftdev.ui.theme/LocalUiStrings.<get-LocalUiStrings>|<get-LocalUiStrings>(){}[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop|#static{}com_jcsoftdev_ui_theme_AccentPalette$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeColors$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeShapes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeSizes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeTypography$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop|#static{}com_jcsoftdev_ui_theme_UiColors$stableprop[0]
+final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop|#static{}com_jcsoftdev_ui_theme_UiFontSizes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop|#static{}com_jcsoftdev_ui_theme_UiPalettes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop|#static{}com_jcsoftdev_ui_theme_UiShapes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop|#static{}com_jcsoftdev_ui_theme_UiSizes$stableprop[0]
+final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiStrings$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiStrings$stableprop|#static{}com_jcsoftdev_ui_theme_UiStrings$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTheme$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTheme$stableprop|#static{}com_jcsoftdev_ui_theme_UiTheme$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTypography$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTypography$stableprop|#static{}com_jcsoftdev_ui_theme_UiTypography$stableprop[0]
 
@@ -1680,11 +1990,23 @@ final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillColors$stablep
 final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop_getter|com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop_getter|com_jcsoftdev_ui_atoms_SwitchColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop_getter|com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/Banner(kotlin/String, androidx.compose.ui/Modifier?, com.jcsoftdev.ui.containers/BannerTone?, kotlin/String?, androidx.compose.ui.graphics.vector/ImageVector?, kotlin/Function0<kotlin/Unit>?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, com.jcsoftdev.ui.containers/BannerColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/Banner|Banner(kotlin.String;androidx.compose.ui.Modifier?;com.jcsoftdev.ui.containers.BannerTone?;kotlin.String?;androidx.compose.ui.graphics.vector.ImageVector?;kotlin.Function0<kotlin.Unit>?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;com.jcsoftdev.ui.containers.BannerColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.containers/Card(androidx.compose.ui/Modifier?, kotlin/Function0<kotlin/Unit>?, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.containers/CardColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.foundation.layout/PaddingValues?, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/Card|Card(androidx.compose.ui.Modifier?;kotlin.Function0<kotlin.Unit>?;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.containers.CardColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.foundation.layout.PaddingValues?;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.containers/ListRow(kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function0<kotlin/Unit>?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.containers/ListRowColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.unit/Dp, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/ListRow|ListRow(kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function0<kotlin.Unit>?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.containers.ListRowColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.unit.Dp;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.containers/PageHeader(kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/String?, kotlin/Function0<kotlin/Unit>?, kotlin/String?, kotlin/Boolean, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, com.jcsoftdev.ui.containers/PageHeaderColors?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/PageHeader|PageHeader(kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.String?;kotlin.Function0<kotlin.Unit>?;kotlin.String?;kotlin.Boolean;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;com.jcsoftdev.ui.containers.PageHeaderColors?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerColors$stableprop_getter|com_jcsoftdev_ui_containers_BannerColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerDefaults$stableprop_getter|com_jcsoftdev_ui_containers_BannerDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardColors$stableprop_getter|com_jcsoftdev_ui_containers_CardColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardDefaults$stableprop_getter|com_jcsoftdev_ui_containers_CardDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowColors$stableprop_getter|com_jcsoftdev_ui_containers_ListRowColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_ListRowDefaults$stableprop_getter|com_jcsoftdev_ui_containers_ListRowDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderColors$stableprop_getter|com_jcsoftdev_ui_containers_PageHeaderColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_PageHeaderDefaults$stableprop_getter|com_jcsoftdev_ui_containers_PageHeaderDefaults$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.forms/DateInput(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, androidx.compose.foundation.text/KeyboardActions?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/DateInput|DateInput(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;androidx.compose.foundation.text.KeyboardActions?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.forms/Field(kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/String?, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.forms/FieldColors?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.unit/Dp, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/Field|Field(kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.String?;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.forms.FieldColors?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.unit.Dp;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.forms/Input(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.foundation.text/KeyboardOptions?, androidx.compose.foundation.text/KeyboardActions?, androidx.compose.ui.text.input/VisualTransformation?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/Input|Input(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.foundation.text.KeyboardOptions?;androidx.compose.foundation.text.KeyboardActions?;androidx.compose.ui.text.input.VisualTransformation?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
-final fun com.jcsoftdev.ui.forms/NumberStepper(kotlin/Int, kotlin/Function1<kotlin/Int, kotlin/Unit>, kotlin/String, kotlin/String, androidx.compose.ui/Modifier?, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Boolean, com.jcsoftdev.ui.atoms/ButtonColors?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Shape?, kotlin/Function3<kotlin/Boolean, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/NumberStepper|NumberStepper(kotlin.Int;kotlin.Function1<kotlin.Int,kotlin.Unit>;kotlin.String;kotlin.String;androidx.compose.ui.Modifier?;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Boolean;com.jcsoftdev.ui.atoms.ButtonColors?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Shape?;kotlin.Function3<kotlin.Boolean,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
-final fun com.jcsoftdev.ui.forms/PasswordInput(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/String, kotlin/String, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, androidx.compose.foundation.text/KeyboardActions?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, kotlin/Function3<kotlin/Boolean, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/PasswordInput|PasswordInput(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;kotlin.String;kotlin.String;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;androidx.compose.foundation.text.KeyboardActions?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;kotlin.Function3<kotlin.Boolean,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.forms/NumberStepper(kotlin/Int, kotlin/Function1<kotlin/Int, kotlin/Unit>, kotlin/String?, kotlin/String?, androidx.compose.ui/Modifier?, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Boolean, com.jcsoftdev.ui.atoms/ButtonColors?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Shape?, kotlin/Function3<kotlin/Boolean, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/NumberStepper|NumberStepper(kotlin.Int;kotlin.Function1<kotlin.Int,kotlin.Unit>;kotlin.String?;kotlin.String?;androidx.compose.ui.Modifier?;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Boolean;com.jcsoftdev.ui.atoms.ButtonColors?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Shape?;kotlin.Function3<kotlin.Boolean,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.forms/PasswordInput(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/String?, kotlin/String?, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, androidx.compose.foundation.text/KeyboardActions?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, kotlin/Function3<kotlin/Boolean, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/PasswordInput|PasswordInput(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;kotlin.String?;kotlin.String?;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;androidx.compose.foundation.text.KeyboardActions?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;kotlin.Function3<kotlin.Boolean,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.forms/PinInput(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Int, kotlin/Boolean, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.unit/DpSize, androidx.compose.ui.unit/Dp, androidx.compose.ui.text/TextStyle?, kotlin/Function1<kotlin/String, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/PinInput|PinInput(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Int;kotlin.Boolean;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.unit.DpSize;androidx.compose.ui.unit.Dp;androidx.compose.ui.text.TextStyle?;kotlin.Function1<kotlin.String,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.forms/Select(kotlin.collections/List<com.jcsoftdev.ui.forms/SelectOption>, kotlin/String?, kotlin/Function1<kotlin/String, kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, kotlin/String?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, kotlin/Function4<kotlin/Boolean, androidx.compose.ui.graphics/Color, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/Select|Select(kotlin.collections.List<com.jcsoftdev.ui.forms.SelectOption>;kotlin.String?;kotlin.Function1<kotlin.String,kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;kotlin.String?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;kotlin.Function4<kotlin.Boolean,androidx.compose.ui.graphics.Color,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.forms/TimeInput(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, androidx.compose.foundation.text/KeyboardActions?, com.jcsoftdev.ui.forms/InputColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.forms/TimeInput|TimeInput(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;androidx.compose.foundation.text.KeyboardActions?;com.jcsoftdev.ui.forms.InputColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
@@ -1713,7 +2035,7 @@ final fun com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_SegmentedOptio
 final fun com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabItem$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabItem$stableprop_getter|com_jcsoftdev_ui_navigation_TabItem$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabsColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabsColors$stableprop_getter|com_jcsoftdev_ui_navigation_TabsColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabsDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.navigation/com_jcsoftdev_ui_navigation_TabsDefaults$stableprop_getter|com_jcsoftdev_ui_navigation_TabsDefaults$stableprop_getter(){}[0]
-final fun com.jcsoftdev.ui.overlays/Dialog(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.overlays/DialogColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.unit/Dp, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, com.jcsoftdev.ui.primitives/OverlayMotion?, kotlin/Float, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Dialog|Dialog(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.overlays.DialogColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.unit.Dp;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;com.jcsoftdev.ui.primitives.OverlayMotion?;kotlin.Float;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.overlays/Dialog(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.overlays/DialogColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.unit/Dp, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, com.jcsoftdev.ui.primitives/OverlayMotion?, kotlin/Float, kotlin/Function3<androidx.compose.foundation.layout/FlowRowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Dialog|Dialog(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.overlays.DialogColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.unit.Dp;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;com.jcsoftdev.ui.primitives.OverlayMotion?;kotlin.Float;kotlin.Function3<androidx.compose.foundation.layout.FlowRowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.overlays/Menu(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, androidx.compose.ui/Modifier?, com.jcsoftdev.ui.overlays/MenuColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.unit/Dp, androidx.compose.ui.unit/Dp, androidx.compose.foundation.layout/PaddingValues?, kotlin/Function2<androidx.compose.ui.graphics.drawscope/DrawScope, androidx.compose.ui.graphics/Color, kotlin/Unit>?, kotlin/Function1<com.jcsoftdev.ui.overlays/MenuScope, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Menu|Menu(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;androidx.compose.ui.Modifier?;com.jcsoftdev.ui.overlays.MenuColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.foundation.layout.PaddingValues?;kotlin.Function2<androidx.compose.ui.graphics.drawscope.DrawScope,androidx.compose.ui.graphics.Color,kotlin.Unit>?;kotlin.Function1<com.jcsoftdev.ui.overlays.MenuScope,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.overlays/OverlayHost(androidx.compose.ui/Modifier?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/OverlayHost|OverlayHost(androidx.compose.ui.Modifier?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.overlays/Sheet(kotlin/Boolean, kotlin/Function0<kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.overlays/SheetColors?, androidx.compose.foundation.shape/CornerBasedShape?, androidx.compose.ui.unit/Dp, androidx.compose.ui.unit/Dp, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.unit/DpSize, androidx.compose.ui.text/TextStyle?, com.jcsoftdev.ui.primitives/OverlayMotion?, com.jcsoftdev.ui.primitives/SheetState?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.overlays/Sheet|Sheet(kotlin.Boolean;kotlin.Function0<kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.overlays.SheetColors?;androidx.compose.foundation.shape.CornerBasedShape?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.unit.DpSize;androidx.compose.ui.text.TextStyle?;com.jcsoftdev.ui.primitives.OverlayMotion?;com.jcsoftdev.ui.primitives.SheetState?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
@@ -1751,15 +2073,30 @@ final fun com.jcsoftdev.ui.primitives/filterDigits(kotlin/String, kotlin/Int): k
 final fun com.jcsoftdev.ui.primitives/rememberMaskedInputState(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, com.jcsoftdev.ui.primitives/DigitMask, kotlin/Function1<kotlin/String, kotlin/String>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): com.jcsoftdev.ui.primitives/MaskedInputState // com.jcsoftdev.ui.primitives/rememberMaskedInputState|rememberMaskedInputState(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;com.jcsoftdev.ui.primitives.DigitMask;kotlin.Function1<kotlin.String,kotlin.String>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.primitives/rememberOverlayPresence(kotlin/Boolean, com.jcsoftdev.ui.primitives/OverlayMotion?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): com.jcsoftdev.ui.primitives/OverlayPresence // com.jcsoftdev.ui.primitives/rememberOverlayPresence|rememberOverlayPresence(kotlin.Boolean;com.jcsoftdev.ui.primitives.OverlayMotion?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.primitives/rememberSheetState(kotlin/Float, kotlin/Float, androidx.compose.animation.core/AnimationSpec<kotlin/Float>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int): com.jcsoftdev.ui.primitives/SheetState // com.jcsoftdev.ui.primitives/rememberSheetState|rememberSheetState(kotlin.Float;kotlin.Float;androidx.compose.animation.core.AnimationSpec<kotlin.Float>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
-final fun com.jcsoftdev.ui.theme/UiTheme(kotlin/Boolean, com.jcsoftdev.ui.theme/ThemeColors?, kotlin/String?, androidx.compose.ui.text.font/FontFamily?, com.jcsoftdev.ui.foundation/Motion?, com.jcsoftdev.ui.theme/ThemeShapes?, com.jcsoftdev.ui.theme/ThemeSizes?, com.jcsoftdev.ui.theme/ThemeTypography?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.theme/UiTheme|UiTheme(kotlin.Boolean;com.jcsoftdev.ui.theme.ThemeColors?;kotlin.String?;androidx.compose.ui.text.font.FontFamily?;com.jcsoftdev.ui.foundation.Motion?;com.jcsoftdev.ui.theme.ThemeShapes?;com.jcsoftdev.ui.theme.ThemeSizes?;com.jcsoftdev.ui.theme.ThemeTypography?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/EmptyState(kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, com.jcsoftdev.ui.states/EmptyStateColors?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/EmptyState|EmptyState(kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;com.jcsoftdev.ui.states.EmptyStateColors?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/ErrorState(kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/String?, kotlin/String?, kotlin/Function0<kotlin/Unit>?, kotlin/String?, com.jcsoftdev.ui.states/EmptyStateColors?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/ErrorState|ErrorState(kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.Function0<kotlin.Unit>?;kotlin.String?;com.jcsoftdev.ui.states.EmptyStateColors?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/OfflineBanner(kotlin/String, androidx.compose.ui/Modifier?, kotlin/Int, kotlin/String?, com.jcsoftdev.ui.containers/BannerColors?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/OfflineBanner|OfflineBanner(kotlin.String;androidx.compose.ui.Modifier?;kotlin.Int;kotlin.String?;com.jcsoftdev.ui.containers.BannerColors?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/Skeleton(androidx.compose.ui/Modifier?, androidx.compose.ui.graphics/Shape?, com.jcsoftdev.ui.states/SkeletonColors?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/Skeleton|Skeleton(androidx.compose.ui.Modifier?;androidx.compose.ui.graphics.Shape?;com.jcsoftdev.ui.states.SkeletonColors?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/SkeletonCircle(androidx.compose.ui/Modifier?, androidx.compose.ui.unit/Dp, com.jcsoftdev.ui.states/SkeletonColors?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/SkeletonCircle|SkeletonCircle(androidx.compose.ui.Modifier?;androidx.compose.ui.unit.Dp;com.jcsoftdev.ui.states.SkeletonColors?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/SkeletonGroup(androidx.compose.ui/Modifier?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/SkeletonGroup|SkeletonGroup(androidx.compose.ui.Modifier?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/SkeletonText(androidx.compose.ui/Modifier?, kotlin/Int, kotlin/Float, androidx.compose.ui.graphics/Shape?, com.jcsoftdev.ui.states/SkeletonColors?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.states/SkeletonText|SkeletonText(androidx.compose.ui.Modifier?;kotlin.Int;kotlin.Float;androidx.compose.ui.graphics.Shape?;com.jcsoftdev.ui.states.SkeletonColors?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateColors$stableprop_getter|com_jcsoftdev_ui_states_EmptyStateColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_EmptyStateDefaults$stableprop_getter|com_jcsoftdev_ui_states_EmptyStateDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_ErrorStateDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_ErrorStateDefaults$stableprop_getter|com_jcsoftdev_ui_states_ErrorStateDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_OfflineBannerDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_OfflineBannerDefaults$stableprop_getter|com_jcsoftdev_ui_states_OfflineBannerDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonColors$stableprop_getter|com_jcsoftdev_ui_states_SkeletonColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stableprop_getter|com_jcsoftdev_ui_states_SkeletonDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.theme/UiTheme(kotlin/Boolean, com.jcsoftdev.ui.theme/ThemeColors?, kotlin/String?, androidx.compose.ui.text.font/FontFamily?, com.jcsoftdev.ui.foundation/Motion?, com.jcsoftdev.ui.theme/ThemeShapes?, com.jcsoftdev.ui.theme/ThemeSizes?, com.jcsoftdev.ui.theme/ThemeTypography?, com.jcsoftdev.ui.theme/UiStrings?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.theme/UiTheme|UiTheme(kotlin.Boolean;com.jcsoftdev.ui.theme.ThemeColors?;kotlin.String?;androidx.compose.ui.text.font.FontFamily?;com.jcsoftdev.ui.foundation.Motion?;com.jcsoftdev.ui.theme.ThemeShapes?;com.jcsoftdev.ui.theme.ThemeSizes?;com.jcsoftdev.ui.theme.ThemeTypography?;com.jcsoftdev.ui.theme.UiStrings?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter|com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter|com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop_getter|com_jcsoftdev_ui_theme_ThemeShapes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop_getter|com_jcsoftdev_ui_theme_ThemeSizes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop_getter|com_jcsoftdev_ui_theme_ThemeTypography$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop_getter|com_jcsoftdev_ui_theme_UiColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop_getter|com_jcsoftdev_ui_theme_UiFontSizes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop_getter|com_jcsoftdev_ui_theme_UiPalettes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop_getter|com_jcsoftdev_ui_theme_UiShapes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop_getter|com_jcsoftdev_ui_theme_UiSizes$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiStrings$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiStrings$stableprop_getter|com_jcsoftdev_ui_theme_UiStrings$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTheme$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTheme$stableprop_getter|com_jcsoftdev_ui_theme_UiTheme$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTypography$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiTypography$stableprop_getter|com_jcsoftdev_ui_theme_UiTypography$stableprop_getter(){}[0]

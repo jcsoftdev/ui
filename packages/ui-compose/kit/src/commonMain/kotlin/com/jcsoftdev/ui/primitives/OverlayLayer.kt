@@ -1,22 +1,27 @@
 package com.jcsoftdev.ui.primitives
 
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.foundation.BackHandler
 import com.jcsoftdev.ui.foundation.BackPriority
 import com.jcsoftdev.ui.overlays.OverlayLayerEffect
@@ -34,10 +39,14 @@ import com.jcsoftdev.ui.overlays.OverlayLayerEffect
  *   modal or has an [onDismissRequest]. The dispatcher picks the highest [backPriority] and, among equals, the layer that
  *   opened last, so layers stack naturally: the default priority of a modal layer is [BackPriority.SHEET], the same as the kit
  *   sheet and dialog, which makes a custom dialog opened over a kit sheet (or the reverse) answer back first. Pass an explicit
- *   [backPriority] only to break that order on purpose; a non-modal layer defaults to [BackPriority.OVERLAY].
+ *   [backPriority] only to break that order on purpose; a non-modal layer with an [onDismissRequest] (a popup) answers above
+ *   sheets and editors, at [BackPriority.SHEET] + 100 like the kit menu, and one without it defaults to [BackPriority.OVERLAY].
  *   [dismissOnBack] decides whether back calls [onDismissRequest] or is only consumed, which is how a dialog can require an
  *   explicit choice.
- * - [captureFocus] (on for modal layers) moves focus into the layer when it appears.
+ * - [captureFocus] (on for modal layers) moves focus into the layer when it appears: the layer is a focus group that restores
+ *   its last focused element, with a zero-size focus target that takes the initial focus. When the layer above leaves, focus
+ *   returns to the exact element that had it. A custom scrolling or lazy container inside the layer needs its own
+ *   `Modifier.focusRestorer()` placed before the scroll modifier for that to reach elements inside it.
  *
  * ```
  * OverlayLayer(visible = open, onDismissRequest = { open = false }) {
@@ -47,6 +56,7 @@ import com.jcsoftdev.ui.overlays.OverlayLayerEffect
  * }
  * ```
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 public fun OverlayLayer(
     visible: Boolean,
@@ -54,7 +64,7 @@ public fun OverlayLayer(
     onDismissRequest: (() -> Unit)? = null,
     modal: Boolean = true,
     z: Int = 0,
-    backPriority: Int = if (modal) BackPriority.SHEET else BackPriority.OVERLAY,
+    backPriority: Int = defaultBackPriority(modal, onDismissRequest != null),
     dismissOnBack: Boolean = true,
     backEnabled: Boolean = visible,
     captureFocus: Boolean = modal,
@@ -68,11 +78,23 @@ public fun OverlayLayer(
         val focus = remember { FocusRequester() }
         if (captureFocus) LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
         Box(
-            modifier.fillMaxSize().then(if (captureFocus) Modifier.focusRequester(focus).focusable() else Modifier),
-            content = content,
-        )
+            modifier.fillMaxSize().then(if (captureFocus) Modifier.focusRestorer().focusGroup() else Modifier),
+        ) {
+            if (captureFocus) Box(Modifier.size(0.dp).focusRequester(focus).focusable())
+            content()
+        }
     }
 }
+
+private fun defaultBackPriority(
+    modal: Boolean,
+    dismissible: Boolean,
+): Int =
+    when {
+        modal -> BackPriority.SHEET
+        dismissible -> BackPriority.SHEET + 100
+        else -> BackPriority.OVERLAY
+    }
 
 /**
  * Modal layer with a scrim: a [OverlayLayer] whose [scrim] sits below [content] and, when [dismissOnScrimTap], turns a tap

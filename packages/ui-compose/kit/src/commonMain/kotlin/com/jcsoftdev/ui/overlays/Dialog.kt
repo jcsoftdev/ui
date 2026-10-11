@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,8 +25,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -106,11 +108,12 @@ public object DialogDefaults {
 
 /**
  * Centered modal dialog built on the headless [ModalLayer] and [initialFocus] primitives. Focus moves into it when it
- * opens, [title] is the pane title, and [description] and [content] sit between the title and the [actions] row.
+ * opens, [title] is the pane title, and [description] and [content] sit between the title and the [actions] row; actions wrap onto further lines (end-aligned) when they do not fit, e.g. at large font scales.
  * [dismissOnScrim] and [dismissOnBack] decide whether a tap outside or system back call [onDismissRequest], which must set
  * [open] to false; a dialog can therefore require an explicit choice. [dismissLabel] (already localized) is the scrim's
  * accessibility action name. [motion] sets the enter and exit timing and [enterScale] the size the card grows from.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 public fun Dialog(
     open: Boolean,
@@ -120,7 +123,7 @@ public fun Dialog(
     description: String? = null,
     dismissOnScrim: Boolean = true,
     dismissOnBack: Boolean = true,
-    dismissLabel: String? = null,
+    dismissLabel: String? = UiTheme.strings.close,
     colors: DialogColors = DialogDefaults.colors(),
     shape: Shape = DialogDefaults.shape,
     maxWidth: Dp = DialogDefaults.maxWidth,
@@ -129,7 +132,7 @@ public fun Dialog(
     descriptionStyle: TextStyle = DialogDefaults.descriptionStyle,
     motion: OverlayMotion = DialogDefaults.motion,
     enterScale: Float = DialogDefaults.ENTER_SCALE,
-    actions: (@Composable RowScope.() -> Unit)? = null,
+    actions: (@Composable FlowRowScope.() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val presence = rememberOverlayPresence(open, motion)
@@ -177,16 +180,17 @@ public fun Dialog(
                 if (description != null) Text(description, style = descriptionStyle, color = colors.description)
                 if (content != null) {
                     Column(
-                        Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                        Modifier.weight(1f, fill = false).focusRestorer().verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(sizes.space8),
                         content = content,
                     )
                 }
                 if (actions != null) {
-                    Row(
+                    FlowRow(
                         Modifier.fillMaxWidth().padding(top = sizes.space8),
                         horizontalArrangement = Arrangement.spacedBy(sizes.space8, Alignment.End),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalArrangement = Arrangement.spacedBy(sizes.space8),
+                        itemVerticalAlignment = Alignment.CenterVertically,
                         content = actions,
                     )
                 }

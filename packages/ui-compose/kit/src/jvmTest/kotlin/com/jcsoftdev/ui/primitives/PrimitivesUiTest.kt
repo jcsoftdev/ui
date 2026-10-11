@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -454,6 +455,135 @@ class PrimitivesUiTest {
             waitForIdle()
             assertEquals(0f, state.offset)
             onNodeWithTag("body").assertExists()
+        }
+
+    @Test
+    fun focusReturnsToTheExactElementInsideASheet() =
+        runComposeUiTest {
+            var layer by mutableStateOf(false)
+            val second = FocusRequester()
+            setContent(
+                screen {
+                    Sheet(true, {}, "S") {
+                        Box(Modifier.size(20.dp).testTag("s1").focusable())
+                        Box(
+                            Modifier
+                                .size(20.dp)
+                                .testTag("s2")
+                                .focusRequester(second)
+                                .focusable(),
+                        )
+                    }
+                    OverlayLayer(visible = layer, z = 5) { Box(Modifier.size(20.dp).testTag("top").focusable()) }
+                },
+            )
+            runOnIdle { second.requestFocus() }
+            onNodeWithTag("s2").assertIsFocused()
+            layer = true
+            waitForIdle()
+            onNodeWithTag("s2").assertIsNotFocused()
+            layer = false
+            waitForIdle()
+            onNodeWithTag("s2").assertIsFocused()
+        }
+
+    @Test
+    fun reopeningASheetDuringItsExitResetsTheDragOffset() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            var open by mutableStateOf(true)
+            lateinit var state: SheetState
+            setContent(
+                {
+                    CompositionLocalProvider(LocalBackDispatcher provides BackDispatcher()) {
+                        UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(1f)) {
+                            state = rememberSheetState()
+                            Sheet(open, { open = false }, "S", state = state) { Box(Modifier.size(20.dp)) }
+                        }
+                    }
+                },
+            )
+            mainClock.advanceTimeBy(1_000)
+            runOnIdle { state.dragBy(150f) }
+            open = false
+            mainClock.advanceTimeBy(48)
+            open = true
+            mainClock.advanceTimeBy(48)
+            assertEquals(0f, state.offset)
+        }
+
+    @Test
+    fun focusFallsThroughModalsWithoutFocusablesToTheContent() =
+        runComposeUiTest {
+            var lower by mutableStateOf(false)
+            var top by mutableStateOf(false)
+            val content = FocusRequester()
+            setContent(
+                screen {
+                    Box(
+                        Modifier
+                            .size(10.dp)
+                            .testTag("app")
+                            .focusRequester(content)
+                            .focusable(),
+                    )
+                    OverlayLayer(visible = lower, captureFocus = false) { Text("Nothing to focus") }
+                    OverlayLayer(visible = top, z = 5) { Box(Modifier.size(20.dp).testTag("top").focusable()) }
+                },
+            )
+            runOnIdle { content.requestFocus() }
+            lower = true
+            waitForIdle()
+            top = true
+            waitForIdle()
+            onNodeWithTag("app").assertIsNotFocused()
+            top = false
+            waitForIdle()
+            onNodeWithTag("app").assertIsFocused()
+        }
+
+    @Test
+    fun aDismissiblePopupLayerAnswersBackBeforeASheet() =
+        runComposeUiTest {
+            val back = BackDispatcher()
+            var popup = 0
+            var sheet = 0
+            setContent(
+                screen(back) {
+                    OverlayLayer(visible = true, modal = false, onDismissRequest = { popup++ }) { Box(Modifier.size(10.dp)) }
+                    Sheet(true, { sheet++ }, "S") { Box(Modifier.size(20.dp)) }
+                },
+            )
+            assertTrue(back.dispatch())
+            assertEquals(1, popup)
+            assertEquals(0, sheet)
+        }
+
+    @Test
+    fun rovingMovesFromTheFocusedItemWhenTheSelectionIsGone() =
+        runComposeUiTest {
+            var value by mutableStateOf<String?>("gone")
+            val values = listOf("a", "b", "c")
+            setContent(
+                screen {
+                    val focus = rememberRovingFocus<String>()
+                    Column(Modifier.rovingSelection(values, value, { value = it }, orientation = Orientation.Vertical, focus = focus)) {
+                        values.forEach { v ->
+                            Box(
+                                Modifier
+                                    .size(20.dp)
+                                    .testTag(v)
+                                    .rovingItem(focus, v)
+                                    .focusable(),
+                            )
+                        }
+                    }
+                },
+            )
+            onNodeWithTag("b").requestFocus()
+            pressOnRoot(Key.DirectionDown)
+            assertEquals("c", value)
+            onNodeWithTag("c").assertIsFocused()
         }
 
     @Test

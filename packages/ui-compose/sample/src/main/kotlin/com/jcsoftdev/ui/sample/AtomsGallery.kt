@@ -35,6 +35,7 @@ import com.jcsoftdev.ui.atoms.RadioOption
 import com.jcsoftdev.ui.atoms.StatusPill
 import com.jcsoftdev.ui.atoms.Switch
 import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.theme.UiStrings
 import com.jcsoftdev.ui.theme.UiTheme
 
 private val Options = listOf(RadioOption("a", "Efectivo", "Pago en caja"), RadioOption("b", "Tarjeta"), RadioOption("c", "Yape"))
@@ -49,7 +50,7 @@ fun AtomsGallery() {
 
 @Composable
 private fun Panel(dark: Boolean) {
-    UiTheme(dark = dark, accent = "#77D3AD") {
+    UiTheme(dark = dark, accent = "#77D3AD", strings = UiStrings.Es) {
         var on by remember { mutableStateOf(true) }
         var box by remember { mutableStateOf(ToggleableState.Indeterminate) }
         var radio by remember { mutableStateOf<String?>("a") }

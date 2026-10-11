@@ -1,4 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type TimelineFeedTone = "neutral" | "accent" | "success" | "warning" | "danger";
@@ -22,8 +23,25 @@ export interface TimelineFeedItem {
   group?: string;
 }
 
+export type TimelinePart =
+  | "root"
+  | "list"
+  | "item"
+  | "group"
+  | "rail"
+  | "marker"
+  | "connector"
+  | "content"
+  | "header"
+  | "title"
+  | "time"
+  | "actor"
+  | "description";
+
 export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "children"> {
   items: TimelineFeedItem[];
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<TimelinePart>;
 }
 
 const markerClasses: Record<TimelineFeedTone, string> = {
@@ -35,51 +53,89 @@ const markerClasses: Record<TimelineFeedTone, string> = {
 };
 
 /** Vertical activity feed: marker rail on the left, grouped by day, newest first by convention. */
-export function Timeline({ items, className, ...props }: TimelineProps) {
+export function Timeline({ items, className, classNames, ...props }: TimelineProps) {
   return (
-    <div className={cn("@container/timeline min-w-0", className)}>
-      <ol className="m-0 flex list-none flex-col p-0" {...props}>
+    <div className={cn("@container/timeline min-w-0", classNames?.root, className)}>
+      <ol {...props} className={cn("m-0 flex list-none flex-col p-0", classNames?.list)}>
         {items.map((item, index) => {
           const previous = items[index - 1];
           const last = index === items.length - 1;
           const tone = item.tone ?? "neutral";
           return (
-            <li key={item.id} className="flex min-w-0 flex-col">
+            <li key={item.id} className={cn("flex min-w-0 flex-col", classNames?.item)}>
               {item.group && item.group !== previous?.group ? (
-                <h4 className="pb-density-sm text-ink-3 text-overline uppercase">{item.group}</h4>
+                <h4
+                  className={cn(
+                    "pb-density-sm text-ink-3 text-overline uppercase",
+                    classNames?.group,
+                  )}
+                >
+                  {item.group}
+                </h4>
               ) : null}
               <div className="flex min-w-0 gap-density">
-                <div className="flex shrink-0 flex-col items-center">
+                <div className={cn("flex shrink-0 flex-col items-center", classNames?.rail)}>
                   <span
                     aria-hidden="true"
                     className={cn(
                       "flex size-7 shrink-0 items-center justify-center rounded-badge [&_svg]:size-3.5",
                       markerClasses[tone],
+                      classNames?.marker,
                     )}
                   >
                     {item.icon ?? <span className="size-2 rounded-full bg-current" />}
                   </span>
-                  {last ? null : <span aria-hidden="true" className="w-px flex-1 bg-divider" />}
+                  {last ? null : (
+                    <span
+                      aria-hidden="true"
+                      className={cn("w-px flex-1 bg-divider", classNames?.connector)}
+                    />
+                  )}
                 </div>
                 <div
                   className={cn(
                     "flex min-w-0 flex-1 flex-col gap-1",
                     last ? "pb-0" : "pb-density-lg",
+                    classNames?.content,
                   )}
                 >
-                  <div className="flex min-w-0 flex-wrap items-baseline gap-x-density-sm">
-                    <span className="min-w-0 break-words text-row-title text-ink">
+                  <div
+                    className={cn(
+                      "flex min-w-0 flex-wrap items-baseline gap-x-density-sm",
+                      classNames?.header,
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "min-w-0 break-words text-row-title text-ink",
+                        classNames?.title,
+                      )}
+                    >
                       {item.title}
                     </span>
                     {item.time ? (
-                      <time dateTime={item.dateTime} className="shrink-0 text-ink-3 text-meta">
+                      <time
+                        dateTime={item.dateTime}
+                        className={cn("shrink-0 text-ink-3 text-meta", classNames?.time)}
+                      >
                         {item.time}
                       </time>
                     ) : null}
                   </div>
-                  {item.actor ? <span className="text-ink-3 text-meta">{item.actor}</span> : null}
+                  {item.actor ? (
+                    <span className={cn("text-ink-3 text-meta", classNames?.actor)}>
+                      {item.actor}
+                    </span>
+                  ) : null}
                   {item.description ? (
-                    <p className="m-0 break-words text-body text-ink-2">{item.description}</p>
+                    <p
+                      className={cn(
+                        "m-0 break-words text-body text-ink-2",
+                        classNames?.description,
+                      )}
+                    >
+                      {item.description}
+                    </p>
                   ) : null}
                   {item.children}
                 </div>

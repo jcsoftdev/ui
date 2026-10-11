@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Scissors, Smile, Sparkles } from "lucide-react";
+import { Scissors, Smile, Sparkles } from "../../icons/index.js";
 import { CheckboxButtonGroup } from "./checkbox-button-group.js";
 
 const options = [

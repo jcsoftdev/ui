@@ -117,7 +117,7 @@ export function PictogramChart({
   const icons = new Set(data.map((item) => item.icon ?? icon));
   const keyShape = resolveUnitShape(icons.size > 1 ? MIXED_KEY : icon);
   const footer = keyShown ? (
-    <p className="m-0 flex items-center gap-1.5 text-[12px] text-ink-3">
+    <p className="m-0 flex items-center gap-1.5 text-fs-120 text-ink-3">
       <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24">
         <path d={keyShape.path} style={{ fill: "var(--ink-3)", fillRule: keyShape.fillRule }} />
       </svg>

@@ -616,7 +616,7 @@ function DonutPlot({
                 x={label.x}
                 y={label.y}
                 textAnchor={label.side > 0 ? "start" : "end"}
-                className="text-[11px]"
+                className="text-fs-110"
               >
                 {label.lines === 2 ? (
                   <>

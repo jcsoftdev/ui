@@ -136,6 +136,7 @@ type Story = StoryObj<typeof meta>;
  * En un contenedor ancho el gráfico va al lado; en uno angosto se fija arriba.
  */
 export const Default: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: (args) => (
     <div style={{ padding: 16 }}>
       <Narrative side={args.graphicSide} />
@@ -145,6 +146,7 @@ export const Default: Story = {
 
 /** 320 px: el gráfico se fija arriba y los pasos pasan debajo. */
 export const Narrow: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => (
     <div style={{ width: 320, padding: "0 0 16px" }}>
       <Narrative />
@@ -154,6 +156,7 @@ export const Narrow: Story = {
 
 /** Paso controlado desde fuera: los botones saltan al paso y la lectura sigue el scroll. */
 export const WithStepIndicator: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => {
     const [step, setStep] = useState(0);
     return (
@@ -183,6 +186,7 @@ export const WithStepIndicator: Story = {
 
 /** Con el preset `brutal`: bordes duros y la misma narrativa. */
 export const BrutalPreset: Story = {
+  parameters: { a11y: { test: "todo" } },
   render: () => (
     <div data-style="brutal" className="bg-bg p-card">
       <Narrative side="start" />

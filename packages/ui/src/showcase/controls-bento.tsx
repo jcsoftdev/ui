@@ -1,4 +1,3 @@
-import { Plus, Scissors, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Avatar } from "../atoms/avatar/index.js";
 import { Button } from "../atoms/button/index.js";
@@ -16,6 +15,7 @@ import { AccentPicker } from "../forms/accent-picker/index.js";
 import { Input } from "../forms/input/index.js";
 import { Select } from "../forms/select/index.js";
 import { Textarea } from "../forms/textarea/index.js";
+import { Plus, Scissors, Trash2 } from "../icons/index.js";
 import { Segmented, SegmentedItem } from "../navigation/segmented/index.js";
 import {
   Dialog,
@@ -256,7 +256,7 @@ export function ControlsBento() {
                 <DialogTitle>Anular cita</DialogTitle>
               </DialogHeader>
               <DialogBody>
-                <p className="m-0 text-[13px] text-ink-2">
+                <p className="m-0 text-fs-130 text-ink-2">
                   Vas a anular la cita de Luis Ramírez (Corte + barba, sábado 11:30 con Diego
                   Quispe). El horario quedará libre.
                 </p>

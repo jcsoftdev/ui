@@ -157,8 +157,8 @@ public fun Input(
 public fun PasswordInput(
     value: String,
     onValueChange: (String) -> Unit,
-    showLabel: String,
-    hideLabel: String,
+    showLabel: String = UiTheme.strings.showPassword,
+    hideLabel: String = UiTheme.strings.hidePassword,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isError: Boolean = false,

@@ -1,4 +1,4 @@
-export { FileTree, type FileTreeProps } from "./file-tree.js";
+export { FileTree, type FileTreePart, type FileTreeProps } from "./file-tree.js";
 export {
   ancestorsOf,
   type FileTreeNode,

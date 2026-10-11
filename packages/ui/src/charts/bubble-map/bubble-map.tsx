@@ -613,7 +613,7 @@ function BubblePlot({
                       textAnchor="middle"
                       dominantBaseline="central"
                       pointerEvents="none"
-                      className="font-bold text-[11px]"
+                      className="font-bold text-fs-110"
                       style={{ fill: "var(--surface)" }}
                     >
                       {item.points.length}
