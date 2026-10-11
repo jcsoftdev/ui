@@ -30,7 +30,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - [x] T2 `progress`, `avatar` in-house. Route: delegated.
 - [x] T3 `Slot` / `asChild` (prop, ref and handler merge). Route: delegated.
 - [x] T4 `switch`, `checkbox`, `radio-group` (+ accent-picker): controllable-state hook, roving focus, hidden form input. Route: delegated.
-- [ ] T5 `tabs`, `segmented` (toggle-group): roving focus, automatic/manual activation. Route: delegated.
+- [x] T5 `tabs`, `segmented` (toggle-group): roving focus, automatic/manual activation. Route: delegated.
 - [ ] T6 Icons: vendored SVG set (~112 names), `Icon`/`icon-map`, `IconComponent` type replacing `LucideIcon`. Route: delegated.
 - [ ] T7 Toaster: store, stack of 2, timers with hover pause, action, dismiss, aria-live; same `toast` API. Route: delegated.
 - [ ] T8 `cn` merge engine replacing `tailwind-merge`: parity tests against current output for the custom token groups first, then swap. Route: delegated.
@@ -58,5 +58,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 
 - 2026-10-10: T4 done (`63780ff` on `feat/zero-deps-t4-toggles`, stacked on T3): in-house `Switch`, `Checkbox` (indeterminate, Enter ignored) and `RadioGroup`/`AccentPicker` (internal `radio-group-primitive.tsx`; `RadioOption.disabled` added). Shared internals in `utils/`: `use-controllable-state`, `roving-focus` (`useRovingFocus({ orientation, dir, loop, activeId })` returns `rootProps` + `getItemProps(id, { disabled, onKeyDown, onFocus, onNavigate })`, DOM-ordered, Home/End/PageUp/PageDown, rtl), `form-bubble` (hidden input + reset), `compose`. Radix switch/checkbox/radio-group removed. 200 story files / 1230 tests, 406 node tests, lint/typecheck/build/treeshake pass. Route: delegated.
 
+- 2026-10-10: T5 done (`402607d` on `feat/zero-deps-t5-tabs`, stacked on T4): in-house `Tabs` (automatic/manual activation, orientation, dir, `forceMount`, inactive panels unmounted like Radix Presence, mousedown selects) and `Segmented` (radiogroup/radio, `data-state` on/off, clicking the active item deselects with `onValueChange("")` like Radix single; `rovingFocus`/`loop`/`dir`/`orientation` kept) on `useRovingFocus`; `TabsTrigger` also gets `data-orientation`. `getRovingIntent`/`findRovingTarget` now covered by `test/roving-focus.test.mjs` (rtl, loop=false). New stories: manual, vertical, disabled skipped, rtl, segmented deselect/disabled. `@radix-ui/react-tabs` and `-toggle-group` removed. 200 story files / 1235 tests, 410 node tests. The `data-[state=checked]:*` classes on the Switch track and Checkbox box spans were already dead under Radix (no data-state on those spans), so no regression; the checked track/box fill is a pre-existing visual gap, left as is. Route: delegated.
+
 ## Next step
-T5 (`tabs`, `segmented`): reuse `useRovingFocus`; T0 baselines must stay green.
+T6 (icons): vendored SVG set, `Icon`/`icon-map`, `IconComponent` replacing `LucideIcon`.
