@@ -69,6 +69,8 @@
   --danger-soft: #ffebe8;
   --warning: #865900;
   --warning-soft: #feefcf;
+  --info: #0b5cad;
+  --info-soft: #e8f2fc;
   --success: #0b7643;
   --success-soft: #dff8e6;
   --hatch: #e6e6ec;
@@ -117,6 +119,7 @@
   --top-height: 58px;
   --control-height: 36px;
   --control-height-sm: 30px;
+  --control-height-lg: 52px;
   --input-height: 38px;
   --agenda-hour: 48px;
   --agenda-col: 148px;
@@ -240,6 +243,8 @@
     --danger-soft: #300f0b;
     --warning: #ebc166;
     --warning-soft: #241900;
+    --info: #8fc3f7;
+    --info-soft: #0a1a2b;
     --success: #80dba2;
     --success-soft: #062111;
     --hatch: #1b1b1f;
@@ -340,6 +345,8 @@
   --danger-soft: #300f0b;
   --warning: #ebc166;
   --warning-soft: #241900;
+  --info: #8fc3f7;
+  --info-soft: #0a1a2b;
   --success: #80dba2;
   --success-soft: #062111;
   --hatch: #1b1b1f;
@@ -913,6 +920,7 @@
 [data-density="compact"] {
   --control-height: calc(36px * var(--density));
   --control-height-sm: calc(30px * var(--density));
+  --control-height-lg: calc(52px * var(--density));
   --input-height: calc(38px * var(--density));
   --density: 0.875;
   --pad-control-x: calc(16px * var(--density));
@@ -926,6 +934,7 @@
 [data-density="normal"] {
   --control-height: calc(36px * var(--density));
   --control-height-sm: calc(30px * var(--density));
+  --control-height-lg: calc(52px * var(--density));
   --input-height: calc(38px * var(--density));
   --density: 1;
   --pad-control-x: calc(16px * var(--density));
@@ -939,7 +948,22 @@
 [data-density="comfortable"] {
   --control-height: calc(36px * var(--density));
   --control-height-sm: calc(30px * var(--density));
+  --control-height-lg: calc(52px * var(--density));
   --input-height: calc(38px * var(--density));
+  --density: 1.125;
+  --pad-control-x: calc(16px * var(--density));
+  --pad-card: calc(16px * var(--density));
+  --gap-density-sm: calc(8px * var(--density));
+  --gap-density: calc(12px * var(--density));
+  --gap-density-lg: calc(18px * var(--density));
+}
+
+:root[data-density="touch"],
+[data-density="touch"] {
+  --control-height: 44px;
+  --control-height-sm: 44px;
+  --control-height-lg: 52px;
+  --input-height: 48px;
   --density: 1.125;
   --pad-control-x: calc(16px * var(--density));
   --pad-card: calc(16px * var(--density));

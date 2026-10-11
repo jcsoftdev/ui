@@ -36,6 +36,8 @@ class ThemeColors(
     val dangerSoft: Color,
     val warning: Color,
     val warningSoft: Color,
+    val info: Color,
+    val infoSoft: Color,
     val success: Color,
     val successSoft: Color,
     val hatch: Color,
@@ -85,6 +87,8 @@ object UiColors {
         dangerSoft = Color(0xFFFFEBE8),
         warning = Color(0xFF865900),
         warningSoft = Color(0xFFFEEFCF),
+        info = Color(0xFF0B5CAD),
+        infoSoft = Color(0xFFE8F2FC),
         success = Color(0xFF0B7643),
         successSoft = Color(0xFFDFF8E6),
         hatch = Color(0xFFE6E6EC),
@@ -132,6 +136,8 @@ object UiColors {
         dangerSoft = Color(0xFF300F0B),
         warning = Color(0xFFEBC166),
         warningSoft = Color(0xFF241900),
+        info = Color(0xFF8FC3F7),
+        infoSoft = Color(0xFF0A1A2B),
         success = Color(0xFF80DBA2),
         successSoft = Color(0xFF062111),
         hatch = Color(0xFF1B1B1F),
@@ -211,6 +217,7 @@ object UiSizes {
     val topHeight = 58.dp
     val controlHeight = 36.dp
     val controlHeightSm = 30.dp
+    val controlHeightLg = 52.dp
     val inputHeight = 38.dp
     val agendaHour = 48.dp
     val agendaCol = 148.dp

@@ -94,6 +94,36 @@ test("density scales heights and paddings through a unitless factor", () => {
   assert.equal(rule(":root {").get("density"), "1");
 });
 
+test("the touch density gives every control a 44px hit area and inputs 48px", () => {
+  const touch = rule(':root[data-density="touch"]');
+  assert.equal(touch.get("density"), "1.125");
+  assert.equal(touch.get("control-height"), "44px");
+  assert.equal(touch.get("control-height-sm"), "44px");
+  assert.equal(touch.get("control-height-lg"), "52px");
+  assert.equal(touch.get("input-height"), "48px");
+  assert.equal(touch.get("pad-control-x"), "calc(16px * var(--density))");
+  assert.deepEqual([...touch.keys()], [...rule(':root[data-density="compact"]').keys()]);
+  assert.ok(css.includes('[data-density="touch"] {'), "matches a nested element too");
+  assert.ok(
+    css.indexOf(':root[data-density="touch"]') > css.indexOf(':root[data-density="comfortable"]'),
+  );
+});
+
+test("a density level cannot override a token density does not scale", () => {
+  const bad = structuredClone(theme);
+  bad.styles.density.levels.find((l) => l.id === "touch").values["radius-card"] = "4px";
+  assert.throws(() => buildTheme(bad), /not scaled/);
+});
+
+test("info tones are themed tokens exposed as utilities", () => {
+  assert.ok(rule(":root {").has("info"));
+  assert.ok(rule(":root {").has("info-soft"));
+  assert.ok(rule(':root[data-theme="dark"] {').has("info"));
+  assert.match(themeCss, /--color-info: var\(--info\);/);
+  assert.match(themeCss, /--color-info-soft: var\(--info-soft\);/);
+  assert.match(themeCss, /--spacing-control-lg: var\(--control-height-lg\);/);
+});
+
 test("theme.css maps the semantic tokens to Tailwind utilities", () => {
   for (const line of [
     "--radius-button: var(--radius-button);",

@@ -558,6 +558,22 @@
     "usage": "Fondo de la cita cuyo cliente ya llegó y del chip de aviso."
    },
    {
+    "name": "info",
+    "value": {
+     "light": "#0b5cad",
+     "dark": "#8fc3f7"
+    },
+    "usage": "Aviso informativo que no pide acción: texto e icono sobre info-soft."
+   },
+   {
+    "name": "info-soft",
+    "value": {
+     "light": "#e8f2fc",
+     "dark": "#0a1a2b"
+    },
+    "usage": "Fondo del aviso informativo y del chip informativo."
+   },
+   {
     "name": "success",
     "value": {
      "light": "#0b7643",
@@ -1090,6 +1106,11 @@
     "usage": "Alto de botones dentro de filas."
    },
    {
+    "name": "control-height-lg",
+    "value": "52px",
+    "usage": "Alto del botón grande: la acción principal de una pantalla pensada para el pulgar."
+   },
+   {
     "name": "input-height",
     "value": "38px",
     "usage": "Alto de campos de texto y de botones de hora."
@@ -1587,6 +1608,7 @@
    "scaled": [
     "control-height",
     "control-height-sm",
+    "control-height-lg",
     "input-height",
     "pad-control-x",
     "pad-card",
@@ -1609,6 +1631,17 @@
      "id": "comfortable",
      "name": "Cómoda",
      "density": 1.125
+    },
+    {
+     "id": "touch",
+     "name": "Táctil",
+     "density": 1.125,
+     "values": {
+      "control-height": "44px",
+      "control-height-sm": "44px",
+      "control-height-lg": "52px",
+      "input-height": "48px"
+     }
     }
    ]
   },
@@ -1742,6 +1775,7 @@
    "--ease-style": "motion-ease",
    "--spacing-control": "control-height",
    "--spacing-control-sm": "control-height-sm",
+   "--spacing-control-lg": "control-height-lg",
    "--spacing-input": "input-height",
    "--spacing-control-x": "pad-control-x",
    "--spacing-card": "pad-card",

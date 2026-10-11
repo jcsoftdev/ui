@@ -68,6 +68,8 @@
   --color-danger-soft: var(--danger-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-hatch: var(--hatch);
@@ -106,6 +108,7 @@
   --spacing-top-height: var(--top-height);
   --spacing-control-height: var(--control-height);
   --spacing-control-height-sm: var(--control-height-sm);
+  --spacing-control-height-lg: var(--control-height-lg);
   --spacing-input-height: var(--input-height);
   --spacing-agenda-hour: var(--agenda-hour);
   --spacing-agenda-col: var(--agenda-col);
@@ -205,6 +208,7 @@
   --ease-style: var(--motion-ease);
   --spacing-control: var(--control-height);
   --spacing-control-sm: var(--control-height-sm);
+  --spacing-control-lg: var(--control-height-lg);
   --spacing-input: var(--input-height);
   --spacing-control-x: var(--pad-control-x);
   --spacing-card: var(--pad-card);

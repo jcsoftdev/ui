@@ -116,6 +116,13 @@ export function stylesOf(tokens) {
       throw new Error(`styles: density token "${name}" is themed`);
   }
 
+  for (const level of density.levels) {
+    for (const name of Object.keys(level.values ?? {})) {
+      if (!densityGoverned.has(name) || name === "density")
+        throw new Error(`styles: density level "${level.id}" sets "${name}", which is not scaled`);
+    }
+  }
+
   const radiusLevels = styles.radius?.levels ?? [];
   const radiusGoverned = new Set(radiusLevels.flatMap((l) => Object.keys(l.values ?? {})));
   for (const name of radiusGoverned) known(name, "radius levels");
@@ -170,11 +177,10 @@ function buildStyleBlocks(tokens) {
   }
 
   for (const level of s.density.levels) {
-    const entries = s.densityGoverned.map((name) =>
-      name === "density"
-        ? [name, String(level.density)]
-        : [name, `calc(${s.byName.get(name).value} * var(--density))`],
-    );
+    const entries = s.densityGoverned.map((name) => {
+      if (name === "density") return [name, String(level.density)];
+      return [name, level.values?.[name] ?? `calc(${s.byName.get(name).value} * var(--density))`];
+    });
     blocks.push(...variantBlocks("data-density", level.id, entries, themes));
   }
 
