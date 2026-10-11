@@ -140,6 +140,7 @@ export const ButtonAsChild: Story = {
     </Button>
   ),
   play: async ({ canvasElement }) => {
+    onLinkClick.mockClear();
     const link = within(canvasElement).getByRole("link", { name: "Ir al destino" });
     await expect(link.tagName).toBe("A");
     await expect(link).toHaveAttribute("href", "#destino");

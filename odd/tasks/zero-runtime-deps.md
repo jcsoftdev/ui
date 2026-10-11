@@ -28,7 +28,7 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 - [x] T0 DOM test harness: Storybook stories run as tests in a real browser (Storybook addon-vitest, Chromium) with play functions and the a11y addon failing on violations; wire into CI. Route: delegated.
 - [x] T1 `clsx` inlined into `utils/cn.ts`. Route: inline-sized, delegated with T2.
 - [x] T2 `progress`, `avatar` in-house. Route: delegated.
-- [ ] T3 `Slot` / `asChild` (prop, ref and handler merge). Route: delegated.
+- [x] T3 `Slot` / `asChild` (prop, ref and handler merge). Route: delegated.
 - [ ] T4 `switch`, `checkbox`, `radio-group` (+ accent-picker): controllable-state hook, roving focus, hidden form input. Route: delegated.
 - [ ] T5 `tabs`, `segmented` (toggle-group): roving focus, automatic/manual activation. Route: delegated.
 - [ ] T6 Icons: vendored SVG set (~112 names), `Icon`/`icon-map`, `IconComponent` type replacing `LucideIcon`. Route: delegated.
@@ -53,6 +53,8 @@ ask-on-risk, chain strategy `feature-branch-chain` (owner, 2026-10-10): each tas
 
 - 2026-10-10: T1 done (`114d415` on `feat/zero-deps-t1-t2`, stacked on T0): clsx-compatible joiner inlined in `utils/cn.ts`, `ClassValue` type owned locally, cn tests extended (406 node tests pass), `clsx` removed from dependencies.
 - 2026-10-10: T2 done (`04ddda5`): in-house `Progress`/`Meter` (Radix attributes mirrored: role, aria-valuemin/max/now/text, data-state/value/max, invalid value falls back to indeterminate, `getValueLabel` kept; `asChild` dropped until T3) and `Avatar` (off-DOM Image preload in effects, SSR safe, 400ms fallback delay kept). `@radix-ui/react-progress` and `-avatar` removed. Stories: 199 files / 1221 tests pass (baselines unchanged, assertions added). Route: delegated.
+- 2026-10-10: T0 follow-ups (`a531d31` on `feat/zero-deps-t3-slot`, stacked on T1/T2): dialog focus-trap baseline asserts the exact Tab/Shift+Tab cycle (Confirmar, Close, Motivo, Confirmar; reverse), `ButtonAsChild` spy cleared at play start, CI caches `~/.cache/ms-playwright` keyed on the installed playwright version and sets `STORYBOOK_DISABLE_TELEMETRY=1`.
+- 2026-10-10: T3 done (`ad89893`): in-house `utils/slot.tsx` mirroring Radix Slot (child handler then slot handler, className concat, style merge child-wins, aria-describedby union, composed refs via React 19 ref prop, throws on non-single-element children; `Slottable` and lazy children dropped since unused). Used by `Button` and `HoverCardTrigger`. `@radix-ui/react-slot` removed. New `utils/slot.test.stories.tsx` (3 stories). Radix popover/dialog still use their own transitive Slot until T9/T10. 200 story files / 1224 tests, 406 node tests pass. Route: delegated.
 
 ## Next step
-T3 (`Slot` / `asChild`); the T0 baselines (`*.test.stories.tsx`) must stay green.
+T4 (`switch`, `checkbox`, `radio-group`, accent-picker); T0 baselines must stay green.
