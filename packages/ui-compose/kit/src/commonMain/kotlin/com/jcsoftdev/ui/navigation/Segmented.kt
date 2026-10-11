@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.atoms.dimWhenDisabled
+import com.jcsoftdev.ui.primitives.rememberRovingFocus
+import com.jcsoftdev.ui.primitives.rovingItem
 import com.jcsoftdev.ui.primitives.rovingSelection
 import com.jcsoftdev.ui.theme.UiTheme
 
@@ -94,6 +96,7 @@ public fun Segmented(
 ) {
     val minHeight = UiTheme.sizes.minTouchTarget
     val values = remember(options) { options.map { it.value } }
+    val focus = rememberRovingFocus<String>()
     Row(
         modifier
             .dimWhenDisabled(enabled)
@@ -102,13 +105,14 @@ public fun Segmented(
             .padding(SegmentedDefaults.trackPadding)
             .horizontalScroll(rememberScrollState())
             .selectableGroup()
-            .rovingSelection(values, value, onValueChange, enabled = enabled),
+            .rovingSelection(values, value, onValueChange, enabled = enabled, focus = focus),
     ) {
         options.forEach { option ->
             val on = option.value == value
             Box(
                 Modifier
                     .clip(shape)
+                    .rovingItem(focus, option.value)
                     .selectable(on, enabled = enabled, role = Role.RadioButton) { onValueChange(option.value) }
                     .background(if (on) colors.selected else Color.Transparent)
                     .heightIn(min = minHeight)

@@ -141,6 +141,7 @@ public fun Dialog(
         dismissOnScrimTap = dismissOnScrim,
         dismissLabel = dismissLabel,
         backPriority = BackPriority.SHEET,
+        captureFocus = false,
         scrim = { dismiss ->
             Box(
                 Modifier

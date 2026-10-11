@@ -63,6 +63,9 @@ public object UiTheme {
  * @param sizes spacing, control heights, minimum touch target and disabled opacity; pass `ThemeSizes.Default.copy(...)`.
  * @param typography text styles by role; pass `ThemeTypography.Default.copy(...)`. The font family is [fontFamily].
  *
+ * It also installs the [OverlayHost] that sheets, dialogs and toasts draw in; headless code can use [OverlayHost] without a
+ * `UiTheme`.
+ *
  * Every group is independent, so overriding one (for example only `colors.accent`) leaves the rest of the kit look unchanged.
  * Single components can still deviate through their `XDefaults` parameters. The small glyphs drawn inside components (spinner,
  * check mark, chevron, eye, plus/minus) keep fixed proportions and take the content color.
@@ -89,6 +92,6 @@ public fun UiTheme(
         LocalSizes provides sizes,
         LocalTypography provides typography,
     ) {
-        OverlayHost(content)
+        OverlayHost(content = content)
     }
 }

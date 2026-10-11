@@ -23,10 +23,15 @@ public class ToastItem internal constructor(
     public val tone: ToastTone,
     public val action: ToastAction?,
     public val durationMillis: Long,
-)
+) {
+    /** True for a toast that never expires by itself ([ToastHostState.INDEFINITE]). */
+    public val isIndefinite: Boolean get() = durationMillis == ToastHostState.INDEFINITE
+}
 
-/** Pure queue behind [ToastHostState]: at most [maxVisible] items show, the rest wait and take free slots in order. */
-@Stable
+/**
+ * Pure queue behind [ToastHostState]: at most [maxVisible] items show, the rest wait and take free slots in order. It
+ * holds plain mutable fields, so it is deliberately not `@Stable`; only [ToastHostState] publishes its snapshot as state.
+ */
 internal class ToastQueue(
     private val maxVisible: Int,
 ) {
@@ -73,8 +78,7 @@ internal class ToastQueue(
     }
 }
 
-/** Pure countdown of one toast: it runs down by the time that passes while it is not [paused]. */
-@Stable
+/** Pure countdown of one toast: it runs down by the time that passes while it is not paused. Not `@Stable`: plain mutable field. */
 internal class ToastTimer(
     totalMillis: Long,
 ) {
@@ -99,6 +103,9 @@ internal class ToastTimer(
  * Pass the same instance to [ToastHost] (headless) or to the styled `Toaster`. [toasts] is an immutable snapshot, so
  * reading it only recomposes when it changes.
  *
+ * A `durationMillis` of zero or less is not "forever": the toast is dismissed on the first countdown tick (about 100ms),
+ * which is rarely wanted. Pass [INDEFINITE] for a toast that stays until it is dismissed with [dismiss] (or its action).
+ *
  * ```
  * val toasts = remember { ToastHostState() }
  * toasts.success("Saved", ToastAction("Undo") { undo() })
@@ -110,6 +117,11 @@ public class ToastHostState(
     private val defaultDurationMillis: Long = 6000L,
 ) {
     private val queue = ToastQueue(maxVisible)
+
+    public companion object {
+        /** Duration of a toast that never expires by itself; the countdown and the accessibility timeout are skipped. */
+        public const val INDEFINITE: Long = Long.MAX_VALUE
+    }
 
     /** The toasts on screen, oldest first. */
     public var toasts: List<ToastItem> by mutableStateOf(emptyList())

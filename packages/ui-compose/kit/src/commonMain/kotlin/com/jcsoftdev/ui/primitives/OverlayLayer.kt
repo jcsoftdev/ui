@@ -26,12 +26,18 @@ import com.jcsoftdev.ui.overlays.OverlayLayerEffect
  * Nothing is drawn by the layer itself: the scrim, surface, shape and motion are whatever [content] draws. Without a host
  * (a `UiTheme` always installs one) the content composes in place.
  *
- * - A [modal] layer hides the app content from accessibility while it is [visible] and gives focus back to it when it leaves.
- * - Layers with a higher [z] draw later; the kit toasts use 10.
- * - System back is routed through the kit [com.jcsoftdev.ui.foundation.BackDispatcher] at [backPriority] while [backEnabled]
- *   and the layer is modal or has an [onDismissRequest]. [dismissOnBack] decides whether back calls [onDismissRequest] or is
- *   only consumed, which is how a dialog can require an explicit choice.
- * - [captureFocus] moves focus into the layer when it appears.
+ * - A [modal] layer hides the app content and every layer below it from accessibility while it is [visible]. When the
+ *   topmost modal layer leaves, focus goes back to the modal layer below it, or to the app content.
+ * - Layers with a higher [z] draw later (equal [z] draws in open order); the kit toasts use 10. [z] and [modal] may change
+ *   while the layer is visible.
+ * - System back is routed through the kit [com.jcsoftdev.ui.foundation.BackDispatcher] while [backEnabled] and the layer is
+ *   modal or has an [onDismissRequest]. The dispatcher picks the highest [backPriority] and, among equals, the layer that
+ *   opened last, so layers stack naturally: the default priority of a modal layer is [BackPriority.SHEET], the same as the kit
+ *   sheet and dialog, which makes a custom dialog opened over a kit sheet (or the reverse) answer back first. Pass an explicit
+ *   [backPriority] only to break that order on purpose; a non-modal layer defaults to [BackPriority.OVERLAY].
+ *   [dismissOnBack] decides whether back calls [onDismissRequest] or is only consumed, which is how a dialog can require an
+ *   explicit choice.
+ * - [captureFocus] (on for modal layers) moves focus into the layer when it appears.
  *
  * ```
  * OverlayLayer(visible = open, onDismissRequest = { open = false }) {
@@ -48,7 +54,7 @@ public fun OverlayLayer(
     onDismissRequest: (() -> Unit)? = null,
     modal: Boolean = true,
     z: Int = 0,
-    backPriority: Int = BackPriority.OVERLAY,
+    backPriority: Int = if (modal) BackPriority.SHEET else BackPriority.OVERLAY,
     dismissOnBack: Boolean = true,
     backEnabled: Boolean = visible,
     captureFocus: Boolean = modal,
@@ -71,6 +77,9 @@ public fun OverlayLayer(
 /**
  * Modal layer with a scrim: a [OverlayLayer] whose [scrim] sits below [content] and, when [dismissOnScrimTap], turns a tap
  * into [onDismissRequest]. This is the behaviour behind the kit sheet and dialog.
+ *
+ * Like every modal [OverlayLayer], it moves focus into the layer by default; pass `captureFocus = false` when a node inside
+ * takes focus itself (see [initialFocus]).
  *
  * [open] drives back handling while [present] keeps the layer composed, so an exit animation can finish after [open] turns
  * false (see [rememberOverlayPresence]). [scrim] receives a modifier that already carries the tap and the accessibility
@@ -99,7 +108,7 @@ public fun ModalLayer(
     dismissOnScrimTap: Boolean = true,
     dismissLabel: String? = null,
     backPriority: Int = BackPriority.SHEET,
-    captureFocus: Boolean = false,
+    captureFocus: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
     OverlayLayer(

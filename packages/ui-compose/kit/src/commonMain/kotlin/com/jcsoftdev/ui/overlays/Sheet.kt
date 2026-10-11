@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -143,7 +142,6 @@ public fun Sheet(
 ) {
     val presence = rememberOverlayPresence(open, motion)
     val currentOpen by rememberUpdatedState(open)
-    LaunchedEffect(open) { if (open) state.reset() }
     ModalLayer(
         open = open,
         present = presence.present,
@@ -152,6 +150,7 @@ public fun Sheet(
         dismissOnScrimTap = dismissible,
         dismissLabel = dismissLabel,
         backPriority = BackPriority.SHEET,
+        captureFocus = true,
         scrim = { dismiss ->
             Box(
                 Modifier

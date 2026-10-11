@@ -6,35 +6,43 @@ import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.UiTheme
+import kotlinx.coroutines.flow.filter
 
 /**
  * Drag-to-dismiss behaviour of a bottom sheet, free of any visuals. The sheet follows the finger downwards ([offset]),
  * and on release it either asks to be dismissed ([shouldDismiss]) or settles back to rest ([settle]).
  *
  * Use it with [sheetDraggable] on the handle or header and [sheetTranslation] on the surface; [scrimAlpha] fades a scrim
- * while the sheet is dragged away.
+ * while the sheet is dragged away. [sheetTranslation] puts the sheet back at rest whenever it is fully hidden or leaves the
+ * composition, so a sheet dismissed by a swipe opens at its rest position next time with no code of your own.
  *
  * ```
  * val state = rememberSheetState()
  * val presence = rememberOverlayPresence(open)
- * ModalLayer(open, { open = false }, scrim = { tap -> MyScrim(tap, state.scrimAlpha(presence.progress)) }) {
+ * ModalLayer(open, { open = false }, present = presence.present, scrim = { tap -> MyScrim(tap, state.scrimAlpha(presence.progress)) }) {
  *     Column(Modifier.align(Alignment.BottomCenter).sheetTranslation(state) { presence.progress }) {
  *         MyHandle(Modifier.sheetDraggable(state, onDismissRequest = { open = false }, isOpen = { open }))
  *         MyBody()
  *     }
  * }
  * ```
+ *
+ * Like the other motion primitives it reads the motion of the nearest `UiTheme` (full motion when there is none).
  */
 @Stable
 public class SheetState(
@@ -85,13 +93,22 @@ public class SheetState(
         offset = 0f
     }
 
-    /** Animates [offset] back to 0 with [settleSpec]. */
+    /**
+     * Animates [offset] back to 0 with [settleSpec]. It runs inside a drag session of lower priority than a user drag, so
+     * the finger touching the sheet again cancels the animation instead of fighting it.
+     */
     public suspend fun settle() {
         val spec = settleSpec
         if (spec == null) {
             reset()
         } else {
-            animate(offset, 0f, animationSpec = spec) { value, _ -> offset = value }
+            draggable.drag {
+                var last = offset
+                animate(last, 0f, animationSpec = spec) { value, _ ->
+                    dragBy(value - last)
+                    last = value
+                }
+            }
         }
     }
 
@@ -154,16 +171,25 @@ public fun Modifier.sheetDraggable(
 
 /**
  * Slides the sheet surface: fully off the bottom at `presence() == 0`, at rest at 1, plus the current drag. It also feeds
- * the measured height into [state]. [presence] is read in the layer block, so animating it does not recompose.
+ * the measured height into [state] and resets the drag offset whenever [presence] is back at 0 (the sheet is about to open
+ * or has closed) and when the node leaves the composition. [presence] is read in the layer block, so animating it does not
+ * recompose.
  *
  * ```
  * Column(Modifier.sheetTranslation(state) { presence.progress }) { ... }
  * ```
  */
+@Composable
 public fun Modifier.sheetTranslation(
     state: SheetState,
     presence: () -> Float,
-): Modifier =
-    this
+): Modifier {
+    val currentPresence by rememberUpdatedState(presence)
+    LaunchedEffect(state) {
+        snapshotFlow { currentPresence() <= 0f }.filter { it }.collect { state.reset() }
+    }
+    DisposableEffect(state) { onDispose { state.reset() } }
+    return this
         .graphicsLayer { translationY = (1f - presence()) * state.height + state.offset }
         .onSizeChanged { state.updateHeight(it.height.toFloat()) }
+}

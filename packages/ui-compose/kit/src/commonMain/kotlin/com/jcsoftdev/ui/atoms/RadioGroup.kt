@@ -29,6 +29,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.jcsoftdev.ui.primitives.RovingFocus
+import com.jcsoftdev.ui.primitives.rememberRovingFocus
+import com.jcsoftdev.ui.primitives.rovingItem
 import com.jcsoftdev.ui.primitives.rovingSelection
 import com.jcsoftdev.ui.theme.UiTheme
 
@@ -106,12 +109,13 @@ public fun RadioGroup(
     itemSpacing: Dp = RadioDefaults.itemSpacing,
 ) {
     val values = remember(options) { options.map { it.value } }
+    val focus = rememberRovingFocus<String>()
     Column(
-        modifier.selectableGroup().rovingSelection(values, value, onValueChange, Orientation.Vertical, enabled),
+        modifier.selectableGroup().rovingSelection(values, value, onValueChange, Orientation.Vertical, enabled, focus = focus),
         verticalArrangement = Arrangement.spacedBy(itemSpacing),
     ) {
         options.forEach { option ->
-            RadioRow(option, option.value == value, enabled, colors, shape, contentPadding, onValueChange)
+            RadioRow(option, option.value == value, enabled, colors, shape, contentPadding, focus, onValueChange)
         }
     }
 }
@@ -124,6 +128,7 @@ private fun RadioRow(
     colors: RadioColors,
     shape: Shape,
     contentPadding: PaddingValues,
+    focus: RovingFocus<String>,
     onValueChange: (String) -> Unit,
 ) {
     val ring = if (selected) colors.selectedRing else colors.ring
@@ -133,6 +138,7 @@ private fun RadioRow(
             .fillMaxWidth()
             .dimWhenDisabled(enabled)
             .clip(shape)
+            .rovingItem(focus, option.value)
             .selectable(selected, enabled = enabled, role = Role.RadioButton) { onValueChange(option.value) }
             .border(sizes.borderWidth, if (selected) colors.selectedBorder else colors.border, shape)
             .heightIn(min = sizes.minTouchTarget)

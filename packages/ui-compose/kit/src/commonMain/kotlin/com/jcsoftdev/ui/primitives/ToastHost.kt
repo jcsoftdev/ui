@@ -89,6 +89,7 @@ private fun ToastSlot(
     val accessibility = LocalAccessibilityManager.current
     val total =
         remember(item.id, accessibility) {
+            if (item.isIndefinite) return@remember item.durationMillis
             accessibility?.calculateRecommendedTimeoutMillis(
                 originalTimeoutMillis = item.durationMillis,
                 containsIcons = false,
@@ -97,13 +98,15 @@ private fun ToastSlot(
             ) ?: item.durationMillis
         }
     val paused by rememberUpdatedState(touched || focused)
-    LaunchedEffect(item.id, total) {
-        val timer = ToastTimer(total)
-        while (!timer.expired) {
-            delay(TICK_MILLIS)
-            timer.advance(TICK_MILLIS, paused)
+    if (!item.isIndefinite) {
+        LaunchedEffect(item.id, total) {
+            val timer = ToastTimer(total)
+            while (!timer.expired) {
+                delay(TICK_MILLIS)
+                timer.advance(TICK_MILLIS, paused)
+            }
+            state.dismiss(item.id)
         }
-        state.dismiss(item.id)
     }
     Box(
         Modifier

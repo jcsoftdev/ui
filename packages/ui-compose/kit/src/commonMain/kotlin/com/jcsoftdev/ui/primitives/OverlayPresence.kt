@@ -49,8 +49,9 @@ public class OverlayPresence internal constructor() {
 }
 
 /**
- * Drives an [OverlayPresence] from [visible]. Durations come from [motion] and are scaled by the theme motion, so reduced
- * motion makes enter and exit a jump cut.
+ * Drives an [OverlayPresence] from [visible]. Durations come from [motion] and are scaled by the motion of the nearest
+ * `UiTheme`, so reduced motion makes enter and exit a jump cut. Without a `UiTheme` it uses the default motion (full speed,
+ * no system scale), so the primitive works on its own.
  *
  * ```
  * val presence = rememberOverlayPresence(open, OverlayMotion(enterMillis = 240, exitMillis = 120))

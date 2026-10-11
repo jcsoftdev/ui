@@ -24,6 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.primitives.rememberRovingFocus
+import com.jcsoftdev.ui.primitives.rovingItem
 import com.jcsoftdev.ui.primitives.rovingSelection
 import com.jcsoftdev.ui.theme.UiTheme
 
@@ -94,6 +96,7 @@ public fun Tabs(
     val sizes = UiTheme.sizes
     val countStyle = UiTheme.typography.count
     val values = remember(tabs) { tabs.map { it.value } }
+    val focus = rememberRovingFocus<String>()
     Row(
         modifier
             .drawBehind {
@@ -105,7 +108,7 @@ public fun Tabs(
                 )
             }.horizontalScroll(rememberScrollState())
             .selectableGroup()
-            .rovingSelection(values, value, onValueChange)
+            .rovingSelection(values, value, onValueChange, focus = focus)
             .padding(horizontal = sizes.space8),
         horizontalArrangement = Arrangement.spacedBy(sizes.space2),
     ) {
@@ -113,6 +116,7 @@ public fun Tabs(
             val on = tab.value == value
             Row(
                 Modifier
+                    .rovingItem(focus, tab.value)
                     .selectable(on, role = Role.Tab) { onValueChange(tab.value) }
                     .heightIn(min = sizes.minTouchTarget)
                     .drawBehind {

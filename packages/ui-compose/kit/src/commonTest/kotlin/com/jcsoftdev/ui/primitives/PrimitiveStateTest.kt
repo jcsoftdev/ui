@@ -159,12 +159,17 @@ class PrimitiveStateTest {
         assertEquals(2, shown.offsetMapping.transformedToOriginal(3))
     }
 
+    private val timeCommit = { digits: String -> if (digits.length == 4) digits.take(2) + ":" + digits.drop(2) else "" }
+
+    private fun timeState(
+        value: String,
+        reported: MutableList<String>,
+    ) = MaskedInputState(DigitMask(4, ':', listOf(2)), value, timeCommit) { reported += it }
+
     @Test
     fun maskedInputStateKeepsDigitsAndCommitsOnlyValidValues() {
         val reported = mutableListOf<String>()
-        val state = MaskedInputState(DigitMask(4, ':', listOf(2)))
-        val commit = { digits: String -> if (digits.length == 4) digits.take(2) + ":" + digits.drop(2) else "" }
-        state.bind("", commit) { reported += it }
+        val state = timeState("", reported)
         state.onInput("09:3")
         assertEquals("093", state.digits)
         assertFalse(state.isComplete)
@@ -172,10 +177,67 @@ class PrimitiveStateTest {
         assertEquals("0930", state.digits)
         assertTrue(state.isComplete)
         assertEquals(listOf("", "09:30"), reported)
-        state.bind("", commit) { reported += it }
+        state.bind("", timeCommit) { reported += it }
         assertEquals("", state.digits)
-        state.bind("12:45", commit) { reported += it }
+        state.bind("12:45", timeCommit) { reported += it }
         assertEquals("1245", state.digits)
+    }
+
+    @Test
+    fun maskedInputStartsFromTheCommittedValue() {
+        assertEquals("0930", timeState("09:30", mutableListOf()).digits)
+    }
+
+    @Test
+    fun maskedInputPartialEntryClearsWithResetNotWithTheSameEmptyValue() {
+        val reported = mutableListOf<String>()
+        val state = timeState("", reported)
+        state.onInput("093")
+        state.bind("", timeCommit) { reported += it }
+        assertEquals("093", state.digits)
+        state.reset()
+        assertEquals("", state.digits)
+        assertEquals(listOf("", ""), reported)
+        state.replaceDigits("12:45")
+        assertEquals("1245", state.digits)
+        assertEquals("12:45", reported.last())
+    }
+
+    @Test
+    fun maskedInputFollowsAParentThatClearsACompleteValue() {
+        val state = timeState("09:30", mutableListOf())
+        state.bind("", timeCommit) {}
+        assertEquals("", state.digits)
+    }
+
+    @Test
+    fun filterDigitsRespectsZeroAndRejectsNegativeLengths() {
+        assertEquals("", filterDigits("123", 0))
+        assertEquals("", filterDigits("", 0))
+        assertEquals("12", filterDigits("1a2b3", 2))
+        assertFailsWith<IllegalArgumentException> { filterDigits("1", -1) }
+    }
+
+    @Test
+    fun digitMaskRejectsBadOffsetsAndComparesStructurally() {
+        assertFailsWith<IllegalArgumentException> { DigitMask(4, ':', listOf(2, 2)) }
+        assertFailsWith<IllegalArgumentException> { DigitMask(4, ':', listOf(0)) }
+        assertFailsWith<IllegalArgumentException> { DigitMask(4, ':', listOf(4)) }
+        assertEquals(DigitMask(8, '/', listOf(4, 2)), DigitMask(8, '/', listOf(2, 4)))
+        assertEquals(DigitMask(8, '/', listOf(4, 2)).hashCode(), DigitMask(8, '/', listOf(2, 4)).hashCode())
+        assertFalse(DigitMask(8, '/', listOf(2, 4)) == DigitMask(8, '-', listOf(2, 4)))
+        assertFalse(DigitMask(8, '/', listOf(2, 4)) == DigitMask(8, '/', listOf(2)))
+    }
+
+    @Test
+    fun indefiniteToastsAreExplicit() {
+        val state = ToastHostState()
+        val forever = state.toasts.size
+        state.toast("stay", durationMillis = ToastHostState.INDEFINITE)
+        state.toast("go")
+        assertEquals(forever + 2, state.toasts.size)
+        assertTrue(state.toasts[0].isIndefinite)
+        assertFalse(state.toasts[1].isIndefinite)
     }
 
     @Test
