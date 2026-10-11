@@ -34,3 +34,23 @@ test("an accent palette swaps its look-alike chart category for the reserve", ()
   const { chartSwaps: _ignored, ...plain } = theme;
   assert.doesNotMatch(buildTheme(plain)["tokens.css"], /var\(--chart-cat-reserve\)/);
 });
+
+test("--kotlin-library flavour is explicit-API and immutable; the default stays untouched", () => {
+  const lib = buildTheme(tokens, { kotlinPackage: "com.jcsoftdev.ui.theme", kotlinLibrary: true })[
+    "Theme.kt"
+  ];
+  assert.match(lib, /^package com\.jcsoftdev\.ui\.theme$/m);
+  assert.match(lib, /@Immutable\npublic class ThemeColors\(/);
+  assert.match(lib, /@Immutable\npublic class AccentPalette\(/);
+  assert.match(lib, /@Immutable\npublic object UiPalettes \{/);
+  assert.doesNotMatch(lib, /Map</);
+  const declarations = lib.split("\n").filter((l) => /^\s*(val|class|object|const val|fun)\s/.test(l));
+  assert.deepEqual(
+    declarations.filter((l) => !/^\s*(private)\s/.test(l)),
+    [],
+    "every non-private declaration must carry an explicit visibility",
+  );
+  const plain = buildTheme(tokens)["Theme.kt"];
+  assert.equal(plain, buildTheme(tokens, { kotlinLibrary: false })["Theme.kt"]);
+  assert.doesNotMatch(plain, /public |@Immutable/);
+});

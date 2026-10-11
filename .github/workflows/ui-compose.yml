@@ -4,10 +4,16 @@ on:
   push:
     paths:
       - "packages/ui-compose/**"
+      - "packages/ui/tokens/**"
+      - "packages/ui/scripts/build-theme.mjs"
+      - "packages/ui/bin/ui-theme.mjs"
       - ".github/workflows/ui-compose.yml"
   pull_request:
     paths:
       - "packages/ui-compose/**"
+      - "packages/ui/tokens/**"
+      - "packages/ui/scripts/build-theme.mjs"
+      - "packages/ui/bin/ui-theme.mjs"
       - ".github/workflows/ui-compose.yml"
 
 concurrency:
@@ -31,6 +37,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:assembleRelease :sample:assembleRelease
 
@@ -43,5 +52,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew :kit:compileKotlinIosSimulatorArm64
