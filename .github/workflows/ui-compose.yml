@@ -7,6 +7,7 @@ on:
       - "packages/ui/tokens/**"
       - "packages/ui/scripts/build-theme.mjs"
       - "packages/ui/bin/ui-theme.mjs"
+      - "packages/ui/icons/**"
       - ".github/workflows/ui-compose.yml"
   pull_request:
     paths:
@@ -14,6 +15,7 @@ on:
       - "packages/ui/tokens/**"
       - "packages/ui/scripts/build-theme.mjs"
       - "packages/ui/bin/ui-theme.mjs"
+      - "packages/ui/icons/**"
       - ".github/workflows/ui-compose.yml"
 
 concurrency:

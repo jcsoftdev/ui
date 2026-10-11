@@ -40,6 +40,25 @@ val generateUiTokens by tasks.registering(Exec::class) {
     )
 }
 
+// Icons come from the same SVG source as the web icons (packages/ui/icons) and are never committed.
+val generatedIconsDir = layout.buildDirectory.dir("generated/ui-icons")
+val generateUiIcons by tasks.registering(Exec::class) {
+    group = "build"
+    description = "Generates one ImageVector file per Lucide icon from packages/ui/icons."
+    val iconsDir = uiPackage.dir("icons")
+    val generator = rootProject.layout.projectDirectory.file("scripts/build-icons.mjs")
+    inputs.dir(iconsDir).withPropertyName("icons").withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(generator).withPropertyName("generator").withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.dir(generatedIconsDir).withPropertyName("generated")
+    outputs.cacheIf { true }
+    commandLine(
+        "node",
+        generator.asFile.absolutePath,
+        iconsDir.asFile.absolutePath,
+        generatedIconsDir.get().asFile.absolutePath,
+    )
+}
+
 kotlin {
     explicitApi()
 
@@ -54,6 +73,8 @@ kotlin {
 
     sourceSets {
         getByName("commonMain").kotlin.srcDir(generateUiTokens.map { layout.buildDirectory.dir("generated/ui-tokens/kotlin").get() })
+        getByName("commonMain").kotlin.srcDir(generateUiIcons.map { generatedIconsDir.get().dir("main") })
+        getByName("commonTest").kotlin.srcDir(generateUiIcons.map { generatedIconsDir.get().dir("test") })
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)

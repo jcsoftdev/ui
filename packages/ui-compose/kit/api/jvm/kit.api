@@ -195,6 +195,591 @@ public final class com/jcsoftdev/ui/foundation/PressKt {
 	public static synthetic fun pressScale$default (Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/interaction/InteractionSource;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
 }
 
+public final class com/jcsoftdev/ui/icons/AlertTriangleKt {
+	public static final fun getAlertTriangle (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArchiveKt {
+	public static final fun getArchive (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArmchairKt {
+	public static final fun getArmchair (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowDownKt {
+	public static final fun getArrowDown (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowDownRightKt {
+	public static final fun getArrowDownRight (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowDownToLineKt {
+	public static final fun getArrowDownToLine (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowLeftKt {
+	public static final fun getArrowLeft (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowLeftToLineKt {
+	public static final fun getArrowLeftToLine (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowRightKt {
+	public static final fun getArrowRight (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowRightToLineKt {
+	public static final fun getArrowRightToLine (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowUpFromLineKt {
+	public static final fun getArrowUpFromLine (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowUpKt {
+	public static final fun getArrowUp (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowUpRightKt {
+	public static final fun getArrowUpRight (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ArrowUpToLineKt {
+	public static final fun getArrowUpToLine (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BanknoteKt {
+	public static final fun getBanknote (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BarChart2Kt {
+	public static final fun getBarChart2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BarChart3Kt {
+	public static final fun getBarChart3 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BellKt {
+	public static final fun getBell (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BoldKt {
+	public static final fun getBold (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BookOpenKt {
+	public static final fun getBookOpen (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BoxesKt {
+	public static final fun getBoxes (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/BrainKt {
+	public static final fun getBrain (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalculatorKt {
+	public static final fun getCalculator (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalendarCheckKt {
+	public static final fun getCalendarCheck (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalendarClockKt {
+	public static final fun getCalendarClock (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalendarDaysKt {
+	public static final fun getCalendarDays (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalendarKt {
+	public static final fun getCalendar (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalendarPlusKt {
+	public static final fun getCalendarPlus (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CalendarXKt {
+	public static final fun getCalendarX (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CameraKt {
+	public static final fun getCamera (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChartColumnKt {
+	public static final fun getChartColumn (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChartNoAxesColumnKt {
+	public static final fun getChartNoAxesColumn (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CheckCheckKt {
+	public static final fun getCheckCheck (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CheckCircle2Kt {
+	public static final fun getCheckCircle2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CheckKt {
+	public static final fun getCheck (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChevronDownKt {
+	public static final fun getChevronDown (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChevronLeftKt {
+	public static final fun getChevronLeft (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChevronRightKt {
+	public static final fun getChevronRight (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChevronsLeftKt {
+	public static final fun getChevronsLeft (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChevronsRightKt {
+	public static final fun getChevronsRight (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ChevronsUpDownKt {
+	public static final fun getChevronsUpDown (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CircleAlertKt {
+	public static final fun getCircleAlert (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CircleCheckKt {
+	public static final fun getCircleCheck (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CircleXKt {
+	public static final fun getCircleX (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ClipboardListKt {
+	public static final fun getClipboardList (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ClockKt {
+	public static final fun getClock (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CoinsKt {
+	public static final fun getCoins (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/Columns3Kt {
+	public static final fun getColumns3 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ConstructionKt {
+	public static final fun getConstruction (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CopyKt {
+	public static final fun getCopy (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/CreditCardKt {
+	public static final fun getCreditCard (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/DownloadKt {
+	public static final fun getDownload (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/EllipsisVerticalKt {
+	public static final fun getEllipsisVertical (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ExternalLinkKt {
+	public static final fun getExternalLink (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/EyeOffKt {
+	public static final fun getEyeOff (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FaceSlightlySmilingKt {
+	public static final fun getFaceSlightlySmiling (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FaceSlightlySmilingPlusKt {
+	public static final fun getFaceSlightlySmilingPlus (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FileCodeKt {
+	public static final fun getFileCode (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FileImageKt {
+	public static final fun getFileImage (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FileKt {
+	public static final fun getFile (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FileSpreadsheetKt {
+	public static final fun getFileSpreadsheet (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FileTextKt {
+	public static final fun getFileText (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FilterKt {
+	public static final fun getFilter (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FolderKt {
+	public static final fun getFolder (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FolderOpenKt {
+	public static final fun getFolderOpen (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/FunnelKt {
+	public static final fun getFunnel (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/GripVerticalKt {
+	public static final fun getGripVertical (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/Heading2Kt {
+	public static final fun getHeading2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/IconKt {
+	public static final fun Icon-q9LK7_k (Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Landroidx/compose/ui/Modifier;JFLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/icons/Icons {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/icons/Icons;
+}
+
+public final class com/jcsoftdev/ui/icons/InboxKt {
+	public static final fun getInbox (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/InfoKt {
+	public static final fun getInfo (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ItalicKt {
+	public static final fun getItalic (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LandmarkKt {
+	public static final fun getLandmark (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LayersKt {
+	public static final fun getLayers (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LayoutDashboardKt {
+	public static final fun getLayoutDashboard (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LayoutGridKt {
+	public static final fun getLayoutGrid (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/Link2Kt {
+	public static final fun getLink2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ListChecksKt {
+	public static final fun getListChecks (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ListFilterKt {
+	public static final fun getListFilter (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ListKt {
+	public static final fun getList (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ListOrderedKt {
+	public static final fun getListOrdered (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LoaderCircleKt {
+	public static final fun getLoaderCircle (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LockKt {
+	public static final fun getLock (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/LogOutKt {
+	public static final fun getLogOut (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MapPinKt {
+	public static final fun getMapPin (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MenuKt {
+	public static final fun getMenu (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MessageCircleKt {
+	public static final fun getMessageCircle (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MessageSquareKt {
+	public static final fun getMessageSquare (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MinusKt {
+	public static final fun getMinus (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MoonKt {
+	public static final fun getMoon (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MoveHorizontalKt {
+	public static final fun getMoveHorizontal (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/OctagonXKt {
+	public static final fun getOctagonX (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PackageKt {
+	public static final fun getPackage (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PanelRightKt {
+	public static final fun getPanelRight (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PaperclipKt {
+	public static final fun getPaperclip (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PauseKt {
+	public static final fun getPause (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PenLineKt {
+	public static final fun getPenLine (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PencilKt {
+	public static final fun getPencil (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PhoneKt {
+	public static final fun getPhone (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PinOffKt {
+	public static final fun getPinOff (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PlayKt {
+	public static final fun getPlay (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/PlusKt {
+	public static final fun getPlus (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/Redo2Kt {
+	public static final fun getRedo2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/RefreshCwKt {
+	public static final fun getRefreshCw (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/RotateCcwKt {
+	public static final fun getRotateCcw (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ScanBarcodeKt {
+	public static final fun getScanBarcode (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ScissorsKt {
+	public static final fun getScissors (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ScrollTextKt {
+	public static final fun getScrollText (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SearchKt {
+	public static final fun getSearch (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SendKt {
+	public static final fun getSend (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SettingsKt {
+	public static final fun getSettings (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ShieldKt {
+	public static final fun getShield (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ShoppingBagKt {
+	public static final fun getShoppingBag (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ShoppingCartKt {
+	public static final fun getShoppingCart (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SlidersHorizontalKt {
+	public static final fun getSlidersHorizontal (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SmartphoneKt {
+	public static final fun getSmartphone (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SmileKt {
+	public static final fun getSmile (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SmilePlusKt {
+	public static final fun getSmilePlus (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SparklesKt {
+	public static final fun getSparkles (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SquareKt {
+	public static final fun getSquare (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/StarKt {
+	public static final fun getStar (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/SunKt {
+	public static final fun getSun (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/TagsKt {
+	public static final fun getTags (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ThumbsDownKt {
+	public static final fun getThumbsDown (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/ThumbsUpKt {
+	public static final fun getThumbsUp (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/Trash2Kt {
+	public static final fun getTrash2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/TrashKt {
+	public static final fun getTrash (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/TriangleAlertKt {
+	public static final fun getTriangleAlert (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/TruckKt {
+	public static final fun getTruck (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UnderlineKt {
+	public static final fun getUnderline (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/Undo2Kt {
+	public static final fun getUndo2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UnlinkKt {
+	public static final fun getUnlink (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UploadKt {
+	public static final fun getUpload (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UserCheckKt {
+	public static final fun getUserCheck (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UserCogKt {
+	public static final fun getUserCog (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UserKt {
+	public static final fun getUser (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UserPlusKt {
+	public static final fun getUserPlus (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UserRoundKt {
+	public static final fun getUserRound (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/UsersKt {
+	public static final fun getUsers (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/VideoKt {
+	public static final fun getVideo (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/WalletKt {
+	public static final fun getWallet (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/WrenchKt {
+	public static final fun getWrench (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/XCircleKt {
+	public static final fun getXCircle (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/XKt {
+	public static final fun getX (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/XOctagonKt {
+	public static final fun getXOctagon (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/navigation/SegmentedKt {
 	public static final fun Segmented (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V
 }

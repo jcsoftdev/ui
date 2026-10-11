@@ -16,6 +16,7 @@ class SampleActivity : ComponentActivity() {
                 when (screen) {
                     "forms" -> FormsGallery()
                     "overlays" -> OverlaysGallery()
+                    "icons" -> IconsGallery()
                     else -> AtomsGallery()
                 }
             }
