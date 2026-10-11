@@ -353,6 +353,33 @@ export const ToasterStaysReachableWhileModalOpen: Story = {
   },
 };
 
+export const ToastActionClickKeepsDialogOpen: Story = {
+  render: () => (
+    <div id="app-root">
+      <Toaster />
+      <Simple />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    let undone = 0;
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Abrir" }));
+    const dialog = await screen.findByRole("dialog");
+    toast("Cita reprogramada", {
+      duration: 60000,
+      action: { label: "Revertir", onClick: () => undone++ },
+    });
+    const action = await screen.findByRole("button", { name: "Revertir" });
+    await userEvent.click(action);
+    await expect(undone).toBe(1);
+    await pause(100);
+    await expect(dialogs()).toHaveLength(1);
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(dialogs()).toHaveLength(0));
+    toast.dismiss();
+  },
+};
+
 export const NonModalOutsideInputKeepsFocus: Story = {
   render: () => (
     <div>

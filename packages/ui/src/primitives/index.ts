@@ -11,6 +11,7 @@
  * explicit entry is defined in T14.
  */
 export * as DialogPrimitive from "./dialog/dialog.js";
+export * as MenuPrimitive from "./menu/menu.js";
 export * as PopoverPrimitive from "./popover/popover.js";
 export type {
   Align,
