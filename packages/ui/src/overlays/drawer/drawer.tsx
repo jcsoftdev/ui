@@ -1,9 +1,9 @@
 "use client";
 
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import type { ComponentPropsWithoutRef } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
+import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import { cn } from "../../utils/cn.js";
 import {
   PreviousFocusProvider,
@@ -16,11 +16,7 @@ import {
  * Wraps `DialogPrimitive.Root` so focus is restored on close even when the
  * drawer is opened in a controlled way, without its own `DrawerTrigger`.
  */
-export function Drawer({
-  open,
-  children,
-  ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) {
+export function Drawer({ open, children, ...props }: DialogPrimitive.DialogRootProps) {
   const focusRef = useCapturePreviousFocus(open);
   return (
     <DialogPrimitive.Root open={open} {...props}>
@@ -31,14 +27,28 @@ export function Drawer({
 
 export const DrawerTrigger = DialogPrimitive.Trigger;
 export const DrawerClose = DialogPrimitive.Close;
-export const DrawerTitle = DialogPrimitive.Title;
+export function DrawerTitle({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+  return <DialogPrimitive.Title className={cn("m-0", className)} {...props} />;
+}
+export function DrawerDescription({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+  return <DialogPrimitive.Description className={cn("m-0 text-ink-2", className)} {...props} />;
+}
 
-export interface DrawerContentProps
-  extends ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+export interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
   /** Same semantics as `DialogContentProps.blocking`. */
   blocking?: boolean;
   /** Accessible label of the close button. */
   closeLabel?: string;
+  /** Classes merged onto the scrim; consumer classes win. */
+  overlayClassName?: string;
+  /** Classes merged onto the built-in close button; consumer classes win. */
+  closeClassName?: string;
 }
 
 /** Right-anchored side panel for secondary flows. */
@@ -46,6 +56,8 @@ export function DrawerContent({
   className,
   blocking = false,
   closeLabel,
+  overlayClassName,
+  closeClassName,
   children,
   onEscapeKeyDown,
   onPointerDownOutside,
@@ -57,10 +69,10 @@ export function DrawerContent({
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-70 bg-scrim" />
+      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", overlayClassName)} />
       <DialogPrimitive.Content
         className={cn(
-          "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto surface-overlay shadow-overlay",
+          "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto outline-none surface-overlay shadow-overlay",
           className,
         )}
         onEscapeKeyDown={(event) => {
@@ -85,7 +97,10 @@ export function DrawerContent({
         {!blocking && (
           <DialogPrimitive.Close
             aria-label={closeLabel ?? strings.close}
-            className="absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5"
+            className={cn(
+              "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
+              closeClassName,
+            )}
           >
             <X aria-hidden="true" className="size-4" />
           </DialogPrimitive.Close>
