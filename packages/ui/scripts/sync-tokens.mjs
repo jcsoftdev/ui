@@ -1,10 +1,11 @@
 // Copies the token assets owned by @jcsoftdev/ui-tokens into this package so the published
 // files stay byte-compatible with 0.2.x (styles/*, tokens/*, bin/ui-theme.mjs). The copies are
 // build output and git-ignored; ui-tokens is a devDependency, so consumers install nothing extra.
+
+import { execFileSync } from "node:child_process";
 import { chmodSync, cpSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync } from "node:child_process";
 import { buildSync } from "esbuild";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
