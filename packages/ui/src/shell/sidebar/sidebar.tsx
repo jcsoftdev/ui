@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useCallback, useEffect, useRef } from "react";
+import { useGlassLens } from "../../glass/use-glass-lens.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
@@ -92,7 +93,15 @@ export function Sidebar({
   classNames,
 }: SidebarProps) {
   const shell = useAppShell();
-  const asideRef = useRef<HTMLElement>(null);
+  const asideRef = useRef<HTMLElement | null>(null);
+  const lens = useGlassLens<HTMLElement>();
+  const setAside = useCallback(
+    (node: HTMLElement | null) => {
+      asideRef.current = node;
+      lens(node);
+    },
+    [lens],
+  );
   const parentCompact = useCompactContainer(asideRef, (aside) => aside.parentElement, !shell);
   const isMobile = shell ? shell.compact : parentCompact;
   const closedOnMobile = isMobile && !open;
@@ -116,7 +125,7 @@ export function Sidebar({
   return (
     <>
       <aside
-        ref={asideRef}
+        ref={setAside}
         aria-label={ariaLabel}
         inert={closedOnMobile || undefined}
         className={cn(

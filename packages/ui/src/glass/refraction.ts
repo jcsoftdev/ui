@@ -1,14 +1,30 @@
-import { createDisplacementMap } from "./displacement-map.js";
+import { createDisplacementMap, VEIL_FLOOR } from "./displacement-map.js";
 import { supportsBackdropRefraction } from "./support.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const HOST_ID = "ui-glass-refraction-defs";
 
 export interface GlassRefractionOptions {
-  /** Strength of the lens in px of displacement at the rim. Default 18. */
+  /** Strength of the lens in px of displacement at the very edge. Default 26. */
   scale?: number;
-  /** Width of the refracting rim in px. Default 14. */
+  /** Width of the refracting rim in px. Default: a quarter of the short side, between 14 and 36. */
   bezel?: number;
+  /**
+   * Chromatic dispersion: how far apart the red and blue channels are pulled, as a fraction of
+   * `scale`. Default 0.08; `0` skips it and runs one displacement pass instead of three.
+   */
+  dispersion?: number;
+  /**
+   * Move the legibility veil of a liquid surface into the filter, where it eases off across the
+   * rim, so the lens shows the backdrop livelier at the edge than under the text. Default true;
+   * `false` keeps the uniform CSS veil.
+   */
+  veil?: boolean;
+  /**
+   * Only refract while the surface resolves to a liquid material (the `--glass-lens` flag the
+   * `liquid` utilities set). This is what the glass components use. Default false.
+   */
+  auto?: boolean;
   /**
    * `"auto"` (default) only refracts where {@link supportsBackdropRefraction} is true and the user
    * has not asked for less transparency, more contrast or less motion. `"force"` skips the
@@ -28,7 +44,27 @@ const OFF_QUERIES = [
 const REBUILD_QUERIES = ["(prefers-color-scheme: dark)"];
 const REBUILD_ATTRIBUTES = ["data-theme", "data-style", "data-density", "data-radius"];
 
+/** Surfaces above this area (CSS px squared) keep the plain liquid look: the filter costs per pixel. */
+const MAX_AREA = 640_000;
+/** Lenses alive at once; further surfaces keep the plain liquid look until one is released. */
+const MAX_ACTIVE = 8;
+
 let counter = 0;
+let active = 0;
+
+/** Size changes are coalesced into one pass per frame, whatever the number of surfaces. */
+const dirty = new Set<() => void>();
+let frame = 0;
+function schedule(run: () => void) {
+  dirty.add(run);
+  if (frame) return;
+  frame = requestAnimationFrame(() => {
+    frame = 0;
+    const batch = [...dirty];
+    dirty.clear();
+    for (const task of batch) task();
+  });
+}
 
 const matches = (query: string) => typeof matchMedia === "function" && matchMedia(query).matches;
 const userWantsLess = () => OFF_QUERIES.some(matches);
@@ -61,11 +97,20 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   const original = element.style.backdropFilter;
   const originalPrefixed = element.style.getPropertyValue("-webkit-backdrop-filter");
 
+  const flagged = () =>
+    !options.auto ||
+    (getComputedStyle(element).getPropertyValue("--glass-lens").trim() === "1" &&
+      element.dataset.glassLens !== "off" &&
+      getComputedStyle(element).backdropFilter !== "none");
+
   const eligible = () =>
-    !userWantsLess() && (options.refraction === "force" || supportsBackdropRefraction());
+    !userWantsLess() &&
+    (options.refraction === "force" || supportsBackdropRefraction()) &&
+    flagged();
 
   const uninstall = () => {
     if (!installed) return;
+    active--;
     installed.observer?.disconnect();
     installed.filter.remove();
     const defs = document.getElementById(HOST_ID);
@@ -75,40 +120,146 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     if (originalPrefixed) element.style.setProperty("-webkit-backdrop-filter", originalPrefixed);
     else element.style.removeProperty("-webkit-backdrop-filter");
     delete element.dataset.glassRefraction;
+    element.style.removeProperty("--glass-veil");
   };
 
   const install = () => {
-    if (!element.isConnected) return;
-    const { scale = 18, bezel = 14 } = options;
+    if (!element.isConnected || active >= MAX_ACTIVE) return;
+    if (element.offsetWidth * element.offsetHeight > MAX_AREA) return;
+    const { scale = 26, dispersion = 0.08 } = options;
     const id = `ui-glass-lens-${++counter}`;
     const filter = document.createElementNS(SVG_NS, "filter");
     filter.id = id;
     filter.setAttribute("filterUnits", "userSpaceOnUse");
     filter.setAttribute("color-interpolation-filters", "sRGB");
-    const image = document.createElementNS(SVG_NS, "feImage");
-    image.setAttribute("result", "map");
-    image.setAttribute("preserveAspectRatio", "none");
-    const displace = document.createElementNS(SVG_NS, "feDisplacementMap");
-    displace.setAttribute("in", "SourceGraphic");
-    displace.setAttribute("in2", "map");
-    displace.setAttribute("scale", String(scale));
-    displace.setAttribute("xChannelSelector", "R");
-    displace.setAttribute("yChannelSelector", "B");
-    filter.append(image, displace);
-    host().appendChild(filter);
-
-    // The blur comes from the stylesheet every time (theme and preset change it), never from a
-    // value captured once: read it with our own inline value out of the way.
+    const node = (name: string, attrs: Record<string, string>) => {
+      const created = document.createElementNS(SVG_NS, name);
+      for (const [key, value] of Object.entries(attrs)) created.setAttribute(key, value);
+      filter.appendChild(created);
+      return created;
+    };
+    const image = node("feImage", { result: "map", preserveAspectRatio: "none" });
+    const displace = (channel: string | undefined, factor: number) =>
+      node("feDisplacementMap", {
+        in: "SourceGraphic",
+        in2: "map",
+        scale: String(scale * factor),
+        xChannelSelector: "R",
+        yChannelSelector: "G",
+        result: channel === "lens" ? "lens" : `d${channel}`,
+      });
+    // Chromatic dispersion: the three colour channels are displaced by slightly different
+    // amounts (blue the least, red the most, so the rim fringes like real glass) and added back.
+    if (dispersion > 0) {
+      const keep = {
+        r: "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0",
+        g: "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0",
+        b: "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0",
+      } as const;
+      const factors = { r: 1 + dispersion, g: 1, b: 1 - dispersion } as const;
+      for (const c of ["r", "g", "b"] as const) {
+        displace(c, factors[c]);
+        node("feColorMatrix", { in: `d${c}`, type: "matrix", values: keep[c], result: c });
+      }
+      node("feComposite", {
+        in: "r",
+        in2: "g",
+        operator: "arithmetic",
+        k1: "0",
+        k2: "1",
+        k3: "1",
+        k4: "0",
+        result: "rg",
+      });
+      node("feComposite", {
+        in: "rg",
+        in2: "b",
+        operator: "arithmetic",
+        k1: "0",
+        k2: "1",
+        k3: "1",
+        k4: "0",
+        result: "lens",
+      });
+    } else displace("lens", 1);
+    // Frosted middle, sharp rim: the blue channel of the map says how soft the backdrop is. The
+    // lens is blurred in here (not by the CSS blur, which would soften the rim too) and mixed
+    // back with the sharp lens by that weight.
+    const computed = getComputedStyle(element);
     element.style.backdropFilter = original;
     const base = getComputedStyle(element).backdropFilter;
-    const blur = !base || base === "none" ? "" : `${base} `;
+    const radius = /blur\(\s*([\d.]+)px\s*\)/.exec(base);
+    const rest = !base || base === "none" ? "" : `${base.replace(/blur\([^)]*\)\s*/, "").trim()} `;
+    if (radius) {
+      node("feColorMatrix", {
+        in: "map",
+        type: "matrix",
+        values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0",
+        result: "soft-weight",
+      });
+      node("feGaussianBlur", { in: "lens", stdDeviation: radius[1] as string, result: "soft" });
+      node("feComposite", { in: "soft", in2: "soft-weight", operator: "in", result: "soft-part" });
+      node("feComposite", {
+        in: "lens",
+        in2: "soft-weight",
+        operator: "out",
+        result: "sharp-part",
+      });
+      node("feComposite", {
+        in: "soft-part",
+        in2: "sharp-part",
+        operator: "arithmetic",
+        k1: "0",
+        k2: "1",
+        k3: "1",
+        k4: "0",
+        result: "mixed",
+      });
+    }
+    // The veil: the CSS veil is switched off (--glass-veil) and the same colour is flooded over
+    // the lens, a little lighter along the rim than under the text.
+    const veilColor =
+      options.veil === false ? "" : computed.getPropertyValue("--glass-lens-dim").trim();
+    if (veilColor) {
+      node("feColorMatrix", {
+        in: "map",
+        type: "matrix",
+        values: `0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${1 - VEIL_FLOOR} 0 ${VEIL_FLOOR}`,
+        result: "veil-weight",
+      });
+      node("feFlood", { "flood-color": veilColor, result: "flood" });
+      node("feComposite", { in: "flood", in2: "veil-weight", operator: "in", result: "veil" });
+      const merge = node("feMerge", {});
+      for (const input of [radius ? "mixed" : "lens", "veil"]) {
+        const mergeNode = document.createElementNS(SVG_NS, "feMergeNode");
+        mergeNode.setAttribute("in", input);
+        merge.appendChild(mergeNode);
+      }
+      element.style.setProperty("--glass-veil", "transparent");
+    } else if (radius) {
+      const merge = node("feMerge", {});
+      const mergeNode = document.createElementNS(SVG_NS, "feMergeNode");
+      mergeNode.setAttribute("in", "mixed");
+      merge.appendChild(mergeNode);
+    }
+    host().appendChild(filter);
 
+    const blur = rest;
+
+    let key = "";
     const update = () => {
       if (!element.isConnected) return stop();
-      const { width, height } = element.getBoundingClientRect();
+      // Layout size, not the bounding box: an entrance transform must not rebuild the map.
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
       if (!width || !height) return;
       const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
-      for (const [node, name, value] of [
+      const bezel = options.bezel ?? Math.min(28, Math.max(12, Math.min(width, height) / 6));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const next = [width, height, radius, bezel, dpr].join("x");
+      if (next === key) return;
+      key = next;
+      for (const [target, name, value] of [
         [filter, "x", "0"],
         [filter, "y", "0"],
         [filter, "width", String(width)],
@@ -116,16 +267,18 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         [image, "width", String(width)],
         [image, "height", String(height)],
       ] as const)
-        node.setAttribute(name, value);
-      image.setAttribute("href", createDisplacementMap({ width, height, radius, bezel }));
+        target.setAttribute(name, value);
+      image.setAttribute("href", createDisplacementMap({ width, height, radius, bezel, dpr }));
     };
     update();
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(update) : undefined;
+    const observer =
+      typeof ResizeObserver === "function" ? new ResizeObserver(() => schedule(update)) : undefined;
     observer?.observe(element);
     element.style.backdropFilter = `${blur}url(#${id})`;
     element.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
     element.dataset.glassRefraction = "on";
     installed = { filter, observer };
+    active++;
   };
 
   /** Bring the element in line with the current preferences, engine and tokens. */

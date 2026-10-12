@@ -407,6 +407,10 @@ describe("legibility over a worst-case backdrop", () => {
   const panels = [
     ["glass", {}],
     ["glass-clear", {}],
+    ["liquid", {}],
+    ["liquid-clear", {}],
+    ["glass", { "data-glass": "liquid" }],
+    ["surface-overlay", { "data-style": "glass", "data-glass": "liquid" }],
     ["surface-overlay", { "data-style": "glass" }],
     ["surface-nav", { "data-style": "glass" }],
   ] as const;
@@ -447,7 +451,14 @@ describe("refraction is opt-in", () => {
     const cleanup = applyGlassRefraction(box);
     expect(box.dataset.glassRefraction).toBe("on");
     expect(styleOf(box).backdropFilter).toContain("url(");
-    expect(styleOf(box).backdropFilter).toContain("blur(20px)");
+    // The blur moves into the filter (soft middle, sharp rim); saturation stays in CSS.
+    expect(styleOf(box).backdropFilter).toContain("saturate(1.8)");
+    expect(styleOf(box).backdropFilter).not.toContain("blur(");
+    expect(
+      document
+        .querySelector("#ui-glass-refraction-defs feGaussianBlur")
+        ?.getAttribute("stdDeviation"),
+    ).toBe("20");
     cleanup();
     expect(box.dataset.glassRefraction).toBeUndefined();
     expect(styleOf(box).backdropFilter).not.toContain("url(");
@@ -509,10 +520,13 @@ describe("refraction is opt-in", () => {
     const h = await mount(glassBox("glass"));
     const box = h.querySelector("[data-testid=box]") as HTMLElement;
     const stop = applyGlassRefraction(box);
-    expect(styleOf(box).backdropFilter).toContain("blur(20px)");
+    const radius = () =>
+      document
+        .querySelector("#ui-glass-refraction-defs feGaussianBlur")
+        ?.getAttribute("stdDeviation");
+    expect(radius()).toBe("20");
     document.documentElement.dataset.style = "glass";
-    await new Promise((r) => setTimeout(r, 50));
-    expect(styleOf(box).backdropFilter).toContain("blur(24px)");
+    await vi.waitFor(() => expect(radius()).toBe("24"));
     expect(styleOf(box).backdropFilter.match(/url\(/g)).toHaveLength(1);
     stop();
   });

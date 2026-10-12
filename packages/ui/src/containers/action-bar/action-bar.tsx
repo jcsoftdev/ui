@@ -1,6 +1,7 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
+import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { X } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -11,6 +12,7 @@ export type ActionBarPart = "root" | "count" | "actions" | "clear";
 export interface ActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /** Number of selected items. The bar renders nothing while it is 0. */
   selectedCount: number;
+  ref?: Ref<HTMLDivElement>;
   /** Singular and plural noun for the live count, e.g. ["cita", "citas"]. */
   noun?: [singular: string, plural: string];
   /** Clears the selection (close button and Escape). */
@@ -48,8 +50,10 @@ export function ActionBar({
   className,
   classNames,
   onKeyDown,
+  ref,
   ...props
 }: ActionBarProps) {
+  const lens = useGlassLens(ref);
   if (selectedCount <= 0) return null;
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -62,6 +66,7 @@ export function ActionBar({
 
   return (
     <div
+      ref={lens}
       role="toolbar"
       aria-label="Acciones para la selección"
       onKeyDown={handleKeyDown}

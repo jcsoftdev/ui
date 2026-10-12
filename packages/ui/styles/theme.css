@@ -280,11 +280,12 @@
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"][data-style="glass"], [data-glass="liquid"] [data-style="glass"], [data-style="glass"] [data-glass="liquid"]) & {
       background-color: var(--liquid-regular-tint);
-      background-image: var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim));
+      background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
       box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
         box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       }
@@ -375,11 +376,12 @@
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"]) & {
       background-color: var(--liquid-regular-tint);
-      background-image: var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim));
+      background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
       box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
         box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       }
@@ -448,11 +450,12 @@
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"]) & {
       background-color: var(--liquid-clear-tint);
-      background-image: var(--glass-noise), linear-gradient(var(--liquid-clear-dim), var(--liquid-clear-dim));
+      background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-clear-filter);
       backdrop-filter: var(--liquid-clear-filter);
       box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
       --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-clear-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
         box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
       }
@@ -517,11 +520,12 @@
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"][data-style="glass"], [data-glass="liquid"] [data-style="glass"], [data-style="glass"] [data-glass="liquid"]) & {
       background-color: var(--liquid-regular-tint);
-      background-image: var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim));
+      background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
       box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
         box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       }
@@ -596,11 +600,12 @@
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"][data-style="glass"], [data-glass="liquid"] [data-style="glass"], [data-style="glass"] [data-glass="liquid"]) & {
       background-color: var(--liquid-regular-tint);
-      background-image: var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim));
+      background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
       box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
         box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
       }
@@ -679,11 +684,12 @@
   box-shadow: 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background-color: var(--liquid-regular-tint);
-    background-image: var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim));
+    background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
     -webkit-backdrop-filter: var(--liquid-regular-filter);
     backdrop-filter: var(--liquid-regular-filter);
     box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
     --glass-lens: 1;
+    --glass-lens-dim: var(--liquid-regular-dim);
     &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
       box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
     }
@@ -744,11 +750,12 @@
   box-shadow: 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     background-color: var(--liquid-clear-tint);
-    background-image: var(--glass-noise), linear-gradient(var(--liquid-clear-dim), var(--liquid-clear-dim));
+    background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
     -webkit-backdrop-filter: var(--liquid-clear-filter);
     backdrop-filter: var(--liquid-clear-filter);
     box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
     --glass-lens: 1;
+    --glass-lens-dim: var(--liquid-clear-dim);
     &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
       box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
     }

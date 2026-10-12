@@ -5,42 +5,153 @@ export interface DisplacementMapOptions {
   radius: number;
   /** Width of the refracting rim, in px. The centre stays undistorted. */
   bezel: number;
+  /** Device pixel ratio the map is rasterised at. Default 1, capped at 2. */
+  dpr?: number;
+}
+
+export interface DisplacementField {
+  /** Width and height of `data` in pixels (CSS size times the capped ratio). */
+  width: number;
+  height: number;
+  /**
+   * RGBA, row major. Red and green carry the horizontal and vertical source offset (128 is zero);
+   * blue carries how soft the backdrop is there: 255 in the middle, easing down to 0 at the edge,
+   * so the lens shows the backdrop sharp and lively along the rim and frosted under the text.
+   */
+  data: Uint8ClampedArray;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
+/** How much of the legibility veil is left at the very edge of the rim. */
+export const VEIL_FLOOR = 0.5;
+
+/** Refractive index of the glass (crown glass), as in the usual web recreations. */
+const INDEX = 1.5;
+const PROFILE_SAMPLES = 64;
+/** How steep the bezel is relative to its width: the thickness of the glass over the rim width. */
+const STEEPNESS = 0.9;
+
+let profile: Float32Array | undefined;
+
 /**
- * SVG displacement map for `feDisplacementMap`: red carries the horizontal and blue the vertical
- * offset, both neutral (50%) across the middle of the shape and ramping to 0% and 100% over the
- * rim on opposite edges, which is what bends the backdrop along the rim like a lens. Returned as
- * a `data:` URI for `feImage`.
+ * Lateral displacement across the rim, 1 at the outer edge and 0 at the inner one.
+ *
+ * The rim is a convex squircle, `h(x) = (1 - (1 - x)^4)^(1/4)` with x running from the outer edge
+ * inwards. A ray entering vertically meets the surface at the angle of its slope, bends by
+ * Snell's law (`sin t1 = n sin t2`, n = 1.5) and lands `tan(t1 - t2)` further sideways per unit
+ * of glass thickness. The curve is normalised by its maximum, so the strength of the lens is the
+ * `scale` of the displacement filter and not a property of the profile.
  */
-export function createDisplacementMap({
+export function lensProfile(): Float32Array {
+  if (profile) return profile;
+  const out = new Float32Array(PROFILE_SAMPLES);
+  let max = 0;
+  for (let i = 0; i < PROFILE_SAMPLES; i++) {
+    const x = clamp(i / (PROFILE_SAMPLES - 1), 0.002, 1);
+    const slope = (1 - x) ** 3 * (1 - (1 - x) ** 4) ** -0.75 * STEEPNESS;
+    const incidence = Math.atan(slope);
+    const refracted = Math.asin(Math.sin(incidence) / INDEX);
+    out[i] = Math.tan(incidence - refracted);
+    max = Math.max(max, out[i] as number);
+  }
+  for (let i = 0; i < PROFILE_SAMPLES; i++) out[i] = (out[i] as number) / max;
+  out[PROFILE_SAMPLES - 1] = 0;
+  profile = out;
+  return out;
+}
+
+/**
+ * Displacement field of a rounded rectangle, from its signed distance function: zero in the
+ * middle, and across the rim a source offset pointing into the shape whose length follows
+ * {@link lensProfile} and whose direction is the inward surface normal (straight edges pull
+ * along the axis, corners along the radius). Pure, so it runs anywhere.
+ */
+export function computeDisplacementField({
   width,
   height,
   radius,
   bezel,
-}: DisplacementMapOptions): string {
-  const w = Math.max(1, Math.round(width));
-  const h = Math.max(1, Math.round(height));
-  const rim = clamp(Math.round(bezel), 1, Math.floor(Math.min(w, h) / 2));
-  const r = clamp(Math.round(radius), 0, Math.floor(Math.min(w, h) / 2));
-  const edge = (size: number) => ((rim / size) * 100).toFixed(2);
-  const ramp = (id: string, vertical: boolean, channel: (value: number) => string, size: number) =>
-    `<linearGradient id="${id}" x1="0%" y1="0%" x2="${vertical ? "0%" : "100%"}" y2="${vertical ? "100%" : "0%"}">` +
-    `<stop offset="0%" stop-color="${channel(0)}"/>` +
-    `<stop offset="${edge(size)}%" stop-color="${channel(128)}"/>` +
-    `<stop offset="${(100 - Number(edge(size))).toFixed(2)}%" stop-color="${channel(128)}"/>` +
-    `<stop offset="100%" stop-color="${channel(255)}"/></linearGradient>`;
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
-    "<defs>" +
-    ramp("x", false, (v) => `rgb(${v},0,0)`, w) +
-    ramp("y", true, (v) => `rgb(0,0,${v})`, h) +
-    "</defs>" +
-    `<rect width="${w}" height="${h}" fill="black"/>` +
-    `<rect width="${w}" height="${h}" rx="${r}" fill="url(#x)"/>` +
-    `<rect width="${w}" height="${h}" rx="${r}" fill="url(#y)" style="mix-blend-mode:screen"/>` +
-    "</svg>";
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  dpr = 1,
+}: DisplacementMapOptions): DisplacementField {
+  const ratio = clamp(dpr, 1, 2);
+  const w = Math.max(1, width);
+  const h = Math.max(1, height);
+  const rim = clamp(bezel, 1, Math.min(w, h) / 2);
+  const r = clamp(radius, 0, Math.min(w, h) / 2);
+  const pw = Math.max(1, Math.round(w * ratio));
+  const ph = Math.max(1, Math.round(h * ratio));
+  const data = new Uint8ClampedArray(pw * ph * 4);
+  const table = lensProfile();
+  const last = table.length - 1;
+  const hx = w / 2;
+  const hy = h / 2;
+  for (let j = 0; j < ph; j++) {
+    const py = (j + 0.5) / ratio - hy;
+    for (let i = 0; i < pw; i++) {
+      const px = (i + 0.5) / ratio - hx;
+      const o = (j * pw + i) * 4;
+      const qx = Math.abs(px) - (hx - r);
+      const qy = Math.abs(py) - (hy - r);
+      const out = Math.hypot(Math.max(qx, 0), Math.max(qy, 0));
+      const depth = r - (out + Math.min(Math.max(qx, qy), 0));
+      let dx = 0;
+      let dy = 0;
+      let veil = 1;
+      if (depth > 0 && depth < rim) {
+        const x = depth / rim;
+        veil = x * x * (3 - 2 * x);
+        const at = (depth / rim) * last;
+        const lo = Math.floor(at);
+        const m =
+          (table[lo] as number) * (1 - (at - lo)) +
+          (table[Math.min(lo + 1, last)] as number) * (at - lo);
+        const sx = px < 0 ? -1 : 1;
+        const sy = py < 0 ? -1 : 1;
+        let nx = 0;
+        let ny = 0;
+        if (qx > 0 && qy > 0) {
+          nx = (sx * qx) / out;
+          ny = (sy * qy) / out;
+        } else if (qx > qy) nx = sx;
+        else ny = sy;
+        dx = -nx * m;
+        dy = -ny * m;
+      }
+      data[o] = 128 + dx * 127;
+      data[o + 1] = 128 + dy * 127;
+      data[o + 2] = veil * 255;
+      data[o + 3] = 255;
+    }
+  }
+  return { width: pw, height: ph, data };
+}
+
+const cache = new Map<string, string>();
+const CACHE_SIZE = 8;
+
+/**
+ * Displacement map for `feDisplacementMap`, as a PNG `data:` URI for `feImage`. Browser only
+ * (it rasterises on a canvas); results are kept in a small cache, so reopening a dialog of the
+ * same size costs nothing.
+ */
+export function createDisplacementMap(options: DisplacementMapOptions): string {
+  const key = [options.width, options.height, options.radius, options.bezel, options.dpr ?? 1]
+    .map((n) => Math.round(n * 100) / 100)
+    .join("x");
+  const hit = cache.get(key);
+  if (hit) return hit;
+  const field = computeDisplacementField(options);
+  const canvas = document.createElement("canvas");
+  canvas.width = field.width;
+  canvas.height = field.height;
+  const context = canvas.getContext("2d");
+  if (!context) return "";
+  const image = context.createImageData(field.width, field.height);
+  image.data.set(field.data);
+  context.putImageData(image, 0, 0);
+  const uri = canvas.toDataURL("image/png");
+  cache.set(key, uri);
+  if (cache.size > CACHE_SIZE) cache.delete(cache.keys().next().value as string);
+  return uri;
 }

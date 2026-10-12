@@ -1533,16 +1533,16 @@
    {
     "name": "liquid-regular-tint",
     "value": {
-     "light": "rgba(255,255,255,.16)",
-     "dark": "rgba(24,24,28,.28)"
+     "light": "rgba(255,255,255,.2)",
+     "dark": "rgba(24,24,28,.36)"
     },
     "usage": "Liquid glass, regular: translucent fill. Thinner than frosted; the dim layer below keeps text legible."
    },
    {
     "name": "liquid-regular-dim",
     "value": {
-     "light": "rgba(255,255,255,.46)",
-     "dark": "rgba(0,0,0,.5)"
+     "light": "rgba(255,255,255,.7)",
+     "dark": "rgba(0,0,0,.66)"
     },
     "usage": "Liquid glass, regular: legibility veil. Keeps text-ink and text-ink-2 at 4.8:1 on white, black, split and striped backdrops."
    },
@@ -1557,8 +1557,8 @@
    {
     "name": "liquid-clear-dim",
     "value": {
-     "light": "rgba(255,255,255,.7)",
-     "dark": "rgba(0,0,0,.62)"
+     "light": "rgba(255,255,255,.8)",
+     "dark": "rgba(0,0,0,.66)"
     },
     "usage": "Liquid glass, clear: legibility veil. Do not remove it."
    },
@@ -2107,11 +2107,12 @@
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"][data-style=\"glass\"], [data-glass=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass=\"liquid\"]) &": {
       "background-color": "var(--liquid-regular-tint)",
-      "background-image": "var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim))",
+      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
       "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
       "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
        "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
       },
@@ -2199,11 +2200,12 @@
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"]) &": {
       "background-color": "var(--liquid-regular-tint)",
-      "background-image": "var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim))",
+      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
       "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
       "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
        "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
       },
@@ -2271,11 +2273,12 @@
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"]) &": {
       "background-color": "var(--liquid-clear-tint)",
-      "background-image": "var(--glass-noise), linear-gradient(var(--liquid-clear-dim), var(--liquid-clear-dim))",
+      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-clear-filter)",
       "backdrop-filter": "var(--liquid-clear-filter)",
       "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
       "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-clear-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
        "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)"
       },
@@ -2339,11 +2342,12 @@
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"][data-style=\"glass\"], [data-glass=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass=\"liquid\"]) &": {
       "background-color": "var(--liquid-regular-tint)",
-      "background-image": "var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim))",
+      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
       "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
       "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
        "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
       },
@@ -2417,11 +2421,12 @@
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"][data-style=\"glass\"], [data-glass=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass=\"liquid\"]) &": {
       "background-color": "var(--liquid-regular-tint)",
-      "background-image": "var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim))",
+      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
       "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
       "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
        "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
       },
@@ -2498,11 +2503,12 @@
     "box-shadow": "0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      "background-color": "var(--liquid-regular-tint)",
-     "background-image": "var(--glass-noise), linear-gradient(var(--liquid-regular-dim), var(--liquid-regular-dim))",
+     "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
      "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
      "backdrop-filter": "var(--liquid-regular-filter)",
      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
      "--glass-lens": "1",
+     "--glass-lens-dim": "var(--liquid-regular-dim)",
      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
      },
@@ -2562,11 +2568,12 @@
     "box-shadow": "0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      "background-color": "var(--liquid-clear-tint)",
-     "background-image": "var(--glass-noise), linear-gradient(var(--liquid-clear-dim), var(--liquid-clear-dim))",
+     "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
      "-webkit-backdrop-filter": "var(--liquid-clear-filter)",
      "backdrop-filter": "var(--liquid-clear-filter)",
      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
      "--glass-lens": "1",
+     "--glass-lens-dim": "var(--liquid-clear-dim)",
      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)"
      },

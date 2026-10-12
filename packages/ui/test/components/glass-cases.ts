@@ -1,4 +1,8 @@
-export { createDisplacementMap } from "../../src/glass/displacement-map.js";
+export {
+  computeDisplacementField,
+  createDisplacementMap,
+  lensProfile,
+} from "../../src/glass/displacement-map.js";
 export { applyGlassRefraction } from "../../src/glass/refraction.js";
 export {
   resetBackdropRefractionSupport,

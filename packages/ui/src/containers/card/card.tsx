@@ -1,4 +1,5 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, Ref } from "react";
+import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
 
@@ -10,11 +11,14 @@ export interface CardRootProps extends CardProps {
    * into Liquid Glass (use sparingly, over imagery, never inside another glass surface).
    */
   material?: Material;
+  ref?: Ref<HTMLDivElement>;
 }
 
-export function Card({ className, material, ...props }: CardRootProps) {
+export function Card({ className, material, ref, ...props }: CardRootProps) {
+  const lens = useGlassLens(ref);
   return (
     <div
+      ref={lens}
       className={cn(
         "min-w-0 rounded-card border-card shadow-card surface-card @container/card",
         materialClass(material, "surface-card"),

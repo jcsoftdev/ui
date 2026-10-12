@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, type Ref, useEffect, useState } from "react";
+import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { Menu, Search } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -67,6 +68,7 @@ export function Topbar({
   classNames,
 }: TopbarProps) {
   const [shortcut, setShortcut] = useState("Ctrl+K");
+  const lens = useGlassLens<HTMLElement>();
 
   useEffect(() => {
     setShortcut(isApplePlatform() ? "⌘K" : "Ctrl+K");
@@ -87,6 +89,7 @@ export function Topbar({
 
   return (
     <header
+      ref={lens}
       className={cn(
         "@container/topbar sticky top-0 z-30 h-top-height border-b-divider surface-nav",
         materialClass(material, "surface-solid [--surface-solid:var(--bg)]"),
