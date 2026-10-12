@@ -94,6 +94,7 @@ fun GlassGallery(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item { SideBySide() }
+                item { LightBackdrop() }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button("Open glass sheet", { sheet = true }, block = true, variant = ButtonVariant.Primary)
@@ -189,6 +190,40 @@ private fun SideBySide() {
                 glass = glass,
                 interactionSource = source,
             ) { Text("Liquid", Modifier.align(Alignment.Center)) }
+        }
+    }
+}
+
+/** A Liquid card and a Liquid capsule over light content with black and white stripes, like the floating bar over the page. */
+@Composable
+private fun LightBackdrop() {
+    val glass = rememberGlassState()
+    Box(Modifier.fillMaxWidth().height(160.dp).clip(RoundedCornerShape(20.dp))) {
+        Canvas(Modifier.fillMaxSize().glassSource(glass)) {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFFEAF4F8), Color(0xFF58A6C9), Color(0xFF6DC3A0))))
+            var x = 0f
+            while (x < size.width) {
+                drawRect(
+                    Color.Black,
+                    Offset(x, size.height * 0.62f),
+                    androidx.compose.ui.geometry
+                        .Size(26f, size.height * 0.38f),
+                )
+                x += 52f
+            }
+        }
+        Row(Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            MaterialSurface(SurfaceMaterial.Liquid, RoundedCornerShape(28.dp), Modifier.size(140.dp, 110.dp), glass = glass) {
+                Text("Liquid card", Modifier.align(Alignment.Center))
+            }
+            MaterialSurface(
+                SurfaceMaterial.Liquid,
+                RoundedCornerShape(50),
+                Modifier.size(150.dp, 56.dp).align(Alignment.CenterVertically),
+                glass = glass,
+            ) {
+                Text("Liquid pill", Modifier.align(Alignment.Center))
+            }
         }
     }
 }
