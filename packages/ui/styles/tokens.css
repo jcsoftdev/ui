@@ -191,7 +191,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -328,7 +328,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -450,7 +450,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -603,7 +603,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -644,7 +644,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -677,7 +677,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -764,7 +764,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -799,7 +799,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -826,7 +826,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -913,7 +913,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -958,7 +958,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -995,7 +995,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1082,7 +1082,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1120,7 +1120,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1150,7 +1150,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1237,7 +1237,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1281,7 +1281,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1318,7 +1318,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1406,7 +1406,7 @@
   --liquid-regular-tint: rgba(255,255,255,.2);
   --liquid-regular-dim: rgba(255,255,255,.7);
   --liquid-clear-tint: rgba(255,255,255,.05);
-  --liquid-clear-dim: rgba(255,255,255,.8);
+  --liquid-clear-dim: rgba(255,255,255,.78);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1441,7 +1441,7 @@
     --liquid-regular-tint: rgba(24,24,28,.36);
     --liquid-regular-dim: rgba(0,0,0,.66);
     --liquid-clear-tint: rgba(255,255,255,.03);
-    --liquid-clear-dim: rgba(0,0,0,.66);
+    --liquid-clear-dim: rgba(0,0,0,.58);
     --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1468,7 +1468,7 @@
   --liquid-regular-tint: rgba(24,24,28,.36);
   --liquid-regular-dim: rgba(0,0,0,.66);
   --liquid-clear-tint: rgba(255,255,255,.03);
-  --liquid-clear-dim: rgba(0,0,0,.66);
+  --liquid-clear-dim: rgba(0,0,0,.58);
   --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);

@@ -1557,8 +1557,8 @@
    {
     "name": "liquid-clear-dim",
     "value": {
-     "light": "rgba(255,255,255,.8)",
-     "dark": "rgba(0,0,0,.66)"
+     "light": "rgba(255,255,255,.78)",
+     "dark": "rgba(0,0,0,.58)"
     },
     "usage": "Liquid glass, clear: legibility veil. Do not remove it."
    },

@@ -4,6 +4,7 @@ import { expect, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
 import { ActionBar } from "../containers/action-bar/action-bar.js";
 import { Card, CardBody, CardHeader } from "../containers/card/card.js";
+import { useGlassLens } from "../glass/use-glass-lens.js";
 import { useGlassRefraction } from "../glass/use-glass-refraction.js";
 import {
   Dialog,
@@ -45,8 +46,9 @@ function Pane({
   className: string;
   children?: ReactNode;
 }) {
+  const lens = useGlassLens<HTMLDivElement>();
   return (
-    <div className={`${className} w-72 rounded-dialog p-5 text-ink`}>
+    <div ref={lens} className={`${className} w-72 rounded-dialog p-5 text-ink`}>
       <h3 className="m-0 text-card-title">{title}</h3>
       <p className="m-0 mt-1 text-body text-ink-2">Legible over stripes, blobs and photos.</p>
       {children}
@@ -185,6 +187,16 @@ function TextBackdrop({ children }: { children: ReactNode }) {
   );
 }
 
+/** A pill button on a glass utility, with the real lens (it only applies to liquid classes). */
+function GlassButton({ className }: { className: string }) {
+  const lens = useGlassLens<HTMLButtonElement>();
+  return (
+    <button ref={lens} type="button" className={`${className} rounded-pill px-6 py-2 text-ink`}>
+      Button
+    </button>
+  );
+}
+
 function Compare({ before, after }: { before: string; after: string }) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -193,18 +205,14 @@ function Compare({ before, after }: { before: string; after: string }) {
           Before: frosted (glass)
         </span>
         <Pane title="Frosted" className={before} />
-        <button type="button" className={`${before} rounded-pill px-6 py-2 text-ink`}>
-          Button
-        </button>
+        <GlassButton className={before} />
       </div>
       <div className="grid justify-items-center gap-3">
         <span className="rounded-pill bg-surface-solid px-3 py-1 text-caption text-ink">
           After: liquid
         </span>
         <Pane title="Liquid" className={after} />
-        <button type="button" className={`${after} rounded-pill px-6 py-2 text-ink`}>
-          Button
-        </button>
+        <GlassButton className={after} />
       </div>
     </div>
   );
@@ -262,7 +270,9 @@ export const LiquidComponents: Story = {
         <LensCard title="Card liquid" material="liquid" />
         <LensCard title="Card frosted" material="glass" />
       </div>
-      <ActionBar selectedCount={3} position="static" material="liquid" />
+      <div className="flex w-full justify-center">
+        <ActionBar selectedCount={3} position="static" material="liquid" />
+      </div>
       <Dialog open>
         <DialogContent material="liquid" aria-describedby={undefined}>
           <DialogHeader>

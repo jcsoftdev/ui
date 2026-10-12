@@ -12,7 +12,7 @@ export interface GlassRefractionOptions {
   /**
    * Chromatic dispersion: how far apart the red and blue channels are pulled, as a fraction of
    * `scale`. It runs three displacement passes instead of one (about +50% to +100% of the lens
-   * cost), so by default it is 0.08 only on surfaces up to 100,000 px squared (nav bars,
+   * cost), so by default it is 0.05 only on surfaces up to 100,000 px squared (nav bars,
    * buttons, popovers) and 0 on larger ones; pass a number to force it either way.
    */
   dispersion?: number;
@@ -146,7 +146,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   };
 
   const dispersionFor = (area: number) =>
-    options.dispersion ?? (area <= DISPERSION_AREA ? 0.08 : 0);
+    options.dispersion ?? (area <= DISPERSION_AREA ? 0.05 : 0);
 
   const install = () => {
     if (!element.isConnected) return;
