@@ -91,7 +91,7 @@ export function Source({
       </HoverCardTrigger>
       <HoverCardContent
         className={cn(
-          "@container/source w-72 max-w-[calc(100vw-1rem)] rounded-popover bg-surface-overlay p-3 text-ink shadow-overlay border-control surface-overlay",
+          "@container/source w-72 max-w-[calc(100vw-1rem)] rounded-popover p-3 text-ink shadow-overlay border-control surface-overlay",
           classNames?.card,
         )}
       >

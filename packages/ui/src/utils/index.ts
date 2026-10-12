@@ -7,4 +7,5 @@ export {
   createCn,
   extendCn,
 } from "./cn.js";
+export { type Material, materialClass } from "./material.js";
 export { usePrefersReducedMotion } from "./reduced-motion.js";

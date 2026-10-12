@@ -230,6 +230,8 @@
   --spacing-density-sm: var(--gap-density-sm);
   --spacing-density: var(--gap-density);
   --spacing-density-lg: var(--gap-density-lg);
+  --color-surface-nav: var(--surface-nav);
+  --color-surface-side: var(--surface-side);
 }
 
 @utility border-card {
@@ -389,4 +391,77 @@
     box-shadow: none;
     outline: 1px solid CanvasText;
   }
+}
+
+@utility surface-nav {
+  background-color: var(--surface-nav);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  :where(.glass, .glass-clear, .surface-overlay) & {
+    background-color: var(--glass-nested-tint);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    outline: 1px solid var(--line-strong);
+  }
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    outline: 1px solid CanvasText;
+  }
+}
+
+@utility surface-side {
+  background-color: var(--surface-side);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  :where(.glass, .glass-clear, .surface-overlay) & {
+    background-color: var(--glass-nested-tint);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    outline: 1px solid var(--line-strong);
+  }
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    outline: 1px solid CanvasText;
+  }
+}
+
+@utility surface-solid {
+  background-color: var(--surface-solid, var(--float));
+  background-image: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

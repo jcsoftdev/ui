@@ -103,7 +103,7 @@ export function Conversation({
             toBottom(!reduced);
           }}
           className={cn(
-            "absolute bottom-3 left-1/2 inline-flex h-control-sm -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-button bg-surface-overlay px-3 text-meta text-ink shadow-overlay border-control surface-overlay pressable focus-visible:focus-ring",
+            "absolute bottom-3 left-1/2 inline-flex h-control-sm -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-button px-3 text-meta text-ink shadow-overlay border-control surface-overlay pressable focus-visible:focus-ring",
             classNames?.jump,
           )}
         >

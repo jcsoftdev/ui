@@ -4,6 +4,7 @@ import { type ReactNode, type Ref, useEffect, useState } from "react";
 import { Menu, Search } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 function isApplePlatform(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -41,6 +42,11 @@ export interface TopbarProps {
   /** Slot at the far end (e.g. the account menu). */
   end?: ReactNode;
   className?: string;
+  /**
+   * Surface material. Omitted keeps the default for this layer (opaque, glass in the glass
+   * preset); `"glass"` and `"glass-clear"` opt into Liquid Glass, `"solid"` forces opaque.
+   */
+  material?: Material;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<TopbarPart>;
 }
@@ -56,6 +62,7 @@ export function Topbar({
   searchPlaceholder,
   actions,
   end,
+  material,
   className,
   classNames,
 }: TopbarProps) {
@@ -81,7 +88,8 @@ export function Topbar({
   return (
     <header
       className={cn(
-        "@container/topbar sticky top-0 z-30 h-top-height border-b-divider bg-bg",
+        "@container/topbar sticky top-0 z-30 h-top-height border-b-divider surface-nav",
+        materialClass(material, "surface-solid [--surface-solid:var(--bg)]"),
         classNames?.root,
         className,
       )}

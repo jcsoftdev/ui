@@ -153,6 +153,8 @@
   --surface-card: var(--surface);
   --surface-control: var(--surface);
   --surface-overlay: var(--float);
+  --surface-nav: var(--bg);
+  --surface-side: var(--surface);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
   --glass-regular-tint: rgba(255,255,255,.62);
@@ -526,6 +528,8 @@
   --surface-card: var(--surface);
   --surface-control: var(--surface);
   --surface-overlay: var(--float);
+  --surface-nav: var(--bg);
+  --surface-side: var(--surface);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
   --glass-regular-tint: rgba(255,255,255,.62);
@@ -648,6 +652,8 @@
   --surface-card: var(--surface);
   --surface-control: var(--surface);
   --surface-overlay: var(--float);
+  --surface-nav: var(--bg);
+  --surface-side: var(--surface);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
   --glass-regular-tint: rgba(255,255,255,.62);
@@ -758,6 +764,8 @@
   --surface-card: var(--surface);
   --surface-control: var(--surface);
   --surface-overlay: var(--float);
+  --surface-nav: var(--bg);
+  --surface-side: var(--surface);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
   --glass-regular-tint: rgba(255,255,255,.62);
@@ -888,6 +896,8 @@
   --surface-card: #ebebf0;
   --surface-control: #ffffff;
   --surface-overlay: #ffffff;
+  --surface-nav: var(--bg);
+  --surface-side: var(--surface);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
   --glass-regular-tint: rgba(255,255,255,.62);
@@ -1004,6 +1014,8 @@
   --surface-card: var(--surface);
   --surface-control: var(--surface);
   --surface-overlay: var(--glass-regular-tint);
+  --surface-nav: var(--glass-regular-tint);
+  --surface-side: var(--glass-regular-tint);
   --surface-sunken: var(--sunken);
   --surface-backdrop: rgba(20,20,30,.16);
   --glass-regular-tint: rgba(255,255,255,.62);
@@ -1134,6 +1146,8 @@
   --surface-card: var(--surface);
   --surface-control: var(--surface);
   --surface-overlay: var(--float);
+  --surface-nav: var(--bg);
+  --surface-side: var(--surface);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
   --glass-regular-tint: rgba(255,255,255,.62);

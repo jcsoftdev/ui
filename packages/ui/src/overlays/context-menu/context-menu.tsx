@@ -17,6 +17,7 @@ import {
 import { Check } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 interface ContextMenuState {
   open: (x: number, y: number) => void;
@@ -160,11 +161,17 @@ export interface ContextMenuContentProps
   extends Omit<MenuPrimitive.MenuContentProps, "side" | "align"> {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
+  /**
+   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
+   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   */
+  material?: Material;
 }
 
 export function ContextMenuContent({
   className,
   container,
+  material,
   collisionPadding = 8,
   onCloseAutoFocus,
   ...props
@@ -182,7 +189,8 @@ export function ContextMenuContent({
           event.preventDefault();
         }}
         className={cn(
-          "z-85 max-h-(--ui-popper-available-height) min-w-48 max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover border-card surface-overlay bg-surface-overlay p-1.5 text-ink shadow-overlay",
+          "z-85 max-h-(--ui-popper-available-height) min-w-48 max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover border-card surface-overlay p-1.5 text-ink shadow-overlay",
+          materialClass(material, "surface-solid"),
           className,
         )}
         {...props}

@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { Check, ChevronRight } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
@@ -21,6 +22,11 @@ const itemBase =
 export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
+  /**
+   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
+   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   */
+  material?: Material;
 }
 
 export function DropdownMenuContent({
@@ -28,6 +34,7 @@ export function DropdownMenuContent({
   sideOffset = 6,
   collisionPadding = 8,
   container,
+  material,
   ...props
 }: DropdownMenuContentProps) {
   return (
@@ -35,7 +42,7 @@ export function DropdownMenuContent({
       <MenuPrimitive.Content
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
-        className={cn(surface, className)}
+        className={cn(surface, materialClass(material, "surface-solid"), className)}
         {...props}
       />
     </MenuPrimitive.Portal>

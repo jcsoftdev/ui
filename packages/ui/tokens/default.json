@@ -1317,6 +1317,16 @@
     "usage": "Fill of dialogs, sheets, menus and popovers (the chrome layer). Translucent glass in the glass preset."
    },
    {
+    "name": "surface-nav",
+    "value": "var(--bg)",
+    "usage": "Fill of the top navigation bar (control and navigation layer). Translucent glass in the glass preset."
+   },
+   {
+    "name": "surface-side",
+    "value": "var(--surface)",
+    "usage": "Fill of the sidebar (control and navigation layer). Translucent glass in the glass preset."
+   },
+   {
     "name": "surface-sunken",
     "value": "var(--sunken)",
     "usage": "Fondo hundido: pistas, zonas de arrastre."
@@ -1675,7 +1685,9 @@
      "shadow-overlay": "inset 0 1px 0 var(--glass-regular-edge), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
      "glass-regular-blur": "24px",
      "glass-regular-saturate": "1.9",
-     "glass-clear-blur": "12px"
+     "glass-clear-blur": "12px",
+     "surface-nav": "var(--glass-regular-tint)",
+     "surface-side": "var(--glass-regular-tint)"
     }
    },
    {
@@ -1932,7 +1944,9 @@
    "--spacing-card": "pad-card",
    "--spacing-density-sm": "gap-density-sm",
    "--spacing-density": "gap-density",
-   "--spacing-density-lg": "gap-density-lg"
+   "--spacing-density-lg": "gap-density-lg",
+   "--color-surface-nav": "surface-nav",
+   "--color-surface-side": "surface-side"
   },
   "utilities": {
    "border-card": {
@@ -2080,6 +2094,76 @@
      "box-shadow": "none",
      "outline": "1px solid CanvasText"
     }
+   },
+   "surface-nav": {
+    "background-color": "var(--surface-nav)",
+    "-webkit-backdrop-filter": "var(--surface-filter)",
+    "backdrop-filter": "var(--surface-filter)",
+    ":where(.glass, .glass-clear, .surface-overlay) &": {
+     "background-color": "var(--glass-nested-tint)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
+     "background-color": "var(--glass-regular-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "@media (prefers-reduced-transparency: reduce)": {
+     "background-color": "var(--glass-regular-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "@media (prefers-contrast: more)": {
+     "background-color": "var(--glass-regular-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "outline": "1px solid var(--line-strong)"
+    },
+    "@media (forced-colors: active)": {
+     "background-color": "Canvas",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "outline": "1px solid CanvasText"
+    }
+   },
+   "surface-side": {
+    "background-color": "var(--surface-side)",
+    "-webkit-backdrop-filter": "var(--surface-filter)",
+    "backdrop-filter": "var(--surface-filter)",
+    ":where(.glass, .glass-clear, .surface-overlay) &": {
+     "background-color": "var(--glass-nested-tint)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
+     "background-color": "var(--glass-regular-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "@media (prefers-reduced-transparency: reduce)": {
+     "background-color": "var(--glass-regular-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "@media (prefers-contrast: more)": {
+     "background-color": "var(--glass-regular-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "outline": "1px solid var(--line-strong)"
+    },
+    "@media (forced-colors: active)": {
+     "background-color": "Canvas",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "outline": "1px solid CanvasText"
+    }
+   },
+   "surface-solid": {
+    "background-color": "var(--surface-solid, var(--float))",
+    "background-image": "none",
+    "-webkit-backdrop-filter": "none",
+    "backdrop-filter": "none"
    }
   }
  }

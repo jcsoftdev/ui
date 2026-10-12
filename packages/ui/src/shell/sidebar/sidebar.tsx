@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
 export interface SidebarLinkProps {
@@ -59,6 +60,11 @@ export interface SidebarProps {
   open?: boolean;
   onClose?: () => void;
   className?: string;
+  /**
+   * Surface material. Omitted keeps the default for this layer (opaque, glass in the glass
+   * preset); `"glass"` and `"glass-clear"` opt into Liquid Glass, `"solid"` forces opaque.
+   */
+  material?: Material;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SidebarPart>;
 }
@@ -81,6 +87,7 @@ export function Sidebar({
   renderLink = defaultRenderLink,
   open = false,
   onClose,
+  material,
   className,
   classNames,
 }: SidebarProps) {
@@ -113,7 +120,7 @@ export function Sidebar({
         aria-label={ariaLabel}
         inert={closedOnMobile || undefined}
         className={cn(
-          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-r-divider bg-surface px-3 pt-3.5 pb-3 transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-r-divider surface-side px-3 pt-3.5 pb-3 transition-transform duration-200",
           // Inside AppShell the container query decides before any script runs (no flash on a
           // narrow first paint); the measured state only drives inert, the scrim and focus.
           shell
@@ -126,6 +133,7 @@ export function Sidebar({
                 closedOnMobile ? "-translate-x-full" : "translate-x-0",
               ),
           openOnMobile && "shadow-overlay",
+          materialClass(material, "surface-solid [--surface-solid:var(--surface)]"),
           classNames?.root,
           className,
         )}
