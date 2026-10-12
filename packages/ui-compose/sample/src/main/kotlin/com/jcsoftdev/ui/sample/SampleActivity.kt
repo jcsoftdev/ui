@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.jcsoftdev.ui.foundation.ProvideAndroidBack
+import com.jcsoftdev.ui.glass.GlassVariant
 
 class SampleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +27,7 @@ class SampleActivity : ComponentActivity() {
                             blur = intent.getBooleanExtra("blur", true),
                             reduceTransparency = intent.getBooleanExtra("reduce", false),
                             open = intent.getStringExtra("open"),
+                            variant = if (intent.getStringExtra("variant") == "frosted") GlassVariant.Frosted else GlassVariant.Liquid,
                         )
                     else -> AtomsGallery()
                 }

@@ -1,6 +1,9 @@
 package com.jcsoftdev.ui.sample
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -31,6 +36,8 @@ import com.jcsoftdev.ui.atoms.IconButton
 import com.jcsoftdev.ui.atoms.Switch
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.containers.Card
+import com.jcsoftdev.ui.glass.GlassVariant
+import com.jcsoftdev.ui.glass.MaterialSurface
 import com.jcsoftdev.ui.glass.SurfaceMaterial
 import com.jcsoftdev.ui.glass.glassSource
 import com.jcsoftdev.ui.glass.rememberGlassState
@@ -66,12 +73,14 @@ fun GlassGallery(
     blur: Boolean = true,
     reduceTransparency: Boolean = false,
     open: String? = null,
+    variant: GlassVariant = GlassVariant.Liquid,
 ) {
     UiTheme(
         dark = dark,
         style = UiStyle.Glass,
         backdropBlur = blur,
         reduceTransparency = reduceTransparency,
+        glassVariant = variant,
     ) {
         val glass = rememberGlassState()
         val toasts = remember { ToastHostState() }
@@ -84,6 +93,7 @@ fun GlassGallery(
                 contentPadding = PaddingValues(top = 120.dp, bottom = 120.dp, start = 16.dp, end = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                item { SideBySide() }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button("Open glass sheet", { sheet = true }, block = true, variant = ButtonVariant.Primary)
@@ -133,6 +143,52 @@ fun GlassGallery(
                 actions = { Button("Close", { dialog = false }) },
             )
             Toaster(toasts)
+        }
+    }
+}
+
+/** A photo-like backdrop drawn in code: gradient sky, colored discs and a grid of fine lines. */
+@Composable
+private fun Photo(modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF1B4079), Color(0xFFFF7B54), Color(0xFFFFD166))))
+        val discs = listOf(Color(0xFFEF476F), Color(0xFF06D6A0), Color(0xFF118AB2), Color(0xFFFFFFFF), Color(0xFF8338EC))
+        discs.forEachIndexed { i, c ->
+            drawCircle(
+                c,
+                size.height * (0.16f + 0.05f * i),
+                Offset(size.width * (0.12f + 0.2f * i), size.height * (0.3f + 0.18f * (i % 2))),
+            )
+        }
+        var x = 0f
+        while (x < size.width) {
+            drawLine(Color.Black.copy(alpha = 0.55f), Offset(x, 0f), Offset(x, size.height), 2f)
+            x += 26f
+        }
+    }
+}
+
+/** Frosted and Liquid next to each other over the same backdrop; the Liquid one flexes when pressed. */
+@Composable
+private fun SideBySide() {
+    val source = remember { MutableInteractionSource() }
+    val glass = rememberGlassState()
+    Box(Modifier.fillMaxWidth().height(220.dp).clip(RoundedCornerShape(20.dp))) {
+        Photo(Modifier.fillMaxSize().glassSource(glass))
+        Row(
+            Modifier.align(Alignment.Center).padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            MaterialSurface(SurfaceMaterial.Glass, RoundedCornerShape(28.dp), Modifier.size(140.dp, 120.dp), glass = glass) {
+                Text("Frosted", Modifier.align(Alignment.Center))
+            }
+            MaterialSurface(
+                SurfaceMaterial.Liquid,
+                RoundedCornerShape(28.dp),
+                Modifier.size(140.dp, 120.dp).clickable(source, null) {},
+                glass = glass,
+                interactionSource = source,
+            ) { Text("Liquid", Modifier.align(Alignment.Center)) }
         }
     }
 }
