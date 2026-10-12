@@ -543,3 +543,224 @@ describe("refraction is opt-in", () => {
     expect(document.getElementById("ui-glass-refraction-defs")).toBeNull();
   });
 });
+
+describe("liquid glass is a variant next to the frosted material", () => {
+  const frosted = (el: Element) => styleOf(el).backdropFilter;
+  const box = (h: HTMLElement) => h.querySelector("[data-testid=box]") as HTMLElement;
+
+  test("glass and glass-clear keep their frosted rendering without a switch", async () => {
+    const regular = await mount(glassBox("glass"));
+    expect(frosted(box(regular))).toBe("blur(20px) saturate(1.8)");
+    expect(styleOf(box(regular)).getPropertyValue("--glass-lens")).toBe("");
+    await act(async () => root?.unmount());
+    regular.remove();
+    const clear = await mount(glassBox("glass-clear"));
+    expect(frosted(box(clear))).toContain("blur(10px)");
+  });
+
+  test("liquid and liquid-clear carry the lens flag, a thin blur and a rim", async () => {
+    const h = await mount(glassBox("liquid"));
+    const s = styleOf(box(h));
+    expect(s.backdropFilter).toBe("blur(10px) saturate(2)");
+    expect(s.getPropertyValue("--glass-lens")).toBe("1");
+    expect(s.boxShadow).toContain("inset");
+    await act(async () => root?.unmount());
+    h.remove();
+    const clear = await mount(glassBox("liquid-clear"));
+    expect(styleOf(box(clear)).backdropFilter).toContain("blur(3px)");
+  });
+
+  test("data-glass=liquid on an ancestor switches glass, glass-clear and the preset chrome", async () => {
+    const h = await mount(
+      <>
+        {glassBox("glass")}
+        <div data-testid="clear" className="glass-clear absolute inset-4" />
+        <div data-testid="overlay" className="surface-overlay absolute inset-2" />
+        <div data-testid="card" className="surface-card absolute inset-1" />
+      </>,
+      { "data-glass": "liquid", "data-style": "glass" },
+    );
+    expect(frosted(box(h))).toBe("blur(10px) saturate(2)");
+    expect(frosted(h.querySelector("[data-testid=clear]") as Element)).toContain("blur(3px)");
+    expect(frosted(h.querySelector("[data-testid=overlay]") as Element)).toBe(
+      "blur(10px) saturate(2)",
+    );
+    expect(frosted(h.querySelector("[data-testid=card]") as Element)).toBe("none");
+  });
+
+  test("the chrome surfaces stay solid under data-glass=liquid when the preset is not glass", async () => {
+    const h = await mount(
+      <div data-testid="overlay" className="surface-overlay absolute inset-2" />,
+      {
+        "data-glass": "liquid",
+      },
+    );
+    expect(frosted(h.querySelector("[data-testid=overlay]") as Element)).toBe("none");
+  });
+
+  test("liquid obeys every accessibility fallback and drops the lens flag", async () => {
+    const h = await mount(glassBox("liquid"));
+    for (const feature of [
+      { name: "prefers-reduced-transparency", value: "reduce" },
+      { name: "prefers-contrast", value: "more" },
+      { name: "forced-colors", value: "active" },
+    ]) {
+      await emulate([feature]);
+      const s = styleOf(box(h));
+      expect(s.backdropFilter, feature.name).toBe("none");
+      expect(alpha(s.backgroundColor), feature.name).toBe(1);
+    }
+  });
+
+  test("liquid inside glass drops its blur like any nested glass", async () => {
+    const h = await mount(
+      glassBox("liquid", <div data-testid="inner" className="liquid absolute inset-4" />),
+    );
+    const inner = styleOf(h.querySelector("[data-testid=inner]") as Element);
+    expect(inner.backdropFilter).toBe("none");
+    expect(inner.getPropertyValue("--glass-lens")).toBe("0");
+  });
+
+  test("an interactive liquid surface flexes on press and not under reduced motion", async () => {
+    const h = await mount(
+      <button type="button" data-testid="btn" className="liquid absolute inset-8 rounded-full" />,
+    );
+    const btn = h.querySelector("[data-testid=btn]") as HTMLElement;
+    expect(styleOf(btn).transitionProperty).toContain("scale");
+    await emulate([{ name: "prefers-reduced-motion", value: "reduce" }]);
+    expect(styleOf(btn).transitionProperty).not.toContain("scale");
+    // Blur is never part of a transition.
+    expect(styleOf(btn).transitionProperty).not.toContain("backdrop");
+  });
+
+  test("a frosted button does not flex", async () => {
+    const h = await mount(
+      <button type="button" data-testid="btn" className="glass absolute inset-8 rounded-full" />,
+    );
+    expect(
+      styleOf(h.querySelector("[data-testid=btn]") as Element).transitionProperty,
+    ).not.toContain("scale");
+  });
+});
+
+describe("components apply the lens by themselves, only for liquid surfaces", () => {
+  const filters = () => document.querySelectorAll("#ui-glass-refraction-defs filter").length;
+  const settle = () => new Promise((r) => setTimeout(r, 120));
+
+  test("a Card with material=liquid is lensed, a frosted or solid one never loads the engine", async () => {
+    await mount(
+      <>
+        <Card data-testid="liquid" material="liquid" className="absolute top-2 left-2 h-24 w-40" />
+        <Card data-testid="frosted" material="glass" className="absolute top-2 left-52 h-24 w-40" />
+        <Card data-testid="solid" className="absolute top-32 left-2 h-24 w-40" />
+      </>,
+    );
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const get = (id: string) => document.querySelector(`[data-testid=${id}]`) as HTMLElement;
+    expect(get("liquid").dataset.glassRefraction).toBe("on");
+    expect(get("frosted").dataset.glassRefraction).toBeUndefined();
+    expect(get("solid").dataset.glassRefraction).toBeUndefined();
+  });
+
+  test("data-glass=liquid lenses a frosted-class component too, and data-glass-lens=off opts out", async () => {
+    await mount(
+      <>
+        <Card data-testid="a" material="glass" className="absolute top-2 left-2 h-24 w-40" />
+        <Card
+          data-testid="b"
+          material="glass"
+          data-glass-lens="off"
+          className="absolute top-2 left-52 h-24 w-40"
+        />
+      </>,
+      { "data-glass": "liquid" },
+    );
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await settle();
+    expect((document.querySelector("[data-testid=a]") as HTMLElement).dataset.glassRefraction).toBe(
+      "on",
+    );
+    expect(
+      (document.querySelector("[data-testid=b]") as HTMLElement).dataset.glassRefraction,
+    ).toBeUndefined();
+    // Still liquid, just not lensed.
+    expect(styleOf(document.querySelector("[data-testid=b]") as Element).backdropFilter).toBe(
+      "blur(10px) saturate(2)",
+    );
+  });
+
+  test("the lens is released when the component unmounts", async () => {
+    await mount(<Card material="liquid" className="absolute top-2 left-2 h-24 w-40" />);
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await act(async () => root?.render(null));
+    await vi.waitFor(() => expect(document.getElementById("ui-glass-refraction-defs")).toBeNull());
+  });
+
+  test("filters are bounded: more surfaces than the budget keep the plain liquid look", async () => {
+    await mount(
+      Array.from({ length: 12 }, (_, i) => (
+        <Card
+          // biome-ignore lint/suspicious/noArrayIndexKey: static fixture
+          key={i}
+          material="liquid"
+          className="absolute h-10 w-24"
+          style={{ left: (i % 4) * 100, top: Math.floor(i / 4) * 50 }}
+        />
+      )),
+    );
+    await settle();
+    expect(filters()).toBe(8);
+  });
+
+  test("a surface above the area budget is not lensed", async () => {
+    await mount(<Card material="liquid" className="absolute top-0 left-0 h-[900px] w-[900px]" />);
+    await settle();
+    expect(filters()).toBe(0);
+  });
+
+  test("a Dialog with material=liquid is lensed once open, with its blur and veil in the filter", async () => {
+    await mount(
+      <Dialog open>
+        <DialogContent material="liquid" aria-describedby={undefined}>
+          <DialogTitle>Liquid</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    );
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const dlg = document.querySelector("[role=dialog]") as HTMLElement;
+    expect(dlg.dataset.glassRefraction).toBe("on");
+    expect(dlg.style.getPropertyValue("--glass-veil")).toBe("transparent");
+    expect(document.querySelector("#ui-glass-refraction-defs feFlood")).not.toBeNull();
+  });
+
+  test("the lens contrast: ink and ink-2 hold over stripes with the lens on", async () => {
+    document.documentElement.dataset.theme = "light";
+    host = document.createElement("div");
+    host.style.cssText = `position:relative;width:600px;height:300px;background:${STRIPES}`;
+    document.body.appendChild(host);
+    root = createRoot(host);
+    await act(async () => {
+      root?.render(
+        <Card
+          data-testid="box"
+          material="liquid"
+          className="absolute rounded-dialog"
+          style={{ left: 60, top: 40, width: 480, height: 220 }}
+        />,
+      );
+    });
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const el = host.querySelector("[data-testid=box]") as Element;
+    const samples = await pixels(el);
+    for (const cls of ["text-ink", "text-ink-2"]) {
+      const probe = document.createElement("span");
+      probe.className = cls;
+      el.appendChild(probe);
+      const ink = lum(channels(styleOf(probe).color));
+      probe.remove();
+      expect(Math.min(...samples.map((p) => contrast(ink, lum(p)))), cls).toBeGreaterThanOrEqual(
+        4.8,
+      );
+    }
+  });
+});
