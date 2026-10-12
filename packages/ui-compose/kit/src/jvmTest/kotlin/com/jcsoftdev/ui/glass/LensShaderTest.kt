@@ -35,6 +35,7 @@ class LensShaderTest {
         builder.uniform("depth", 24f)
         builder.uniform("strength", 30f)
         builder.uniform("dispersion", dispersion)
+        builder.uniform("sat", 1f)
         builder.uniform("bounds", 0f, 0f, width.toFloat(), height.toFloat())
         val surface = Surface.makeRasterN32Premul(width, height)
         surface.canvas.drawRect(Rect.makeWH(width.toFloat(), height.toFloat()), Paint().apply { shader = builder.makeShader() })
