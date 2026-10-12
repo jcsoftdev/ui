@@ -211,6 +211,17 @@ private fun LightBackdrop() {
                 )
                 x += 52f
             }
+            // A straight grid, so a facet or crease in the refraction shows as a kink in the lines.
+            var gx = 0f
+            while (gx < size.width) {
+                drawLine(Color.Black.copy(alpha = 0.7f), Offset(gx, 0f), Offset(gx, size.height), 2f)
+                gx += 24f
+            }
+            var gy = 0f
+            while (gy < size.height) {
+                drawLine(Color.Black.copy(alpha = 0.7f), Offset(0f, gy), Offset(size.width, gy), 2f)
+                gy += 24f
+            }
         }
         Row(Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             MaterialSurface(SurfaceMaterial.Liquid, RoundedCornerShape(28.dp), Modifier.size(140.dp, 110.dp), glass = glass) {
