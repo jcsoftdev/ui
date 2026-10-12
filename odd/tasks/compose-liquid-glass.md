@@ -39,15 +39,15 @@ Goldens of record are Linux, recorded by `.github/workflows/ui-compose-record.ym
 `ask-on-risk`; direct work-unit commits on `feat/compose-liquid-glass` in worktree `/Users/jcsoftdev/personal/ui-compose-glass`. No push.
 
 ## Tasks
-- [ ] CG0 ODD document. Route: inline.
-- [ ] CG1 Spike: confirm `GraphicsLayer.renderEffect`/`BlurEffect`/`ColorFilter` on Compose 1.8.2 (desktop Skiko render, Android emulator), confirm overlays are in-tree. Route: inline.
-- [ ] CG2 Material model: `SurfaceMaterial`, `UiStyle`, theme flags, nested/accessibility resolution, pure resolver + JVM tests. Route: inline.
-- [ ] CG3 Rendering: `GlassState`, `glassSource`, `Modifier.material`, `MaterialSurface`, tint + blur paths, `OverlayHost` source. Route: inline.
-- [ ] CG4 Platform signals: expect/actual for blur support, reduce transparency, high contrast (Android, iOS, JVM). Route: inline.
-- [ ] CG5 Component integration: Sheet, Dialog, Menu, Toaster, Card `material`; new `TopBar`, `ActionBar`. Route: delegated writer if over 4 non-trivial files, else inline.
-- [ ] CG6 Tests and goldens: resolver tests, UI tests, provisional shots. Route: inline.
-- [ ] CG7 Sample "Glass" screen over busy content, emulator screenshots (real blur vs fallback), frame timing. Route: inline.
-- [ ] CG8 Docs: README "Glass", `docs/parity.md`, CHANGELOG 0.2.0 Unreleased, api dumps. Route: inline.
+- [x] CG0 ODD document. Route: inline.
+- [x] CG1 Spike: confirm `GraphicsLayer.renderEffect`/`BlurEffect`/`ColorFilter` on Compose 1.8.2 (desktop Skiko render, Android emulator), confirm overlays are in-tree. Route: inline.
+- [x] CG2 Material model: `SurfaceMaterial`, `UiStyle`, theme flags, nested/accessibility resolution, pure resolver + JVM tests. Route: inline.
+- [x] CG3 Rendering: `GlassState`, `glassSource`, `Modifier.material`, `MaterialSurface`, tint + blur paths, `OverlayHost` source. Route: inline.
+- [x] CG4 Platform signals: expect/actual for blur support, reduce transparency, high contrast (Android, iOS, JVM). Route: inline.
+- [x] CG5 Component integration: Sheet, Dialog, Menu, Toaster, Card `material`; new `TopBar`, `ActionBar`. Route: delegated writer if over 4 non-trivial files, else inline.
+- [x] CG6 Tests and goldens: resolver tests, UI tests, provisional shots. Route: inline.
+- [x] CG7 Sample "Glass" screen over busy content, emulator screenshots (real blur vs fallback), frame timing. Route: inline.
+- [x] CG8 Docs: README "Glass", `docs/parity.md`, CHANGELOG 0.2.0 Unreleased, api dumps. Route: inline.
 
 ## Acceptance
 - Defaults: Default style keeps every surface exactly as before; Glass style turns only chrome to glass; Card is solid unless `material` is given.
@@ -56,4 +56,11 @@ Goldens of record are Linux, recorded by `.github/workflows/ui-compose-record.ym
 - `apiCheck`, `spotlessCheck`, `:kit:allTests -x :kit:iosSimulatorArm64Test`, `:kit:compileKotlinIosSimulatorArm64`, `:sample:assembleRelease` green.
 
 ## Progress and verification evidence
-(filled per task)
+- CG1 spike: `GraphicsLayer.renderEffect = BlurEffect` and `ColorFilter` work on Skiko (pixel test) and Android API 35 (emulator). Gotcha: `layer.record(size = ...)` (DrawScope extension) is required to capture `drawContent()`; the member overload with explicit density draws content on the outer canvas and records nothing. Overlays are in-tree siblings of the content in `OverlayHost`; Menu is a platform popup (no sampling, tint only).
+- CG2-CG4: commit 83a322f. Resolver tests (11) in commonTest.
+- CG5: commit 2714278 (Sheet, Dialog, Menu, Toaster, Card, TopBar, ActionBar). Sheet passes an `observe` lambda so the backdrop follows the drag/enter translation exactly.
+- Fix: tint fallback is a 90% float veil (unblurred tint leaked text in the emulator shot); `UiTheme(backdropBlur)` added.
+- CG6: 8 pixel tests in `GlassRenderTest`; shots gated behind `GLASS_SHOTS=1` (macOS goldens are not of record).
+- CG7: emulator API 35 shots (blur vs tint vs reduce); frame timing: scrolling under glass top bar p50 29ms/p90 53ms with blur vs 16/27ms tint (software-GPU emulator, debug build); sheet open p50 16ms both, p90 29 vs 27ms.
+- CG8: README Glass, parity, CHANGELOG 0.2.0 Unreleased, api dumps.
+- Checks: spotlessCheck, apiCheck, :kit:allTests (-x iosSimulatorArm64Test) 267 tests 0 failures, :kit:compileKotlinIosSimulatorArm64, :sample:assembleRelease (R8): BUILD SUCCESSFUL. `verifyRoborazziJvm` on macOS: 15 failures, identical to origin/main (glyph rasterization), none from glass.
