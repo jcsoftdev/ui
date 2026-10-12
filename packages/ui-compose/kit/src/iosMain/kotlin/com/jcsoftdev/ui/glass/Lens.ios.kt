@@ -26,7 +26,8 @@ internal actual class LensEngine actual constructor() {
         builder.uniform("tint", params.tintR, params.tintG, params.tintB, params.tintA)
         builder.uniform("dim", params.dimR, params.dimG, params.dimB, params.dimA)
         builder.uniform("veilEdge", params.veilEdge)
-        builder.uniform("veilReach", params.veilReach)
+        builder.uniform("rimDepth", params.rimDepth)
+        builder.uniform("dome", params.dome)
         builder.uniform("glintWidth", params.glintWidth)
         builder.uniform("glintStrength", params.glintStrength)
         val blur = if (params.blur > 0f) ImageFilter.makeBlur(params.blur, params.blur, FilterTileMode.CLAMP) else null

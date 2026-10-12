@@ -50,7 +50,6 @@ import com.jcsoftdev.ui.theme.GlassMaterial
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.math.ceil
 import kotlin.math.min
-import kotlin.math.tanh
 
 /**
  * Fills this node with [material] clipped to [shape]: solid ([solid]), frosted glass (tint, dim, edge highlight, border and a
@@ -239,16 +238,16 @@ private val EdgeFade: Dp = 28.dp
 // Without a backdrop the glass tint cannot keep text legible over arbitrary content, so the tint fallback is a mostly opaque veil.
 private const val TINT_VEIL_ALPHA = 0.9f
 
-private val MinBezel: Dp = 8.dp
-
 // Kyant's backdrop lens uses a refraction height up to the smallest corner radius and an amount about twice that; our samples
 // stay inside the surface, so the amount is capped at the bevel itself.
 private const val STRENGTH_PER_DEPTH = 1.1f
-private const val VEIL_REACH = 0.9f
+private val RIM_DEPTH: Dp = 22.dp
+private const val LENS_COVERAGE = 1f
+private const val DOME = 0.05f
+private val MAX_REFRACTION: Dp = 20.dp
 private const val LENS_SATURATION = 1.5f
 private const val VEIL_EDGE = 0.35f
-private val BEVEL_SOFT_CAP: Dp = 24.dp
-private const val DISPERSION = 0.025f
+private const val DISPERSION = 0.03f
 private const val GLINT_WIDTH_DP = 1.5f
 private const val CONTOUR_WIDTH_DP = 0.75f
 private const val LIGHT_ANGLE = -125f
@@ -403,13 +402,9 @@ private class GlassSurfaceNode(
         drawOutline(outline, tokens.border, style = Stroke(width = borderWidth.toPx() * 2f))
     }
 
-    // The bevel follows the smallest corner radius (a pill gets half its height) with a soft cap, so large cards keep the same
-    // curvature at the edge as a small capsule instead of a band that grows with the radius.
-    private fun ContentDrawScope.bevel(outline: Outline): Float {
-        val corner = outline.cornerRadii().filter { it > 0f }.minOrNull() ?: 0f
-        val soft = BEVEL_SOFT_CAP.toPx() * tanh(corner / BEVEL_SOFT_CAP.toPx())
-        return soft.coerceAtLeast(MinBezel.toPx()).coerceAtMost(min(size.width, size.height) * 0.5f)
-    }
+    // The lens covers the whole surface: its profile runs from the rim to the medial axis, half the short side deep, for every
+    // shape. (LENS_COVERAGE is the fraction of that distance the edge term spans; 1 is the full surface.)
+    private fun ContentDrawScope.bevel(): Float = (min(size.width, size.height) * 0.5f * LENS_COVERAGE).coerceAtLeast(1f)
 
     private fun ContentDrawScope.drawBackdrop(
         source: GlassState,
@@ -421,8 +416,8 @@ private class GlassSurfaceNode(
         val dx = position.x - source.originX
         val dy = position.y - source.originY
         val radius = tokens.blur.toPx()
-        val depth = bevel(outline)
-        val strength = depth * STRENGTH_PER_DEPTH * (1f + PRESS_LENS_GAIN * pressed)
+        val depth = bevel()
+        val strength = min(depth * STRENGTH_PER_DEPTH, MAX_REFRACTION.toPx()) * (1f + PRESS_LENS_GAIN * pressed)
         val pad = ceil(radius).toInt()
         val width = size.width.toInt() + pad * 2
         val height = size.height.toInt() + pad * 2
@@ -486,7 +481,8 @@ private class GlassSurfaceNode(
                 tokens.dim.blue,
                 tokens.dim.alpha,
                 VEIL_EDGE,
-                VEIL_REACH,
+                RIM_DEPTH.toPx().coerceAtMost(depth),
+                DOME,
                 GLINT_WIDTH_DP.dp.toPx(),
                 tokens.edge.alpha,
             )

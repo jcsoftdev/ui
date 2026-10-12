@@ -39,8 +39,10 @@ internal data class LensParams(
     val dimA: Float = 0f,
     /** Share of the veil left at the very edge (1 keeps it uniform). */
     val veilEdge: Float = 1f,
-    /** How far in, as a multiple of [depth], the veil takes to reach full strength. */
-    val veilReach: Float = 1f,
+    /** How far in, in pixels, the veil and the thickness shading reach (independent of the lens [depth]). */
+    val rimDepth: Float = 1f,
+    /** Magnification toward the center (0.05 samples the backdrop 5% closer to the center at the edge). */
+    val dome: Float = 0f,
     /** Width of the edge glint in pixels and its strength (0 turns it off). */
     val glintWidth: Float = 1f,
     val glintStrength: Float = 0f,
@@ -74,7 +76,8 @@ uniform float sat;
 uniform float4 tint;
 uniform float4 dim;
 uniform float veilEdge;
-uniform float veilReach;
+uniform float rimDepth;
+uniform float dome;
 uniform float glintWidth;
 uniform float glintStrength;
 
@@ -94,8 +97,10 @@ half4 main(float2 coord) {
         sdBox(p + float2(0.0, 1.0), b, radii) - sdBox(p - float2(0.0, 1.0), b, radii));
     float2 n = length(g) > 0.0001 ? normalize(g) : float2(0.0, 0.0);
     float t = clamp(-d / max(depth, 1.0), 0.0, 1.0);
-    float bend = pow(1.0 - t, 2.2);
-    float2 off = -n * strength * bend;
+    float bend = pow(1.0 - t, 3.0);
+    // Edge term (strongest at the rim, fading to zero at the center where the normal flips) plus a dome that magnifies the
+    // whole surface a little, so no part of it is a flat, undisplaced zone.
+    float2 off = -n * strength * bend - p * dome;
     float2 lo = bounds.xy;
     float2 hi = bounds.zw;
     half4 mid = content.eval(clamp(coord + off, lo, hi));
@@ -106,7 +111,8 @@ half4 main(float2 coord) {
     c = mix(float3(luma), c, sat);
 
     // The veil thins smoothly toward the edge, so the bent backdrop shows at the rim and the centre keeps full strength.
-    float vt = smoothstep(0.0, 1.0, clamp(-d / max(depth * veilReach, 1.0), 0.0, 1.0));
+    float rt = clamp(-d / max(rimDepth, 1.0), 0.0, 1.0);
+    float vt = smoothstep(0.0, 1.0, rt);
     float s = mix(veilEdge, 1.0, vt);
     c = mix(c, tint.rgb, tint.a * s);
     c = mix(c, dim.rgb, dim.a * s);
@@ -114,7 +120,7 @@ half4 main(float2 coord) {
     // Directional light from the top left: thickness shading across the bevel, and a thin glint right at the wall.
     float2 L = float2(-0.57, -0.82);
     float lf = dot(n, L);
-    float wall = 1.0 - smoothstep(0.0, 1.0, t);
+    float wall = 1.0 - vt;
     c += 0.06 * wall * max(lf, 0.0);
     c *= 1.0 - 0.07 * wall * max(-lf, 0.0);
     float edge = 1.0 - smoothstep(0.0, max(glintWidth, 0.001), -d);
