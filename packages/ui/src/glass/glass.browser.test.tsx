@@ -1,7 +1,7 @@
 /// <reference types="@vitest/browser-playwright" />
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
 import "../../test/glass-browser.css";
 import { Card } from "../containers/card/card.js";
@@ -312,7 +312,7 @@ describe("non-glass presets are unchanged (0.2.0 behaviour)", () => {
           await emulate([...features]);
           const h = await mount(
             <>
-              {LEGACY.map(([cls, token]) => (
+              {LEGACY.map(([cls]) => (
                 <div key={cls} data-testid={cls} className={cls}>
                   <div data-testid={`${cls}-nested`} className="surface-overlay" />
                 </div>
@@ -468,13 +468,15 @@ describe("refraction is opt-in", () => {
     expect(box.dataset.glassRefraction).toBe("on");
     for (const feature of OFF) {
       await emulate([feature]);
-      await new Promise((r) => setTimeout(r, 30));
-      expect(box.dataset.glassRefraction, `${feature.name} removes it`).toBeUndefined();
+      await vi.waitFor(() =>
+        expect(box.dataset.glassRefraction, `${feature.name} removes it`).toBeUndefined(),
+      );
       expect(styleOf(box).backdropFilter, feature.name).not.toContain("url(");
       expect(document.getElementById("ui-glass-refraction-defs"), feature.name).toBeNull();
       await emulate([]);
-      await new Promise((r) => setTimeout(r, 30));
-      expect(box.dataset.glassRefraction, `${feature.name} cleared`).toBe("on");
+      await vi.waitFor(() =>
+        expect(box.dataset.glassRefraction, `${feature.name} cleared`).toBe("on"),
+      );
     }
     stop();
   });
