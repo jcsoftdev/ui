@@ -46,14 +46,14 @@ Density is a unitless `--density` that scales control heights, control and card 
 
 Use the semantic utilities so your UI follows the presets too:
 
-| Concern          | Utilities                                                                               |
-| ---------------- | --------------------------------------------------------------------------------------- |
-| Radius           | `rounded-button`, `rounded-input`, `rounded-card`, `rounded-popover`, `rounded-chip`... |
-| Edge             | `border-card`, `border-control`                                                         |
-| Shadow           | `shadow-card`, `shadow-raised`, `shadow-overlay`, `shadow-control`                      |
+| Concern          | Utilities                                                                                                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Radius           | `rounded-button`, `rounded-input`, `rounded-card`, `rounded-popover`, `rounded-chip`...                                                                                           |
+| Edge             | `border-card`, `border-control`                                                                                                                                                   |
+| Shadow           | `shadow-card`, `shadow-raised`, `shadow-overlay`, `shadow-control`                                                                                                                |
 | Surface          | `bg-surface-card`, `bg-surface-control`, `bg-surface-sunken`; utilities `surface-card`, `surface-overlay`, `surface-nav`, `surface-side`, `surface-solid`, `glass`, `glass-clear` |
-| Density          | `h-control`, `h-input`, `px-control-x`, `p-card`, `gap-density`                         |
-| Focus and motion | `focus-visible:focus-ring`, `pressable`, `ease-style`                                   |
+| Density          | `h-control`, `h-input`, `px-control-x`, `p-card`, `gap-density`                                                                                                                   |
+| Focus and motion | `focus-visible:focus-ring`, `pressable`, `ease-style`                                                                                                                             |
 
 The complete list of tokens, with light and dark values and usage notes, is generated on the [Design tokens](/docs/theming/tokens/) page.
 

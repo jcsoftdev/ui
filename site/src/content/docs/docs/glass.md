@@ -10,10 +10,10 @@ References: Apple HIG [Materials](https://developer.apple.com/design/human-inter
 
 ## When to use it
 
-| Layer | Examples | Default |
-| --- | --- | --- |
+| Layer                  | Examples                                                                                        | Default                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Control and navigation | Dialog, Drawer, Popover, menus, HoverCard, CommandPalette, ActionBar, Topbar, Sidebar, tooltips | Glass in the `glass` preset, solid in the others |
-| Content | Card, ItemCardGroup, KpiGroup, ResponsiveList, DataGrid, Kanban, chat bodies | Always solid |
+| Content                | Card, ItemCardGroup, KpiGroup, ResponsiveList, DataGrid, Kanban, chat bodies                    | Always solid                                     |
 
 Rules of thumb: put glass over imagery or changing content, keep it off long reading surfaces, and never stack glass on glass.
 
