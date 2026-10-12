@@ -29,6 +29,13 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   dark contour, faint inner shadow, second `feImage`), dispersion 0.05, a materialise ramp and a
   press lift on the refraction, and a `--liquid-shadow` token. Liquid contrast floors are now
   documented per variant (regular 4.5 / 3.5, clear 4.5 / 2).
+- **Full-surface lens** (liquid): the lens now bends the whole surface (smooth dome, strongest at the
+  rim, 24 px cap) instead of a bevel only; `coverage: "rim"` / `--glass-lens-coverage: rim` keeps the
+  old extent. The serrated edge of the first lenses was a fold-over of the displacement (offset
+  falling faster than 1 px per px); both profiles are now fold-free, with a regression test. The
+  veil moved fully into the filter and is adaptive (only where the backdrop is close to the ink), the
+  tint is dropped while the lens is on, blur is 2 px / 0.6 px, the rim glint is brighter and wider,
+  and dispersion is off by default (`--glass-lens-dispersion` or the option turns it on).
 - **Fixes**: `Card` stays a server component (only a glass card renders the client `CardLens`);
   the lens follows class, `data-glass`, opt-out and preference changes at runtime; area and
   dispersion budgets are enforced on every resize; surfaces waiting for one of the 8 slots get one

@@ -5,6 +5,7 @@ export {
   createSpecularMap,
   type DisplacementField,
   type DisplacementMapOptions,
+  type LensCoverage,
   lensProfile,
   type SpecularMapOptions,
 } from "./displacement-map.js";

@@ -3,11 +3,20 @@ export interface DisplacementMapOptions {
   height: number;
   /** Corner radius of the glass shape, in px. */
   radius: number;
-  /** Width of the refracting rim, in px. The centre stays undistorted. */
+  /** Width of the refracting bevel, in px, for `coverage: "rim"`; the centre stays undistorted. */
   bezel: number;
+  /**
+   * `"full"` (default) bends the backdrop over the whole surface, strongest at the rim and
+   * gentle but never zero towards the centre; `"rim"` only across the bevel.
+   */
+  coverage?: LensCoverage;
+  /** Width of the rim, in px, over which the veil and the blur ease off (blue channel). Default: `bezel`. */
+  soft?: number;
   /** Device pixel ratio the map is rasterised at. Default 1, capped at 2. */
   dpr?: number;
 }
+
+export type LensCoverage = "full" | "rim";
 
 export interface DisplacementField {
   /** Width and height of `data` in pixels (CSS size times the capped ratio). */
@@ -27,37 +36,89 @@ const clamp = (value: number, min: number, max: number, ceil = Number.POSITIVE_I
 /** How much of the legibility veil is left at the very edge of the rim. */
 export const VEIL_FLOOR = 0.5;
 
-/** Bevel width of a surface, in px: a little more than its corner radius, so the bend reads as a drop. */
-export function bezelFor(radius: number, width: number, height: number): number {
+/**
+ * Bevel width of a surface, in px. `"rim"`: a little more than its corner radius, so the bend
+ * reads as a drop. `"full"`: half the short side, the whole surface.
+ */
+export function bezelFor(
+  radius: number,
+  width: number,
+  height: number,
+  coverage: LensCoverage = "full",
+): number {
   const short = Math.min(width, height);
+  if (coverage === "full") return Math.max(1, short / 2);
   return clamp(radius * 1.2, 14, Math.max(8, short * 0.45), 56);
 }
 
 /**
- * Largest source offset of the lens, as a fraction of the bevel width. The profile below falls at
- * most 1.5 times its amplitude per bevel width, so an amplitude of 0.58 keeps the mapping
- * `depth + offset(depth)` strictly increasing (slope 0.87 < 1). Above 1 it folds back on itself:
- * several output pixels then sample the same source pixels in reverse order, and straight
- * stripes break into a repeating sawtooth along the walls. That fold, not the map resolution, was
- * the serrated edge of the first lenses.
+ * Largest source offset of the lens, as a fraction of the bevel width (`"rim"`). The profile falls
+ * at most 1.5 times its amplitude per bevel width, so 0.58 keeps the mapping `depth +
+ * offset(depth)` strictly increasing (slope 0.87 < 1). Above 1 it folds back on itself: several
+ * output pixels then sample the same source pixels in reverse order, and straight stripes break
+ * into a repeating sawtooth along the walls. That fold, not the map resolution, was the serrated
+ * edge of the first lenses.
  */
 export const MAX_OFFSET = 0.58;
 
-/** `scale` of the displacement filter for a bevel: the offset is half of it (128 is neutral). */
-export const scaleFor = (bezel: number) => (2 * MAX_OFFSET * bezel * 255) / 254;
+/**
+ * Full coverage bends each axis on its own: the pull along x is `-sign(x) A (x / hx)^2` (and the
+ * same along y), a smooth dome with no crease along the diagonals of the shape and no seam at the
+ * centre, where it is zero without a kink. Its slope is at most 2A/h, so A is at most 0.4 of the
+ * half size (fold-free), and at most {@link FULL_CAP} px so a large surface does not smear.
+ */
+export const FULL_FRACTION = 0.4;
+/** Largest offset of the full lens, in px. */
+export const FULL_CAP = 24;
+
+/** Offset amplitude of the lens along each axis, in px. */
+export function lensAmplitude(
+  width: number,
+  height: number,
+  bezel: number,
+  coverage: LensCoverage = "full",
+): { x: number; y: number } {
+  if (coverage === "rim") {
+    const a = MAX_OFFSET * bezel;
+    return { x: a, y: a };
+  }
+  return {
+    x: Math.min((width / 2) * FULL_FRACTION, FULL_CAP),
+    y: Math.min((height / 2) * FULL_FRACTION, FULL_CAP),
+  };
+}
+
+/** `scale` of the displacement filter: the offset is half of it (128 is neutral). */
+export function scaleFor(
+  width: number,
+  height: number,
+  bezel: number,
+  coverage: LensCoverage = "full",
+): number {
+  const { x, y } = lensAmplitude(width, height, bezel, coverage);
+  return (2 * Math.max(x, y, 1) * 255) / 254;
+}
 
 const PROFILE_SAMPLES = 64;
 
 let profile: Float32Array | undefined;
+let quadratic: Float32Array | undefined;
 
 /**
- * Lateral displacement across the bevel, 1 at the outer edge and 0 at the inner one: `1 -
+ * `"full"`: the table of the dome, `(x / half size)^2` from the centre (0) to the edge (1).
+ *
+ * `"rim"`: lateral displacement across the bevel, 1 at the outer edge and 0 at the inner one: `1 -
  * smoothstep(x)`, with x running from the outer edge inwards. It starts flat (the outermost
  * pixels show one clean shifted copy of the backdrop, like the rim of a drop), bends most at the
  * middle of the bevel and eases to zero, so the lens meets the clear centre without a seam. Its
  * slope never exceeds 1.5, which is what keeps {@link MAX_OFFSET} fold-free.
  */
-export function lensProfile(): Float32Array {
+export function lensProfile(coverage: LensCoverage = "rim"): Float32Array {
+  if (coverage === "full") {
+    if (quadratic) return quadratic;
+    quadratic = new Float32Array(PROFILE_SAMPLES).map((_, i) => (i / (PROFILE_SAMPLES - 1)) ** 2);
+    return quadratic;
+  }
   if (profile) return profile;
   const out = new Float32Array(PROFILE_SAMPLES);
   for (let i = 0; i < PROFILE_SAMPLES; i++) {
@@ -79,12 +140,15 @@ export function computeDisplacementField({
   height,
   radius,
   bezel,
+  coverage = "rim",
+  soft,
   dpr = 1,
 }: DisplacementMapOptions): DisplacementField {
   const ratio = clamp(dpr, 1, 2);
   const w = Math.max(1, width);
   const h = Math.max(1, height);
-  const rim = clamp(bezel, 1, Math.min(w, h) / 2);
+  const full = coverage === "full";
+  const rim = clamp(full ? (soft ?? bezelFor(radius, w, h, "rim")) : bezel, 1, Math.min(w, h) / 2);
   const r = clamp(radius, 0, Math.min(w, h) / 2);
   const pw = Math.max(1, Math.round(w * ratio));
   const ph = Math.max(1, Math.round(h * ratio));
@@ -93,17 +157,29 @@ export function computeDisplacementField({
   // rims are visited at their two ends. Little-endian packing of R, G, B, A.
   new Uint32Array(data.buffer).fill(0xffff8080);
   const band = Math.min(pw, Math.ceil(rim * ratio) + 1);
-  const table = lensProfile();
+  const table = lensProfile("rim");
   const last = table.length - 1;
   const hx = w / 2;
   const hy = h / 2;
+  const amp = lensAmplitude(w, h, bezel, coverage);
+  const norm = Math.max(amp.x, amp.y, 1);
   for (let j = 0; j < ph; j++) {
     const py = (j + 0.5) / ratio - hy;
     const inner = Math.abs(py) < hy - rim;
+    const fy = full ? -Math.sign(py) * (amp.y / norm) * (py / hy) ** 2 : 0;
     for (let i = 0; i < pw; i++) {
-      if (inner && i === band) i = Math.max(band, pw - band);
+      if (!full && inner && i === band) i = Math.max(band, pw - band);
       const px = (i + 0.5) / ratio - hx;
       const o = (j * pw + i) * 4;
+      if (full) {
+        data[o] = 128 + -Math.sign(px) * (amp.x / norm) * (px / hx) ** 2 * 127;
+        data[o + 1] = 128 + fy * 127;
+        data[o + 3] = 255;
+        if (inner && Math.abs(px) < hx - rim) {
+          data[o + 2] = 255;
+          continue;
+        }
+      }
       const qx = Math.abs(px) - (hx - r);
       const qy = Math.abs(py) - (hy - r);
       const out = Math.hypot(Math.max(qx, 0), Math.max(qy, 0));
@@ -111,6 +187,14 @@ export function computeDisplacementField({
       let dx = 0;
       let dy = 0;
       let veil = 1;
+      if (full) {
+        if (depth > 0 && depth < rim) {
+          const x = depth / rim;
+          veil = x * x * (3 - 2 * x);
+        }
+        data[o + 2] = veil * 255;
+        continue;
+      }
       if (depth > 0 && depth < rim) {
         const x = depth / rim;
         veil = x * x * (3 - 2 * x);
@@ -131,8 +215,8 @@ export function computeDisplacementField({
         dx = -nx * m;
         dy = -ny * m;
       }
-      data[o] = 128 + dx * 127;
-      data[o + 1] = 128 + dy * 127;
+      data[o] = 128 + dx * 127 * (amp.x / norm);
+      data[o + 1] = 128 + dy * 127 * (amp.y / norm);
       data[o + 2] = veil * 255;
       data[o + 3] = 255;
     }
@@ -151,7 +235,7 @@ export interface SpecularMapOptions {
 }
 
 /** Thickness, in CSS px, of the glint along the walls that face the light. */
-export const GLINT_WIDTH = 2.2;
+export const GLINT_WIDTH = 3;
 /** Thickness of the dark contour that separates the glass from the backdrop. */
 export const CONTOUR_WIDTH = 0.75;
 /** Depth of the faint inner shadow on the walls that turn away from the light. */
@@ -210,7 +294,7 @@ export function computeSpecularField({
       const away = Math.max(-facing, 0) ** 1.5;
       const falloff = clamp(1 - depth / GLINT_WIDTH, 0, 1) ** 1.5;
       const o = (j * pw + i) * 4;
-      data[o] = 255 * clamp(falloff * (lit + 0.5 * away), 0, 1);
+      data[o] = 255 * clamp(falloff * (lit + 0.5 * away + 0.3), 0, 1);
       data[o + 1] = depth < CONTOUR_WIDTH ? 255 * (1 - depth / CONTOUR_WIDTH) : 0;
       data[o + 2] = 255 * (1 - depth / SHADE_DEPTH) ** 2 * away;
     }
@@ -227,10 +311,17 @@ const CACHE_SIZE = 16;
  * same size costs nothing.
  */
 export function createDisplacementMap(options: DisplacementMapOptions): string {
-  const key = [options.width, options.height, options.radius, options.bezel, options.dpr ?? 1]
+  const key = [
+    options.width,
+    options.height,
+    options.radius,
+    options.bezel,
+    options.soft ?? 0,
+    options.dpr ?? 1,
+  ]
     .map((n) => Math.round(n * 100) / 100)
     .join("x");
-  return cached(`d${key}`, () => computeDisplacementField(options));
+  return cached(`d${options.coverage ?? "rim"}${key}`, () => computeDisplacementField(options));
 }
 
 /** Specular map for the rim light, as a PNG `data:` URI for `feImage` (browser only, cached). */

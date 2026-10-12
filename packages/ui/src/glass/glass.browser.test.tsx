@@ -890,7 +890,7 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     });
   });
 
-  test("the filter carries the directional rim light and the lens materialises to its bevel-sized strength", async () => {
+  test("the filter carries the directional rim light and the lens materialises to its capped strength", async () => {
     await mount(<Card material="liquid" className="absolute top-2 left-2 h-24 w-40" />);
     await vi.waitFor(() => expect(filters()).toBe(1));
     const defs = document.querySelector("#ui-glass-refraction-defs") as Element;
@@ -900,9 +900,9 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     );
     await vi.waitFor(() => {
       const scale = Number(defs.querySelector("feDisplacementMap")?.getAttribute("scale"));
-      // 96px high: the bevel is capped at 30% of the short side, and the strength follows it.
+      // Full coverage: the offset is capped at 24px whatever the size.
       expect(scale).toBeGreaterThan(10);
-      expect(scale).toBeLessThanOrEqual(36 * 1.05);
+      expect(scale).toBeLessThanOrEqual(2 * 24 * 1.01);
     });
   });
 

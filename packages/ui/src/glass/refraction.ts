@@ -2,6 +2,7 @@ import {
   bezelFor,
   createDisplacementMap,
   createSpecularMap,
+  type LensCoverage,
   scaleFor,
   VEIL_FLOOR,
 } from "./displacement-map.js";
@@ -13,7 +14,7 @@ const HOST_ID = "ui-glass-refraction-defs";
 export interface GlassRefractionOptions {
   /**
    * `scale` of the displacement filter (the source offset at the edge is half of it). Default:
-   * `scaleFor(bezel)`, the strongest bend that cannot fold back on itself. Above that, stripes
+   * `scaleFor()`, the strongest bend that cannot fold back on itself. Above that, stripes
    * behind the glass break into a sawtooth.
    */
   scale?: number;
@@ -23,6 +24,12 @@ export interface GlassRefractionOptions {
    * the short side (so a small pill keeps a clear middle).
    */
   bezel?: number;
+  /**
+   * `"full"` (default): the lens bends the backdrop over the whole surface, strongest at the rim
+   * and gentle but never zero towards the centre, with at most 24 px of offset. `"rim"`: only the
+   * bevel, the middle shows the backdrop undisplaced. CSS: `--glass-lens-coverage: rim`.
+   */
+  coverage?: LensCoverage;
   /**
    * Chromatic dispersion: how far apart the red and blue channels are pulled, as a fraction of
    * `scale`. It runs three displacement passes instead of one (about +50% to +100% of the lens
@@ -177,6 +184,13 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     element.style.removeProperty("--glass-veil");
     element.style.removeProperty("--glass-lens-tint");
   };
+
+  /** `full` (default) bends the whole surface; `rim` only the bevel. `--glass-lens-coverage` in CSS sets it too. */
+  const coverageFor = (): LensCoverage =>
+    options.coverage ??
+    (getComputedStyle(element).getPropertyValue("--glass-lens-coverage").trim() === "rim"
+      ? "rim"
+      : "full");
 
   /** Dispersion is off unless asked for: `dispersion` option, or `--glass-lens-dispersion` in CSS. */
   const dispersionFor = (area: number) => {
@@ -426,13 +440,15 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       if (width * height > MAX_AREA || dispersionFor(width * height) > 0 !== dispersion > 0)
         return sync();
       const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
-      const bezel = options.bezel ?? bezelFor(radius, width, height);
+      const coverage = coverageFor();
+      const bezel = options.bezel ?? bezelFor(radius, width, height, coverage);
+      const soft = bezelFor(radius, width, height, "rim");
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const next = [width, height, radius, bezel, dpr].join("x");
+      const next = [width, height, radius, bezel, coverage, dpr].join("x");
       if (next === key) return;
       key = next;
       built = performance.now();
-      baseScale = options.scale ?? scaleFor(bezel);
+      baseScale = options.scale ?? scaleFor(width, height, bezel, coverage);
       applyScale();
       for (const [target, name, value] of [
         [filter, "x", "0"],
@@ -443,7 +459,10 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         [image, "height", String(height)],
       ] as const)
         target.setAttribute(name, value);
-      image.setAttribute("href", createDisplacementMap({ width, height, radius, bezel, dpr }));
+      image.setAttribute(
+        "href",
+        createDisplacementMap({ width, height, radius, bezel, coverage, soft, dpr }),
+      );
       if (specularImage) {
         specularImage.setAttribute("width", String(width));
         specularImage.setAttribute("height", String(height));

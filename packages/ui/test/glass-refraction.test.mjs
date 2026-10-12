@@ -53,25 +53,51 @@ test("the default lens cannot fold: source position minus output position stays 
     [320, 320, 24],
     [40, 20, 9],
   ];
-  for (const [width, height, radius] of shapes) {
-    for (const dpr of [1, 2]) {
-      const bezel = glass.bezelFor(radius, width, height);
-      const scale = glass.scaleFor(bezel);
-      const f = glass.computeDisplacementField({ width, height, radius, bezel, dpr });
-      const along = (get, count) => {
-        let last = Number.NEGATIVE_INFINITY;
-        for (let i = 0; i < count; i++) {
-          const source = i / dpr + (scale * (get(i) - 127.5)) / 255;
-          assert.ok(source >= last - 0.2, `${width}x${height} r${radius} @${dpr}x folds at ${i}`);
-          last = source;
-        }
-      };
-      const midY = Math.floor(f.height / 2);
-      const midX = Math.floor(f.width / 2);
-      along((i) => f.data[(midY * f.width + i) * 4], Math.ceil((bezel + 1) * dpr)); // left wall, red
-      along((i) => f.data[(i * f.width + midX) * 4 + 1], Math.ceil((bezel + 1) * dpr)); // top wall, green
+  for (const coverage of ["full", "rim"]) {
+    for (const [width, height, radius] of shapes) {
+      for (const dpr of [1, 2]) {
+        const bezel = glass.bezelFor(radius, width, height, coverage);
+        const scale = glass.scaleFor(width, height, bezel, coverage);
+        const f = glass.computeDisplacementField({ width, height, radius, bezel, coverage, dpr });
+        const along = (get, count) => {
+          let last = Number.NEGATIVE_INFINITY;
+          for (let i = 0; i < count; i++) {
+            const source = i / dpr + (scale * (get(i) - 127.5)) / 255;
+            assert.ok(
+              source >= last - 0.2,
+              `${coverage} ${width}x${height} r${radius} @${dpr}x folds at ${i}`,
+            );
+            last = source;
+          }
+        };
+        const midY = Math.floor(f.height / 2);
+        const midX = Math.floor(f.width / 2);
+        // Whole left half of the middle row (red) and top half of the middle column (green).
+        along((i) => f.data[(midY * f.width + i) * 4], midX);
+        along((i) => f.data[(i * f.width + midX) * 4 + 1], midY);
+      }
     }
   }
+});
+
+test("full coverage bends the whole surface: strongest at the rim, smaller but non-zero inside, zero at the centre, capped in px", () => {
+  const f = glass.computeDisplacementField({
+    width: 400,
+    height: 200,
+    radius: 28,
+    bezel: glass.bezelFor(28, 400, 200, "full"),
+    coverage: "full",
+  });
+  const red = (x, y) => f.data[(y * f.width + x) * 4] - 128;
+  assert.ok(
+    red(0, 100) > red(100, 100) && red(100, 100) > red(180, 100),
+    "falls towards the centre",
+  );
+  assert.ok(red(180, 100) > 0, "still bends close to the centre");
+  assert.equal(red(200, 100), 0, "no seam at the centre");
+  assert.equal(red(399, 100) + red(0, 100), -1 + 1 - 0, "symmetric");
+  const { x, y } = glass.lensAmplitude(2000, 1000, glass.bezelFor(0, 2000, 1000, "full"), "full");
+  assert.ok(x <= 24 && y <= 24, "a large surface does not smear");
 });
 
 test("the displacement field is neutral in the middle and pulls the rim inwards", () => {
