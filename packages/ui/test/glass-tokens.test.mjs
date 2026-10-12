@@ -108,3 +108,44 @@ test("a glass variant with a missing part is rejected", () => {
   broken.styles.tokens = broken.styles.tokens.filter((t) => t.name !== "glass-clear-dim");
   assert.throws(() => glassOf(broken), /glass-clear-dim/);
 });
+
+const themeCss = out["theme.css"];
+const utility = (name) => {
+  const start = themeCss.indexOf(`@utility ${name} {`);
+  assert.notEqual(start, -1, `missing @utility ${name}`);
+  const next = themeCss.indexOf("\n@utility ", start + 1);
+  return themeCss.slice(start, next === -1 ? undefined : next);
+};
+
+test("glass and glass-clear gate the blur and fall back to an opaque fill", () => {
+  for (const [name, variant] of [
+    ["glass", "regular"],
+    ["glass-clear", "clear"],
+  ]) {
+    const css = utility(name);
+    // The opaque fill is the base; the translucent one only exists inside @supports.
+    assert.ok(
+      css.indexOf(`background-color: var(--glass-${variant}-fallback)`) < css.indexOf("@supports"),
+    );
+    assert.match(
+      css,
+      /@supports \(\(-webkit-backdrop-filter: blur\(1px\)\) or \(backdrop-filter: blur\(1px\)\)\) \{[^}]*--glass-\w+-tint/,
+    );
+    assert.match(css, /@media \(prefers-reduced-transparency: reduce\)/);
+    assert.match(css, /@media \(prefers-contrast: more\)/);
+    assert.match(css, /@media \(forced-colors: active\) \{[^}]*Canvas/);
+    assert.match(
+      css,
+      /:where\(\.glass, \.glass-clear, \.surface-overlay\) & \{[^}]*--glass-nested-tint/,
+    );
+  }
+  assert.match(utility("glass-clear"), /linear-gradient\(var\(--glass-clear-dim\)/);
+});
+
+test("surface-card never blurs; surface-overlay keeps the alias and gets fallbacks", () => {
+  assert.doesNotMatch(utility("surface-card"), /backdrop-filter/);
+  const overlay = utility("surface-overlay");
+  assert.match(overlay, /backdrop-filter: var\(--surface-filter\)/);
+  assert.match(overlay, /@media \(prefers-reduced-transparency: reduce\)/);
+  assert.match(overlay, /@supports not/);
+});

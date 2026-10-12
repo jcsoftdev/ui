@@ -39,7 +39,7 @@ Disabled (owner override: implement first, tests that protect the change in the 
 ## Tasks
 - [x] G0 Research + this document. Route: inline. Commit docs(odd).
 - [x] G1 Tokens and materials (`--glass-regular-*`, `--glass-clear-*`, all presets, backward-compatible `--surface-*` aliases, JSON + Theme.kt generation). Route: inline (generator + JSON are one coherent unit).
-- [ ] G2 Utilities (`glass`, `glass-clear`) and fallbacks (@supports, reduced transparency, more contrast, forced colors, reduced motion), specular layer, noise token default off. Route: inline.
+- [x] G2 Utilities (`glass`, `glass-clear`) and fallbacks (@supports, reduced transparency, more contrast, forced colors, reduced motion), specular layer, noise token default off. Route: inline.
 - [ ] G3 Component mapping: chrome keeps glass, content surfaces solid, glass-on-glass protection, scrims, opt-in `material` prop on surface components, no blur tween. Route: delegated if more than 4 non-trivial files, else inline.
 - [ ] G4 Refraction opt-in (SVG displacement filter, runtime feature detect). Route: inline.
 - [ ] G5 Stories and tests (busy imagery, variants, fallbacks, contrast; style-presets and token-generation tests). Route: inline.
@@ -58,3 +58,4 @@ In `packages/ui`: `pnpm lint`, `typecheck`, `test`, `build`, `check:treeshake`, 
 ## Progress and verification evidence
 - G1 (inline: one generator + JSON unit): 21 `glass-*` tokens (regular/clear x tint, blur, saturate, filter, border, edge, shadow, dim, fallback, plus sheen, noise, nested-tint) added to `styles.tokens`, so every preset declares them; the glass preset tunes blur/saturate and maps `surface-filter`/`surface-overlay` to them, `surface-card`/`surface-control` are opaque. `surface-alpha/blur/filter` kept as aliases. `UiGlass`/`GlassMaterial` emitted in both Theme.kt flavours (only when glass tokens exist). `pnpm test`: 512 pass, 0 fail (new `test/glass-tokens.test.mjs`).
 
+- G2 (inline): `@utility glass` and `glass-clear` (decision: utilities, matching `surface-card`/`surface-overlay`; no attribute for the material). Opaque `--glass-*-fallback` is the base; blur/tint/sheen/noise/dim only inside `@supports (backdrop-filter)`; `prefers-reduced-transparency`, `prefers-contrast: more` (solid + line-strong ring) and `forced-colors` (Canvas + CanvasText outline) override; nested inside `.glass`/`.glass-clear`/`.surface-overlay` they use `--glass-nested-tint` with no filter. Specular highlight = inset top shadow + diagonal sheen gradient (no pseudo-elements). `surface-card` lost its backdrop-filter; `surface-overlay` gained the same fallbacks. Verified compiled by Tailwind 4.3.3 (`@tailwindcss/node`). Reduced motion: the material has no motion of its own; refraction (G4) and entrance animations honor it.
