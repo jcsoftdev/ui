@@ -10,3 +10,9 @@ storybook-static/
 .env*
 __screenshots__/
 .vitest-attachments/
+
+# Synced from packages/ui-tokens by packages/ui/scripts/sync-tokens.mjs
+packages/ui/styles/
+packages/ui/tokens/
+packages/ui/bin/
+packages/ui/scripts/build-theme.mjs

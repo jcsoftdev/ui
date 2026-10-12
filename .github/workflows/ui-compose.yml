@@ -4,17 +4,17 @@ on:
   push:
     paths:
       - "packages/ui-compose/**"
-      - "packages/ui/tokens/**"
-      - "packages/ui/scripts/build-theme.mjs"
-      - "packages/ui/bin/ui-theme.mjs"
+      - "packages/ui-tokens/tokens/**"
+      - "packages/ui-tokens/scripts/build-theme.mjs"
+      - "packages/ui-tokens/bin/ui-theme.mjs"
       - "packages/ui/icons/**"
       - ".github/workflows/ui-compose.yml"
   pull_request:
     paths:
       - "packages/ui-compose/**"
-      - "packages/ui/tokens/**"
-      - "packages/ui/scripts/build-theme.mjs"
-      - "packages/ui/bin/ui-theme.mjs"
+      - "packages/ui-tokens/tokens/**"
+      - "packages/ui-tokens/scripts/build-theme.mjs"
+      - "packages/ui-tokens/bin/ui-theme.mjs"
       - "packages/ui/icons/**"
       - ".github/workflows/ui-compose.yml"
 

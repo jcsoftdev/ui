@@ -1,4 +1,4 @@
-// Token generator: tokens.json -> tokens.css, theme.css, fonts.css, Theme.kt.
+// Token generator: tokens.json -> tokens.css, theme.css (= tailwind.css), fonts.css, Theme.kt.
 // Pure functions, no dependencies. Used by bin/ui-theme.mjs and the tests.
 
 const PALETTE_ROLES = {
@@ -627,6 +627,7 @@ export function buildTheme(tokens, { kotlinPackage, kotlinLibrary = false } = {}
   return {
     "tokens.css": buildTokensCss(tokens),
     "theme.css": buildThemeCss(tokens),
+    "tailwind.css": buildThemeCss(tokens),
     "fonts.css": buildFontsCss(tokens),
     "Theme.kt": buildThemeKt(tokens, kotlinPackage, { library: kotlinLibrary }),
   };

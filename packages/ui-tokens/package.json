@@ -1,0 +1,70 @@
+{
+  "name": "@jcsoftdev/ui-tokens",
+  "version": "0.2.0",
+  "description": "Design tokens, CSS variable contract and a pure WCAG-AA theme generator for the jcsoftdev UI platform. Zero dependencies.",
+  "author": "jcsoftdev",
+  "license": "MIT",
+  "homepage": "https://ui.jcsoftdev.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcsoftdev/ui.git",
+    "directory": "packages/ui-tokens"
+  },
+  "bugs": {
+    "url": "https://github.com/jcsoftdev/ui/issues"
+  },
+  "keywords": ["design-tokens", "css-variables", "theme", "oklch", "wcag", "tailwind-v4", "design-system"],
+  "type": "module",
+  "sideEffects": false,
+  "bin": {
+    "ui-theme": "./bin/ui-theme.mjs"
+  },
+  "files": [
+    "dist",
+    "src",
+    "!src/**/*.test.*",
+    "styles",
+    "tokens",
+    "bin",
+    "scripts/build-theme.mjs",
+    "scripts/build-theme.d.mts",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./dom": {
+      "types": "./dist/dom.d.ts",
+      "import": "./dist/dom.js"
+    },
+    "./build": {
+      "types": "./scripts/build-theme.d.mts",
+      "import": "./scripts/build-theme.mjs"
+    },
+    "./tailwind.css": "./styles/tailwind.css",
+    "./styles/*": "./styles/*",
+    "./tokens/*": "./tokens/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "pnpm build:styles && pnpm build:ts",
+    "build:styles": "node bin/ui-theme.mjs build tokens/default.json --out styles",
+    "build:ts": "tsc -p tsconfig.build.json",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build:ts && node --test \"test/*.test.mjs\"",
+    "check:size": "node ../../scripts/check-size.mjs ui-tokens"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^20",
+    "typescript": "^5.5.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

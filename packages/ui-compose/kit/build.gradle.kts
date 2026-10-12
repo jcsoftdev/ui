@@ -17,14 +17,15 @@ version = providers.gradleProperty("VERSION_NAME").get()
 
 // Tokens are generated from the same tokens.json as the web CSS and never committed.
 val uiPackage = rootProject.layout.projectDirectory.dir("../ui")
+val tokensPackage = rootProject.layout.projectDirectory.dir("../ui-tokens")
 val generatedTokensDir = layout.buildDirectory.dir("generated/ui-tokens/kotlin/com/jcsoftdev/ui/theme")
 val generateUiTokens by tasks.registering(Exec::class) {
     group = "build"
-    description = "Generates Theme.kt from packages/ui/tokens/default.json."
-    val tokensFile = uiPackage.file("tokens/default.json")
+    description = "Generates Theme.kt from packages/ui-tokens/tokens/default.json."
+    val tokensFile = tokensPackage.file("tokens/default.json")
     inputs.file(tokensFile).withPropertyName("tokens").withPathSensitivity(PathSensitivity.RELATIVE)
     inputs
-        .files(uiPackage.file("bin/ui-theme.mjs"), uiPackage.file("scripts/build-theme.mjs"))
+        .files(tokensPackage.file("bin/ui-theme.mjs"), tokensPackage.file("scripts/build-theme.mjs"))
         .withPropertyName("generator")
         .withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir(generatedTokensDir).withPropertyName("generated")
@@ -32,7 +33,7 @@ val generateUiTokens by tasks.registering(Exec::class) {
     doFirst { delete(generatedTokensDir) }
     commandLine(
         "node",
-        uiPackage.file("bin/ui-theme.mjs").asFile.absolutePath,
+        tokensPackage.file("bin/ui-theme.mjs").asFile.absolutePath,
         "build",
         tokensFile.asFile.absolutePath,
         "--out",
