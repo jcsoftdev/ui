@@ -408,6 +408,13 @@ describe("legibility over a worst-case backdrop", () => {
   }
 });
 
+const OFF = [
+  { name: "prefers-reduced-transparency", value: "reduce" },
+  { name: "prefers-reduced-motion", value: "reduce" },
+  { name: "prefers-contrast", value: "more" },
+  { name: "forced-colors", value: "active" },
+];
+
 describe("refraction is opt-in", () => {
   test("applies a displacement filter in Chromium and cleans up", async () => {
     const h = await mount(glassBox("glass"));
@@ -425,14 +432,74 @@ describe("refraction is opt-in", () => {
   test("does nothing when the user prefers less transparency or motion", async () => {
     const h = await mount(glassBox("glass"));
     const box = h.querySelector("[data-testid=box]") as HTMLElement;
-    for (const feature of [
-      { name: "prefers-reduced-transparency", value: "reduce" },
-      { name: "prefers-reduced-motion", value: "reduce" },
-      { name: "prefers-contrast", value: "more" },
-    ]) {
+    for (const feature of OFF) {
       await emulate([feature]);
       applyGlassRefraction(box);
       expect(box.dataset.glassRefraction, feature.name).toBeUndefined();
     }
+  });
+
+  test("applying twice is idempotent: one filter, one url(), any cleanup stops it", async () => {
+    const h = await mount(glassBox("glass"));
+    const box = h.querySelector("[data-testid=box]") as HTMLElement;
+    const first = applyGlassRefraction(box);
+    const second = applyGlassRefraction(box);
+    expect(document.querySelectorAll("#ui-glass-refraction-defs filter")).toHaveLength(1);
+    expect(styleOf(box).backdropFilter.match(/url\(/g)).toHaveLength(1);
+    first();
+    expect(box.dataset.glassRefraction).toBeUndefined();
+    expect(styleOf(box).backdropFilter).not.toContain("url(");
+    second();
+    expect(document.getElementById("ui-glass-refraction-defs")).toBeNull();
+  });
+
+  test("repeated apply and cleanup leaves no filters and no host behind", async () => {
+    const h = await mount(glassBox("glass"));
+    const box = h.querySelector("[data-testid=box]") as HTMLElement;
+    for (let i = 0; i < 50; i++) applyGlassRefraction(box)();
+    expect(document.getElementById("ui-glass-refraction-defs")).toBeNull();
+    expect(box.style.backdropFilter).toBe("");
+  });
+
+  test("follows preference changes after it was applied, and comes back when cleared", async () => {
+    const h = await mount(glassBox("glass"));
+    const box = h.querySelector("[data-testid=box]") as HTMLElement;
+    const stop = applyGlassRefraction(box);
+    expect(box.dataset.glassRefraction).toBe("on");
+    for (const feature of OFF) {
+      await emulate([feature]);
+      await new Promise((r) => setTimeout(r, 30));
+      expect(box.dataset.glassRefraction, `${feature.name} removes it`).toBeUndefined();
+      expect(styleOf(box).backdropFilter, feature.name).not.toContain("url(");
+      expect(document.getElementById("ui-glass-refraction-defs"), feature.name).toBeNull();
+      await emulate([]);
+      await new Promise((r) => setTimeout(r, 30));
+      expect(box.dataset.glassRefraction, `${feature.name} cleared`).toBe("on");
+    }
+    stop();
+  });
+
+  test("reads the blur from the stylesheet again when the preset changes", async () => {
+    const h = await mount(glassBox("glass"));
+    const box = h.querySelector("[data-testid=box]") as HTMLElement;
+    const stop = applyGlassRefraction(box);
+    expect(styleOf(box).backdropFilter).toContain("blur(20px)");
+    document.documentElement.dataset.style = "glass";
+    await new Promise((r) => setTimeout(r, 50));
+    expect(styleOf(box).backdropFilter).toContain("blur(24px)");
+    expect(styleOf(box).backdropFilter.match(/url\(/g)).toHaveLength(1);
+    stop();
+  });
+
+  test("an element removed without cleanup does not leak its filter", async () => {
+    const box = document.createElement("div");
+    box.className = "glass";
+    box.style.cssText = "position:absolute;width:200px;height:100px";
+    document.body.appendChild(box);
+    applyGlassRefraction(box);
+    expect(document.querySelectorAll("#ui-glass-refraction-defs filter")).toHaveLength(1);
+    box.remove();
+    await new Promise((r) => setTimeout(r, 100));
+    expect(document.getElementById("ui-glass-refraction-defs")).toBeNull();
   });
 });
