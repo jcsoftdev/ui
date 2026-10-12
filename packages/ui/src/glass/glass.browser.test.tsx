@@ -246,6 +246,38 @@ describe("portaled overlays opened from glass", () => {
   });
 });
 
+describe("popper content nested in a liquid surface", () => {
+  test("a popover and a menu opened from a liquid dialog stay opaque and are never lensed", async () => {
+    await mount(
+      <Dialog open>
+        <DialogContent material="liquid" aria-describedby={undefined}>
+          <DialogTitle>Liquid dialog</DialogTitle>
+          <Popover>
+            <PopoverTrigger>Open popover</PopoverTrigger>
+            <PopoverContent>Hello</PopoverContent>
+          </Popover>
+        </DialogContent>
+      </Dialog>,
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll("#ui-glass-refraction-defs filter").length).toBe(1),
+    );
+    const trigger = [...document.querySelectorAll("button")].find(
+      (b) => b.textContent === "Open popover",
+    );
+    await userEvent.click(trigger as Element);
+    await new Promise((r) => setTimeout(r, 150));
+    const pop = [...document.querySelectorAll("[data-glass-nested]")].find(
+      (e) => e.textContent === "Hello",
+    ) as HTMLElement;
+    expect(pop).toBeDefined();
+    expect(styleOf(pop).backdropFilter).toBe("none");
+    expect(styleOf(pop).getPropertyValue("--glass-lens").trim()).toBe("0");
+    expect(pop.dataset.glassRefraction).toBeUndefined();
+    expect(document.querySelectorAll("#ui-glass-refraction-defs filter").length).toBe(1);
+  });
+});
+
 describe("accessibility fallbacks", () => {
   test("reduced transparency, more contrast and forced colors make glass opaque", async () => {
     const h = await mount(glassBox("glass"));
