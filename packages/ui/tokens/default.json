@@ -1504,19 +1504,19 @@
    },
    {
     "name": "liquid-regular-blur",
-    "value": "10px",
+    "value": "4px",
     "usage": "Liquid glass, regular: backdrop blur radius at the centre. Low on purpose: the rim lens and the specular layers carry the look. Raised only if legibility needs it."
    },
    {
     "name": "liquid-clear-blur",
-    "value": "3px",
+    "value": "1.5px",
     "usage": "Liquid glass, clear: backdrop blur radius."
    },
    {
     "name": "liquid-saturate",
     "value": {
-     "light": "2",
-     "dark": "1.9"
+     "light": "1.5",
+     "dark": "1.45"
     },
     "usage": "Liquid glass: backdrop saturation. Higher than frosted, so colour bleeds through the thin blur."
    },
@@ -1541,10 +1541,10 @@
    {
     "name": "liquid-regular-dim",
     "value": {
-     "light": "rgba(255,255,255,.7)",
-     "dark": "rgba(0,0,0,.66)"
+     "light": "rgba(255,255,255,.6)",
+     "dark": "rgba(0,0,0,.54)"
     },
-    "usage": "Liquid glass, regular: legibility veil. Keeps text-ink and text-ink-2 at 4.8:1 on white, black, split and striped backdrops."
+    "usage": "Liquid glass, regular: legibility veil. Keeps text-ink at 4.5:1 and text-ink-2 at 3.5:1 on white, black, split and striped backdrops; the text halo adds to that for real text."
    },
    {
     "name": "liquid-clear-tint",
@@ -1557,10 +1557,26 @@
    {
     "name": "liquid-clear-dim",
     "value": {
-     "light": "rgba(255,255,255,.78)",
-     "dark": "rgba(0,0,0,.58)"
+     "light": "rgba(255,255,255,.47)",
+     "dark": "rgba(0,0,0,.38)"
     },
-    "usage": "Liquid glass, clear: legibility veil. Do not remove it."
+    "usage": "Liquid glass, clear: thin legibility veil. Keeps text-ink at 4.5:1; secondary text (text-ink-2) is only guaranteed 2:1, so use regular glass for small secondary copy."
+   },
+   {
+    "name": "liquid-halo",
+    "value": {
+     "light": "0 0 .6em rgba(255,255,255,.7)",
+     "dark": "0 0 .6em rgba(0,0,0,.6)"
+    },
+    "usage": "Liquid glass: soft halo behind text on a liquid surface (text-shadow, inherited), the content-side scrim that keeps copy legible over a busy backdrop now that the veil is thin."
+   },
+   {
+    "name": "liquid-shadow",
+    "value": {
+     "light": "0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08)",
+     "dark": "0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3)"
+    },
+    "usage": "Liquid glass: outer shadow. Deeper than the frosted one so the lens reads as an object lifting off a busy or light backdrop; override per surface to ease it over plain light content."
    },
    {
     "name": "liquid-rim",
@@ -2110,11 +2126,12 @@
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)",
+      "text-shadow": "var(--liquid-halo)",
       "--glass-lens": "1",
       "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
+       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)"
       },
       "@media (prefers-reduced-motion: no-preference)": {
        "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
@@ -2203,11 +2220,12 @@
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)",
+      "text-shadow": "var(--liquid-halo)",
       "--glass-lens": "1",
       "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
+       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)"
       },
       "@media (prefers-reduced-motion: no-preference)": {
        "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
@@ -2276,11 +2294,12 @@
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-clear-filter)",
       "backdrop-filter": "var(--liquid-clear-filter)",
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow)",
+      "text-shadow": "var(--liquid-halo)",
       "--glass-lens": "1",
       "--glass-lens-dim": "var(--liquid-clear-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)"
+       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow)"
       },
       "@media (prefers-reduced-motion: no-preference)": {
        "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
@@ -2345,11 +2364,12 @@
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)",
+      "text-shadow": "var(--liquid-halo)",
       "--glass-lens": "1",
       "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
+       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)"
       },
       "@media (prefers-reduced-motion: no-preference)": {
        "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
@@ -2424,11 +2444,12 @@
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)",
+      "text-shadow": "var(--liquid-halo)",
       "--glass-lens": "1",
       "--glass-lens-dim": "var(--liquid-regular-dim)",
       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
+       "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)"
       },
       "@media (prefers-reduced-motion: no-preference)": {
        "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
@@ -2506,11 +2527,12 @@
      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
      "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
      "backdrop-filter": "var(--liquid-regular-filter)",
-     "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+     "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)",
+     "text-shadow": "var(--liquid-halo)",
      "--glass-lens": "1",
      "--glass-lens-dim": "var(--liquid-regular-dim)",
      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)"
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow)"
      },
      "@media (prefers-reduced-motion: no-preference)": {
       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
@@ -2571,11 +2593,12 @@
      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
      "-webkit-backdrop-filter": "var(--liquid-clear-filter)",
      "backdrop-filter": "var(--liquid-clear-filter)",
-     "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
+     "box-shadow": "var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow)",
+     "text-shadow": "var(--liquid-halo)",
      "--glass-lens": "1",
      "--glass-lens-dim": "var(--liquid-clear-dim)",
      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
-      "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)"
+      "box-shadow": "var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow)"
      },
      "@media (prefers-reduced-motion: no-preference)": {
       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {

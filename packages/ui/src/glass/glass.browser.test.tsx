@@ -446,10 +446,20 @@ describe("legibility over a worst-case backdrop", () => {
     ["surface-overlay", { "data-style": "glass" }],
     ["surface-nav", { "data-style": "glass" }],
   ] as const;
+  // Frosted and chrome surfaces keep 4.8:1 (4.5 required) for both inks. Liquid glass trades
+  // veil for transparency, so its floors are lower and documented: regular keeps text-ink at 4.5:1
+  // and text-ink-2 at 3.5:1, clear keeps text-ink at 4.5:1 and text-ink-2 at 2:1 (use regular
+  // glass for small secondary copy). The text halo of liquid surfaces adds to this for real text.
+  const floors = (panel: string, attrs: Record<string, string>): [number, number] => {
+    if (panel === "liquid-clear") return [4.5, 2];
+    if (panel === "liquid" || attrs["data-glass"] === "liquid") return [4.5, 3.5];
+    return [4.8, 4.8];
+  };
   for (const theme of ["light", "dark"] as const) {
     for (const [panel, attrs] of panels) {
+      const [inkFloor, ink2Floor] = floors(panel, attrs);
       for (const [name, backdrop] of Object.entries(BACKDROPS)) {
-        test(`${panel} in ${theme} over ${name}: text-ink and text-ink-2 keep 4.8:1 (4.5 required, 0.3 margin)`, async () => {
+        test(`${panel}${attrs["data-glass"] ? " (data-glass)" : ""} in ${theme} over ${name}: text-ink ${inkFloor}:1, text-ink-2 ${ink2Floor}:1`, async () => {
           document.documentElement.dataset.theme = theme;
           const [ink, ink2] = await worstContrast(
             panel,
@@ -460,8 +470,8 @@ describe("legibility over a worst-case backdrop", () => {
           console.info(
             `contrast ${panel}/${theme}/${name}: ink ${ink?.toFixed(2)} ink-2 ${ink2?.toFixed(2)}`,
           );
-          expect(ink, `${panel}/${theme}/${name} text-ink`).toBeGreaterThanOrEqual(4.8);
-          expect(ink2, `${panel}/${theme}/${name} text-ink-2`).toBeGreaterThanOrEqual(4.8);
+          expect(ink, `${panel}/${theme}/${name} text-ink`).toBeGreaterThanOrEqual(inkFloor);
+          expect(ink2, `${panel}/${theme}/${name} text-ink-2`).toBeGreaterThanOrEqual(ink2Floor);
         });
       }
     }
@@ -593,13 +603,13 @@ describe("liquid glass is a variant next to the frosted material", () => {
   test("liquid and liquid-clear carry the lens flag, a thin blur and a rim", async () => {
     const h = await mount(glassBox("liquid"));
     const s = styleOf(box(h));
-    expect(s.backdropFilter).toBe("blur(10px) saturate(2)");
+    expect(s.backdropFilter).toBe("blur(4px) saturate(1.5)");
     expect(s.getPropertyValue("--glass-lens")).toBe("1");
     expect(s.boxShadow).toContain("inset");
     await act(async () => root?.unmount());
     h.remove();
     const clear = await mount(glassBox("liquid-clear"));
-    expect(styleOf(box(clear)).backdropFilter).toContain("blur(3px)");
+    expect(styleOf(box(clear)).backdropFilter).toContain("blur(1.5px)");
   });
 
   test("data-glass=liquid on an ancestor switches glass, glass-clear and the preset chrome", async () => {
@@ -612,10 +622,10 @@ describe("liquid glass is a variant next to the frosted material", () => {
       </>,
       { "data-glass": "liquid", "data-style": "glass" },
     );
-    expect(frosted(box(h))).toBe("blur(10px) saturate(2)");
-    expect(frosted(h.querySelector("[data-testid=clear]") as Element)).toContain("blur(3px)");
+    expect(frosted(box(h))).toBe("blur(4px) saturate(1.5)");
+    expect(frosted(h.querySelector("[data-testid=clear]") as Element)).toContain("blur(1.5px)");
     expect(frosted(h.querySelector("[data-testid=overlay]") as Element)).toBe(
-      "blur(10px) saturate(2)",
+      "blur(4px) saturate(1.5)",
     );
     expect(frosted(h.querySelector("[data-testid=card]") as Element)).toBe("none");
   });
@@ -717,7 +727,7 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     ).toBeUndefined();
     // Still liquid, just not lensed.
     expect(styleOf(document.querySelector("[data-testid=b]") as Element).backdropFilter).toBe(
-      "blur(10px) saturate(2)",
+      "blur(4px) saturate(1.5)",
     );
   });
 

@@ -230,7 +230,7 @@ export const FrostedVsLiquidOverPhoto: Story = {
     const frosted = canvas.getByText("Frosted").parentElement as HTMLElement;
     const liquid = canvas.getByText("Liquid").parentElement as HTMLElement;
     await expect(getComputedStyle(frosted).backdropFilter).toContain("blur(20px)");
-    await expect(getComputedStyle(liquid).backdropFilter).toContain("blur(10px)");
+    await expect(getComputedStyle(liquid).backdropFilter).toContain("blur(4px)");
     await expect(getComputedStyle(liquid).getPropertyValue("--glass-lens")).toBe("1");
   },
 };
@@ -308,6 +308,6 @@ export const GlobalSwitch: Story = {
     const frosted = canvas.getByText("Default scope").parentElement as HTMLElement;
     const liquid = canvas.getByText(/data-glass=liquid scope/).parentElement as HTMLElement;
     await expect(getComputedStyle(frosted).backdropFilter).toContain("blur(20px)");
-    await expect(getComputedStyle(liquid).backdropFilter).toContain("blur(10px)");
+    await expect(getComputedStyle(liquid).backdropFilter).toContain("blur(4px)");
   },
 };

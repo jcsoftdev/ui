@@ -283,11 +283,12 @@
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
-      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
+      text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -379,11 +380,12 @@
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
-      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
+      text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -453,11 +455,12 @@
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-clear-filter);
       backdrop-filter: var(--liquid-clear-filter);
-      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow);
+      text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-clear-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
+        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow);
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -523,11 +526,12 @@
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
-      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
+      text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -603,11 +607,12 @@
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
-      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
+      text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+        box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -687,11 +692,12 @@
     background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
     -webkit-backdrop-filter: var(--liquid-regular-filter);
     backdrop-filter: var(--liquid-regular-filter);
-    box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+    box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
+    text-shadow: var(--liquid-halo);
     --glass-lens: 1;
     --glass-lens-dim: var(--liquid-regular-dim);
     &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-      box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow);
     }
     @media (prefers-reduced-motion: no-preference) {
       &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -753,11 +759,12 @@
     background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
     -webkit-backdrop-filter: var(--liquid-clear-filter);
     backdrop-filter: var(--liquid-clear-filter);
-    box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
+    box-shadow: var(--liquid-rim), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow);
+    text-shadow: var(--liquid-halo);
     --glass-lens: 1;
     --glass-lens-dim: var(--liquid-clear-dim);
     &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-      box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
+      box-shadow: var(--liquid-rim), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow);
     }
     @media (prefers-reduced-motion: no-preference) {
       &:is(button, a, [role="button"], [data-glass-interactive]) {
