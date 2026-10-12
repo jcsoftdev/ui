@@ -12,8 +12,15 @@ export function toCss(
   { selector = ":root", scheme = "auto" }: ToCssOptions = {},
 ): string {
   if (scheme === "light" || scheme === "dark") return `${block(selector, theme, scheme)}\n`;
-  const notLight = `${selector}:not([data-theme="light"]):not([data-theme="light"] *)`;
-  const forcedDark = `${selector}[data-theme="dark"],\n[data-theme="dark"] ${selector}`;
+  // Everything except the caller's selector sits inside :where(), which has zero specificity, so
+  // every generated rule weighs exactly as much as `selector` itself. That keeps overrides such as
+  // `:root[data-accent="menta"]` (0,2,0) ahead of the generated dark values; order alone settles
+  // light vs dark between the generated blocks.
+  const notLight = `${selector}:where(:not([data-theme="light"]):not([data-theme="light"] *))`;
+  const forcedDark = `${selector}:where([data-theme="dark"]),\n:where([data-theme="dark"]) ${selector}`;
+  // A forced scheme on a descendant must win over the value it would inherit from `selector`.
+  const nestedLight = `${selector} :where([data-theme="light"])`;
+  const nestedDark = `${selector} :where([data-theme="dark"])`;
   const indented = block(notLight, theme, "dark")
     .split("\n")
     .map((l) => `  ${l}`)
@@ -22,6 +29,8 @@ export function toCss(
     block(selector, theme, "light"),
     `@media (prefers-color-scheme: dark) {\n${indented}\n}`,
     block(forcedDark, theme, "dark"),
+    block(nestedLight, theme, "light"),
+    block(nestedDark, theme, "dark"),
     "",
   ].join("\n");
 }

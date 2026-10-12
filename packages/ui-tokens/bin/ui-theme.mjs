@@ -55,7 +55,12 @@ const extra = {};
 if (command === "generate") {
   const { createTheme, withTheme } = await import("../dist/index.js");
   const defined = Object.fromEntries(Object.entries(seeds).filter(([, v]) => v !== undefined));
-  tokens = withTheme(tokens, createTheme(defined));
+  try {
+    tokens = withTheme(tokens, createTheme(defined));
+  } catch (error) {
+    console.error(`ui-theme: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
   extra["tokens.json"] = `${JSON.stringify(tokens, null, 2)}\n`;
 }
 const files = { ...extra, ...buildTheme(tokens, { kotlinPackage, kotlinLibrary }) };

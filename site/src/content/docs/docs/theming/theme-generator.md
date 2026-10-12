@@ -27,6 +27,8 @@ import { applyTheme } from "@jcsoftdev/ui-tokens/dom";
 applyTheme(theme, document.documentElement);
 ```
 
+`toCss` writes every rule with the zero-specificity `:where()` around its scheme conditions, so a generated block weighs the same as your selector (`:root` is 0,1,0) and a `data-accent` preset (`:root[data-accent="menta"]`, 0,2,0) still overrides it in light and dark. It also re-declares the values under `[data-theme="light"]` and `[data-theme="dark"]` descendants, so a forced-scheme subtree inside the opposite scheme gets its own colors. `applyTheme` gives every call its own `<style>`; applying again to the same element replaces its theme, and the returned function removes only what that call added.
+
 ## Options
 
 | Option     | Meaning                                                                        |

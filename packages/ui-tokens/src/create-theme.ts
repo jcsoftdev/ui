@@ -13,8 +13,10 @@ type Palette = Record<string, string>;
 
 const PAGE = ["bg", "surface"] as const;
 const SURFACES = ["bg", "surface", "surface-2", "sunken", "float"] as const;
-const AA_TEXT = 4.5;
-const AA_UI = 3;
+// The documented guarantee is WCAG AA (4.5 text, 3 non-text). The solver aims slightly above it so
+// rounding to 8-bit hex and tooling that computes ratios differently never lands below the line.
+const AA_TEXT = 4.55;
+const AA_UI = 3.05;
 
 const CHART_CATEGORIES: readonly [hue: number, chroma: number][] = [
   [245, 0.12],
@@ -117,7 +119,7 @@ function palette(scheme: Scheme, seeds: ReturnType<typeof normalizeSeeds>): Pale
     ...tint,
     from: light ? 0.68 : 0.5,
     direction: dir,
-    against: get(...PAGE),
+    against: get(...PAGE, "surface-2", "float"),
     min: AA_UI,
   });
 
@@ -151,7 +153,7 @@ function palette(scheme: Scheme, seeds: ReturnType<typeof normalizeSeeds>): Pale
     chroma: brand.c,
     from: light ? Math.min(brand.l, 0.55) : Math.max(brand.l, 0.8),
     direction: dir,
-    against: [...get(...PAGE), p["accent-soft"] as string],
+    against: [...get(...PAGE, "surface-2"), p["accent-soft"] as string],
     min: AA_TEXT,
   });
   p["accent-word"] = solveTone({
@@ -159,7 +161,7 @@ function palette(scheme: Scheme, seeds: ReturnType<typeof normalizeSeeds>): Pale
     chroma: brand.c,
     from: brand.l,
     direction: dir,
-    against: get(...PAGE),
+    against: get(...PAGE, "float"),
     min: AA_UI,
   });
   p["accent-2"] = accent2;
@@ -229,7 +231,10 @@ const USAGE: readonly [string, string][] = [
   ["float", "Things that float above the page: dialogs, sheets and menus."],
   ["line", "Decorative dividers and borders."],
   ["line-strong", "Stronger decorative border."],
-  ["line-control", "Border of text fields, selects and checkboxes (3:1 on bg and surface)."],
+  [
+    "line-control",
+    "Border of text fields, selects and checkboxes (3:1 on bg, surface, surface-2 and float).",
+  ],
   ["hair", "Hairline around cards and secondary buttons."],
   ["track", "Progress bar track."],
   ["seg-track", "Segmented control tray."],
@@ -239,8 +244,11 @@ const USAGE: readonly [string, string][] = [
   ["ink-3", "Metadata text (4.5:1 on every surface)."],
   ["accent", "Brand fill: the primary action and the selected state."],
   ["on-accent", "Text and icons on an accent fill (4.5:1)."],
-  ["accent-ink", "Brand-colored text and focus ring (4.5:1 on bg, surface and accent-soft)."],
-  ["accent-word", "Brand-colored large text and the on switch (3:1 on bg and surface)."],
+  [
+    "accent-ink",
+    "Brand-colored text and focus ring (4.5:1 on bg, surface, surface-2 and accent-soft).",
+  ],
+  ["accent-word", "Brand-colored large text and the on switch (3:1 on bg, surface and float)."],
   ["accent-soft", "Soft brand background."],
   ["accent-line", "Brand hairline."],
   ["accent-2", "Neighbour tone for gradients and illustrations."],

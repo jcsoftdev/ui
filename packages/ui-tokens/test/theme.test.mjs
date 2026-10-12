@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -152,9 +152,12 @@ test("toCss emits light, dark media and forced-dark blocks, or one scheme", () =
   assert.match(auto, /^\.brand \{\n {2}--bg: #/);
   assert.match(
     auto,
-    /@media \(prefers-color-scheme: dark\) \{\n {2}\.brand:not\(\[data-theme="light"\]\)/,
+    /@media \(prefers-color-scheme: dark\) \{\n {2}\.brand:where\(:not\(\[data-theme="light"\]\)/,
   );
-  assert.match(auto, /\.brand\[data-theme="dark"\],\n\[data-theme="dark"\] \.brand \{/);
+  assert.match(
+    auto,
+    /\.brand:where\(\[data-theme="dark"\]\),\n:where\(\[data-theme="dark"\]\) \.brand \{/,
+  );
   const dark = toCss(theme, { scheme: "dark" });
   assert.match(dark, /^:root \{\n {2}--bg: #000000;/);
   assert.doesNotMatch(dark, /@media/);
@@ -255,4 +258,122 @@ test("ui-theme generate writes tokens.json and the css outputs", () => {
       stdio: "pipe",
     }),
   );
+});
+
+// Minimal CSS specificity calculator for the selector shapes toCss emits (a, b, c).
+function specificity(selector) {
+  let a = 0;
+  let b = 0;
+  let c = 0;
+  const walk = (sel) => {
+    let rest = sel;
+    for (;;) {
+      const fn = /:(where|not|is)\(/.exec(rest);
+      if (!fn) break;
+      let depth = 1;
+      let i = fn.index + fn[0].length;
+      const start = i;
+      while (depth && i < rest.length) {
+        if (rest[i] === "(") depth++;
+        else if (rest[i] === ")") depth--;
+        i++;
+      }
+      const inner = rest.slice(start, i - 1);
+      if (fn[1] !== "where") {
+        const [x, y, z] = specificity(inner);
+        a += x;
+        b += y;
+        c += z;
+      }
+      rest = rest.slice(0, fn.index) + rest.slice(i);
+    }
+    b += (rest.match(/\[[^\]]*\]/g) ?? []).length;
+    rest = rest.replace(/\[[^\]]*\]/g, "");
+    b += (rest.match(/[.:](?!:)[\w-]+/g) ?? []).length;
+    a += (rest.match(/#[\w-]+/g) ?? []).length;
+    rest = rest.replace(/[.#:][\w-]+/g, "");
+    c += (rest.match(/(?:^|[\s>+~])[a-z][\w-]*/gi) ?? []).length;
+  };
+  walk(selector);
+  return [a, b, c];
+}
+const selectorsOf = (css) =>
+  css
+    .replace(/@media[^{]*\{/g, "")
+    .split("}")
+    .map((chunk) => chunk.split("{")[0].trim())
+    .filter(Boolean)
+    .flatMap((list) => list.split(",").map((s) => s.trim()));
+
+test("the specificity helper itself is right", () => {
+  assert.deepEqual(specificity(":root"), [0, 1, 0]);
+  assert.deepEqual(specificity(':root[data-accent="x"]'), [0, 2, 0]);
+  assert.deepEqual(
+    specificity(':root:not([data-theme="light"]):not([data-theme="light"] *)'),
+    [0, 3, 0],
+  );
+  assert.deepEqual(specificity(':root:where(:not([data-theme="light"]))'), [0, 1, 0]);
+});
+
+test("generated selectors never outweigh :root, so data-accent presets keep precedence in dark mode", () => {
+  const css = toCss(createTheme({ brand: "#6d28d9" }));
+  const preset = specificity(':root[data-accent="menta"]');
+  const found = selectorsOf(css).filter((s) => s.includes("data-theme"));
+  assert.ok(found.length >= 5, "dark selectors were found");
+  for (const selector of selectorsOf(css)) {
+    const [a, b, c] = specificity(selector);
+    assert.ok(
+      a === preset[0] && (b < preset[1] || (b === preset[1] && c <= preset[2])),
+      `${selector} weighs (${a},${b},${c}), a data-accent preset must beat it`,
+    );
+  }
+});
+
+test("a forced scheme on a descendant is re-declared so it does not inherit the opposite scheme", () => {
+  const theme = createTheme({ brand: "#6d28d9" });
+  const css = toCss(theme, { selector: ".brand" });
+  const bg = (scheme) => theme.color.tokens.find((t) => t.name === "bg").value[scheme];
+  const block = (selector) =>
+    new RegExp(`${selector.replace(/[.[\]()"]/g, "\\$&")} \\{\\n[^}]*--bg: ([^;]+);`).exec(css);
+  assert.equal(block('.brand :where([data-theme="light"])')?.[1], bg("light"));
+  assert.equal(block('.brand :where([data-theme="dark"])')?.[1], bg("dark"));
+});
+
+test("CONTRAST_PAIRS covers the pairs the kit renders on surface-2 and float", () => {
+  const has = (fg, bg, kind) =>
+    CONTRAST_PAIRS.some((p) => p.fg === fg && p.bg === bg && p.kind === kind);
+  assert.ok(has("accent-ink", "surface-2", "text"));
+  assert.ok(has("line-control", "surface-2", "ui"));
+  assert.ok(has("line-control", "float", "ui"));
+  assert.ok(has("accent-word", "float", "ui"));
+});
+
+test("the solver keeps a margin above the AA floor (4.55 text, 3.05 non-text) on 800 seeds", () => {
+  const r = rng(424242);
+  for (let i = 0; i < 800; i++) {
+    const theme = createTheme({ brand: hex(r), neutral: r() < 0.5 ? hex(r) : undefined });
+    const margin = auditTheme(
+      theme,
+      CONTRAST_PAIRS.map((p) => ({ ...p, min: p.kind === "text" ? 4.54 : 3.04 })),
+    );
+    assert.deepEqual(
+      margin.map((v) => `${v.scheme} ${v.fg}/${v.bg} ${v.ratio.toFixed(3)}`),
+      [],
+      `brand/neutral seed ${i}`,
+    );
+  }
+});
+
+test("ui-theme generate with a bad hex prints a clean error and exits 1", () => {
+  const out = mkdtempSync(join(tmpdir(), "ui-bad-"));
+  const run = () =>
+    spawnSync(
+      process.execPath,
+      [join(here, "../bin/ui-theme.mjs"), "generate", "--brand", "purple", "--out", out],
+      { encoding: "utf8" },
+    );
+  const result = run();
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /^ui-theme: .*hex color/m);
+  assert.doesNotMatch(result.stderr, /\n\s+at /);
 });

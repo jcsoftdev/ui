@@ -72,10 +72,10 @@
       {
         "name": "line-control",
         "value": {
-          "light": "#7d8da5",
-          "dark": "#55647a"
+          "light": "#7a8aa1",
+          "dark": "#5c6b81"
         },
-        "usage": "Border of text fields, selects and checkboxes (3:1 on bg and surface)."
+        "usage": "Border of text fields, selects and checkboxes (3:1 on bg, surface, surface-2 and float)."
       },
       {
         "name": "hair",
@@ -155,15 +155,15 @@
           "light": "#6d28d9",
           "dark": "#c0b0ff"
         },
-        "usage": "Brand-colored text and focus ring (4.5:1 on bg, surface and accent-soft)."
+        "usage": "Brand-colored text and focus ring (4.5:1 on bg, surface, surface-2 and accent-soft)."
       },
       {
         "name": "accent-word",
         "value": {
           "light": "#6d28d9",
-          "dark": "#7636e4"
+          "dark": "#793ae8"
         },
-        "usage": "Brand-colored large text and the on switch (3:1 on bg and surface)."
+        "usage": "Brand-colored large text and the on switch (3:1 on bg, surface and float)."
       },
       {
         "name": "accent-soft",
@@ -345,7 +345,7 @@
         "name": "chart-cat-reserve",
         "value": {
           "light": "#6d28d9",
-          "dark": "#7636e4"
+          "dark": "#793ae8"
         },
         "usage": "Charts: reserve category color, equal to accent-word."
       },
