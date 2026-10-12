@@ -10,15 +10,15 @@ Everything visual is a CSS custom property. This page says which ones you may re
 
 The semantic tokens listed in the [token reference](/docs/theming/tokens/) are the stable contract. Override them on `:root`, on `[data-theme]`, or on any subtree.
 
-| Family        | Examples                                                                  |
-| ------------- | ------------------------------------------------------------------------- |
-| Surfaces      | `--bg`, `--surface`, `--surface-2`, `--sunken`, `--float`                 |
-| Text          | `--ink`, `--ink-2`, `--ink-3`, `--on-accent`                              |
-| Brand         | `--accent`, `--accent-ink`, `--accent-word`, `--accent-soft`, `--accent-line`, `--accent-2` |
-| Lines         | `--line`, `--line-strong`, `--line-control`, `--hair`                     |
-| Status        | `--danger`, `--warning`, `--info`, `--success` and their `-soft` fills   |
-| Shape, space  | `--radius-*`, `--shadow-*`, `--space-*`, `--density`                      |
-| Type          | `--font-sans`, `--font-scale`, the `--text-*` scale                        |
+| Family       | Examples                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------- |
+| Surfaces     | `--bg`, `--surface`, `--surface-2`, `--sunken`, `--float`                                   |
+| Text         | `--ink`, `--ink-2`, `--ink-3`, `--on-accent`                                                |
+| Brand        | `--accent`, `--accent-ink`, `--accent-word`, `--accent-soft`, `--accent-line`, `--accent-2` |
+| Lines        | `--line`, `--line-strong`, `--line-control`, `--hair`                                       |
+| Status       | `--danger`, `--warning`, `--info`, `--success` and their `-soft` fills                      |
+| Shape, space | `--radius-*`, `--shadow-*`, `--space-*`, `--density`                                        |
+| Type         | `--font-sans`, `--font-scale`, the `--text-*` scale                                         |
 
 Rules:
 

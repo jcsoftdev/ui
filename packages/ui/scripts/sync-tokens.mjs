@@ -4,10 +4,14 @@
 import { chmodSync, cpSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { buildSync } from "esbuild";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = resolve(root, "../ui-tokens");
+
+// The CLI bundles ui-tokens' compiled theme engine.
+execFileSync("pnpm", ["--dir", source, "run", "build:ts"], { stdio: "ignore" });
 
 for (const dir of ["styles", "tokens"]) {
   rmSync(join(root, dir), { recursive: true, force: true });

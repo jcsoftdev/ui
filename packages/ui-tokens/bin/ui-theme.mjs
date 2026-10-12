@@ -4,12 +4,17 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildTheme } from "../scripts/build-theme.mjs";
 
-const USAGE = `Usage: ui-theme build [tokens.json] --out <dir> [--kotlin-package <pkg>] [--no-kotlin]
+const USAGE = `Usage:
+  ui-theme build [tokens.json] --out <dir> [--kotlin-package <pkg>] [--no-kotlin]
+  ui-theme generate --brand <hex> [--accent <hex>] [--neutral <hex>] [--danger <hex>] --out <dir>
 
-Generates tokens.css, theme.css, fonts.css and Theme.kt from a tokens file.
+build generates tokens.css, theme.css, tailwind.css, fonts.css and Theme.kt from a tokens file.
 Without a tokens file the bundled default theme is used.
 --kotlin-library emits the explicit-API, @Immutable flavour used by the Compose kit.
---no-css skips the CSS outputs.`;
+--no-css skips the CSS outputs.
+
+generate derives a WCAG AA color set (light and dark) from seed colors, merges it into the bundled
+default tokens (the data-accent presets are kept) and writes tokens.json plus the same CSS outputs.`;
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -30,16 +35,30 @@ const tokensFlag = flag("--tokens");
 const noKotlin = has("--no-kotlin");
 const kotlinLibrary = has("--kotlin-library");
 const noCss = has("--no-css");
+const seeds = {
+  brand: flag("--brand"),
+  accent: flag("--accent"),
+  neutral: flag("--neutral"),
+  danger: flag("--danger"),
+};
 const [command, positional] = args;
 
-if (command !== "build" || !out) {
+if (!["build", "generate"].includes(command) || !out || (command === "generate" && !seeds.brand)) {
   console.error(USAGE);
   process.exit(command === "--help" ? 0 : 1);
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
 const file = resolve(tokensFlag ?? positional ?? join(here, "../tokens/default.json"));
-const files = buildTheme(JSON.parse(readFileSync(file, "utf8")), { kotlinPackage, kotlinLibrary });
+let tokens = JSON.parse(readFileSync(file, "utf8"));
+const extra = {};
+if (command === "generate") {
+  const { createTheme, withTheme } = await import("../dist/index.js");
+  const defined = Object.fromEntries(Object.entries(seeds).filter(([, v]) => v !== undefined));
+  tokens = withTheme(tokens, createTheme(defined));
+  extra["tokens.json"] = `${JSON.stringify(tokens, null, 2)}\n`;
+}
+const files = { ...extra, ...buildTheme(tokens, { kotlinPackage, kotlinLibrary }) };
 
 mkdirSync(resolve(out), { recursive: true });
 for (const [name, content] of Object.entries(files)) {

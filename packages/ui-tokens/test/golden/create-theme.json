@@ -1,0 +1,394 @@
+{
+  "name": "Generated #6d28d9",
+  "version": 2,
+  "color": {
+    "themes": [
+      {
+        "id": "light",
+        "name": "Light"
+      },
+      {
+        "id": "dark",
+        "name": "Dark"
+      }
+    ],
+    "tokens": [
+      {
+        "name": "bg",
+        "value": {
+          "light": "#edf4ff",
+          "dark": "#000000"
+        },
+        "usage": "Page background."
+      },
+      {
+        "name": "surface",
+        "value": {
+          "light": "#ffffff",
+          "dark": "#061223"
+        },
+        "usage": "Cards, sidebar, fields and rows."
+      },
+      {
+        "name": "surface-2",
+        "value": {
+          "light": "#e7f1ff",
+          "dark": "#121e31"
+        },
+        "usage": "Hovered row, neutral chip and control fill inside a card."
+      },
+      {
+        "name": "sunken",
+        "value": {
+          "light": "#d7e8ff",
+          "dark": "#1a273a"
+        },
+        "usage": "Sunken areas: neutral avatar and drop zones."
+      },
+      {
+        "name": "float",
+        "value": {
+          "light": "#ffffff",
+          "dark": "#0b1729"
+        },
+        "usage": "Things that float above the page: dialogs, sheets and menus."
+      },
+      {
+        "name": "line",
+        "value": {
+          "light": "#d7e8ff",
+          "dark": "#142133"
+        },
+        "usage": "Decorative dividers and borders."
+      },
+      {
+        "name": "line-strong",
+        "value": {
+          "light": "#c6d7f1",
+          "dark": "#28364a"
+        },
+        "usage": "Stronger decorative border."
+      },
+      {
+        "name": "line-control",
+        "value": {
+          "light": "#7d8da5",
+          "dark": "#55647a"
+        },
+        "usage": "Border of text fields, selects and checkboxes (3:1 on bg and surface)."
+      },
+      {
+        "name": "hair",
+        "value": {
+          "light": "rgba(0,0,0,0.11)",
+          "dark": "rgba(255,255,255,0.1)"
+        },
+        "usage": "Hairline around cards and secondary buttons."
+      },
+      {
+        "name": "track",
+        "value": {
+          "light": "#d1e3fc",
+          "dark": "#1a273a"
+        },
+        "usage": "Progress bar track."
+      },
+      {
+        "name": "seg-track",
+        "value": {
+          "light": "#dae9ff",
+          "dark": "#0a1628"
+        },
+        "usage": "Segmented control tray."
+      },
+      {
+        "name": "seg-on",
+        "value": {
+          "light": "#ffffff",
+          "dark": "#212e42"
+        },
+        "usage": "Selected segmented option."
+      },
+      {
+        "name": "ink",
+        "value": {
+          "light": "#000000",
+          "dark": "#eaf3ff"
+        },
+        "usage": "Primary text."
+      },
+      {
+        "name": "ink-2",
+        "value": {
+          "light": "#47566c",
+          "dark": "#aebfd8"
+        },
+        "usage": "Secondary text (4.5:1 on every surface)."
+      },
+      {
+        "name": "ink-3",
+        "value": {
+          "light": "#59687e",
+          "dark": "#899ab1"
+        },
+        "usage": "Metadata text (4.5:1 on every surface)."
+      },
+      {
+        "name": "accent",
+        "value": {
+          "light": "#6d28d9",
+          "dark": "#6d28d9"
+        },
+        "usage": "Brand fill: the primary action and the selected state."
+      },
+      {
+        "name": "on-accent",
+        "value": {
+          "light": "#f5f3ff",
+          "dark": "#f5f3ff"
+        },
+        "usage": "Text and icons on an accent fill (4.5:1)."
+      },
+      {
+        "name": "accent-ink",
+        "value": {
+          "light": "#6d28d9",
+          "dark": "#c0b0ff"
+        },
+        "usage": "Brand-colored text and focus ring (4.5:1 on bg, surface and accent-soft)."
+      },
+      {
+        "name": "accent-word",
+        "value": {
+          "light": "#6d28d9",
+          "dark": "#7636e4"
+        },
+        "usage": "Brand-colored large text and the on switch (3:1 on bg and surface)."
+      },
+      {
+        "name": "accent-soft",
+        "value": {
+          "light": "#f2f0ff",
+          "dark": "#17112a"
+        },
+        "usage": "Soft brand background."
+      },
+      {
+        "name": "accent-line",
+        "value": {
+          "light": "#d2c9ff",
+          "dark": "#352959"
+        },
+        "usage": "Brand hairline."
+      },
+      {
+        "name": "accent-2",
+        "value": {
+          "light": "#0ea5e9",
+          "dark": "#0ea5e9"
+        },
+        "usage": "Neighbour tone for gradients and illustrations."
+      },
+      {
+        "name": "danger",
+        "value": {
+          "light": "#b7191c",
+          "dark": "#ffa196"
+        },
+        "usage": "Error text and icons (4.5:1 on surface and danger-soft)."
+      },
+      {
+        "name": "danger-soft",
+        "value": {
+          "light": "#ffebe8",
+          "dark": "#260907"
+        },
+        "usage": "Error background."
+      },
+      {
+        "name": "warning",
+        "value": {
+          "light": "#7e5e00",
+          "dark": "#eab532"
+        },
+        "usage": "Warning text and icons (4.5:1 on surface and warning-soft)."
+      },
+      {
+        "name": "warning-soft",
+        "value": {
+          "light": "#fcefd4",
+          "dark": "#1c1200"
+        },
+        "usage": "Warning background."
+      },
+      {
+        "name": "info",
+        "value": {
+          "light": "#0961bb",
+          "dark": "#91c1ff"
+        },
+        "usage": "Informational text and icons (4.5:1 on surface and info-soft)."
+      },
+      {
+        "name": "info-soft",
+        "value": {
+          "light": "#e7f1ff",
+          "dark": "#041429"
+        },
+        "usage": "Informational background."
+      },
+      {
+        "name": "success",
+        "value": {
+          "light": "#007835",
+          "dark": "#6ed889"
+        },
+        "usage": "Success text and icons (4.5:1 on surface and success-soft)."
+      },
+      {
+        "name": "success-soft",
+        "value": {
+          "light": "#dff8e3",
+          "dark": "#011a07"
+        },
+        "usage": "Success background."
+      },
+      {
+        "name": "hatch",
+        "value": {
+          "light": "#ddebff",
+          "dark": "#0e1b2d"
+        },
+        "usage": "Diagonal hatch for unavailable time."
+      },
+      {
+        "name": "scrim",
+        "value": {
+          "light": "rgba(0,0,0,0.2)",
+          "dark": "rgba(0,0,0,0.72)"
+        },
+        "usage": "Veil behind dialogs and sheets."
+      },
+      {
+        "name": "toast-bg",
+        "value": {
+          "light": "#000000",
+          "dark": "#132032"
+        },
+        "usage": "Toast background."
+      },
+      {
+        "name": "toast-ink",
+        "value": {
+          "light": "#eff6ff",
+          "dark": "#eff6ff"
+        },
+        "usage": "Toast text (4.5:1 on toast-bg)."
+      },
+      {
+        "name": "chart-cat-1",
+        "value": {
+          "light": "#3786c3",
+          "dark": "#71bfff"
+        },
+        "usage": "Charts: categorical series 2 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-2",
+        "value": {
+          "light": "#19966e",
+          "dark": "#62d0a4"
+        },
+        "usage": "Charts: categorical series 3 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-3",
+        "value": {
+          "light": "#ac7300",
+          "dark": "#e8aa4e"
+        },
+        "usage": "Charts: categorical series 4 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-4",
+        "value": {
+          "light": "#806fcd",
+          "dark": "#b6aaff"
+        },
+        "usage": "Charts: categorical series 5 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-5",
+        "value": {
+          "light": "#b55b9a",
+          "dark": "#f292d3"
+        },
+        "usage": "Charts: categorical series 6 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-6",
+        "value": {
+          "light": "#748192",
+          "dark": "#abb9cb"
+        },
+        "usage": "Charts: categorical series 7 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-7",
+        "value": {
+          "light": "#6f8d2a",
+          "dark": "#a4c665"
+        },
+        "usage": "Charts: categorical series 8 (3:1 on bg and surface)."
+      },
+      {
+        "name": "chart-cat-reserve",
+        "value": {
+          "light": "#6d28d9",
+          "dark": "#7636e4"
+        },
+        "usage": "Charts: reserve category color, equal to accent-word."
+      },
+      {
+        "name": "chart-grid",
+        "value": {
+          "light": "rgba(0,0,0,0.06)",
+          "dark": "rgba(255,255,255,0.07)"
+        },
+        "usage": "Charts: background guide lines."
+      },
+      {
+        "name": "chart-crosshair",
+        "value": {
+          "light": "rgba(0,0,0,0.3)",
+          "dark": "rgba(255,255,255,0.34)"
+        },
+        "usage": "Charts: pointer crosshair."
+      },
+      {
+        "name": "chart-up",
+        "value": {
+          "light": "#009957",
+          "dark": "#2eaf6b"
+        },
+        "usage": "Charts: rising value (3:1)."
+      },
+      {
+        "name": "chart-down",
+        "value": {
+          "light": "#d24d45",
+          "dark": "#eb6459"
+        },
+        "usage": "Charts: falling value (3:1)."
+      },
+      {
+        "name": "chart-total",
+        "value": {
+          "light": "#414853",
+          "dark": "#b0b8c4"
+        },
+        "usage": "Charts: totals and unchanged values (3:1)."
+      }
+    ]
+  }
+}

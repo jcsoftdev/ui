@@ -62,6 +62,10 @@ try {
       `ui-theme regenerates styles/${name} byte-for-byte`,
     );
   }
+  const generated = join(work, "generated");
+  execFileSync("node", [bin, "generate", "--brand", "#0e7490", "--out", generated, "--no-kotlin"], { stdio: "pipe" });
+  assert.ok(existsSync(join(generated, "tokens.json")), "ui-theme generate works from the packed bin");
+
   for (const entry of ["primitives", "rich-text"]) {
     assert.ok(existsSync(join(installed, `dist/${entry}/index.js`)), `dist/${entry} packed`);
     assert.ok(
