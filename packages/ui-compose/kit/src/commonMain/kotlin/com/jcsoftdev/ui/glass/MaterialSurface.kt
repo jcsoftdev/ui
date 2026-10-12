@@ -406,6 +406,14 @@ private class GlassSurfaceNode(
     // shape. (LENS_COVERAGE is the fraction of that distance the edge term spans; 1 is the full surface.)
     private fun ContentDrawScope.bevel(): Float = (min(size.width, size.height) * 0.5f * LENS_COVERAGE).coerceAtLeast(1f)
 
+    // Superellipse exponent of the lens height field from the sharpest corner: a pill or circle is an ellipse (2), a sharp
+    // rectangle fills its corners (8).
+    private fun ContentDrawScope.squareness(outline: Outline): Float {
+        val half = min(size.width, size.height) * 0.5f
+        val sharpest = outline.cornerRadii().min()
+        return 2f + 6f * (1f - (sharpest / half).coerceIn(0f, 1f))
+    }
+
     private fun ContentDrawScope.drawBackdrop(
         source: GlassState,
         blurLayer: GraphicsLayer,
@@ -430,7 +438,7 @@ private class GlassSurfaceNode(
             if (lens) drawRect(base)
             translate(pad - dx, pad - dy) { drawLayer(source.layer) }
         }
-        val lensed = if (lens) lensFor(outline, pad, depth, strength, radius) else null
+        val lensed = if (lens) lensFor(outline, pad, depth, strength, radius, squareness(outline)) else null
         lensApplied = lensed != null
         blurLayer.renderEffect = lensed ?: blurFor(radius)
         // The lens shader saturates the backdrop itself, before the veil.
@@ -452,6 +460,7 @@ private class GlassSurfaceNode(
         depth: Float,
         strength: Float,
         radius: Float,
+        exponent: Float,
     ): RenderEffect? {
         val corners = outline.cornerRadii()
         val params =
@@ -463,7 +472,7 @@ private class GlassSurfaceNode(
                 corners[1],
                 corners[2],
                 corners[3],
-                depth,
+                exponent,
                 strength,
                 DISPERSION,
                 radius,

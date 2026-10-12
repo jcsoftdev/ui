@@ -18,7 +18,7 @@ internal actual class LensEngine actual constructor() {
         builder.uniform("size", params.width, params.height)
         builder.uniform("origin", params.pad, params.pad)
         builder.uniform("radii", params.tl, params.tr, params.br, params.bl)
-        builder.uniform("depth", params.depth)
+        builder.uniform("exponent", params.exponent)
         builder.uniform("strength", params.strength)
         builder.uniform("dispersion", params.dispersion)
         builder.uniform("bounds", params.boundsLeft, params.boundsTop, params.boundsRight, params.boundsBottom)

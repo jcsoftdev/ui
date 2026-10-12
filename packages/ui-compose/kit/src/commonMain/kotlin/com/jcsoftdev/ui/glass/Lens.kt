@@ -13,8 +13,8 @@ internal data class LensParams(
     val tr: Float,
     val br: Float,
     val bl: Float,
-    /** Width of the refracting bezel, measured inward from the edge. */
-    val depth: Float,
+    /** Squareness of the height field (the superellipse exponent): 2 is an ellipse, higher values fill the corners. */
+    val exponent: Float,
     /** Largest displacement, reached at the edge. */
     val strength: Float,
     /** Per-channel spread of the displacement (chromatic dispersion). */
@@ -39,7 +39,7 @@ internal data class LensParams(
     val dimA: Float = 0f,
     /** Share of the veil left at the very edge (1 keeps it uniform). */
     val veilEdge: Float = 1f,
-    /** How far in, in pixels, the veil and the thickness shading reach (independent of the lens [depth]). */
+    /** How far in, in pixels, the veil and the thickness shading reach (independent of the lens). */
     val rimDepth: Float = 1f,
     /** Magnification toward the center (0.05 samples the backdrop 5% closer to the center at the edge). */
     val dome: Float = 0f,
@@ -60,7 +60,7 @@ internal expect class LensEngine() {
 /**
  * Edge refraction in SkSL (also valid AGSL): a rounded-rect signed distance field gives the distance to the edge and the
  * edge normal; the backdrop is sampled from further inside (so every sample stays within the visible surface), by an amount that is strongest at the edge and fades to zero
- * across the bezel [depth], so the center shows the backdrop undistorted. Samples are clamped to the surface rectangle. Red and blue use slightly different amounts for a
+ * across the whole surface. Samples are clamped to the surface rectangle. Red and blue use slightly different amounts for a
  * subtle dispersion at the rim.
  */
 internal const val LENS_SHADER: String = """
@@ -68,7 +68,7 @@ uniform shader content;
 uniform float2 size;
 uniform float2 origin;
 uniform float4 radii;
-uniform float depth;
+uniform float exponent;
 uniform float strength;
 uniform float dispersion;
 uniform float4 bounds;
@@ -96,11 +96,18 @@ half4 main(float2 coord) {
         sdBox(p + float2(1.0, 0.0), b, radii) - sdBox(p - float2(1.0, 0.0), b, radii),
         sdBox(p + float2(0.0, 1.0), b, radii) - sdBox(p - float2(0.0, 1.0), b, radii));
     float2 n = length(g) > 0.0001 ? normalize(g) : float2(0.0, 0.0);
-    float t = clamp(-d / max(depth, 1.0), 0.0, 1.0);
-    float bend = pow(1.0 - t, 3.0);
-    // Edge term (strongest at the rim, fading to zero at the center where the normal flips) plus a dome that magnifies the
-    // whole surface a little, so no part of it is a flat, undisplaced zone.
-    float2 off = -n * strength * bend - p * dome;
+    // The refraction comes from a smooth height field, not from the edge distance (whose gradient jumps along the medial axis and
+    // would crease the surface into four faces): a superellipse radial coordinate r = (|u|^n + |v|^n)^(1/n) over the
+    // half-size normalized axes. Its gradient direction is continuous everywhere but the exact center, where the displacement
+    // is zero anyway. The displacement grows as r^3 toward the rim (strongest there), plus a dome that magnifies the whole
+    // surface a little, so no part of it is a flat, undisplaced zone.
+    float2 h = max(b, float2(1.0));
+    float2 uv = p / h;
+    float2 a = abs(uv) + float2(0.0001);
+    float rr = pow(pow(a.x, exponent) + pow(a.y, exponent), 1.0 / exponent);
+    float2 gr = float2(pow(a.x, exponent - 1.0) * sign(uv.x) / h.x, pow(a.y, exponent - 1.0) * sign(uv.y) / h.y);
+    float2 dir = length(gr) > 0.000001 ? normalize(gr) : float2(0.0, 0.0);
+    float2 off = -dir * strength * pow(clamp(rr, 0.0, 1.0), 3.0) - p * dome;
     float2 lo = bounds.xy;
     float2 hi = bounds.zw;
     half4 mid = content.eval(clamp(coord + off, lo, hi));

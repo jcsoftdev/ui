@@ -27,7 +27,7 @@ private fun agslEffect(
     shader.setFloatUniform("size", params.width, params.height)
     shader.setFloatUniform("origin", params.pad, params.pad)
     shader.setFloatUniform("radii", params.tl, params.tr, params.br, params.bl)
-    shader.setFloatUniform("depth", params.depth)
+    shader.setFloatUniform("exponent", params.exponent)
     shader.setFloatUniform("strength", params.strength)
     shader.setFloatUniform("dispersion", params.dispersion)
     shader.setFloatUniform("bounds", params.boundsLeft, params.boundsTop, params.boundsRight, params.boundsBottom)
