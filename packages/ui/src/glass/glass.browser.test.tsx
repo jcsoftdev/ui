@@ -1,10 +1,18 @@
 /// <reference types="@vitest/browser-playwright" />
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, test } from "vitest";
-import { cdp, page } from "vitest/browser";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { cdp, page, userEvent } from "vitest/browser";
 import "../../test/glass-browser.css";
 import { Card } from "../containers/card/card.js";
+import { Dialog, DialogContent, DialogTitle } from "../overlays/dialog/dialog.js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../overlays/dropdown-menu/dropdown-menu.js";
+import { Popover, PopoverContent, PopoverTrigger } from "../overlays/popover/popover.js";
 import { applyGlassRefraction } from "./refraction.js";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -34,6 +42,7 @@ afterEach(async () => {
   host?.remove();
   root = host = undefined;
   delete document.documentElement.dataset.theme;
+  delete document.documentElement.dataset.style;
   await emulate([]);
 });
 
@@ -141,6 +150,75 @@ describe("materials render as glass", () => {
     const inner = styleOf(h.querySelector("[data-testid=inner]") as Element);
     expect(inner.backdropFilter).toBe("none");
     expect(alpha(inner.backgroundColor)).toBeGreaterThan(0.9);
+  });
+});
+
+describe("portaled overlays opened from glass", () => {
+  // Portals land in <body>, outside the mounted host, so the preset goes on the root.
+  beforeEach(() => {
+    document.documentElement.dataset.style = "glass";
+  });
+  const clickByText = async (text: string) => {
+    const el = [...document.querySelectorAll("button")].find((b) => b.textContent === text);
+    await userEvent.click(el as Element);
+    await new Promise((r) => setTimeout(r, 50));
+  };
+  const menu = () => document.querySelector("[role=menu]") as HTMLElement;
+
+  test("a menu opened from a glass dialog has no backdrop-filter of its own", async () => {
+    await mount(
+      <Dialog open>
+        <DialogContent material="glass" aria-describedby={undefined}>
+          <DialogTitle>Glass dialog</DialogTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger>Open menu</DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>One</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </DialogContent>
+      </Dialog>,
+    );
+    await clickByText("Open menu");
+    expect(menu()).not.toBeNull();
+    expect(menu().closest("[role=dialog]")).toBeNull();
+    expect(menu().hasAttribute("data-glass-nested")).toBe(true);
+    expect(styleOf(menu()).backdropFilter).toBe("none");
+    expect(alpha(styleOf(menu()).backgroundColor)).toBeGreaterThan(0.9);
+  });
+
+  test("a menu opened from plain content keeps its glass", async () => {
+    await mount(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Open menu</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>One</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    await clickByText("Open menu");
+    expect(menu().hasAttribute("data-glass-nested")).toBe(false);
+    expect(styleOf(menu()).backdropFilter).toContain("blur");
+  });
+
+  test("a popover opened from a glass dialog is marked too", async () => {
+    await mount(
+      <Dialog open>
+        <DialogContent material="glass" aria-describedby={undefined}>
+          <DialogTitle>Glass dialog</DialogTitle>
+          <Popover>
+            <PopoverTrigger>Open popover</PopoverTrigger>
+            <PopoverContent>Hello</PopoverContent>
+          </Popover>
+        </DialogContent>
+      </Dialog>,
+    );
+    await clickByText("Open popover");
+    const pop = [...document.querySelectorAll("[data-glass-nested]")].find(
+      (e) => e.textContent === "Hello",
+    );
+    expect(pop).toBeDefined();
+    expect(styleOf(pop as Element).backdropFilter).toBe("none");
   });
 });
 

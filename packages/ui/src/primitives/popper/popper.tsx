@@ -168,6 +168,9 @@ function containingBlockOrigin(node: HTMLElement): { x: number; y: number } {
   return { x: 0, y: 0 };
 }
 
+/** Surfaces that blur their backdrop: an overlay opened from inside one must not blur again. */
+const GLASS_ANCESTORS = ".glass, .glass-clear, .surface-overlay";
+
 export function Content({
   side = "bottom",
   align = "center",
@@ -201,6 +204,13 @@ export function Content({
   const padding = paddingKey(collisionPadding);
   const paddingRef = useRef(collisionPadding);
   paddingRef.current = collisionPadding;
+
+  // A panel portaled out of a glass surface is not its DOM descendant, so the CSS nesting rule
+  // cannot see it: mark it so the glass utilities drop the second blur (glass on glass).
+  useLayoutEffect(() => {
+    if (!content || !anchor || typeof anchor.closest !== "function") return;
+    content.toggleAttribute("data-glass-nested", anchor.closest(GLASS_ANCESTORS) !== null);
+  }, [content, anchor]);
 
   // The wrapper owns the stacking context; the styled content decides its z-index.
   useLayoutEffect(() => {
