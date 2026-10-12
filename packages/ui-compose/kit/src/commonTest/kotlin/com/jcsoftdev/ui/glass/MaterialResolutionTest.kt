@@ -15,7 +15,19 @@ class MaterialResolutionTest {
         highContrast: Boolean = false,
         nested: Boolean = false,
         blurAvailable: Boolean = true,
-    ) = resolveMaterial(requested, role, style, reduceTransparency, highContrast, nested, blurAvailable)
+        glassVariant: GlassVariant = GlassVariant.Frosted,
+        lensAvailable: Boolean = false,
+    ) = resolveMaterial(
+        requested,
+        role,
+        style,
+        reduceTransparency,
+        highContrast,
+        nested,
+        blurAvailable,
+        glassVariant,
+        lensAvailable,
+    )
 
     @Test fun defaultStyleKeepsEverySurfaceSolid() {
         for (role in SurfaceRole.entries) assertEquals(SurfaceMode.Solid, resolve(role = role).mode)
@@ -77,5 +89,40 @@ class MaterialResolutionTest {
         val r = resolve(highContrast = true, reduceTransparency = true)
         assertEquals(SurfaceMode.Solid, r.mode)
         assertFalse(r.forcedOpaque)
+    }
+
+    @Test fun theLiquidVariantMakesChromeLiquidAndFrostedKeepsItFrosted() {
+        val liquid = resolve(style = UiStyle.Glass, glassVariant = GlassVariant.Liquid)
+        assertEquals(SurfaceMaterial.Liquid, liquid.variant)
+        assertEquals(SurfaceMaterial.Glass, resolve(style = UiStyle.Glass, glassVariant = GlassVariant.Frosted).variant)
+    }
+
+    @Test fun anExplicitMaterialBeatsTheThemeVariant() {
+        assertEquals(SurfaceMaterial.Glass, resolve(SurfaceMaterial.Glass, glassVariant = GlassVariant.Liquid).variant)
+    }
+
+    @Test fun liquidUsesTheLensOnlyWhereTheShaderRuns() {
+        assertEquals(SurfaceMode.Lens, resolve(SurfaceMaterial.Liquid, lensAvailable = true).mode)
+        // Android 12 / 12L: blur but no runtime shader.
+        assertEquals(SurfaceMode.Blur, resolve(SurfaceMaterial.Liquid, lensAvailable = false).mode)
+        // Below Android 12: no blur either.
+        assertEquals(SurfaceMode.Tint, resolve(SurfaceMaterial.Liquid, blurAvailable = false, lensAvailable = false).mode)
+        assertEquals(SurfaceMode.Tint, resolve(SurfaceMaterial.Liquid, blurAvailable = false, lensAvailable = true).mode)
+    }
+
+    @Test fun frostedNeverUsesTheLens() {
+        assertEquals(SurfaceMode.Blur, resolve(SurfaceMaterial.Glass, lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Blur, resolve(SurfaceMaterial.GlassClear, lensAvailable = true).mode)
+    }
+
+    @Test fun accessibilityForcesLiquidOpaqueAndNestingFlattensIt() {
+        assertEquals(SurfaceMode.Solid, resolve(SurfaceMaterial.Liquid, reduceTransparency = true, lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Solid, resolve(SurfaceMaterial.LiquidClear, highContrast = true, lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Nested, resolve(SurfaceMaterial.Liquid, nested = true, lensAvailable = true).mode)
+    }
+
+    @Test fun liquidClearIsClearAndLiquid() {
+        val r = resolve(SurfaceMaterial.LiquidClear, lensAvailable = true)
+        assertTrue(r.liquid && r.clear)
     }
 }
