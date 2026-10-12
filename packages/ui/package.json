@@ -86,7 +86,8 @@
     "test:glass": "vitest run --project glass",
     "check:treeshake": "node test/treeshake.mjs",
     "check:dist-imports": "node test/dist-imports.mjs",
-    "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs"
+    "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs",
+    "check:rsc": "node test/rsc.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",

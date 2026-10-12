@@ -1,43 +1,69 @@
 "use client";
 
-import { type Ref, type RefCallback, useCallback, useEffect, useRef, useState } from "react";
+import { type Ref, type RefCallback, useEffect, useState } from "react";
+import { useComposedRefs } from "../utils/compose.js";
 
-function assign<T>(ref: Ref<T> | undefined, value: T | null) {
-  if (typeof ref === "function") ref(value);
-  else if (ref) (ref as { current: T | null }).current = value;
-}
+/** Preferences that flip the `--glass-lens` flag in CSS; the engine is brought back when cleared. */
+const PREFERENCES = [
+  "(prefers-reduced-transparency: reduce)",
+  "(prefers-contrast: more)",
+  "(forced-colors: active)",
+  "(prefers-reduced-motion: reduce)",
+];
+/** What can change whether a surface resolves to a liquid material. */
+const WATCHED = ["class", "data-glass", "data-glass-lens", "data-style", "data-theme"];
 
 /**
- * Gives a glass component its lens. Put the returned ref on the surface element (it forwards the
- * ref you pass in). When the surface resolves to a liquid material, the engine
- * (`./refraction.js`, a separate lazy chunk) is imported and applied; a frosted or solid surface
- * never loads it, so the cost is this file only. Pass `data-glass-lens="off"` on the element, or
- * set `--glass-lens: 0` in CSS, to keep the plain liquid look.
+ * Gives a glass component its lens. Put the returned ref on the surface element (it composes the
+ * ref you pass in, so a changed ref or a React 19 ref cleanup keeps working). While the surface
+ * resolves to a liquid material, the engine (`./refraction.js`, a separate lazy chunk) is imported
+ * and applied; a frosted or solid surface never loads it, so the cost is this file only. The
+ * decision follows the page: it is re-evaluated when the element's classes or `data-glass`
+ * change, when an ancestor's `data-glass`, `data-glass-lens`, `data-style` or class change (the
+ * theme-level switch, an opt-out, a nested glass), and when a transparency, contrast or motion
+ * preference changes. Pass `data-glass-lens="off"` on the element or an ancestor, or set
+ * `--glass-lens: 0` in CSS, to keep the plain liquid look.
  */
 export function useGlassLens<T extends HTMLElement>(forwarded?: Ref<T>): RefCallback<T> {
   const [element, setElement] = useState<T | null>(null);
-  const forward = useRef(forwarded);
-  forward.current = forwarded;
+  const ref = useComposedRefs<T>(forwarded, setElement);
   useEffect(() => {
-    if (
-      !element ||
-      typeof getComputedStyle !== "function" ||
-      element.closest('[data-glass-lens="off"]')
-    )
-      return;
-    if (getComputedStyle(element).getPropertyValue("--glass-lens").trim() !== "1") return;
+    if (!element || typeof getComputedStyle !== "function") return;
     let stop: (() => void) | undefined;
-    let cancelled = false;
-    import("./refraction.js").then(({ applyGlassRefraction }) => {
-      if (!cancelled) stop = applyGlassRefraction(element, { auto: true });
-    });
+    let loading = false;
+    let gone = false;
+    const wants = () =>
+      !element.closest('[data-glass-lens="off"]') &&
+      getComputedStyle(element).getPropertyValue("--glass-lens").trim() === "1";
+    const check = () => {
+      if (gone) return;
+      const want = wants();
+      if (!want) {
+        stop?.();
+        stop = undefined;
+      } else if (!stop && !loading) {
+        loading = true;
+        import("./refraction.js").then(({ applyGlassRefraction }) => {
+          loading = false;
+          // It may have stopped being wanted while the chunk loaded; the next change re-checks.
+          if (!gone && wants()) stop = applyGlassRefraction(element, { auto: true });
+        });
+      }
+    };
+    check();
+    const observer =
+      typeof MutationObserver === "function" ? new MutationObserver(check) : undefined;
+    for (let node: Element | null = element; node; node = node.parentElement)
+      observer?.observe(node, { attributes: true, attributeFilter: WATCHED });
+    const lists =
+      typeof matchMedia === "function" ? PREFERENCES.map((query) => matchMedia(query)) : [];
+    for (const list of lists) list.addEventListener("change", check);
     return () => {
-      cancelled = true;
+      gone = true;
+      observer?.disconnect();
+      for (const list of lists) list.removeEventListener("change", check);
       stop?.();
     };
   }, [element]);
-  return useCallback((value: T | null) => {
-    setElement(value);
-    assign(forward.current, value);
-  }, []);
+  return ref;
 }

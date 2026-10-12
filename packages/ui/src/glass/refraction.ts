@@ -58,6 +58,8 @@ const REBUILD_MS = 90;
 
 let counter = 0;
 let active = 0;
+/** Surfaces that are eligible but found no free slot; the next one is woken when a slot frees. */
+const waiting = new Set<() => void>();
 
 /** Size changes are coalesced into one pass per frame, whatever the number of surfaces. */
 const dirty = new Set<() => void>();
@@ -103,6 +105,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   let installed:
     | { filter: SVGFilterElement; observer?: ResizeObserver; cancel: () => void }
     | undefined;
+  /** Watches the size of an eligible surface that is too large for now, so it lenses once it shrinks. */
+  let sizeWatch: ResizeObserver | undefined;
   const original = element.style.backdropFilter;
   const originalPrefixed = element.style.getPropertyValue("-webkit-backdrop-filter");
 
@@ -116,6 +120,14 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     !userWantsLess() &&
     (options.refraction === "force" || supportsBackdropRefraction()) &&
     flagged();
+
+  /** Hands a freed slot to the first surface that was waiting for one. */
+  const wake = () => {
+    const next = waiting.values().next().value;
+    if (!next) return;
+    waiting.delete(next);
+    schedule(next);
+  };
 
   const uninstall = () => {
     if (!installed) return;
@@ -133,13 +145,25 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     element.style.removeProperty("--glass-veil");
   };
 
+  const dispersionFor = (area: number) =>
+    options.dispersion ?? (area <= DISPERSION_AREA ? 0.08 : 0);
+
   const install = () => {
-    if (!element.isConnected || active >= MAX_ACTIVE) return;
-    if (element.offsetWidth * element.offsetHeight > MAX_AREA) return;
+    if (!element.isConnected) return;
+    if (active >= MAX_ACTIVE) {
+      waiting.add(sync);
+      return;
+    }
+    if (element.offsetWidth * element.offsetHeight > MAX_AREA) {
+      // Too large for the filter right now; stay on the plain liquid look and look again on resize.
+      if (typeof ResizeObserver === "function") {
+        sizeWatch = new ResizeObserver(() => schedule(sync));
+        sizeWatch.observe(element);
+      }
+      return;
+    }
     const { scale = 20 } = options;
-    const dispersion =
-      options.dispersion ??
-      (element.offsetWidth * element.offsetHeight <= DISPERSION_AREA ? 0.08 : 0);
+    const dispersion = dispersionFor(element.offsetWidth * element.offsetHeight);
     const id = `ui-glass-lens-${++counter}`;
     const filter = document.createElementNS(SVG_NS, "filter");
     filter.id = id;
@@ -268,6 +292,11 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       const width = element.offsetWidth;
       const height = element.offsetHeight;
       if (!width || !height) return;
+      // The budgets are checked on every size, not only at install: a surface that grows past
+      // them (a dialog whose content arrives, an entrance that settles) drops the lens or its
+      // dispersion, and one that shrinks back under gets it.
+      if (width * height > MAX_AREA || dispersionFor(width * height) > 0 !== dispersion > 0)
+        return sync();
       const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
       const bezel = options.bezel ?? Math.min(28, Math.max(12, Math.min(width, height) / 6));
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -317,11 +346,16 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   };
 
   /** Bring the element in line with the current preferences, engine and tokens. */
-  const sync = () => {
+  function sync() {
     if (stopped) return;
+    waiting.delete(sync);
+    sizeWatch?.disconnect();
+    sizeWatch = undefined;
+    const was = installed !== undefined;
     uninstall();
     if (eligible()) install();
-  };
+    if (was && !installed) wake();
+  }
 
   const lists = [...OFF_QUERIES, ...REBUILD_QUERIES].map((q) => matchMedia(q));
   for (const list of lists) list.addEventListener("change", sync);
@@ -336,7 +370,12 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     stopped = true;
     for (const list of lists) list.removeEventListener("change", sync);
     mutations?.disconnect();
+    waiting.delete(sync);
+    sizeWatch?.disconnect();
+    sizeWatch = undefined;
+    const was = installed !== undefined;
     uninstall();
+    if (was) wake();
     controllers.delete(element);
   }
 

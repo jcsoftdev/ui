@@ -718,6 +718,135 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     expect(filters()).toBe(0);
   });
 
+  describe("the lens follows the page", () => {
+    const small = "absolute top-2 left-2 h-24 w-40";
+    const passes = () =>
+      document.querySelectorAll("#ui-glass-refraction-defs feDisplacementMap").length;
+    const card = (material: "glass" | "liquid", extra: Record<string, string> = {}) => (
+      <Card data-testid="c" material={material} className={small} {...extra} />
+    );
+    const el = () => document.querySelector("[data-testid=c]") as HTMLElement;
+
+    test("liquid to glass on a mounted card releases the lens and restores the frosted look", async () => {
+      await mount(card("liquid"));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await act(async () => root?.render(card("glass")));
+      await vi.waitFor(() => expect(filters()).toBe(0));
+      expect(el().dataset.glassRefraction).toBeUndefined();
+      expect(styleOf(el()).backdropFilter).not.toContain("url(");
+      expect(el().style.getPropertyValue("--glass-veil")).toBe("");
+      expect(alpha(styleOf(el()).getPropertyValue("--glass-veil"))).toBeGreaterThan(0.3);
+    });
+
+    test("removing the theme-level data-glass releases the lens", async () => {
+      const box = await mount(card("glass"), { "data-glass": "liquid" });
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await act(async () => box.removeAttribute("data-glass"));
+      await vi.waitFor(() => expect(filters()).toBe(0));
+      expect(el().dataset.glassRefraction).toBeUndefined();
+      expect(styleOf(el()).backdropFilter).not.toContain("url(");
+    });
+
+    test("glass to liquid on a mounted card gets the lens", async () => {
+      await mount(card("glass"));
+      await settle();
+      expect(filters()).toBe(0);
+      await act(async () => root?.render(card("liquid")));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      expect(el().dataset.glassRefraction).toBe("on");
+    });
+
+    test("switching data-glass=liquid on at runtime lenses a mounted frosted card", async () => {
+      const box = await mount(card("glass"));
+      await settle();
+      expect(filters()).toBe(0);
+      await act(async () => box.setAttribute("data-glass", "liquid"));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await act(async () => box.removeAttribute("data-glass"));
+      await vi.waitFor(() => expect(filters()).toBe(0));
+    });
+
+    test("an opt-out added or removed at runtime is honoured", async () => {
+      const box = await mount(card("liquid"));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await act(async () => box.setAttribute("data-glass-lens", "off"));
+      await vi.waitFor(() => expect(filters()).toBe(0));
+      await act(async () => box.removeAttribute("data-glass-lens"));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+    });
+
+    test("the area and dispersion budgets are checked on every resize, not only at install", async () => {
+      const sized = (w: number, h: number) => (
+        <Card
+          data-testid="c"
+          material="liquid"
+          className="absolute top-0 left-0"
+          style={{ width: w, height: h }}
+        />
+      );
+      await mount(sized(120, 48));
+      await vi.waitFor(() => expect(passes()).toBe(3));
+      // Grown past the dispersion budget (a dialog whose content arrives): one pass instead of three.
+      await act(async () => root?.render(sized(400, 300)));
+      await vi.waitFor(() => expect(passes()).toBe(1));
+      // Grown past the area budget: no lens at all, the plain liquid look.
+      await act(async () => root?.render(sized(900, 900)));
+      await vi.waitFor(() => expect(filters()).toBe(0));
+      expect(el().dataset.glassRefraction).toBeUndefined();
+      // And back under: the lens returns.
+      await act(async () => root?.render(sized(120, 48)));
+      await vi.waitFor(() => expect(passes()).toBe(3));
+    });
+
+    test("a surface that found no free slot gets one when another is released", async () => {
+      const grid = (skip: number) =>
+        Array.from({ length: 10 }, (_, i) =>
+          i === skip ? null : (
+            <Card
+              key={i}
+              data-testid={`c${i}`}
+              material="liquid"
+              className="absolute h-10 w-24"
+              style={{ left: (i % 4) * 100, top: Math.floor(i / 4) * 50 }}
+            />
+          ),
+        );
+      await mount(grid(-1));
+      await settle();
+      expect(filters()).toBe(8);
+      expect(
+        document.querySelector("[data-testid=c8]")?.hasAttribute("data-glass-refraction"),
+      ).toBe(false);
+      await act(async () => root?.render(grid(0)));
+      await vi.waitFor(() =>
+        expect(
+          document.querySelector("[data-testid=c8]")?.getAttribute("data-glass-refraction"),
+        ).toBe("on"),
+      );
+      expect(filters()).toBe(8);
+    });
+
+    test("a changed ref identity is honoured and a ref cleanup runs on unmount", async () => {
+      const log: string[] = [];
+      const make = (name: string) => (node: HTMLDivElement | null) => {
+        log.push(`${name}:${node ? "set" : "null"}`);
+        return () => {
+          log.push(`${name}:cleanup`);
+        };
+      };
+      const a = make("a");
+      const b = make("b");
+      await mount(<Card material="liquid" ref={a} className={small} />);
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await act(async () => root?.render(<Card material="liquid" ref={b} className={small} />));
+      expect(log).toContain("a:cleanup");
+      expect(log).toContain("b:set");
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await act(async () => root?.render(null));
+      expect(log).toContain("b:cleanup");
+    });
+  });
+
   test("a Dialog with material=liquid is lensed once open, with its blur and veil in the filter", async () => {
     await mount(
       <Dialog open>
