@@ -128,4 +128,21 @@ class LiquidRenderTest {
         val pressed = scene(SurfaceMaterial.Liquid, motion = 1f, press = PressInteraction.Press(Offset.Zero)).rgb(200, 60)
         assertTrue(pressed.first > idle.first, "press: idle=$idle pressed=$pressed")
     }
+
+    @Test fun liquidCastsAnOuterShadowAndFrostedDoesNot() {
+        // The surface starts at x=110 over a pure red backdrop; 3px outside it only the Liquid shadow darkens the red.
+        val liquid = scene(SurfaceMaterial.Liquid).rgb(107, 60).first
+        val frosted = scene(SurfaceMaterial.Glass).rgb(107, 60).first
+        assertTrue(frosted == 255, "frosted must leave the backdrop alone: $frosted")
+        assertTrue(liquid <= 251, "liquid shadow missing: $liquid")
+    }
+
+    @Test fun theThemeDefaultsToTheFrostedVariant() {
+        var seen: GlassVariant? = null
+        runComposeUiTest {
+            setContent { UiTheme { seen = LocalGlassVariant.current } }
+            waitForIdle()
+        }
+        assertTrue(seen == GlassVariant.Frosted, "default variant: $seen")
+    }
 }
