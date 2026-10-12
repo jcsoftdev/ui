@@ -690,6 +690,23 @@ final class com.jcsoftdev.ui.theme/AccentPalette { // com.jcsoftdev.ui.theme/Acc
         final fun <get-onAccent>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/AccentPalette.onAccent.<get-onAccent>|<get-onAccent>(){}[0]
 }
 
+final class com.jcsoftdev.ui.theme/GlassMaterial { // com.jcsoftdev.ui.theme/GlassMaterial|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.unit/Dp, kotlin/Float) // com.jcsoftdev.ui.theme/GlassMaterial.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.unit.Dp;kotlin.Float){}[0]
+
+    final val blur // com.jcsoftdev.ui.theme/GlassMaterial.blur|{}blur[0]
+        final fun <get-blur>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.theme/GlassMaterial.blur.<get-blur>|<get-blur>(){}[0]
+    final val border // com.jcsoftdev.ui.theme/GlassMaterial.border|{}border[0]
+        final fun <get-border>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/GlassMaterial.border.<get-border>|<get-border>(){}[0]
+    final val dim // com.jcsoftdev.ui.theme/GlassMaterial.dim|{}dim[0]
+        final fun <get-dim>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/GlassMaterial.dim.<get-dim>|<get-dim>(){}[0]
+    final val edge // com.jcsoftdev.ui.theme/GlassMaterial.edge|{}edge[0]
+        final fun <get-edge>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/GlassMaterial.edge.<get-edge>|<get-edge>(){}[0]
+    final val saturate // com.jcsoftdev.ui.theme/GlassMaterial.saturate|{}saturate[0]
+        final fun <get-saturate>(): kotlin/Float // com.jcsoftdev.ui.theme/GlassMaterial.saturate.<get-saturate>|<get-saturate>(){}[0]
+    final val tint // com.jcsoftdev.ui.theme/GlassMaterial.tint|{}tint[0]
+        final fun <get-tint>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.theme/GlassMaterial.tint.<get-tint>|<get-tint>(){}[0]
+}
+
 final class com.jcsoftdev.ui.theme/ThemeColors { // com.jcsoftdev.ui.theme/ThemeColors|null[0]
     constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.theme/ThemeColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
 
@@ -1410,6 +1427,17 @@ final object com.jcsoftdev.ui.theme/UiFontSizes { // com.jcsoftdev.ui.theme/UiFo
         final fun <get-fs95>(): androidx.compose.ui.unit/TextUnit // com.jcsoftdev.ui.theme/UiFontSizes.fs95.<get-fs95>|<get-fs95>(){}[0]
 }
 
+final object com.jcsoftdev.ui.theme/UiGlass { // com.jcsoftdev.ui.theme/UiGlass|null[0]
+    final val ClearDark // com.jcsoftdev.ui.theme/UiGlass.ClearDark|{}ClearDark[0]
+        final fun <get-ClearDark>(): com.jcsoftdev.ui.theme/GlassMaterial // com.jcsoftdev.ui.theme/UiGlass.ClearDark.<get-ClearDark>|<get-ClearDark>(){}[0]
+    final val ClearLight // com.jcsoftdev.ui.theme/UiGlass.ClearLight|{}ClearLight[0]
+        final fun <get-ClearLight>(): com.jcsoftdev.ui.theme/GlassMaterial // com.jcsoftdev.ui.theme/UiGlass.ClearLight.<get-ClearLight>|<get-ClearLight>(){}[0]
+    final val RegularDark // com.jcsoftdev.ui.theme/UiGlass.RegularDark|{}RegularDark[0]
+        final fun <get-RegularDark>(): com.jcsoftdev.ui.theme/GlassMaterial // com.jcsoftdev.ui.theme/UiGlass.RegularDark.<get-RegularDark>|<get-RegularDark>(){}[0]
+    final val RegularLight // com.jcsoftdev.ui.theme/UiGlass.RegularLight|{}RegularLight[0]
+        final fun <get-RegularLight>(): com.jcsoftdev.ui.theme/GlassMaterial // com.jcsoftdev.ui.theme/UiGlass.RegularLight.<get-RegularLight>|<get-RegularLight>(){}[0]
+}
+
 final object com.jcsoftdev.ui.theme/UiPalettes { // com.jcsoftdev.ui.theme/UiPalettes|null[0]
     final val ids // com.jcsoftdev.ui.theme/UiPalettes.ids|{}ids[0]
         final fun <get-ids>(): kotlin.collections/List<kotlin/String> // com.jcsoftdev.ui.theme/UiPalettes.ids.<get-ids>|<get-ids>(){}[0]
@@ -1931,12 +1959,14 @@ final val com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stabl
 final val com.jcsoftdev.ui.theme/LocalUiStrings // com.jcsoftdev.ui.theme/LocalUiStrings|{}LocalUiStrings[0]
     final fun <get-LocalUiStrings>(): androidx.compose.runtime/ProvidableCompositionLocal<com.jcsoftdev.ui.theme/UiStrings> // com.jcsoftdev.ui.theme/LocalUiStrings.<get-LocalUiStrings>|<get-LocalUiStrings>(){}[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop|#static{}com_jcsoftdev_ui_theme_AccentPalette$stableprop[0]
+final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_GlassMaterial$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_GlassMaterial$stableprop|#static{}com_jcsoftdev_ui_theme_GlassMaterial$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeColors$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeShapes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeSizes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop|#static{}com_jcsoftdev_ui_theme_ThemeTypography$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop|#static{}com_jcsoftdev_ui_theme_UiColors$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop|#static{}com_jcsoftdev_ui_theme_UiFontSizes$stableprop[0]
+final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiGlass$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiGlass$stableprop|#static{}com_jcsoftdev_ui_theme_UiGlass$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop|#static{}com_jcsoftdev_ui_theme_UiPalettes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop|#static{}com_jcsoftdev_ui_theme_UiShapes$stableprop[0]
 final val com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop|#static{}com_jcsoftdev_ui_theme_UiSizes$stableprop[0]
@@ -2088,12 +2118,14 @@ final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonColors$stablep
 final fun com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.states/com_jcsoftdev_ui_states_SkeletonDefaults$stableprop_getter|com_jcsoftdev_ui_states_SkeletonDefaults$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/UiTheme(kotlin/Boolean, com.jcsoftdev.ui.theme/ThemeColors?, kotlin/String?, androidx.compose.ui.text.font/FontFamily?, com.jcsoftdev.ui.foundation/Motion?, com.jcsoftdev.ui.theme/ThemeShapes?, com.jcsoftdev.ui.theme/ThemeSizes?, com.jcsoftdev.ui.theme/ThemeTypography?, com.jcsoftdev.ui.theme/UiStrings?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.theme/UiTheme|UiTheme(kotlin.Boolean;com.jcsoftdev.ui.theme.ThemeColors?;kotlin.String?;androidx.compose.ui.text.font.FontFamily?;com.jcsoftdev.ui.foundation.Motion?;com.jcsoftdev.ui.theme.ThemeShapes?;com.jcsoftdev.ui.theme.ThemeSizes?;com.jcsoftdev.ui.theme.ThemeTypography?;com.jcsoftdev.ui.theme.UiStrings?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter|com_jcsoftdev_ui_theme_AccentPalette$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_GlassMaterial$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_GlassMaterial$stableprop_getter|com_jcsoftdev_ui_theme_GlassMaterial$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter|com_jcsoftdev_ui_theme_ThemeColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeShapes$stableprop_getter|com_jcsoftdev_ui_theme_ThemeShapes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeSizes$stableprop_getter|com_jcsoftdev_ui_theme_ThemeSizes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_ThemeTypography$stableprop_getter|com_jcsoftdev_ui_theme_ThemeTypography$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiColors$stableprop_getter|com_jcsoftdev_ui_theme_UiColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiFontSizes$stableprop_getter|com_jcsoftdev_ui_theme_UiFontSizes$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiGlass$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiGlass$stableprop_getter|com_jcsoftdev_ui_theme_UiGlass$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiPalettes$stableprop_getter|com_jcsoftdev_ui_theme_UiPalettes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiShapes$stableprop_getter|com_jcsoftdev_ui_theme_UiShapes$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.theme/com_jcsoftdev_ui_theme_UiSizes$stableprop_getter|com_jcsoftdev_ui_theme_UiSizes$stableprop_getter(){}[0]
