@@ -29,7 +29,7 @@ Each preset changes shape, edge and elevation, not the palette:
 - `bordered`: crisp 1px borders, no shadows, tighter radii.
 - `elevated`: real shadows and a lifted card surface; has light and dark variants.
 - `flat`: no shadows and no borders; surfaces separate by tone only.
-- `glass`: translucent surfaces with backdrop blur; has light and dark variants.
+- `glass`: translucent, blurred chrome (dialogs, menus, popovers, top bar, sidebar) over a gradient page backdrop, with solid cards; has light and dark variants. The material itself is available in every preset, see [Liquid Glass](/docs/glass).
 - `brutal`: thick borders, hard offset shadows, square corners.
 
 ## Precedence
@@ -51,7 +51,7 @@ Use the semantic utilities so your UI follows the presets too:
 | Radius           | `rounded-button`, `rounded-input`, `rounded-card`, `rounded-popover`, `rounded-chip`... |
 | Edge             | `border-card`, `border-control`                                                         |
 | Shadow           | `shadow-card`, `shadow-raised`, `shadow-overlay`, `shadow-control`                      |
-| Surface          | `bg-surface-card`, `bg-surface-control`, `bg-surface-overlay`, `bg-surface-sunken`      |
+| Surface          | `bg-surface-card`, `bg-surface-control`, `bg-surface-sunken`; utilities `surface-card`, `surface-overlay`, `surface-nav`, `surface-side`, `surface-solid`, `glass`, `glass-clear` |
 | Density          | `h-control`, `h-input`, `px-control-x`, `p-card`, `gap-density`                         |
 | Focus and motion | `focus-visible:focus-ring`, `pressable`, `ease-style`                                   |
 

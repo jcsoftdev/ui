@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+### Liquid Glass
+
+Apple-style glass for the control and navigation layer, with content kept solid.
+
+- **Glass material tokens in every preset**: `--glass-regular-*` and `--glass-clear-*` (`tint`,
+  `blur`, `saturate`, `filter`, `border`, `edge`, `shadow`, `dim`, `fallback`) plus
+  `--glass-sheen`, `--glass-noise` (off) and `--glass-nested-tint`. The `glass` preset now tunes
+  them. `Theme.kt` exports `UiGlass` / `GlassMaterial`.
+- **`glass` and `glass-clear` utilities** with an opaque base and the blur behind
+  `@supports (backdrop-filter)`; `prefers-reduced-transparency`, `prefers-contrast: more` and
+  `forced-colors` fall back to a solid fill with a border. Glass nested in glass drops its blur.
+  Specular edge highlight and sheen are built in; clear glass carries a legibility veil.
+- **`material` prop** (`"solid" | "glass" | "glass-clear"`) on Card, Dialog, Drawer, Popover,
+  DropdownMenu, ContextMenu, HoverCard, CommandPalette, ActionBar, Topbar and Sidebar; every other
+  surface opts in with `glass`, `glass-clear` or `surface-solid` in `className`. The `cn` merge
+  treats the surface utilities as one group (the last one wins).
+- **New `surface-nav`, `surface-side` and `surface-solid` utilities**; Topbar and Sidebar are glass
+  in the `glass` preset and unchanged elsewhere.
+- **Opt-in refraction** in the new `@jcsoftdev/ui/glass` entry: `useGlassRefraction`,
+  `applyGlassRefraction`, `supportsBackdropRefraction`, `createDisplacementMap`. Chromium only,
+  never on by default, skipped under reduced transparency, more contrast, forced colors and reduced
+  motion. No dependencies.
+- New [Liquid Glass guide](https://ui.jcsoftdev.com/docs/glass), stories and real-browser tests
+  (`pnpm test:glass`) including measured text contrast over a worst-case backdrop.
+
+### Migration notes
+
+- **Cards no longer blur.** `surface-card` is now an opaque fill with no `backdrop-filter`, in every
+  preset. In the `glass` preset cards (`surface-card`, `surface-control`) are opaque instead of
+  translucent. To get the old look on one card use `material="glass"` (or `className="glass"`).
+- `--surface-alpha` is now `1` in every preset and is only kept as an alias. `--surface-blur` and
+  `--surface-filter` still exist; in the `glass` preset they equal `--glass-regular-blur` and
+  `--glass-regular-filter`, and `--surface-overlay` equals `--glass-regular-tint`.
+- Translucent `bg-surface-overlay` without a blur was replaced by the `surface-overlay` utility in
+  the map controls, attachment preview, emoji picker, source card and conversation button.
+- `cn("surface-card", "surface-overlay")` now returns `surface-overlay`.
+- A menu or popover portaled out of a glass dialog is not a DOM descendant, so it is not detected as
+  nested glass; pass `material="solid"` if you want it opaque.
+- Browsers without `backdrop-filter` and users with reduced transparency now get an opaque
+  overlay instead of a translucent one.
+
 ## 0.2.0 (2026-10-11)
 
 Zero runtime dependencies, a published headless layer, per-part customization and a configurable
