@@ -274,34 +274,50 @@
 
 @utility surface-overlay {
   background-color: var(--surface-overlay);
+  background-image: var(--surface-glass-layer);
   -webkit-backdrop-filter: var(--surface-filter);
   backdrop-filter: var(--surface-filter);
-  :where(.glass, .glass-clear, .surface-overlay) & {
-    background-color: var(--glass-nested-tint);
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
   }
   @media (prefers-reduced-transparency: reduce) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
   }
   @media (prefers-contrast: more) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    outline: 1px solid var(--line-strong);
+    :where([data-style="glass"]) & {
+      outline: 1px solid var(--line-strong);
+    }
+    background-image: none;
   }
   @media (forced-colors: active) {
-    background-color: Canvas;
+    background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    outline: 1px solid CanvasText;
+    :where([data-style="glass"]) & {
+      outline: 1px solid CanvasText;
+    }
+    background-image: none;
   }
 }
 
@@ -326,7 +342,13 @@
     -webkit-backdrop-filter: var(--glass-regular-filter);
     backdrop-filter: var(--glass-regular-filter);
   }
-  :where(.glass, .glass-clear, .surface-overlay) & {
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  &[data-glass-nested] {
     background-color: var(--glass-nested-tint);
     background-image: none;
     -webkit-backdrop-filter: none;
@@ -364,7 +386,13 @@
     -webkit-backdrop-filter: var(--glass-clear-filter);
     backdrop-filter: var(--glass-clear-filter);
   }
-  :where(.glass, .glass-clear, .surface-overlay) & {
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  &[data-glass-nested] {
     background-color: var(--glass-nested-tint);
     background-image: none;
     -webkit-backdrop-filter: none;
@@ -395,67 +423,99 @@
 
 @utility surface-nav {
   background-color: var(--surface-nav);
+  background-image: var(--surface-glass-layer);
   -webkit-backdrop-filter: var(--surface-filter);
   backdrop-filter: var(--surface-filter);
-  :where(.glass, .glass-clear, .surface-overlay) & {
-    background-color: var(--glass-nested-tint);
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
   }
   @media (prefers-reduced-transparency: reduce) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
   }
   @media (prefers-contrast: more) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    outline: 1px solid var(--line-strong);
+    :where([data-style="glass"]) & {
+      outline: 1px solid var(--line-strong);
+    }
+    background-image: none;
   }
   @media (forced-colors: active) {
-    background-color: Canvas;
+    background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    outline: 1px solid CanvasText;
+    :where([data-style="glass"]) & {
+      outline: 1px solid CanvasText;
+    }
+    background-image: none;
   }
 }
 
 @utility surface-side {
   background-color: var(--surface-side);
+  background-image: var(--surface-glass-layer);
   -webkit-backdrop-filter: var(--surface-filter);
   backdrop-filter: var(--surface-filter);
-  :where(.glass, .glass-clear, .surface-overlay) & {
-    background-color: var(--glass-nested-tint);
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
   }
   @media (prefers-reduced-transparency: reduce) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    background-image: none;
   }
   @media (prefers-contrast: more) {
-    background-color: var(--glass-regular-fallback);
+    background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    outline: 1px solid var(--line-strong);
+    :where([data-style="glass"]) & {
+      outline: 1px solid var(--line-strong);
+    }
+    background-image: none;
   }
   @media (forced-colors: active) {
-    background-color: Canvas;
+    background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-    outline: 1px solid CanvasText;
+    :where([data-style="glass"]) & {
+      outline: 1px solid CanvasText;
+    }
+    background-image: none;
   }
 }
 

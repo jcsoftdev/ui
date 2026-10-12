@@ -52,10 +52,29 @@ test("only the glass preset tunes the material; the others keep the base values"
   assert.equal(declarations(':root[data-style="glass"]').get("glass-regular-blur"), "24px");
 });
 
-test("clear glass carries a dimming layer, regular glass does not", () => {
+test("both variants carry a legibility veil; clear is the stronger one", () => {
+  const veil = (v) => Number(/,(\.\d+)\)$/.exec(v)?.[1]);
+  for (const theme of [":root {", ':root[data-theme="dark"] {']) {
+    const t = declarations(theme);
+    assert.ok(veil(t.get("glass-regular-dim")) > 0, `${theme} regular veil is not zero`);
+    assert.ok(veil(t.get("glass-clear-dim")) > veil(t.get("glass-regular-dim")));
+  }
+});
+
+test("chrome fallbacks default to the surface's own fill; only the glass preset swaps them", () => {
   const root = declarations(":root {");
-  assert.equal(root.get("glass-regular-dim"), "rgba(0,0,0,0)");
-  assert.match(root.get("glass-clear-dim"), /^rgba\(\d+,\d+,\d+,\.\d+\)$/);
+  assert.equal(root.get("surface-overlay-fallback"), "var(--surface-overlay)");
+  assert.equal(root.get("surface-nav-fallback"), "var(--surface-nav)");
+  assert.equal(root.get("surface-side-fallback"), "var(--surface-side)");
+  assert.equal(root.get("glass-nested-tint"), "var(--float)");
+  for (const id of ["soft", "bordered", "elevated", "flat", "brutal"]) {
+    const block = declarations(`:root[data-style="${id}"],\n[data-style="${id}"] {`);
+    assert.equal(block.get("surface-overlay-fallback"), "var(--surface-overlay)", id);
+    assert.equal(block.get("glass-nested-tint"), "var(--float)", id);
+  }
+  const glass = declarations(':root[data-style="glass"]');
+  assert.equal(glass.get("surface-overlay-fallback"), "var(--glass-regular-fallback)");
+  assert.match(glass.get("glass-nested-tint"), /^color-mix/);
 });
 
 test("legacy surface tokens still resolve and content stays opaque in every preset", () => {
@@ -81,8 +100,8 @@ test("legacy surface tokens still resolve and content stays opaque in every pres
 
 test("glass tokens are themed with dark values", () => {
   const dark = declarations(':root[data-theme="dark"] {');
-  assert.equal(dark.get("glass-regular-tint"), "rgba(30,30,36,.58)");
-  assert.equal(dark.get("glass-clear-dim"), "rgba(0,0,0,.3)");
+  assert.equal(dark.get("glass-regular-tint"), "rgba(24,24,28,.62)");
+  assert.equal(dark.get("glass-clear-dim"), "rgba(0,0,0,.6)");
 });
 
 test("Theme.kt exports the materials per theme in both flavours", () => {
@@ -136,7 +155,7 @@ test("glass and glass-clear gate the blur and fall back to an opaque fill", () =
     assert.match(css, /@media \(forced-colors: active\) \{[^}]*Canvas/);
     assert.match(
       css,
-      /:where\(\.glass, \.glass-clear, \.surface-overlay\) & \{[^}]*--glass-nested-tint/,
+      /:where\(\.glass, \.glass-clear, \.surface-overlay, \.surface-nav, \.surface-side\) & \{[^}]*--glass-nested-tint/,
     );
   }
   assert.match(utility("glass-clear"), /linear-gradient\(var\(--glass-clear-dim\)/);

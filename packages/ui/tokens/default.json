@@ -1327,6 +1327,26 @@
     "usage": "Fill of the sidebar (control and navigation layer). Translucent glass in the glass preset."
    },
    {
+    "name": "surface-overlay-fallback",
+    "value": "var(--surface-overlay)",
+    "usage": "Opaque fill of overlays when backdrop-filter is unavailable, transparency is reduced, contrast is raised, or the overlay is nested in glass. The surface's own fill, except in the glass preset where it is the opaque glass fallback."
+   },
+   {
+    "name": "surface-nav-fallback",
+    "value": "var(--surface-nav)",
+    "usage": "Opaque fill of the top bar under the same conditions as --surface-overlay-fallback."
+   },
+   {
+    "name": "surface-side-fallback",
+    "value": "var(--surface-side)",
+    "usage": "Opaque fill of the sidebar under the same conditions as --surface-overlay-fallback."
+   },
+   {
+    "name": "surface-glass-layer",
+    "value": "none",
+    "usage": "Image layers painted over the fill of overlays, the top bar and the sidebar: none, except in the glass preset where it carries the sheen and the legibility veil of regular glass."
+   },
+   {
     "name": "surface-sunken",
     "value": "var(--sunken)",
     "usage": "Fondo hundido: pistas, zonas de arrastre."
@@ -1339,8 +1359,8 @@
    {
     "name": "glass-regular-tint",
     "value": {
-     "light": "rgba(255,255,255,.62)",
-     "dark": "rgba(30,30,36,.58)"
+     "light": "rgba(255,255,255,.72)",
+     "dark": "rgba(24,24,28,.62)"
     },
     "usage": "Liquid Glass, regular variant: translucent fill over the blurred backdrop. Adaptive and legible; the default material for the control and navigation layer."
    },
@@ -1385,8 +1405,11 @@
    },
    {
     "name": "glass-regular-dim",
-    "value": "rgba(0,0,0,0)",
-    "usage": "Regular glass: dimming layer over the blurred backdrop. None for regular."
+    "value": {
+     "light": "rgba(255,255,255,.2)",
+     "dark": "rgba(0,0,0,.45)"
+    },
+    "usage": "Regular glass: legibility veil over the tinted backdrop. Keeps text-ink and text-ink-2 at 4.5:1 on a white, black or split backdrop; it pushes the backdrop away from the ink colour."
    },
    {
     "name": "glass-regular-fallback",
@@ -1412,8 +1435,16 @@
     "usage": "Clear glass: backdrop saturation multiplier."
    },
    {
+    "name": "glass-clear-brightness",
+    "value": {
+     "light": "1",
+     "dark": ".5"
+    },
+    "usage": "Clear glass: backdrop brightness multiplier. Below 1 in the dark theme so bright content behind clear glass cannot wash out light text."
+   },
+   {
     "name": "glass-clear-filter",
-    "value": "blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate))",
+    "value": "blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate)) brightness(var(--glass-clear-brightness))",
     "usage": "Clear glass: backdrop-filter value."
    },
    {
@@ -1443,8 +1474,8 @@
    {
     "name": "glass-clear-dim",
     "value": {
-     "light": "rgba(255,255,255,.4)",
-     "dark": "rgba(0,0,0,.3)"
+     "light": "rgba(255,255,255,.74)",
+     "dark": "rgba(0,0,0,.6)"
     },
     "usage": "Clear glass: legibility veil over the backdrop. It pushes the backdrop away from the ink colour (lightens in the light theme, darkens in the dark theme). Do not remove it."
    },
@@ -1468,8 +1499,8 @@
    },
    {
     "name": "glass-nested-tint",
-    "value": "color-mix(in srgb, var(--float) 94%, transparent)",
-    "usage": "Glass inside glass: Apple avoids stacking glass, so a glass element nested in another one uses this near-solid fill and drops its own blur."
+    "value": "var(--float)",
+    "usage": "Glass inside glass: Apple avoids stacking glass, so a glass element nested in another one uses this fill and drops its own blur. Opaque (--float) except in the glass preset, where it is a near-solid tint."
    },
    {
     "name": "page-backdrop",
@@ -1687,7 +1718,12 @@
      "glass-regular-saturate": "1.9",
      "glass-clear-blur": "12px",
      "surface-nav": "var(--glass-regular-tint)",
-     "surface-side": "var(--glass-regular-tint)"
+     "surface-side": "var(--glass-regular-tint)",
+     "glass-nested-tint": "color-mix(in srgb, var(--float) 94%, transparent)",
+     "surface-overlay-fallback": "var(--glass-regular-fallback)",
+     "surface-nav-fallback": "var(--glass-regular-fallback)",
+     "surface-side-fallback": "var(--glass-regular-fallback)",
+     "surface-glass-layer": "var(--glass-noise), var(--glass-sheen), linear-gradient(var(--glass-regular-dim), var(--glass-regular-dim))"
     }
    },
    {
@@ -1981,34 +2017,50 @@
    },
    "surface-overlay": {
     "background-color": "var(--surface-overlay)",
+    "background-image": "var(--surface-glass-layer)",
     "-webkit-backdrop-filter": "var(--surface-filter)",
     "backdrop-filter": "var(--surface-filter)",
-    ":where(.glass, .glass-clear, .surface-overlay) &": {
-     "background-color": "var(--glass-nested-tint)",
+    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
+    },
+    "&[data-glass-nested]": {
+     "background-color": "var(--surface-overlay-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@media (prefers-reduced-transparency: reduce)": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@media (prefers-contrast: more)": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "outline": "1px solid var(--line-strong)"
+     ":where([data-style=\"glass\"]) &": {
+      "outline": "1px solid var(--line-strong)"
+     },
+     "background-image": "none"
     },
     "@media (forced-colors: active)": {
-     "background-color": "Canvas",
+     "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "outline": "1px solid CanvasText"
+     ":where([data-style=\"glass\"]) &": {
+      "outline": "1px solid CanvasText"
+     },
+     "background-image": "none"
     }
    },
    "focus-ring": {
@@ -2030,7 +2082,13 @@
      "-webkit-backdrop-filter": "var(--glass-regular-filter)",
      "backdrop-filter": "var(--glass-regular-filter)"
     },
-    ":where(.glass, .glass-clear, .surface-overlay) &": {
+    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--glass-nested-tint)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "&[data-glass-nested]": {
      "background-color": "var(--glass-nested-tint)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
@@ -2067,7 +2125,13 @@
      "-webkit-backdrop-filter": "var(--glass-clear-filter)",
      "backdrop-filter": "var(--glass-clear-filter)"
     },
-    ":where(.glass, .glass-clear, .surface-overlay) &": {
+    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--glass-nested-tint)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none"
+    },
+    "&[data-glass-nested]": {
      "background-color": "var(--glass-nested-tint)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
@@ -2097,66 +2161,98 @@
    },
    "surface-nav": {
     "background-color": "var(--surface-nav)",
+    "background-image": "var(--surface-glass-layer)",
     "-webkit-backdrop-filter": "var(--surface-filter)",
     "backdrop-filter": "var(--surface-filter)",
-    ":where(.glass, .glass-clear, .surface-overlay) &": {
-     "background-color": "var(--glass-nested-tint)",
+    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
+    },
+    "&[data-glass-nested]": {
+     "background-color": "var(--surface-nav-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@media (prefers-reduced-transparency: reduce)": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@media (prefers-contrast: more)": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "outline": "1px solid var(--line-strong)"
+     ":where([data-style=\"glass\"]) &": {
+      "outline": "1px solid var(--line-strong)"
+     },
+     "background-image": "none"
     },
     "@media (forced-colors: active)": {
-     "background-color": "Canvas",
+     "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "outline": "1px solid CanvasText"
+     ":where([data-style=\"glass\"]) &": {
+      "outline": "1px solid CanvasText"
+     },
+     "background-image": "none"
     }
    },
    "surface-side": {
     "background-color": "var(--surface-side)",
+    "background-image": "var(--surface-glass-layer)",
     "-webkit-backdrop-filter": "var(--surface-filter)",
     "backdrop-filter": "var(--surface-filter)",
-    ":where(.glass, .glass-clear, .surface-overlay) &": {
-     "background-color": "var(--glass-nested-tint)",
+    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
+    },
+    "&[data-glass-nested]": {
+     "background-color": "var(--surface-side-fallback)",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@media (prefers-reduced-transparency: reduce)": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "background-image": "none"
     },
     "@media (prefers-contrast: more)": {
-     "background-color": "var(--glass-regular-fallback)",
+     "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "outline": "1px solid var(--line-strong)"
+     ":where([data-style=\"glass\"]) &": {
+      "outline": "1px solid var(--line-strong)"
+     },
+     "background-image": "none"
     },
     "@media (forced-colors: active)": {
-     "background-color": "Canvas",
+     "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "outline": "1px solid CanvasText"
+     ":where([data-style=\"glass\"]) &": {
+      "outline": "1px solid CanvasText"
+     },
+     "background-image": "none"
     }
    },
    "surface-solid": {

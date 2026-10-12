@@ -171,21 +171,161 @@ describe("accessibility fallbacks", () => {
   });
 });
 
-describe("legibility over a worst-case backdrop", () => {
+const BACKDROPS = {
+  white: "#fff",
+  black: "#000",
+  split: "linear-gradient(90deg, #000 50%, #fff 50%)",
+  stripes: STRIPES,
+} as const;
+
+/** Contrast of `colors` against every sampled backdrop pixel of an empty panel. */
+async function worstContrast(
+  panelClass: string,
+  backdrop: string,
+  colors: string[],
+  attrs: Record<string, string> = {},
+) {
+  host = document.createElement("div");
+  host.style.cssText = `position:relative;width:600px;height:300px;background:${backdrop}`;
+  for (const [k, v] of Object.entries(attrs)) host.setAttribute(k, v);
+  document.body.appendChild(host);
+  root = createRoot(host);
+  await act(async () => {
+    root?.render(
+      <div
+        data-testid="box"
+        className={`${panelClass} absolute rounded-dialog`}
+        style={{ left: 60, top: 40, width: 480, height: 220 }}
+      />,
+    );
+  });
+  const box = host.querySelector("[data-testid=box]") as Element;
+  const samples = await pixels(box);
+  return colors.map((cls) => {
+    const probe = document.createElement("span");
+    probe.className = cls;
+    box.appendChild(probe);
+    const ink = lum(channels(styleOf(probe).color));
+    probe.remove();
+    return Math.min(...samples.map((p) => contrast(ink, lum(p))));
+  });
+}
+
+describe("non-glass presets are unchanged (0.2.0 behaviour)", () => {
+  const MEDIA = {
+    normal: [],
+    "reduced-transparency": [{ name: "prefers-reduced-transparency", value: "reduce" }],
+    "more-contrast": [{ name: "prefers-contrast", value: "more" }],
+    "forced-colors": [{ name: "forced-colors", value: "active" }],
+  } as const;
+  const PRESETS = ["soft", "bordered", "elevated", "flat", "brutal"];
+  // What each utility resolved to in 0.2.0: the surface's own token, no blur, no outline.
+  const LEGACY = [
+    ["surface-overlay", "--surface-overlay"],
+    ["surface-nav", "--bg"],
+    ["surface-side", "--surface"],
+  ] as const;
+
   for (const theme of ["light", "dark"] as const) {
-    for (const variant of ["glass", "glass-clear"] as const) {
-      test(`${variant} in ${theme}: ink keeps 4.5:1 against every sampled pixel`, async () => {
-        document.documentElement.dataset.theme = theme;
-        const h = await mount(glassBox(variant));
-        const box = h.querySelector("[data-testid=box]") as Element;
-        const ink = lum(channels(styleOf(box).color));
-        const samples = await pixels(box);
-        const worst = Math.min(...samples.map((p) => contrast(ink, lum(p))));
-        expect(
-          worst,
-          `${variant}/${theme} worst contrast ${worst.toFixed(2)}`,
-        ).toBeGreaterThanOrEqual(4.5);
+    for (const preset of PRESETS) {
+      for (const [media, features] of Object.entries(MEDIA)) {
+        test(`${preset}/${theme}/${media}: chrome surfaces equal their 0.2.0 values`, async () => {
+          document.documentElement.dataset.theme = theme;
+          await emulate([...features]);
+          const h = await mount(
+            <>
+              {LEGACY.map(([cls, token]) => (
+                <div key={cls} data-testid={cls} className={cls}>
+                  <div data-testid={`${cls}-nested`} className="surface-overlay" />
+                </div>
+              ))}
+              <div
+                data-testid="ref-overlay"
+                style={{ backgroundColor: "var(--surface-overlay)" }}
+              />
+              <div data-testid="ref-bg" style={{ backgroundColor: "var(--bg)" }} />
+              <div data-testid="ref-surface" style={{ backgroundColor: "var(--surface)" }} />
+            </>,
+            { "data-style": preset },
+          );
+          const get = (id: string) => styleOf(h.querySelector(`[data-testid=${id}]`) as Element);
+          const refs: Record<string, string> = {
+            "surface-overlay": "ref-overlay",
+            "surface-nav": "ref-bg",
+            "surface-side": "ref-surface",
+          };
+          for (const [cls] of LEGACY) {
+            const s = get(cls);
+            const ref = get(refs[cls] as string);
+            expect(s.backgroundColor, `${cls} background`).toBe(ref.backgroundColor);
+            expect(s.backdropFilter, `${cls} backdrop-filter`).toBe("none");
+            expect(s.backgroundImage, `${cls} background-image`).toBe("none");
+            expect(s.outlineStyle, `${cls} outline`).toBe("none");
+            // A surface-overlay nested in any chrome surface stays the plain overlay fill.
+            const nested = get(`${cls}-nested`);
+            expect(nested.backgroundColor, `${cls} nested background`).toBe(
+              get("ref-overlay").backgroundColor,
+            );
+            expect(nested.backdropFilter, `${cls} nested backdrop-filter`).toBe("none");
+          }
+        });
+      }
+    }
+  }
+});
+
+describe("glass nested in any glass or chrome surface drops its blur", () => {
+  for (const outer of ["glass", "glass-clear", "surface-overlay", "surface-nav", "surface-side"]) {
+    for (const inner of [
+      "glass",
+      "glass-clear",
+      "surface-overlay",
+      "surface-nav",
+      "surface-side",
+    ]) {
+      test(`${inner} inside ${outer}`, async () => {
+        const h = await mount(
+          <div className={outer}>
+            <div data-testid="inner" className={inner} />
+          </div>,
+          { "data-style": "glass" },
+        );
+        const s = styleOf(h.querySelector("[data-testid=inner]") as Element);
+        expect(s.backdropFilter).toBe("none");
+        expect(alpha(s.backgroundColor)).toBeGreaterThan(0.9);
       });
+    }
+  }
+});
+
+describe("legibility over a worst-case backdrop", () => {
+  // Menus, popovers and the top bar are regular glass in the glass preset; clear glass is the
+  // explicit opt-in. All of them keep text-ink and text-ink-2 at 4.5:1 on white, black, a hard
+  // half-and-half split and fine stripes.
+  const panels = [
+    ["glass", {}],
+    ["glass-clear", {}],
+    ["surface-overlay", { "data-style": "glass" }],
+    ["surface-nav", { "data-style": "glass" }],
+  ] as const;
+  for (const theme of ["light", "dark"] as const) {
+    for (const [panel, attrs] of panels) {
+      for (const [name, backdrop] of Object.entries(BACKDROPS)) {
+        test(`${panel} in ${theme} over ${name}: text-ink and text-ink-2 keep 4.5:1`, async () => {
+          document.documentElement.dataset.theme = theme;
+          const [ink, ink2] = await worstContrast(
+            panel,
+            backdrop,
+            ["text-ink", "text-ink-2"],
+            attrs,
+          );
+          console.info(
+            `contrast ${panel}/${theme}/${name}: ink ${ink?.toFixed(2)} ink-2 ${ink2?.toFixed(2)}`,
+          );
+          expect(ink, `${panel}/${theme}/${name} text-ink`).toBeGreaterThanOrEqual(4.5);
+          expect(ink2, `${panel}/${theme}/${name} text-ink-2`).toBeGreaterThanOrEqual(4.5);
+        });
+      }
     }
   }
 });

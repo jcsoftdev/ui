@@ -280,10 +280,10 @@ class GlassMaterial(
 
 object UiGlass {
     val RegularLight = GlassMaterial(
-        tint = Color(0x9EFFFFFF),
+        tint = Color(0xB8FFFFFF),
         border = Color(0x8CFFFFFF),
         edge = Color(0xE6FFFFFF),
-        dim = Color(0x00000000),
+        dim = Color(0x33FFFFFF),
         blur = 20.dp,
         saturate = 1.8f,
     )
@@ -291,15 +291,15 @@ object UiGlass {
         tint = Color(0x24FFFFFF),
         border = Color(0x99FFFFFF),
         edge = Color(0xF2FFFFFF),
-        dim = Color(0x66FFFFFF),
+        dim = Color(0xBDFFFFFF),
         blur = 10.dp,
         saturate = 1.5f,
     )
     val RegularDark = GlassMaterial(
-        tint = Color(0x941E1E24),
+        tint = Color(0x9E18181C),
         border = Color(0x24FFFFFF),
         edge = Color(0x38FFFFFF),
-        dim = Color(0x00000000),
+        dim = Color(0x73000000),
         blur = 20.dp,
         saturate = 1.8f,
     )
@@ -307,7 +307,7 @@ object UiGlass {
         tint = Color(0x12FFFFFF),
         border = Color(0x33FFFFFF),
         edge = Color(0x4DFFFFFF),
-        dim = Color(0x4D000000),
+        dim = Color(0x99000000),
         blur = 10.dp,
         saturate = 1.5f,
     )
