@@ -13,7 +13,9 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 - **`glass` and `glass-clear` utilities** with an opaque base and the blur behind
   `@supports (backdrop-filter)`; `prefers-reduced-transparency`, `prefers-contrast: more` and
   `forced-colors` fall back to a solid fill with a border. Glass nested in glass drops its blur.
-  Specular edge highlight and sheen are built in; clear glass carries a legibility veil.
+  Specular edge highlight and sheen are built in. Both variants carry a legibility veil (stronger
+  for clear) so `text-ink` and `text-ink-2` keep 4.5:1 over white, black, split and striped
+  backdrops in both themes; `text-ink-3` and tinted text are not covered.
 - **`material` prop** (`"solid" | "glass" | "glass-clear"`) on Card, Dialog, Drawer, Popover,
   DropdownMenu, ContextMenu, HoverCard, CommandPalette, ActionBar, Topbar and Sidebar; every other
   surface opts in with `glass`, `glass-clear` or `surface-solid` in `className`. The `cn` merge
@@ -40,8 +42,17 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 - `cn("surface-card", "surface-overlay")` now returns `surface-overlay`.
 - A menu or popover portaled out of a glass dialog is not a DOM descendant, so it is not detected as
   nested glass; pass `material="solid"` if you want it opaque.
-- Browsers without `backdrop-filter` and users with reduced transparency now get an opaque
-  overlay instead of a translucent one.
+- Non-glass presets are unchanged: overlays, the top bar and the sidebar keep their 0.2.0 fills in
+  every media mode (new `--surface-overlay-fallback`, `--surface-nav-fallback` and
+  `--surface-side-fallback` default to the surface's own token). In the `glass` preset, browsers
+  without `backdrop-filter` and users with reduced transparency or more contrast now get an opaque
+  overlay instead of a translucent one, plus a ring (more contrast) or outline (forced colors).
+- In the `glass` preset `--shadow-card` changed (an inset highlight plus a large drop shadow became
+  a 1px ring plus a softer drop), and the overlay fill went from 82% `--float` to the regular
+  glass tint (72% white in light, 62% near-black in dark) plus the veil, which only the
+  `surface-overlay` / `surface-nav` / `surface-side` utilities paint: a bare `bg-surface-overlay`
+  is a translucent colour without blur or veil, use the utility.
+- The unprefixed `glass` class can collide with an existing `.glass` in your CSS; see the guide.
 
 ## 0.2.0 (2026-10-11)
 
