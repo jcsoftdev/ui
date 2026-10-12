@@ -28,17 +28,17 @@ written inline by the orchestrating worker in this worktree (`/Users/jcsoftdev/p
 branch `feat/ui-tokens-theme`).
 
 ## Tasks
-- [ ] P0.1 ADR `docs/adr/0001-package-split.md` (decisions, rationale, alternatives).
-- [ ] P0.2 Verify platform facts with primary sources (cross-root ARIA; DSD, delegatesfocus, Popover, :state()); record URLs in the ADR.
-- [ ] P0.3 Release workflow for lockstep multi-package publish, inert until trusted publishing is configured; current `@jcsoftdev/ui` publish keeps working.
-- [ ] P1.1 `packages/ui-tokens`: move tokens JSON, CSS outputs, build-theme script, `ui-theme` CLI; add `tailwind.css`.
-- [ ] P1.2 `@jcsoftdev/ui` consumes ui-tokens (workspace) and ships byte-identical `styles/*`, `tokens/*`, `bin`; pack + consumer install test.
-- [ ] P1.3 Compose generator + CI path filters follow the move; `generateUiTokens` verified.
-- [ ] P1.4 Site: stable CSS variable contract page + component-level var convention (`--ui-<component>-<prop>`).
-- [ ] P2.1 `createTheme` (OKLCH, gamut mapping, contrast solver, same JSON shape as default.json), `toCss`, `applyTheme`, CLI `ui-theme generate`.
-- [ ] P2.2 Golden + property tests (random seeds, determinism, no-DOM import, SSR import); verify data-accent presets against createTheme.
-- [ ] P2.3 Playground `examples/vanilla-theme` + site "Theme builder" page if cheap; real Chromium screenshots.
-- [ ] P2.4 `check:size` gzip budgets wired into CI.
+- [x] P0.1 ADR `docs/adr/0001-package-split.md` (decisions, rationale, alternatives).
+- [x] P0.2 Verify platform facts with primary sources (cross-root ARIA; DSD, delegatesfocus, Popover, :state()); record URLs in the ADR.
+- [x] P0.3 Release workflow for lockstep multi-package publish, inert until trusted publishing is configured; current `@jcsoftdev/ui` publish keeps working.
+- [x] P1.1 `packages/ui-tokens`: move tokens JSON, CSS outputs, build-theme script, `ui-theme` CLI; add `tailwind.css`.
+- [x] P1.2 `@jcsoftdev/ui` consumes ui-tokens (workspace) and ships byte-identical `styles/*`, `tokens/*`, `bin`; pack + consumer install test.
+- [x] P1.3 Compose generator + CI path filters follow the move; `generateUiTokens` verified.
+- [x] P1.4 Site: stable CSS variable contract page + component-level var convention (`--ui-<component>-<prop>`).
+- [x] P2.1 `createTheme` (OKLCH, gamut mapping, contrast solver, same JSON shape as default.json), `toCss`, `applyTheme`, CLI `ui-theme generate`.
+- [x] P2.2 Golden + property tests (random seeds, determinism, no-DOM import, SSR import); verify data-accent presets against createTheme.
+- [x] P2.3 Playground `examples/vanilla-theme` verified in Chromium (screenshots outside the repo). Site "Theme builder" page: not done (follow-up); the site documents the API instead.
+- [x] P2.4 `check:size` gzip budgets wired into CI.
 
 ## Acceptance
 - All existing `packages/ui` checks pass unchanged: lint, typecheck, test, build, check:treeshake, check:dist-imports, check:docs-examples, test:stories, test:glass; root build:site.
@@ -51,4 +51,9 @@ branch `feat/ui-tokens-theme`).
 TDD: disabled (project policy: implement first, then protective tests).
 
 ## Progress / evidence
-(filled as tasks close)
+- P0: a2d6090 (ADR + release plan, inert: publish-packages.json lists only packages/ui). Route: research delegated (sonnet), rest inline.
+- P1: 68c48db (ui-tokens extraction, sync-tokens, pack check, Compose paths), site contract page (docs(site) commit).
+- P2: 01c8953 (createTheme, toCss, applyTheme, ui-theme generate, tests), playground commit, size gate commit.
+- Checks observed: lint, test (ui-tokens 44, ui 492, site 23, root 3), build, typecheck, check:treeshake, check:dist-imports, check:docs-examples, check:size, check:pack, test:stories (209 files, 1402 tests), test:glass (116), build:site, playground e2e, Compose `:kit:generateUiTokens apiCheck`: all exit 0.
+- Finding: existing menta preset's accent-word is 2.88:1 on the light page bg (3:1 on surface); pinned in a test, visuals unchanged.
+- Next: user configures npm trusted publishers for new package names, then adds them to .github/publish-packages.json; P3 ui-core.
