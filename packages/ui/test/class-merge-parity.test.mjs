@@ -6,6 +6,9 @@
 // T8b deliberately changed exactly two rows: `h-control-lg` is a theme token (--spacing-control-lg)
 // the hand-written list had missed, so it now conflicts with other heights instead of passing
 // through (`h-16 h-control-lg` -> `h-control-lg`, `h-control-lg h-2` -> `h-2`).
+// Liquid Glass changed one more row on purpose: the kit's surface materials (`surface-card`,
+// `surface-overlay`, `glass`, ...) are one merge group so `className="glass"` replaces a default
+// (`surface-card surface-overlay` -> `surface-overlay`).
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
