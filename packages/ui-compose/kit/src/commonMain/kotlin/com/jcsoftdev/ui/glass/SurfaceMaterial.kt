@@ -165,10 +165,10 @@ private fun liquid(
 
 private fun Color.scaleAlpha(f: Float) = copy(alpha = alpha * f)
 
-private val LiquidRegularLight = liquid(UiGlass.RegularLight, 8.dp, 0.95f)
-private val LiquidRegularDark = liquid(UiGlass.RegularDark, 8.dp, 0.95f)
-private val LiquidClearLight = liquid(UiGlass.ClearLight, 4.dp, 0.8f)
-private val LiquidClearDark = liquid(UiGlass.ClearDark, 4.dp, 0.8f)
+private val LiquidRegularLight = liquid(UiGlass.RegularLight, 4.dp, 0.95f)
+private val LiquidRegularDark = liquid(UiGlass.RegularDark, 4.dp, 0.95f)
+private val LiquidClearLight = liquid(UiGlass.ClearLight, 2.dp, 0.8f)
+private val LiquidClearDark = liquid(UiGlass.ClearDark, 2.dp, 0.8f)
 
 /** Resolves [requested] for a [role] against the theme, accessibility flags, nesting and the backdrop in scope. */
 @Composable

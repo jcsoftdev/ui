@@ -152,7 +152,7 @@ fun GlassGallery(
 private fun Photo(modifier: Modifier = Modifier) {
     Canvas(modifier) {
         drawRect(Brush.verticalGradient(listOf(Color(0xFF1B4079), Color(0xFFFF7B54), Color(0xFFFFD166))))
-        val discs = listOf(Color(0xFFEF476F), Color(0xFF06D6A0), Color(0xFF118AB2), Color(0xFFFFFFFF), Color(0xFF8338EC))
+        val discs = listOf(Color(0xFFEF476F), Color(0xFF06D6A0), Color(0xFF118AB2), Color(0xFFFFE066), Color(0xFF8338EC))
         discs.forEachIndexed { i, c ->
             drawCircle(
                 c,
