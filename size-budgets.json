@@ -1,0 +1,53 @@
+{
+  "_comment": "gzip budgets in bytes per entry; see scripts/check-size.mjs. Raise only with a reason.",
+  "entries": [
+    {
+      "id": "ui-tokens (createTheme, toCss)",
+      "kind": "js",
+      "file": "packages/ui-tokens/dist/index.js",
+      "maxGzip": 4400
+    },
+    {
+      "id": "ui-tokens/dom (applyTheme)",
+      "kind": "js",
+      "file": "packages/ui-tokens/dist/dom.js",
+      "maxGzip": 550
+    },
+    {
+      "id": "ui-tokens styles/tokens.css",
+      "kind": "css",
+      "file": "packages/ui-tokens/styles/tokens.css",
+      "maxGzip": 6100
+    },
+    {
+      "id": "ui-tokens styles/theme.css (tailwind.css)",
+      "kind": "css",
+      "file": "packages/ui-tokens/styles/theme.css",
+      "maxGzip": 2850
+    },
+    {
+      "id": "ui-tokens styles/base.css",
+      "kind": "css",
+      "file": "packages/ui-tokens/styles/base.css",
+      "maxGzip": 700
+    },
+    {
+      "id": "ui/primitives",
+      "kind": "js",
+      "file": "packages/ui/dist/primitives/index.js",
+      "maxGzip": 19850
+    },
+    {
+      "id": "ui/icons",
+      "kind": "js",
+      "file": "packages/ui/dist/icons/index.js",
+      "maxGzip": 10100
+    },
+    {
+      "id": "ui/glass",
+      "kind": "js",
+      "file": "packages/ui/dist/glass/index.js",
+      "maxGzip": 2250
+    }
+  ]
+}

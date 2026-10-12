@@ -14,6 +14,7 @@
     "check:treeshake": "pnpm --filter @jcsoftdev/ui check:treeshake",
     "check:dist-imports": "pnpm --filter @jcsoftdev/ui check:dist-imports",
     "check:docs-examples": "pnpm --filter @jcsoftdev/ui check:docs-examples",
-    "check:pack": "pnpm --filter @jcsoftdev/ui check:pack"
+    "check:pack": "pnpm --filter @jcsoftdev/ui check:pack",
+    "check:size": "node scripts/check-size.mjs"
   }
 }
