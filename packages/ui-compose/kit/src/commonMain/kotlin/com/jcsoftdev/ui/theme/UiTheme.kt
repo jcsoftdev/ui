@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontFamily
 import com.jcsoftdev.ui.foundation.LocalMotion
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.foundation.rememberSystemMotion
+import com.jcsoftdev.ui.glass.LocalBackdropBlur
 import com.jcsoftdev.ui.glass.LocalHighContrast
 import com.jcsoftdev.ui.glass.LocalReduceTransparency
 import com.jcsoftdev.ui.glass.LocalUiDark
@@ -94,6 +95,8 @@ public object UiTheme {
  * Android has none).
  * @param highContrast forces opaque surfaces with a stronger border; defaults to the OS setting (iOS Increase Contrast,
  * Android high-contrast text and the Android 14 contrast level).
+ * @param backdropBlur false keeps glass as the translucent tint everywhere (no backdrop capture or blur), for example to save
+ * battery or GPU; the platform check (Android below API 31) already does this on its own.
  *
  * It also installs the [OverlayHost] that sheets, dialogs and toasts draw in; headless code can use [OverlayHost] without a
  * `UiTheme`.
@@ -116,6 +119,7 @@ public fun UiTheme(
     style: UiStyle = UiStyle.Default,
     reduceTransparency: Boolean = rememberSystemReduceTransparency(),
     highContrast: Boolean = rememberSystemHighContrast(),
+    backdropBlur: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val themed = remember(colors, accent, dark) { colors.withPalette(resolveAccent(accent, dark, colors.accent)) }
@@ -132,6 +136,7 @@ public fun UiTheme(
         LocalUiStyle provides style,
         LocalReduceTransparency provides reduceTransparency,
         LocalHighContrast provides highContrast,
+        LocalBackdropBlur provides backdropBlur,
     ) {
         OverlayHost(content = content)
     }

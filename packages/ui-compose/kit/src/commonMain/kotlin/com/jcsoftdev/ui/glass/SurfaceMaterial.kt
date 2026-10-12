@@ -97,6 +97,7 @@ internal val LocalUiDark = staticCompositionLocalOf { false }
 internal val LocalUiStyle = staticCompositionLocalOf { UiStyle.Default }
 internal val LocalReduceTransparency = staticCompositionLocalOf { false }
 internal val LocalHighContrast = staticCompositionLocalOf { false }
+internal val LocalBackdropBlur = staticCompositionLocalOf { true }
 
 /** The shared backdrop surfaces sample: set by [com.jcsoftdev.ui.overlays.OverlayHost] for overlays; null in content. */
 public val LocalGlassState: androidx.compose.runtime.ProvidableCompositionLocal<GlassState?> = compositionLocalOf { null }
@@ -124,5 +125,5 @@ internal fun rememberResolvedMaterial(
         reduceTransparency = UiTheme.reduceTransparency,
         highContrast = UiTheme.highContrast,
         nested = LocalGlassNested.current,
-        blurAvailable = glass != null && backdropBlurSupported(),
+        blurAvailable = glass != null && LocalBackdropBlur.current && backdropBlurSupported(),
     )

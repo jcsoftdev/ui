@@ -126,6 +126,7 @@ internal fun Modifier.surfaceMaterial(
                     shape = shape,
                     tokens = tokens,
                     blur = resolved.mode == SurfaceMode.Blur,
+                    veil = if (resolved.mode == SurfaceMode.Tint) colors.float.copy(alpha = TINT_VEIL_ALPHA) else Color.Unspecified,
                     state = glass,
                     borderWidth = borderWidth,
                     observe = observe,
@@ -138,13 +139,14 @@ private data class GlassSurfaceElement(
     val shape: Shape,
     val tokens: GlassMaterial,
     val blur: Boolean,
+    val veil: Color,
     val state: GlassState?,
     val borderWidth: Dp,
     val observe: (() -> Float)?,
 ) : ModifierNodeElement<GlassSurfaceNode>() {
-    override fun create(): GlassSurfaceNode = GlassSurfaceNode(shape, tokens, blur, state, borderWidth, observe)
+    override fun create(): GlassSurfaceNode = GlassSurfaceNode(shape, tokens, blur, veil, state, borderWidth, observe)
 
-    override fun update(node: GlassSurfaceNode) = node.update(shape, tokens, blur, state, borderWidth, observe)
+    override fun update(node: GlassSurfaceNode) = node.update(shape, tokens, blur, veil, state, borderWidth, observe)
 
     override fun InspectorInfo.inspectableProperties() {
         name = "glassSurface"
@@ -153,10 +155,14 @@ private data class GlassSurfaceElement(
 
 private val EdgeFade: Dp = 28.dp
 
+// Without a backdrop the glass tint cannot keep text legible over arbitrary content, so the tint fallback is a mostly opaque veil.
+private const val TINT_VEIL_ALPHA = 0.9f
+
 private class GlassSurfaceNode(
     var shape: Shape,
     var tokens: GlassMaterial,
     var blur: Boolean,
+    var veil: Color,
     var state: GlassState?,
     var borderWidth: Dp,
     var observe: (() -> Float)?,
@@ -175,10 +181,12 @@ private class GlassSurfaceNode(
         shape: Shape,
         tokens: GlassMaterial,
         blur: Boolean,
+        veil: Color,
         state: GlassState?,
         borderWidth: Dp,
         observe: (() -> Float)?,
     ) {
+        this.veil = veil
         this.shape = shape
         this.tokens = tokens
         this.blur = blur
@@ -219,8 +227,12 @@ private class GlassSurfaceNode(
         val source = state
         val blurLayer = layer
         if (blur && source != null && blurLayer != null && source.isRecording) drawBackdrop(source, blurLayer)
-        drawRect(tokens.tint)
-        drawRect(tokens.dim)
+        if (veil.isSpecified) {
+            drawRect(veil)
+        } else {
+            drawRect(tokens.tint)
+            drawRect(tokens.dim)
+        }
         val stroke = Stroke(width = borderWidth.toPx() * 2f)
         drawOutline(outline, tokens.border, style = stroke)
         val fade = EdgeFade.toPx().coerceAtMost(size.height).coerceAtLeast(1f)
