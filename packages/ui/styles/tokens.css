@@ -155,6 +155,27 @@
   --surface-overlay: var(--float);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 20px;
+  --glass-regular-saturate: 1.8;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 10px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: none;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -272,6 +293,16 @@
     --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
     --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
     --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   }
 }
 
@@ -374,6 +405,16 @@
   --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
   --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
   --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
 }
 
 :root[data-accent="durazno"] {
@@ -487,6 +528,27 @@
   --surface-overlay: var(--float);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 20px;
+  --glass-regular-saturate: 1.8;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 10px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: none;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -508,6 +570,16 @@
     --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
     --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
     --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   }
 }
 
@@ -521,6 +593,16 @@
   --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
   --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
   --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
 }
 
 :root[data-style="bordered"],
@@ -568,6 +650,27 @@
   --surface-overlay: var(--float);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 20px;
+  --glass-regular-saturate: 1.8;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 10px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: none;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -583,6 +686,16 @@
   :root:not([data-theme="light"]) [data-style="bordered"] {
     --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
     --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   }
 }
 
@@ -590,6 +703,16 @@
 :root[data-theme="dark"] [data-style="bordered"] {
   --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
   --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
 }
 
 :root[data-style="elevated"],
@@ -637,6 +760,27 @@
   --surface-overlay: var(--float);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 20px;
+  --glass-regular-saturate: 1.8;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 10px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: none;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -662,6 +806,16 @@
     --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
     --surface-card: #141417;
     --surface-overlay: #1c1c20;
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   }
 }
 
@@ -679,6 +833,16 @@
   --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
   --surface-card: #141417;
   --surface-overlay: #1c1c20;
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
 }
 
 :root[data-style="flat"],
@@ -726,6 +890,27 @@
   --surface-overlay: #ffffff;
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 20px;
+  --glass-regular-saturate: 1.8;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 10px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: none;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -744,6 +929,16 @@
     --surface-card: #141417;
     --surface-control: #1a1a1d;
     --surface-overlay: #1f1f23;
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   }
 }
 
@@ -754,6 +949,16 @@
   --surface-card: #141417;
   --surface-control: #1a1a1d;
   --surface-overlay: #1f1f23;
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
 }
 
 :root[data-style="glass"],
@@ -784,23 +989,44 @@
   --border-color-control: var(--line-control);
   --border-width-divider: 1px;
   --border-color-divider: var(--line);
-  --shadow-card: inset 0 1px 0 rgba(255,255,255,.6),0 8px 24px -8px rgba(17,17,26,.16);
+  --shadow-card: 0 0 0 1px rgba(255,255,255,.7), 0 6px 20px -8px rgba(17,17,26,.14);
   --shadow-raised: var(--shadow-hero);
-  --shadow-overlay: var(--shadow-pop);
+  --shadow-overlay: inset 0 1px 0 var(--glass-regular-edge), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
   --shadow-control: var(--shadow-flat);
   --shadow-selected: var(--shadow-sel);
   --shadow-inset: inset 0 1px 2px rgba(0,0,0,.06);
   --shadow-inset-accent: inset 0 0 0 1px var(--accent-line);
   --shadow-pinned-start: 6px 0 8px -6px rgba(0,0,0,.28);
   --shadow-pinned-end: -6px 0 8px -6px rgba(0,0,0,.28);
-  --surface-alpha: .62;
-  --surface-blur: 18px;
-  --surface-filter: blur(var(--surface-blur)) saturate(1.6);
-  --surface-card: color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100%), transparent);
-  --surface-control: color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100% + 20%), transparent);
-  --surface-overlay: color-mix(in srgb, var(--float) calc(var(--surface-alpha) * 100% + 20%), transparent);
+  --surface-alpha: 1;
+  --surface-blur: var(--glass-regular-blur);
+  --surface-filter: var(--glass-regular-filter);
+  --surface-card: var(--surface);
+  --surface-control: var(--surface);
+  --surface-overlay: var(--glass-regular-tint);
   --surface-sunken: var(--sunken);
   --surface-backdrop: rgba(20,20,30,.16);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 24px;
+  --glass-regular-saturate: 1.9;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 12px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: radial-gradient(60% 55% at 12% 8%, var(--accent-soft), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 45%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 18%, transparent), transparent);
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
@@ -820,12 +1046,21 @@
     --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
     --shadow-pop: 0 0 0 1px rgba(255,255,255,.14),0 24px 48px rgba(0,0,0,.7);
     --border-color-card: rgba(255,255,255,.12);
-    --shadow-card: inset 0 1px 0 rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.6);
+    --shadow-card: 0 0 0 1px rgba(255,255,255,.08), 0 6px 20px rgba(0,0,0,.5);
     --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
     --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
     --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
-    --surface-alpha: .5;
     --surface-backdrop: rgba(0,0,0,.5);
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
     --page-backdrop: radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent);
   }
 }
@@ -838,12 +1073,21 @@
   --shadow-sel: 0 0 0 0 rgba(0,0,0,0);
   --shadow-pop: 0 0 0 1px rgba(255,255,255,.14),0 24px 48px rgba(0,0,0,.7);
   --border-color-card: rgba(255,255,255,.12);
-  --shadow-card: inset 0 1px 0 rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.6);
+  --shadow-card: 0 0 0 1px rgba(255,255,255,.08), 0 6px 20px rgba(0,0,0,.5);
   --shadow-inset: inset 0 0 0 1px rgba(255,255,255,.05);
   --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
   --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
-  --surface-alpha: .5;
   --surface-backdrop: rgba(0,0,0,.5);
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   --page-backdrop: radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent);
 }
 
@@ -892,6 +1136,27 @@
   --surface-overlay: var(--float);
   --surface-sunken: var(--sunken);
   --surface-backdrop: var(--scrim);
+  --glass-regular-tint: rgba(255,255,255,.62);
+  --glass-regular-blur: 20px;
+  --glass-regular-saturate: 1.8;
+  --glass-regular-filter: blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate));
+  --glass-regular-border: rgba(255,255,255,.55);
+  --glass-regular-edge: rgba(255,255,255,.9);
+  --glass-regular-shadow: 0 10px 32px -8px rgba(17,17,26,.24);
+  --glass-regular-dim: rgba(0,0,0,0);
+  --glass-regular-fallback: var(--float);
+  --glass-clear-tint: rgba(255,255,255,.14);
+  --glass-clear-blur: 10px;
+  --glass-clear-saturate: 1.5;
+  --glass-clear-filter: blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate));
+  --glass-clear-border: rgba(255,255,255,.6);
+  --glass-clear-edge: rgba(255,255,255,.95);
+  --glass-clear-shadow: 0 8px 28px -8px rgba(17,17,26,.3);
+  --glass-clear-dim: rgba(0,0,0,.22);
+  --glass-clear-fallback: var(--float);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
+  --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
+  --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
   --page-backdrop: none;
   --focus-ring-width: 3px;
   --focus-ring-offset: 2px;
@@ -907,6 +1172,16 @@
   :root:not([data-theme="light"]) [data-style="brutal"] {
     --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
     --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+    --glass-regular-tint: rgba(30,30,36,.58);
+    --glass-regular-border: rgba(255,255,255,.14);
+    --glass-regular-edge: rgba(255,255,255,.22);
+    --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+    --glass-clear-tint: rgba(255,255,255,.07);
+    --glass-clear-border: rgba(255,255,255,.2);
+    --glass-clear-edge: rgba(255,255,255,.3);
+    --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+    --glass-clear-dim: rgba(0,0,0,.3);
+    --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
   }
 }
 
@@ -914,6 +1189,16 @@
 :root[data-theme="dark"] [data-style="brutal"] {
   --shadow-pinned-start: 1px 0 0 rgba(255,255,255,.10),6px 0 10px -6px rgba(0,0,0,.9);
   --shadow-pinned-end: -1px 0 0 rgba(255,255,255,.10),-6px 0 10px -6px rgba(0,0,0,.9);
+  --glass-regular-tint: rgba(30,30,36,.58);
+  --glass-regular-border: rgba(255,255,255,.14);
+  --glass-regular-edge: rgba(255,255,255,.22);
+  --glass-regular-shadow: 0 14px 40px -8px rgba(0,0,0,.6);
+  --glass-clear-tint: rgba(255,255,255,.07);
+  --glass-clear-border: rgba(255,255,255,.2);
+  --glass-clear-edge: rgba(255,255,255,.3);
+  --glass-clear-shadow: 0 12px 36px -8px rgba(0,0,0,.65);
+  --glass-clear-dim: rgba(0,0,0,.3);
+  --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%);
 }
 
 :root[data-density="compact"],

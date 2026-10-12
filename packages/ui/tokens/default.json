@@ -1289,22 +1289,22 @@
    {
     "name": "surface-alpha",
     "value": "1",
-    "usage": "Opacidad de las superficies (0 a 1). Solo baja en el estilo vidrio."
+    "usage": "Legacy alias, kept for compatibility: surfaces are opaque (1). Translucency of the chrome layer comes from --glass-regular-tint."
    },
    {
     "name": "surface-blur",
     "value": "0px",
-    "usage": "Desenfoque detrás de superficies translúcidas."
+    "usage": "Alias of the chrome blur. 0px unless the glass preset is active, where it equals --glass-regular-blur."
    },
    {
     "name": "surface-filter",
     "value": "none",
-    "usage": "backdrop-filter de tarjetas y overlays. none salvo en vidrio: un filtro activo crea un bloque contenedor."
+    "usage": "Alias of the chrome backdrop-filter. none unless the glass preset is active, where it equals --glass-regular-filter. An active filter creates a containing block."
    },
    {
     "name": "surface-card",
     "value": "var(--surface)",
-    "usage": "Fondo de tarjetas."
+    "usage": "Fill of cards and other content-layer surfaces. Always opaque: content does not use glass unless it opts in."
    },
    {
     "name": "surface-control",
@@ -1314,7 +1314,7 @@
    {
     "name": "surface-overlay",
     "value": "var(--float)",
-    "usage": "Fondo de diálogos, hojas, menús y popovers."
+    "usage": "Fill of dialogs, sheets, menus and popovers (the chrome layer). Translucent glass in the glass preset."
    },
    {
     "name": "surface-sunken",
@@ -1325,6 +1325,141 @@
     "name": "surface-backdrop",
     "value": "var(--scrim)",
     "usage": "Velo detrás de diálogos y hojas."
+   },
+   {
+    "name": "glass-regular-tint",
+    "value": {
+     "light": "rgba(255,255,255,.62)",
+     "dark": "rgba(30,30,36,.58)"
+    },
+    "usage": "Liquid Glass, regular variant: translucent fill over the blurred backdrop. Adaptive and legible; the default material for the control and navigation layer."
+   },
+   {
+    "name": "glass-regular-blur",
+    "value": "20px",
+    "usage": "Regular glass: backdrop blur radius. Keep 8-24px; cost grows with radius times area."
+   },
+   {
+    "name": "glass-regular-saturate",
+    "value": "1.8",
+    "usage": "Regular glass: backdrop saturation multiplier (colour from behind bleeds through)."
+   },
+   {
+    "name": "glass-regular-filter",
+    "value": "blur(var(--glass-regular-blur)) saturate(var(--glass-regular-saturate))",
+    "usage": "Regular glass: backdrop-filter value."
+   },
+   {
+    "name": "glass-regular-border",
+    "value": {
+     "light": "rgba(255,255,255,.55)",
+     "dark": "rgba(255,255,255,.14)"
+    },
+    "usage": "Regular glass: hairline edge."
+   },
+   {
+    "name": "glass-regular-edge",
+    "value": {
+     "light": "rgba(255,255,255,.9)",
+     "dark": "rgba(255,255,255,.22)"
+    },
+    "usage": "Regular glass: specular highlight on the top edge (inset shadow)."
+   },
+   {
+    "name": "glass-regular-shadow",
+    "value": {
+     "light": "0 10px 32px -8px rgba(17,17,26,.24)",
+     "dark": "0 14px 40px -8px rgba(0,0,0,.6)"
+    },
+    "usage": "Regular glass: soft drop shadow that separates the layer from its content."
+   },
+   {
+    "name": "glass-regular-dim",
+    "value": "rgba(0,0,0,0)",
+    "usage": "Regular glass: dimming layer over the blurred backdrop. None for regular."
+   },
+   {
+    "name": "glass-regular-fallback",
+    "value": "var(--float)",
+    "usage": "Regular glass: opaque fill used when backdrop-filter is unsupported or transparency is reduced."
+   },
+   {
+    "name": "glass-clear-tint",
+    "value": {
+     "light": "rgba(255,255,255,.14)",
+     "dark": "rgba(255,255,255,.07)"
+    },
+    "usage": "Liquid Glass, clear variant: highly transparent fill for media-rich content. Always pair it with the dimming layer."
+   },
+   {
+    "name": "glass-clear-blur",
+    "value": "10px",
+    "usage": "Clear glass: backdrop blur radius."
+   },
+   {
+    "name": "glass-clear-saturate",
+    "value": "1.5",
+    "usage": "Clear glass: backdrop saturation multiplier."
+   },
+   {
+    "name": "glass-clear-filter",
+    "value": "blur(var(--glass-clear-blur)) saturate(var(--glass-clear-saturate))",
+    "usage": "Clear glass: backdrop-filter value."
+   },
+   {
+    "name": "glass-clear-border",
+    "value": {
+     "light": "rgba(255,255,255,.6)",
+     "dark": "rgba(255,255,255,.2)"
+    },
+    "usage": "Clear glass: hairline edge."
+   },
+   {
+    "name": "glass-clear-edge",
+    "value": {
+     "light": "rgba(255,255,255,.95)",
+     "dark": "rgba(255,255,255,.3)"
+    },
+    "usage": "Clear glass: specular highlight on the top edge (inset shadow)."
+   },
+   {
+    "name": "glass-clear-shadow",
+    "value": {
+     "light": "0 8px 28px -8px rgba(17,17,26,.3)",
+     "dark": "0 12px 36px -8px rgba(0,0,0,.65)"
+    },
+    "usage": "Clear glass: drop shadow."
+   },
+   {
+    "name": "glass-clear-dim",
+    "value": {
+     "light": "rgba(0,0,0,.22)",
+     "dark": "rgba(0,0,0,.3)"
+    },
+    "usage": "Clear glass: dimming layer. Keeps text legible over bright content; do not remove it."
+   },
+   {
+    "name": "glass-clear-fallback",
+    "value": "var(--float)",
+    "usage": "Clear glass: opaque fill used when backdrop-filter is unsupported or transparency is reduced."
+   },
+   {
+    "name": "glass-sheen",
+    "value": {
+     "light": "linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%)",
+     "dark": "linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,0) 45%)"
+    },
+    "usage": "Glass: diagonal specular sheen painted over the fill."
+   },
+   {
+    "name": "glass-noise",
+    "value": "linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0))",
+    "usage": "Glass: optional grain layer. A transparent no-op by default; set it to a tiling image (url(data:...)) to add texture."
+   },
+   {
+    "name": "glass-nested-tint",
+    "value": "color-mix(in srgb, var(--float) 94%, transparent)",
+    "usage": "Glass inside glass: Apple avoids stacking glass, so a glass element nested in another one uses this near-solid fill and drops its own blur."
    },
    {
     "name": "page-backdrop",
@@ -1485,7 +1620,7 @@
    {
     "id": "glass",
     "name": "Vidrio",
-    "usage": "Superficies translúcidas con desenfoque y filetes claros, sobre un fondo de página degradado.",
+    "usage": "Showcase of the Liquid Glass material: translucent, blurred chrome (dialogs, sheets, menus, popovers) over a gradient page backdrop, with solid cards. Tunes the --glass-* tokens.",
     "values": {
      "radius-xs": "6px",
      "radius-chip": "8px",
@@ -1501,15 +1636,12 @@
      "radius-input": "12px",
      "radius-badge": "999px",
      "radius-popover": "18px",
-     "surface-alpha": {
-      "light": ".62",
-      "dark": ".5"
-     },
-     "surface-blur": "18px",
-     "surface-filter": "blur(var(--surface-blur)) saturate(1.6)",
-     "surface-card": "color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100%), transparent)",
-     "surface-control": "color-mix(in srgb, var(--surface) calc(var(--surface-alpha) * 100% + 20%), transparent)",
-     "surface-overlay": "color-mix(in srgb, var(--float) calc(var(--surface-alpha) * 100% + 20%), transparent)",
+     "surface-alpha": "1",
+     "surface-blur": "var(--glass-regular-blur)",
+     "surface-filter": "var(--glass-regular-filter)",
+     "surface-card": "var(--surface)",
+     "surface-control": "var(--surface)",
+     "surface-overlay": "var(--glass-regular-tint)",
      "surface-backdrop": {
       "light": "rgba(20,20,30,.16)",
       "dark": "rgba(0,0,0,.5)"
@@ -1536,11 +1668,14 @@
       "dark": "0 0 0 1px rgba(255,255,255,.14),0 24px 48px rgba(0,0,0,.7)"
      },
      "shadow-card": {
-      "light": "inset 0 1px 0 rgba(255,255,255,.6),0 8px 24px -8px rgba(17,17,26,.16)",
-      "dark": "inset 0 1px 0 rgba(255,255,255,.06),0 8px 24px rgba(0,0,0,.6)"
+      "light": "0 0 0 1px rgba(255,255,255,.7), 0 6px 20px -8px rgba(17,17,26,.14)",
+      "dark": "0 0 0 1px rgba(255,255,255,.08), 0 6px 20px rgba(0,0,0,.5)"
      },
      "shadow-raised": "var(--shadow-hero)",
-     "shadow-overlay": "var(--shadow-pop)"
+     "shadow-overlay": "inset 0 1px 0 var(--glass-regular-edge), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+     "glass-regular-blur": "24px",
+     "glass-regular-saturate": "1.9",
+     "glass-clear-blur": "12px"
     }
    },
    {

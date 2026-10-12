@@ -343,6 +343,74 @@ export function toKotlinColor(css) {
 
 const px = (value) => `${Number.parseFloat(value)}.dp`;
 
+// ---------------------------------------------------------------- Glass
+
+const GLASS_VARIANTS = ["regular", "clear"];
+
+/**
+ * Liquid Glass materials, derived from styles.tokens named glass-<variant>-<part>. Empty when the
+ * theme declares none, so themes without glass generate exactly what they did before.
+ */
+export function glassOf(tokens) {
+  const byName = new Map((tokens.styles?.tokens ?? []).map((t) => [t.name, t]));
+  return GLASS_VARIANTS.filter((v) => byName.has(`glass-${v}-tint`)).map((id) => {
+    const part = (name) => {
+      const t = byName.get(`glass-${id}-${name}`);
+      if (!t) throw new Error(`styles: glass variant "${id}" is missing "glass-${id}-${name}"`);
+      return t;
+    };
+    return {
+      id,
+      tint: part("tint"),
+      border: part("border"),
+      edge: part("edge"),
+      dim: part("dim"),
+      blur: part("blur"),
+      saturate: part("saturate"),
+    };
+  });
+}
+
+function glassKotlin(tokens, { library }) {
+  const variants = glassOf(tokens);
+  if (!variants.length) return [];
+  const { base, others } = themeOf(tokens);
+  const vis = library ? "public " : "";
+  const out = [];
+  if (library) out.push("@Immutable");
+  out.push(
+    `${vis}class GlassMaterial(`,
+    `    ${vis}val tint: Color,`,
+    `    ${vis}val border: Color,`,
+    `    ${vis}val edge: Color,`,
+    `    ${vis}val dim: Color,`,
+    `    ${vis}val blur: ${library ? "Dp" : "androidx.compose.ui.unit.Dp"},`,
+    `    ${vis}val saturate: Float,`,
+    ")",
+    "",
+  );
+  if (library) out.push("@Immutable");
+  out.push(`${vis}object UiGlass {`);
+  for (const theme of [base, ...others]) {
+    for (const v of variants) {
+      const c = (t) => toKotlinColor(valueFor(t, theme, base));
+      const type = library ? ": GlassMaterial" : "";
+      out.push(
+        `    ${vis}val ${pascal(v.id)}${pascal(theme)}${type} = GlassMaterial(`,
+        `        tint = ${c(v.tint)},`,
+        `        border = ${c(v.border)},`,
+        `        edge = ${c(v.edge)},`,
+        `        dim = ${c(v.dim)},`,
+        `        blur = ${px(valueFor(v.blur, theme, base))},`,
+        `        saturate = ${Number.parseFloat(valueFor(v.saturate, theme, base))}f,`,
+        "    )",
+      );
+    }
+  }
+  out.push("}", "");
+  return out;
+}
+
 export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme", { library = false } = {}) {
   if (library) return buildLibraryThemeKt(tokens, pkg);
   const { base, others } = themeOf(tokens);
@@ -432,6 +500,7 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme", { library =
       out.push(`    val ${camel(s.name)} = ${Number.parseFloat(s.fontSize)}.sp`);
     out.push("}", "");
   }
+  out.push(...glassKotlin(tokens, { library: false }));
   return out.join("\n");
 }
 
@@ -550,6 +619,7 @@ function buildLibraryThemeKt(tokens, pkg) {
       out.push(`    public val ${camel(s.name)}: TextUnit = ${Number.parseFloat(s.fontSize)}.sp`);
     out.push("}", "");
   }
+  out.push(...glassKotlin(tokens, { library: true }));
   return out.join("\n");
 }
 

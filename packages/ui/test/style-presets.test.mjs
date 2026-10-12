@@ -50,8 +50,14 @@ test("themed preset values get dark blocks, with and without an explicit data-th
     assert.ok(explicit.has("shadow-card"));
   }
   const glassDark = rule(':root[data-theme="dark"][data-style="glass"]');
-  assert.equal(glassDark.get("surface-alpha"), ".5");
-  assert.equal(rule(':root[data-style="glass"]').get("surface-alpha"), ".62");
+  assert.equal(
+    glassDark.get("shadow-card"),
+    "0 0 0 1px rgba(255,255,255,.08), 0 6px 20px rgba(0,0,0,.5)",
+  );
+  assert.equal(
+    rule(':root[data-style="glass"]').get("shadow-card"),
+    "0 0 0 1px rgba(255,255,255,.7), 0 6px 20px -8px rgba(17,17,26,.14)",
+  );
   // A themed base token is restored for dark even in a preset that does not override it.
   assert.equal(
     rule(':root[data-theme="dark"][data-style="soft"]').get("shadow-flat"),

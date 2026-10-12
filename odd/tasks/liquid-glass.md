@@ -37,8 +37,8 @@ Disabled (owner override: implement first, tests that protect the change in the 
 `ask-on-risk` default; direct commits on `feat/liquid-glass` in worktree `/Users/jcsoftdev/personal/ui-glass`, one work unit per commit. No push.
 
 ## Tasks
-- [ ] G0 Research + this document. Route: inline.
-- [ ] G1 Tokens and materials (`--glass-regular-*`, `--glass-clear-*`, all presets, backward-compatible `--surface-*` aliases, JSON + Theme.kt generation). Route: inline (generator + JSON are one coherent unit).
+- [x] G0 Research + this document. Route: inline. Commit docs(odd).
+- [x] G1 Tokens and materials (`--glass-regular-*`, `--glass-clear-*`, all presets, backward-compatible `--surface-*` aliases, JSON + Theme.kt generation). Route: inline (generator + JSON are one coherent unit).
 - [ ] G2 Utilities (`glass`, `glass-clear`) and fallbacks (@supports, reduced transparency, more contrast, forced colors, reduced motion), specular layer, noise token default off. Route: inline.
 - [ ] G3 Component mapping: chrome keeps glass, content surfaces solid, glass-on-glass protection, scrims, opt-in `material` prop on surface components, no blur tween. Route: delegated if more than 4 non-trivial files, else inline.
 - [ ] G4 Refraction opt-in (SVG displacement filter, runtime feature detect). Route: inline.
@@ -56,4 +56,5 @@ Disabled (owner override: implement first, tests that protect the change in the 
 In `packages/ui`: `pnpm lint`, `typecheck`, `test`, `build`, `check:treeshake`, `check:dist-imports`, `check:docs-examples`, `test:stories`; root `pnpm build:site`; browser visual check and a performance trace.
 
 ## Progress and verification evidence
-(updated per task)
+- G1 (inline: one generator + JSON unit): 21 `glass-*` tokens (regular/clear x tint, blur, saturate, filter, border, edge, shadow, dim, fallback, plus sheen, noise, nested-tint) added to `styles.tokens`, so every preset declares them; the glass preset tunes blur/saturate and maps `surface-filter`/`surface-overlay` to them, `surface-card`/`surface-control` are opaque. `surface-alpha/blur/filter` kept as aliases. `UiGlass`/`GlassMaterial` emitted in both Theme.kt flavours (only when glass tokens exist). `pnpm test`: 512 pass, 0 fail (new `test/glass-tokens.test.mjs`).
+

@@ -268,3 +268,47 @@ object UiFontSizes {
     val fs300 = 30.sp
     val fs440 = 44.sp
 }
+
+class GlassMaterial(
+    val tint: Color,
+    val border: Color,
+    val edge: Color,
+    val dim: Color,
+    val blur: androidx.compose.ui.unit.Dp,
+    val saturate: Float,
+)
+
+object UiGlass {
+    val RegularLight = GlassMaterial(
+        tint = Color(0x9EFFFFFF),
+        border = Color(0x8CFFFFFF),
+        edge = Color(0xE6FFFFFF),
+        dim = Color(0x00000000),
+        blur = 20.dp,
+        saturate = 1.8f,
+    )
+    val ClearLight = GlassMaterial(
+        tint = Color(0x24FFFFFF),
+        border = Color(0x99FFFFFF),
+        edge = Color(0xF2FFFFFF),
+        dim = Color(0x38000000),
+        blur = 10.dp,
+        saturate = 1.5f,
+    )
+    val RegularDark = GlassMaterial(
+        tint = Color(0x941E1E24),
+        border = Color(0x24FFFFFF),
+        edge = Color(0x38FFFFFF),
+        dim = Color(0x00000000),
+        blur = 20.dp,
+        saturate = 1.8f,
+    )
+    val ClearDark = GlassMaterial(
+        tint = Color(0x12FFFFFF),
+        border = Color(0x33FFFFFF),
+        edge = Color(0x4DFFFFFF),
+        dim = Color(0x4D000000),
+        blur = 10.dp,
+        saturate = 1.5f,
+    )
+}
