@@ -1,0 +1,65 @@
+name: ui-compose-release
+
+on:
+  push:
+    tags:
+      - "ui-compose-v*"
+
+concurrency:
+  group: ui-compose-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: packages/ui-compose
+
+jobs:
+  # Same gate as ui-compose.yml. Goldens are Linux-rendered, so the checks run on ubuntu.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag must match VERSION_NAME
+        working-directory: .
+        run: |
+          expected="ui-compose-v$(sed -n 's/^VERSION_NAME=//p' packages/ui-compose/gradle.properties)"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match gradle.properties (expected $expected)" >&2
+            exit 1
+          fi
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+
+  # Kotlin/Native only builds the Apple klibs on macOS; publishing from Linux would release
+  # ui-compose without its iosarm64/iossimulatorarm64 artifacts, and Central releases are immutable.
+  # One macOS job therefore publishes every target (android, jvm, ios) as a single deployment.
+  publish:
+    needs: check
+    runs-on: macos-latest
+    environment: maven-central
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}

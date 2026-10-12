@@ -12,6 +12,7 @@ benchmarkMacro = "1.4.1"
 uiautomator = "2.3.0"
 androidxTestExtJunit = "1.3.0"
 profileInstaller = "1.4.1"
+mavenPublish = "0.34.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -34,3 +35,4 @@ binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibilit
 roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
 androidTest = { id = "com.android.test", version.ref = "agp" }
 baselineProfile = { id = "androidx.baselineprofile", version.ref = "baselineProfile" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
