@@ -169,7 +169,7 @@ function containingBlockOrigin(node: HTMLElement): { x: number; y: number } {
 }
 
 /** Surfaces that blur their backdrop: an overlay opened from inside one must not blur again. */
-const GLASS_ANCESTORS = ".glass, .glass-clear, .surface-overlay";
+const GLASS_ANCESTORS = ".glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay";
 
 export function Content({
   side = "bottom",
