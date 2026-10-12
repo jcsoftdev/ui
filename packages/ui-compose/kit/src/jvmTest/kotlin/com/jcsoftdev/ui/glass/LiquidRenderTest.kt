@@ -39,7 +39,7 @@ private fun px(
     y: Int,
 ) = Triple((b.getColor(x, y) shr 16) and 0xFF, (b.getColor(x, y) shr 8) and 0xFF, b.getColor(x, y) and 0xFF)
 
-/** Red left of x=130, blue to the right; a 120x60 surface sits at x=110..230, so the red/blue seam is 20px inside its left edge. */
+/** Red left of x=122, blue to the right; a 120x60 surface sits at x=110..230, so the red/blue seam is 12px inside its left edge. */
 private fun scene(
     material: SurfaceMaterial,
     lens: Boolean = true,
@@ -57,7 +57,7 @@ private fun scene(
                             val glass = rememberGlassState()
                             Box(Modifier.fillMaxSize().glassSource(glass)) {
                                 Row(Modifier.fillMaxSize()) {
-                                    Box(Modifier.width(130.dp).fillMaxHeight().background(Color.Red))
+                                    Box(Modifier.width(122.dp).fillMaxHeight().background(Color.Red))
                                     Box(Modifier.fillMaxSize().background(Color.Blue))
                                 }
                             }
@@ -144,5 +144,16 @@ class LiquidRenderTest {
             waitForIdle()
         }
         assertTrue(seen == GlassVariant.Frosted, "default variant: $seen")
+    }
+
+    @Test fun liquidThinsTheVeilAtTheBevelAndKeepsItInTheMiddle() {
+        val liquid = scene(SurfaceMaterial.Liquid, lens = false)
+        val frosted = scene(SurfaceMaterial.Glass, lens = false)
+        // Over the blue backdrop the white veil lifts red; at the very edge Liquid shows noticeably more of the blue.
+        assertTrue(
+            liquid.rgb(180, 31).first + 15 < liquid.rgb(180, 60).first,
+            "liquid edge ${liquid.rgb(180, 31)} center ${liquid.rgb(180, 60)}",
+        )
+        assertTrue(abs(frosted.rgb(180, 31).first - frosted.rgb(180, 60).first) < 12, "frosted veil is uniform")
     }
 }
