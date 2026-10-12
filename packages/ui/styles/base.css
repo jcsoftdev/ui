@@ -33,6 +33,14 @@ body {
   outline-offset: var(--focus-ring-offset, 2px);
 }
 
+/* The menu surface itself takes programmatic focus and its items carry the visible ring, so the
+   surface drops the ring normally. Under more contrast and forced colors it keeps it. */
+@media (not (prefers-contrast: more)) and (not (forced-colors: active)) {
+  [data-ui-menu-content]:focus-visible {
+    outline: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -515,7 +515,7 @@ function ContentImpl({
         tabIndex={-1}
         {...props}
         ref={ref ?? nodeRef}
-        style={{ outline: "none", ...(root.modal ? { pointerEvents: "auto" } : null), ...style }}
+        style={root.modal ? { pointerEvents: "auto", ...style } : style}
         onPointerDownCapture={composeHandlers(
           onPointerDownCapture,
           layerProps.onPointerDownCapture,

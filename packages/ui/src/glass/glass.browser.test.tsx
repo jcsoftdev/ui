@@ -187,6 +187,30 @@ describe("portaled overlays opened from glass", () => {
     expect(alpha(styleOf(menu()).backgroundColor)).toBeGreaterThan(0.9);
   });
 
+  test("a focused menu takes the glass outline under more contrast and none otherwise", async () => {
+    document.documentElement.dataset.style = "glass";
+    document.documentElement.dataset.theme = "dark";
+    await mount(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Open menu</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem>One</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    await clickByText("Open menu");
+    await userEvent.keyboard("{Shift}");
+    menu().focus();
+    expect(styleOf(menu()).outlineStyle).toBe("none");
+    await emulate([{ name: "prefers-contrast", value: "more" }]);
+    await vi.waitFor(() => {
+      expect(styleOf(menu()).outlineStyle).toBe("solid");
+      expect(Number.parseFloat(styleOf(menu()).outlineWidth)).toBeGreaterThanOrEqual(1);
+    });
+    await emulate([{ name: "forced-colors", value: "active" }]);
+    await vi.waitFor(() => expect(styleOf(menu()).outlineStyle).toBe("solid"));
+  });
+
   test("a menu opened from plain content keeps its glass", async () => {
     await mount(
       <DropdownMenu>
