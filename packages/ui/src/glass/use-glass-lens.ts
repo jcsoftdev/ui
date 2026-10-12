@@ -19,7 +19,11 @@ export function useGlassLens<T extends HTMLElement>(forwarded?: Ref<T>): RefCall
   const forward = useRef(forwarded);
   forward.current = forwarded;
   useEffect(() => {
-    if (!element || typeof getComputedStyle !== "function" || element.dataset.glassLens === "off")
+    if (
+      !element ||
+      typeof getComputedStyle !== "function" ||
+      element.closest('[data-glass-lens="off"]')
+    )
       return;
     if (getComputedStyle(element).getPropertyValue("--glass-lens").trim() !== "1") return;
     let stop: (() => void) | undefined;

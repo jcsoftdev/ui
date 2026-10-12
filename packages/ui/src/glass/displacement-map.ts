@@ -30,7 +30,7 @@ export const VEIL_FLOOR = 0.5;
 const INDEX = 1.5;
 const PROFILE_SAMPLES = 64;
 /** How steep the bezel is relative to its width: the thickness of the glass over the rim width. */
-const STEEPNESS = 0.9;
+const STEEPNESS = 2.5;
 
 let profile: Float32Array | undefined;
 
@@ -82,13 +82,19 @@ export function computeDisplacementField({
   const pw = Math.max(1, Math.round(w * ratio));
   const ph = Math.max(1, Math.round(h * ratio));
   const data = new Uint8ClampedArray(pw * ph * 4);
+  // Neutral everywhere (128, 128, 255, 255), then only the rim is computed: rows between the
+  // rims are visited at their two ends. Little-endian packing of R, G, B, A.
+  new Uint32Array(data.buffer).fill(0xffff8080);
+  const band = Math.min(pw, Math.ceil(rim * ratio) + 1);
   const table = lensProfile();
   const last = table.length - 1;
   const hx = w / 2;
   const hy = h / 2;
   for (let j = 0; j < ph; j++) {
     const py = (j + 0.5) / ratio - hy;
+    const inner = Math.abs(py) < hy - rim;
     for (let i = 0; i < pw; i++) {
+      if (inner && i === band) i = Math.max(band, pw - band);
       const px = (i + 0.5) / ratio - hx;
       const o = (j * pw + i) * 4;
       const qx = Math.abs(px) - (hx - r);

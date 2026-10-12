@@ -11,7 +11,9 @@ export interface GlassRefractionOptions {
   bezel?: number;
   /**
    * Chromatic dispersion: how far apart the red and blue channels are pulled, as a fraction of
-   * `scale`. Default 0.08; `0` skips it and runs one displacement pass instead of three.
+   * `scale`. It runs three displacement passes instead of one (about +50% to +100% of the lens
+   * cost), so by default it is 0.08 only on surfaces up to 100,000 px squared (nav bars,
+   * buttons, popovers) and 0 on larger ones; pass a number to force it either way.
    */
   dispersion?: number;
   /**
@@ -46,8 +48,13 @@ const REBUILD_ATTRIBUTES = ["data-theme", "data-style", "data-density", "data-ra
 
 /** Surfaces above this area (CSS px squared) keep the plain liquid look: the filter costs per pixel. */
 const MAX_AREA = 640_000;
+/** Largest surface (CSS px squared) that gets chromatic dispersion by default. */
+const DISPERSION_AREA = 100_000;
 /** Lenses alive at once; further surfaces keep the plain liquid look until one is released. */
 const MAX_ACTIVE = 8;
+
+/** Minimum time between two rebuilds of the displacement map of one surface. */
+const REBUILD_MS = 90;
 
 let counter = 0;
 let active = 0;
@@ -93,14 +100,16 @@ const controllers = new WeakMap<HTMLElement, Controller>();
 function createController(element: HTMLElement, initial: GlassRefractionOptions): Controller {
   let options = initial;
   let stopped = false;
-  let installed: { filter: SVGFilterElement; observer?: ResizeObserver } | undefined;
+  let installed:
+    | { filter: SVGFilterElement; observer?: ResizeObserver; cancel: () => void }
+    | undefined;
   const original = element.style.backdropFilter;
   const originalPrefixed = element.style.getPropertyValue("-webkit-backdrop-filter");
 
   const flagged = () =>
     !options.auto ||
     (getComputedStyle(element).getPropertyValue("--glass-lens").trim() === "1" &&
-      element.dataset.glassLens !== "off" &&
+      !element.closest('[data-glass-lens="off"]') &&
       getComputedStyle(element).backdropFilter !== "none");
 
   const eligible = () =>
@@ -112,6 +121,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     if (!installed) return;
     active--;
     installed.observer?.disconnect();
+    installed.cancel();
     installed.filter.remove();
     const defs = document.getElementById(HOST_ID);
     if (defs && !defs.querySelector("filter")) defs.remove();
@@ -126,7 +136,10 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   const install = () => {
     if (!element.isConnected || active >= MAX_ACTIVE) return;
     if (element.offsetWidth * element.offsetHeight > MAX_AREA) return;
-    const { scale = 26, dispersion = 0.08 } = options;
+    const { scale = 20 } = options;
+    const dispersion =
+      options.dispersion ??
+      (element.offsetWidth * element.offsetHeight <= DISPERSION_AREA ? 0.08 : 0);
     const id = `ui-glass-lens-${++counter}`;
     const filter = document.createElementNS(SVG_NS, "filter");
     filter.id = id;
@@ -247,6 +260,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     const blur = rest;
 
     let key = "";
+    let built = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const update = () => {
       if (!element.isConnected) return stop();
       // Layout size, not the bounding box: an entrance transform must not rebuild the map.
@@ -259,6 +274,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       const next = [width, height, radius, bezel, dpr].join("x");
       if (next === key) return;
       key = next;
+      built = performance.now();
       for (const [target, name, value] of [
         [filter, "x", "0"],
         [filter, "y", "0"],
@@ -272,12 +288,31 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     };
     update();
     const observer =
-      typeof ResizeObserver === "function" ? new ResizeObserver(() => schedule(update)) : undefined;
+      typeof ResizeObserver === "function"
+        ? new ResizeObserver(() => {
+            // Rebuilding the map costs a few ms: while a surface is being resized, at most
+            // about ten rebuilds a second, and the last size always lands.
+            const wait = REBUILD_MS - (performance.now() - built);
+            if (wait <= 0) return schedule(update);
+            if (timer === undefined)
+              timer = setTimeout(() => {
+                timer = undefined;
+                schedule(update);
+              }, wait);
+          })
+        : undefined;
     observer?.observe(element);
     element.style.backdropFilter = `${blur}url(#${id})`;
     element.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
     element.dataset.glassRefraction = "on";
-    installed = { filter, observer };
+    installed = {
+      filter,
+      observer,
+      cancel: () => {
+        clearTimeout(timer);
+        timer = undefined;
+      },
+    };
     active++;
   };
 

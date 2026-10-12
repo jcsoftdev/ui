@@ -763,4 +763,18 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
       );
     }
   });
+
+  test("dispersion (three displacement passes) is on for small surfaces and off for large ones", async () => {
+    await mount(
+      <>
+        <Card material="liquid" className="absolute top-2 left-2 h-16 w-40" />
+        <Card material="liquid" className="absolute top-24 left-2 h-[320px] w-[480px]" />
+      </>,
+    );
+    await vi.waitFor(() => expect(filters()).toBe(2));
+    const passes = [...document.querySelectorAll("#ui-glass-refraction-defs filter")].map(
+      (f) => f.querySelectorAll("feDisplacementMap").length,
+    );
+    expect(passes.sort()).toEqual([1, 3]);
+  });
 });
