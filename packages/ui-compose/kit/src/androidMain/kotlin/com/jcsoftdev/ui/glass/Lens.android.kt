@@ -11,11 +11,12 @@ import android.graphics.RenderEffect as PlatformRenderEffect
 // RuntimeShader (AGSL) exists from Android 13.
 internal actual fun lensSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
-internal actual class LensEngine actual constructor() {
-    // Created lazily so the class stays loadable below API 33.
-    private val shader: Any? by lazy { if (lensSupported()) RuntimeShader(LENS_SHADER) else null }
+// One shader per process, created lazily so the class stays loadable below API 33. Each effect snapshots the uniforms when it
+// is created, and effects are only built on the main thread, so every surface can reuse it.
+private val SharedShader: Any? by lazy { if (lensSupported()) RuntimeShader(LENS_SHADER) else null }
 
-    actual fun effect(params: LensParams): RenderEffect? = if (lensSupported()) agslEffect(shader as RuntimeShader, params) else null
+internal actual class LensEngine actual constructor() {
+    actual fun effect(params: LensParams): RenderEffect? = if (lensSupported()) agslEffect(SharedShader as RuntimeShader, params) else null
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)

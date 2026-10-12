@@ -27,7 +27,7 @@ class SampleActivity : ComponentActivity() {
                             blur = intent.getBooleanExtra("blur", true),
                             reduceTransparency = intent.getBooleanExtra("reduce", false),
                             open = intent.getStringExtra("open"),
-                            variant = if (intent.getStringExtra("variant") == "frosted") GlassVariant.Frosted else GlassVariant.Liquid,
+                            variant = if (intent.getStringExtra("variant") == "liquid") GlassVariant.Liquid else GlassVariant.Frosted,
                         )
                     else -> AtomsGallery()
                 }

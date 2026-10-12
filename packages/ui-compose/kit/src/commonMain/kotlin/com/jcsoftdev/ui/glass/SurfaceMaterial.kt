@@ -154,18 +154,21 @@ internal fun glassTokens(
         else -> if (dark) UiGlass.RegularDark else UiGlass.RegularLight
     }
 
-// Liquid keeps the shared tokens but lets more of the backdrop (and the lens) through: lighter tint, a low center blur.
+// Liquid keeps the shared tokens but lets more of the backdrop (and the lens) through: a lower center blur and a slightly lighter
+// tint. The dim layer is kept as is, and the tint scales are the lowest that keep ink and ink2 at 4.5:1 or better over a pure
+// black or white backdrop (see GlassContrastTest).
 private fun liquid(
     base: GlassMaterial,
     blur: Dp,
-): GlassMaterial = GlassMaterial(base.tint.scaleAlpha(0.6f), base.border, base.edge, base.dim.scaleAlpha(0.8f), blur, base.saturate)
+    tintScale: Float,
+): GlassMaterial = GlassMaterial(base.tint.scaleAlpha(tintScale), base.border, base.edge, base.dim, blur, base.saturate)
 
 private fun Color.scaleAlpha(f: Float) = copy(alpha = alpha * f)
 
-private val LiquidRegularLight = liquid(UiGlass.RegularLight, 8.dp)
-private val LiquidRegularDark = liquid(UiGlass.RegularDark, 8.dp)
-private val LiquidClearLight = liquid(UiGlass.ClearLight, 4.dp)
-private val LiquidClearDark = liquid(UiGlass.ClearDark, 4.dp)
+private val LiquidRegularLight = liquid(UiGlass.RegularLight, 8.dp, 0.95f)
+private val LiquidRegularDark = liquid(UiGlass.RegularDark, 8.dp, 0.95f)
+private val LiquidClearLight = liquid(UiGlass.ClearLight, 4.dp, 0.8f)
+private val LiquidClearDark = liquid(UiGlass.ClearDark, 4.dp, 0.8f)
 
 /** Resolves [requested] for a [role] against the theme, accessibility flags, nesting and the backdrop in scope. */
 @Composable

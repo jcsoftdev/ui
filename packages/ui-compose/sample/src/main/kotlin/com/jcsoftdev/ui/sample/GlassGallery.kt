@@ -73,7 +73,7 @@ fun GlassGallery(
     blur: Boolean = true,
     reduceTransparency: Boolean = false,
     open: String? = null,
-    variant: GlassVariant = GlassVariant.Liquid,
+    variant: GlassVariant = GlassVariant.Frosted,
 ) {
     UiTheme(
         dark = dark,

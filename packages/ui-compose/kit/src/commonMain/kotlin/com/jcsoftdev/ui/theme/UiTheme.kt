@@ -58,7 +58,7 @@ public object UiTheme {
         @Composable @ReadOnlyComposable
         get() = LocalMotion.current
 
-    /** The chrome look: [UiStyle.Default] is opaque, [UiStyle.Glass] turns the control and navigation layer into Liquid Glass. */
+    /** The chrome look: [UiStyle.Default] is opaque, [UiStyle.Glass] turns the control and navigation layer into glass (frosted by default, see `glassVariant`). */
     public val style: UiStyle
         @Composable @ReadOnlyComposable
         get() = LocalUiStyle.current
@@ -99,8 +99,8 @@ public object UiTheme {
  * Android high-contrast text and the Android 14 contrast level).
  * @param backdropBlur false keeps glass as the translucent tint everywhere (no backdrop capture or blur), for example to save
  * battery or GPU; the platform check (Android below API 31) already does this on its own.
- * @param glassVariant which glass chrome surfaces get with [UiStyle.Glass] and no `material`: [GlassVariant.Liquid] (default, the
- * lensed Apple look) or [GlassVariant.Frosted] (blur only). An explicit `material` is never changed by it.
+ * @param glassVariant which glass chrome surfaces get with [UiStyle.Glass] and no `material`: [GlassVariant.Frosted] (default, blur
+ * only, like the web preset) or [GlassVariant.Liquid] (opt in, the lensed Apple look). An explicit `material` is never changed by it.
  *
  * It also installs the [OverlayHost] that sheets, dialogs and toasts draw in; headless code can use [OverlayHost] without a
  * `UiTheme`.
@@ -124,7 +124,7 @@ public fun UiTheme(
     reduceTransparency: Boolean = rememberSystemReduceTransparency(),
     highContrast: Boolean = rememberSystemHighContrast(),
     backdropBlur: Boolean = true,
-    glassVariant: GlassVariant = GlassVariant.Liquid,
+    glassVariant: GlassVariant = GlassVariant.Frosted,
     content: @Composable () -> Unit,
 ) {
     val themed = remember(colors, accent, dark) { colors.withPalette(resolveAccent(accent, dark, colors.accent)) }
