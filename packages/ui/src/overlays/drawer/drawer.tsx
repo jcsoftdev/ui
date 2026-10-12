@@ -6,6 +6,7 @@ import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -46,6 +47,11 @@ export type DrawerContentPart = "root" | "overlay" | "close";
 export interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content and is merged last. */
   classNames?: ClassNames<DrawerContentPart>;
+  /**
+   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
+   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   */
+  material?: Material;
   /** Same semantics as `DialogContentProps.blocking`. */
   blocking?: boolean;
   /** Accessible label of the close button. */
@@ -56,6 +62,7 @@ export interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
 export function DrawerContent({
   className,
   classNames,
+  material,
   blocking = false,
   closeLabel,
   children,
@@ -73,6 +80,7 @@ export function DrawerContent({
       <DialogPrimitive.Content
         className={cn(
           "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto outline-none surface-overlay shadow-overlay",
+          materialClass(material, "surface-solid"),
           classNames?.root,
           className,
         )}

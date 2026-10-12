@@ -79,7 +79,7 @@ export function EmojiPicker({
   return (
     <div
       className={cn(
-        "@container/emoji flex w-full max-w-xs min-w-0 flex-col gap-density-sm rounded-popover border-card bg-surface-overlay p-card text-ink",
+        "@container/emoji flex w-full max-w-xs min-w-0 flex-col gap-density-sm rounded-popover border-card surface-overlay p-card text-ink",
         classNames?.root,
         className,
       )}

@@ -498,7 +498,7 @@
 [["foo","bar","foo"],"foo bar foo"]
 [["btn p-4","btn p-2"],"btn btn p-2"]
 [["unknown-class p-1","unknown-class p-2"],"unknown-class unknown-class p-2"]
-[["surface-card","surface-overlay"],"surface-card surface-overlay"]
+[["surface-card","surface-overlay"],"surface-overlay"]
 [["focus-ring","focus-ring"],"focus-ring focus-ring"]
 [["p-4  px-2   py-1"],"p-4 px-2 py-1"]
 [["  p-4 "],"p-4"]

@@ -1674,6 +1674,17 @@ public final class com/jcsoftdev/ui/theme/AccentPalette {
 	public final fun getOnAccent-0d7_KjU ()J
 }
 
+public final class com/jcsoftdev/ui/theme/GlassMaterial {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJFFLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBlur-D9Ej5fM ()F
+	public final fun getBorder-0d7_KjU ()J
+	public final fun getDim-0d7_KjU ()J
+	public final fun getEdge-0d7_KjU ()J
+	public final fun getSaturate ()F
+	public final fun getTint-0d7_KjU ()J
+}
+
 public final class com/jcsoftdev/ui/theme/ThemeColors {
 	public static final field $stable I
 	public synthetic fun <init> (JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1856,6 +1867,15 @@ public final class com/jcsoftdev/ui/theme/UiFontSizes {
 	public final fun getFs300-XSAIIZE ()J
 	public final fun getFs440-XSAIIZE ()J
 	public final fun getFs95-XSAIIZE ()J
+}
+
+public final class com/jcsoftdev/ui/theme/UiGlass {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiGlass;
+	public final fun getClearDark ()Lcom/jcsoftdev/ui/theme/GlassMaterial;
+	public final fun getClearLight ()Lcom/jcsoftdev/ui/theme/GlassMaterial;
+	public final fun getRegularDark ()Lcom/jcsoftdev/ui/theme/GlassMaterial;
+	public final fun getRegularLight ()Lcom/jcsoftdev/ui/theme/GlassMaterial;
 }
 
 public final class com/jcsoftdev/ui/theme/UiPalettes {

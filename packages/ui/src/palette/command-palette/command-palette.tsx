@@ -5,6 +5,7 @@ import { Search } from "../../icons/index.js";
 import * as Command from "../../primitives/command/command.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export interface CommandPaletteItem {
   id: string;
@@ -48,6 +49,11 @@ export interface CommandPaletteProps {
   /** Controlled query, so the parent can react to typing (e.g. debounced remote search). */
   query?: string;
   onQueryChange?: (query: string) => void;
+  /**
+   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
+   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   */
+  material?: Material;
   className?: string;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CommandPalettePart>;
@@ -84,6 +90,7 @@ export function CommandPalette({
   closeKeyLabel = "Esc",
   query,
   onQueryChange,
+  material,
   className,
   classNames,
 }: CommandPaletteProps) {
@@ -97,6 +104,7 @@ export function CommandPalette({
       overlayClassName={cn("fixed inset-0 z-50 bg-scrim", classNames?.overlay)}
       contentClassName={cn(
         "@container/palette fixed top-[9vh] left-1/2 z-50 flex max-h-[70vh] w-[min(560px,calc(100vw-1rem))] -translate-x-1/2 flex-col overflow-hidden rounded-dialog surface-overlay shadow-overlay",
+        materialClass(material, "surface-solid"),
         classNames?.root,
         className,
       )}

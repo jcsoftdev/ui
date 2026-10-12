@@ -1,13 +1,23 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export type CardProps = ComponentPropsWithoutRef<"div">;
 
-export function Card({ className, ...props }: CardProps) {
+export interface CardRootProps extends CardProps {
+  /**
+   * Cards are content, so they are opaque by default. `"glass"` or `"glass-clear"` opts one
+   * into Liquid Glass (use sparingly, over imagery, never inside another glass surface).
+   */
+  material?: Material;
+}
+
+export function Card({ className, material, ...props }: CardRootProps) {
   return (
     <div
       className={cn(
         "min-w-0 rounded-card border-card shadow-card surface-card @container/card",
+        materialClass(material, "surface-card"),
         className,
       )}
       {...props}

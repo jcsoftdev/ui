@@ -4,6 +4,7 @@ import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode } from "react";
 import { X } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export type ActionBarPart = "root" | "count" | "actions" | "clear";
 
@@ -21,6 +22,11 @@ export interface ActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "c
    * ancestor (a card, a table wrapper); `static` renders inline.
    */
   position?: "fixed" | "absolute" | "static";
+  /**
+   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
+   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   */
+  material?: Material;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ActionBarPart>;
 }
@@ -38,6 +44,7 @@ export function ActionBar({
   onClear,
   children,
   position = "absolute",
+  material,
   className,
   classNames,
   onKeyDown,
@@ -59,8 +66,9 @@ export function ActionBar({
       aria-label="Acciones para la selección"
       onKeyDown={handleKeyDown}
       className={cn(
-        "@container/action-bar z-40 flex w-fit max-w-[calc(100%-1rem)] flex-wrap items-center gap-density rounded-popover border-card surface-overlay bg-surface-overlay px-control-x py-density-sm shadow-overlay",
+        "@container/action-bar z-40 flex w-fit max-w-[calc(100%-1rem)] flex-wrap items-center gap-density rounded-popover border-card surface-overlay px-control-x py-density-sm shadow-overlay",
         positionClasses[position],
+        materialClass(material, "surface-solid"),
         classNames?.root,
         className,
       )}

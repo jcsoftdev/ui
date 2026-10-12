@@ -1,5 +1,59 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+### Liquid Glass
+
+Apple-style glass for the control and navigation layer, with content kept solid.
+
+- **Glass material tokens in every preset**: `--glass-regular-*` and `--glass-clear-*` (`tint`,
+  `blur`, `saturate`, `filter`, `border`, `edge`, `shadow`, `dim`, `fallback`) plus
+  `--glass-sheen`, `--glass-noise` (off) and `--glass-nested-tint`. The `glass` preset now tunes
+  them. `Theme.kt` exports `UiGlass` / `GlassMaterial`.
+- **`glass` and `glass-clear` utilities** with an opaque base and the blur behind
+  `@supports (backdrop-filter)`; `prefers-reduced-transparency`, `prefers-contrast: more` and
+  `forced-colors` fall back to a solid fill with a border. Glass nested in glass drops its blur.
+  Specular edge highlight and sheen are built in. Both variants carry a legibility veil (stronger
+  for clear) so `text-ink` and `text-ink-2` keep 4.5:1 over white, black, split and striped
+  backdrops in both themes; `text-ink-3` and tinted text are not covered.
+- **`material` prop** (`"solid" | "glass" | "glass-clear"`) on Card, Dialog, Drawer, Popover,
+  DropdownMenu, ContextMenu, HoverCard, CommandPalette, ActionBar, Topbar and Sidebar; every other
+  surface opts in with `glass`, `glass-clear` or `surface-solid` in `className`. The `cn` merge
+  treats the surface utilities as one group (the last one wins).
+- **New `surface-nav`, `surface-side` and `surface-solid` utilities**; Topbar and Sidebar are glass
+  in the `glass` preset and unchanged elsewhere.
+- **Opt-in refraction** in the new `@jcsoftdev/ui/glass` entry: `useGlassRefraction`,
+  `applyGlassRefraction`, `supportsBackdropRefraction`, `createDisplacementMap`. Chromium only,
+  never on by default, skipped under reduced transparency, more contrast, forced colors and reduced
+  motion. No dependencies.
+- New [Liquid Glass guide](https://ui.jcsoftdev.com/docs/glass), stories and real-browser tests
+  (`pnpm test:glass`) including measured text contrast over a worst-case backdrop.
+
+### Migration notes
+
+- **Cards no longer blur.** `surface-card` is now an opaque fill with no `backdrop-filter`, in every
+  preset. In the `glass` preset cards (`surface-card`, `surface-control`) are opaque instead of
+  translucent. To get the old look on one card use `material="glass"` (or `className="glass"`).
+- `--surface-alpha` is now `1` in every preset and is only kept as an alias. `--surface-blur` and
+  `--surface-filter` still exist; in the `glass` preset they equal `--glass-regular-blur` and
+  `--glass-regular-filter`, and `--surface-overlay` equals `--glass-regular-tint`.
+- Translucent `bg-surface-overlay` without a blur was replaced by the `surface-overlay` utility in
+  the map controls, attachment preview, emoji picker, source card and conversation button.
+- `cn("surface-card", "surface-overlay")` now returns `surface-overlay`.
+- A menu or popover portaled out of a glass dialog is not a DOM descendant, so it is not detected as
+  nested glass; pass `material="solid"` if you want it opaque.
+- Non-glass presets are unchanged: overlays, the top bar and the sidebar keep their 0.2.0 fills in
+  every media mode (new `--surface-overlay-fallback`, `--surface-nav-fallback` and
+  `--surface-side-fallback` default to the surface's own token). In the `glass` preset, browsers
+  without `backdrop-filter` and users with reduced transparency or more contrast now get an opaque
+  overlay instead of a translucent one, plus a ring (more contrast) or outline (forced colors).
+- In the `glass` preset `--shadow-card` changed (an inset highlight plus a large drop shadow became
+  a 1px ring plus a softer drop), and the overlay fill went from 82% `--float` to the regular
+  glass tint (72% white in light, 62% near-black in dark) plus the veil, which only the
+  `surface-overlay` / `surface-nav` / `surface-side` utilities paint: a bare `bg-surface-overlay`
+  is a translucent colour without blur or veil, use the utility.
+- The unprefixed `glass` class can collide with an existing `.glass` in your CSS; see the guide.
+
 ## 0.2.0 (2026-10-11)
 
 Zero runtime dependencies, a published headless layer, per-part customization and a configurable

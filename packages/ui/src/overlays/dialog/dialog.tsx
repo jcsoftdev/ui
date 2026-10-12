@@ -6,6 +6,7 @@ import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -43,6 +44,11 @@ export interface DialogContentProps extends DialogPrimitive.DialogContentProps {
   classNames?: ClassNames<DialogContentPart>;
   width?: DialogWidth;
   /**
+   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
+   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   */
+  material?: Material;
+  /**
    * While a mutation is in flight: `Escape`, outside click and the close button
    * are disabled so half-saved state is not lost.
    */
@@ -57,6 +63,7 @@ export function DialogContent({
   className,
   classNames,
   width = "md",
+  material,
   blocking = false,
   closeLabel,
   container,
@@ -76,6 +83,7 @@ export function DialogContent({
         className={cn(
           "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
           widthClasses[width],
+          materialClass(material, "surface-solid"),
           classNames?.root,
           className,
         )}

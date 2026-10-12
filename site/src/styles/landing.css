@@ -82,8 +82,23 @@ body.landing {
   top: 0;
   z-index: 50;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in oklab, var(--bg) 78%, transparent);
-  backdrop-filter: blur(14px) saturate(1.4);
+  background: var(--glass-regular-fallback);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .landing-nav {
+    background: color-mix(in oklab, var(--bg) 78%, transparent);
+    -webkit-backdrop-filter: var(--glass-regular-filter);
+    backdrop-filter: var(--glass-regular-filter);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .landing-nav {
+    background: var(--glass-regular-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
 
 .landing-nav a {

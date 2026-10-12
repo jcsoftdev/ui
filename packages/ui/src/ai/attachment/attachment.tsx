@@ -122,7 +122,7 @@ export function Attachment({
           onClick={onRemove}
           className={cn(
             "size-5",
-            preview && "absolute right-2.5 top-2.5 bg-surface-overlay shadow-control",
+            preview && "absolute right-2.5 top-2.5 surface-overlay shadow-control",
             classNames?.remove,
           )}
         >

@@ -205,7 +205,7 @@ function RegionLabels({
 }
 
 const BUTTON =
-  "inline-flex size-8 cursor-pointer items-center justify-center border-0 bg-surface-overlay text-ink-2 outline-none transition-colors hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:-outline-offset-2 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-float";
+  "inline-flex size-8 cursor-pointer items-center justify-center border-0 surface-overlay text-ink-2 outline-none transition-colors hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:-outline-offset-2 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-float";
 
 function Glyph({ d }: { d: string }) {
   return (

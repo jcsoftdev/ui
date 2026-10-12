@@ -519,6 +519,21 @@ export const GROUPS: GroupEntry[] = [
   ...perSide("border-w", "border", AXES, borderWidth, "-"),
   ["divide-x", "divide-x", borderWidth],
   ["divide-x-reverse", "", ["divide-x-reverse"]],
+  // The kit's surface materials: a later one replaces an earlier one, so `glass` in a className
+  // wins over a component's default `surface-card`.
+  [
+    "surface-material",
+    "",
+    [
+      "surface-card",
+      "surface-overlay",
+      "surface-nav",
+      "surface-side",
+      "glass",
+      "glass-clear",
+      "surface-solid",
+    ],
+  ],
   ["divide-y", "divide-y", borderWidth],
   ["divide-y-reverse", "", ["divide-y-reverse"]],
   ["border-style", "border", [...lineStyle, "hidden", "none"]],
