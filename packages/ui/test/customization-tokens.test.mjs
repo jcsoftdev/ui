@@ -17,6 +17,10 @@ const ALLOW = new Map([
   ["brand/logo-forge.tsx", "logo preview renders user-chosen brand colours"],
   ["charts/core/export.ts", "PNG/SVG export needs an opaque fallback background"],
   ["charts/globe-chart/globe-chart.tsx", "sphere shading gradient (white/black highlights)"],
+  [
+    "glass/displacement-map.ts",
+    "channel encoding of the displacement map (data, not a theme colour)",
+  ],
   ["showcase/shell.tsx", "swatch fallback inside var(--pal-*, #...)"],
   ["showcase/controls-bento.tsx", "swatch fallback inside var(--pal-*, #...)"],
 ]);

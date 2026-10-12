@@ -23,14 +23,14 @@ function withGlobals(globals, run) {
 const css = (supported) => ({ supports: (prop) => supported.includes(prop) });
 const BLINK = ["backdrop-filter", "-webkit-app-region"];
 
-test("the displacement map is a sized SVG data URI with a neutral centre", () => {
+test("the displacement map is a sized SVG data URI with a neutral middle", () => {
   const uri = glass.createDisplacementMap({ width: 320, height: 200, radius: 24, bezel: 14 });
   assert.match(uri, /^data:image\/svg\+xml,/);
   const svg = decodeURIComponent(uri.slice(uri.indexOf(",") + 1));
   assert.match(svg, /width="320" height="200"/);
-  assert.match(svg, /fill="gray"/);
-  assert.match(svg, /stop-color="red"/);
-  assert.match(svg, /stop-color="blue"/);
+  assert.match(svg, /stop-color="rgb\(128,0,0\)"/);
+  assert.match(svg, /stop-color="rgb\(0,0,128\)"/);
+  assert.match(svg, /mix-blend-mode:screen/);
 });
 
 test("the displacement map clamps a bezel or radius larger than the shape", () => {
