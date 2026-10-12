@@ -27,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -40,6 +39,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackPriority
+import com.jcsoftdev.ui.glass.GlassNesting
+import com.jcsoftdev.ui.glass.LocalGlassState
+import com.jcsoftdev.ui.glass.SurfaceMaterial
+import com.jcsoftdev.ui.glass.SurfaceRole
+import com.jcsoftdev.ui.glass.rememberResolvedMaterial
+import com.jcsoftdev.ui.glass.surfaceMaterial
 import com.jcsoftdev.ui.primitives.ModalLayer
 import com.jcsoftdev.ui.primitives.OverlayMotion
 import com.jcsoftdev.ui.primitives.initialFocus
@@ -112,6 +117,9 @@ public object DialogDefaults {
  * [dismissOnScrim] and [dismissOnBack] decide whether a tap outside or system back call [onDismissRequest], which must set
  * [open] to false; a dialog can therefore require an explicit choice. [dismissLabel] (already localized) is the scrim's
  * accessibility action name. [motion] sets the enter and exit timing and [enterScale] the size the card grows from.
+ *
+ * A dialog is chrome: Liquid Glass with `UiTheme(style = UiStyle.Glass)`, opaque otherwise; [material] overrides that (null
+ * keeps the theme default).
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -132,6 +140,7 @@ public fun Dialog(
     descriptionStyle: TextStyle = DialogDefaults.descriptionStyle,
     motion: OverlayMotion = DialogDefaults.motion,
     enterScale: Float = DialogDefaults.ENTER_SCALE,
+    material: SurfaceMaterial? = null,
     actions: (@Composable FlowRowScope.() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
@@ -156,6 +165,7 @@ public fun Dialog(
         },
     ) {
         val sizes = UiTheme.sizes
+        val resolved = rememberResolvedMaterial(material, SurfaceRole.Chrome)
         Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing), contentAlignment = Alignment.Center) {
             Column(
                 modifier
@@ -167,32 +177,32 @@ public fun Dialog(
                         val scale = enterScale + (1f - enterScale) * presence.progress
                         scaleX = scale
                         scaleY = scale
-                    }.clip(shape)
-                    .background(colors.container)
-                    .border(sizes.borderWidth, colors.border, shape)
+                    }.surfaceMaterial(resolved, shape, colors.container, colors.border, LocalGlassState.current)
                     .pointerInput(Unit) { detectTapGestures { } }
                     .semantics { paneTitle = title }
                     .initialFocus()
                     .padding(contentPadding),
                 verticalArrangement = Arrangement.spacedBy(sizes.space8),
             ) {
-                Text(title, style = titleStyle, color = colors.title)
-                if (description != null) Text(description, style = descriptionStyle, color = colors.description)
-                if (content != null) {
-                    Column(
-                        Modifier.weight(1f, fill = false).focusRestorer().verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(sizes.space8),
-                        content = content,
-                    )
-                }
-                if (actions != null) {
-                    FlowRow(
-                        Modifier.fillMaxWidth().padding(top = sizes.space8),
-                        horizontalArrangement = Arrangement.spacedBy(sizes.space8, Alignment.End),
-                        verticalArrangement = Arrangement.spacedBy(sizes.space8),
-                        itemVerticalAlignment = Alignment.CenterVertically,
-                        content = actions,
-                    )
+                GlassNesting(resolved) {
+                    Text(title, style = titleStyle, color = colors.title)
+                    if (description != null) Text(description, style = descriptionStyle, color = colors.description)
+                    if (content != null) {
+                        Column(
+                            Modifier.weight(1f, fill = false).focusRestorer().verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(sizes.space8),
+                            content = content,
+                        )
+                    }
+                    if (actions != null) {
+                        FlowRow(
+                            Modifier.fillMaxWidth().padding(top = sizes.space8),
+                            horizontalArrangement = Arrangement.spacedBy(sizes.space8, Alignment.End),
+                            verticalArrangement = Arrangement.spacedBy(sizes.space8),
+                            itemVerticalAlignment = Alignment.CenterVertically,
+                            content = actions,
+                        )
+                    }
                 }
             }
         }

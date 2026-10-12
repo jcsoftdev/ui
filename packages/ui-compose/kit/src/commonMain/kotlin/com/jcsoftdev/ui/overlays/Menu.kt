@@ -33,6 +33,11 @@ import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.atoms.drawCheckGlyph
 import com.jcsoftdev.ui.foundation.BackPriority
+import com.jcsoftdev.ui.glass.GlassNesting
+import com.jcsoftdev.ui.glass.SurfaceMaterial
+import com.jcsoftdev.ui.glass.SurfaceRole
+import com.jcsoftdev.ui.glass.rememberResolvedMaterial
+import com.jcsoftdev.ui.glass.surfaceMaterial
 import com.jcsoftdev.ui.primitives.AnchoredPopup
 import com.jcsoftdev.ui.primitives.menuCheckboxItem
 import com.jcsoftdev.ui.primitives.menuGroup
@@ -189,6 +194,10 @@ public object MenuDefaults {
  * outside and system back (kit back dispatcher) call it too. Entries expose `Role.Button`, `Role.Checkbox` and
  * `Role.RadioButton` with their state; the radio entries form a selectable group. [checkMark] draws the tick of checked
  * entries.
+ *
+ * A menu is chrome: Liquid Glass with `UiTheme(style = UiStyle.Glass)`, opaque otherwise; [material] overrides that. It opens
+ * in a platform popup window that cannot sample the app content, so its glass is the translucent tint without the blur. A
+ * menu opened from a glass sheet or dialog is nested glass and falls back to a near-solid fill.
  */
 @Composable
 public fun Menu(
@@ -202,23 +211,22 @@ public fun Menu(
     maxHeight: Dp = MenuDefaults.maxHeight,
     contentPadding: PaddingValues = MenuDefaults.contentPadding,
     checkMark: DrawScope.(color: Color) -> Unit = MenuDefaults.CheckMark,
+    material: SurfaceMaterial? = null,
     content: MenuScope.() -> Unit,
 ) {
     AnchoredPopup(expanded, onDismissRequest, backPriority = MENU_BACK_PRIORITY) {
         val entries = MenuBuilder().apply(content).entries
-        val borderWidth = UiTheme.sizes.borderWidth
+        val resolved = rememberResolvedMaterial(material, SurfaceRole.Chrome, glass = null)
         Column(
             modifier
                 .width(width)
                 .heightIn(max = maxHeight)
-                .clip(shape)
-                .background(colors.container)
-                .border(borderWidth, colors.border, shape)
+                .surfaceMaterial(resolved, shape, colors.container, colors.border, glass = null)
                 .verticalScroll(rememberScrollState())
                 .menuGroup()
                 .padding(contentPadding),
         ) {
-            entries.forEach { MenuRow(it, colors, itemShape, checkMark, onDismissRequest) }
+            GlassNesting(resolved) { entries.forEach { MenuRow(it, colors, itemShape, checkMark, onDismissRequest) } }
         }
     }
 }

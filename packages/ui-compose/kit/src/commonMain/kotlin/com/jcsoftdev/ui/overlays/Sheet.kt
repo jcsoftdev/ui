@@ -48,6 +48,12 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackPriority
+import com.jcsoftdev.ui.glass.GlassNesting
+import com.jcsoftdev.ui.glass.LocalGlassState
+import com.jcsoftdev.ui.glass.SurfaceMaterial
+import com.jcsoftdev.ui.glass.SurfaceRole
+import com.jcsoftdev.ui.glass.rememberResolvedMaterial
+import com.jcsoftdev.ui.glass.surfaceMaterial
 import com.jcsoftdev.ui.primitives.ModalLayer
 import com.jcsoftdev.ui.primitives.OverlayMotion
 import com.jcsoftdev.ui.primitives.SheetState
@@ -122,6 +128,9 @@ public object SheetDefaults {
  * [onDismiss] when [dismissible]; it must set [open] to false. [dismissLabel] (already localized) is the scrim's
  * accessibility action name (the theme's close string by default; null leaves the scrim unannounced). The title is exposed as the pane title. [motion] sets
  * the enter and exit timing and [state] the drag-to-dismiss thresholds.
+ *
+ * A sheet is chrome: it is Liquid Glass with `UiTheme(style = UiStyle.Glass)` and opaque otherwise; [material] overrides that
+ * (null keeps the theme default). The backdrop is the app content, sampled without any setup.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -141,6 +150,7 @@ public fun Sheet(
     titleStyle: TextStyle = SheetDefaults.titleStyle,
     motion: OverlayMotion = SheetDefaults.motion,
     state: SheetState = rememberSheetState(),
+    material: SurfaceMaterial? = null,
     footer: (@Composable ColumnScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -167,6 +177,8 @@ public fun Sheet(
         },
     ) {
         val sizes = UiTheme.sizes
+        val resolved = rememberResolvedMaterial(material, SurfaceRole.Chrome)
+        val sheetShape = shape.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
         Box(
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)).padding(top = topGap),
             contentAlignment = Alignment.BottomCenter,
@@ -176,32 +188,39 @@ public fun Sheet(
                     .widthIn(max = maxWidth)
                     .fillMaxWidth()
                     .sheetTranslation(state) { presence.progress }
-                    .clip(shape.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize))
-                    .background(colors.container)
-                    .pointerInput(Unit) { detectTapGestures { } }
+                    .surfaceMaterial(
+                        resolved,
+                        sheetShape,
+                        colors.container,
+                        Color.Unspecified,
+                        LocalGlassState.current,
+                        observe = { presence.progress + state.offset },
+                    ).pointerInput(Unit) { detectTapGestures { } }
                     .semantics {
                         paneTitle = title
                         traversalIndex = 1f
                     }.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
             ) {
-                SheetHeader(title, titleStyle, colors, handleSize, contentPadding, dismissible, state, { currentOpen }, onDismiss)
-                Column(
-                    Modifier
-                        .weight(1f, fill = false)
-                        .focusRestorer()
-                        .verticalScroll(rememberScrollState())
-                        .padding(contentPadding),
-                    content = content,
-                )
-                if (footer != null) {
+                GlassNesting(resolved) {
+                    SheetHeader(title, titleStyle, colors, handleSize, contentPadding, dismissible, state, { currentOpen }, onDismiss)
                     Column(
                         Modifier
-                            .fillMaxWidth()
-                            .drawBehind { drawRect(colors.divider, size = Size(size.width, sizes.borderWidth.toPx())) }
-                            .padding(contentPadding)
-                            .padding(vertical = sizes.space12),
-                        content = footer,
+                            .weight(1f, fill = false)
+                            .focusRestorer()
+                            .verticalScroll(rememberScrollState())
+                            .padding(contentPadding),
+                        content = content,
                     )
+                    if (footer != null) {
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .drawBehind { drawRect(colors.divider, size = Size(size.width, sizes.borderWidth.toPx())) }
+                                .padding(contentPadding)
+                                .padding(vertical = sizes.space12),
+                            content = footer,
+                        )
+                    }
                 }
             }
         }
