@@ -72,7 +72,6 @@ fun GlassGallery(
         style = UiStyle.Glass,
         backdropBlur = blur,
         reduceTransparency = reduceTransparency,
-        highContrast = false,
     ) {
         val glass = rememberGlassState()
         val toasts = remember { ToastHostState() }

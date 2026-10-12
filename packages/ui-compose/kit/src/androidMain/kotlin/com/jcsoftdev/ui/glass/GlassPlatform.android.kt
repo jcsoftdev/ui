@@ -10,10 +10,10 @@ import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 
 // RenderEffect (the blur) exists from Android 12.
@@ -30,8 +30,8 @@ private const val HIGH_TEXT_CONTRAST = "high_text_contrast_enabled"
 @Composable
 internal actual fun rememberSystemHighContrast(): Boolean {
     val context = LocalContext.current
-    val configuration = LocalConfiguration.current
     var highText by remember(context) { mutableStateOf(context.highTextContrast()) }
+    var level by remember(context) { mutableFloatStateOf(context.contrastLevel()) }
     DisposableEffect(context) {
         val observer =
             object : ContentObserver(Handler(Looper.getMainLooper())) {
@@ -41,9 +41,12 @@ internal actual fun rememberSystemHighContrast(): Boolean {
             }
         val resolver = context.contentResolver
         resolver.registerContentObserver(Settings.Secure.getUriFor(HIGH_TEXT_CONTRAST), false, observer)
-        onDispose { resolver.unregisterContentObserver(observer) }
+        val unregisterContrast = context.listenContrast { level = it }
+        onDispose {
+            resolver.unregisterContentObserver(observer)
+            unregisterContrast()
+        }
     }
-    val level = remember(context, configuration) { context.contrastLevel() }
     return highText || level >= MEDIUM_CONTRAST
 }
 
@@ -57,3 +60,12 @@ private fun Context.contrastLevel(): Float =
     } else {
         0f
     }
+
+/** Android 14+ pushes contrast changes to a listener; returns the function that stops listening. */
+private fun Context.listenContrast(onChange: (Float) -> Unit): () -> Unit {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) return {}
+    val manager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager ?: return {}
+    val listener = UiModeManager.ContrastChangeListener { onChange(it) }
+    manager.addContrastChangeListener(mainExecutor, listener)
+    return { manager.removeContrastChangeListener(listener) }
+}
