@@ -1,5 +1,5 @@
 /// <reference types="@vitest/browser-playwright" />
-import { act, type ReactNode } from "react";
+import { act, type CSSProperties, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
@@ -604,13 +604,13 @@ describe("liquid glass is a variant next to the frosted material", () => {
   test("liquid and liquid-clear carry the lens flag, a thin blur and a rim", async () => {
     const h = await mount(glassBox("liquid"));
     const s = styleOf(box(h));
-    expect(s.backdropFilter).toBe("blur(4px) saturate(1.5)");
+    expect(s.backdropFilter).toBe("blur(2px) saturate(1.5)");
     expect(s.getPropertyValue("--glass-lens")).toBe("1");
     expect(s.boxShadow).toContain("inset");
     await act(async () => root?.unmount());
     h.remove();
     const clear = await mount(glassBox("liquid-clear"));
-    expect(styleOf(box(clear)).backdropFilter).toContain("blur(1.5px)");
+    expect(styleOf(box(clear)).backdropFilter).toContain("blur(0.6px)");
   });
 
   test("data-glass=liquid on an ancestor switches glass, glass-clear and the preset chrome", async () => {
@@ -623,10 +623,10 @@ describe("liquid glass is a variant next to the frosted material", () => {
       </>,
       { "data-glass": "liquid", "data-style": "glass" },
     );
-    expect(frosted(box(h))).toBe("blur(4px) saturate(1.5)");
-    expect(frosted(h.querySelector("[data-testid=clear]") as Element)).toContain("blur(1.5px)");
+    expect(frosted(box(h))).toBe("blur(2px) saturate(1.5)");
+    expect(frosted(h.querySelector("[data-testid=clear]") as Element)).toContain("blur(0.6px)");
     expect(frosted(h.querySelector("[data-testid=overlay]") as Element)).toBe(
-      "blur(4px) saturate(1.5)",
+      "blur(2px) saturate(1.5)",
     );
     expect(frosted(h.querySelector("[data-testid=card]") as Element)).toBe("none");
   });
@@ -728,7 +728,7 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     ).toBeUndefined();
     // Still liquid, just not lensed.
     expect(styleOf(document.querySelector("[data-testid=b]") as Element).backdropFilter).toBe(
-      "blur(4px) saturate(1.5)",
+      "blur(2px) saturate(1.5)",
     );
   });
 
@@ -824,7 +824,7 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
           data-testid="c"
           material="liquid"
           className="absolute top-0 left-0"
-          style={{ width: w, height: h }}
+          style={{ width: w, height: h, "--glass-lens-dispersion": ".05" } as CSSProperties}
         />
       );
       await mount(sized(120, 48));
@@ -895,7 +895,9 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     await vi.waitFor(() => expect(filters()).toBe(1));
     const defs = document.querySelector("#ui-glass-refraction-defs") as Element;
     expect(defs.querySelectorAll("feImage").length).toBe(2);
-    expect(defs.querySelector('feColorMatrix[type="saturate"]')?.getAttribute("values")).toBe("6");
+    expect(defs.querySelector('feColorMatrix[type="saturate"]')?.getAttribute("values")).toBe(
+      "2.5",
+    );
     await vi.waitFor(() => {
       const scale = Number(defs.querySelector("feDisplacementMap")?.getAttribute("scale"));
       // 96px high: the bevel is capped at 30% of the short side, and the strength follows it.
@@ -919,42 +921,62 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     expect(document.querySelector("#ui-glass-refraction-defs feFlood")).not.toBeNull();
   });
 
-  test("the lens contrast: ink and ink-2 hold over stripes with the lens on", async () => {
-    document.documentElement.dataset.theme = "light";
-    host = document.createElement("div");
-    host.style.cssText = `position:relative;width:600px;height:300px;background:${STRIPES}`;
-    document.body.appendChild(host);
-    root = createRoot(host);
-    await act(async () => {
-      root?.render(
-        <Card
-          data-testid="box"
-          material="liquid"
-          className="absolute rounded-dialog"
-          style={{ left: 60, top: 40, width: 480, height: 220 }}
-        />,
-      );
+  // With the lens the veil is adaptive: only as strong as the backdrop needs, so the body stays
+  // clear. Over a smooth photo-like backdrop it still holds text-ink at 4.5:1 and text-ink-2 at
+  // 2:1 on every pixel; over hard stripes (a backdrop no text should sit on) the worst pixel keeps
+  // 2:1 and the text halo carries the glyphs. Both are measured on the backdrop, halo not counted.
+  const SMOOTH =
+    "radial-gradient(circle at 20% 30%, #ff3d71 0 70px, transparent 71px), radial-gradient(circle at 75% 70%, #00c2ff 0 90px, transparent 91px), linear-gradient(135deg, #ff9a3c, #1b2cc1 60%, #0b8f6b)";
+  for (const [name, backdrop, floors] of [
+    ["smooth photo", SMOOTH, [4.5, 2]],
+    ["hard stripes", STRIPES, [2, 1]],
+  ] as const) {
+    test(`the lens contrast over ${name}: text-ink ${floors[0]}:1, text-ink-2 ${floors[1]}:1 with the lens on`, async () => {
+      document.documentElement.dataset.theme = "light";
+      host = document.createElement("div");
+      host.style.cssText = `position:relative;width:600px;height:300px;background:${backdrop}`;
+      document.body.appendChild(host);
+      root = createRoot(host);
+      await act(async () => {
+        root?.render(
+          <Card
+            data-testid="box"
+            material="liquid"
+            className="absolute rounded-dialog"
+            style={{ left: 60, top: 40, width: 480, height: 220 }}
+          />,
+        );
+      });
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await settle();
+      const el = host.querySelector("[data-testid=box]") as Element;
+      const samples = await pixels(el);
+      for (const [i, cls] of ["text-ink", "text-ink-2"].entries()) {
+        const probe = document.createElement("span");
+        probe.className = cls;
+        el.appendChild(probe);
+        const ink = lum(channels(styleOf(probe).color));
+        probe.remove();
+        const worst = Math.min(...samples.map((p) => contrast(ink, lum(p))));
+        console.info(`lens contrast ${name} ${cls}: ${worst.toFixed(2)}`);
+        expect(worst, cls).toBeGreaterThanOrEqual(floors[i] as number);
+      }
     });
-    await vi.waitFor(() => expect(filters()).toBe(1));
-    const el = host.querySelector("[data-testid=box]") as Element;
-    const samples = await pixels(el);
-    for (const cls of ["text-ink", "text-ink-2"]) {
-      const probe = document.createElement("span");
-      probe.className = cls;
-      el.appendChild(probe);
-      const ink = lum(channels(styleOf(probe).color));
-      probe.remove();
-      expect(Math.min(...samples.map((p) => contrast(ink, lum(p)))), cls).toBeGreaterThanOrEqual(
-        4.8,
-      );
-    }
-  });
+  }
 
-  test("dispersion (three displacement passes) is on for small surfaces and off for large ones", async () => {
+  test("dispersion (three displacement passes) is off by default, and when asked for applies to small surfaces only", async () => {
     await mount(
       <>
-        <Card material="liquid" className="absolute top-2 left-2 h-16 w-40" />
-        <Card material="liquid" className="absolute top-24 left-2 h-[320px] w-[480px]" />
+        <Card
+          material="liquid"
+          className="absolute top-2 left-2 h-16 w-40"
+          style={{ "--glass-lens-dispersion": ".05" } as CSSProperties}
+        />
+        <Card
+          material="liquid"
+          className="absolute top-24 left-2 h-[320px] w-[480px]"
+          style={{ "--glass-lens-dispersion": ".05" } as CSSProperties}
+        />
       </>,
     );
     await vi.waitFor(() => expect(filters()).toBe(2));

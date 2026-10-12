@@ -1,29 +1,40 @@
-import { createDisplacementMap, createSpecularMap, VEIL_FLOOR } from "./displacement-map.js";
+import {
+  bezelFor,
+  createDisplacementMap,
+  createSpecularMap,
+  scaleFor,
+  VEIL_FLOOR,
+} from "./displacement-map.js";
 import { supportsBackdropRefraction } from "./support.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const HOST_ID = "ui-glass-refraction-defs";
 
 export interface GlassRefractionOptions {
-  /** Strength of the lens in px of displacement at the very edge. Default: the bevel width, between 12 and 36. */
+  /**
+   * `scale` of the displacement filter (the source offset at the edge is half of it). Default:
+   * `scaleFor(bezel)`, the strongest bend that cannot fold back on itself. Above that, stripes
+   * behind the glass break into a sawtooth.
+   */
   scale?: number;
   /**
    * Width of the refracting bevel in px; the middle of the surface shows the backdrop
-   * undisplaced. Default: the corner radius of the surface, at least 10 and at most 30% of its
-   * short side (so a small pill keeps a clear middle).
+   * undisplaced. Default: 1.2 times the corner radius, between 14 and 56 px and at most 45% of
+   * the short side (so a small pill keeps a clear middle).
    */
   bezel?: number;
   /**
    * Chromatic dispersion: how far apart the red and blue channels are pulled, as a fraction of
    * `scale`. It runs three displacement passes instead of one (about +50% to +100% of the lens
-   * cost), so by default it is 0.05 only on surfaces up to 100,000 px squared (nav bars,
-   * buttons, popovers) and 0 on larger ones; pass a number to force it either way.
+   * cost), so it is off by default (it also paints a colour fringe on hard edges). Pass a number,
+   * or set `--glass-lens-dispersion` in CSS, to turn it on; it only applies on surfaces up to
+   * 100,000 px squared.
    */
   dispersion?: number;
   /**
-   * Move the legibility veil of a liquid surface into the filter, where it eases off across the
-   * rim, so the lens shows the backdrop livelier at the edge than under the text. Default true;
-   * `false` keeps the uniform CSS veil.
+   * Move the legibility veil of a liquid surface into the filter, where it is adaptive (only as
+   * strong as the backdrop needs, so the body stays clear over friendly backdrops) and eases off
+   * across the rim. Default true; `false` keeps the uniform CSS veil.
    */
   veil?: boolean;
   /**
@@ -68,15 +79,6 @@ const MAX_AREA = 640_000;
 const DISPERSION_AREA = 100_000;
 /** Lenses alive at once; further surfaces keep the plain liquid look until one is released. */
 const MAX_ACTIVE = 8;
-
-/** Bevel width of a surface: its corner radius, clamped so a small pill keeps a clear middle. */
-function bezelFor(radius: number, width: number, height: number): number {
-  const short = Math.min(width, height);
-  return Math.min(Math.max(radius, 10), Math.max(8, short * 0.3), 36);
-}
-
-/** Refraction strength of a bevel, in px of displacement at the edge. */
-const scaleFor = (bezel: number) => Math.min(36, Math.max(12, bezel));
 
 /** Ease-out cubic. */
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
@@ -173,10 +175,17 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     else element.style.removeProperty("-webkit-backdrop-filter");
     delete element.dataset.glassRefraction;
     element.style.removeProperty("--glass-veil");
+    element.style.removeProperty("--glass-lens-tint");
   };
 
-  const dispersionFor = (area: number) =>
-    options.dispersion ?? (area <= DISPERSION_AREA ? 0.05 : 0);
+  /** Dispersion is off unless asked for: `dispersion` option, or `--glass-lens-dispersion` in CSS. */
+  const dispersionFor = (area: number) => {
+    const asked =
+      options.dispersion ??
+      (Number.parseFloat(getComputedStyle(element).getPropertyValue("--glass-lens-dispersion")) ||
+        0);
+    return area <= DISPERSION_AREA ? asked : 0;
+  };
 
   const install = () => {
     if (!element.isConnected) return;
@@ -299,17 +308,50 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     const veilColor =
       options.veil === false ? "" : computed.getPropertyValue("--glass-lens-dim").trim();
     const layers = [radius ? "mixed" : "lens"];
-    if (veilColor) {
+    const parts = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?/.exec(
+      veilColor,
+    );
+    if (parts) {
+      // Adaptive veil: only as strong as the backdrop needs. The lens is blurred wide, its
+      // luminance read, and a veil of the ink-contrasting colour is laid down where the backdrop
+      // is close to the ink (a light veil over dark areas in the light theme, a dark one over
+      // light areas in the dark theme). Over a backdrop that already contrasts with the text
+      // there is none, so the body stays clear instead of milky.
+      const [r, g, b] = [1, 2, 3].map((n) => Number(parts[n]) / 255) as [number, number, number];
+      const alphaPart = parts[4];
+      // The CSS value is tuned for the uniform veil of the fallback; the adaptive one needs less.
+      const strength =
+        0.85 *
+        (alphaPart
+          ? alphaPart.endsWith("%")
+            ? Number.parseFloat(alphaPart) / 100
+            : Number(alphaPart)
+          : 1);
+      const lightVeil = (r + g + b) / 3 > 0.5;
+      const sign = lightVeil ? -1 : 1;
+      const base = lightVeil ? strength : 0;
+      node("feGaussianBlur", { in: "lens", stdDeviation: "7", result: "regional" });
+      node("feColorMatrix", {
+        in: "regional",
+        type: "matrix",
+        values: [
+          `0 0 0 0 ${r}`,
+          `0 0 0 0 ${g}`,
+          `0 0 0 0 ${b}`,
+          `${sign * 0.2126 * strength} ${sign * 0.7152 * strength} ${sign * 0.0722 * strength} 0 ${base}`,
+        ].join(" "),
+        result: "adaptive",
+      });
       node("feColorMatrix", {
         in: "map",
         type: "matrix",
         values: `0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${1 - VEIL_FLOOR} 0 ${VEIL_FLOOR}`,
         result: "veil-weight",
       });
-      node("feFlood", { "flood-color": veilColor, result: "flood" });
-      node("feComposite", { in: "flood", in2: "veil-weight", operator: "in", result: "veil" });
+      node("feComposite", { in: "adaptive", in2: "veil-weight", operator: "in", result: "veil" });
       layers.push("veil");
       element.style.setProperty("--glass-veil", "transparent");
+      element.style.setProperty("--glass-lens-tint", "transparent");
     }
     // Directional rim light from a second map: a dark contour and a faint inner shadow, a glint
     // that is the lensed backdrop itself pushed to a high saturation and brightness (so it takes
@@ -326,16 +368,16 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       node("feColorMatrix", {
         in: "spec",
         type: "matrix",
-        values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0 0 0 0",
+        values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0 0 0 0",
         result: "glint-mask",
       });
-      node("feColorMatrix", { in: "lens", type: "saturate", values: "6", result: "glint-sat" });
+      node("feColorMatrix", { in: "lens", type: "saturate", values: "2.5", result: "glint-sat" });
       const bright = node("feComponentTransfer", { in: "glint-sat", result: "glint-bright" });
       for (const channel of ["feFuncR", "feFuncG", "feFuncB"]) {
         const fn = document.createElementNS(SVG_NS, channel);
         fn.setAttribute("type", "linear");
-        fn.setAttribute("slope", "1.5");
-        fn.setAttribute("intercept", "0.12");
+        fn.setAttribute("slope", "1.6");
+        fn.setAttribute("intercept", "0.2");
         bright.appendChild(fn);
       }
       node("feComposite", {
@@ -346,7 +388,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       });
       node("feFlood", {
         "flood-color": "white",
-        "flood-opacity": "0.55",
+        "flood-opacity": "0.8",
         result: "glint-white-flood",
       });
       node("feComposite", {

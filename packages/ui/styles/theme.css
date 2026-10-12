@@ -279,7 +279,7 @@
   backdrop-filter: var(--surface-filter);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"][data-style="glass"], [data-glass="liquid"] [data-style="glass"], [data-style="glass"] [data-glass="liquid"]) & {
-      background-color: var(--liquid-regular-tint);
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
@@ -376,7 +376,7 @@
   }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"]) & {
-      background-color: var(--liquid-regular-tint);
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
@@ -451,7 +451,7 @@
   }
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"]) & {
-      background-color: var(--liquid-clear-tint);
+      background-color: var(--glass-lens-tint, var(--liquid-clear-tint));
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-clear-filter);
       backdrop-filter: var(--liquid-clear-filter);
@@ -522,7 +522,7 @@
   backdrop-filter: var(--surface-filter);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"][data-style="glass"], [data-glass="liquid"] [data-style="glass"], [data-style="glass"] [data-glass="liquid"]) & {
-      background-color: var(--liquid-regular-tint);
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
@@ -603,7 +603,7 @@
   backdrop-filter: var(--surface-filter);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :where([data-glass="liquid"][data-style="glass"], [data-glass="liquid"] [data-style="glass"], [data-style="glass"] [data-glass="liquid"]) & {
-      background-color: var(--liquid-regular-tint);
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
       background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
       -webkit-backdrop-filter: var(--liquid-regular-filter);
       backdrop-filter: var(--liquid-regular-filter);
@@ -688,7 +688,7 @@
   background-color: var(--glass-regular-fallback);
   box-shadow: 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    background-color: var(--liquid-regular-tint);
+    background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
     background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
     -webkit-backdrop-filter: var(--liquid-regular-filter);
     backdrop-filter: var(--liquid-regular-filter);
@@ -755,7 +755,7 @@
   background-color: var(--glass-clear-fallback);
   box-shadow: 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    background-color: var(--liquid-clear-tint);
+    background-color: var(--glass-lens-tint, var(--liquid-clear-tint));
     background-image: var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)));
     -webkit-backdrop-filter: var(--liquid-clear-filter);
     backdrop-filter: var(--liquid-clear-filter);

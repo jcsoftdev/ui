@@ -1504,12 +1504,12 @@
    },
    {
     "name": "liquid-regular-blur",
-    "value": "4px",
+    "value": "2px",
     "usage": "Liquid glass, regular: backdrop blur radius at the centre. Low on purpose: the rim lens and the specular layers carry the look. Raised only if legibility needs it."
    },
    {
     "name": "liquid-clear-blur",
-    "value": "1.5px",
+    "value": ".6px",
     "usage": "Liquid glass, clear: backdrop blur radius."
    },
    {
@@ -1581,10 +1581,10 @@
    {
     "name": "liquid-rim",
     "value": {
-     "light": "inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2)",
-     "dark": "inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1)"
+     "light": "inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5)",
+     "dark": "inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22)"
     },
-    "usage": "Liquid glass: specular rim as inset shadows: a 1px highlight on the lit (top-left) and a fainter one on the opposite (bottom-right) edge, plus a faint full ring. Unlike a masked gradient it follows the radius and survives scrolling."
+    "usage": "Liquid glass: specular rim as inset shadows: a bright 1.5px highlight on the lit (top-left) and a weaker one on the opposite (bottom-right) edge, plus a ring all around. Unlike a masked gradient it follows the radius and survives scrolling."
    },
    {
     "name": "liquid-depth",
@@ -2122,7 +2122,7 @@
     "backdrop-filter": "var(--surface-filter)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"][data-style=\"glass\"], [data-glass=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass=\"liquid\"]) &": {
-      "background-color": "var(--liquid-regular-tint)",
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
@@ -2216,7 +2216,7 @@
     },
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"]) &": {
-      "background-color": "var(--liquid-regular-tint)",
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
@@ -2290,7 +2290,7 @@
     },
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"]) &": {
-      "background-color": "var(--liquid-clear-tint)",
+      "background-color": "var(--glass-lens-tint, var(--liquid-clear-tint))",
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-clear-filter)",
       "backdrop-filter": "var(--liquid-clear-filter)",
@@ -2360,7 +2360,7 @@
     "backdrop-filter": "var(--surface-filter)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"][data-style=\"glass\"], [data-glass=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass=\"liquid\"]) &": {
-      "background-color": "var(--liquid-regular-tint)",
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
@@ -2440,7 +2440,7 @@
     "backdrop-filter": "var(--surface-filter)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
      ":where([data-glass=\"liquid\"][data-style=\"glass\"], [data-glass=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass=\"liquid\"]) &": {
-      "background-color": "var(--liquid-regular-tint)",
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
       "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
       "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
       "backdrop-filter": "var(--liquid-regular-filter)",
@@ -2523,7 +2523,7 @@
     "background-color": "var(--glass-regular-fallback)",
     "box-shadow": "0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
-     "background-color": "var(--liquid-regular-tint)",
+     "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
      "-webkit-backdrop-filter": "var(--liquid-regular-filter)",
      "backdrop-filter": "var(--liquid-regular-filter)",
@@ -2589,7 +2589,7 @@
     "background-color": "var(--glass-clear-fallback)",
     "box-shadow": "0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
     "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
-     "background-color": "var(--liquid-clear-tint)",
+     "background-color": "var(--glass-lens-tint, var(--liquid-clear-tint))",
      "background-image": "var(--glass-noise), linear-gradient(var(--glass-veil, var(--glass-lens-dim)), var(--glass-veil, var(--glass-lens-dim)))",
      "-webkit-backdrop-filter": "var(--liquid-clear-filter)",
      "backdrop-filter": "var(--liquid-clear-filter)",

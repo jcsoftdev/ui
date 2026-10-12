@@ -28,13 +28,50 @@ const px = (field, x, y) => {
   return [...field.data.slice(o, o + 4)];
 };
 
-test("the lens profile is 1 at the edge, falls monotonically and is 0 inside", () => {
+test("the lens profile is 1 at the edge, falls monotonically, starts flat and is 0 inside", () => {
   const profile = glass.lensProfile();
   assert.equal(profile[0], 1);
   assert.equal(profile.at(-1), 0);
-  for (let i = 1; i < profile.length; i++) assert.ok(profile[i] <= profile[i - 1]);
-  // Snell on a convex squircle: most of the bend is in the outer rim.
-  assert.ok(profile[Math.floor(profile.length / 2)] < 0.15);
+  const step = 1 / (profile.length - 1);
+  let steepest = 0;
+  for (let i = 1; i < profile.length; i++) {
+    assert.ok(profile[i] <= profile[i - 1]);
+    steepest = Math.max(steepest, (profile[i - 1] - profile[i]) / step);
+  }
+  // Starts flat (a clean shifted copy at the very edge), and never falls faster than 1.5 per bevel.
+  assert.ok(profile[0] - profile[1] < 0.002);
+  assert.ok(steepest <= 1.52, `steepest slope ${steepest}`);
+});
+
+test("the default lens cannot fold: source position minus output position stays increasing across the bevel", () => {
+  // Regression for the sawtooth along the walls: when the offset falls faster than 1px per px the
+  // mapping folds back on itself and stripes behind the glass break into a repeating serration.
+  const shapes = [
+    [480, 220, 28],
+    [1120, 64, 32],
+    [180, 56, 28],
+    [320, 320, 24],
+    [40, 20, 9],
+  ];
+  for (const [width, height, radius] of shapes) {
+    for (const dpr of [1, 2]) {
+      const bezel = glass.bezelFor(radius, width, height);
+      const scale = glass.scaleFor(bezel);
+      const f = glass.computeDisplacementField({ width, height, radius, bezel, dpr });
+      const along = (get, count) => {
+        let last = Number.NEGATIVE_INFINITY;
+        for (let i = 0; i < count; i++) {
+          const source = i / dpr + (scale * (get(i) - 127.5)) / 255;
+          assert.ok(source >= last - 0.2, `${width}x${height} r${radius} @${dpr}x folds at ${i}`);
+          last = source;
+        }
+      };
+      const midY = Math.floor(f.height / 2);
+      const midX = Math.floor(f.width / 2);
+      along((i) => f.data[(midY * f.width + i) * 4], Math.ceil((bezel + 1) * dpr)); // left wall, red
+      along((i) => f.data[(i * f.width + midX) * 4 + 1], Math.ceil((bezel + 1) * dpr)); // top wall, green
+    }
+  }
 });
 
 test("the displacement field is neutral in the middle and pulls the rim inwards", () => {

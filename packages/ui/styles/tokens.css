@@ -183,8 +183,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: var(--float);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -194,7 +194,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: none;
@@ -333,7 +333,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   }
@@ -457,7 +457,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
 }
@@ -601,8 +601,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: var(--float);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -612,7 +612,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: none;
@@ -655,7 +655,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   }
@@ -690,7 +690,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
 }
@@ -768,8 +768,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: var(--float);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -779,7 +779,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: none;
@@ -816,7 +816,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   }
@@ -845,7 +845,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
 }
@@ -923,8 +923,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: var(--float);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -934,7 +934,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: none;
@@ -981,7 +981,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   }
@@ -1020,7 +1020,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
 }
@@ -1098,8 +1098,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: var(--float);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -1109,7 +1109,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: none;
@@ -1149,7 +1149,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   }
@@ -1181,7 +1181,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
 }
@@ -1259,8 +1259,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: color-mix(in srgb, var(--float) 94%, transparent);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -1270,7 +1270,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: radial-gradient(60% 55% at 12% 8%, var(--accent-soft), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 45%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 18%, transparent), transparent);
@@ -1316,7 +1316,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
     --page-backdrop: radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent);
@@ -1355,7 +1355,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   --page-backdrop: radial-gradient(60% 55% at 12% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),radial-gradient(55% 50% at 92% 88%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent),radial-gradient(40% 40% at 70% 20%, color-mix(in srgb, var(--chart-cat-1) 14%, transparent), transparent);
@@ -1434,8 +1434,8 @@
   --glass-sheen: linear-gradient(135deg, rgba(255,255,255,.34), rgba(255,255,255,0) 45%);
   --glass-noise: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0));
   --glass-nested-tint: var(--float);
-  --liquid-regular-blur: 4px;
-  --liquid-clear-blur: 1.5px;
+  --liquid-regular-blur: 2px;
+  --liquid-clear-blur: .6px;
   --liquid-saturate: 1.5;
   --liquid-regular-filter: blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate));
   --liquid-clear-filter: blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness));
@@ -1445,7 +1445,7 @@
   --liquid-clear-dim: rgba(255,255,255,.47);
   --liquid-halo: 0 0 .6em rgba(255,255,255,.7);
   --liquid-shadow: 0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.95), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.2);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
   --page-backdrop: none;
@@ -1482,7 +1482,7 @@
     --liquid-clear-dim: rgba(0,0,0,.38);
     --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
     --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-    --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+    --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
   }
@@ -1511,7 +1511,7 @@
   --liquid-clear-dim: rgba(0,0,0,.38);
   --liquid-halo: 0 0 .6em rgba(0,0,0,.6);
   --liquid-shadow: 0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3);
-  --liquid-rim: inset 1.5px 1.5px 0 -.5px rgba(255,255,255,.55), inset -1.5px -1.5px 0 -.5px rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.1);
+  --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
 }

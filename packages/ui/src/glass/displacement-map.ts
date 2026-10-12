@@ -21,42 +21,49 @@ export interface DisplacementField {
   data: Uint8ClampedArray;
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+const clamp = (value: number, min: number, max: number, ceil = Number.POSITIVE_INFINITY) =>
+  Math.min(Math.max(value, min), max, ceil);
 
 /** How much of the legibility veil is left at the very edge of the rim. */
 export const VEIL_FLOOR = 0.5;
 
-/** Refractive index of the glass (crown glass), as in the usual web recreations. */
-const INDEX = 1.5;
+/** Bevel width of a surface, in px: a little more than its corner radius, so the bend reads as a drop. */
+export function bezelFor(radius: number, width: number, height: number): number {
+  const short = Math.min(width, height);
+  return clamp(radius * 1.2, 14, Math.max(8, short * 0.45), 56);
+}
+
+/**
+ * Largest source offset of the lens, as a fraction of the bevel width. The profile below falls at
+ * most 1.5 times its amplitude per bevel width, so an amplitude of 0.58 keeps the mapping
+ * `depth + offset(depth)` strictly increasing (slope 0.87 < 1). Above 1 it folds back on itself:
+ * several output pixels then sample the same source pixels in reverse order, and straight
+ * stripes break into a repeating sawtooth along the walls. That fold, not the map resolution, was
+ * the serrated edge of the first lenses.
+ */
+export const MAX_OFFSET = 0.58;
+
+/** `scale` of the displacement filter for a bevel: the offset is half of it (128 is neutral). */
+export const scaleFor = (bezel: number) => (2 * MAX_OFFSET * bezel * 255) / 254;
+
 const PROFILE_SAMPLES = 64;
-/** How steep the bezel is relative to its width: the thickness of the glass over the rim width. */
-const STEEPNESS = 2.5;
 
 let profile: Float32Array | undefined;
 
 /**
- * Lateral displacement across the rim, 1 at the outer edge and 0 at the inner one.
- *
- * The rim is a convex squircle, `h(x) = (1 - (1 - x)^4)^(1/4)` with x running from the outer edge
- * inwards. A ray entering vertically meets the surface at the angle of its slope, bends by
- * Snell's law (`sin t1 = n sin t2`, n = 1.5) and lands `tan(t1 - t2)` further sideways per unit
- * of glass thickness. The curve is normalised by its maximum, so the strength of the lens is the
- * `scale` of the displacement filter and not a property of the profile.
+ * Lateral displacement across the bevel, 1 at the outer edge and 0 at the inner one: `1 -
+ * smoothstep(x)`, with x running from the outer edge inwards. It starts flat (the outermost
+ * pixels show one clean shifted copy of the backdrop, like the rim of a drop), bends most at the
+ * middle of the bevel and eases to zero, so the lens meets the clear centre without a seam. Its
+ * slope never exceeds 1.5, which is what keeps {@link MAX_OFFSET} fold-free.
  */
 export function lensProfile(): Float32Array {
   if (profile) return profile;
   const out = new Float32Array(PROFILE_SAMPLES);
-  let max = 0;
   for (let i = 0; i < PROFILE_SAMPLES; i++) {
-    const x = clamp(i / (PROFILE_SAMPLES - 1), 0.002, 1);
-    const slope = (1 - x) ** 3 * (1 - (1 - x) ** 4) ** -0.75 * STEEPNESS;
-    const incidence = Math.atan(slope);
-    const refracted = Math.asin(Math.sin(incidence) / INDEX);
-    out[i] = Math.tan(incidence - refracted);
-    max = Math.max(max, out[i] as number);
+    const x = i / (PROFILE_SAMPLES - 1);
+    out[i] = 1 - x * x * (3 - 2 * x);
   }
-  for (let i = 0; i < PROFILE_SAMPLES; i++) out[i] = (out[i] as number) / max;
-  out[PROFILE_SAMPLES - 1] = 0;
   profile = out;
   return out;
 }
@@ -144,7 +151,7 @@ export interface SpecularMapOptions {
 }
 
 /** Thickness, in CSS px, of the glint along the walls that face the light. */
-export const GLINT_WIDTH = 1.4;
+export const GLINT_WIDTH = 2.2;
 /** Thickness of the dark contour that separates the glass from the backdrop. */
 export const CONTOUR_WIDTH = 0.75;
 /** Depth of the faint inner shadow on the walls that turn away from the light. */
