@@ -31,6 +31,13 @@ private fun agslEffect(
     shader.setFloatUniform("strength", params.strength)
     shader.setFloatUniform("dispersion", params.dispersion)
     shader.setFloatUniform("bounds", params.boundsLeft, params.boundsTop, params.boundsRight, params.boundsBottom)
+    shader.setFloatUniform("sat", params.saturate)
+    shader.setFloatUniform("tint", params.tintR, params.tintG, params.tintB, params.tintA)
+    shader.setFloatUniform("dim", params.dimR, params.dimG, params.dimB, params.dimA)
+    shader.setFloatUniform("veilEdge", params.veilEdge)
+    shader.setFloatUniform("veilReach", params.veilReach)
+    shader.setFloatUniform("glintWidth", params.glintWidth)
+    shader.setFloatUniform("glintStrength", params.glintStrength)
     val lens = PlatformRenderEffect.createRuntimeShaderEffect(shader, "content")
     val effect =
         if (params.blur > 0f) {

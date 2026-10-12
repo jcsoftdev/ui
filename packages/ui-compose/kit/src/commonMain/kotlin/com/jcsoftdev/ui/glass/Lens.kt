@@ -26,6 +26,24 @@ internal data class LensParams(
     val boundsTop: Float,
     val boundsRight: Float,
     val boundsBottom: Float,
+    /** Backdrop saturation, applied before the veil. */
+    val saturate: Float = 1f,
+    /** The veil (non-premultiplied red, green, blue, alpha of the tint, then of the dim layer). */
+    val tintR: Float = 0f,
+    val tintG: Float = 0f,
+    val tintB: Float = 0f,
+    val tintA: Float = 0f,
+    val dimR: Float = 0f,
+    val dimG: Float = 0f,
+    val dimB: Float = 0f,
+    val dimA: Float = 0f,
+    /** Share of the veil left at the very edge (1 keeps it uniform). */
+    val veilEdge: Float = 1f,
+    /** How far in, as a multiple of [depth], the veil takes to reach full strength. */
+    val veilReach: Float = 1f,
+    /** Width of the edge glint in pixels and its strength (0 turns it off). */
+    val glintWidth: Float = 1f,
+    val glintStrength: Float = 0f,
 )
 
 /** True when a runtime shader can refract the backdrop (Android 13+, Skia targets). */
@@ -52,6 +70,13 @@ uniform float depth;
 uniform float strength;
 uniform float dispersion;
 uniform float4 bounds;
+uniform float sat;
+uniform float4 tint;
+uniform float4 dim;
+uniform float veilEdge;
+uniform float veilReach;
+uniform float glintWidth;
+uniform float glintStrength;
 
 float sdBox(float2 p, float2 b, float4 r) {
     float2 rr = p.x > 0.0 ? r.yz : r.xw;
@@ -68,14 +93,33 @@ half4 main(float2 coord) {
         sdBox(p + float2(1.0, 0.0), b, radii) - sdBox(p - float2(1.0, 0.0), b, radii),
         sdBox(p + float2(0.0, 1.0), b, radii) - sdBox(p - float2(0.0, 1.0), b, radii));
     float2 n = length(g) > 0.0001 ? normalize(g) : float2(0.0, 0.0);
-    float t = clamp(-d / depth, 0.0, 1.0);
-    float bend = pow(1.0 - t, 3.0);
+    float t = clamp(-d / max(depth, 1.0), 0.0, 1.0);
+    float bend = pow(1.0 - t, 2.2);
     float2 off = -n * strength * bend;
     float2 lo = bounds.xy;
     float2 hi = bounds.zw;
     half4 mid = content.eval(clamp(coord + off, lo, hi));
     half r = content.eval(clamp(coord + off * (1.0 + dispersion), lo, hi)).r;
     half bl = content.eval(clamp(coord + off * (1.0 - dispersion), lo, hi)).b;
-    return half4(r, mid.g, bl, mid.a);
+    float3 c = float3(r, mid.g, bl);
+    float luma = dot(c, float3(0.2126, 0.7152, 0.0722));
+    c = mix(float3(luma), c, sat);
+
+    // The veil thins smoothly toward the edge, so the bent backdrop shows at the rim and the centre keeps full strength.
+    float vt = smoothstep(0.0, 1.0, clamp(-d / max(depth * veilReach, 1.0), 0.0, 1.0));
+    float s = mix(veilEdge, 1.0, vt);
+    c = mix(c, tint.rgb, tint.a * s);
+    c = mix(c, dim.rgb, dim.a * s);
+
+    // Directional light from the top left: thickness shading across the bevel, and a thin glint right at the wall.
+    float2 L = float2(-0.57, -0.82);
+    float lf = dot(n, L);
+    float wall = 1.0 - smoothstep(0.0, 1.0, t);
+    c += 0.06 * wall * max(lf, 0.0);
+    c *= 1.0 - 0.07 * wall * max(-lf, 0.0);
+    float edge = 1.0 - smoothstep(0.0, max(glintWidth, 0.001), -d);
+    float glint = edge * (pow(max(lf, 0.0), 2.0) + 0.55 * pow(max(-lf, 0.0), 2.0)) * glintStrength * 0.7;
+    c += glint * (0.35 + 0.65 * c);
+    return half4(half3(clamp(c, 0.0, 1.0)), 1.0);
 }
 """

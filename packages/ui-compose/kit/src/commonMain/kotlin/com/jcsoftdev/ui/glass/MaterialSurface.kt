@@ -13,9 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
@@ -23,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
@@ -53,7 +50,7 @@ import com.jcsoftdev.ui.theme.GlassMaterial
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.math.ceil
 import kotlin.math.min
-import kotlin.math.pow
+import kotlin.math.tanh
 
 /**
  * Fills this node with [material] clipped to [shape]: solid ([solid]), frosted glass (tint, dim, edge highlight, border and a
@@ -242,19 +239,19 @@ private val EdgeFade: Dp = 28.dp
 // Without a backdrop the glass tint cannot keep text legible over arbitrary content, so the tint fallback is a mostly opaque veil.
 private const val TINT_VEIL_ALPHA = 0.9f
 
-private val MaxBezel: Dp = 32.dp
 private val MinBezel: Dp = 8.dp
 
 // Kyant's backdrop lens uses a refraction height up to the smallest corner radius and an amount about twice that; our samples
 // stay inside the surface, so the amount is capped at the bevel itself.
-private const val STRENGTH_PER_DEPTH = 1.6f
-private const val VEIL_REACH = 0.7f
-private const val BEVEL_STEPS = 16
-private const val DISPERSION = 0.04f
+private const val STRENGTH_PER_DEPTH = 1.1f
+private const val VEIL_REACH = 0.9f
+private const val LENS_SATURATION = 1.5f
+private const val VEIL_EDGE = 0.35f
+private val BEVEL_SOFT_CAP: Dp = 24.dp
+private const val DISPERSION = 0.025f
 private const val GLINT_WIDTH_DP = 1.5f
 private const val CONTOUR_WIDTH_DP = 0.75f
 private const val LIGHT_ANGLE = -125f
-private const val THICKNESS_STEPS = 6
 private const val PRESS_LENS_GAIN = 0.35f
 private const val PRESS_BRIGHTEN = 0.14f
 
@@ -281,6 +278,7 @@ private class GlassSurfaceNode(
     private val lensEngine by lazy { LensEngine() }
     private var lensKey: LensParams? = null
     private var lensEffect: RenderEffect? = null
+    private var lensApplied = false
     private var filterSaturation = -1f
     private var filter: ColorFilter? = null
 
@@ -342,18 +340,16 @@ private class GlassSurfaceNode(
         val outline = shape.createOutline(size, layoutDirection, this)
         val source = state
         val blurLayer = layer
+        lensApplied = false
         if (blur && source != null && blurLayer != null && source.isRecording) {
             // Opaque base: where the source is transparent (or ends) the content under the surface must not show through.
             drawRect(base)
             source.surfaceDraws++
             drawBackdrop(source, blurLayer, outline, pressed)
         }
-        if (veil.isSpecified) {
-            drawRect(veil)
-        } else {
-            if (liquid) {
-                drawBeveledVeil(outline, tokens.tint)
-                drawBeveledVeil(outline, tokens.dim)
+        if (!lensApplied) {
+            if (veil.isSpecified) {
+                drawRect(veil)
             } else {
                 drawRect(tokens.tint)
                 drawRect(tokens.dim)
@@ -361,7 +357,15 @@ private class GlassSurfaceNode(
         }
         if (liquid) {
             if (pressed > 0f) drawRect(Color.White.copy(alpha = PRESS_BRIGHTEN * pressed))
-            drawLiquidRim(outline)
+            if (lensApplied) {
+                drawOutline(
+                    outline,
+                    tokens.border,
+                    style = Stroke(width = borderWidth.toPx() * 2f),
+                )
+            } else {
+                drawDirectionalRim(outline)
+            }
         } else {
             drawFrostedEdge(outline)
         }
@@ -377,39 +381,6 @@ private class GlassSurfaceNode(
             Brush.verticalGradient(0f to tokens.edge, 1f to Color.Transparent, startY = 0f, endY = fade),
             style = stroke,
         )
-    }
-
-    // Liquid: a soft inner glow (thickness), shade along the lower edge, and a rim lit from the top left.
-    private fun ContentDrawScope.drawLiquidRim(outline: Outline) {
-        val w = size.width
-        val h = size.height
-        val rim = borderWidth.toPx() * 1.5f
-        val thickness = min(min(w, h) * 0.18f, 14.dp.toPx())
-        // Stacked strokes of shrinking width fade the thickness shading toward the center instead of ending on a hard line.
-        for (step in 0 until THICKNESS_STEPS) {
-            val band = thickness * 2f * (THICKNESS_STEPS - step) / THICKNESS_STEPS
-            drawOutline(
-                outline,
-                Brush.linearGradient(
-                    0f to Color.White.copy(alpha = 0.16f / THICKNESS_STEPS),
-                    0.6f to Color.Transparent,
-                    start = Offset.Zero,
-                    end = Offset(w, h),
-                ),
-                style = Stroke(width = band),
-            )
-            drawOutline(
-                outline,
-                Brush.verticalGradient(
-                    0.55f to Color.Transparent,
-                    1f to Color.Black.copy(alpha = 0.08f / THICKNESS_STEPS),
-                    startY = 0f,
-                    endY = h,
-                ),
-                style = Stroke(width = band),
-            )
-        }
-        drawDirectionalRim(outline)
     }
 
     // A thin glint on the walls that face the light (top left, with a weaker one opposite), added on top of the glass so it
@@ -432,30 +403,12 @@ private class GlassSurfaceNode(
         drawOutline(outline, tokens.border, style = Stroke(width = borderWidth.toPx() * 2f))
     }
 
-    // The veil keeps its full strength where text sits and thins out toward the edge, across the bevel the lens bends, so the
-    // refracted backdrop shows at the rim (as on Apple glass) while the worst-case text contrast at the center holds. Stacked
-    // insets of equal alpha compose to a geometric ramp from one layer at the edge to all of them [BEVEL_STEPS] in.
-    private fun ContentDrawScope.drawBeveledVeil(
-        outline: Outline,
-        color: Color,
-    ) {
-        if (color.alpha <= 0f) return
-        val box = (outline as? Outline.Rounded)?.roundRect
-        if (box == null) {
-            drawRect(color)
-            return
-        }
-        val reach = bevel(outline) * VEIL_REACH
-        val layer = color.copy(alpha = 1f - (1f - color.alpha).pow(1f / BEVEL_STEPS))
-        for (step in 0 until BEVEL_STEPS) {
-            val inset = reach * step / BEVEL_STEPS
-            drawPath(Path().apply { addRoundRect(box.insetBy(inset)) }, layer)
-        }
-    }
-
+    // The bevel follows the smallest corner radius (a pill gets half its height) with a soft cap, so large cards keep the same
+    // curvature at the edge as a small capsule instead of a band that grows with the radius.
     private fun ContentDrawScope.bevel(outline: Outline): Float {
         val corner = outline.cornerRadii().filter { it > 0f }.minOrNull() ?: 0f
-        return corner.coerceIn(MinBezel.toPx(), MaxBezel.toPx()).coerceAtMost(min(size.width, size.height) * 0.45f)
+        val soft = BEVEL_SOFT_CAP.toPx() * tanh(corner / BEVEL_SOFT_CAP.toPx())
+        return soft.coerceAtLeast(MinBezel.toPx()).coerceAtMost(min(size.width, size.height) * 0.5f)
     }
 
     private fun ContentDrawScope.drawBackdrop(
@@ -479,11 +432,14 @@ private class GlassSurfaceNode(
         }
         blurLayer.topLeft = IntOffset(-pad, -pad)
         blurLayer.record(this, layoutDirection, IntSize(width, height)) {
+            if (lens) drawRect(base)
             translate(pad - dx, pad - dy) { drawLayer(source.layer) }
         }
-        blurLayer.renderEffect =
-            if (lens) lensFor(outline, pad, depth, strength, radius) else blurFor(radius)
-        blurLayer.colorFilter = filter
+        val lensed = if (lens) lensFor(outline, pad, depth, strength, radius) else null
+        lensApplied = lensed != null
+        blurLayer.renderEffect = lensed ?: blurFor(radius)
+        // The lens shader saturates the backdrop itself, before the veil.
+        blurLayer.colorFilter = if (lensApplied) null else filter
         drawLayer(blurLayer)
     }
 
@@ -520,12 +476,25 @@ private class GlassSurfaceNode(
                 pad.toFloat(),
                 pad + size.width,
                 pad + size.height,
+                tokens.saturate,
+                tokens.tint.red,
+                tokens.tint.green,
+                tokens.tint.blue,
+                tokens.tint.alpha,
+                tokens.dim.red,
+                tokens.dim.green,
+                tokens.dim.blue,
+                tokens.dim.alpha,
+                VEIL_EDGE,
+                VEIL_REACH,
+                GLINT_WIDTH_DP.dp.toPx(),
+                tokens.edge.alpha,
             )
         if (params != lensKey) {
             lensKey = params
             lensEffect = lensEngine.effect(params)
         }
-        return lensEffect ?: blurFor(radius)
+        return lensEffect
     }
 }
 
@@ -561,18 +530,4 @@ private fun sweepAround(
     if (sorted.first().first > 0f) sorted.add(0, 0f to fade)
     if (sorted.last().first < 1f) sorted.add(1f to fade)
     return Brush.sweepGradient(colorStops = sorted.toTypedArray(), center = center)
-}
-
-private fun RoundRect.insetBy(i: Float): RoundRect {
-    fun shrink(r: CornerRadius) = CornerRadius((r.x - i).coerceAtLeast(0f), (r.y - i).coerceAtLeast(0f))
-    return RoundRect(
-        left + i,
-        top + i,
-        right - i,
-        bottom - i,
-        shrink(topLeftCornerRadius),
-        shrink(topRightCornerRadius),
-        shrink(bottomRightCornerRadius),
-        shrink(bottomLeftCornerRadius),
-    )
 }
