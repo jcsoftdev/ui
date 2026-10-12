@@ -20,6 +20,13 @@ class SampleActivity : ComponentActivity() {
                     "custom" -> CustomThemeGallery()
                     "headless" -> HeadlessGallery()
                     "states" -> StatesGallery()
+                    "glass" ->
+                        GlassGallery(
+                            dark = intent.getBooleanExtra("dark", false),
+                            blur = intent.getBooleanExtra("blur", true),
+                            reduceTransparency = intent.getBooleanExtra("reduce", false),
+                            open = intent.getStringExtra("open"),
+                        )
                     else -> AtomsGallery()
                 }
             }
