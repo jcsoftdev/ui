@@ -55,7 +55,7 @@ test("only the glass preset tunes the material; the others keep the base values"
 test("clear glass carries a dimming layer, regular glass does not", () => {
   const root = declarations(":root {");
   assert.equal(root.get("glass-regular-dim"), "rgba(0,0,0,0)");
-  assert.match(root.get("glass-clear-dim"), /^rgba\(0,0,0,\.\d+\)$/);
+  assert.match(root.get("glass-clear-dim"), /^rgba\(\d+,\d+,\d+,\.\d+\)$/);
 });
 
 test("legacy surface tokens still resolve and content stays opaque in every preset", () => {

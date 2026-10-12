@@ -28,7 +28,7 @@ test("the displacement map is a sized SVG data URI with a neutral centre", () =>
   assert.match(uri, /^data:image\/svg\+xml,/);
   const svg = decodeURIComponent(uri.slice(uri.indexOf(",") + 1));
   assert.match(svg, /width="320" height="200"/);
-  assert.match(svg, /rgb\(128 128 128\)/);
+  assert.match(svg, /fill="gray"/);
   assert.match(svg, /stop-color="red"/);
   assert.match(svg, /stop-color="blue"/);
 });

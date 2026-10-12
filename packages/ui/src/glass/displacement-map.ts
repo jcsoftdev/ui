@@ -27,14 +27,14 @@ export function createDisplacementMap({
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
     "<defs>" +
-    '<linearGradient id="x" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/></linearGradient>' +
-    '<linearGradient id="y" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/></linearGradient>' +
+    '<linearGradient id="x" x1="100%" y1="0%" x2="0%" y2="0%"><stop offset="0%" stop-color="red" stop-opacity="0"/><stop offset="100%" stop-color="red"/></linearGradient>' +
+    '<linearGradient id="y" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="blue" stop-opacity="0"/><stop offset="100%" stop-color="blue"/></linearGradient>' +
     `<filter id="b"><feGaussianBlur stdDeviation="${rim / 2}"/></filter>` +
     "</defs>" +
     `<rect width="${w}" height="${h}" fill="black"/>` +
     `<rect width="${w}" height="${h}" rx="${r}" fill="url(#x)"/>` +
     `<rect width="${w}" height="${h}" rx="${r}" fill="url(#y)" style="mix-blend-mode:difference"/>` +
-    `<rect x="${rim}" y="${rim}" width="${Math.max(1, w - rim * 2)}" height="${Math.max(1, h - rim * 2)}" rx="${Math.max(0, r - rim)}" fill="rgb(128 128 128)" filter="url(#b)"/>` +
+    `<rect x="${rim}" y="${rim}" width="${Math.max(1, w - rim * 2)}" height="${Math.max(1, h - rim * 2)}" rx="${Math.max(0, r - rim)}" fill="gray" filter="url(#b)"/>` +
     "</svg>";
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

@@ -291,7 +291,7 @@ object UiGlass {
         tint = Color(0x24FFFFFF),
         border = Color(0x99FFFFFF),
         edge = Color(0xF2FFFFFF),
-        dim = Color(0x38000000),
+        dim = Color(0x66FFFFFF),
         blur = 10.dp,
         saturate = 1.5f,
     )

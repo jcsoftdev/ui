@@ -1443,10 +1443,10 @@
    {
     "name": "glass-clear-dim",
     "value": {
-     "light": "rgba(0,0,0,.22)",
+     "light": "rgba(255,255,255,.4)",
      "dark": "rgba(0,0,0,.3)"
     },
-    "usage": "Clear glass: dimming layer. Keeps text legible over bright content; do not remove it."
+    "usage": "Clear glass: legibility veil over the backdrop. It pushes the backdrop away from the ink colour (lightens in the light theme, darkens in the dark theme). Do not remove it."
    },
    {
     "name": "glass-clear-fallback",

@@ -8,3 +8,5 @@ storybook-static/
 .idea/
 .vscode/
 .env*
+__screenshots__/
+.vitest-attachments/

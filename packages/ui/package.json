@@ -83,6 +83,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test \"test/*.test.mjs\"",
     "test:stories": "vitest run --project stories",
+    "test:glass": "vitest run --project glass",
     "check:treeshake": "node test/treeshake.mjs",
     "check:dist-imports": "node test/dist-imports.mjs",
     "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs"
