@@ -21,8 +21,12 @@ export function planRelease({ tag, enabled, packages }) {
   if (versions.size > 1) {
     errors.push(`packages are not in lockstep: ${packages.map((p) => `${p.name}@${p.version}`).join(", ")}`);
   }
-  const [version] = versions;
-  if (tag !== `v${version}`) errors.push(`tag ${tag} does not match package version v${version}`);
+  // With diverging versions the lockstep error above already says what is wrong; comparing the tag
+  // against an arbitrary first version would add a misleading second error.
+  if (versions.size === 1) {
+    const [version] = versions;
+    if (tag !== `v${version}`) errors.push(`tag ${tag} does not match package version v${version}`);
+  }
   const known = new Map(packages.map((p) => [p.dir, p]));
   for (const dir of enabled) {
     if (!known.has(dir)) errors.push(`publish list names "${dir}", which is not a public package`);

@@ -29,6 +29,18 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 - New [Liquid Glass guide](https://ui.jcsoftdev.com/docs/glass), stories and real-browser tests
   (`pnpm test:glass`) including measured text contrast over a worst-case backdrop.
 
+### Platform
+
+- **Tokens live in `@jcsoftdev/ui-tokens`.** `@jcsoftdev/ui` still ships the same `styles/*`,
+  `tokens/*` and `ui-theme` bin; they are synced from ui-tokens at build time.
+- **The `ui-theme` bin is now a single bundled file** (it inlines the theme engine from ui-tokens);
+  invoke it exactly as before. It is no longer a thin script next to `scripts/build-theme.mjs`.
+- **`ui-theme build` also writes `tailwind.css`** next to `tokens.css`, `theme.css` and `fonts.css`.
+- **`ui-theme generate`** derives a WCAG AA color set from `--brand` (and optional `--accent`,
+  `--neutral`, `--danger`) and writes `tokens.json` plus the CSS outputs; a bad hex prints a clean
+  error and exits 1. The same engine is available as `createTheme`, `toCss` and `applyTheme` in
+  `@jcsoftdev/ui-tokens`.
+
 ### Migration notes
 
 - **Cards no longer blur.** `surface-card` is now an opaque fill with no `backdrop-filter`, in every

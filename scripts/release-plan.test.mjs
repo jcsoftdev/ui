@@ -22,6 +22,10 @@ test("rejects a tag that does not match the version", () => {
 
 test("rejects diverging versions and unknown or empty lists", () => {
   assert.match(plan({ packages: [pkgs[0], { ...pkgs[1], version: "1.3.0" }] }).errors[0], /lockstep/);
+  // Diverging versions must not also report a misleading tag mismatch.
+  const diverged = plan({ tag: "v1.3.0", packages: [pkgs[0], { ...pkgs[1], version: "1.3.0" }] });
+  assert.equal(diverged.errors.length, 1);
+  assert.doesNotMatch(diverged.errors.join(), /does not match/);
   assert.match(plan({ enabled: ["packages/nope"] }).errors.join(), /not a public package/);
   assert.match(plan({ enabled: [] }).errors.join(), /empty/);
 });
