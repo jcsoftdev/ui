@@ -26,15 +26,24 @@ class LensShaderTest {
         br: Float = 0f,
         bl: Float = 0f,
         dispersion: Float = 0.06f,
+        exponent: Float = 4f,
+        veil: Boolean = false,
     ): Bitmap {
         val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
         builder.child("content", content)
         builder.uniform("size", 160f, 80f)
         builder.uniform("origin", 20f, 20f)
         builder.uniform("radii", tl, tr, br, bl)
-        builder.uniform("depth", 24f)
+        builder.uniform("exponent", exponent)
         builder.uniform("strength", 30f)
         builder.uniform("dispersion", dispersion)
+        builder.uniform("sat", 1f)
+        if (veil) {
+            // A pure red dim whose strength depends only on the distance to the edge: red appears where the pixel is inside.
+            builder.uniform("dim", 1f, 0f, 0f, 1f)
+            builder.uniform("veilEdge", 0f)
+            builder.uniform("rimDepth", 10f)
+        }
         builder.uniform("sat", 1f)
         builder.uniform("bounds", 0f, 0f, width.toFloat(), height.toFloat())
         val surface = Surface.makeRasterN32Premul(width, height)
@@ -87,23 +96,44 @@ class LensShaderTest {
     }
 
     @Test fun eachCornerRadiusShapesItsOwnCorner() {
-        val sharp = lens()
+        // The veil fades in with the distance to the edge: a pixel 3px inside a sharp corner is lightly dimmed (green drops), while
+        // the same pixel outside a 40px rounded corner is not dimmed at all.
+        val sharp = lens(veil = true)
         val corners =
             listOf(
-                Triple("top-left", 23 to 23, lens(tl = 40f)),
-                Triple("top-right", 176 to 23, lens(tr = 40f)),
-                Triple("bottom-right", 176 to 96, lens(br = 40f)),
-                Triple("bottom-left", 23 to 96, lens(bl = 40f)),
+                Triple("top-left", 23 to 23, lens(tl = 40f, veil = true)),
+                Triple("top-right", 176 to 23, lens(tr = 40f, veil = true)),
+                Triple("bottom-right", 176 to 96, lens(br = 40f, veil = true)),
+                Triple("bottom-left", 23 to 96, lens(bl = 40f, veil = true)),
             )
         for ((name, at, rounded) in corners) {
             val (x, y) = at
-            // With a big radius the pixel sits outside the shape (full bend); a sharp corner has it 3px inside (less bend).
             assertTrue(
-                rounded.displacement(x, y) > sharp.displacement(x, y) + 4f,
-                "$name: rounded=${rounded.displacement(x, y)} sharp=${sharp.displacement(x, y)}",
+                rounded.green(x, y) > sharp.green(x, y) + 15,
+                "$name: rounded=${rounded.green(x, y)} sharp=${sharp.green(x, y)}",
             )
         }
-        // A radius at one corner leaves the opposite corner alone.
-        assertTrue(abs(lens(tl = 40f).displacement(176, 96) - sharp.displacement(176, 96)) < 1f)
+        assertTrue(abs(lens(tl = 40f, veil = true).green(176, 96) - sharp.green(176, 96)) < 3)
+    }
+
+    private fun Bitmap.shift(
+        x: Int,
+        y: Int,
+    ): Pair<Float, Float> = (red(x, y) * width / 255f - x) to (green(x, y) * height / 255f - y)
+
+    @Test fun theRefractionHasNoCreaseAlongTheDiagonals() {
+        // Walk across the top-left diagonal of a sharp card and of a pill-like ellipse, and across its center row. The edge
+        // distance would flip direction there; the height field must not: neighbouring pixels move by almost the same vector.
+        for (exponent in listOf(2f, 4f, 8f)) {
+            val out = lens(exponent = exponent)
+            val walks = listOf((26..90).map { it to 40 }, (24..60).map { it to it + 6 }.map { (x, y) -> y to x })
+            for (walk in walks) {
+                val shifts = walk.map { (x, y) -> out.shift(x, y) }
+                for (i in 1 until shifts.size) {
+                    val jump = hypot(shifts[i].first - shifts[i - 1].first, shifts[i].second - shifts[i - 1].second)
+                    assertTrue(jump < 3f, "exponent $exponent at ${walk[i]}: jump $jump")
+                }
+            }
+        }
     }
 }
