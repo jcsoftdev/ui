@@ -25,6 +25,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
+import com.jcsoftdev.ui.glass.GlassState
+import com.jcsoftdev.ui.glass.LocalGlassState
+import com.jcsoftdev.ui.glass.glassSource
+import com.jcsoftdev.ui.glass.rememberGlassState
 
 /**
  * A layer registered in the host: a piece of UI drawn above the app content; higher [z] draws later (equal [z] keeps the
@@ -43,7 +47,9 @@ internal class OverlayEntry(
 }
 
 @Stable
-internal class OverlayHostState {
+internal class OverlayHostState(
+    val glass: GlassState,
+) {
     val layers = mutableStateListOf<OverlayEntry>()
     val contentFocus = FocusRequester()
 
@@ -92,13 +98,15 @@ public fun OverlayHost(
         content()
         return
     }
-    val state = remember { OverlayHostState() }
+    val glass = rememberGlassState()
+    val state = remember(glass) { OverlayHostState(glass) }
     CompositionLocalProvider(LocalOverlayHost provides state) {
         Box(modifier.fillMaxSize(), propagateMinConstraints = true) {
             val ordered = state.ordered()
             val topModal = ordered.indexOfLast { it.modal }
             Box(
                 Modifier
+                    .glassSource(glass)
                     .semantics { if (topModal >= 0) hideFromAccessibility() }
                     .focusRequester(state.contentFocus)
                     .restoreFocus()
@@ -151,7 +159,7 @@ internal fun OverlayLayerEffect(
     SideEffect {
         layer.z = z
         layer.modal = modal
-        layer.content = { CompositionLocalProvider(locals) { content() } }
+        layer.content = { CompositionLocalProvider(locals) { CompositionLocalProvider(LocalGlassState provides host.glass) { content() } } }
     }
     DisposableEffect(host, layer, active) {
         if (active) host.layers.add(layer)
