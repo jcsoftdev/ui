@@ -413,7 +413,7 @@ describe("legibility over a worst-case backdrop", () => {
   for (const theme of ["light", "dark"] as const) {
     for (const [panel, attrs] of panels) {
       for (const [name, backdrop] of Object.entries(BACKDROPS)) {
-        test(`${panel} in ${theme} over ${name}: text-ink and text-ink-2 keep 4.5:1`, async () => {
+        test(`${panel} in ${theme} over ${name}: text-ink and text-ink-2 keep 4.8:1 (4.5 required, 0.3 margin)`, async () => {
           document.documentElement.dataset.theme = theme;
           const [ink, ink2] = await worstContrast(
             panel,
@@ -424,8 +424,8 @@ describe("legibility over a worst-case backdrop", () => {
           console.info(
             `contrast ${panel}/${theme}/${name}: ink ${ink?.toFixed(2)} ink-2 ${ink2?.toFixed(2)}`,
           );
-          expect(ink, `${panel}/${theme}/${name} text-ink`).toBeGreaterThanOrEqual(4.5);
-          expect(ink2, `${panel}/${theme}/${name} text-ink-2`).toBeGreaterThanOrEqual(4.5);
+          expect(ink, `${panel}/${theme}/${name} text-ink`).toBeGreaterThanOrEqual(4.8);
+          expect(ink2, `${panel}/${theme}/${name} text-ink-2`).toBeGreaterThanOrEqual(4.8);
         });
       }
     }

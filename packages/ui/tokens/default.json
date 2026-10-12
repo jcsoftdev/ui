@@ -1407,7 +1407,7 @@
     "name": "glass-regular-dim",
     "value": {
      "light": "rgba(255,255,255,.2)",
-     "dark": "rgba(0,0,0,.45)"
+     "dark": "rgba(0,0,0,.52)"
     },
     "usage": "Regular glass: legibility veil over the tinted backdrop. Keeps text-ink and text-ink-2 at 4.5:1 on a white, black or split backdrop; it pushes the backdrop away from the ink colour."
    },
