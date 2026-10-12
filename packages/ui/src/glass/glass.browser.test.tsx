@@ -800,10 +800,10 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
 
     test("a surface that found no free slot gets one when another is released", async () => {
       const grid = (skip: number) =>
-        Array.from({ length: 10 }, (_, i) =>
+        [..."abcdefghij"].map((id, i) =>
           i === skip ? null : (
             <Card
-              key={i}
+              key={id}
               data-testid={`c${i}`}
               material="liquid"
               className="absolute h-10 w-24"
