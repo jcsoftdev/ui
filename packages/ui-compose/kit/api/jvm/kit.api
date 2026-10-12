@@ -594,14 +594,24 @@ public final class com/jcsoftdev/ui/glass/GlassState {
 	public final fun isRecording ()Z
 }
 
+public final class com/jcsoftdev/ui/glass/GlassVariant : java/lang/Enum {
+	public static final field Frosted Lcom/jcsoftdev/ui/glass/GlassVariant;
+	public static final field Liquid Lcom/jcsoftdev/ui/glass/GlassVariant;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/glass/GlassVariant;
+	public static fun values ()[Lcom/jcsoftdev/ui/glass/GlassVariant;
+}
+
 public final class com/jcsoftdev/ui/glass/MaterialSurfaceKt {
-	public static final fun MaterialSurface-fWhpE4E (Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/Modifier;JLcom/jcsoftdev/ui/glass/GlassState;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
-	public static final fun material-uDo3WH8 (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/runtime/Composer;II)Landroidx/compose/ui/Modifier;
+	public static final fun MaterialSurface-hYmLsZ8 (Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/Modifier;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/foundation/interaction/InteractionSource;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun material-fWhpE4E (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/foundation/interaction/InteractionSource;Landroidx/compose/runtime/Composer;II)Landroidx/compose/ui/Modifier;
 }
 
 public final class com/jcsoftdev/ui/glass/SurfaceMaterial : java/lang/Enum {
 	public static final field Glass Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
 	public static final field GlassClear Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
+	public static final field Liquid Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
+	public static final field LiquidClear Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
 	public static final field Solid Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
@@ -2038,7 +2048,7 @@ public final class com/jcsoftdev/ui/theme/UiTheme {
 }
 
 public final class com/jcsoftdev/ui/theme/UiThemeKt {
-	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lcom/jcsoftdev/ui/theme/UiStrings;Lcom/jcsoftdev/ui/theme/UiStyle;ZZZLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lcom/jcsoftdev/ui/theme/UiStrings;Lcom/jcsoftdev/ui/theme/UiStyle;ZZZLcom/jcsoftdev/ui/glass/GlassVariant;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/theme/UiTypography {

@@ -36,6 +36,8 @@ public class GlassState internal constructor(
     // Where the source sits in the root; only read in the draw phase, so it needs no snapshot state.
     internal var originX: Float = 0f
     internal var originY: Float = 0f
+    internal var width: Float = 0f
+    internal var height: Float = 0f
 
     // How many times the source was recorded; lets tests prove nothing is captured without a consumer.
     internal var recordings: Int = 0
@@ -99,6 +101,8 @@ private class GlassSourceNode(
             return
         }
         val layer = state.layer
+        state.width = size.width
+        state.height = size.height
         state.recordings++
         layer.record(size = IntSize(size.width.toInt(), size.height.toInt())) {
             this@draw.drawContent()
