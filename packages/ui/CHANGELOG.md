@@ -2,6 +2,34 @@
 
 ## 0.3.0 (unreleased)
 
+### Liquid variant of the glass (lensing)
+
+Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it.
+
+- **`liquid` and `liquid-clear` utilities and `material="liquid" | "liquid-clear"`**: thin blur, higher
+  saturation, specular rim (lit top-left edge and a fainter opposite one), inner highlight, edge
+  glow and lower inner shadow for thickness, press flex on interactive surfaces (brightens and
+  scales; no transition under reduced motion; `backdrop-filter` is never animated). `glass` and
+  `glass-clear` render exactly as in 0.2 (a golden test pins their CSS).
+- **Global switch**: `data-glass="liquid"` on `<html>` or any scope makes `glass`, `glass-clear` and
+  the glass-preset chrome surfaces render liquid. Content (`surface-card`) stays solid.
+- **Lens by default for liquid surfaces in Chromium**: Dialog, Drawer, popper content (Popover,
+  DropdownMenu, ContextMenu, HoverCard), Topbar, Sidebar, ActionBar and Card call the new
+  `useGlassLens` internally. It lazy-loads the engine only when the surface resolves to a liquid
+  material, so frosted and solid surfaces never load it. The displacement map is rasterised from a
+  rounded-rect signed distance field with a Snell's-law squircle profile, DPR aware; chromatic
+  dispersion on surfaces up to 100,000 px squared; the blur and legibility veil move into the
+  filter so the rim stays sharp while the middle stays frosted. Budgets: 8 lenses, 640,000 px
+  squared, rebuilds throttled, one coalesced pass per frame. Opt out with `data-glass-lens="off"`
+  (element or ancestor) or `--glass-lens: 0`. Other engines get the base liquid look.
+- `@jcsoftdev/ui/glass`: new `useGlassLens`, `computeDisplacementField`, `lensProfile`;
+  `createDisplacementMap` now returns a PNG data URI (browser only); `applyGlassRefraction` gains
+  `dispersion`, `veil` and `auto`, and moves the blur into the filter. The default `scale` is 20.
+- New shared tokens `--liquid-*` (blur, saturate, filters, tints, dim, rim, depth). Legibility
+  holds: ink and ink-2 4.8:1 over white, black, split and stripes, with and without the lens.
+- Material components and the `cn` merge group accept the new values. Components with a `ref` prop
+  on Card and ActionBar now forward it to the root.
+
 ### Liquid Glass
 
 Apple-style glass for the control and navigation layer, with content kept solid.

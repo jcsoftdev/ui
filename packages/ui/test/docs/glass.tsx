@@ -1,7 +1,7 @@
 // Type-checks the examples in site/src/content/docs/docs/glass.md against the built package.
 // Every ```tsx block in that page must equal one `#region` below (see test/docs-examples.mjs).
 import { Card, ItemCardGroup, type ItemCardGroupItem } from "@jcsoftdev/ui/containers";
-import { useGlassRefraction } from "@jcsoftdev/ui/glass";
+import { useGlassLens } from "@jcsoftdev/ui/glass";
 import { DialogContent } from "@jcsoftdev/ui/overlays";
 
 // #region opt-in
@@ -19,11 +19,22 @@ export function AlwaysOpaque() {
 }
 // #endregion
 
-// #region refraction
-export function Lens() {
-  const ref = useGlassRefraction<HTMLDivElement>();
+// #region liquid
+export function LiquidCards() {
   return (
-    <div ref={ref} className="glass-clear rounded-dialog p-6">
+    <>
+      <Card material="liquid">Lensed along the rim</Card>
+      <Card material="glass">Frosted, as before</Card>
+    </>
+  );
+}
+// #endregion
+
+// #region lens
+export function Lens() {
+  const ref = useGlassLens<HTMLDivElement>();
+  return (
+    <div ref={ref} className="liquid-clear rounded-dialog p-6">
       Bent edges
     </div>
   );

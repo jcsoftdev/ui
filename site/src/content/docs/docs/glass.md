@@ -1,6 +1,6 @@
 ---
 title: Liquid Glass
-description: A glass material for the control and navigation layer, with regular and clear variants, accessibility fallbacks, per-component opt-in and optional refraction.
+description: A glass material for the control and navigation layer in two looks, frosted and liquid (lensing, specular rim, thickness), with regular and clear variants, accessibility fallbacks and per-component opt-in.
 section: Theming
 ---
 
@@ -85,21 +85,86 @@ The utilities are plain, unprefixed class names (`glass`, `glass-clear`, `surfac
 - An active `backdrop-filter` creates a stacking and containing block; do not nest them.
 - Do not animate the blur radius. Fade opacity or transform instead.
 
-## Refraction (optional)
+## Two looks: frosted and liquid
 
-Lensing bends the backdrop along the rim. It is opt-in, off by default and only active in Chromium.
+Every glass has two looks. **Frosted** (`glass`, `glass-clear`) is the 0.2/0.3 material: blur, tint, hairline edge. It renders exactly as before. **Liquid** (`liquid`, `liquid-clear`) follows what makes Apple's Liquid Glass recognisable:
 
-```tsx region=refraction
-export function Lens() {
-  const ref = useGlassRefraction<HTMLDivElement>();
+- **Lensing**: the backdrop is bent along the rim, following the curvature of the shape, and stays sharp there; under the content it is frosted so text stays legible.
+- **Specular rim**: a thin highlight on the lit (top-left) edge and a fainter one on the opposite edge.
+- **Thickness**: inner highlight, edge glow and a lower inner shadow, plus a soft outer shadow.
+- **Chromatic dispersion** at the rim of small surfaces, higher saturation and a thinner blur (10px regular, 3px clear).
+- **Press flex**: interactive surfaces (`button`, `a`, `[role=button]`, `[data-glass-interactive]`) brighten from within and scale on press. Nothing animates `backdrop-filter`, and under `prefers-reduced-motion` there is no transition.
+
+```html
+<div class="liquid rounded-dialog p-5">Regular liquid</div>
+<button class="liquid-clear rounded-full px-6 py-2">Clear liquid</button>
+```
+
+```tsx region=liquid
+export function LiquidCards() {
   return (
-    <div ref={ref} className="glass-clear rounded-dialog p-6">
+    <>
+      <Card material="liquid">Lensed along the rim</Card>
+      <Card material="glass">Frosted, as before</Card>
+    </>
+  );
+}
+```
+
+`material` accepts `"solid" | "glass" | "glass-clear" | "liquid" | "liquid-clear"`. The names `glass` and `glass-clear` keep meaning frosted, so nothing changes for existing apps.
+
+### Switching the whole app
+
+Put `data-glass="liquid"` on `<html>` (or on any scope): `glass`, `glass-clear` and, in the `glass` preset, the chrome surfaces (`surface-overlay`, `surface-nav`, `surface-side`: Dialog, Drawer, menus, Topbar, Sidebar) render liquid. The content layer (`surface-card`) stays solid. Remove the attribute to go back to frosted. Limits: the switch is one-way down the tree (a nested `data-glass="frosted"` does not undo an outer `liquid`; use `material` on the component instead), and surfaces already mounted do not load the lens until they remount.
+
+### The lens
+
+Chromium only: it is the one engine that paints `backdrop-filter: url(#filter)`. Components with a glass `material` (Dialog, Drawer, Popover, DropdownMenu, ContextMenu, HoverCard, Topbar, Sidebar, ActionBar, Card) call `useGlassLens` internally. It looks at the `--glass-lens` flag that the liquid utilities set and, only then, imports the engine as a separate chunk; frosted and solid surfaces never load it, so tree-shaking and bundle size are untouched for them. It does nothing on import, is SSR-safe, and releases its filter on unmount.
+
+The map is rasterised from the signed distance function of the rounded rectangle (size, radius and pixel ratio aware). Across a rim, the displacement follows a convex squircle height profile through Snell's law (n = 1.5): zero in the middle, strongest at the edge, pulling the content from just inside the shape. The filter then blurs the backdrop only where it is under the content, mixes the sharp lens back along the rim, and floods the legibility veil a little lighter at the rim than under the text. Dispersion displaces the three colour channels by slightly different amounts.
+
+Budgets: at most 8 lenses alive at once, no lens on a surface over 640,000 px squared (they keep the plain liquid look), dispersion only up to 100,000 px squared, the map is rebuilt at most about ten times a second while a surface resizes (one coalesced pass per frame for all surfaces), and the last 8 maps are cached. Opt out with `data-glass-lens="off"` on the element or any ancestor, or `--glass-lens: 0` in CSS. It follows `prefers-reduced-transparency`, `prefers-contrast: more`, `forced-colors` and `prefers-reduced-motion` live.
+
+Other engines (Safari, Firefox) get the base liquid look without refraction: rim, thickness, saturation, outer shadow. Legibility is the same: the uniform CSS veil is used there. With the lens active the veil is lighter only along the rim (at most the outer 28px), so text placed on the rim of a surface over a black or white backdrop has less contrast than the guarantee below, which is measured away from it.
+
+### Measured cost
+
+Chromium headless with software compositing, device pixel ratio 2, unthrottled frame loop while a photo scrolls under the surface (so every frame re-renders the backdrop). These are relative numbers, not GPU numbers:
+
+| Surface                          | Frame time |
+| -------------------------------- | ---------- |
+| No lens (frosted or liquid)      | 0.1 ms     |
+| Nav bar 1280x56, lens + dispersion | 6.2 ms   |
+| Nav bar 1280x56, lens, no dispersion | 4.0 ms |
+| Dialog 520x320, lens + dispersion  | 18.9 ms  |
+| Dialog 520x320, lens, no dispersion | 8.9 ms  |
+
+The cost only exists while the backdrop changes (scrolling under a nav, animations behind a surface); a modal dialog over a static page does not pay it per frame. Dispersion roughly doubles it on large surfaces, which is why it is off by default there. Building a map costs 1 to 7 ms at ratio 2 for typical sizes (a 520x320 surface: about 6 ms).
+
+### Imperative API
+
+`applyGlassRefraction(element, options)` and `useGlassRefraction()` still exist for any element, glass or not, with `scale`, `bezel`, `dispersion`, `veil`, `refraction: "force"` and `auto` (only while `--glass-lens` is 1). `useGlassLens(ref?)` is the ref the components use; reuse it for your own surfaces.
+
+```tsx region=lens
+export function Lens() {
+  const ref = useGlassLens<HTMLDivElement>();
+  return (
+    <div ref={ref} className="liquid-clear rounded-dialog p-6">
       Bent edges
     </div>
   );
 }
 ```
 
-`applyGlassRefraction(element)` is the imperative form and returns a cleanup. It builds an SVG displacement filter at runtime (no dependencies) and sets `backdrop-filter: <blur> url(#id)` plus `data-glass-refraction="on"`.
+Safari parses `backdrop-filter: url(...)` and then paints nothing, and Firefox ignores it, so `@supports` cannot gate it. `supportsBackdropRefraction()` is a feature allow-list: the declaration parses, `SVGFEDisplacementMapElement` exists and the Blink-only `-webkit-app-region` property exists. It is not a pixel test.
 
-Safari parses `backdrop-filter: url(...)` and then paints nothing, and Firefox ignores it, so `@supports` cannot gate it. `supportsBackdropRefraction()` is a feature allow-list: the declaration parses, `SVGFEDisplacementMapElement` exists and the Blink-only `-webkit-app-region` property exists. It is not a pixel test; pass `refraction: "force"` to skip the engine check. Refraction follows the user's preferences live: it is removed as soon as reduced transparency, more contrast, forced colors or reduced motion turn on, and re-applied when they are cleared. Applying it twice to the same element updates it instead of stacking filters, and removing the element (or calling the cleanup) releases the filter.
+## Tokens (liquid)
+
+Shared, per theme where light and dark differ: `liquid-regular-blur`, `liquid-clear-blur`, `liquid-saturate`, `liquid-regular-filter`, `liquid-clear-filter`, `liquid-regular-tint`, `liquid-regular-dim`, `liquid-clear-tint`, `liquid-clear-dim`, `liquid-rim`, `liquid-depth`, `liquid-depth-active`. Border, edge-less shadow and fallback reuse `glass-*`. The veil values are the same legibility floor as frosted: ink and ink-2 keep 4.8:1 over white, black, split and striped backdrops (the tests run it for liquid, with and without the lens). The price is the same as for frosted: over a dark backdrop, light liquid glass is pale.
+
+## Sources
+
+- WWDC25 [Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/): lensing ("bends, shapes, and concentrates light"), specular highlights that respond to geometry, tint adapting to what is behind, Regular vs Clear, glass that "illuminates from within" on press, thicker glass with deeper shadows and stronger lensing.
+- Apple Newsroom, [new software design](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/): "reflects and refracts its surroundings", specular highlights.
+- Apple HIG [Materials](https://developer.apple.com/design/human-interface-guidelines/materials) is JavaScript-rendered and could not be read automatically.
+- kube.io, [Liquid Glass in the Browser](https://kube.io/blog/liquid-glass-css-svg/): Snell's law, squircle height profile, displacement map encoding, Chromium-only `backdrop-filter: url()`. Dispersion by per-channel displacement is a common technique that is not described there; the implementation here is our own.
