@@ -1,9 +1,12 @@
 export {
   computeDisplacementField,
+  computeSpecularField,
   createDisplacementMap,
+  createSpecularMap,
   type DisplacementField,
   type DisplacementMapOptions,
   lensProfile,
+  type SpecularMapOptions,
 } from "./displacement-map.js";
 export { applyGlassRefraction, type GlassRefractionOptions } from "./refraction.js";
 export { supportsBackdropRefraction } from "./support.js";

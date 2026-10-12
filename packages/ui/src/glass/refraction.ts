@@ -1,13 +1,17 @@
-import { createDisplacementMap, VEIL_FLOOR } from "./displacement-map.js";
+import { createDisplacementMap, createSpecularMap, VEIL_FLOOR } from "./displacement-map.js";
 import { supportsBackdropRefraction } from "./support.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const HOST_ID = "ui-glass-refraction-defs";
 
 export interface GlassRefractionOptions {
-  /** Strength of the lens in px of displacement at the very edge. Default 26. */
+  /** Strength of the lens in px of displacement at the very edge. Default: the bevel width, between 12 and 36. */
   scale?: number;
-  /** Width of the refracting rim in px. Default: a quarter of the short side, between 14 and 36. */
+  /**
+   * Width of the refracting bevel in px; the middle of the surface shows the backdrop
+   * undisplaced. Default: the corner radius of the surface, at least 10 and at most 30% of its
+   * short side (so a small pill keeps a clear middle).
+   */
   bezel?: number;
   /**
    * Chromatic dispersion: how far apart the red and blue channels are pulled, as a fraction of
@@ -22,6 +26,18 @@ export interface GlassRefractionOptions {
    * `false` keeps the uniform CSS veil.
    */
   veil?: boolean;
+  /**
+   * Directional rim light inside the filter: a glint on the walls facing the upper left (and a
+   * weaker one opposite) that is the lensed backdrop pushed to a high saturation, a dark contour
+   * and a faint inner shadow. Default true.
+   */
+  specular?: boolean;
+  /**
+   * Materialise the lens when it is first applied (the refraction grows from nothing over
+   * 280 ms) and lift it while an interactive surface is pressed. Default true; never runs under
+   * reduced motion, where the lens is not applied at all.
+   */
+  animate?: boolean;
   /**
    * Only refract while the surface resolves to a liquid material (the `--glass-lens` flag the
    * `liquid` utilities set). This is what the glass components use. Default false.
@@ -52,6 +68,18 @@ const MAX_AREA = 640_000;
 const DISPERSION_AREA = 100_000;
 /** Lenses alive at once; further surfaces keep the plain liquid look until one is released. */
 const MAX_ACTIVE = 8;
+
+/** Bevel width of a surface: its corner radius, clamped so a small pill keeps a clear middle. */
+function bezelFor(radius: number, width: number, height: number): number {
+  const short = Math.min(width, height);
+  return Math.min(Math.max(radius, 10), Math.max(8, short * 0.3), 36);
+}
+
+/** Refraction strength of a bevel, in px of displacement at the edge. */
+const scaleFor = (bezel: number) => Math.min(36, Math.max(12, bezel));
+
+/** Ease-out cubic. */
+const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
@@ -107,6 +135,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     | undefined;
   /** Watches the size of an eligible surface that is too large for now, so it lenses once it shrinks. */
   let sizeWatch: ResizeObserver | undefined;
+  /** The first install of a controller materialises; later ones (theme change) do not. */
+  let intro = true;
   const original = element.style.backdropFilter;
   const originalPrefixed = element.style.getPropertyValue("-webkit-backdrop-filter");
 
@@ -162,8 +192,16 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       }
       return;
     }
-    const { scale = 20 } = options;
+    const displacers: Array<{ node: Element; factor: number }> = [];
+    let baseScale = options.scale ?? 0;
+    let level = options.animate === false || !intro ? 1 : 0;
+    intro = false;
+    const applyScale = () => {
+      for (const { node: target, factor } of displacers)
+        target.setAttribute("scale", String(baseScale * factor * level));
+    };
     const dispersion = dispersionFor(element.offsetWidth * element.offsetHeight);
+    let specularImage: SVGElement | undefined;
     const id = `ui-glass-lens-${++counter}`;
     const filter = document.createElementNS(SVG_NS, "filter");
     filter.id = id;
@@ -177,13 +215,16 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     };
     const image = node("feImage", { result: "map", preserveAspectRatio: "none" });
     const displace = (channel: string | undefined, factor: number) =>
-      node("feDisplacementMap", {
-        in: "SourceGraphic",
-        in2: "map",
-        scale: String(scale * factor),
-        xChannelSelector: "R",
-        yChannelSelector: "G",
-        result: channel === "lens" ? "lens" : `d${channel}`,
+      displacers.push({
+        node: node("feDisplacementMap", {
+          in: "SourceGraphic",
+          in2: "map",
+          scale: "0",
+          xChannelSelector: "R",
+          yChannelSelector: "G",
+          result: channel === "lens" ? "lens" : `d${channel}`,
+        }),
+        factor,
       });
     // Chromatic dispersion: the three colour channels are displaced by slightly different
     // amounts (blue the least, red the most, so the rim fringes like real glass) and added back.
@@ -257,6 +298,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     // the lens, a little lighter along the rim than under the text.
     const veilColor =
       options.veil === false ? "" : computed.getPropertyValue("--glass-lens-dim").trim();
+    const layers = [radius ? "mixed" : "lens"];
     if (veilColor) {
       node("feColorMatrix", {
         in: "map",
@@ -266,18 +308,62 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       });
       node("feFlood", { "flood-color": veilColor, result: "flood" });
       node("feComposite", { in: "flood", in2: "veil-weight", operator: "in", result: "veil" });
+      layers.push("veil");
+      element.style.setProperty("--glass-veil", "transparent");
+    }
+    // Directional rim light from a second map: a dark contour and a faint inner shadow, a glint
+    // that is the lensed backdrop itself pushed to a high saturation and brightness (so it takes
+    // the colour of what is behind the glass), and a touch of white on top of it.
+    const specular = options.specular !== false;
+    if (specular) {
+      specularImage = node("feImage", { result: "spec", preserveAspectRatio: "none" });
+      node("feColorMatrix", {
+        in: "spec",
+        type: "matrix",
+        values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0.4 0 0",
+        result: "shade",
+      });
+      node("feColorMatrix", {
+        in: "spec",
+        type: "matrix",
+        values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 0 0 0 0",
+        result: "glint-mask",
+      });
+      node("feColorMatrix", { in: "lens", type: "saturate", values: "6", result: "glint-sat" });
+      const bright = node("feComponentTransfer", { in: "glint-sat", result: "glint-bright" });
+      for (const channel of ["feFuncR", "feFuncG", "feFuncB"]) {
+        const fn = document.createElementNS(SVG_NS, channel);
+        fn.setAttribute("type", "linear");
+        fn.setAttribute("slope", "1.5");
+        fn.setAttribute("intercept", "0.12");
+        bright.appendChild(fn);
+      }
+      node("feComposite", {
+        in: "glint-bright",
+        in2: "glint-mask",
+        operator: "in",
+        result: "glint-tint",
+      });
+      node("feFlood", {
+        "flood-color": "white",
+        "flood-opacity": "0.55",
+        result: "glint-white-flood",
+      });
+      node("feComposite", {
+        in: "glint-white-flood",
+        in2: "glint-mask",
+        operator: "in",
+        result: "glint-white",
+      });
+      layers.push("shade", "glint-tint", "glint-white");
+    }
+    if (layers.length > 1 || radius) {
       const merge = node("feMerge", {});
-      for (const input of [radius ? "mixed" : "lens", "veil"]) {
+      for (const input of layers) {
         const mergeNode = document.createElementNS(SVG_NS, "feMergeNode");
         mergeNode.setAttribute("in", input);
         merge.appendChild(mergeNode);
       }
-      element.style.setProperty("--glass-veil", "transparent");
-    } else if (radius) {
-      const merge = node("feMerge", {});
-      const mergeNode = document.createElementNS(SVG_NS, "feMergeNode");
-      mergeNode.setAttribute("in", "mixed");
-      merge.appendChild(mergeNode);
     }
     host().appendChild(filter);
 
@@ -298,12 +384,14 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       if (width * height > MAX_AREA || dispersionFor(width * height) > 0 !== dispersion > 0)
         return sync();
       const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
-      const bezel = options.bezel ?? Math.min(28, Math.max(12, Math.min(width, height) / 6));
+      const bezel = options.bezel ?? bezelFor(radius, width, height);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const next = [width, height, radius, bezel, dpr].join("x");
       if (next === key) return;
       key = next;
       built = performance.now();
+      baseScale = options.scale ?? scaleFor(bezel);
+      applyScale();
       for (const [target, name, value] of [
         [filter, "x", "0"],
         [filter, "y", "0"],
@@ -314,6 +402,11 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       ] as const)
         target.setAttribute(name, value);
       image.setAttribute("href", createDisplacementMap({ width, height, radius, bezel, dpr }));
+      if (specularImage) {
+        specularImage.setAttribute("width", String(width));
+        specularImage.setAttribute("height", String(height));
+        specularImage.setAttribute("href", createSpecularMap({ width, height, radius, dpr }));
+      }
     };
     update();
     const observer =
@@ -331,6 +424,32 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
           })
         : undefined;
     observer?.observe(element);
+
+    // Materialise: the refraction grows from nothing; and lift it while a control is pressed.
+    let tween = 0;
+    const ease = (to: number, ms: number) => {
+      cancelAnimationFrame(tween);
+      const from = level;
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / ms);
+        level = from + (to - from) * easeOut(t);
+        applyScale();
+        if (t < 1) tween = requestAnimationFrame(step);
+      };
+      tween = requestAnimationFrame(step);
+    };
+    const press = element.matches('button, a, [role="button"], [data-glass-interactive]');
+    const down = () => ease(1.35, 120);
+    const up = () => ease(1, 220);
+    if (options.animate !== false) {
+      if (level < 1) ease(1, 280);
+      if (press) {
+        element.addEventListener("pointerdown", down);
+        for (const type of ["pointerup", "pointercancel", "pointerleave"])
+          element.addEventListener(type, up);
+      }
+    }
     element.style.backdropFilter = `${blur}url(#${id})`;
     element.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
     element.dataset.glassRefraction = "on";
@@ -340,6 +459,10 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       cancel: () => {
         clearTimeout(timer);
         timer = undefined;
+        cancelAnimationFrame(tween);
+        element.removeEventListener("pointerdown", down);
+        for (const type of ["pointerup", "pointercancel", "pointerleave"])
+          element.removeEventListener(type, up);
       },
     };
     active++;

@@ -1,5 +1,6 @@
 export {
   computeDisplacementField,
+  computeSpecularField,
   createDisplacementMap,
   lensProfile,
 } from "../../src/glass/displacement-map.js";

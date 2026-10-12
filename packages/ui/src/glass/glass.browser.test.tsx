@@ -458,8 +458,9 @@ describe("legibility over a worst-case backdrop", () => {
   for (const theme of ["light", "dark"] as const) {
     for (const [panel, attrs] of panels) {
       const [inkFloor, ink2Floor] = floors(panel, attrs);
+      const glassAttr = (attrs as Record<string, string>)["data-glass"];
       for (const [name, backdrop] of Object.entries(BACKDROPS)) {
-        test(`${panel}${attrs["data-glass"] ? " (data-glass)" : ""} in ${theme} over ${name}: text-ink ${inkFloor}:1, text-ink-2 ${ink2Floor}:1`, async () => {
+        test(`${panel}${glassAttr ? " (data-glass)" : ""} in ${theme} over ${name}: text-ink ${inkFloor}:1, text-ink-2 ${ink2Floor}:1`, async () => {
           document.documentElement.dataset.theme = theme;
           const [ink, ink2] = await worstContrast(
             panel,
@@ -886,6 +887,20 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
       await vi.waitFor(() => expect(filters()).toBe(1));
       await act(async () => root?.render(null));
       expect(log).toContain("b:cleanup");
+    });
+  });
+
+  test("the filter carries the directional rim light and the lens materialises to its bevel-sized strength", async () => {
+    await mount(<Card material="liquid" className="absolute top-2 left-2 h-24 w-40" />);
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const defs = document.querySelector("#ui-glass-refraction-defs") as Element;
+    expect(defs.querySelectorAll("feImage").length).toBe(2);
+    expect(defs.querySelector('feColorMatrix[type="saturate"]')?.getAttribute("values")).toBe("6");
+    await vi.waitFor(() => {
+      const scale = Number(defs.querySelector("feDisplacementMap")?.getAttribute("scale"));
+      // 96px high: the bevel is capped at 30% of the short side, and the strength follows it.
+      expect(scale).toBeGreaterThan(10);
+      expect(scale).toBeLessThanOrEqual(36 * 1.05);
     });
   });
 

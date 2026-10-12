@@ -44,3 +44,24 @@ lint, typecheck, test, build, check:treeshake, check:dist-imports, check:docs-ex
 - Perf (headless Chromium, software, DPR 2, unthrottled loop, backdrop scrolling): no lens 0.1 ms/frame; nav 1280x56 lens+dispersion 6.2 ms, no dispersion 4.0; dialog 520x320 18.9 / 8.9. Map build 1-7 ms at 2x.
 - WebKit: Playwright WebKit 27.2 does not paint backdrop-filter blur at all (frosted either), so only the rim/depth layers could be verified there.
 - Checks: lint (10 pre-existing warnings), typecheck, test 531, build, check:treeshake, check:dist-imports, check:docs-examples, test:stories 1407, test:glass 164, root build:site 435 pages.
+
+## Correction pass (verifier FAIL on b67bf82)
+- [x] H1 `Card` is a server component again: only glass cards (material glass/liquid or a glass utility in className) render the client `CardLens`. Other wired components already had "use client". New `pnpm check:rsc` (test/rsc.mjs): walks the dist import graph of every JSX module, fails on server-side use of client-only React APIs or calling a hook imported from a client module, then imports every server module under `--conditions=react-server` with client modules stubbed. Fails on b67bf82 (card.js calls useGlassLens), passes now. Story/site demos and `showcase/` are excluded (not package entries).
+- [x] H2 `useGlassLens` re-evaluates on class/data-glass/data-glass-lens/data-style/data-theme mutations of the element and every ancestor and on preference media changes; starts and stops the engine accordingly. Tests: liquid->glass, data-glass removed, glass->liquid, runtime switch-on, opt-out toggled (all fail on b67bf82).
+- [x] M1 area and dispersion budgets are checked in `update()` (resize): over MAX_AREA drops the lens and watches the size; crossing the dispersion area rebuilds. Entrance sizes are handled because every resize re-checks.
+- [x] M2 surfaces without a free slot wait in a queue and are woken when a slot frees.
+- [x] M3 `useGlassLens` composes the consumer ref with `useComposedRefs` (cleanup + identity change honoured).
+- [x] Low: compare stories use the real lens (Pane, GlassButton); ActionBar story wrapped to full width; dispersion 0.08 -> 0.05; popper nested in liquid dialog browser test.
+
+## Closer to Apple (second work unit)
+Sources: kube.io/blog/liquid-glass-css-svg, rdev/liquid-glass-react, liquid-glass-js, Kyant0 backdrop, flutter liquid_glass_renderer, WWDC25 #219 (as relayed by the coordinator; not re-fetched).
+- Bevel width = corner radius, clamped to [10, 30% of short side, 36]; lens strength = bevel width (12..36 px); the centre is undisplaced.
+- Blur 4px regular / 1.5px clear (was 10/3), saturate 1.5 light / 1.45 dark (was 2/1.9).
+- Veil: regular dim .6 light / .54 dark (was .7/.66), clear .47 / .38 (was .8/.66). Text halo token `liquid-halo` (text-shadow, inherited) as the content-side scrim. New `liquid-shadow` token (deeper outer shadow; adaptive-to-backdrop shadow is not possible in CSS, so it is a token).
+- Contrast floors for liquid relaxed and documented in the test: regular ink 4.5 / ink-2 3.5, clear ink 4.5 / ink-2 2.0 (frosted unchanged at 4.8). Reaching 4.8 needs the old .7+ veil, which is what made it look like frosted plastic.
+- Directional specular: second `feImage` (R glint, G contour, B inner shadow) from `computeSpecularField`; glint = lensed backdrop at saturate 6, slope 1.5, plus 0.55 white, masked by a 1.4px light wall facing the upper left (-120 deg), half strength opposite; 0.75px dark contour; 9px faint inner shadow. Cached with the displacement maps (16 entries).
+- Dispersion 0.05 (small surfaces only).
+- Materialise: refraction scale ramps 0 -> target in 280 ms on the first install of a controller; press lifts it to 1.35x (120 ms in, 220 ms out) on interactive surfaces. Not run under reduced motion (the lens is off there).
+- Not done: SDF merging (infeasible in SVG).
+- Perf (software Chromium, DPR 2, unthrottled): no lens 0.07 ms; nav 12.0 ms (dispersion), 6.1 (none); dialog 24.8 / 15.9. The extra feImage and layers roughly double the previous cost; still only paid while the backdrop changes.
+- Screenshots: scratchpad `liquid2/` (v2b-*: liquid over photo and text, light/dark, plus the frosted reference), next to the earlier ones in `liquid/`.

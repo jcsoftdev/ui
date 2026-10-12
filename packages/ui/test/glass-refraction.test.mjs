@@ -102,3 +102,34 @@ test("applyGlassRefraction is a no-op without a DOM and returns a cleanup", () =
   assert.equal(typeof cleanup, "function");
   cleanup();
 });
+
+test("the specular field lights the walls facing the upper left, weakly the opposite ones, and leaves the middle dark", () => {
+  const f = glass.computeSpecularField({ width: 200, height: 120, radius: 24, dpr: 1 });
+  const at = (x, y) => (y * f.width + x) * 4;
+  // Glint (red) on the outermost pixel of each wall.
+  const top = f.data[at(100, 0)];
+  const left = f.data[at(0, 60)];
+  const bottom = f.data[at(100, 119)];
+  const right = f.data[at(199, 60)];
+  assert.ok(top > 100 && left > 40, "walls facing the light glint");
+  assert.ok(bottom > 0 && bottom < top, "the opposite wall glints less");
+  assert.ok(right > 0 && right < left);
+  // Contour (green) on every wall, nothing in the middle, always opaque.
+  for (const [x, y] of [
+    [100, 0],
+    [0, 60],
+    [100, 119],
+    [199, 60],
+  ])
+    assert.ok(f.data[at(x, y) + 1] > 60);
+  const mid = at(100, 60);
+  assert.deepEqual([...f.data.slice(mid, mid + 4)], [0, 0, 0, 255]);
+  // The inner shadow (blue) sits on the walls turned away from the light, not on the lit ones.
+  assert.ok(f.data[at(100, 3) + 2] < f.data[at(100, 116) + 2]);
+});
+
+test("a small pill keeps a clear middle: the bevel never exceeds 30% of the short side", () => {
+  const f = glass.computeDisplacementField({ width: 180, height: 56, radius: 28, bezel: 16.8 });
+  const centre = (28 * f.width + 90) * 4;
+  assert.deepEqual([...f.data.slice(centre, centre + 3)], [128, 128, 255]);
+});

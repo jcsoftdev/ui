@@ -22,11 +22,22 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   filter so the rim stays sharp while the middle stays frosted. Budgets: 8 lenses, 640,000 px
   squared, rebuilds throttled, one coalesced pass per frame. Opt out with `data-glass-lens="off"`
   (element or ancestor) or `--glass-lens: 0`. Other engines get the base liquid look.
+- **Closer to Apple** (liquid only): refraction only across a bevel as wide as the corner radius
+  (centre shows the backdrop undisplaced), strength equal to the bevel width, blur 4px / 1.5px,
+  saturation 1.5, thinner veil (regular .6 light / .54 dark, clear .47 / .38) with a text halo
+  (`--liquid-halo`), a directional specular layer in the filter (glint tinted by the backdrop,
+  dark contour, faint inner shadow, second `feImage`), dispersion 0.05, a materialise ramp and a
+  press lift on the refraction, and a `--liquid-shadow` token. Liquid contrast floors are now
+  documented per variant (regular 4.5 / 3.5, clear 4.5 / 2).
+- **Fixes**: `Card` stays a server component (only a glass card renders the client `CardLens`);
+  the lens follows class, `data-glass`, opt-out and preference changes at runtime; area and
+  dispersion budgets are enforced on every resize; surfaces waiting for one of the 8 slots get one
+  when it frees; `useGlassLens` composes the consumer ref (React 19 cleanup, changing identity).
+  New `check:rsc` script.
 - `@jcsoftdev/ui/glass`: new `useGlassLens`, `computeDisplacementField`, `lensProfile`;
   `createDisplacementMap` now returns a PNG data URI (browser only); `applyGlassRefraction` gains
   `dispersion`, `veil` and `auto`, and moves the blur into the filter. The default `scale` is 20.
-- New shared tokens `--liquid-*` (blur, saturate, filters, tints, dim, rim, depth). Legibility
-  holds: ink and ink-2 4.8:1 over white, black, split and stripes, with and without the lens.
+- New shared tokens `--liquid-*` (blur, saturate, filters, tints, dim, rim, depth). 
 - Material components and the `cn` merge group accept the new values. Components with a `ref` prop
   on Card and ActionBar now forward it to the root.
 
