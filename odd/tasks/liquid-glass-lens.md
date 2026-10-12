@@ -83,3 +83,19 @@ Feedback v4: "parece un diamante con solo 4 lados".
 - Tests: `full coverage has no facets` (direction continuity across the four diagonals at four radii, five aspect ratios), a negative control that the detector flags a hip-roof field, `never folds in 2D` (Jacobian of the sampling map > 0.05 on a grid, four shapes at 2x).
 - Yellow circle cut at the right of "Liquid clear": the lens, not the fixture. The pull at the silhouette is about 0.7 A (up to 17 px at 24 px), so a backdrop shape crossing the edge jumps there by that much, like real glass at the rim. Kept; lowering `FULL_CAP` shrinks it.
 - Screenshots: scratchpad `liquid4/` (`v5-kit-{photo,text}-{light,dark}.png`, `zoom-card-straight-stripes.png`).
+
+## Configurable liquid glass and liquid motion (fifth work unit, web only)
+Approved 2026-10-12. Phases 1-3 of the plan; shape merging on web stays out of scope. Route: delegated direct, single writer. TDD: disabled (implement, then protect); runner: `node --test` (pnpm test), vitest projects `glass` and `stories`.
+References (ideas only, no code copied): liquidglass.dev (gentpan/liquidglass, MIT): rim-band bevel, Snell table, spring constants (press 600/36, lens-follow 260/26, ...). ybouane liquid-glass (license unclear): only the parameter set was mirrored.
+Contrast: defaults keep the current floors untouched. Lower `opacity`, a `tint` or `grain` void the contrast guarantee (documented). The liquid contrast floor decision is still pending with the user; no floor changed here.
+Design: options -> `--liquid-*` custom properties (inherit, so a scope or the theme sets defaults; the lens engine and the CSS read the same variables). `Material` accepts `{ type: "liquid" | "liquid-clear", ...options }` next to the string values; `materialStyle()` returns the variables. Presets via `data-glass="liquid-clear|liquid-regular|liquid-thick"` (`[data-glass^="liquid"]` switch) in base.css. Zero runtime deps: in-house spring.
+
+### Tasks
+- [ ] LC1 `LiquidGlassOptions`, defaults, presets, `liquidStyle`, `Material` object form (`materialClass` + `materialStyle`), CSS wiring in the liquid utilities (frost, saturation, brightness, tint, opacity, rim, shadow, radius), `data-glass` presets in base.css, wired into every component that takes `material`. Tests: mapping, defaults, golden frosted unchanged.
+- [ ] LC2 Optics: `profile` rim | full | dome in the displacement map, `bevelWidth`, `refraction`, specular angle/intensity, fresnel, grain, size-scaled thickness and shadow. Tests: no-crease/no-fold per profile.
+- [ ] LC3 Motion: in-house spring, press lift + swell + materialise by spring, drag with rubber band and velocity squash (mismatched X/Y springs, jelly settle), touch glow, pointer light. Tests: spring convergence, squash bounds, reduced motion.
+- [ ] LC4 Storybook playground with a control per option, README/docs page, CHANGELOG, screenshots.
+- [ ] LC5 Final checks: test, test:glass, test:stories, check:rsc, build:site.
+
+### Route declaration
+All tasks: inline by the single writer (the exploration read of 8 files was done before the first write; no parallel writers).
