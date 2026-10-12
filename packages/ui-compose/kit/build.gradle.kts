@@ -1,3 +1,5 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinMultiplatform
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,10 +9,11 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.binaryCompatibilityValidator)
     alias(libs.plugins.roborazzi)
+    alias(libs.plugins.mavenPublish)
 }
 
 group = "com.jcsoftdev"
-version = "0.1.0-SNAPSHOT"
+version = providers.gradleProperty("VERSION_NAME").get()
 
 // Tokens are generated from the same tokens.json as the web CSS and never committed.
 val uiPackage = rootProject.layout.projectDirectory.dir("../ui")
@@ -135,4 +138,45 @@ compose.resources {
     publicResClass = false
     packageOfResClass = "com.jcsoftdev.ui.resources"
     generateResClass = always
+}
+
+// Published as com.jcsoftdev:ui-compose (+ per-target ui-compose-android / -jvm / -iosarm64 ...).
+// Signing and Central credentials come from ORG_GRADLE_PROJECT_* env vars; local builds stay unsigned.
+mavenPublishing {
+    configure(
+        KotlinMultiplatform(
+            javadocJar = JavadocJar.Empty(),
+            androidVariantsToPublish = listOf("release"),
+        ),
+    )
+    publishToMavenCentral()
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) {
+        signAllPublications()
+    }
+    coordinates(artifactId = "ui-compose")
+    pom {
+        name.set("jcsoftdev UI (Compose)")
+        description.set("Compose Multiplatform UI kit sharing design tokens and icons with the jcsoftdev web UI.")
+        inceptionYear.set("2026")
+        url.set("https://github.com/jcsoftdev/ui")
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
+                distribution.set("repo")
+            }
+        }
+        developers {
+            developer {
+                id.set("jcsoftdev")
+                name.set("Juan Carlos")
+                url.set("https://github.com/jcsoftdev")
+            }
+        }
+        scm {
+            url.set("https://github.com/jcsoftdev/ui")
+            connection.set("scm:git:git://github.com/jcsoftdev/ui.git")
+            developerConnection.set("scm:git:ssh://git@github.com/jcsoftdev/ui.git")
+        }
+    }
 }

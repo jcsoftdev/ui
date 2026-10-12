@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.androidTest) apply false
     alias(libs.plugins.baselineProfile) apply false
     alias(libs.plugins.binaryCompatibilityValidator) apply false
+    alias(libs.plugins.mavenPublish) apply false
     alias(libs.plugins.spotless)
 }
 
