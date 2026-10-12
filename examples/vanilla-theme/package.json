@@ -1,0 +1,18 @@
+{
+  "name": "@jcsoftdev/example-vanilla-theme",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zero-framework playground: createTheme + applyTheme with a live brand color picker.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:e2e": "node scripts/screenshot.mjs"
+  },
+  "devDependencies": {
+    "@jcsoftdev/ui-tokens": "workspace:^",
+    "playwright": "1.64.0",
+    "vite": "7.3.6"
+  }
+}
