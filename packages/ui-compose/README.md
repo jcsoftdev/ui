@@ -9,15 +9,15 @@ Published to Maven Central as `com.jcsoftdev:ui-compose`.
 ```kotlin
 // commonMain (Kotlin Multiplatform)
 dependencies {
-    implementation("com.jcsoftdev:ui-compose:0.1.0")
+    implementation("com.jcsoftdev:ui-compose:0.2.0")
 }
 ```
 
-Gradle resolves the per-target artifacts (`ui-compose-android`, `ui-compose-jvm`, `ui-compose-iosarm64`, `ui-compose-iossimulatorarm64`) through Gradle module metadata. Android-only projects can depend on `com.jcsoftdev:ui-compose-android:0.1.0` directly. The Android artifact ships the kit's baseline profile.
+Gradle resolves the per-target artifacts (`ui-compose-android`, `ui-compose-jvm`, `ui-compose-iosarm64`, `ui-compose-iossimulatorarm64`) through Gradle module metadata. Android-only projects can depend on `com.jcsoftdev:ui-compose-android:0.2.0` directly. The Android artifact ships the kit's baseline profile.
 
 ## Glass
 
-Liquid Glass follows Apple's model: glass is for controls and navigation floating above content; content stays solid; glass never sits on glass; accessibility settings make it opaque.
+Liquid Glass follows Apple's model: glass is for controls and navigation floating above content; content stays solid; glass on glass falls back to a near-solid fill; accessibility settings make it opaque.
 
 ```kotlin
 UiTheme(style = UiStyle.Glass) {          // chrome (Sheet, Dialog, Menu, Toaster, TopBar, ActionBar) becomes glass
@@ -34,6 +34,12 @@ UiTheme(style = UiStyle.Glass) {          // chrome (Sheet, Dialog, Menu, Toaste
 | `UiTheme(reduceTransparency, highContrast, backdropBlur)` | Opaque-with-border switches and a global blur kill switch. |
 
 How it renders: tint, dim layer, 1 px border and a top edge highlight everywhere (the `UiGlass` tokens shared with the web); real blur (`BlurEffect` plus a saturation color filter on a per-surface `GraphicsLayer` that replays the shared source layer) on Android 12 (API 31)+, desktop and iOS. The source is recorded only while a blurring surface is composed. Below API 31, in the Menu popup window (it cannot sample the app) and without a source, the surface is a 90% opaque tint instead of a blurred one. No dependency beyond Compose foundation.
+
+Nesting: everything inside a glass surface (including a Menu opened from a glass `TopBar`, `ActionBar`, sheet or dialog) that asks for glass gets the near-solid fill. The web keeps portaled popups opened from a top bar as glass; Compose is stricter here on purpose, because a popup window cannot blur anyway. Glass inside an opaque surface (for example a glass `Card` in a default, solid sheet) is tint-only: it does not sample the page hidden behind the sheet.
+
+The blur sits on an opaque `bg` base and never samples past the source bounds, so content under a source that is not opaque does not show through sharply.
+
+Performance: blurred scrolling under a `TopBar` costs noticeably more than tint on software-GPU emulators (p50 29 ms vs 16 ms measured); for long scrolling lists prefer `material = SurfaceMaterial.Solid` or `UiTheme(backdropBlur = false)` on low-end devices. The kit does not switch blur off while scrolling on its own.
 
 Rules: blur large chrome only, never list items; the radius is constant (never animate it); in-content glass cards are tint-only (a surface inside its own source would sample itself). The glass sheet follows its drag exactly; if a screen drops frames, `UiTheme(backdropBlur = false)` is the fallback.
 
