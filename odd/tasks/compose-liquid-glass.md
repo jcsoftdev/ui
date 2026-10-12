@@ -48,6 +48,8 @@ Goldens of record are Linux, recorded by `.github/workflows/ui-compose-record.ym
 - [x] CG6 Tests and goldens: resolver tests, UI tests, provisional shots. Route: inline.
 - [x] CG7 Sample "Glass" screen over busy content, emulator screenshots (real blur vs fallback), frame timing. Route: inline.
 - [x] CG8 Docs: README "Glass", `docs/parity.md`, CHANGELOG 0.2.0 Unreleased, api dumps. Route: inline.
+- [x] CA Phase A corrections (version 0.2.0, opaque base under the backdrop, solid overlays hide the page from glass, dialog observe, contrast listener, mutation-killing tests, README fixes): 956094a, 9b54d09, 99ef62a, 557420c.
+- [x] CB Phase B Liquid variant: `Liquid`/`LiquidClear`, `GlassVariant`, lens shader per platform, rim/shadow/press, sample side by side, tests, docs. Route: inline.
 
 ## Acceptance
 - Defaults: Default style keeps every surface exactly as before; Glass style turns only chrome to glass; Card is solid unless `material` is given.
@@ -64,3 +66,5 @@ Goldens of record are Linux, recorded by `.github/workflows/ui-compose-record.ym
 - CG7: emulator API 35 shots (blur vs tint vs reduce); frame timing: scrolling under glass top bar p50 29ms/p90 53ms with blur vs 16/27ms tint (software-GPU emulator, debug build); sheet open p50 16ms both, p90 29 vs 27ms.
 - CG8: README Glass, parity, CHANGELOG 0.2.0 Unreleased, api dumps.
 - Checks: spotlessCheck, apiCheck, :kit:allTests (-x iosSimulatorArm64Test) 267 tests 0 failures, :kit:compileKotlinIosSimulatorArm64, :sample:assembleRelease (R8): BUILD SUCCESSFUL. `verifyRoborazziJvm` on macOS: 15 failures, identical to origin/main (glyph rasterization), none from glass.
+- Phase B: lens samples inward (Android clips RenderEffect inputs to the surface clip, so outward samples came back transparent and truncated the right/bottom of the card); thickness shading is stacked strokes so no hard inner edge. Resolver variant tests (6), `LiquidRenderTest` (5: edge displacement vs center, frosted ignores the lens switch, liquid differs from frosted, press brightens). Frosted pixels hashed identical between 557420c and the Phase B tree (Glass and GlassClear scenes).
+- Perf (emulator API 35, software GPU, debug, 12 swipes under the glass TopBar): frosted p50 17 / p90 31 / p99 65 ms, janky 6.6%; liquid p50 17 / p90 26 / p99 32 ms, janky 3.3% (one first-use shader compile outlier in gpu p99).

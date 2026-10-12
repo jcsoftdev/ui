@@ -28,8 +28,9 @@ UiTheme(style = UiStyle.Glass) {          // chrome (Sheet, Dialog, Menu, Toaste
 
 | Piece | What it does |
 | --- | --- |
-| `SurfaceMaterial.Solid / Glass / GlassClear` | The `material` parameter. `null` means the role default: chrome is glass only with `UiStyle.Glass`, content is solid. |
+| `SurfaceMaterial.Solid / Glass / GlassClear / Liquid / LiquidClear` | The `material` parameter. `null` means the role default: chrome is glass only with `UiStyle.Glass`, content is solid. |
 | `Modifier.material`, `MaterialSurface` | Glass for any surface; `MaterialSurface` also marks its children as inside glass. |
+| `GlassVariant` (`Frosted`, `Liquid`), `UiTheme(glassVariant = ...)` | Which glass `UiStyle.Glass` chrome uses; the default is `Liquid`. Pass `GlassVariant.Frosted` for the blur-only look. |
 | `rememberGlassState`, `Modifier.glassSource`, `LocalGlassState` | The backdrop. Overlays get the app content automatically from `OverlayHost`; for in-content bars mark the scrolling content and pass the state to `TopBar(glass = ...)`. |
 | `UiTheme(reduceTransparency, highContrast, backdropBlur)` | Opaque-with-border switches and a global blur kill switch. |
 
@@ -45,7 +46,9 @@ Rules: blur large chrome only, never list items; the radius is constant (never a
 
 Accessibility: Android has no reduce-transparency setting; the kit reads high-contrast text (`high_text_contrast_enabled`) and the Android 14 contrast level (`UiModeManager.contrast >= 0.5`) and shows opaque glass for them. iOS maps Reduce Transparency and Increase Contrast (`darkerSystemColors`). Pass the flags yourself to override.
 
-The sample app has a Glass screen (`--es screen glass`; extras `dark`, `blur`, `reduce`, `open` = `sheet` or `dialog`).
+Liquid variant: `Liquid` and `LiquidClear` refract the backdrop like a lens. A runtime shader (AGSL on Android 13+, SkSL on desktop and iOS) bends the backdrop along a signed-distance edge, strongest at the rim and fading to nothing across a bezel, with a little chromatic dispersion, a low center blur, a specular rim, thickness shading and an outer shadow. Pass `interactionSource` to `Modifier.material` or `MaterialSurface` and a press brightens and strengthens the lens; with motion enabled the surface also flexes by 3% (reduced motion keeps only the brightening). Fallbacks: Android 12 and 12L (API 31-32) get the blurred glass with the Liquid rim and shadow; below API 31 a tint with the rim; reduce transparency and high contrast force opaque, as for any glass. Frosted rendering is unchanged by the Liquid variant. Cost: one extra shader pass per Liquid surface, and the shader compiles on first use.
+
+The sample app has a Glass screen (`--es screen glass`; extras `dark`, `blur`, `reduce`, `variant` = `liquid` or `frosted`, `open` = `sheet` or `dialog`).
 
 Golden screenshots of glass are not in the verified set yet: goldens of record are Linux, recorded by CI. Run `GLASS_SHOTS=1 ./gradlew :kit:recordRoborazziJvm --tests '*GlassShots*'` to inspect them locally.
 
