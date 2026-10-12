@@ -62,14 +62,24 @@ export function bezelFor(
 export const MAX_OFFSET = 0.58;
 
 /**
- * Full coverage bends each axis on its own: the pull along x is `-sign(x) A (x / hx)^2` (and the
- * same along y), a smooth dome with no crease along the diagonals of the shape and no seam at the
- * centre, where it is zero without a kink. Its slope is at most 2A/h, so A is at most 0.4 of the
- * half size (fold-free), and at most {@link FULL_CAP} px so a large surface does not smear.
+ * Full coverage is a dome over a superellipse radial coordinate: with `u = x / hx`, `v = y / hy`
+ * and `r = (|u|^N + |v|^N)^(1/N)`, a pixel is pulled towards the centre along the gradient of `r` in
+ * the normalised (u, v) plane (perpendicular to the contours of the superellipse) by `A (r / r_corner)^1.5`. The gradient is
+ * continuous everywhere except the exact centre, where the pull is zero, so there is no crease:
+ * a field built from the distance to the nearest edge, or from each axis on its own, has its
+ * pull flip direction along the diagonals of the shape and the glass reads as a four-faced
+ * pyramid. `N = 3` keeps the contours between an ellipse (a round drop) and a rounded rectangle
+ * (a slab). The slope of the pull is at most 2A / (r_corner^2 h) along an axis, so A is at most
+ * 0.55 of the smaller half size (fold-free), and at most {@link FULL_CAP} px so a large surface
+ * does not smear.
  */
-export const FULL_FRACTION = 0.4;
+export const FULL_FRACTION = 0.55;
+/** Exponent of the superellipse radial coordinate of the full lens. */
+export const FULL_EXPONENT = 3;
 /** Largest offset of the full lens, in px. */
 export const FULL_CAP = 24;
+/** Value of the radial coordinate at the corners of the box. */
+const CORNER = 2 ** (1 / FULL_EXPONENT);
 
 /** Offset amplitude of the lens along each axis, in px. */
 export function lensAmplitude(
@@ -82,10 +92,8 @@ export function lensAmplitude(
     const a = MAX_OFFSET * bezel;
     return { x: a, y: a };
   }
-  return {
-    x: Math.min((width / 2) * FULL_FRACTION, FULL_CAP),
-    y: Math.min((height / 2) * FULL_FRACTION, FULL_CAP),
-  };
+  const a = Math.min((Math.min(width, height) / 2) * FULL_FRACTION, FULL_CAP);
+  return { x: a, y: a };
 }
 
 /** `scale` of the displacement filter: the offset is half of it (128 is neutral). */
@@ -166,14 +174,21 @@ export function computeDisplacementField({
   for (let j = 0; j < ph; j++) {
     const py = (j + 0.5) / ratio - hy;
     const inner = Math.abs(py) < hy - rim;
-    const fy = full ? -Math.sign(py) * (amp.y / norm) * (py / hy) ** 2 : 0;
+    const av = Math.abs(py) / hy;
+    const gv = full ? Math.sign(py) * av ** (FULL_EXPONENT - 1) : 0;
+    const vn = av ** FULL_EXPONENT;
     for (let i = 0; i < pw; i++) {
       if (!full && inner && i === band) i = Math.max(band, pw - band);
       const px = (i + 0.5) / ratio - hx;
       const o = (j * pw + i) * 4;
       if (full) {
-        data[o] = 128 + -Math.sign(px) * (amp.x / norm) * (px / hx) ** 2 * 127;
-        data[o + 1] = 128 + fy * 127;
+        const au = Math.abs(px) / hx;
+        const gx = Math.sign(px) * au ** (FULL_EXPONENT - 1);
+        const g = Math.hypot(gx, gv);
+        const t = Math.min(Math.cbrt(au ** FULL_EXPONENT + vn) / CORNER, 1);
+        const pull = g > 0 ? t ** 1.5 / g : 0;
+        data[o] = 128 - gx * pull * 127 * (amp.x / norm);
+        data[o + 1] = 128 - gv * pull * 127 * (amp.y / norm);
         data[o + 3] = 255;
         if (inner && Math.abs(px) < hx - rim) {
           data[o + 2] = 255;

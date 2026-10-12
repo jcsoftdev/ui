@@ -75,3 +75,11 @@ Feedback: the v2b screenshots looked milky, stripes blurred rather than bent, a 
 - Contrast floors: no lens: unchanged from unit 2. Lens on: smooth photo ink 4.5 / ink-2 2.0 (measured 5.35 / 2.19), hard stripes ink 2.0 / ink-2 1.0 (halo not counted). Documented.
 - Pre-existing: `ActionBar` collapses to ~32 px wide with `w-fit` because `@container/action-bar` size-contains the inline axis; the fixture passes an explicit width, not fixed here.
 - Screenshots: scratchpad `liquid3/` (v3-* intermediate, v4-kit-{photo,text}-{light,dark}.png final: card, clear card, action bar, capsule; compare-pill-vs-web.png next to the Compose pill; zoom-left-before/after).
+
+## No facets (fourth work unit)
+Feedback v4: "parece un diamante con solo 4 lados".
+- Diagnosis: the coordinator's (SDF/edge-distance gradient creases along the diagonals) is right in kind; the v4 field was per-axis (`-sign(x) A (x/hx)^2` on x and y separately), which is also a pyramid-like read: each triangle of the shape is dominated by one axis.
+- Fix: superellipse dome. `r = (|u|^3 + |v|^3)^(1/3)`, pull along the gradient of `r` in the normalised (u, v) plane (normalised, not scaled by 1/hx, 1/hy, otherwise the direction rotates too fast at the ends of a wide nav and the map folds), magnitude `A (r / r_corner)^1.5`, `A = min(0.55 x smaller half size, 24 px)`. Continuous gradient except at the exact centre where the pull is zero (C1). Exponent 3 sits between an ellipse (round drop) and a slab.
+- Tests: `full coverage has no facets` (direction continuity across the four diagonals at four radii, five aspect ratios), a negative control that the detector flags a hip-roof field, `never folds in 2D` (Jacobian of the sampling map > 0.05 on a grid, four shapes at 2x).
+- Yellow circle cut at the right of "Liquid clear": the lens, not the fixture. The pull at the silhouette is about 0.7 A (up to 17 px at 24 px), so a backdrop shape crossing the edge jumps there by that much, like real glass at the rim. Kept; lowering `FULL_CAP` shrinks it.
+- Screenshots: scratchpad `liquid4/` (`v5-kit-{photo,text}-{light,dark}.png`, `zoom-card-straight-stripes.png`).

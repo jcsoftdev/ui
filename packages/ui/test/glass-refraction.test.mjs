@@ -80,6 +80,94 @@ test("the default lens cannot fold: source position minus output position stays 
   }
 });
 
+const fullField = (width, height, dpr = 1) => {
+  const radius = 24;
+  const bezel = glass.bezelFor(radius, width, height, "full");
+  const f = glass.computeDisplacementField({ width, height, radius, bezel, coverage: "full", dpr });
+  const scale = glass.scaleFor(width, height, bezel, "full");
+  /** Source offset in css px at css position (x, y), from the nearest map pixel. */
+  const at = (x, y) => {
+    const i = Math.min(f.width - 1, Math.max(0, Math.round(x * dpr)));
+    const j = Math.min(f.height - 1, Math.max(0, Math.round(y * dpr)));
+    const o = (j * f.width + i) * 4;
+    return [(scale * (f.data[o] - 127.5)) / 255, (scale * (f.data[o + 1] - 127.5)) / 255];
+  };
+  return { at, scale };
+};
+
+test("full coverage has no facets: the direction of the pull is continuous across the diagonals", () => {
+  // A height field from the distance to the nearest edge (or one per axis) flips the direction of
+  // the pull along the diagonals of the shape, and the glass reads as a four-faced pyramid.
+  for (const [width, height] of [
+    [520, 320],
+    [1280, 56],
+    [200, 200],
+    [180, 56],
+    [320, 520],
+  ]) {
+    const { at } = fullField(width, height);
+    for (const sx of [-1, 1]) {
+      for (const sy of [-1, 1]) {
+        for (const q of [0.35, 0.5, 0.65, 0.8]) {
+          // The point of the diagonal u = v at radius q, and a point one pixel either side of it.
+          const x = width / 2 + (sx * q * width) / 2;
+          const y = height / 2 + (sy * q * height) / 2;
+          const a = at(x - 1.5, y);
+          const b = at(x + 1.5, y);
+          const norm = Math.hypot(...a) * Math.hypot(...b);
+          if (norm < 1e-6) continue;
+          const cos = (a[0] * b[0] + a[1] * b[1]) / norm;
+          assert.ok(cos > 0.97, `${width}x${height} facet at ${sx},${sy},${q}: cos ${cos}`);
+        }
+      }
+    }
+  }
+});
+
+test("the facet detector flags a hip-roof field (pull along the normal of the nearest edge)", () => {
+  const width = 200;
+  const height = 200;
+  const roof = (x, y) => {
+    const dl = x;
+    const dr = width - x;
+    const dt = y;
+    const db = height - y;
+    const m = Math.min(dl, dr, dt, db);
+    if (m === dl) return [1, 0];
+    if (m === dr) return [-1, 0];
+    if (m === dt) return [0, 1];
+    return [0, -1];
+  };
+  // The same probe as above, on the diagonal of a square at radius 0.5.
+  const a = roof(100 - 50 - 1.5, 100 - 50);
+  const b = roof(100 - 50 + 1.5, 100 - 50);
+  assert.ok(a[0] * b[0] + a[1] * b[1] < 0.97);
+});
+
+test("full coverage never folds in 2D: the Jacobian of the sampling map stays positive", () => {
+  for (const [width, height] of [
+    [520, 320],
+    [1280, 56],
+    [200, 200],
+    [180, 56],
+  ]) {
+    const { at } = fullField(width, height, 2);
+    for (let x = 4; x < width - 4; x += Math.ceil(width / 90)) {
+      for (let y = 4; y < height - 4; y += Math.ceil(height / 40)) {
+        const [ox1, oy1] = at(x + 1, y);
+        const [ox0, oy0] = at(x - 1, y);
+        const [px1, py1] = at(x, y + 1);
+        const [px0, py0] = at(x, y - 1);
+        const a = 1 + (ox1 - ox0) / 2;
+        const b = (px1 - px0) / 2;
+        const c = (oy1 - oy0) / 2;
+        const d = 1 + (py1 - py0) / 2;
+        assert.ok(a * d - b * c > 0.05, `${width}x${height} folds at ${x},${y}`);
+      }
+    }
+  }
+});
+
 test("full coverage bends the whole surface: strongest at the rim, smaller but non-zero inside, zero at the centre, capped in px", () => {
   const f = glass.computeDisplacementField({
     width: 400,

@@ -36,6 +36,7 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   veil moved fully into the filter and is adaptive (only where the backdrop is close to the ink), the
   tint is dropped while the lens is on, blur is 2 px / 0.6 px, the rim glint is brighter and wider,
   and dispersion is off by default (`--glass-lens-dispersion` or the option turns it on).
+- The full-surface lens is a crease-free superellipse dome (pull along the gradient of `r = (|u|^3 + |v|^3)^(1/3)`), not a per-axis or edge-distance field, so it no longer reads as a four-faced diamond; tests check direction continuity across the diagonals and a positive 2D Jacobian.
 - **Fixes**: `Card` stays a server component (only a glass card renders the client `CardLens`);
   the lens follows class, `data-glass`, opt-out and preference changes at runtime; area and
   dispersion budgets are enforced on every resize; surfaces waiting for one of the 8 slots get one
