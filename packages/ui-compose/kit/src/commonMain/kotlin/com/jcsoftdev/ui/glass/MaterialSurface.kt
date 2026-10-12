@@ -88,7 +88,12 @@ internal fun GlassNesting(
     resolved: ResolvedMaterial,
     content: @Composable () -> Unit,
 ) {
-    if (resolved.providesNesting) CompositionLocalProvider(LocalGlassNested provides true, content = content) else content()
+    when {
+        resolved.providesNesting -> CompositionLocalProvider(LocalGlassNested provides true, content = content)
+        // An opaque surface hides the page behind it, so glass inside it must not sample that page.
+        resolved.mode == SurfaceMode.Solid -> CompositionLocalProvider(LocalGlassState provides null, content = content)
+        else -> content()
+    }
 }
 
 /**
@@ -126,6 +131,7 @@ internal fun Modifier.surfaceMaterial(
                     shape = shape,
                     tokens = tokens,
                     blur = resolved.mode == SurfaceMode.Blur,
+                    base = colors.bg,
                     veil = if (resolved.mode == SurfaceMode.Tint) colors.float.copy(alpha = TINT_VEIL_ALPHA) else Color.Unspecified,
                     state = glass,
                     borderWidth = borderWidth,
@@ -139,14 +145,15 @@ private data class GlassSurfaceElement(
     val shape: Shape,
     val tokens: GlassMaterial,
     val blur: Boolean,
+    val base: Color,
     val veil: Color,
     val state: GlassState?,
     val borderWidth: Dp,
     val observe: (() -> Float)?,
 ) : ModifierNodeElement<GlassSurfaceNode>() {
-    override fun create(): GlassSurfaceNode = GlassSurfaceNode(shape, tokens, blur, veil, state, borderWidth, observe)
+    override fun create(): GlassSurfaceNode = GlassSurfaceNode(shape, tokens, blur, base, veil, state, borderWidth, observe)
 
-    override fun update(node: GlassSurfaceNode) = node.update(shape, tokens, blur, veil, state, borderWidth, observe)
+    override fun update(node: GlassSurfaceNode) = node.update(shape, tokens, blur, base, veil, state, borderWidth, observe)
 
     override fun InspectorInfo.inspectableProperties() {
         name = "glassSurface"
@@ -162,6 +169,7 @@ private class GlassSurfaceNode(
     var shape: Shape,
     var tokens: GlassMaterial,
     var blur: Boolean,
+    var base: Color,
     var veil: Color,
     var state: GlassState?,
     var borderWidth: Dp,
@@ -181,11 +189,13 @@ private class GlassSurfaceNode(
         shape: Shape,
         tokens: GlassMaterial,
         blur: Boolean,
+        base: Color,
         veil: Color,
         state: GlassState?,
         borderWidth: Dp,
         observe: (() -> Float)?,
     ) {
+        this.base = base
         this.veil = veil
         this.shape = shape
         this.tokens = tokens
@@ -226,7 +236,12 @@ private class GlassSurfaceNode(
         val outline = shape.createOutline(size, layoutDirection, this)
         val source = state
         val blurLayer = layer
-        if (blur && source != null && blurLayer != null && source.isRecording) drawBackdrop(source, blurLayer)
+        if (blur && source != null && blurLayer != null && source.isRecording) {
+            // Opaque base: where the source is transparent (or ends) the content under the surface must not show through.
+            drawRect(base)
+            source.surfaceDraws++
+            drawBackdrop(source, blurLayer)
+        }
         if (veil.isSpecified) {
             drawRect(veil)
         } else {

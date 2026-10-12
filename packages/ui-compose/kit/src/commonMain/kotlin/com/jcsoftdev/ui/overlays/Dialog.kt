@@ -177,8 +177,14 @@ public fun Dialog(
                         val scale = enterScale + (1f - enterScale) * presence.progress
                         scaleX = scale
                         scaleY = scale
-                    }.surfaceMaterial(resolved, shape, colors.container, colors.border, LocalGlassState.current)
-                    .pointerInput(Unit) { detectTapGestures { } }
+                    }.surfaceMaterial(
+                        resolved,
+                        shape,
+                        colors.container,
+                        colors.border,
+                        LocalGlassState.current,
+                        observe = { presence.progress },
+                    ).pointerInput(Unit) { detectTapGestures { } }
                     .semantics { paneTitle = title }
                     .initialFocus()
                     .padding(contentPadding),

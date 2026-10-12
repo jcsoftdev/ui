@@ -37,6 +37,12 @@ public class GlassState internal constructor(
     internal var originX: Float = 0f
     internal var originY: Float = 0f
 
+    // How many times the source was recorded; lets tests prove nothing is captured without a consumer.
+    internal var recordings: Int = 0
+
+    // How many times a surface drew its backdrop from this source (tests: a surface follows an animated ancestor).
+    internal var surfaceDraws: Int = 0
+
     /** True while the source is being recorded for at least one glass surface. */
     public val isRecording: Boolean get() = consumers > 0
 }
@@ -93,6 +99,7 @@ private class GlassSourceNode(
             return
         }
         val layer = state.layer
+        state.recordings++
         layer.record(size = IntSize(size.width.toInt(), size.height.toInt())) {
             this@draw.drawContent()
         }
