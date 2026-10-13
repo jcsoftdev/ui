@@ -1,0 +1,29 @@
+:host {
+  --ui-text-shimmer-duration: 2s;
+  display: inline-block;
+  color: var(--ink-3);
+  background-image: linear-gradient(100deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%);
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ui-text-shimmer var(--ui-text-shimmer-duration) linear infinite;
+}
+:host([hidden]) {
+  display: none;
+}
+@keyframes ui-text-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    background-image: none;
+    -webkit-text-fill-color: currentcolor;
+    animation: none;
+  }
+}

@@ -1,0 +1,50 @@
+:host {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: var(--border-width-divider) solid var(--border-color-divider);
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    scale var(--motion-duration) var(--motion-ease),
+    border-color var(--motion-duration) var(--motion-ease);
+}
+:host([hidden]) {
+  display: none;
+}
+:host(:active:not([data-disabled])) {
+  scale: var(--press-scale);
+}
+:host([data-state="checked"]) {
+  border-color: var(--accent-ink);
+  box-shadow: var(--shadow-selected);
+}
+:host([data-disabled]) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+:host(:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[part="swatch"] {
+  flex-shrink: 0;
+  inline-size: 14px;
+  block-size: 14px;
+  border-radius: var(--radius-xs);
+  background: var(--ui-accent-swatch, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    transition: none;
+  }
+}

@@ -6,6 +6,8 @@ import type { BrowserCommand } from "vitest/node";
 export interface AxNode {
   role: string;
   name: string;
+  /** The node's value: `aria-valuetext` of a range, the text of a field. */
+  value?: unknown;
   properties: Record<string, unknown>;
 }
 
@@ -13,6 +15,7 @@ interface RawAxNode {
   ignored?: boolean;
   role?: { value?: unknown };
   name?: { value?: unknown };
+  value?: { value?: unknown };
   properties?: { name: string; value: { value?: unknown } }[];
 }
 
@@ -36,9 +39,18 @@ export const axTree: BrowserCommand<[]> = async (context) => {
       .map((node) => ({
         role: String(node.role?.value ?? ""),
         name: String(node.name?.value ?? ""),
+        value: node.value?.value,
         properties: Object.fromEntries((node.properties ?? []).map((p) => [p.name, p.value.value])),
       }));
   } finally {
     await cdp.detach();
   }
+};
+
+/** Switches `prefers-reduced-motion` for the page (Playwright `emulateMedia`). */
+export const reducedMotion: BrowserCommand<["reduce" | "no-preference"]> = async (
+  context,
+  value,
+) => {
+  await context.page.emulateMedia({ reducedMotion: value });
 };

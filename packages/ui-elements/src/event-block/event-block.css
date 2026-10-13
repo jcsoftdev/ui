@@ -1,0 +1,7 @@
+:host {
+  display: block;
+  min-inline-size: 0;
+}
+:host([hidden]) {
+  display: none;
+}

@@ -83,16 +83,16 @@ describe("toast", () => {
     const undo = vi.fn();
     const dismissed = vi.fn();
     toast("Deleted", {
-      duration: 300,
+      duration: 400,
       action: { label: "Undo", onClick: undo },
       onDismiss: dismissed,
     });
     await frame();
     const item = document.querySelector<HTMLElement>("[data-ui-part=toast]")!;
-    // Move the pointer away first: a toast appearing under a still pointer gets no pointerenter.
-    await userEvent.hover(document.body, { position: { x: 1, y: 1 } });
-    await userEvent.hover(item);
-    await wait(450);
+    // Dispatch the enter synchronously: a real pointer move is a CDP round trip that can outlast
+    // the toast's timer on a slow runner, and a toast appearing under a still pointer gets none.
+    item.dispatchEvent(new PointerEvent("pointerenter"));
+    await wait(700);
     expect(item.dataset.state).toBe("open");
     await userEvent.click(item.querySelector("button")!);
     expect(undo).toHaveBeenCalledTimes(1);

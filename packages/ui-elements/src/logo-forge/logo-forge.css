@@ -1,0 +1,266 @@
+[data-ui="logo-forge"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-density-lg);
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  container: forge / inline-size;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+[data-ui="logo-forge"][hidden],
+[data-ui="logo-forge"] [hidden] {
+  display: none;
+}
+[data-ui="logo-forge"] [data-ui-part="top"] {
+  display: grid;
+  gap: var(--gap-density-lg);
+  min-inline-size: 0;
+}
+@container forge (min-width: 48rem) {
+  [data-ui="logo-forge"] [data-ui-part="top"] {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+}
+[data-ui="logo-forge"] [data-ui-part="controls"],
+[data-ui="logo-forge"] [data-ui-part="more"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-density);
+  min-inline-size: 0;
+  padding: var(--pad-card);
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+[data-ui="logo-forge"] [data-ui-part="side"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-density);
+  min-inline-size: 0;
+}
+[data-ui="logo-forge"] [data-ui-part="pair"] {
+  display: grid;
+  gap: var(--gap-density);
+}
+@container forge (min-width: 28rem) {
+  [data-ui="logo-forge"] [data-ui-part="pair"] {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+[data-ui="logo-forge"] [data-ui-part="field"],
+[data-ui="logo-forge"] fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+[data-ui="logo-forge"] legend,
+[data-ui="logo-forge"] [data-ui-part="field"] > span,
+[data-ui="logo-forge"] [data-ui-part="tracking-label"] {
+  margin-block-end: 6px;
+  padding: 0;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+[data-ui="logo-forge"] [data-ui-part="field"] > span {
+  margin: 0;
+}
+[data-ui="logo-forge"] input[type="text"] {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: var(--control-height);
+  padding: 0 var(--pad-control-x);
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--radius-input);
+  background-color: var(--surface-control);
+  color: var(--ink);
+  font: inherit;
+}
+[data-ui="logo-forge"] input[type="range"] {
+  inline-size: 100%;
+  block-size: var(--control-height-sm);
+  accent-color: var(--accent-ink);
+}
+[data-ui="logo-forge"] [data-ui-part="choices"],
+[data-ui="logo-forge"] [data-ui-part="colors"],
+[data-ui="logo-forge"] [data-ui-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+[data-ui="logo-forge"] [data-ui-part="colors"] {
+  gap: var(--gap-density);
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+[data-ui="logo-forge"] [data-ui-part="colors"] label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+[data-ui="logo-forge"] input[type="color"] {
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--radius-badge);
+  background: transparent;
+  cursor: pointer;
+}
+[data-ui="logo-forge"] button {
+  font: inherit;
+  cursor: pointer;
+  transition: scale var(--motion-duration) var(--motion-ease);
+}
+[data-ui="logo-forge"] button:active {
+  scale: var(--press-scale);
+}
+[data-ui="logo-forge"] button:focus-visible,
+[data-ui="logo-forge"] input:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="logo-forge"] [data-ui-part="choice"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  block-size: var(--control-height-sm);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background-color: var(--surface-control);
+  box-shadow: var(--shadow-control);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+[data-ui="logo-forge"] [data-ui-part="choice"]:hover {
+  color: var(--ink);
+}
+[data-ui="logo-forge"] [data-ui-part="choice"][aria-pressed="true"] {
+  background-color: var(--accent);
+  box-shadow: none;
+  color: var(--on-accent);
+}
+[data-ui="logo-forge"] [data-ui-part="choice"][data-kind="glyph"] {
+  inline-size: 40px;
+  padding: 0;
+}
+[data-ui="logo-forge"] [data-ui-part="swatch"] {
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: var(--shadow-control);
+}
+[data-ui="logo-forge"] [data-ui-part="swatch"][aria-pressed="true"] {
+  box-shadow: var(--shadow-selected);
+}
+[data-ui="logo-forge"] [data-ui-part="preview"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: 14rem;
+  padding: var(--pad-card);
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-sunken);
+  box-shadow: var(--shadow-card);
+}
+[data-ui="logo-forge"] [data-ui-part="action"] {
+  block-size: var(--control-height);
+  padding: 0 var(--pad-control-x);
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--radius-button);
+  background-color: var(--surface-control);
+  color: var(--ink);
+  font-weight: 600;
+}
+[data-ui="logo-forge"] [data-ui-part="actions"] [data-action="svg"] {
+  border-color: transparent;
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
+[data-ui="logo-forge"] [data-ui-part="actions"] [data-action="copy"] {
+  border-color: transparent;
+  background: transparent;
+}
+[data-ui="logo-forge"] [data-ui-part="status"] {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+[data-ui="logo-forge"] [data-ui-part="more-head"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+[data-ui="logo-forge"] [data-ui-part="more-head"] h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+[data-ui="logo-forge"] [data-ui-part="more-head"] [data-ui-part="action"] {
+  block-size: var(--control-height-sm);
+}
+[data-ui="logo-forge"] [data-ui-part="variations"] {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-density);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@container forge (min-width: 28rem) {
+  [data-ui="logo-forge"] [data-ui-part="variations"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container forge (min-width: 42rem) {
+  [data-ui="logo-forge"] [data-ui-part="variations"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@container forge (min-width: 56rem) {
+  [data-ui="logo-forge"] [data-ui-part="variations"] {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+[data-ui="logo-forge"] [data-ui-part="variation"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 100%;
+  aspect-ratio: 1;
+  min-inline-size: 0;
+  padding: 12px;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-card);
+  background-color: var(--surface-sunken);
+  box-shadow: var(--shadow-control);
+}
+[data-ui="logo-forge"] [data-ui-part="variation"][aria-pressed="true"] {
+  box-shadow: var(--shadow-selected);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="logo-forge"] button {
+    transition: none;
+  }
+}

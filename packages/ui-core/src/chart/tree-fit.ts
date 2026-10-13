@@ -1,0 +1,84 @@
+/** Initial pan/zoom view that fits a laid out tree into a viewport. */
+import type {
+  TreeDirection,
+  TreeFitMode,
+  TreeFitOptions,
+  TreeLayout,
+} from "../internal/tree-types.ts";
+
+export type { TreeFitMode, TreeFitOptions };
+
+interface PanZoomView {
+  k: number;
+  x: number;
+  y: number;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Initial view of a laid out tree in a `width` x `height` viewport. `contain` scales the whole
+ * tree to fit (never past 1). `readable` ignores the width: it fits by height within
+ * `[readableMin, readableMax]` and puts the root at its edge (centred across, never above the `inset` band), so the
+ * rest is a pan away. `auto` picks `contain` unless it would drop below `minReadable`.
+ */
+export function treeFitView(
+  layout: Pick<TreeLayout, "nodes" | "width" | "height">,
+  width: number,
+  height: number,
+  direction: TreeDirection,
+  {
+    inset = 0,
+    padding = 16,
+    mode = "auto",
+    minReadable = 0.6,
+    readableMin = 0.85,
+    readableMax = 1,
+    minZoom = 0.05,
+    centerRoot = false,
+  }: TreeFitOptions = {},
+): { view: PanZoomView; mode: TreeFitMode } {
+  const areaHeight = Math.max(1, height - inset);
+  const containK = Math.max(
+    minZoom,
+    Math.min(
+      (width - padding * 2) / Math.max(1, layout.width),
+      (areaHeight - padding * 2) / Math.max(1, layout.height),
+      1,
+    ),
+  );
+  const root = layout.nodes[0];
+  if (!root || mode === "contain" || (mode === "auto" && containK >= minReadable)) {
+    return {
+      mode: "contain",
+      view: {
+        k: containK,
+        x: (width - layout.width * containK) / 2,
+        y: inset + (areaHeight - layout.height * containK) / 2,
+      },
+    };
+  }
+
+  const k = clamp(
+    (areaHeight - padding * 2) / Math.max(1, layout.height),
+    readableMin,
+    readableMax,
+  );
+  let x = width / 2 - root.x * k;
+  let y = inset + areaHeight / 2 - root.y * k;
+  if (centerRoot) {
+    // Radial: the root stays at the middle, the rings are a pan away.
+  } else if (direction === "top") y = inset + padding - (root.y - root.height / 2) * k;
+  else if (direction === "bottom") y = height - padding - (root.y + root.height / 2) * k;
+  else {
+    x =
+      direction === "left"
+        ? padding - (root.x - root.width / 2) * k
+        : width - padding - (root.x + root.width / 2) * k;
+    const top = Math.min(...layout.nodes.map((node) => node.y - node.height / 2));
+    y = Math.max(y, inset + padding - top * k);
+  }
+  return { mode: "readable", view: { k, x, y } };
+}

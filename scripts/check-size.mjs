@@ -4,7 +4,7 @@
 // imports statically. A dynamic `import()` (the Liquid Glass lens engine) becomes its own lazy
 // chunk and is not counted, since it is only fetched when a surface needs it.
 //   node scripts/check-size.mjs [--update]   --update prints suggested budgets (+8%, rounded up).
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +15,31 @@ const { build } = createRequire(join(root, "packages/ui/package.json"))("esbuild
 const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")).entries;
 // Each ui-elements entry keeps its budget next to its source (src/<name>/size.json), so adding an
 // element never touches this list.
+// ui-core behaviours (top-level src/<name>.ts) without an entry here keep theirs in
+// src/<name>.size.json, for the same reason.
+// Grouped behaviours (src/<group>/<part>.ts, e.g. observe/resize) follow the same rule; liquid keeps
+// its own entries in size-budgets.json.
+const coreEntries = [];
+for (const item of readdirSync(join(root, "packages/ui-core/src"), { withFileTypes: true })) {
+  if (item.isFile() && item.name.endsWith(".ts")) coreEntries.push(item.name.slice(0, -3));
+  else if (item.isDirectory() && item.name !== "liquid")
+    for (const part of readdirSync(join(root, "packages/ui-core/src", item.name)))
+      if (part.endsWith(".ts")) coreEntries.push(`${item.name}/${part.slice(0, -3)}`);
+}
+for (const name of coreEntries) {
+  const dist = `packages/ui-core/dist/${name}.js`;
+  if (budgets.some((entry) => entry.file === dist)) continue;
+  const sizeFile = `packages/ui-core/src/${name}.size.json`;
+  budgets.push({
+    id: `ui-core/${name}`,
+    kind: "js",
+    file: dist,
+    maxGzip: existsSync(join(root, sizeFile))
+      ? JSON.parse(readFileSync(join(root, sizeFile), "utf8")).maxGzip
+      : null,
+    budgetFile: sizeFile,
+  });
+}
 const { elementEntries } = await import("../packages/ui-elements/scripts/entries.mjs");
 for (const element of elementEntries())
   budgets.push({
@@ -24,6 +49,21 @@ for (const element of elementEntries())
     maxGzip: element.budget ?? null,
     budgetFile: `packages/ui-elements/src/${element.name}/size.json`,
   });
+
+// Static icon entries (`@jcsoftdev/ui-elements/icons/<name>`: the icon element plus one glyph) share
+// one budget group in src/icon/glyphs.size.json, so 159 glyphs need no 159 files.
+const glyphDist = join(root, "packages/ui-elements/dist/icon/glyphs");
+if (existsSync(glyphDist)) {
+  const maxGzip = JSON.parse(readFileSync(join(root, "packages/ui-elements/src/icon/glyphs.size.json"), "utf8")).maxGzip;
+  for (const file of readdirSync(glyphDist).filter((name) => name.endsWith(".js")))
+    budgets.push({
+      id: `ui-elements/icons/${file.slice(0, -3)}`,
+      kind: "js",
+      file: `packages/ui-elements/dist/icon/glyphs/${file}`,
+      maxGzip,
+      budgetFile: "packages/ui-elements/src/icon/glyphs.size.json",
+    });
+}
 
 async function measure({ file, kind }) {
   const path = join(root, file);
