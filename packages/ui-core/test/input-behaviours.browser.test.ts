@@ -130,6 +130,29 @@ describe("createPressRepeat", () => {
   });
 });
 
+describe("createPressRepeat disabled mid-hold", () => {
+  it("stops repeating once disabled() turns true inside a tick", async () => {
+    const host = mount(`<button id="b">+</button>`);
+    const button = host.querySelector<HTMLElement>("#b") as HTMLElement;
+    let disabled = false;
+    const onRepeat = vi.fn();
+    const stop = createPressRepeat(button, {
+      onRepeat,
+      disabled: () => disabled,
+      delay: 20,
+      interval: 20,
+    });
+    button.dispatchEvent(pointer("pointerdown", { pointerType: "mouse", button: 0 }));
+    await wait(100);
+    disabled = true;
+    await wait(60);
+    const settled = onRepeat.mock.calls.length;
+    await wait(100);
+    expect(onRepeat).toHaveBeenCalledTimes(settled);
+    stop();
+  });
+});
+
 describe("createSegmentedInput", () => {
   it("types a time with the mask, commits it, and steps the segment under the caret", async () => {
     const host = mount(`<input id="t">`);
@@ -270,11 +293,13 @@ describe("createFileDrop", () => {
     const host = mount(`<div id="z"></div>`);
     const zone = host.querySelector<HTMLElement>("#z") as HTMLElement;
     const onFiles = vi.fn();
-    const drop = createFileDrop(zone, { onFiles, multiple: false });
+    const onReject = vi.fn();
+    const drop = createFileDrop(zone, { onFiles, onReject, multiple: false });
     const a = new File(["a"], "a.txt");
     const b = new File(["b"], "b.txt");
     zone.dispatchEvent(dropOf([a, b]));
     expect(onFiles).toHaveBeenCalledWith([a]);
+    expect(onReject).toHaveBeenCalledWith([{ file: b, reason: "count" }]);
     drop.destroy();
   });
 });

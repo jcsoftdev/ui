@@ -59,6 +59,7 @@ for (const { name, dist, define, budget } of elements) {
   console.log(`${name.padEnd(12)} ${inputs.length} modules eager, ${lazy} lazy import(s)`);
 }
 
+<<<<<<< HEAD
 // Static icons: `icon` plus `icons/<name>` is the whole eager graph. No registry, no other glyph.
 {
   const result = await build({
@@ -104,3 +105,16 @@ for (const { name, dist, define, budget } of elements) {
   );
   console.log("icons/x + icons/bell: no registry, no other glyph in the eager graph");
 }
+=======
+// The default pin-input must not pay for the `cells` variant: `createOtp` stays behind import().
+const pin = await graph("dist/pin-input/pin-input.js");
+assert.ok(
+  !pin.inputs.some((file) => /ui-core\/dist\/otp\.js$/.test(file)),
+  "pin-input: the default graph excludes createOtp (ui-core otp)",
+);
+assert.ok(
+  pin.inputs.some((file) => /ui-core\/dist\/otp-sanitize\.js$/.test(file)),
+  "pin-input: sanitizeOtp comes from its own entry",
+);
+assert.ok(pin.lazy >= 1, "pin-input: the cells variant is a lazy import");
+>>>>>>> origin/feat/ui-parity-e5

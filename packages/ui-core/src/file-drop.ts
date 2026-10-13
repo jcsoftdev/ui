@@ -1,4 +1,4 @@
-export type FileRejectionReason = "type" | "size";
+export type FileRejectionReason = "type" | "size" | "count";
 
 export interface FileRejection {
   file: File;
@@ -16,13 +16,15 @@ export function isTypeAllowed(
 ): boolean {
   if (!accepted || accepted.length === 0) return true;
   const name = file.name.toLowerCase();
-  return accepted.some((type) =>
-    type.startsWith(".")
-      ? name.endsWith(type.toLowerCase())
-      : type.endsWith("/*")
-        ? file.type.startsWith(type.slice(0, -1))
-        : file.type === type,
-  );
+  // MIME types are case-insensitive and may carry parameters (`text/plain;charset=utf-8`).
+  const mime = (value: string) => value.split(";")[0]?.trim().toLowerCase() ?? "";
+  const kind = mime(file.type);
+  return accepted.some((entry) => {
+    const type = mime(entry);
+    if (type.startsWith(".")) return name.endsWith(type);
+    if (type === "*/*") return true;
+    return type.endsWith("/*") ? kind.startsWith(type.slice(0, -1)) : kind === type;
+  });
 }
 
 /** Splits files into the ones that pass the type and size rules and the rejected ones, in order. */
@@ -50,7 +52,7 @@ export interface FileDropOptions {
   /** Accepted MIME types (`image/*` allowed) and `.ext` suffixes. */
   accept?: readonly string[];
   maxSize?: number;
-  /** When false only the first dropped or picked file is considered. Default true. */
+  /** When false only the first dropped or picked file is kept; the others are rejected with reason `count`. Default true. */
   multiple?: boolean;
   /** A disabled drop zone ignores drags and `open()`. */
   disabled?: () => boolean;
@@ -87,6 +89,7 @@ export function createFileDrop(target: HTMLElement, options: FileDropOptions): F
       options.accept,
       options.maxSize,
     );
+    if (!multiple) for (const file of files.slice(1)) rejected.push({ file, reason: "count" });
     if (rejected.length > 0) options.onReject?.(rejected);
     if (accepted.length > 0) options.onFiles(accepted);
   };
