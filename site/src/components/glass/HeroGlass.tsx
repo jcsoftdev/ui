@@ -69,9 +69,6 @@ export default function HeroGlass({ components, charts }: { components: number; 
           </ul>
         </div>
       </div>
-      <p className="hero-credit">
-        Photo: David Marcu, CC0 · <a href="/photos/CREDITS.md">credits</a>
-      </p>
     </div>
   );
 }

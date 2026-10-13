@@ -1,4 +1,4 @@
-/** Backdrops for the glass demos: three CC0 photos (see public/photos/CREDITS.md) and a gradient. */
+/** Backdrops for the glass demos: three CC0 photos (sources kept in public/photos/CREDITS.md) and a gradient. */
 export interface Scene {
   id: string;
   label: string;
@@ -9,7 +9,6 @@ export interface Scene {
   file?: string;
   width?: number;
   height?: number;
-  credit?: { title: string; author: string; handle: string; url: string };
 }
 
 export const SCENES: Scene[] = [
@@ -21,12 +20,6 @@ export const SCENES: Scene[] = [
     file: "wilderness",
     width: 1920,
     height: 1275,
-    credit: {
-      title: "Alone in the unspoilt wilderness",
-      author: "David Marcu",
-      handle: "davidmarcu",
-      url: "https://commons.wikimedia.org/wiki/File:Alone_in_the_unspoilt_wilderness_(Unsplash).jpg",
-    },
   },
   {
     id: "bridge",
@@ -36,12 +29,6 @@ export const SCENES: Scene[] = [
     file: "bridge",
     width: 1920,
     height: 1222,
-    credit: {
-      title: "Golden Gate Bridge from above",
-      author: "Chris Leipelt",
-      handle: "cleipelt",
-      url: "https://commons.wikimedia.org/wiki/File:(NOT_A)_Drone_view_of_golden_gate_bridge_(Unsplash).jpg",
-    },
   },
   {
     id: "alley",
@@ -51,12 +38,6 @@ export const SCENES: Scene[] = [
     file: "alley",
     width: 1920,
     height: 1280,
-    credit: {
-      title: "Friendship alleys in Yazd, Iran",
-      author: "Sander van Dijk",
-      handle: "sandervd",
-      url: "https://commons.wikimedia.org/wiki/File:%27Friendship_alleys%27_in_Yazd,_Iran._(Unsplash).jpg",
-    },
   },
   { id: "gradient", label: "Gradient", alt: "A colourful gradient", kind: "gradient" },
 ];

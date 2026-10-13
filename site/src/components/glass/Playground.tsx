@@ -522,23 +522,6 @@ export default function Playground() {
               </label>
             ))}
           </fieldset>
-          <p className="pg-credit">
-            {scene.credit ? (
-              <>
-                Photo:{" "}
-                <a href={scene.credit.url} rel="noopener">
-                  {scene.credit.title}
-                </a>{" "}
-                by {scene.credit.author} (@{scene.credit.handle}), CC0 1.0. Other backdrops are
-                credited in <a href="/photos/CREDITS.md">CREDITS</a>.
-              </>
-            ) : (
-              <>
-                A generated gradient. The photos are CC0, credited in{" "}
-                <a href="/photos/CREDITS.md">CREDITS</a>.
-              </>
-            )}
-          </p>
           <p className="pg-status" role="status" data-state={support}>
             {support === "lens" &&
               "Lens active: this browser renders the refraction. Drag the panel, or focus it and use the arrow keys."}
