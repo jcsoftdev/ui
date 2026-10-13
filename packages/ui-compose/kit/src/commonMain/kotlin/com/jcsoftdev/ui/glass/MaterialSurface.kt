@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -195,7 +196,7 @@ internal fun Modifier.surfaceMaterial(
     }
 }
 
-private val REFERENCE_SIZE: Dp = 56.dp
+internal val REFERENCE_SIZE: Dp = 56.dp
 
 // The shadow is a stack of slightly larger copies of the silhouette, each faint: their sum falls off smoothly from the edge, with
 // no blur or elevation API, so it looks the same on every target and can be pushed down by offsetY. It grows with the size of
@@ -206,8 +207,8 @@ private fun Modifier.liquidShadow(
     style: LiquidGlassStyle,
 ): Modifier = if (style.shadow.opacity <= 0f || style.shadow.spread.value <= 0f) this else this then LiquidShadowElement(shape, style)
 
-private const val SHADOW_ALPHA = 0.26f
-private const val SHADOW_STEPS = 14
+internal const val SHADOW_ALPHA = 0.26f
+internal const val SHADOW_STEPS = 14
 
 private data class LiquidShadowElement(
     val shape: Shape,
@@ -232,30 +233,37 @@ private class LiquidShadowNode(
 ) : Modifier.Node(),
     DrawModifierNode {
     override fun ContentDrawScope.draw() {
-        val shadow = style.shadow
-        val reach = shadow.spread.toPx() * sizeScale(min(size.width, size.height), REFERENCE_SIZE.toPx())
         val rounded = shape.createOutline(size, layoutDirection, this).asRoundRect()
-        if (rounded != null && reach > 0f) {
-            val edge = (SHADOW_ALPHA * shadow.opacity).coerceIn(0f, 0.95f)
-            val each = (1.0 - (1.0 - edge).pow(1.0 / SHADOW_STEPS)).toFloat()
-            translate(0f, shadow.offsetY.toPx()) {
-                for (k in SHADOW_STEPS downTo 1) {
-                    val grow = reach * k / SHADOW_STEPS
-                    drawRoundRect(
-                        Color.Black.copy(alpha = each),
-                        topLeft = Offset(rounded.left - grow, rounded.top - grow),
-                        size = Size(rounded.width + grow * 2f, rounded.height + grow * 2f),
-                        cornerRadius = CornerRadius(rounded.topLeftCornerRadius.x + grow, rounded.topLeftCornerRadius.y + grow),
-                    )
-                }
-            }
-        }
+        if (rounded != null) drawSoftShadow(rounded, style.shadow, min(size.width, size.height))
         drawContent()
     }
 }
 
+/** Draws the Liquid shadow of [rounded]; [shortSide] scales it (bigger surfaces cast a longer shadow). */
+internal fun DrawScope.drawSoftShadow(
+    rounded: RoundRect,
+    shadow: LiquidShadow,
+    shortSide: Float,
+) {
+    val reach = shadow.spread.toPx() * sizeScale(shortSide, REFERENCE_SIZE.toPx())
+    if (reach <= 0f || shadow.opacity <= 0f) return
+    val edge = (SHADOW_ALPHA * shadow.opacity).coerceIn(0f, 0.95f)
+    val each = (1.0 - (1.0 - edge).pow(1.0 / SHADOW_STEPS)).toFloat()
+    translate(0f, shadow.offsetY.toPx()) {
+        for (k in SHADOW_STEPS downTo 1) {
+            val grow = reach * k / SHADOW_STEPS
+            drawRoundRect(
+                Color.Black.copy(alpha = each),
+                topLeft = Offset(rounded.left - grow, rounded.top - grow),
+                size = Size(rounded.width + grow * 2f, rounded.height + grow * 2f),
+                cornerRadius = CornerRadius(rounded.topLeftCornerRadius.x + grow, rounded.topLeftCornerRadius.y + grow),
+            )
+        }
+    }
+}
+
 /** The outline as one rounded rectangle (its top-left corner radius stands for all four); null for free-form shapes. */
-private fun Outline.asRoundRect(): RoundRect? =
+internal fun Outline.asRoundRect(): RoundRect? =
     when (this) {
         is Outline.Rounded -> roundRect
         is Outline.Rectangle -> RoundRect(rect)

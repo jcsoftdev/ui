@@ -250,10 +250,13 @@ float field(float2 p) {
 
 half4 main(float2 coord) {
     float d = field(coord);
+    // The gradient is measured over a step, not a pixel, and not normalized: where the joined outline folds in on itself (the
+    // medial axis inside a neck) opposite normals average out, so the displacement fades to zero there instead of flipping.
+    float st = max(1.0, rimDepth * 0.25);
     float2 g = float2(
-        field(coord + float2(1.0, 0.0)) - field(coord - float2(1.0, 0.0)),
-        field(coord + float2(0.0, 1.0)) - field(coord - float2(0.0, 1.0)));
-    float2 n = length(g) > 0.0001 ? normalize(g) : float2(0.0, 0.0);
+        field(coord + float2(st, 0.0)) - field(coord - float2(st, 0.0)),
+        field(coord + float2(0.0, st)) - field(coord - float2(0.0, st))) / (2.0 * st);
+    float2 n = length(g) > 1.0 ? normalize(g) : g;
     float t = clamp(-d / max(rimDepth, 1.0), 0.0, 1.0);
     float m = 1.0 - t;
     float2 off = -n * strength * m * m;
