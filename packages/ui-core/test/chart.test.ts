@@ -1,6 +1,6 @@
 // The chart maths is a port: these pin every entry to the React kit's sources, value for value,
 // with seeded random inputs next to hand-picked edge cases.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as reactAxes from "../../ui/src/charts/core/axes.tsx";
 import * as reactCategory from "../../ui/src/charts/core/category-axis.ts";
 import * as reactColor from "../../ui/src/charts/core/color-scale.ts";
@@ -289,7 +289,8 @@ describe("format parity", () => {
       expect(format.formatNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 1 })).toBe(
         reactFormat.formatNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 1 }),
       );
-      expect(format.formatCurrency(v)).toBe(reactFormat.formatCurrency(v));
+      // The React kit defaults to PEN; ui-core never guesses a currency, so compare with it explicit.
+      expect(format.formatCurrency(v, { currency: "PEN" })).toBe(reactFormat.formatCurrency(v));
       expect(format.formatPercent(v)).toBe(reactFormat.formatPercent(v));
       expect(format.formatPercent(v, { input: "whole", decimals: 0 })).toBe(
         reactFormat.formatPercent(v, { input: "whole", decimals: 0 }),
@@ -305,8 +306,11 @@ describe("format parity", () => {
     const presets = [undefined, "number", "integer", "currency", "percent", "compact"] as const;
     for (const preset of presets) {
       for (const v of [...values, ...randoms]) {
-        expect(format.resolveFormat(preset)(v)).toBe(reactFormat.resolveFormat(preset)(v));
-        expect(format.resolveAxisFormat(preset)(v)).toBe(reactFormat.resolveAxisFormat(preset)(v));
+        const options = preset === "currency" ? { currency: "PEN" } : {};
+        expect(format.resolveFormat(preset, options)(v)).toBe(reactFormat.resolveFormat(preset)(v));
+        expect(format.resolveAxisFormat(preset, options)(v)).toBe(
+          reactFormat.resolveAxisFormat(preset)(v),
+        );
       }
     }
     const custom = (v: number) => `#${v}`;
@@ -583,10 +587,10 @@ describe("locale and time zone options", () => {
         scaleTime.timeScale({ domain: [a, b], range: [0, 500], locale: undefined }).timeTicks(),
       ).toEqual(reactScales.timeScale({ domain: [a, b], range: [0, 500] }).timeTicks());
     }
-    expect(format.resolveFormat("currency", {})(1234.5)).toBe(
+    expect(format.resolveFormat("currency", { currency: "PEN" })(1234.5)).toBe(
       reactFormat.resolveFormat("currency")(1234.5),
     );
-    expect(format.resolveAxisFormat("currency", {})(25_000)).toBe(
+    expect(format.resolveAxisFormat("currency", { currency: "PEN" })(25_000)).toBe(
       reactFormat.resolveAxisFormat("currency")(25_000),
     );
     expect(categoryAxis.defaultCategoryLabel(new Date(2026, 9, 6), {})).toBe(
@@ -659,5 +663,23 @@ describe("locale and time zone options", () => {
     expect(format.resolveFormat("compact", us)(1234)).toBe("1.2K");
     expect(format.resolveFormat("percent", us)(0.125)).toBe("12.5%");
     expect(format.formatNumber(1234.5, { locale: "de-DE" })).toBe("1.234,5");
+  });
+});
+
+describe("currency has no default", () => {
+  it("formats as a plain number and warns once when no currency code is given", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(format.resolveFormat("currency", { locale: "en-US" })(1234.5)).toBe("1,234.50");
+    expect(format.resolveAxisFormat("currency", { locale: "en-US" })(25_000)).toBe("25K");
+    expect(format.formatCurrency(5, { locale: "en-US" })).toBe("5.00");
+    expect(warn.mock.calls.length).toBeLessThanOrEqual(1);
+    warn.mockRestore();
+  });
+
+  it("never reads the currency from the locale", () => {
+    // The symbol depends on the ICU data ("US$" or "USD"); what matters is that it is not soles.
+    const text = format.formatCurrency(1, { locale: "es-PE", currency: "USD" });
+    expect(text).toMatch(/US\$|USD/);
+    expect(text).not.toContain("S/");
   });
 });
