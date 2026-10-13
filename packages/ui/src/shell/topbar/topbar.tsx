@@ -34,10 +34,11 @@ export interface TopbarProps {
   menuLabel?: string;
   /** Ref to the menu button so the opener can restore focus when the drawer closes. */
   menuButtonRef?: Ref<HTMLButtonElement>;
-  /** Called by the search trigger and by Cmd/Ctrl+K. */
-  onSearch: () => void;
-  searchLabel: string;
-  searchPlaceholder: string;
+  /** Called by the search trigger and by Cmd/Ctrl+K. Omit it to render a topbar without search: no trigger and no shortcut. */
+  onSearch?: () => void;
+  /** Accessible name of the search trigger. Falls back to `searchPlaceholder`. */
+  searchLabel?: string;
+  searchPlaceholder?: string;
   /** Slot between the search trigger and the end block (status, notifications, primary action). */
   actions?: ReactNode;
   /** Slot at the far end (e.g. the account menu). */
@@ -75,10 +76,11 @@ export function Topbar({
   }, []);
 
   useEffect(() => {
+    if (!onSearch) return;
     function onKeyDown(event: KeyboardEvent) {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;
       event.preventDefault();
-      onSearch();
+      onSearch?.();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -148,28 +150,32 @@ export function Topbar({
           </strong>
         </nav>
 
-        <button
-          type="button"
-          aria-label={searchLabel}
-          onClick={onSearch}
-          className={cn(
-            "ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
-            classNames?.search,
-          )}
-        >
-          <Search className="size-4 shrink-0" aria-hidden="true" />
-          <span className={cn("truncate @max-[700px]/topbar:hidden", classNames?.searchText)}>
-            {searchPlaceholder}
-          </span>
-          <span
+        {onSearch ? (
+          <button
+            type="button"
+            aria-label={searchLabel ?? searchPlaceholder}
+            onClick={onSearch}
             className={cn(
-              "ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden",
-              classNames?.shortcut,
+              "ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
+              classNames?.search,
             )}
           >
-            {shortcut}
-          </span>
-        </button>
+            <Search className="size-4 shrink-0" aria-hidden="true" />
+            <span className={cn("truncate @max-[700px]/topbar:hidden", classNames?.searchText)}>
+              {searchPlaceholder}
+            </span>
+            <span
+              className={cn(
+                "ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden",
+                classNames?.shortcut,
+              )}
+            >
+              {shortcut}
+            </span>
+          </button>
+        ) : (
+          <span aria-hidden="true" className="ml-auto" />
+        )}
 
         {actions}
         {end}

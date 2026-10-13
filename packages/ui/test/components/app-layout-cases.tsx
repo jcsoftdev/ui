@@ -8,6 +8,8 @@ import { BottomNav } from "../../src/shell/bottom-nav/bottom-nav.js";
 export { splitBottomNavItems } from "../../src/shell/bottom-nav/split.js";
 import { AppShell, createAppShellStore, useAppShell } from "../../src/shell/app-shell/app-shell.js";
 export { createAppShellStore };
+import { Topbar } from "../../src/shell/topbar/topbar.js";
+import { OfflineBanner } from "../../src/states/offline-banner/offline-banner.js";
 import { Form, FormError, FormStatus } from "../../src/forms/form/form.js";
 import { Grid } from "../../src/containers/grid/grid.js";
 
@@ -88,4 +90,23 @@ export const html = {
     }
     return renderToStaticMarkup(<Reader />);
   },
+  topbarNoSearch: () =>
+    renderToStaticMarkup(<Topbar breadcrumbs={["Home", "Agenda"]} breadcrumbsLabel="Trail" />),
+  topbarSearch: () =>
+    renderToStaticMarkup(
+      <Topbar
+        breadcrumbs={["Home"]}
+        breadcrumbsLabel="Trail"
+        onSearch={() => {}}
+        searchLabel="Search"
+        searchPlaceholder="Search anything"
+      />,
+    ),
+  offlineAction: () =>
+    renderToStaticMarkup(
+      <OfflineBanner message="Offline" queuedChanges={2} action={<button type="button">Retry</button>} />,
+    ),
+  offlineActionOnly: () =>
+    renderToStaticMarkup(<OfflineBanner message="Offline" action={<button type="button">Retry</button>} />),
+  offlinePlain: () => renderToStaticMarkup(<OfflineBanner message="Offline" />),
 };

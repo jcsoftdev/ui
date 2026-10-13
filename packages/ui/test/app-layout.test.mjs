@@ -140,3 +140,22 @@ test("useAppShell reads the server snapshot during server render and is null out
   );
   assert.equal(html.appShellOutside(), "<i>null</i>");
 });
+
+test("Topbar renders without a search trigger and keeps it when onSearch is given", () => {
+  const without = html.topbarNoSearch();
+  assert.doesNotMatch(without, /<button/);
+  assert.doesNotMatch(without, /Search/);
+  assert.match(without, /<nav aria-label="Trail"/);
+
+  const withSearch = html.topbarSearch();
+  assert.match(withSearch, /<button[^>]*aria-label="Search"/);
+  assert.match(withSearch, /Search anything/);
+});
+
+test("OfflineBanner shows an optional action next to the queue counter", () => {
+  const both = html.offlineAction();
+  assert.match(both, /tabular-nums.*<button type="button">Retry<\/button>/);
+  assert.match(html.offlineActionOnly(), /<button type="button">Retry<\/button>/);
+  assert.doesNotMatch(html.offlineActionOnly(), /tabular-nums/);
+  assert.doesNotMatch(html.offlinePlain(), /<button/);
+});
