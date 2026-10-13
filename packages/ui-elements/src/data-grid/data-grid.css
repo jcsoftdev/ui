@@ -16,6 +16,10 @@
 [data-ui="data-grid"][hidden] {
   display: none;
 }
+[data-ui="data-grid"] [data-ui-part="grid"] {
+  position: absolute;
+  inset: 0;
+}
 [data-ui="data-grid"] [data-ui-part="viewport"] {
   position: absolute;
   inset: 0;
@@ -67,10 +71,18 @@
   inset-inline-end: 0;
   z-index: 2;
 }
-[data-ui="data-grid"][data-pin-start][data-scrolled-start] [data-zone="start"] {
+/* Pinned zones that leave no room to scroll stop sticking and scroll with the grid. */
+[data-ui="data-grid"][data-pin-overflow] [data-ui-part="zone"] {
+  position: relative;
+  inset-inline: auto;
+  z-index: auto;
+  box-shadow: none;
+}
+[data-ui="data-grid"][data-pin-start][data-scrolled-start]:not([data-pin-overflow])
+  [data-zone="start"] {
   box-shadow: var(--shadow-pinned-start);
 }
-[data-ui="data-grid"][data-pin-end][data-scrolled-end] [data-zone="end"] {
+[data-ui="data-grid"][data-pin-end][data-scrolled-end]:not([data-pin-overflow]) [data-zone="end"] {
   box-shadow: var(--shadow-pinned-end);
 }
 [data-ui="data-grid"] :is([data-ui-part="cell"], [data-ui-part="hcell"]) {
@@ -110,11 +122,10 @@
   text-transform: uppercase;
   user-select: none;
 }
-[data-ui="data-grid"] [data-ui-part="hcell"][aria-sort="ascending"],
-[data-ui="data-grid"] [data-ui-part="hcell"][aria-sort="descending"] {
+[data-ui="data-grid"] [data-ui-part="hcell"][data-sort] {
   color: var(--ink);
 }
-[data-ui="data-grid"] [data-ui-part="hcell"][aria-sort]:not([aria-sort="none"]) {
+[data-ui="data-grid"] [data-ui-part="hcell"][data-sortable] {
   cursor: pointer;
 }
 [data-ui="data-grid"] [data-ui-part="label"] {
@@ -130,10 +141,10 @@
   color: var(--accent-ink);
   font-size: 10px;
 }
-[data-ui="data-grid"] [aria-sort="ascending"] [data-ui-part="sort"]::after {
+[data-ui="data-grid"] [data-sort="ascending"] [data-ui-part="sort"]::after {
   content: "▲";
 }
-[data-ui="data-grid"] [aria-sort="descending"] [data-ui-part="sort"]::after {
+[data-ui="data-grid"] [data-sort="descending"] [data-ui-part="sort"]::after {
   content: "▼";
 }
 [data-ui="data-grid"] [data-ui-part="handle"] {
@@ -243,10 +254,12 @@
   padding-inline: 0;
 }
 [data-ui="data-grid"] [data-ui-part="empty"] {
-  position: sticky;
-  inset-inline-start: 0;
+  position: absolute;
+  inset-block-start: var(--ui-data-grid-row);
+  inset-inline: 0;
   padding: 24px 16px;
   color: var(--ink-3);
+  pointer-events: none;
 }
 [data-ui="data-grid"] [data-ui-part="empty"][hidden] {
   display: none;

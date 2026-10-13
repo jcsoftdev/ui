@@ -7,6 +7,7 @@ import {
   moveColumnTo,
   parseStoredLayout,
   reconcileLayout,
+  serializeLayout,
 } from "@jcsoftdev/ui-core/grid/columns";
 import {
   type HeaderAction,
@@ -42,10 +43,12 @@ import {
   sortRows,
   toggleSort,
 } from "@jcsoftdev/ui-core/grid/sort";
+import { buildView, type GridView, uniqueKeys } from "@jcsoftdev/ui-core/grid/view";
 import {
   createGridViewport,
   type GridViewport,
   type GridWindow,
+  scrollInlineToReveal,
 } from "@jcsoftdev/ui-core/grid/virtual";
 import { type DefineOptions, defineElement, ElementBase, emit } from "../internal/base.js";
 import { connectLight } from "../internal/containers.js";
@@ -60,6 +63,9 @@ export interface GridLabels {
   selectAll: string;
   selectRow: string;
   empty: string;
+  /** Text for a boolean cell value. */
+  yes: string;
+  no: string;
   columnMenu: (header: string) => string;
   sortAsc: string;
   sortDesc: string;
@@ -71,12 +77,16 @@ export interface GridLabels {
   moved: (header: string, position: number, count: number) => string;
   resized: (header: string, width: number) => string;
   selected: (count: number) => string;
+  /** Announced when a pin is refused because the pinned columns would fill the grid. */
+  pinTooWide: (header: string) => string;
 }
 
 const LABELS: GridLabels = {
   selectAll: "Select all rows",
   selectRow: "Select row",
   empty: "No rows",
+  yes: "Yes",
+  no: "No",
   columnMenu: (header) => `Options for column ${header}`,
   sortAsc: "Sort ascending",
   sortDesc: "Sort descending",
@@ -89,16 +99,60 @@ const LABELS: GridLabels = {
   moved: (header, position, count) => `${header} moved to position ${position} of ${count}`,
   resized: (header, width) => `${header} width ${width} pixels`,
   selected: (count) => `${count} selected`,
+  pinTooWide: (header) => `${header} cannot be pinned: the pinned columns would fill the grid`,
 };
 
 const DENSITY = { compact: 32, normal: 40, comfortable: 48 } as const;
+/** Id of the checkbox column. A consumer column with this id is rejected. */
 const SELECT_ID = "__select";
 const SELECT_WIDTH = 44;
+/** Scrolling columns keep at least this much width (or all they have) next to the pinned zones. */
+const MIN_SCROLL_WIDTH = 120;
+/** Browsers cap an element's height at roughly 17 to 33 million pixels. */
+const MAX_BODY_HEIGHT = 15_000_000;
 const ZONES = ["start", "center", "end"] as const;
 const TAG = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
+/** Valid custom element names that the platform reserves. */
+const RESERVED_TAGS = new Set([
+  "annotation-xml",
+  "color-profile",
+  "font-face",
+  "font-face-src",
+  "font-face-uri",
+  "font-face-format",
+  "font-face-name",
+  "missing-glyph",
+]);
 const INTERACTIVE =
   "a[href],button,input:not([data-ui-part=check]),select,textarea,[data-no-select]";
+/** Controls inside a cell: out of the tab order until the cell is entered (Enter / F2). */
+const FOCUSABLE =
+  "a[href],button,input:not([data-ui-part=check]),select,textarea,[contenteditable]:not([contenteditable=false]),[tabindex]";
 const CELL = "[role=gridcell],[role=columnheader]";
+
+// What changed decides how much work the next flush does.
+/** Rows, row key, sort or locale: rebuild the view. */
+const F_VIEW = 1;
+/** Cell content: every mounted cell is filled again. */
+const F_CONTENT = 2;
+/** Widths, pins, order, density, viewport width: layout and cell positions only. */
+const F_GEOMETRY = 4;
+/** Selected rows: `aria-selected` and the checkboxes, nothing else. */
+const F_SELECTION = 8;
+/** Re-run the render pass without invalidating any cell. */
+const F_PAINT = 16;
+const F_ALL = F_VIEW | F_CONTENT | F_GEOMETRY | F_SELECTION | F_PAINT;
+
+/** What an attribute change invalidates; any other attribute (pins, hidden, density...) is geometry. */
+const ATTRIBUTE_FLAGS: Record<string, number> = {
+  label: 0,
+  locale: F_VIEW | F_CONTENT,
+  selection: F_CONTENT | F_GEOMETRY | F_SELECTION,
+  sort: F_VIEW,
+  "sort-manual": F_VIEW,
+  "column-menu": F_PAINT,
+  reorderable: F_PAINT,
+};
 
 // biome-ignore lint/suspicious/noExplicitAny: rows are whatever the consumer passes.
 type Row = any;
@@ -106,7 +160,12 @@ type Col = GridColumn<Row>;
 type RowKey = string | ((row: Row, index: number) => string);
 
 interface CellEl extends HTMLElement {
-  _epoch?: number;
+  /** Content epoch the cell was filled for. */
+  _c?: number;
+  /** Geometry epoch the cell was placed for. */
+  _g?: number;
+  /** View row the cell was placed for (the roving tabindex depends on it). */
+  _v?: number;
   _row?: unknown;
   _col?: unknown;
   _tag?: HTMLElement;
@@ -116,7 +175,10 @@ interface RowRec {
   el: HTMLElement;
   key: string;
   v: number;
-  epoch: number;
+  /** Geometry epoch the row was placed for. */
+  g: number;
+  /** `aria-selected` last written: `null` means none. */
+  sel: boolean | null;
   zones: Record<GridZone, HTMLElement>;
   cells: Map<string, CellEl>;
 }
@@ -155,39 +217,77 @@ const same = <T>(a: readonly T[], b: readonly T[]) =>
 const idsOf = (value: string | null): string[] =>
   (value ?? "").split(/[\s,]+/).filter((id) => id.length > 0);
 
+const validTag = (tag: string | undefined): tag is string =>
+  !!tag && TAG.test(tag) && !RESERVED_TAGS.has(tag);
+
 /**
  * `<ui-data-grid>`: a virtualised data grid (WAI-ARIA `grid` pattern) for `rows` x `columns` that
  * stays smooth at 100 000 rows by 200 columns. Only the visible rows and columns are in the DOM and
  * their elements are pooled and reused, so a scroll inside the rendered window touches no DOM.
+ *
+ * Structure: the host is a plain container. `role=grid` and its ARIA (label, row and column count,
+ * multiselectable) live on an inner element that holds only rows; the live region, the column menu
+ * and the "No rows" message are siblings of it, so the grid owns nothing but rows.
  *
  * Data (properties; assigning them before the element is defined works):
  * - `columns: GridColumn[]` with `id`, `header`, `accessor` (key or function, default `id`), `cell`
  *   (returns a Node or a string; a string is always rendered as text, never as HTML), `cellTag` (a
  *   custom element created inside the cell and given `value`, `row`, `rowId`, `column` and
  *   `formatted`), `type`, `format`, `width`, `minWidth`, `maxWidth`, `grow`, `align`, `sortable`,
- *   `resizable`, `reorderable`.
- * - `rows: T[]` and `rowKey` (a property name or `(row, index) => string`, default the index).
+ *   `resizable`, `reorderable`. The id `__select` is reserved for the checkbox column.
+ * - `rows: T[]` and `rowKey` (a property name or `(row, index) => string`, default the index). Keys
+ *   must be unique; a repeated key is renamed (`key#2`, `key#3`...) and warned about, so no row is
+ *   ever dropped.
  * - `sort: SortRule[]`, `selectedKeys: string[]`, `pinned: {left, right}`, `hiddenColumns`,
- *   `layout` (order, widths, hidden, pinned) and `labels`.
+ *   `layout` (order, widths, hidden, pinned), `labels` and `locale`.
+ *
+ * Locale: dates, numbers, currencies and the sort collator follow `locale` (property, then
+ * attribute, then the nearest `[lang]`, then `navigator.language`). Numbers keep the Peruvian
+ * no-break thousands space only for `es-PE`.
+ *
+ * Rows have a fixed height (`density` or `row-height`), which is what makes scrolling arithmetic.
+ * The scroll height is `rows x height`, and browsers cap an element's height at roughly 17 to 33
+ * million pixels, so the limit is about 400 000 rows at 40 px; above 15 million pixels the grid
+ * warns once.
  *
  * Keyboard: one tab stop, by roving tabindex. The active cell has `tabindex=0` and stays mounted
  * while it is scrolled out of the window, so focus is never lost; `aria-activedescendant` is not
  * used because recycled elements cannot be referenced reliably. Arrows, Home / End, Ctrl+Home /
  * Ctrl+End, PageUp / PageDown. On a header: Enter / Space sort (Shift adds a rule), Shift+Arrow
  * resizes, Ctrl+Shift+Arrow reorders (with `reorderable`), Alt+ArrowDown opens the menu (with
- * `column-menu`). In the body: Space toggles the row (Shift extends), Ctrl+A selects all (multi),
+ * `column-menu`). Ctrl+Home lands on the first header cell and never scrolls the body (the header is
+ * sticky). In the body: Space toggles the row (Shift extends), Ctrl+A selects all (multi),
  * Enter fires `cellactivate`. `aria-rowcount`, `aria-colcount`, `aria-rowindex` and `aria-colindex`
- * describe the whole grid, not the rendered part.
+ * describe the whole grid, not the rendered part. If the focused column gets hidden, focus stays on
+ * the same row and moves to the column now at that position (or the last one).
  *
- * Attributes: `label`, `selection` (`none` | `single` | `multi`; multi adds a checkbox column),
- * `density` (`compact` | `normal` | `comfortable`) or `row-height` (px), `sort` (`name:asc,price:desc`),
- * `sort-manual` (report sorts without sorting), `pinned-left` / `pinned-right` (column ids; logical,
- * so right-to-left works), `hidden-columns`, `column-menu` (a menu per column, loaded on demand),
- * `reorderable` (column reordering, loaded on demand), `storage-key` (persists the layout).
+ * Interactive cell content (APG "widgets in a grid"): links, buttons and inputs inside a cell are
+ * taken out of the tab order. Enter or F2 on the cell enters it and focuses the first control, which
+ * then (like every control in that cell) is tabbable; arrows and typing belong to the content; Escape
+ * or F2 returns focus to the cell. The cancelable `beforecelledit` event fires first so an editor
+ * can take over.
+ *
+ * Attributes: `label`, `locale`, `selection` (`none` | `single` | `multi`; multi adds a checkbox
+ * column), `density` (`compact` | `normal` | `comfortable`) or `row-height` (px), `sort`
+ * (`name:asc,price:desc`), `sort-manual` (report sorts without sorting), `pinned-left` /
+ * `pinned-right` (column ids; logical, so right-to-left works), `hidden-columns`, `column-menu` (a
+ * menu per column, loaded on demand), `reorderable` (column reordering, loaded on demand),
+ * `storage-key` (persists the layout; changing it loads that key's layout).
+ *
+ * Pinned zones are sticky only while they leave room to scroll: `pinColumn` refuses (and announces
+ * it) a pin that would leave the scrolling columns less than a minimum width, and pins that arrive
+ * from attributes or storage and overflow switch the grid to `data-pin-overflow`, where the pinned
+ * columns scroll with the rest and focus still reveals them.
  *
  * Events (bubble, composed): `sortchange` `{sort}`, `selectionchange` `{keys}`, `columnresize`
  * `{id, width}`, `columnmove` `{id, order}`, `pinchange` `{left, right}`, `cellfocus`
- * `{rowKey, columnId, row}`, `cellactivate` `{rowKey, columnId, row}`.
+ * `{rowKey, columnId, row}`, `cellactivate` `{rowKey, columnId, row}`, `beforecelledit`
+ * `{rowKey, columnId, row}` (cancelable), `beforecellchange` `{rowKey, columnId, row, oldValue,
+ * value}` (cancelable) and `cellchange` (same detail).
+ *
+ * Updates are granular: selection touches `aria-selected` and checkboxes only, a resize moves cells
+ * without filling them, and `refreshRows(keys)` refills just those rows. `setEditingCell` exempts
+ * one cell from being refilled or unmounted while an editor lives in it.
  *
  * Touch: selection is driven by `click`, which a scroll gesture never produces; the resize handle,
  * the grip and the menu honour `--touch-target`, and pinned columns are sticky at any width.
@@ -195,6 +295,7 @@ const idsOf = (value: string | null): string[] =>
 export class UiDataGrid extends ElementBase {
   static observedAttributes = [
     "label",
+    "locale",
     "selection",
     "density",
     "row-height",
@@ -212,11 +313,13 @@ export class UiDataGrid extends ElementBase {
   #columns: Col[] = [];
   #rows: Row[] = [];
   #rowKey: RowKey | undefined;
-  #order: number[] | null = null;
-  #keyIndex: Map<string, number> | null = null;
+  #view: GridView = buildView({ keys: [] });
   #sort: SortRule[] = [];
   #selection: SelectionState = EMPTY_SELECTION;
   #labels: GridLabels = LABELS;
+  #localeProp: string | undefined;
+  #locale = "";
+  #level: { sel: SelectionState; view: GridView; value: "all" | "some" | "none" } | undefined;
 
   // layout
   #layout: GridLayout = { order: [], hidden: [], widths: {}, pinned: { left: [], right: [] } };
@@ -224,12 +327,16 @@ export class UiDataGrid extends ElementBase {
   #arr: ColumnArrangement = arrangeColumns([], [], {});
   #shown: Record<string, number> = {};
   #renderIds: string[] = [];
+  #colIndex = new Map<string, number>();
+  #zonePos = new Map<string, number>();
   #byId = new Map<string, Col>();
   #offsets: Record<GridZone, number[]> = { start: [0], center: [0], end: [0] };
   #rowHeight = 40;
   #width = 0;
+  #pinOverflow = false;
 
   // dom
+  #gridEl!: HTMLElement;
   #viewport!: HTMLElement;
   #sizer!: HTMLElement;
   #head!: HTMLElement;
@@ -241,8 +348,10 @@ export class UiDataGrid extends ElementBase {
   #grid: GridViewport | undefined;
   #observer: ResizeObserver | undefined;
   #built = false;
-  #epoch = 1;
-  #dirty = false;
+  #pending = 0;
+  #queued = false;
+  #contentEpoch = 1;
+  #geoEpoch = 1;
   #rowRecs = new Map<string, RowRec>();
   #rowPool: RowRec[] = [];
   #cellPool: CellEl[] = [];
@@ -250,21 +359,30 @@ export class UiDataGrid extends ElementBase {
   #meta = new WeakMap<HTMLElement, Meta>();
   #active = { row: 0, col: 0 };
   #activeKey: string | null = null;
+  #revealActive = false;
+  #entered: HTMLElement | null = null;
+  #editing: { key: string; id: string } | null = null;
   #scrolled = { start: false, end: false };
   #dragging = false;
   #resizeFrame = 0;
   #reorder: { destroy(): void } | undefined;
   #reorderLoading = false;
+  #warnedHeight = false;
 
   /** Column definitions. */
   get columns(): Col[] {
     return this.#columns;
   }
   set columns(value: Col[]) {
-    this.#columns = Array.isArray(value) ? value : [];
+    const list = Array.isArray(value) ? value : [];
+    this.#columns = list.filter((column) => {
+      if (column?.id !== SELECT_ID) return true;
+      console.warn(`ui-data-grid: the column id "${SELECT_ID}" is reserved and was ignored.`);
+      return false;
+    });
     this.#byId = new Map(this.#columns.map((c) => [c.id, c]));
     this.#resetLayout();
-    this.#invalidate();
+    this.#invalidate(F_VIEW | F_CONTENT | F_GEOMETRY);
   }
 
   /** The data. Replace the array (or call `refresh()`) after changing it. */
@@ -273,8 +391,7 @@ export class UiDataGrid extends ElementBase {
   }
   set rows(value: Row[]) {
     this.#rows = Array.isArray(value) ? value : [];
-    this.#data();
-    this.#invalidate();
+    this.#invalidate(F_VIEW | F_CONTENT);
   }
 
   /** A property name or `(row, index) => string`. Defaults to the position in `rows`. */
@@ -283,8 +400,7 @@ export class UiDataGrid extends ElementBase {
   }
   set rowKey(value: RowKey | undefined) {
     this.#rowKey = value;
-    this.#data();
-    this.#invalidate();
+    this.#invalidate(F_VIEW | F_CONTENT);
   }
 
   get sort(): SortRule[] {
@@ -292,8 +408,8 @@ export class UiDataGrid extends ElementBase {
   }
   set sort(value: SortRule[]) {
     this.#sort = Array.isArray(value) ? [...value] : [];
-    this.#data();
-    this.#invalidate();
+    this.#revealActive = true;
+    this.#invalidate(F_VIEW);
   }
 
   get selectedKeys(): string[] {
@@ -304,7 +420,7 @@ export class UiDataGrid extends ElementBase {
       keys: new Set(Array.isArray(value) ? value : []),
       anchor: this.#selection.anchor,
     };
-    this.#invalidate();
+    this.#invalidate(F_SELECTION);
   }
 
   /** Column order, widths, hidden and pinned columns. */
@@ -319,7 +435,7 @@ export class UiDataGrid extends ElementBase {
   }
   set layout(value: Partial<GridLayout>) {
     this.#layout = reconcileLayout(this.#columns, value, this.#baseLayout());
-    this.#invalidate();
+    this.#invalidate(F_GEOMETRY);
   }
 
   get pinned(): { left: string[]; right: string[] } {
@@ -333,7 +449,7 @@ export class UiDataGrid extends ElementBase {
     const left = [...new Set(value?.left ?? [])];
     const right = [...new Set(value?.right ?? [])].filter((id) => !left.includes(id));
     this.#layout = { ...this.#layout, pinned: { left, right } };
-    this.#invalidate();
+    this.#invalidate(F_GEOMETRY);
   }
 
   get hiddenColumns(): string[] {
@@ -341,7 +457,7 @@ export class UiDataGrid extends ElementBase {
   }
   set hiddenColumns(value: string[]) {
     this.#layout = { ...this.#layout, hidden: [...new Set(value ?? [])] };
-    this.#invalidate();
+    this.#invalidate(F_GEOMETRY);
   }
 
   get labels(): GridLabels {
@@ -349,7 +465,16 @@ export class UiDataGrid extends ElementBase {
   }
   set labels(value: Partial<GridLabels>) {
     this.#labels = { ...LABELS, ...value };
-    this.#invalidate();
+    this.#invalidate(F_VIEW | F_CONTENT);
+  }
+
+  /** The locale in use: the property, else the `locale` attribute, else `[lang]`, else the browser's. */
+  get locale(): string {
+    return this.#resolveLocale();
+  }
+  set locale(value: string | undefined) {
+    this.#localeProp = value || undefined;
+    this.#invalidate(F_VIEW | F_CONTENT);
   }
 
   get selection(): SelectionMode {
@@ -372,6 +497,7 @@ export class UiDataGrid extends ElementBase {
       "pinned",
       "hiddenColumns",
       "labels",
+      "locale",
       "selection",
     ]);
     this.#build();
@@ -379,8 +505,7 @@ export class UiDataGrid extends ElementBase {
     this.#readStorage();
     this.#observer = new ResizeObserver(() => {
       if (this.#viewport.clientWidth === this.#width) return;
-      this.#width = this.#viewport.clientWidth;
-      this.#invalidate();
+      this.#invalidate(F_GEOMETRY);
     });
     this.#observer.observe(this.#viewport);
     this.addEventListener("keydown", this.#onKeyDown);
@@ -389,6 +514,7 @@ export class UiDataGrid extends ElementBase {
     this.addEventListener("dblclick", this.#onDoubleClick);
     this.addEventListener("pointerdown", this.#onPointerDown);
     this.#ensureReorder();
+    this.#pending |= F_ALL;
     this.#flush();
   }
 
@@ -409,14 +535,30 @@ export class UiDataGrid extends ElementBase {
   attributeChangedCallback(name: string): void {
     if (!this.#built) return;
     if (name === "reorderable") this.#ensureReorder();
+    if (name === "storage-key") {
+      this.#stored = false;
+      this.#readStorage();
+    }
     this.#readAttributes(name);
-    this.#invalidate();
+    const flags = ATTRIBUTE_FLAGS[name] ?? F_GEOMETRY;
+    if (flags) this.#invalidate(flags);
   }
 
   // ---- public methods ----------------------------------------------------------------------
-  /** Moves keyboard focus to a cell. Row 0 is the header; columns count the rendered columns. */
-  focusCell(row: number, col: number): void {
-    this.#focusCell(row, col, true);
+  /**
+   * Moves keyboard focus to a cell: by position (row 0 is the header, columns count the rendered
+   * columns) or by row key and column id (`null` for the header row).
+   */
+  focusCell(row: number, col: number): void;
+  focusCell(rowKey: string | null, columnId: string): void;
+  focusCell(row: number | string | null, col: number | string): void {
+    if (typeof row === "number" && typeof col === "number") {
+      this.#focusCell(row, col, true);
+      return;
+    }
+    const c = this.#colIndex.get(String(col));
+    const v = row === null ? -1 : this.#view.indexOfKey(String(row));
+    if (c !== undefined && (row === null || v >= 0)) this.#focusCell(v + 1, c, true);
   }
 
   /** A rendered cell, `null` when that row or column is not in the DOM right now. */
@@ -431,14 +573,64 @@ export class UiDataGrid extends ElementBase {
 
   /** Scrolls a row (by key or index) into view. */
   scrollToRow(row: string | number): void {
-    const v = typeof row === "number" ? row : this.#indexOfKey(row);
+    const v = typeof row === "number" ? row : this.#view.indexOfKey(row);
     if (v >= 0) this.#grid?.scrollToRow(v);
   }
 
-  /** Re-renders every visible cell, for row objects that were changed in place. */
+  /** Re-sorts and re-renders every visible cell, for row objects that were changed in place. */
   refresh(): void {
-    this.#data();
-    this.#invalidate();
+    this.#invalidate(F_VIEW | F_CONTENT);
+  }
+
+  /**
+   * Refills the mounted cells of these rows (by key) and nothing else, for rows changed in place.
+   * It does not re-sort: call `refresh()` when the change can move a row.
+   */
+  refreshRows(keys: Iterable<string>): void {
+    let any = false;
+    for (const key of keys) {
+      const rec = this.#rowRecs.get(key);
+      if (!rec) continue;
+      any = true;
+      for (const cell of rec.cells.values()) cell._c = 0;
+    }
+    if (any) this.#invalidate(F_PAINT);
+  }
+
+  /**
+   * Exempts one cell from refills and keeps its row and column mounted while an editor lives in
+   * it. Pass `null` to release it. The cell is filled again once released.
+   */
+  setEditingCell(rowKey: string | null, columnId?: string): void {
+    const before = this.#editing;
+    this.#editing =
+      rowKey === null || columnId === undefined ? null : { key: rowKey, id: columnId };
+    if (before) {
+      const cell = this.#rowRecs.get(before.key)?.cells.get(before.id);
+      if (cell) cell._c = 0;
+    }
+    this.#invalidate(F_PAINT);
+  }
+
+  /**
+   * Writes `value` into a row through the column's accessor (a property name) after the cancelable
+   * `beforecellchange`, then refills the row and fires `cellchange`. Returns `false` when the event
+   * was cancelled or the column has no writable accessor. D2's editors commit through it.
+   */
+  changeCell(rowKey: string, columnId: string, value: CellValue): boolean {
+    const v = this.#view.indexOfKey(rowKey);
+    const column = this.#byId.get(columnId);
+    if (v < 0 || !column) return false;
+    const accessor = column.accessor ?? column.id;
+    if (typeof accessor === "function") return false;
+    const row = this.#rowAt(v);
+    const detail = { rowKey, columnId, row, oldValue: getCellValue(row, column), value };
+    if (!emit(this, "beforecellchange", detail, true)) return false;
+    row[accessor] = value;
+    this.refreshRows([rowKey]);
+    if (this.#sort.some((rule) => rule.id === columnId)) this.#invalidate(F_VIEW);
+    emit(this, "cellchange", detail);
+    return true;
   }
 
   clearSelection(): void {
@@ -448,7 +640,7 @@ export class UiDataGrid extends ElementBase {
   resizeColumn(id: string, width: number): void {
     const column = this.#byId.get(id);
     if (!column) return;
-    const clamped = clampWidth(width, column);
+    const clamped = clampWidth(width, column, this.#shown[id] ?? 0);
     this.#layout = { ...this.#layout, widths: { ...this.#layout.widths, [id]: clamped } };
     this.#changed();
     emit(this, "columnresize", { id, width: clamped });
@@ -466,8 +658,13 @@ export class UiDataGrid extends ElementBase {
     );
   }
 
-  pinColumn(id: string, side: "left" | "right" | null): void {
-    if (!this.#byId.has(id)) return;
+  /**
+   * Pins a column to the inline start or end (`null` unpins). Returns `false`, and announces why,
+   * when the pinned columns would leave the scrolling ones less than a minimum width.
+   */
+  pinColumn(id: string, side: "left" | "right" | null): boolean {
+    const column = this.#byId.get(id);
+    if (!column) return false;
     const left = this.#layout.pinned.left.filter((x) => x !== id);
     const right = this.#layout.pinned.right.filter((x) => x !== id);
     if (side === "left") left.push(id);
@@ -475,9 +672,17 @@ export class UiDataGrid extends ElementBase {
     const rank = (x: string) => this.#layout.order.indexOf(x);
     left.sort((a, b) => rank(a) - rank(b));
     right.sort((a, b) => rank(a) - rank(b));
+    if (
+      side !== null &&
+      this.#overflows(arrangeColumns(this.#layout.order, this.#layout.hidden, { left, right }))
+    ) {
+      this.#say(this.#labels.pinTooWide(column.header));
+      return false;
+    }
     this.#layout = { ...this.#layout, pinned: { left, right } };
     this.#changed();
     emit(this, "pinchange", { left, right });
+    return true;
   }
 
   setSort(sort: SortRule[]): void {
@@ -489,7 +694,8 @@ export class UiDataGrid extends ElementBase {
     const all = only === undefined;
     if (all || only === "label") {
       const label = this.getAttribute("label");
-      if (label) this.setAttribute("aria-label", label);
+      if (label) this.#gridEl.setAttribute("aria-label", label);
+      else this.#gridEl.removeAttribute("aria-label");
     }
     if (all || only === "density" || only === "row-height") {
       const explicit = Number(this.getAttribute("row-height"));
@@ -498,11 +704,8 @@ export class UiDataGrid extends ElementBase {
         explicit >= 20 ? explicit : DENSITY[density && density in DENSITY ? density : "normal"];
       this.style.setProperty("--ui-data-grid-row", `${this.#rowHeight}px`);
     }
-    if ((all || only === "sort") && this.hasAttribute("sort")) {
+    if ((all || only === "sort") && this.hasAttribute("sort"))
       this.#sort = parseSort(this.getAttribute("sort"));
-      this.#data();
-    }
-    if (only === "sort-manual") this.#data();
     if (
       (all || only === "pinned-left" || only === "pinned-right") &&
       (this.hasAttribute("pinned-left") || this.hasAttribute("pinned-right"))
@@ -513,8 +716,10 @@ export class UiDataGrid extends ElementBase {
       };
     if ((all || only === "hidden-columns") && this.hasAttribute("hidden-columns"))
       this.hiddenColumns = idsOf(this.getAttribute("hidden-columns"));
-    if (this.selection === "multi") this.setAttribute("aria-multiselectable", "true");
-    else this.removeAttribute("aria-multiselectable");
+    if (all || only === "selection") {
+      if (this.selection === "multi") this.#gridEl.setAttribute("aria-multiselectable", "true");
+      else this.#gridEl.removeAttribute("aria-multiselectable");
+    }
   }
 
   #readStorage(): void {
@@ -533,10 +738,20 @@ export class UiDataGrid extends ElementBase {
     const key = this.getAttribute("storage-key");
     if (!key) return;
     try {
-      localStorage.setItem(key, JSON.stringify(this.#layout));
+      localStorage.setItem(key, serializeLayout(this.#layout, this.#columns));
     } catch {
       // See #readStorage.
     }
+  }
+
+  #resolveLocale(): string {
+    return (
+      this.#localeProp ||
+      this.getAttribute("locale") ||
+      this.closest("[lang]")?.getAttribute("lang") ||
+      (typeof navigator !== "undefined" ? navigator.language : "") ||
+      "en"
+    );
   }
 
   // ---- model -------------------------------------------------------------------------------
@@ -560,7 +775,7 @@ export class UiDataGrid extends ElementBase {
     this.#readStorage();
   }
 
-  #keyAtSource(i: number): string {
+  #rawKey(i: number): string {
     const rowKey = this.#rowKey;
     const row = this.#rows[i];
     if (typeof rowKey === "function") return String(rowKey(row, i));
@@ -568,50 +783,52 @@ export class UiDataGrid extends ElementBase {
     return String(i);
   }
 
-  /** Rebuilds the sort order and drops the key index after the rows, the sort or the key changed. */
-  #data(): void {
-    this.#keyIndex = null;
-    this.#order = null;
-    if (this.#sort.length > 0 && !this.hasAttribute("sort-manual") && this.#columns.length > 0) {
-      const rows = this.#rows;
-      const proxies: GridColumn<number>[] = this.#columns.map((c) => ({
-        ...c,
-        accessor: (i: number) => getCellValue(rows[i], c),
-      }));
-      this.#order = sortRows(
-        Array.from({ length: rows.length }, (_, i) => i),
-        proxies,
-        this.#sort,
+  /**
+   * Rebuilds the view (filter, then sort, then group; filter and group are identity for now) after
+   * the rows, the sort, the key or the locale changed. Repeated row keys are renamed.
+   */
+  #buildView(): void {
+    const rows = this.#rows;
+    const { keys, duplicates } = uniqueKeys(rows.length, (i) => this.#rawKey(i));
+    if (duplicates.length > 0)
+      console.warn(
+        `ui-data-grid: ${duplicates.length} repeated row key(s), e.g. "${duplicates[0]}". Repeats were renamed ("key#2") so no row is dropped; make \`rowKey\` unique.`,
       );
-    }
-  }
-
-  #source(v: number): number {
-    return this.#order ? (this.#order[v] as number) : v;
+    const sorted =
+      this.#sort.length > 0 && !this.hasAttribute("sort-manual") && this.#columns.length > 0;
+    const proxies: GridColumn<number>[] = sorted
+      ? this.#columns.map((c) => ({ ...c, accessor: (i: number) => getCellValue(rows[i], c) }))
+      : [];
+    this.#view = buildView({
+      keys,
+      sort: sorted ? (indices) => sortRows(indices, proxies, this.#sort, this.#locale) : undefined,
+    });
   }
 
   #rowAt(v: number): Row {
-    return this.#rows[this.#source(v)];
+    return this.#rows[this.#view.sourceAt(v)];
   }
 
   #keyAt(v: number): string {
-    return this.#keyAtSource(this.#source(v));
-  }
-
-  #indexOfKey(key: string): number {
-    if (!this.#keyIndex) {
-      this.#keyIndex = new Map();
-      for (let v = 0; v < this.#rows.length; v += 1) this.#keyIndex.set(this.#keyAt(v), v);
-    }
-    return this.#keyIndex.get(key) ?? -1;
+    return this.#view.keyAt(v);
   }
 
   #selectionRows(): SelectionRows {
+    const view = this.#view;
     return {
-      count: this.#rows.length,
-      indexOf: (key) => this.#indexOfKey(key),
-      keyAt: (i) => this.#keyAt(i),
+      count: view.count,
+      indexOf: (key) => view.indexOfKey(key),
+      keyAt: (i) => view.keyAt(i),
     };
+  }
+
+  /** Header checkbox state, recomputed only when the selection or the view changed. */
+  #selectionLevel(): "all" | "some" | "none" {
+    const cached = this.#level;
+    if (cached && cached.sel === this.#selection && cached.view === this.#view) return cached.value;
+    const value = selectionLevel(this.#selection, this.#selectionRows());
+    this.#level = { sel: this.#selection, view: this.#view, value };
+    return value;
   }
 
   #setSelection(next: SelectionState): void {
@@ -620,7 +837,7 @@ export class UiDataGrid extends ElementBase {
       next.keys.size !== this.#selection.keys.size ||
       [...next.keys].some((k) => !this.#selection.keys.has(k));
     this.#selection = next;
-    this.#invalidate();
+    this.#invalidate(F_SELECTION);
     if (!changed) return;
     this.#say(this.#labels.selected(next.keys.size));
     emit(this, "selectionchange", { keys: [...next.keys] });
@@ -628,13 +845,13 @@ export class UiDataGrid extends ElementBase {
 
   #changed(): void {
     this.#writeStorage();
-    this.#invalidate();
+    this.#invalidate(F_GEOMETRY);
   }
 
   #applySort(sort: SortRule[]): void {
     this.#sort = sort;
-    this.#data();
-    this.#invalidate();
+    this.#revealActive = true;
+    this.#invalidate(F_VIEW);
     emit(this, "sortchange", { sort: [...sort] });
     if (this.hasAttribute("sort")) this.setAttribute("sort", formatSort(sort));
   }
@@ -678,9 +895,27 @@ export class UiDataGrid extends ElementBase {
       : this.#arr[zone];
   }
 
+  /** Width a column has before leftover space is shared out. */
+  #baseWidth(id: string): number {
+    if (id === SELECT_ID) return SELECT_WIDTH;
+    const column = this.#byId.get(id);
+    return this.#layout.widths[id] ?? (column ? defaultWidth(column) : 160);
+  }
+
+  /** Whether the pinned zones of `arr` would leave the scrolling columns hidden behind them. */
+  #overflows(arr: ColumnArrangement): boolean {
+    if (this.#width <= 0) return false;
+    const sum = (ids: readonly string[]) =>
+      ids.reduce((total, id) => total + this.#baseWidth(id), 0);
+    const pinned = sum(arr.start) + sum(arr.end) + (this.#selectable() ? SELECT_WIDTH : 0);
+    if (pinned === 0) return false;
+    return pinned + Math.min(MIN_SCROLL_WIDTH, sum(arr.center)) > this.#width;
+  }
+
   #computeLayout(): void {
     const { order, hidden, pinned } = this.#layout;
     this.#arr = arrangeColumns(order, hidden, pinned);
+    this.#pinOverflow = this.#overflows(this.#arr);
     const dataCols = this.#arr.ids.map((id) => this.#byId.get(id)).filter((c): c is Col => !!c);
     this.#shown = this.#width
       ? fillColumnWidths(
@@ -697,52 +932,100 @@ export class UiDataGrid extends ElementBase {
       end: columnOffsets(this.#arr.end.map(widthOf)),
     };
     this.#renderIds = ZONES.flatMap((zone) => this.#zoneList(zone));
+    this.#colIndex = new Map(this.#renderIds.map((id, i) => [id, i]));
+    this.#zonePos = new Map();
+    for (const zone of ZONES) {
+      const list = this.#zoneList(zone);
+      for (let i = 0; i < list.length; i += 1) this.#zonePos.set(list[i] as string, i);
+    }
   }
 
   // ---- scheduling --------------------------------------------------------------------------
-  #invalidate(): void {
-    if (this.#dirty || !this.#built) return;
-    this.#dirty = true;
+  #invalidate(flags: number): void {
+    this.#pending |= flags;
+    if (this.#queued || !this.#built) return;
+    this.#queued = true;
     queueMicrotask(() => this.#flush());
   }
 
+  /** Applies what changed, and only that: see the `F_*` flags. */
   #flush(): void {
-    this.#dirty = false;
+    this.#queued = false;
     if (!this.isConnected || !this.#built) return;
-    this.#width = this.#viewport.clientWidth;
-    this.#epoch += 1;
-    this.#computeLayout();
-    this.#clampActive();
+    let flags = this.#pending;
+    this.#pending = 0;
+    const locale = this.#resolveLocale();
+    if (locale !== this.#locale) {
+      this.#locale = locale;
+      flags |= F_VIEW | F_CONTENT;
+    }
+    const width = this.#viewport.clientWidth;
+    if (width !== this.#width) {
+      this.#width = width;
+      flags |= F_GEOMETRY;
+    }
+    if (flags & F_VIEW) this.#buildView();
+    const wasOverflow = this.#pinOverflow;
+    if (flags & F_GEOMETRY) {
+      this.#computeLayout();
+      this.#geoEpoch += 1;
+    }
+    if (flags & F_CONTENT) this.#contentEpoch += 1;
+    if (flags & (F_VIEW | F_GEOMETRY)) {
+      this.#clampActive();
+      this.#applyMetrics();
+    }
+    if (flags & (F_VIEW | F_CONTENT | F_GEOMETRY | F_PAINT)) {
+      if (this.#grid) this.#grid.update(true);
+      else
+        this.#grid = createGridViewport(this.#viewport, {
+          rowCount: () => this.#view.count,
+          rowHeight: () => this.#rowHeight,
+          headerHeight: () => this.#rowHeight,
+          centerOffsets: () => this.#offsets.center,
+          insetStart: () => this.#extent("start"),
+          stickyStart: () => (this.#pinOverflow ? 0 : this.#extent("start")),
+          rtl: () => this.#rtl(),
+          onChange: (win) => this.#render(win),
+        });
+      if (this.#revealActive || (this.#pinOverflow !== wasOverflow && this.#hasFocus())) {
+        this.#revealActive = false;
+        this.#revealCell(this.#active.row, this.#active.col);
+      }
+    }
+    this.#applySelection();
+  }
+
+  #hasFocus(): boolean {
+    return this.contains(document.activeElement);
+  }
+
+  /** Sizes of the scroll area and the attributes that describe the whole grid. */
+  #applyMetrics(): void {
     const total = this.#extent("start") + this.#extent("center") + this.#extent("end");
-    const rows = this.#rows.length;
+    const rows = this.#view.count;
     this.#sizer.style.inlineSize = `${total}px`;
     this.#body.style.blockSize = `${rows * this.#rowHeight}px`;
     this.#head.style.blockSize = `${this.#rowHeight}px`;
-    this.setAttribute("aria-rowcount", String(rows + 1));
-    this.setAttribute("aria-colcount", String(this.#renderIds.length));
+    this.#gridEl.setAttribute("aria-rowcount", String(rows + 1));
+    this.#gridEl.setAttribute("aria-colcount", String(this.#renderIds.length));
     this.toggleAttribute("data-pin-start", this.#zoneList("start").length > 0);
     this.toggleAttribute("data-pin-end", this.#arr.end.length > 0);
+    this.toggleAttribute("data-pin-overflow", this.#pinOverflow);
     this.#empty.hidden = rows > 0;
     this.#empty.textContent = rows === 0 ? this.#labels.empty : "";
-    if (this.#grid) {
-      this.#grid.update(true);
-      return;
+    if (rows * this.#rowHeight > MAX_BODY_HEIGHT && !this.#warnedHeight) {
+      this.#warnedHeight = true;
+      console.warn(
+        `ui-data-grid: ${rows} rows of ${this.#rowHeight}px are taller than browsers can scroll reliably; rows past the limit will not be reachable.`,
+      );
     }
-    this.#grid = createGridViewport(this.#viewport, {
-      rowCount: () => this.#rows.length,
-      rowHeight: () => this.#rowHeight,
-      headerHeight: () => this.#rowHeight,
-      centerOffsets: () => this.#offsets.center,
-      insetStart: () => this.#extent("start"),
-      rtl: () => this.#rtl(),
-      onChange: (win) => this.#render(win),
-    });
   }
 
   // ---- construction ------------------------------------------------------------------------
   #build(): void {
     if (this.#built) return;
-    this.setAttribute("role", "grid");
+    this.#gridEl = create("div", "grid", "grid");
     this.#viewport = create("div", "viewport");
     this.#sizer = create("div", "sizer");
     this.#head = create("div", "head", "rowgroup");
@@ -752,13 +1035,14 @@ export class UiDataGrid extends ElementBase {
     this.#headZones = this.#zones(this.#headRow);
     this.#head.append(this.#headRow);
     this.#body = create("div", "body", "rowgroup");
+    this.#sizer.append(this.#head, this.#body);
+    this.#viewport.append(this.#sizer);
+    this.#gridEl.append(this.#viewport);
     this.#empty = create("div", "empty");
     this.#empty.hidden = true;
-    this.#sizer.append(this.#head, this.#body, this.#empty);
-    this.#viewport.append(this.#sizer);
     this.#status = create("div", "status", "status");
     this.#status.setAttribute("aria-live", "polite");
-    this.replaceChildren(this.#viewport, this.#status);
+    this.replaceChildren(this.#gridEl, this.#empty, this.#status);
     this.#viewport.addEventListener("scroll", () => this.#applyEdges(), { passive: true });
     this.#built = true;
   }
@@ -782,43 +1066,53 @@ export class UiDataGrid extends ElementBase {
   }
 
   // ---- rendering ---------------------------------------------------------------------------
-  /** Ids to render in a zone: every pinned column, the windowed scrolling ones, the active one. */
-  #zoneIds(zone: GridZone, win: GridWindow, keepActive: boolean): string[] {
+  /** Ids to render in a zone: every pinned column, the windowed scrolling ones, the kept ones. */
+  #zoneIds(zone: GridZone, win: GridWindow, keep: readonly string[]): string[] {
     if (zone !== "center") return this.#zoneList(zone);
     const all = this.#arr.center;
     const ids = all.slice(win.columns.start, win.columns.end);
-    const active = keepActive ? this.#renderIds[this.#active.col] : undefined;
-    if (active && this.#arr.zoneOf.get(active) === "center" && !ids.includes(active))
-      ids.splice(all.indexOf(active) < win.columns.start ? 0 : ids.length, 0, active);
+    for (const id of keep)
+      if (this.#arr.zoneOf.get(id) === "center" && !ids.includes(id))
+        ids.splice(all.indexOf(id) < win.columns.start ? 0 : ids.length, 0, id);
     return ids;
   }
 
+  /** Columns that stay mounted in a row even outside the window: the active and the edited cell. */
+  #keepIds(row: number, key: string | null): string[] {
+    const keep: string[] = [];
+    if (this.#active.row === row) {
+      const id = this.#renderIds[this.#active.col];
+      if (id !== undefined) keep.push(id);
+    }
+    if (key !== null && this.#editing?.key === key) keep.push(this.#editing.id);
+    return keep;
+  }
+
   #render(win: GridWindow): void {
-    const hadFocus = this.contains(document.activeElement);
+    const hadFocus = this.#hasFocus();
     this.#renderHead(win);
     this.#renderBody(win);
     this.#applyEdges();
-    if (hadFocus && !this.contains(document.activeElement)) this.#focusActive();
+    if (hadFocus && !this.#hasFocus()) this.#focusActive();
   }
 
   #renderHead(win: GridWindow): void {
     const wanted = new Set<string>();
     for (const zone of ZONES) {
       const cells: CellEl[] = [];
-      let offset = 0;
-      for (const id of this.#zoneIds(zone, win, this.#active.row === 0)) {
+      for (const id of this.#zoneIds(zone, win, this.#keepIds(0, null))) {
         let cell = this.#headCells.get(id);
         if (!cell) {
           cell = this.#makeHead(id);
           this.#headCells.set(id, cell);
         }
-        offset = this.#offsets[zone][this.#zoneList(zone).indexOf(id)] ?? offset;
+        const offset = this.#offsets[zone][this.#zonePos.get(id) ?? 0] ?? 0;
         this.#bindHead(cell, id, zone, offset);
         cells.push(cell);
         wanted.add(id);
       }
       reconcile(this.#headZones[zone], cells);
-      this.#headZones[zone].style.inlineSize = `${this.#offsets[zone].at(-1)}px`;
+      this.#headZones[zone].style.inlineSize = `${this.#extent(zone)}px`;
     }
     for (const id of this.#headCells.keys()) if (!wanted.has(id)) this.#headCells.delete(id);
   }
@@ -846,7 +1140,7 @@ export class UiDataGrid extends ElementBase {
   }
 
   #bindHead(cell: CellEl, id: string, zone: GridZone, offset: number): void {
-    const col = this.#renderIds.indexOf(id);
+    const col = this.#colIndex.get(id) ?? 0;
     this.#meta.set(cell, { rec: null, col });
     cell.dataset.col = id;
     cell.setAttribute("aria-colindex", String(col + 1));
@@ -855,19 +1149,20 @@ export class UiDataGrid extends ElementBase {
     cell.tabIndex = this.#active.row === 0 && this.#active.col === col ? 0 : -1;
     if (id === SELECT_ID) {
       const box = cell.firstElementChild as HTMLInputElement;
-      const level = selectionLevel(this.#selection, this.#selectionRows());
-      box.checked = level === "all";
-      box.indeterminate = level === "some";
       box.setAttribute("aria-label", this.#labels.selectAll);
+      this.#syncHeaderCheck(box);
       return;
     }
     const column = this.#byId.get(id);
     if (!column) return;
     cell.dataset.sortableItem = id;
-    const sorted = ariaSort(this.#sort, id);
-    if (sorted) cell.setAttribute("aria-sort", sorted);
-    else if (column.sortable !== false) cell.setAttribute("aria-sort", "none");
+    // Only the primary sorted column carries aria-sort; every sorted one shows its arrow.
+    const direction = ariaSort(this.#sort, id);
+    if (direction && this.#sort[0]?.id === id) cell.setAttribute("aria-sort", direction);
     else cell.removeAttribute("aria-sort");
+    if (direction) cell.dataset.sort = direction;
+    else delete cell.dataset.sort;
+    cell.toggleAttribute("data-sortable", column.sortable !== false);
     cell.dataset.align = columnAlign(column);
     const label = cell.querySelector<HTMLElement>(":scope > [data-ui-part=label]");
     if (label && label.textContent !== column.header) label.textContent = column.header;
@@ -909,11 +1204,15 @@ export class UiDataGrid extends ElementBase {
 
   #renderBody(win: GridWindow): void {
     const { start, end } = win.rows;
+    const count = this.#view.count;
     const wanted: number[] = [];
     for (let v = start; v < end; v += 1) wanted.push(v);
-    const activeV = this.#active.row - 1;
-    if (activeV >= 0 && activeV < this.#rows.length && (activeV < start || activeV >= end))
-      wanted.splice(activeV < start ? 0 : wanted.length, 0, activeV);
+    const extra = (v: number) => {
+      if (v >= 0 && v < count && (v < start || v >= end) && !wanted.includes(v))
+        wanted.splice(v < start ? 0 : wanted.length, 0, v);
+    };
+    extra(this.#active.row - 1);
+    if (this.#editing) extra(this.#view.indexOfKey(this.#editing.key));
 
     const keep = new Map<string, number>();
     for (const v of wanted) keep.set(this.#keyAt(v), v);
@@ -928,7 +1227,8 @@ export class UiDataGrid extends ElementBase {
       if (!rec) {
         rec = this.#rowPool.pop() ?? this.#makeRow();
         rec.key = key;
-        rec.epoch = 0;
+        rec.g = 0;
+        rec.sel = null;
         this.#rowRecs.set(key, rec);
       }
       this.#bindRow(rec, v, win);
@@ -939,7 +1239,7 @@ export class UiDataGrid extends ElementBase {
 
   #makeRow(): RowRec {
     const el = create("div", "row", "row");
-    return { el, key: "", v: -1, epoch: 0, zones: this.#zones(el), cells: new Map() };
+    return { el, key: "", v: -1, g: 0, sel: null, zones: this.#zones(el), cells: new Map() };
   }
 
   #releaseRow(rec: RowRec): void {
@@ -951,25 +1251,30 @@ export class UiDataGrid extends ElementBase {
   }
 
   #releaseCell(cell: CellEl): void {
+    if (cell === this.#entered) this.#entered = null;
     cell.remove();
     cell._row = undefined;
     cell._col = undefined;
-    cell._epoch = 0;
+    cell._c = 0;
+    cell._g = 0;
+    cell._v = -1;
     this.#cellPool.push(cell);
   }
 
   #bindRow(rec: RowRec, v: number, win: GridWindow): void {
     const row = this.#rowAt(v);
-    if (rec.epoch !== this.#epoch || rec.v !== v) {
+    const geo = this.#geoEpoch;
+    if (rec.v !== v || rec.g !== geo) {
       rec.v = v;
+      rec.g = geo;
       rec.el.setAttribute("aria-rowindex", String(v + 2));
       rec.el.style.insetBlockStart = `${v * this.#rowHeight}px`;
-      if (this.selection === "none") rec.el.removeAttribute("aria-selected");
-      else rec.el.setAttribute("aria-selected", String(this.#selection.keys.has(rec.key)));
+      for (const zone of ZONES) rec.zones[zone].style.inlineSize = `${this.#extent(zone)}px`;
     }
+    this.#syncRowSelection(rec);
+    const keep = this.#keepIds(v + 1, rec.key);
     for (const zone of ZONES) {
-      const ids = this.#zoneIds(zone, win, this.#active.row === v + 1);
-      const list = this.#zoneList(zone);
+      const ids = this.#zoneIds(zone, win, keep);
       const cells: CellEl[] = [];
       for (const id of ids) {
         let cell = rec.cells.get(id);
@@ -977,8 +1282,11 @@ export class UiDataGrid extends ElementBase {
           cell = this.#cellPool.pop() ?? this.#makeCell();
           rec.cells.set(id, cell);
         }
-        if (cell._epoch !== this.#epoch || cell._row !== row || cell._col !== id)
-          this.#bindCell(cell, rec, row, id, this.#offsets[zone][list.indexOf(id)] ?? 0);
+        if (cell._g !== geo || cell._v !== v)
+          this.#placeCell(cell, rec, id, this.#offsets[zone][this.#zonePos.get(id) ?? 0] ?? 0);
+        const editing = this.#editing?.key === rec.key && this.#editing.id === id;
+        if (!editing && (cell._c !== this.#contentEpoch || cell._row !== row || cell._col !== id))
+          this.#fillCell(cell, rec, row, id);
         cells.push(cell);
       }
       for (const [id, cell] of rec.cells)
@@ -987,9 +1295,7 @@ export class UiDataGrid extends ElementBase {
           rec.cells.delete(id);
         }
       reconcile(rec.zones[zone], cells);
-      rec.zones[zone].style.inlineSize = `${this.#offsets[zone].at(-1)}px`;
     }
-    rec.epoch = this.#epoch;
   }
 
   #makeCell(): CellEl {
@@ -998,17 +1304,24 @@ export class UiDataGrid extends ElementBase {
     return cell;
   }
 
-  #bindCell(cell: CellEl, rec: RowRec, row: Row, id: string, offset: number): void {
-    const col = this.#renderIds.indexOf(id);
+  /** Position, size and roving tabindex: everything that does not depend on the data. */
+  #placeCell(cell: CellEl, rec: RowRec, id: string, offset: number): void {
+    const col = this.#colIndex.get(id) ?? 0;
     this.#meta.set(cell, { rec, col });
-    cell._epoch = this.#epoch;
-    cell._row = row;
-    cell._col = id;
-    cell.dataset.col = id;
+    cell._g = this.#geoEpoch;
+    cell._v = rec.v;
     cell.setAttribute("aria-colindex", String(col + 1));
     cell.style.insetInlineStart = `${offset}px`;
     cell.style.inlineSize = `${id === SELECT_ID ? SELECT_WIDTH : (this.#shown[id] ?? 160)}px`;
     cell.tabIndex = this.#active.row === rec.v + 1 && this.#active.col === col ? 0 : -1;
+  }
+
+  /** The cell's content: the only place the column renderer runs. */
+  #fillCell(cell: CellEl, rec: RowRec, row: Row, id: string): void {
+    cell._c = this.#contentEpoch;
+    cell._row = row;
+    cell._col = id;
+    cell.dataset.col = id;
     if (id === SELECT_ID) {
       let box = cell.firstElementChild as HTMLInputElement | null;
       if (box?.dataset.uiPart !== "check") {
@@ -1024,16 +1337,22 @@ export class UiDataGrid extends ElementBase {
     const align = columnAlign(column);
     if (cell.dataset.align !== align) cell.dataset.align = align;
     const value: CellValue = getCellValue(row, column);
-    const formatted = formatCellValue(value, column);
+    const formatted = formatCellValue(value, column, {
+      locale: this.#locale,
+      labels: { yes: this.#labels.yes, no: this.#labels.no },
+    });
     const context = { row, rowId: rec.key, value, formatted };
-    if (column.cellTag && TAG.test(column.cellTag)) {
+    if (validTag(column.cellTag)) {
       let host = cell._tag;
       if (host?.localName !== column.cellTag || host.parentElement !== cell) {
         host = document.createElement(column.cellTag);
+        // Upgrade first so the properties below reach the element's accessors, not shadow them.
+        customElements.upgrade(host);
         cell._tag = host;
         cell.replaceChildren(host);
       }
       Object.assign(host, { ...context, column });
+      this.#tame(cell);
       return;
     }
     cell._tag = undefined;
@@ -1041,6 +1360,7 @@ export class UiDataGrid extends ElementBase {
     if (content instanceof Node) {
       if (cell.childNodes.length !== 1 || cell.firstChild !== content)
         cell.replaceChildren(content);
+      this.#tame(cell);
       return;
     }
     const text = content == null ? formatted : String(content);
@@ -1048,6 +1368,41 @@ export class UiDataGrid extends ElementBase {
     if (cell.childNodes.length === 1 && node?.nodeType === 3) {
       if (node.nodeValue !== text) node.nodeValue = text;
     } else cell.textContent = text;
+  }
+
+  /** Takes the controls in a cell out of the tab order (the cell is the tab stop). */
+  #tame(cell: HTMLElement): void {
+    if (cell === this.#entered) return;
+    for (const control of this.#controls(cell)) if (control.tabIndex !== -1) control.tabIndex = -1;
+  }
+
+  #controls(cell: HTMLElement): HTMLElement[] {
+    return [...cell.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+      (el) => !(el as HTMLInputElement).disabled,
+    );
+  }
+
+  #syncRowSelection(rec: RowRec): void {
+    const selected = this.selection === "none" ? null : this.#selection.keys.has(rec.key);
+    if (rec.sel === selected) return;
+    rec.sel = selected;
+    if (selected === null) rec.el.removeAttribute("aria-selected");
+    else rec.el.setAttribute("aria-selected", String(selected));
+    const box = rec.cells.get(SELECT_ID)?.firstElementChild as HTMLInputElement | undefined;
+    if (box) box.checked = selected === true;
+  }
+
+  #syncHeaderCheck(box: HTMLInputElement): void {
+    const level = this.#selectionLevel();
+    box.checked = level === "all";
+    box.indeterminate = level === "some";
+  }
+
+  /** Selection changed: `aria-selected` and the checkboxes of what is mounted, nothing else. */
+  #applySelection(): void {
+    for (const rec of this.#rowRecs.values()) this.#syncRowSelection(rec);
+    const box = this.#headCells.get(SELECT_ID)?.firstElementChild as HTMLInputElement | undefined;
+    if (box) this.#syncHeaderCheck(box);
   }
 
   #applyEdges(): void {
@@ -1068,10 +1423,10 @@ export class UiDataGrid extends ElementBase {
   /** Keeps the active cell on the same row after the data changed, and inside the grid. */
   #clampActive(): void {
     if (this.#active.row > 0 && this.#activeKey !== null) {
-      const v = this.#indexOfKey(this.#activeKey);
+      const v = this.#view.indexOfKey(this.#activeKey);
       if (v >= 0) this.#active.row = v + 1;
     }
-    this.#active.row = Math.min(this.#active.row, this.#rows.length);
+    this.#active.row = Math.min(this.#active.row, this.#view.count);
     this.#active.col = Math.min(this.#active.col, Math.max(0, this.#renderIds.length - 1));
     this.#activeKey = this.#active.row > 0 ? this.#keyAt(this.#active.row - 1) : null;
   }
@@ -1080,7 +1435,7 @@ export class UiDataGrid extends ElementBase {
     const id = this.#renderIds[col];
     if (id === undefined) return undefined;
     if (row === 0) return this.#headCells.get(id);
-    if (row > this.#rows.length) return undefined;
+    if (row > this.#view.count) return undefined;
     return this.#rowRecs.get(this.#keyAt(row - 1))?.cells.get(id);
   }
 
@@ -1097,19 +1452,52 @@ export class UiDataGrid extends ElementBase {
     if (next) next.tabIndex = 0;
   }
 
+  /**
+   * Scrolls a cell into view without it hiding under a pinned zone. The header row never scrolls
+   * the body: it is sticky, so focusing it leaves `scrollTop` alone.
+   */
+  #revealCell(row: number, col: number): void {
+    const grid = this.#grid;
+    const id = this.#renderIds[col];
+    if (!grid || id === undefined) return;
+    if (row > 0) grid.scrollToRow(row - 1);
+    const zone = this.#arr.zoneOf.get(id) ?? "start";
+    if (zone === "center")
+      grid.scrollToColumn(
+        this.#arr.center.indexOf(id),
+        this.#pinOverflow ? 0 : this.#extent("end"),
+      );
+    else if (this.#pinOverflow) this.#revealPinned(id, zone);
+    // A scroll that moved the window re-renders now, so the target cell exists before it is focused.
+    grid.update();
+  }
+
+  /** In overflow mode the pinned zones scroll with the grid, so a pinned cell can be off-screen. */
+  #revealPinned(id: string, zone: GridZone): void {
+    const offsets = this.#offsets[zone];
+    const at = this.#zonePos.get(id) ?? 0;
+    const base = zone === "start" ? 0 : this.#extent("start") + this.#extent("center");
+    const left = base + (offsets[at] ?? 0);
+    const width = (offsets[at + 1] ?? 0) - (offsets[at] ?? 0);
+    const next = scrollInlineToReveal(
+      left,
+      width,
+      this.#viewport.clientWidth,
+      Math.abs(this.#viewport.scrollLeft),
+      0,
+      0,
+    );
+    this.#viewport.scrollLeft = (this.#rtl() ? -1 : 1) * next;
+  }
+
   #focusCell(row: number, col: number, focus: boolean): void {
     const count = this.#renderIds.length;
     if (!this.#built || count === 0 || !this.#grid) return;
-    const r = Math.min(Math.max(0, row), this.#rows.length);
+    const r = Math.min(Math.max(0, row), this.#view.count);
     const c = Math.min(Math.max(0, col), count - 1);
     this.#setActive(r, c);
     const id = this.#renderIds[c] as string;
-    if (r > 0) this.#grid.scrollToRow(r - 1);
-    else this.#viewport.scrollTop = 0;
-    if (this.#arr.zoneOf.get(id) === "center")
-      this.#grid.scrollToColumn(this.#arr.center.indexOf(id), this.#extent("end"));
-    // A scroll that moved the window re-renders now, so the target cell exists before it is focused.
-    this.#grid.update();
+    this.#revealCell(r, c);
     const cell = this.#cellAt(r, c);
     if (cell) cell.tabIndex = 0;
     if (focus) this.#focusActive();
@@ -1121,12 +1509,33 @@ export class UiDataGrid extends ElementBase {
   }
 
   readonly #onFocusIn = (event: FocusEvent): void => {
-    const cell = (event.target as Element).closest<HTMLElement>(CELL);
+    const target = event.target as Element;
+    const cell = target.closest<HTMLElement>(CELL);
+    if (this.#entered && cell !== this.#entered) this.#exitCell(false);
     const meta = cell ? this.#meta.get(cell) : undefined;
     if (!meta) return;
     const row = meta.rec ? meta.rec.v + 1 : 0;
     if (row !== this.#active.row || meta.col !== this.#active.col) this.#setActive(row, meta.col);
   };
+
+  // ---- interactive cell content ------------------------------------------------------------
+  /** Enter / F2 on a cell with controls: they become tabbable and the first one takes focus. */
+  #enterCell(cell: HTMLElement): boolean {
+    const controls = this.#controls(cell);
+    if (controls.length === 0) return false;
+    this.#entered = cell;
+    for (const control of controls) control.tabIndex = 0;
+    controls[0]?.focus();
+    return true;
+  }
+
+  /** Back to the cell: its controls leave the tab order again. */
+  #exitCell(refocus: boolean, cell: HTMLElement | null = this.#entered): void {
+    if (!cell) return;
+    if (cell === this.#entered) this.#entered = null;
+    for (const control of this.#controls(cell)) control.tabIndex = -1;
+    if (refocus) cell.focus({ preventScroll: true });
+  }
 
   // ---- keyboard ----------------------------------------------------------------------------
   readonly #onKeyDown = (event: KeyboardEvent): void => {
@@ -1135,7 +1544,16 @@ export class UiDataGrid extends ElementBase {
     const cell = target.closest<HTMLElement>(CELL);
     const meta = cell ? this.#meta.get(cell) : undefined;
     if (!cell || !meta || !this.contains(cell)) return;
-    if (target !== cell && !target.matches("[data-ui-part=check]")) return;
+    if (target !== cell && !target.matches("[data-ui-part=check]")) {
+      // Inside the content of a cell the keys belong to the content, except the way back.
+      if (event.key === "Escape" || event.key === "F2") {
+        event.preventDefault();
+        this.#exitCell(true, cell);
+      }
+      return;
+    }
+    // Content a custom element rendered after the cell was filled must not become a tab stop.
+    if (event.key === "Tab" && cell !== this.#entered) this.#tame(cell);
     const row = meta.rec ? meta.rec.v + 1 : 0;
     const mod = event.ctrlKey || event.metaKey;
     const rtl = this.#rtl();
@@ -1174,9 +1592,13 @@ export class UiDataGrid extends ElementBase {
         this.#setSelection(toggleAll(EMPTY_SELECTION, "multi", this.#selectionRows()));
         return;
       }
-      if (event.key === "Enter") {
+      if (event.key === "Enter" || event.key === "F2") {
         event.preventDefault();
-        emit(this, "cellactivate", { rowKey: key, columnId: id, row: this.#rowAt(row - 1) });
+        const detail = { rowKey: key, columnId: id, row: this.#rowAt(row - 1) };
+        // An editor takes over by cancelling this; otherwise Enter / F2 enters the cell's controls.
+        if (!emit(this, "beforecelledit", detail, true)) return;
+        if (event.key === "Enter") emit(this, "cellactivate", detail);
+        this.#enterCell(cell);
         return;
       }
     }
@@ -1185,7 +1607,7 @@ export class UiDataGrid extends ElementBase {
       key: event.key,
       mod,
       pos: { row, col: meta.col },
-      rowCount: this.#rows.length,
+      rowCount: this.#view.count,
       colCount: this.#renderIds.length,
       pageSize: Math.max(
         1,
@@ -1269,11 +1691,12 @@ export class UiDataGrid extends ElementBase {
     }
     const meta = this.#meta.get(target.closest<HTMLElement>("[role=gridcell]") as HTMLElement);
     if (!meta?.rec || target.closest(INTERACTIVE)) return;
-    emit(this, "cellactivate", {
+    const detail = {
       rowKey: meta.rec.key,
       columnId: this.#renderIds[meta.col],
       row: this.#rowAt(meta.rec.v),
-    });
+    };
+    if (emit(this, "beforecelledit", detail, true)) emit(this, "cellactivate", detail);
   };
 
   readonly #onPointerDown = (event: PointerEvent): void => {
@@ -1294,8 +1717,9 @@ export class UiDataGrid extends ElementBase {
       if (this.#resizeFrame) return;
       this.#resizeFrame = requestAnimationFrame(() => {
         this.#resizeFrame = 0;
+        // Geometry only: cells move and resize, none is filled again.
         this.#layout = { ...this.#layout, widths: { ...this.#layout.widths, [id]: width } };
-        this.#flush();
+        this.#invalidate(F_GEOMETRY);
       });
     };
     const end = () => {
