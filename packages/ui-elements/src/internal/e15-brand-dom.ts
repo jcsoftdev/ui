@@ -12,10 +12,13 @@ import { GLYPH_IDS } from "./e15-brand-glyphs.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+const ATTR_NAME = /^[a-zA-Z][a-zA-Z0-9:-]*$/;
+
 function renderNode(node: MarkNode): SVGElement {
   const element = document.createElementNS(SVG_NS, node.tag);
   for (const [name, value] of Object.entries(node.attrs))
-    if (value !== undefined) element.setAttribute(name, String(value));
+    if (value !== undefined && ATTR_NAME.test(name) && !/^on/i.test(name))
+      element.setAttribute(name, String(value));
   for (const child of node.children ?? []) element.append(renderNode(child));
   if (node.text !== undefined) element.append(node.text);
   return element;
@@ -31,7 +34,12 @@ export function renderMark(mark: MarkDescription, size = "100%"): SVGSVGElement 
   svg.setAttribute("viewBox", mark.viewBox);
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", mark.label);
-  svg.style.cssText = `display:block;max-width:100%;height:auto;width:${size}`;
+  svg.style.display = "block";
+  svg.style.maxWidth = "100%";
+  svg.style.height = "auto";
+  // CSSOM assignment rejects anything that is not a valid width, so `size` cannot inject CSS.
+  svg.style.width = "100%";
+  svg.style.width = size;
   for (const node of mark.nodes) svg.append(renderNode(node));
   return svg;
 }

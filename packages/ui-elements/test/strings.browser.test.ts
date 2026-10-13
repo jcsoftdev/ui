@@ -60,4 +60,20 @@ describe("strings registry", () => {
     expect(resolveString(leaf, "richText.bold", "Bold")).toBe("Negrita");
     stop();
   });
+
+  it("notifies watchers when a provider appears or goes, and ignores prototype keys", () => {
+    const { leaf, outer } = tree();
+    const seen = vi.fn();
+    const stop = watchStrings(seen);
+    const off = provideStrings(outer, { a: "A" });
+    off();
+    expect(seen).toHaveBeenCalledTimes(2);
+    expect(resolveString(leaf, "constructor", "fallback")).toBe("fallback");
+    stop();
+  });
+
+  it("stops the lang walk at an empty lang", () => {
+    const host = mount('<section lang="es"><div lang=""><i id="x"></i></div></section>');
+    expect(localeOf(host.querySelector("#x") as HTMLElement)).toBe("en");
+  });
 });

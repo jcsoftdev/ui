@@ -65,9 +65,9 @@ export function clearStrings(locale?: string): void {
   changed();
 }
 
-const loaders: Record<string, () => Promise<StringMap>> = {
-  es: async () => (await import("../strings/es.js")).es,
-};
+const loaders = new Map<string, () => Promise<StringMap>>([
+  ["es", async () => (await import("../strings/es.js")).es],
+]);
 
 /**
  * Registers a built-in pack on demand (`"es"` today). The pack lives in its own chunk, so a page
@@ -75,7 +75,7 @@ const loaders: Record<string, () => Promise<StringMap>> = {
  */
 export async function loadStrings(locale: string): Promise<void> {
   const base = locale.toLowerCase().split("-")[0] as string;
-  const load = loaders[base];
+  const load = loaders.get(base);
   if (load) setStrings(base, await load());
 }
 
@@ -84,7 +84,8 @@ export function localeOf(host: Element): string {
   let node: Element | null = host;
   while (node) {
     const lang = node.getAttribute("lang");
-    if (lang) return lang.toLowerCase();
+    // An empty `lang` means "unknown language" in HTML: stop the walk and use the default.
+    if (lang !== null) return lang.toLowerCase() || "en";
     node = node.parentElement ?? (node.getRootNode() as ShadowRoot).host ?? null;
   }
   return (
@@ -92,15 +93,22 @@ export function localeOf(host: Element): string {
   );
 }
 
+const own = (pack: StringMap | undefined, key: string): string | undefined =>
+  pack && Object.hasOwn(pack, key) ? pack[key] : undefined;
+
 const lookup = (locale: string, key: string): string | undefined =>
-  registry.get(locale)?.[key] ?? registry.get(locale.split("-")[0] as string)?.[key];
+  own(registry.get(locale), key) ?? own(registry.get(locale.split("-")[0] as string), key);
 
 const STRINGS_CONTEXT: ContextKey<StringMap> = createContextKey<StringMap>("ui-strings");
 
-/** Makes `host` override strings for its whole subtree. Returns a cleanup. */
+/** Makes `host` override strings for its whole subtree and notifies watchers. Returns a cleanup. */
 export function provideStrings(host: Element, partial: StringMap): () => void {
   const provider = provideContext<StringMap>(host, STRINGS_CONTEXT, partial);
-  return () => provider.destroy();
+  changed();
+  return () => {
+    provider.destroy();
+    changed();
+  };
 }
 
 function provided(host: Element, key: string): string | undefined {
@@ -108,7 +116,7 @@ function provided(host: Element, key: string): string | undefined {
   consumeContext(host, STRINGS_CONTEXT, (value) => {
     found = value;
   })?.();
-  return found?.[key];
+  return own(found, key);
 }
 
 /**

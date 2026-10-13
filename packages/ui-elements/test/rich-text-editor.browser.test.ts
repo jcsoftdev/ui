@@ -179,4 +179,75 @@ describe("ui-rich-text-editor", () => {
     expect(label("italic")).toBe("Italique (Ctrl+I)");
     document.documentElement.lang = "";
   });
+
+  it("seeds from a template and drops live children, whichever order it is defined in", async () => {
+    // Defined before parsing: children arrive after connectedCallback ran.
+    const early = document.createElement("ui-rich-text-editor") as UiRichTextEditor;
+    document.body.append(early);
+    expect(early.value).toBe("");
+    const template = document.createElement("template");
+    template.innerHTML = "<p>seeded</p>";
+    const live = document.createElement("b");
+    live.textContent = "raw";
+    early.append(template, live);
+    await Promise.resolve();
+    expect(early.value).toBe("<p>seeded</p>");
+    expect(early.editor?.innerHTML).toBe("<p>seeded</p>");
+    expect([...early.children].map((c) => c.getAttribute("data-ui-part"))).toEqual([
+      "toolbar",
+      "body",
+    ]);
+
+    // Defined after parsing (upgrade): children already exist.
+    const host = mount(
+      '<acme-rich-text-editor><template><p>late</p></template><img src=x onerror="window.__pwn=9"></acme-rich-text-editor>',
+    );
+    defineRichTextEditor({ prefix: "acme" });
+    const late = host.firstElementChild as UiRichTextEditor;
+    expect(late.value).toBe("<p>late</p>");
+    expect(late.querySelector("img, template")).toBeNull();
+    expect([...late.children].map((c) => c.getAttribute("data-ui-part"))).toEqual([
+      "toolbar",
+      "body",
+    ]);
+
+    // The value attribute wins over a template.
+    const both = make("value='<p>attr</p>'", "<template><p>tpl</p></template>").editor;
+    expect(both.value).toBe("<p>attr</p>");
+  });
+
+  it("does not fire change for focus and blur after a programmatic value", () => {
+    const { editor, surface } = make();
+    const change = vi.fn();
+    editor.addEventListener("change", change);
+    editor.value = "<p>set from code</p>";
+    surface.focus();
+    surface.blur();
+    expect(change).not.toHaveBeenCalled();
+  });
+
+  it("closes an open link field with Escape from the surface first", async () => {
+    const { editor, surface } = make("value='<p>x</p>'");
+    surface.focus();
+    await userEvent.keyboard("{Control>}k{/Control}");
+    const row = editor.querySelector<HTMLElement>('[data-ui-part="link-row"]');
+    expect(row?.hidden).toBe(false);
+    const esc = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    const outer = vi.fn();
+    document.addEventListener("keydown", outer);
+    surface.dispatchEvent(esc);
+    document.removeEventListener("keydown", outer);
+    expect(row?.hidden).toBe(true);
+    expect(esc.defaultPrevented).toBe(true);
+    expect(outer).not.toHaveBeenCalled();
+  });
+
+  it("does not resolve labels on every input", async () => {
+    const { editor, surface } = make();
+    const seen = vi.fn();
+    editor.addEventListener("ui-context-request", seen);
+    surface.focus();
+    await userEvent.keyboard("abc");
+    expect(seen).not.toHaveBeenCalled();
+  });
 });

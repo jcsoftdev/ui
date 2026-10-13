@@ -85,13 +85,19 @@ const clean = (html: string) => {
  * `aria-multiline` named by `aria-label`/`label` on the host or its `<label>`s. Ctrl/Cmd+K opens
  * the link field (Enter applies, Escape closes), Ctrl/Cmd+B/I/U format as usual.
  *
+ * Initial content: use the `value` attribute or a `<template>` child. Both are inert, so the markup
+ * reaches the sanitizer before anything runs. Live child markup (`<ui-rich-text-editor><img onerror=...>`)
+ * is parsed by the browser, and its handlers run, before any sanitizer can see it: the element
+ * therefore ignores and removes live children (also when it was defined before the page was parsed).
+ *
  * Attributes: `name`, `value` (initial HTML; the default restored by `form.reset()`; when absent
- * the element's own initial markup seeds it), `required`, `disabled`, `placeholder`, `min-height`
+ * a `<template>` child seeds it), `required`, `disabled`, `placeholder`, `min-height`
  * (rem, default 8), `label`/`aria-label`, `aria-describedby`, `invalid`, and one label override per
  * string (`bold-label`, `italic-label`, `underline-label`, `heading-label`, `bullet-list-label`,
  * `numbered-list-label`, `link-label`, `link-address-label`, `apply-label`, `unlink-label`,
  * `toolbar-label`). Missing strings come from the strings registry (`richText.*`), then English.
- * Events: `input` (every edit, native, bubbles) and `change` (when the surface blurs with a new value).
+ * Changing `lang` does not re-render labels; call `setStrings`/`loadStrings` (or change an attribute)
+ * after switching language. Events: `input` (every edit, native, bubbles) and `change` (when the surface blurs with a new value).
  * Methods: `focus()`, `checkValidity()`, `reportValidity()`; property `editor` is the surface.
  * Style parts: `[data-ui-part="toolbar" | "tool" | "body" | "content" | "placeholder"]`.
  */
@@ -116,13 +122,19 @@ export class UiRichTextEditor extends FormElement {
   #stopStrings?: () => void;
   #seed: string | undefined;
   #lastChange = "";
+  #fromUser = false;
+  #requiredMessage: string = DEFAULTS.required;
+  #body?: HTMLElement;
+  #watcher?: MutationObserver;
   #linkOpen = false;
 
   override get value(): string {
     return super.value;
   }
   override set value(value: string) {
-    super.value = clean(value);
+    const next = clean(value);
+    super.value = next;
+    if (!this.#fromUser) this.#lastChange = next;
   }
   override get defaultValue(): string {
     return clean(this.getAttribute("value") ?? this.#seed ?? "");
@@ -136,18 +148,27 @@ export class UiRichTextEditor extends FormElement {
   override connectedCallback(): void {
     this.dataset.ui = "rich-text-editor";
     adoptStyles(rootOf(this), css);
+    this.#adoptChildren();
     if (!this.#surface) this.#build();
+    this.#watcher = new MutationObserver(() => this.#adoptChildren());
+    this.#watcher.observe(this, { childList: true });
     const surface = this.#surface as HTMLElement;
     this.#rich = createRichText(surface, {
       html: this.value,
       onChange: (html) => {
+        this.#fromUser = true;
         this.value = html;
+        this.#fromUser = false;
       },
       onActiveChange: () => this.#syncPressed(),
       onLinkShortcut: () => this.#openLink(),
     });
     this.#roving = createRovingFocus(this.#toolbar as HTMLElement, { orientation: "horizontal" });
-    this.#stopStrings = watchStrings(() => this.update());
+    this.#stopStrings = watchStrings(() => {
+      this.#relabel();
+      this.update();
+    });
+    this.#relabel();
     super.connectedCallback();
     this.#lastChange = this.value;
     queueMicrotask(() => this.update());
@@ -157,6 +178,7 @@ export class UiRichTextEditor extends FormElement {
     this.#rich?.destroy();
     this.#roving?.destroy();
     this.#stopStrings?.();
+    this.#watcher?.disconnect();
     this.#rich = this.#roving = this.#stopStrings = undefined;
   }
 
@@ -169,12 +191,32 @@ export class UiRichTextEditor extends FormElement {
     this.#lastChange = this.value;
   }
 
+  override attributeChangedCallback(name: string, old?: string | null, next?: string | null): void {
+    if (STRING_ATTRIBUTES.includes(name) && this.#surface) this.#relabel();
+    super.attributeChangedCallback(name, old, next);
+  }
+
+  /**
+   * Keeps only our own parts inside the host. A `<template>` child is the inert seed; any other
+   * child (live markup, already parsed and run by the browser) is dropped.
+   */
+  #adoptChildren(): void {
+    for (const child of [...this.childNodes]) {
+      if (child === this.#toolbar || child === this.#body) continue;
+      if (child instanceof HTMLTemplateElement) {
+        this.#seed = child.innerHTML.trim() || undefined;
+        if (!this.hasAttribute("value") && this.#rich && this.value === "")
+          this.formResetCallback();
+      }
+      child.remove();
+    }
+  }
+
   #t(key: Key): string {
     return resolveString(this, `richText.${key}`, DEFAULTS[key], attrOf(key));
   }
 
   #build(): void {
-    this.#seed = this.innerHTML.trim() ? this.innerHTML : undefined;
     const tools = [
       ...RICH_TEXT_COMMANDS.map(
         (command) =>
@@ -182,13 +224,16 @@ export class UiRichTextEditor extends FormElement {
       ),
       `<button type="button" data-ui-part="tool" data-tool="link" data-roving-item aria-pressed="false">${icon("link")}</button>`,
     ].join("");
-    this.innerHTML = `<div data-ui-part="toolbar" role="toolbar">${tools}<div data-ui-part="link-row" hidden><input data-ui-part="link-input" type="url" form="" autocomplete="off" /><button type="button" data-ui-part="link-apply"></button><button type="button" data-ui-part="link-remove" data-tool="unlink">${icon("unlink")}</button></div></div><div data-ui-part="body"><span data-ui-part="placeholder" aria-hidden="true"></span><div data-ui-part="content" role="textbox" aria-multiline="true" contenteditable="true" spellcheck="true"></div></div>`;
-    const part = (name: string) => this.querySelector(`[data-ui-part="${name}"]`) as HTMLElement;
+    const parts = document.createElement("div");
+    parts.innerHTML = `<div data-ui-part="toolbar" role="toolbar">${tools}<div data-ui-part="link-row" hidden><input data-ui-part="link-input" type="url" form="" autocomplete="off" /><button type="button" data-ui-part="link-apply"></button><button type="button" data-ui-part="link-remove" data-tool="unlink">${icon("unlink")}</button></div></div><div data-ui-part="body"><span data-ui-part="placeholder" aria-hidden="true"></span><div data-ui-part="content" role="textbox" aria-multiline="true" contenteditable="true" spellcheck="true"></div></div>`;
+    const part = (name: string) => parts.querySelector(`[data-ui-part="${name}"]`) as HTMLElement;
     this.#toolbar = part("toolbar");
     this.#linkRow = part("link-row");
     this.#linkInput = part("link-input") as HTMLInputElement;
     this.#placeholder = part("placeholder");
     this.#surface = part("content");
+    this.#body = part("body");
+    this.replaceChildren(...parts.children);
     const surface = this.#surface;
     ensureId(surface, "rte");
     this.#toolbar.setAttribute("aria-controls", surface.id);
@@ -228,6 +273,12 @@ export class UiRichTextEditor extends FormElement {
       this.dispatchEvent(new Event("change", { bubbles: true }));
     });
     surface.addEventListener("input", () => this.#syncPlaceholder());
+    surface.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !this.#linkOpen) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.#closeLink();
+    });
   }
 
   #openLink(): void {
@@ -279,6 +330,30 @@ export class UiRichTextEditor extends FormElement {
       );
   }
 
+  /** Resolves every label; runs when strings or label attributes change, never per keystroke. */
+  #relabel(): void {
+    const toolbar = this.#toolbar;
+    if (!toolbar) return;
+    (this.#placeholder as HTMLElement).textContent = this.#t("placeholder");
+    toolbar.setAttribute("aria-label", this.#t("toolbar"));
+    for (const button of toolbar.querySelectorAll<HTMLButtonElement>("button[data-tool]")) {
+      const tool = button.dataset.tool as string;
+      let label: string;
+      if (tool === "link") label = `${this.#t("link")} (Ctrl+K)`;
+      else if (tool === "unlink") label = this.#t("unlink");
+      else {
+        const spec = TOOLS[tool as RichTextCommand] as (typeof TOOLS)[RichTextCommand];
+        label = spec.shortcut ? `${this.#t(spec.label)} (${spec.shortcut})` : this.#t(spec.label);
+      }
+      button.title = label;
+      button.setAttribute("aria-label", label);
+    }
+    const apply = (this.#linkRow as HTMLElement).querySelector("[data-ui-part=link-apply]");
+    if (apply) apply.textContent = this.#t("apply");
+    (this.#linkInput as HTMLInputElement).setAttribute("aria-label", this.#t("linkAddress"));
+    this.#requiredMessage = this.#t("required");
+  }
+
   protected render(): void {
     const surface = this.#surface;
     const rich = this.#rich;
@@ -290,30 +365,11 @@ export class UiRichTextEditor extends FormElement {
     else surface.removeAttribute("aria-disabled");
     this.toggleAttribute("data-disabled", this.disabled);
     surface.style.minBlockSize = `${Number(this.getAttribute("min-height")) || 8}rem`;
-    (this.#placeholder as HTMLElement).textContent = this.#t("placeholder");
     this.#syncPlaceholder();
-
-    (this.#toolbar as HTMLElement).setAttribute("aria-label", this.#t("toolbar"));
     for (const button of (this.#toolbar as HTMLElement).querySelectorAll<HTMLButtonElement>(
       "button[data-tool]",
-    )) {
-      const tool = button.dataset.tool as string;
-      let label: string;
-      if (tool === "link") label = `${this.#t("link")} (Ctrl+K)`;
-      else if (tool === "unlink") label = this.#t("unlink");
-      else {
-        const spec = TOOLS[tool as RichTextCommand] as (typeof TOOLS)[RichTextCommand];
-        label = spec.shortcut ? `${this.#t(spec.label)} (${spec.shortcut})` : this.#t(spec.label);
-      }
-      button.title = label;
-      button.setAttribute("aria-label", label);
+    ))
       button.disabled = this.disabled;
-    }
-    const apply = (this.#linkRow as HTMLElement).querySelector(
-      "[data-ui-part=link-apply]",
-    ) as HTMLElement;
-    apply.textContent = this.#t("apply");
-    (this.#linkInput as HTMLInputElement).setAttribute("aria-label", this.#t("linkAddress"));
     (this.#linkInput as HTMLInputElement).disabled = this.disabled;
     this.#roving?.update();
     if (this.disabled && this.#linkOpen) this.#closeLink(false);
@@ -325,7 +381,7 @@ export class UiRichTextEditor extends FormElement {
     if (this.required && !this.value)
       return {
         flags: { valueMissing: true },
-        message: this.#t("required"),
+        message: this.#requiredMessage,
         ...(this.#surface ? { anchor: this.#surface } : {}),
       };
     return undefined;
