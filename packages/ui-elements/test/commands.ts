@@ -46,3 +46,11 @@ export const axTree: BrowserCommand<[]> = async (context) => {
     await cdp.detach();
   }
 };
+
+/** Switches `prefers-reduced-motion` for the page (Playwright `emulateMedia`). */
+export const reducedMotion: BrowserCommand<["reduce" | "no-preference"]> = async (
+  context,
+  value,
+) => {
+  await context.page.emulateMedia({ reducedMotion: value });
+};

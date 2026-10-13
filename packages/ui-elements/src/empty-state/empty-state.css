@@ -1,0 +1,22 @@
+:host {
+  --ui-state-pad-y: 32px;
+}
+@container (min-width: 360px) {
+  [part="root"] {
+    padding-block: 48px;
+  }
+}
+[part="icon"] {
+  color: var(--ink-3);
+}
+[part="actions"] {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+[hidden] {
+  display: none;
+}

@@ -1,6 +1,6 @@
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
-import { axTree } from "./test/commands.ts";
+import { axTree, reducedMotion } from "./test/commands.ts";
 
 export default defineConfig({
   test: {
@@ -22,7 +22,7 @@ export default defineConfig({
             headless: true,
             provider: playwright(),
             instances: [{ browser: "chromium" }],
-            commands: { axTree },
+            commands: { axTree, reducedMotion },
           },
         },
       },
