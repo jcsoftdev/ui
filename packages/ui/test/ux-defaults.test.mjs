@@ -233,5 +233,8 @@ test("Button announces the UI string `loading` when no loadingLabel is given", (
   const loading = html.buttonLoadingDefault();
   assert.match(loading, />Save</);
   assert.match(loading, /<span role="status" class="sr-only">Loading<\/span>$/);
-  assert.match(html.buttonLoadingDefaultEs(), /<span role="status" class="sr-only">Cargando<\/span>$/);
+  assert.match(
+    html.buttonLoadingDefaultEs(),
+    /<span role="status" class="sr-only">Cargando<\/span>$/,
+  );
 });
