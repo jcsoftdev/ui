@@ -29,7 +29,6 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 - New [Liquid Glass guide](https://ui.jcsoftdev.com/docs/glass), stories and real-browser tests
   (`pnpm test:glass`) including measured text contrast over a worst-case backdrop.
 
-<<<<<<< HEAD
 ### Platform
 
 - **Tokens live in `@jcsoftdev/ui-tokens`.** `@jcsoftdev/ui` still ships the same `styles/*`,
@@ -41,7 +40,7 @@ Apple-style glass for the control and navigation layer, with content kept solid.
   `--neutral`, `--danger`) and writes `tokens.json` plus the CSS outputs; a bad hex prints a clean
   error and exits 1. The same engine is available as `createTheme`, `toCss` and `applyTheme` in
   `@jcsoftdev/ui-tokens`.
-=======
+
 ### Fixes
 
 - **DonutChart / PieChart no longer flicker on hover.** The hovered slice steps out by `explode`
@@ -51,7 +50,6 @@ Apple-style glass for the control and navigation layer, with content kept solid.
   no gap between slices and also cover the stepped-out ring.
 - `ChartTooltip` takes an optional `containerHeight` and keeps the card inside it vertically
   (DonutChart passes it), so a slice near the top no longer pushes the card past the chart edge.
->>>>>>> origin/main
 
 ### Migration notes
 
