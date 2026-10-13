@@ -80,4 +80,30 @@ describe("ui-time-input", () => {
     expect(time.input.disabled).toBe(true);
     expect(new FormData(form).has("at")).toBe(false);
   });
+
+  it("submits and validates the normalized time, not the raw text", () => {
+    const host = mount(`<form><ui-time-input name="at" value="930" required></ui-time-input>
+      <ui-time-input name="bad" value="9999" required></ui-time-input></form>`);
+    const [ok, bad] = host.querySelectorAll<UiTimeInput>(
+      "ui-time-input",
+    ) as unknown as UiTimeInput[];
+    const data = new FormData(host.querySelector("form")!);
+    expect(data.get("at")).toBe("09:30");
+    expect(data.has("bad")).toBe(false);
+    expect(ok!.checkValidity()).toBe(true);
+    expect(bad!.validity.valueMissing).toBe(true);
+  });
+
+  it("does not leak the native input event while typing", async () => {
+    const host = mount(`<ui-time-input aria-label="At"></ui-time-input>`);
+    const time = host.querySelector<UiTimeInput>("ui-time-input")!;
+    const seen = vi.fn();
+    host.addEventListener("input", seen);
+    time.focus();
+    await userEvent.keyboard("093");
+    expect(seen).not.toHaveBeenCalled();
+    await userEvent.keyboard("0");
+    expect(seen).toHaveBeenCalledTimes(1);
+    expect(time.value).toBe("09:30");
+  });
 });

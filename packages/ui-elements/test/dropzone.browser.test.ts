@@ -117,4 +117,42 @@ describe("ui-dropzone", () => {
     expect(zone.files).toEqual([]);
     expect(zone.shadowRoot!.querySelector("button")!.disabled).toBe(true);
   });
+
+  it("rejects the extra files of a single-file drop with the count reason", () => {
+    const host = mount(`<ui-dropzone multiple="false">Drop</ui-dropzone>`);
+    const zone = host.querySelector<UiDropzone>("ui-dropzone")!;
+    const reject = vi.fn();
+    zone.addEventListener("reject", (event) =>
+      reject(
+        (event as CustomEvent).detail.rejections.map((r: { file: File; reason: string }) => [
+          r.file.name,
+          r.reason,
+        ]),
+      ),
+    );
+    drop(zone, file("a.png", "image/png"), file("b.png", "image/png"));
+    expect(zone.files.map((f) => f.name)).toEqual(["a.png"]);
+    expect(reject).toHaveBeenCalledWith([["b.png", "count"]]);
+  });
+
+  it("resets the dragging state when the drag ends elsewhere, and works again after", () => {
+    const host = mount(`<ui-dropzone>Drop</ui-dropzone>`);
+    const zone = host.querySelector<UiDropzone>("ui-dropzone")!;
+    const enter = () =>
+      zone.dispatchEvent(
+        new DragEvent("dragenter", {
+          dataTransfer: transfer(file("a.png", "image/png")),
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    enter();
+    expect(zone.hasAttribute("dragging")).toBe(true);
+    window.dispatchEvent(new DragEvent("dragend"));
+    expect(zone.hasAttribute("dragging")).toBe(false);
+    enter();
+    expect(zone.hasAttribute("dragging")).toBe(true);
+    window.dispatchEvent(new DragEvent("drop"));
+    expect(zone.hasAttribute("dragging")).toBe(false);
+  });
 });

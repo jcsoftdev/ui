@@ -21,7 +21,8 @@ export function starFill(index: number, rating: number): 0 | 0.5 | 1 {
  * `<ui-rating>`: star rating. An editable rating is one `role="slider"` with a single tab stop
  * (arrows, Home/End), as in the React kit; a read-only or disabled one is a `role="img"` named
  * with its value. The left half of a star counts as .5 with `precision="0.5"`; pressing the
- * current value again clears it. Arrows and the pointer are mirrored in RTL. The value is a number
+ * current value again clears it (the press is read on release over a star, as in the React kit,
+ * so releasing elsewhere sets nothing). Arrows and the pointer are mirrored in RTL. The value is a number
  * as text, submitted under `name`.
  *
  * Attributes: `value` (0), `name`, `max` (5), `precision` (`1` or `0.5`), `readonly`, `disabled`,

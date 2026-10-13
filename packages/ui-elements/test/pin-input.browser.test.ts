@@ -17,6 +17,20 @@ const cells = (pin: UiPinInput) => [
   ...pin.shadowRoot!.querySelectorAll<HTMLInputElement>("[part=cell]"),
 ];
 
+/** A paste into the single input (the filter runs before `maxlength` could cut the text). */
+function paste(pin: UiPinInput, text: string) {
+  const data = new DataTransfer();
+  data.setData("text", text);
+  inner(pin).dispatchEvent(
+    new ClipboardEvent("paste", {
+      clipboardData: data,
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+    }),
+  );
+}
+
 describe("ui-pin-input", () => {
   it("is a masked, named input announced through a live region", async () => {
     const host = mount(`<ui-pin-input length="4" label="Access code"></ui-pin-input>`);
@@ -40,7 +54,7 @@ describe("ui-pin-input", () => {
     const input = vi.fn();
     pin.addEventListener("complete", (event) => complete((event as CustomEvent).detail));
     pin.addEventListener("input", input);
-    await userEvent.fill(inner(pin), "1a2b3c4d5");
+    paste(pin, "1a2b3c4d5");
     expect(pin.value).toBe("1234");
     expect(complete).toHaveBeenCalledWith({ value: "1234" });
     expect(input).toHaveBeenCalled();
@@ -49,7 +63,7 @@ describe("ui-pin-input", () => {
   it("charset alphanumeric accepts letters", async () => {
     const host = mount(`<ui-pin-input length="5" charset="alphanumeric"></ui-pin-input>`);
     const pin = host.querySelector<UiPinInput>("ui-pin-input")!;
-    await userEvent.fill(inner(pin), "a1-b2!c3");
+    paste(pin, "a1-b2!c3");
     expect(pin.value).toBe("a1b2c");
   });
 
@@ -118,5 +132,71 @@ describe("ui-pin-input", () => {
       ).toBe("4321");
       expect(new FormData(host.querySelector("form")!).get("otp")).toBe("4321");
     });
+  });
+
+  it("fires one input per change and one complete; a paste is filtered before maxlength", async () => {
+    const host = mount(`<ui-pin-input length="4"></ui-pin-input>`);
+    const pin = host.querySelector<UiPinInput>("ui-pin-input")!;
+    const input = vi.fn();
+    const complete = vi.fn();
+    host.addEventListener("input", input);
+    pin.addEventListener("complete", complete);
+    pin.focus();
+    await userEvent.keyboard("1234");
+    expect(input).toHaveBeenCalledTimes(4);
+    expect(complete).toHaveBeenCalledTimes(1);
+    expect(inner(pin).maxLength).toBe(4);
+    await userEvent.fill(inner(pin), "");
+    const data = new DataTransfer();
+    data.setData("text", "12-34-56");
+    inner(pin).dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: data,
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }),
+    );
+    expect(pin.value).toBe("1234");
+    expect(complete).toHaveBeenCalledTimes(2);
+  });
+
+  it("validates required on the normalized value", () => {
+    const host = mount(`<ui-pin-input length="4" value="ab" required></ui-pin-input>`);
+    const pin = host.querySelector<UiPinInput>("ui-pin-input")!;
+    expect(pin.value).toBe("");
+    expect(pin.validity.valueMissing).toBe(true);
+  });
+
+  it("settles an IME composition on compositionend", () => {
+    const host = mount(`<ui-pin-input length="4"></ui-pin-input>`);
+    const pin = host.querySelector<UiPinInput>("ui-pin-input")!;
+    inner(pin).value = "12ab";
+    inner(pin).dispatchEvent(
+      new InputEvent("input", { isComposing: true, bubbles: true, composed: true }),
+    );
+    expect(inner(pin).value).toBe("12ab");
+    expect(pin.value).toBe("");
+    inner(pin).dispatchEvent(
+      new CompositionEvent("compositionend", { bubbles: true, composed: true }),
+    );
+    expect(pin.value).toBe("12");
+    expect(inner(pin).value).toBe("12");
+  });
+
+  it("keeps the positions when a middle cell is cleared (cells)", async () => {
+    const host = mount(`<ui-pin-input variant="cells" length="4" name="otp"></ui-pin-input>`);
+    const pin = host.querySelector<UiPinInput>("ui-pin-input")!;
+    await frame();
+    await wait(50);
+    pin.focus();
+    await userEvent.keyboard("1234");
+    cells(pin)[1]!.focus();
+    await userEvent.keyboard("{Backspace}");
+    expect(cells(pin).map((cell) => cell.value)).toEqual(["1", "", "3", "4"]);
+    expect(pin.value).toBe("134");
+    expect(pin.validity.tooShort).toBe(true);
+    pin.setAttribute("aria-label", "Code");
+    expect(cells(pin).map((cell) => cell.value)).toEqual(["1", "", "3", "4"]);
   });
 });

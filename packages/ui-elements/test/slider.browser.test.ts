@@ -134,4 +134,54 @@ describe("ui-slider", () => {
   it("registers under a custom prefix", () => {
     expect(defineSlider({ prefix: "acme" })).toBe("acme-slider");
   });
+
+  it("rounds min-gap up to a step, clamps the aria bounds, and enforces the gap on load", () => {
+    const host = mount(
+      `<ui-slider aria-label="Price" step="10" min-gap="15" value="50,60"></ui-slider>`,
+    );
+    const slider = host.querySelector<UiSlider>("ui-slider")!;
+    expect(slider.value).toBe("40,60");
+    const [low, high] = thumbs(slider);
+    expect(low!.getAttribute("aria-valuemax")).toBe("40");
+    expect(high!.getAttribute("aria-valuemin")).toBe("60");
+    const edge = mount(
+      `<ui-slider aria-label="E" step="10" min-gap="30" value="0,100"></ui-slider>`,
+    );
+    const [first, second] = thumbs(edge.querySelector<UiSlider>("ui-slider")!);
+    expect(first!.getAttribute("aria-valuemax")).toBe("70");
+    expect(second!.getAttribute("aria-valuemin")).toBe("30");
+  });
+
+  it("sorts a reversed range instead of collapsing it", () => {
+    const host = mount(`<ui-slider aria-label="Price" value="80,20"></ui-slider>`);
+    expect(host.querySelector<UiSlider>("ui-slider")!.value).toBe("20,80");
+  });
+
+  it("restores a range from form state", () => {
+    const host = mount(`<form><ui-slider name="p" value="10,20"></ui-slider></form>`);
+    const slider = host.querySelector<UiSlider>("ui-slider")!;
+    slider.formStateRestoreCallback("30,70");
+    expect(slider.value).toBe("30,70");
+    expect(new FormData(host.querySelector("form")!).get("p-max")).toBe("70");
+  });
+
+  it("cancels a drag cut short by removal without a change event", () => {
+    const host = mount(`<ui-slider aria-label="Volume" style="width:200px"></ui-slider>`);
+    const slider = host.querySelector<UiSlider>("ui-slider")!;
+    const change = vi.fn();
+    slider.addEventListener("change", change);
+    const rect = track(slider).getBoundingClientRect();
+    const at = (fraction: number) => ({
+      clientX: rect.left + rect.width * fraction,
+      clientY: rect.top + 5,
+      pointerId: 9,
+      pointerType: "mouse",
+      button: 0,
+      bubbles: true,
+    });
+    track(slider).dispatchEvent(new PointerEvent("pointerdown", at(0.3)));
+    track(slider).dispatchEvent(new PointerEvent("pointermove", at(0.6)));
+    slider.remove();
+    expect(change).not.toHaveBeenCalled();
+  });
 });

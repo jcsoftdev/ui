@@ -1,4 +1,4 @@
-import { type OtpCharset, sanitizeOtp } from "@jcsoftdev/ui-core/otp";
+import { type OtpCharset, sanitizeOtp } from "@jcsoftdev/ui-core/otp-sanitize";
 import { adoptStyles, type DefineOptions, defineElement, emit, uid } from "../internal/base.js";
 import { controlName, numberAttr } from "../internal/e5-forms.js";
 import { FormElement } from "../internal/form.js";
@@ -136,9 +136,9 @@ export class UiPinInput extends FormElement {
   }
 
   protected override validate() {
-    const base = super.validate();
     const anchor = this.#cells()[0] ?? this.#input();
-    if (base) return { ...base, anchor };
+    if (this.required && this.value === "")
+      return { flags: { valueMissing: true }, message: "Fill in this field.", anchor };
     if (this.value !== "" && this.value.length < this.length)
       return {
         flags: { tooShort: true },
@@ -169,15 +169,35 @@ export class UiPinInput extends FormElement {
         (_, at) =>
           `<input part="cell" type="${type}" inputmode="${inputmode}" autocomplete="${at === 0 ? "one-time-code" : "off"}" spellcheck="false">`,
       ).join("")}</div>${status}`;
+      this.#shadow
+        .querySelector("[part=cells]")
+        ?.addEventListener("input", (event) => event.stopPropagation());
       this.#mountCells();
       return;
     }
-    this.#shadow.innerHTML = `<div part="dots" aria-hidden="true">${'<i part="dot"></i>'.repeat(length)}</div><input part="input" type="password" inputmode="${inputmode}" autocomplete="off">${status}`;
+    this.#shadow.innerHTML = `<div part="dots" aria-hidden="true">${'<i part="dot"></i>'.repeat(length)}</div><input part="input" type="password" inputmode="${inputmode}" maxlength="${length}" autocomplete="off">${status}`;
     const input = this.#input() as HTMLInputElement;
-    input.addEventListener("input", () => {
+    const settle = () => {
       const value = sanitizeOtp(input.value, this.charset, length);
       input.value = value;
       this.#publish(value);
+    };
+    input.addEventListener("input", (event) => {
+      // The native event is composed: only the host's own `input` (from `#publish`) may leave.
+      event.stopPropagation();
+      // An IME composition is settled on `compositionend`.
+      if ((event as InputEvent).isComposing) return;
+      settle();
+    });
+    input.addEventListener("compositionend", settle);
+    // `maxlength` would cut a paste before the filter sees it: filter first.
+    input.addEventListener("paste", (event) => {
+      event.preventDefault();
+      const start = input.selectionStart ?? input.value.length;
+      const end = input.selectionEnd ?? start;
+      const text = event.clipboardData?.getData("text") ?? "";
+      input.value = input.value.slice(0, start) + text + input.value.slice(end);
+      settle();
     });
     // `change` is not composed: re-dispatch it from the host.
     input.addEventListener("change", () => emit(this, "change"));
@@ -205,7 +225,7 @@ export class UiPinInput extends FormElement {
 
   /** A user edit: stores the value, fires `input`, and `complete` when every position is filled. */
   #publish(value: string): void {
-    if (this.disabled) return;
+    if (this.disabled || value === this.value) return;
     this.value = value;
     this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     if (value.length === this.length) emit(this, "complete", { value });

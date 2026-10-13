@@ -43,6 +43,9 @@ export class UiTimeInput extends FormElement {
     root.innerHTML =
       '<input part="input" type="text" inputmode="numeric" autocomplete="off" maxlength="5">';
     this.#input = root.querySelector("input") as HTMLInputElement;
+    // The native `input` is composed and would leak out with half-typed text; the host's own
+    // `input`/`change` (from `commit`) carry the committed time.
+    this.#input.addEventListener("input", (event) => event.stopPropagation());
   }
 
   /** The inner native input, for selection APIs. */
@@ -84,6 +87,7 @@ export class UiTimeInput extends FormElement {
     this.#input.placeholder = this.getAttribute("placeholder") ?? "HH:MM";
     syncControlAria(this, this.#input, this.internals.labels as NodeListOf<HTMLLabelElement>);
     super.update();
+    this.internals.setFormValue(this.value || null);
   }
 
   protected render(): void {
@@ -93,8 +97,14 @@ export class UiTimeInput extends FormElement {
   }
 
   protected override validate() {
-    const base = super.validate();
-    return base && { ...base, anchor: this.#input };
+    // `required` is judged on the normalized time, so a half-typed or invalid text is missing.
+    if (this.required && !this.value)
+      return {
+        flags: { valueMissing: true },
+        message: "Fill in this field.",
+        anchor: this.#input,
+      };
+    return undefined;
   }
 }
 

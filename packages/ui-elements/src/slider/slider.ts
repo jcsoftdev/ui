@@ -141,6 +141,8 @@ export class UiSlider extends FormElement {
   }
 
   disconnectedCallback(): void {
+    // A drag cut short by removal is cancelled, not committed: no `change`.
+    this.#moved = false;
     this.#drag.cancel();
   }
 
@@ -152,7 +154,7 @@ export class UiSlider extends FormElement {
       const data = new FormData();
       data.append(`${name}-min`, String(this.#pair[0]));
       data.append(`${name}-max`, String(this.#pair[1]));
-      this.internals.setFormValue(data);
+      this.internals.setFormValue(data, this.value);
     } else this.internals.setFormValue(String(this.#pair[1]));
   }
 
@@ -197,8 +199,10 @@ export class UiSlider extends FormElement {
         "aria-label",
         range && name ? `${name} (${index === 0 ? "min" : "max"})` : name,
       );
-      thumb.setAttribute("aria-valuemin", String(range && index === 1 ? pair[0] + minGap : min));
-      thumb.setAttribute("aria-valuemax", String(range && index === 0 ? pair[1] - minGap : max));
+      const lowest = range && index === 1 ? clampValue(pair[0] + minGap, min, max) : min;
+      const highest = range && index === 0 ? clampValue(pair[1] - minGap, min, max) : max;
+      thumb.setAttribute("aria-valuemin", String(lowest));
+      thumb.setAttribute("aria-valuemax", String(highest));
       thumb.setAttribute("aria-valuenow", String(value));
       thumb.setAttribute("aria-valuetext", this.formatValue(value));
       if (disabled) thumb.setAttribute("aria-disabled", "true");
@@ -218,18 +222,20 @@ export class UiSlider extends FormElement {
     const min = numberAttr(this, "min", 0);
     const max = Math.max(min, numberAttr(this, "max", 100));
     const step = numberAttr(this, "step", 1);
+    // The gap is a whole number of steps, so both thumbs can always sit on a step.
+    const gap = Math.max(0, numberAttr(this, "min-gap", 0));
     return {
       min,
       max,
       step,
       page: numberAttr(this, "page-step", step * 10),
-      minGap: Math.max(0, numberAttr(this, "min-gap", 0)),
+      minGap: step > 0 ? Math.ceil(gap / step) * step : gap,
     };
   }
 
   /** The value as `[low, high]`, snapped into the limits. */
   get #pair(): RangeValue {
-    const { min, max, step } = this.#limits;
+    const { min, max, step, minGap } = this.#limits;
     const snap = (value: number) => snapToStep(value, min, max, step);
     const parts = super.value
       .split(",")
@@ -238,9 +244,16 @@ export class UiSlider extends FormElement {
       .map(Number)
       .filter(Number.isFinite);
     if (this.range) {
-      const low = parts.length > 1 ? snap(parts[0] as number) : min;
-      const high = snap(parts.length > 1 ? (parts[1] as number) : (parts[0] ?? max));
-      return [Math.min(low, high), high];
+      const first = parts.length > 1 ? snap(parts[0] as number) : min;
+      const second = snap(parts.length > 1 ? (parts[1] as number) : (parts[0] ?? max));
+      // A reversed pair is sorted, then the gap is enforced.
+      let low = Math.min(first, second);
+      let high = Math.max(first, second);
+      if (high - low < minGap) {
+        low = Math.max(min, high - minGap);
+        if (high - low < minGap) high = Math.min(max, low + minGap);
+      }
+      return [low, high];
     }
     return [min, snap(parts[0] ?? min)];
   }
@@ -274,9 +287,10 @@ export class UiSlider extends FormElement {
   #move(index: Index, raw: number): void {
     const { min, max, step, minGap } = this.#limits;
     const current = this.#pair;
-    const next = this.range
+    const moved = this.range
       ? setRangeThumb(current, index, raw, min, max, step, minGap)
       : ([min, snapToStep(raw, min, max, step)] as RangeValue);
+    const next: RangeValue = [clampValue(moved[0], min, max), clampValue(moved[1], min, max)];
     if (next[0] === current[0] && next[1] === current[1]) return;
     this.value = this.#text(next);
     this.#moved = true;

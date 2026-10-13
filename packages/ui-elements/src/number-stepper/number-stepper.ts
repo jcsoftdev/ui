@@ -19,6 +19,9 @@ import css from "./number-stepper.css.js";
  * buttons repeat while held (ui-core `press-repeat`) and stay out of the tab order, as in the React
  * kit. The value is submitted under `name`.
  *
+ * Parsing is React parity: a typed value accepts a comma as the decimal mark and anything that is
+ * not a finite number is ignored on commit.
+ *
  * Attributes: `value` (0), `name`, `min`, `max`, `step` (1), `unit` (text after the number, read
  * through `aria-valuetext`), `decrement-label` ("Decrease"), `increment-label` ("Increase"),
  * `aria-label`, `label`, `disabled`, `invalid`. Events: `input` and `change` on every step.
@@ -43,6 +46,7 @@ export class UiNumberStepper extends FormElement {
   readonly #up: HTMLButtonElement;
   readonly #unit: HTMLElement;
   #draft: string | null = null;
+  #releases: (() => void)[] = [];
 
   constructor() {
     super();
@@ -59,23 +63,14 @@ export class UiNumberStepper extends FormElement {
       // Keep the caret where it is: pressing a button must not steal focus from the field.
       button.addEventListener("mousedown", (event) => event.preventDefault());
     }
-    for (const [button, direction] of [
-      [this.#down, -1],
-      [this.#up, 1],
-    ] as const)
-      createPressRepeat(button, {
-        onRepeat: () => {
-          this.#commitDraft();
-          this.#apply(this.#number + direction * this.#limits.step);
-        },
-        disabled: () => this.disabled || this.#atLimit(direction),
-        minInterval: 30,
-      });
     // A `<label>` click reaches the host itself (not a child); `delegatesFocus` would pick a button.
     this.addEventListener("click", (event) => {
       if (event.composedPath()[0] === this) this.focus();
     });
-    this.#input.addEventListener("input", () => {
+    this.#input.addEventListener("input", (event) => {
+      // The native event is composed and would leak out with half-typed text: the host's own
+      // `input`/`change` (from `commit`) are the only ones consumers see.
+      event.stopPropagation();
       this.#draft = this.#input.value;
     });
     this.#input.addEventListener("blur", () => this.#commitDraft());
@@ -99,14 +94,35 @@ export class UiNumberStepper extends FormElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    if (this.#releases.length === 0)
+      for (const [button, direction] of [
+        [this.#down, -1],
+        [this.#up, 1],
+      ] as const)
+        this.#releases.push(
+          createPressRepeat(button, {
+            onRepeat: () => {
+              this.#commitDraft();
+              this.#apply(this.#number + direction * this.#limits.step);
+            },
+            disabled: () => this.disabled || this.#atLimit(direction),
+            minInterval: 30,
+          }),
+        );
     // Labels parsed after the element are only known once the parser has moved on.
     queueMicrotask(() => this.update());
+  }
+
+  disconnectedCallback(): void {
+    for (const release of this.#releases.splice(0)) release();
   }
 
   protected override update(): void {
     this.#input.disabled = this.disabled;
     syncControlAria(this, this.#input, this.internals.labels as NodeListOf<HTMLLabelElement>);
     super.update();
+    // Submit the number that is shown (clamped), not the raw attribute.
+    this.internals.setFormValue(this.name ? String(this.#number) : null);
   }
 
   protected render(): void {

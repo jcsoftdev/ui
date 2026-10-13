@@ -27,7 +27,7 @@ export type { FileRejection };
  * drag over the zone. Properties: `files` (readonly copy), `clear()`, `browse()`.
  *
  * Events: `files` with `detail.files` for each accepted batch, then `input` and `change`;
- * `reject` with `detail.rejections` (`{ file, reason: "type" | "size" }`) for the refused ones.
+ * `reject` with `detail.rejections` (`{ file, reason: "type" | "size" | "count" }`) for the refused ones; with `multiple="false"` the files after the first are refused with `count`.
  */
 export class UiDropzone extends FormElement {
   static override observedAttributes = [
@@ -93,11 +93,15 @@ export class UiDropzone extends FormElement {
   override connectedCallback(): void {
     super.connectedCallback();
     this.#bind();
+    window.addEventListener("drop", this.#settleDrag);
+    window.addEventListener("dragend", this.#settleDrag);
     // Labels parsed after the element are only known once the parser has moved on.
     queueMicrotask(() => this.update());
   }
 
   disconnectedCallback(): void {
+    window.removeEventListener("drop", this.#settleDrag);
+    window.removeEventListener("dragend", this.#settleDrag);
     this.#drop?.destroy();
     this.#drop = undefined;
   }
@@ -141,6 +145,16 @@ export class UiDropzone extends FormElement {
     this.internals.ariaLabel =
       controlName(this, this.internals.labels as NodeListOf<HTMLLabelElement>) || null;
   }
+
+  /**
+   * A drag that ends elsewhere (dropped outside the zone, cancelled with Escape) never sends a
+   * `dragleave` for every `dragenter`, which would leave the zone looking active: start afresh.
+   */
+  readonly #settleDrag = (): void => {
+    if (!this.hasAttribute("dragging")) return;
+    toggleAttr(this, "dragging", false);
+    this.#bind();
+  };
 
   #bind(): void {
     this.#drop?.destroy();

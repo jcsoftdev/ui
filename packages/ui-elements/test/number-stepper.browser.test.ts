@@ -88,4 +88,42 @@ describe("ui-number-stepper", () => {
     expect(stepper.value).toBe("4");
     expect(new FormData(form).has("qty")).toBe(false);
   });
+
+  it("submits the shown (clamped) number, not the raw attribute", () => {
+    const host = mount(`<form><ui-number-stepper name="q" value="50" max="10"></ui-number-stepper>
+      <ui-number-stepper name="m" value="-4" min="0"></ui-number-stepper>
+      <ui-number-stepper value="3"></ui-number-stepper></form>`);
+    const data = new FormData(host.querySelector("form")!);
+    expect(data.get("q")).toBe("10");
+    expect(data.get("m")).toBe("0");
+    expect([...data.keys()]).toEqual(["q", "m"]);
+  });
+
+  it("releases press-repeat when removed and binds it again when re-attached", async () => {
+    const host = mount(`<ui-number-stepper aria-label="Qty" value="0"></ui-number-stepper>`);
+    const stepper = host.querySelector<UiNumberStepper>("ui-number-stepper")!;
+    press(part(stepper, "increment"), "pointerdown");
+    stepper.remove();
+    const after = stepper.value;
+    await wait(700);
+    expect(stepper.value).toBe(after);
+    press(part(stepper, "increment"), "pointerdown");
+    expect(stepper.value).toBe(after);
+    host.append(stepper);
+    press(part(stepper, "increment"), "pointerdown");
+    press(part(stepper, "increment"), "pointerup");
+    expect(Number(stepper.value)).toBe(Number(after) + 1);
+  });
+
+  it("does not leak the native input event while typing", async () => {
+    const host = mount(`<ui-number-stepper aria-label="Qty" value="1"></ui-number-stepper>`);
+    const stepper = host.querySelector<UiNumberStepper>("ui-number-stepper")!;
+    const seen = vi.fn();
+    host.addEventListener("input", seen);
+    await userEvent.fill(part(stepper, "input") as HTMLInputElement, "7");
+    expect(seen).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Enter}");
+    expect(seen).toHaveBeenCalledTimes(1);
+    expect(stepper.value).toBe("7");
+  });
 });
