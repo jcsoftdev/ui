@@ -4,8 +4,7 @@ import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { Check, ChevronRight } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material-class.js";
-import { useMaterialStyle } from "../../utils/use-material-style.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
@@ -25,7 +24,9 @@ export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps
   container?: HTMLElement | null;
   /**
    * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
+   * forces an opaque surface. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
 }
@@ -36,17 +37,14 @@ export function DropdownMenuContent({
   collisionPadding = 8,
   container,
   material,
-  style,
   ...props
 }: DropdownMenuContentProps) {
-  const materialProps = useMaterialStyle(material, style);
   return (
     <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(surface, materialClass(material, "surface-solid"), className)}
-        {...materialProps}
         {...props}
       />
     </MenuPrimitive.Portal>

@@ -1,14 +1,12 @@
 "use client";
 
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
-import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material-class.js";
-import { useMaterialStyle } from "../../utils/use-material-style.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -47,7 +45,9 @@ export interface DialogContentProps extends DialogPrimitive.DialogContentProps {
   width?: DialogWidth;
   /**
    * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
+   * forces an opaque surface. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
   /**
@@ -74,19 +74,14 @@ export function DialogContent({
   onPointerDownOutside,
   onInteractOutside,
   onCloseAutoFocus,
-  ref,
-  style,
   ...props
 }: DialogContentProps) {
-  const materialProps = useMaterialStyle(material, style);
-  const lens = useGlassLens(ref, { ownInteractive: true });
   const previousFocusRef = usePreviousFocus();
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
       <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
       <DialogPrimitive.Content
-        ref={lens}
         className={cn(
           "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
           widthClasses[width],
@@ -110,7 +105,6 @@ export function DialogContent({
           onCloseAutoFocus?.(event);
           restoreFocusOnClose(event, previousFocusRef);
         }}
-        {...materialProps}
         {...props}
       >
         {children}

@@ -15,6 +15,7 @@ export {
   type LensCoverage,
   lensProfile,
 } from "./displacement-map.js";
+export { LiquidGlass, startLiquidGlass } from "./liquid-glass.js";
 export {
   LIQUID_DEFAULTS,
   LIQUID_MOTIONS,
@@ -25,11 +26,9 @@ export {
   LIQUID_PRESETS,
   type LiquidGlassOptions,
   type LiquidInteractive,
-  type LiquidMaterial,
   type LiquidMotion,
   type LiquidPresetName,
   type LiquidProfile,
-  liquidOptionsOf,
   liquidStyle,
   liquidVars,
   mergeLiquid,
@@ -41,5 +40,4 @@ export {
   type SpecularMapOptions,
 } from "./specular-map.js";
 export { supportsBackdropRefraction } from "./support.js";
-export { useGlassLens } from "./use-glass-lens.js";
 export { useGlassRefraction } from "./use-glass-refraction.js";

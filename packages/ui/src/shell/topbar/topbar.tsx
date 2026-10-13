@@ -1,12 +1,10 @@
 "use client";
 
-import { type ReactNode, type Ref, useEffect, useState } from "react";
-import { useGlassLens } from "../../glass/use-glass-lens.js";
+import { type CSSProperties, type ReactNode, type Ref, useEffect, useState } from "react";
 import { Menu, Search } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material-class.js";
-import { useMaterialStyle } from "../../utils/use-material-style.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 function isApplePlatform(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -44,9 +42,13 @@ export interface TopbarProps {
   /** Slot at the far end (e.g. the account menu). */
   end?: ReactNode;
   className?: string;
+  /** Inline style of the root (for example `liquidStyle()` options). */
+  style?: CSSProperties;
   /**
    * Surface material. Omitted keeps the default for this layer (opaque, glass in the glass
-   * preset); `"glass"` and `"glass-clear"` opt into Liquid Glass, `"solid"` forces opaque.
+   * preset); `"glass"` and `"glass-clear"` are frosted glass, `"liquid"` and `"liquid-clear"`
+   * Liquid Glass, `"solid"` forces opaque. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -65,12 +67,11 @@ export function Topbar({
   actions,
   end,
   material,
+  style,
   className,
   classNames,
 }: TopbarProps) {
-  const materialProps = useMaterialStyle(material);
   const [shortcut, setShortcut] = useState("Ctrl+K");
-  const lens = useGlassLens<HTMLElement>();
 
   useEffect(() => {
     setShortcut(isApplePlatform() ? "⌘K" : "Ctrl+K");
@@ -91,14 +92,13 @@ export function Topbar({
 
   return (
     <header
-      ref={lens}
       className={cn(
         "@container/topbar sticky top-0 z-30 h-top-height border-b-divider surface-nav",
         materialClass(material, "surface-solid [--surface-solid:var(--bg)]"),
         classNames?.root,
         className,
       )}
-      {...materialProps}
+      style={style}
     >
       <div
         className={cn(

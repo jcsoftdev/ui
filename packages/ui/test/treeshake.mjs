@@ -255,17 +255,11 @@ console.log(
 );
 console.log("primitives tree-shaking OK");
 
-// Liquid Glass: a surface that takes a `material` prop or a lens loads the option mapping, the
-// lens watcher and the engine only through dynamic imports, so a non-liquid page never pays for them.
-for (const [name, code] of [
-  ["Topbar", `import { Topbar } from "@jcsoftdev/ui/shell"; console.log(Topbar);`],
-  [
-    "DialogContent",
-    `import { DialogContent } from "@jcsoftdev/ui/overlays"; console.log(DialogContent);`,
-  ],
-  ["Card", `import { Card } from "@jcsoftdev/ui/containers/card"; console.log(Card);`],
-]) {
-  const liquid = await build({
+// Liquid Glass is opt-in. A page that does not use it carries no liquid code and has nothing it
+// could fetch for it later: no chunk of these entries, eager or lazy, holds a glass module, so no
+// liquid surface, `material` value or preference can make the page load one at run time.
+async function splitBuild(code) {
+  const result = await build({
     stdin: { contents: code, resolveDir: process.cwd(), loader: "js" },
     bundle: true,
     splitting: true,
@@ -276,89 +270,98 @@ for (const [name, code] of [
     metafile: true,
     external: ["react", "react-dom", "react/jsx-runtime", "react-dom/*"],
   });
-  const outputs = Object.values(liquid.metafile.outputs);
-  const entry = outputs.find((output) => output.entryPoint);
-  const eager = new Set();
-  const visit = (output) => {
-    if (eager.has(output)) return;
-    eager.add(output);
-    for (const dep of output.imports)
-      if (dep.kind === "import-statement" && !dep.external)
-        visit(liquid.metafile.outputs[dep.path]);
-  };
-  visit(entry);
-  const eagerInputs = [...eager].flatMap((output) => Object.keys(output.inputs));
-  for (const banned of [
-    "glass/liquid-options",
-    "glass/lens-watch",
-    "glass/refraction",
-    "utils/material-style",
-  ]) {
-    assert.ok(
-      !eagerInputs.some((f) => f.includes(banned)),
-      `${name} must load "${banned}" lazily, not in its eager chunks`,
-    );
-  }
-  assert.ok(
-    outputs.some((output) =>
-      Object.keys(output.inputs).some((f) => f.includes("glass/liquid-options")),
-    ),
-    `${name} still emits the liquid option mapping as a lazy chunk`,
-  );
-}
-console.log("liquid glass lazy loading OK");
-
-// Liquid Glass tiers: each lazy step brings only its own feature. The lens watcher does not hold
-// the engine, the engine does not hold the crystal layer or the dispersion passes.
-{
-  const tiers = await build({
-    stdin: {
-      contents: `import { Topbar } from "@jcsoftdev/ui/shell"; console.log(Topbar);`,
-      resolveDir: process.cwd(),
-      loader: "js",
-    },
-    bundle: true,
-    splitting: true,
-    outdir: "out",
-    minify: true,
-    format: "esm",
-    write: false,
-    metafile: true,
-    external: ["react", "react-dom", "react/jsx-runtime", "react-dom/*"],
-  });
-  const outputs = tiers.metafile.outputs;
-  const holder = (module) =>
-    Object.keys(outputs).find((name) =>
-      Object.keys(outputs[name].inputs).some((input) => input.endsWith(module)),
-    );
-  const closure = (name, seen = new Set()) => {
+  const outputs = result.metafile.outputs;
+  const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint);
+  // `lazy` also follows `import()`: every chunk the page can fetch at run time.
+  const closure = (name, seen = new Set(), lazy = false) => {
     if (seen.has(name)) return seen;
     seen.add(name);
     for (const dep of outputs[name].imports)
-      if (dep.kind === "import-statement" && !dep.external) closure(dep.path, seen);
+      if (
+        !dep.external &&
+        (dep.kind === "import-statement" || (lazy && dep.kind === "dynamic-import"))
+      )
+        closure(dep.path, seen, lazy);
     return seen;
   };
-  const inputsOf = (module) =>
-    [...closure(holder(module))].flatMap((name) => Object.keys(outputs[name].inputs));
-  const expectTier = (module, banned) => {
-    const inputs = inputsOf(module);
-    for (const other of banned)
-      assert.ok(!inputs.some((f) => f.includes(other)), `${module} must not hold "${other}"`);
+  const kept = (names) =>
+    [...names].flatMap((name) =>
+      Object.entries(outputs[name].inputs)
+        .filter(([, input]) => input.bytesInOutput > 0)
+        .map(([file]) => file),
+    );
+  const holder = (module) =>
+    Object.keys(outputs).find((name) =>
+      Object.entries(outputs[name].inputs).some(
+        ([input, { bytesInOutput }]) => input.endsWith(module) && bytesInOutput > 0,
+      ),
+    );
+  return {
+    all: kept(Object.keys(outputs)),
+    eager: kept(closure(entry)),
+    reachable: kept(closure(entry, new Set(), true)),
+    holder,
+    closureOf: (module) => kept(closure(holder(module))),
   };
-  expectTier("glass/lens-watch.js", [
-    "glass/refraction",
-    "glass/displacement-map",
-    "glass/liquid-motion",
-    "glass/liquid-options",
-  ]);
-  expectTier("glass/refraction.js", [
-    "glass/lens-crystal",
-    "glass/crystal-map",
-    "glass/lens-dispersion",
-  ]);
-  expectTier("glass/lens-dispersion.js", ["glass/lens-crystal", "glass/crystal-map"]);
+}
+for (const path of [
+  "atoms",
+  "ai",
+  "containers",
+  "forms",
+  "navigation",
+  "overlays",
+  "palette",
+  "primitives",
+  "shell",
+  "utils",
+]) {
+  const { all } = await splitBuild(`import * as m from "@jcsoftdev/ui/${path}"; console.log(m);`);
+  const liquid = all.filter((f) => f.includes("/glass/"));
+  assert.deepEqual(liquid, [], `@jcsoftdev/ui/${path} must not hold or fetch any glass module`);
+}
+console.log("liquid glass: non-liquid entries hold and fetch no glass module OK");
+
+// Liquid Glass tiers: each step brings only its own feature. `liquidStyle` is the option mapping
+// alone; `<LiquidGlass />` adds the watcher and fetches the engine lazily; the engine does not hold
+// the crystal layer or the dispersion passes, which are lazy chunks of their own.
+{
+  const style = await splitBuild(
+    `import { liquidStyle } from "@jcsoftdev/ui/liquid"; console.log(liquidStyle);`,
+  );
+  for (const banned of ["glass/liquid-glass", "glass/refraction", "glass/displacement-map"])
+    assert.ok(
+      !style.reachable.some((f) => f.includes(banned)),
+      `liquidStyle must not hold or fetch "${banned}"`,
+    );
+
+  const lens = await splitBuild(
+    `import { LiquidGlass } from "@jcsoftdev/ui/liquid"; console.log(LiquidGlass);`,
+  );
+  assert.ok(
+    lens.eager.some((f) => f.includes("glass/liquid-glass")),
+    "the watcher is eager",
+  );
+  for (const banned of ["glass/refraction", "glass/displacement-map", "glass/liquid-motion"])
+    assert.ok(
+      !lens.eager.some((f) => f.includes(banned)),
+      `<LiquidGlass /> must load "${banned}" lazily`,
+    );
+  assert.ok(lens.holder("glass/refraction.js"), "<LiquidGlass /> emits the engine as a lazy chunk");
+  for (const banned of ["glass/lens-crystal", "glass/crystal-map", "glass/lens-dispersion"])
+    assert.ok(
+      !lens.closureOf("glass/refraction.js").some((f) => f.includes(banned)),
+      `the engine must not hold "${banned}"`,
+    );
+  assert.ok(
+    !lens.closureOf("glass/lens-dispersion.js").some((f) => f.includes("glass/crystal-map")),
+    "dispersion must not hold the crystal map",
+  );
   for (const module of ["glass/lens-crystal.js", "glass/lens-dispersion.js"])
-    assert.ok(holder(module) !== holder("glass/refraction.js"), `${module} is its own lazy chunk`);
+    assert.ok(
+      lens.holder(module) && lens.holder(module) !== lens.holder("glass/refraction.js"),
+      `${module} is its own lazy chunk`,
+    );
 }
 const preset = await keptFor(
   `import { LIQUID_PRESET_CRYSTAL } from "@jcsoftdev/ui/glass"; console.log(LIQUID_PRESET_CRYSTAL);`,

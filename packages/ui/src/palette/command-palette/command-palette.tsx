@@ -1,12 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Search } from "../../icons/index.js";
 import * as Command from "../../primitives/command/command.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material-class.js";
-import { useMaterialStyle } from "../../utils/use-material-style.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export interface CommandPaletteItem {
   id: string;
@@ -52,10 +51,14 @@ export interface CommandPaletteProps {
   onQueryChange?: (query: string) => void;
   /**
    * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
+   * forces an opaque surface. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
   className?: string;
+  /** Inline style of the root (for example `liquidStyle()` options). */
+  style?: CSSProperties;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CommandPalettePart>;
 }
@@ -93,9 +96,9 @@ export function CommandPalette({
   onQueryChange,
   material,
   className,
+  style,
   classNames,
 }: CommandPaletteProps) {
-  const materialProps = useMaterialStyle(material);
   return (
     <Command.Dialog
       open={open}
@@ -110,7 +113,7 @@ export function CommandPalette({
         classNames?.root,
         className,
       )}
-      contentStyle={materialProps.style}
+      contentStyle={style}
     >
       <div
         className={cn(

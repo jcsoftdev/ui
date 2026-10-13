@@ -1,5 +1,5 @@
 {
-  "_comment": "gzip budgets in bytes per entry (~5-8% headroom); JS entries count the entry chunk and its static imports, not lazy import() chunks; entries with `lazy` are tiers that also count those lazy chunks; see scripts/check-size.mjs. Raise only with a reason.",
+  "_comment": "gzip budgets in bytes per entry (~5-8% headroom); JS entries count the entry chunk and its static imports, not lazy import() chunks; entries with `lazy` are tiers that also count those lazy chunks; entries with `code` measure a combination of imports; see scripts/check-size.mjs. Raise only with a reason.",
   "entries": [
     {
       "id": "ui-tokens (createTheme, toCss)",
@@ -35,13 +35,13 @@
       "id": "ui/primitives",
       "kind": "js",
       "file": "packages/ui/dist/primitives/index.js",
-      "maxGzip": 19500
+      "maxGzip": 19350
     },
     {
       "id": "ui/icons",
       "kind": "js",
       "file": "packages/ui/dist/icons/index.js",
-      "maxGzip": 10100
+      "maxGzip": 9800
     },
     {
       "id": "ui/glass",
@@ -53,146 +53,141 @@
       "id": "ui/ai",
       "kind": "js",
       "file": "packages/ui/dist/ai/index.js",
-      "maxGzip": 32000
+      "maxGzip": 31600
     },
     {
       "id": "ui/atoms",
       "kind": "js",
       "file": "packages/ui/dist/atoms/index.js",
-      "maxGzip": 19600
+      "maxGzip": 19100
     },
     {
       "id": "ui/brand",
       "kind": "js",
       "file": "packages/ui/dist/brand/index.js",
-      "maxGzip": 18300
+      "maxGzip": 17800
     },
     {
       "id": "ui/calendar",
       "kind": "js",
       "file": "packages/ui/dist/calendar/index.js",
-      "maxGzip": 12000
+      "maxGzip": 11700
     },
     {
       "id": "ui/charts",
       "kind": "js",
       "file": "packages/ui/dist/charts/index.js",
-      "maxGzip": 207800
+      "maxGzip": 202250
     },
     {
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 94050
+      "maxGzip": 93500
     },
     {
       "id": "ui/forms",
       "kind": "js",
       "file": "packages/ui/dist/forms/index.js",
-      "maxGzip": 30500
+      "maxGzip": 30350
     },
     {
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 600
+      "maxGzip": 550
+    },
+    {
+      "id": "ui/liquid",
+      "kind": "js",
+      "file": "packages/ui/dist/liquid/index.js",
+      "maxGzip": 3150
     },
     {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 11900
+      "maxGzip": 11600
     },
     {
       "id": "ui/overlays",
       "kind": "js",
       "file": "packages/ui/dist/overlays/index.js",
-      "maxGzip": 28950
+      "maxGzip": 28500
     },
     {
       "id": "ui/palette",
       "kind": "js",
       "file": "packages/ui/dist/palette/index.js",
-      "maxGzip": 18950
+      "maxGzip": 18700
     },
     {
       "id": "ui/rich-text",
       "kind": "js",
       "file": "packages/ui/dist/rich-text/index.js",
-      "maxGzip": 13450
+      "maxGzip": 13050
     },
     {
       "id": "ui/shell",
       "kind": "js",
       "file": "packages/ui/dist/shell/index.js",
-      "maxGzip": 11000
+      "maxGzip": 10600
     },
     {
       "id": "ui/states",
       "kind": "js",
       "file": "packages/ui/dist/states/index.js",
-      "maxGzip": 10400
+      "maxGzip": 10100
     },
     {
       "id": "ui/utils",
       "kind": "js",
       "file": "packages/ui/dist/utils/index.js",
-      "maxGzip": 9850
+      "maxGzip": 8100
     },
     {
       "id": "ui/xlsx",
       "kind": "js",
       "file": "packages/ui/dist/xlsx/index.js",
-      "maxGzip": 4150
+      "maxGzip": 4050
     },
     {
       "id": "liquid tier 0: Topbar, no liquid",
       "kind": "js",
-      "file": "packages/ui/dist/shell/topbar/topbar.js",
-      "maxGzip": 9800
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nconsole.log(Topbar);",
+      "maxGzip": 9250
     },
     {
-      "id": "liquid tier 1: + base liquid (lens watcher)",
+      "id": "liquid tier 1: + liquidStyle options",
       "kind": "js",
-      "file": "packages/ui/dist/shell/topbar/topbar.js",
-      "maxGzip": 10400,
-      "lazy": [
-        "glass/lens-watch.js"
-      ]
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle);",
+      "maxGzip": 10850
     },
     {
-      "id": "liquid tier 2: + liquid options object",
+      "id": "liquid tier 2: + <LiquidGlass /> watcher",
       "kind": "js",
-      "file": "packages/ui/dist/shell/topbar/topbar.js",
-      "maxGzip": 12150,
-      "lazy": [
-        "glass/lens-watch.js",
-        "utils/material-style.js"
-      ]
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "maxGzip": 11700
     },
     {
-      "id": "liquid tier 3: + refraction lens",
+      "id": "liquid tier 3: + refraction lens (lazy)",
       "kind": "js",
-      "file": "packages/ui/dist/shell/topbar/topbar.js",
-      "maxGzip": 20450,
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
       "lazy": [
-        "glass/lens-watch.js",
-        "utils/material-style.js",
         "glass/refraction.js"
-      ]
+      ],
+      "maxGzip": 19950
     },
     {
-      "id": "liquid tier 4: + crystal preset",
+      "id": "liquid tier 4: + crystal and dispersion (lazy)",
       "kind": "js",
-      "file": "packages/ui/dist/shell/topbar/topbar.js",
-      "maxGzip": 22500,
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
       "lazy": [
-        "glass/lens-watch.js",
-        "utils/material-style.js",
         "glass/refraction.js",
         "glass/lens-crystal.js",
         "glass/lens-dispersion.js"
-      ]
+      ],
+      "maxGzip": 21950
     }
   ]
 }

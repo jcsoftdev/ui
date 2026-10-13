@@ -99,7 +99,7 @@ export const LIQUID_DEFAULTS = {
   motion: "snappy",
 } as const satisfies LiquidGlassOptions;
 
-/** Names of the `data-glass` presets and of `material.preset`. */
+/** Names of the `data-glass` presets. */
 export type LiquidPresetName = "clear" | "regular" | "thick" | "crystal";
 
 /** The `clear` preset (`data-glass="liquid-clear"`): thin, lighter frost and veil. */
@@ -155,13 +155,6 @@ export const LIQUID_PRESETS: Record<LiquidPresetName, LiquidGlassOptions> = {
   thick: LIQUID_PRESET_THICK,
 };
 
-/** `Material` value for a liquid surface that carries options. */
-export interface LiquidMaterial extends LiquidGlassOptions {
-  type: "liquid" | "liquid-clear";
-  /** Starting point; the fields of this object win over it. */
-  preset?: LiquidPresetName;
-}
-
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const round = (value: number) => Math.round(value * 1000) / 1000;
 const finite = (value: unknown): value is number =>
@@ -181,12 +174,6 @@ export function mergeLiquid(
   if (base?.tint || over?.tint)
     out.tint = { ...base?.tint, ...over?.tint } as LiquidGlassOptions["tint"];
   return out;
-}
-
-/** The options of a material object: its preset underneath its own fields. */
-export function liquidOptionsOf(material: LiquidMaterial): LiquidGlassOptions {
-  const { type: _type, preset, ...own } = material;
-  return mergeLiquid(preset ? LIQUID_PRESETS[preset] : undefined, own);
 }
 
 /** Highlight alphas are themed tokens (`--liquid-rim-lit|back|ring`); this scales them. */

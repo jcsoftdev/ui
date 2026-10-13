@@ -4,7 +4,8 @@
 // imports statically. A dynamic `import()` (the Liquid Glass lens engine) becomes its own lazy
 // chunk and is not counted, since it is only fetched when a surface needs it. An entry with `lazy`
 // is a tier: it also counts the lazy chunks that hold those modules (and what they import), which
-// is what a page fetches once a surface uses that feature.
+// is what a page fetches once a surface uses that feature. An entry with `code` bundles that source
+// (paths relative to the repository root) instead of a file, to measure a combination of imports.
 //   node scripts/check-size.mjs [--update]   --update prints suggested budgets (+8%, rounded up).
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -16,15 +17,17 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { build } = createRequire(join(root, "packages/ui/package.json"))("esbuild");
 const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")).entries;
 
-async function measure({ file, kind, lazy = [] }) {
-  const path = join(root, file);
+async function measure({ file, code: source, kind, lazy = [] }) {
+  const path = file && join(root, file);
   let code;
   if (kind === "css") {
     code = readFileSync(path);
   } else {
     const outdir = join(root, ".size-check");
     const result = await build({
-      entryPoints: [path],
+      ...(source
+        ? { stdin: { contents: source, resolveDir: root, loader: "js" } }
+        : { entryPoints: [path] }),
       bundle: true,
       splitting: true,
       minify: true,
@@ -67,7 +70,7 @@ for (const entry of budgets) {
   try {
     size = await measure(entry);
   } catch (error) {
-    rows.push(`FAIL  ${entry.id}: cannot measure ${entry.file} (${error.message.split("\n")[0]})`);
+    rows.push(`FAIL  ${entry.id}: cannot measure ${entry.file ?? "code"} (${error.message.split("\n")[0]})`);
     failed = true;
     continue;
   }

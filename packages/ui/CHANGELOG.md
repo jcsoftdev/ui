@@ -2,29 +2,68 @@
 
 ## 0.3.0 (unreleased)
 
-### Liquid Glass loads only where it is used
+### Liquid Glass is opt-in (breaking for the 0.3.0 previews)
 
-- The liquid option mapping (`liquid-options`) and the lens watcher are lazy chunks. A component
-  with a `material` prop loads the mapping only when it receives a liquid material object, and a
-  lens-capable surface (Popper content, Sidebar, Topbar, Dialog, Drawer, ActionBar, glass Card)
-  imports the watcher after it mounts; the engine stays lazy as before. Non-liquid entries shrink
-  by about 1.4 to 2 kB gzip (`shell` 12225 to 10437 B, `overlays` 29334 to 27564 B, `palette`
-  19448 to 18019 B). No API change; `materialStyle` and `withMaterialStyle` stay synchronous.
-- The lens engine is split along its features. The crystal layer (`lens-crystal`, with
-  `crystal-map`) and the chromatic dispersion passes (`lens-dispersion`) are lazy chunks the engine
-  imports only for a surface that resolves to them, so a plain lens never fetches them and the
-  `crystal` preset fetches both. The specular and crystal map builders moved out of
-  `displacement-map` into `specular-map` and `crystal-map` (same exports from
-  `@jcsoftdev/ui/glass`). The lens watcher checks `supportsBackdropRefraction()` first, so
-  Safari and Firefox never load the engine.
-- Each preset is its own export: `LIQUID_PRESET_CLEAR`, `LIQUID_PRESET_REGULAR`,
-  `LIQUID_PRESET_THICK`, `LIQUID_PRESET_CRYSTAL` (`LIQUID_PRESETS` is unchanged).
-- `check:size` measures the liquid tiers of a Topbar (no liquid, lens watcher, options object,
-  refraction lens, crystal preset), and `check:treeshake` asserts that each lazy step holds only
-  its own feature.
-- A server loads the mapping at startup, so server-rendered markup keeps the `--liquid-*`
-  variables of a material object. On a client-only render the first liquid material object
-  shows the theme's liquid look until the chunk lands (one request, shared with the lens engine).
+Liquid Glass now costs nothing until an app asks for it. This replaces the material objects and
+the per-component lens of the earlier 0.3.0 previews, which were never published (0.2.x users have
+nothing to change).
+
+- **Non-liquid components carry no liquid code.** Card, Dialog, Drawer, Popover, DropdownMenu,
+  ContextMenu, HoverCard, Topbar, Sidebar, ActionBar and CommandPalette are back to plain class
+  names: no lens hook, no option mapping, no glass-card detection, no ref composition, and no
+  chunk they could fetch later. `check:treeshake` asserts that no chunk of the `atoms`, `ai`,
+  `containers`, `forms`, `navigation`, `overlays`, `palette`, `primitives`, `shell` and `utils`
+  entries, eager or lazy, holds a glass module, so a page without Liquid Glass cannot fetch one at
+  run time. Sizes match the build before Liquid Glass (#35) within 15 bytes gzip (`shell` 10057 B, `overlays` 27125 B,
+  `containers` 89025 B, `utils` 7678 B).
+- **New `@jcsoftdev/ui/liquid` entry** for the declarative API: `<LiquidGlass />`,
+  `startLiquidGlass()`, `liquidStyle()`, `liquidVars()`, `mergeLiquid()`, `LIQUID_DEFAULTS`,
+  `LIQUID_PRESETS`, `LIQUID_PRESET_CLEAR`, `LIQUID_PRESET_REGULAR`, `LIQUID_PRESET_THICK`,
+  `LIQUID_PRESET_CRYSTAL`, `supportsBackdropRefraction()` and the option types. It holds no static
+  import of the lens engine, so even a bundler that splits by file (esbuild) keeps the engine out
+  of the first load. `@jcsoftdev/ui/glass` keeps the imperative engine and the map builders.
+- **`<LiquidGlass />`** (or `startLiquidGlass()`, which returns its stop; calls are counted) is the
+  only thing that loads the lens. Render it once near the root. It watches the document (classes,
+  `data-glass`, `data-glass-lens`, `data-style`, `data-theme`, added and removed nodes, and the
+  transparency, contrast and motion preferences) and gives the lens to every surface whose CSS
+  resolves to `--glass-lens: 1`, fetching the engine the first time one does. It does nothing on
+  the server and nothing where the lens cannot paint (Safari, Firefox).
+- **Options are `style={liquidStyle(options)}`**: synchronous custom properties, so the server
+  markup and the first client paint are already right, nothing changes at hydration, and no option
+  can go stale after it.
+- The engine is split along its features: the crystal layer (`lens-crystal`, with `crystal-map`)
+  and the dispersion passes (`lens-dispersion`) are lazy chunks fetched only for a surface that
+  uses them. The specular and crystal map builders moved out of `displacement-map` into
+  `specular-map` and `crystal-map` (same exports from `@jcsoftdev/ui/glass`). The specular layer
+  and the motion stay in the engine chunk: every lensed surface uses both on its first frame.
+- Topbar, Sidebar and CommandPalette accept `style` on their root.
+- `check:size` measures the liquid tiers (Topbar alone, plus `liquidStyle`, plus `<LiquidGlass />`,
+  plus the lazy engine, plus the crystal and dispersion chunks).
+
+### Migration
+
+From the 0.3.0 previews (`main` before this change):
+
+- `material={{ type: "liquid", ...options }}` becomes
+  `material="liquid" style={liquidStyle(options)}` (`"liquid-clear"` the same way). `material` only
+  takes `"solid" | "glass" | "glass-clear" | "liquid" | "liquid-clear"`.
+- `material={{ type: "liquid", preset: "thick", radius: 24 }}` becomes
+  `material="liquid" style={liquidStyle(mergeLiquid(LIQUID_PRESET_THICK, { radius: 24 }))}`.
+- The lens no longer turns on by itself: render `<LiquidGlass />` once (from
+  `@jcsoftdev/ui/liquid`) in an app that wants it. Without it, liquid surfaces keep the CSS look.
+- `useGlassLens(ref?)` is removed. Drop the ref: with `<LiquidGlass />` mounted, any element with
+  the `liquid` or `liquid-clear` class (or a glass surface under `data-glass="liquid"`) is lensed.
+  `applyGlassRefraction()` and `useGlassRefraction()` remain for manual control.
+- `materialStyle()`, `withMaterialStyle()`, `MaterialName`, `LiquidMaterial` and
+  `liquidOptionsOf()` are removed. `@jcsoftdev/ui/utils` exports `Material` (now a string union)
+  and `materialClass()` only.
+- Import `LiquidGlass` and `startLiquidGlass` from `@jcsoftdev/ui/liquid`; the options, presets
+  and `liquidStyle` are exported from both `@jcsoftdev/ui/liquid` and `@jcsoftdev/ui/glass`.
+- The automatic lens reads the pointer mode (`interactive`) only from the surface itself, on every
+  surface (before, only the overlays did).
+- A surface that leaves the page releases its lens in the next frame, not synchronously.
+
+From 0.2.x: nothing changes unless you adopt Liquid Glass.
 
 ### Crystal lens
 
@@ -32,13 +71,12 @@
 
 ### Configurable Liquid Glass and liquid motion
 
-- **`LiquidGlassOptions`**: `material={{ type: "liquid" | "liquid-clear", ...options }}` on every
-  component with a `material` prop (the string values are unchanged). Options: `refraction`,
+- **`LiquidGlassOptions`**: `style={liquidStyle(options)}` on any liquid surface. Options: `refraction`,
   `bevelWidth`, `profile` (`"full"`, `"dome"`, `"rim"`), `dispersion`, `frost`, `saturation`,
   `brightness`, `tint`, `rim`, `specular`, `fresnel`, `grain`, `radius`, `opacity`, `shadow`,
   `interactive`, `motion`. Each maps to a `--liquid-*` custom property that the CSS and the lens
   read, so a scope or the theme can set them and a change applies live. Exported from
-  `@jcsoftdev/ui/glass` with `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle` and `liquidVars`.
+  `@jcsoftdev/ui/liquid` with `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle` and `liquidVars`.
 - **`data-glass` presets**: `liquid-clear`, `liquid-regular` and `liquid-thick` (in `base.css`).
   The global switch is now `[data-glass^="liquid"]`.
 - **Optics**: the `dome` profile (round contours), a size-scaled outer shadow, fresnel glow, film
@@ -60,8 +98,7 @@
   drag ignores presses on buttons, links and fields inside the surface, captures the pointer only
   after 6 px, and swallows just its own gesture's click (within ~350 ms); no style reads per frame
   and no config refresh from the motion's own writes; `--liquid-motion` and `--liquid-interactive`
-  are live; a moved surface follows its new ancestors; the overlays (dialog, popover, sidebar,
-  drawer) read `--liquid-interactive` only from their own inline style.
+  are live; a moved surface follows its new ancestors.
 
 ### Liquid variant of the glass (lensing)
 
@@ -74,10 +111,7 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   `glass-clear` render exactly as in 0.2 (a golden test pins their CSS).
 - **Global switch**: `data-glass="liquid"` on `<html>` or any scope makes `glass`, `glass-clear` and
   the glass-preset chrome surfaces render liquid. Content (`surface-card`) stays solid.
-- **Lens by default for liquid surfaces in Chromium**: Dialog, Drawer, popper content (Popover,
-  DropdownMenu, ContextMenu, HoverCard), Topbar, Sidebar, ActionBar and Card call the new
-  `useGlassLens` internally. It lazy-loads the engine only when the surface resolves to a liquid
-  material, so frosted and solid surfaces never load it. The displacement map is rasterised from a
+- **Lens for liquid surfaces in Chromium** once `<LiquidGlass />` is mounted (see above). The displacement map is rasterised from a
   rounded-rect signed distance field with a Snell's-law squircle profile, DPR aware; chromatic
   dispersion on surfaces up to 100,000 px squared; the blur and legibility veil move into the
   filter so the rim stays sharp while the middle stays frosted. Budgets: 8 lenses, 640,000 px
@@ -98,17 +132,15 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   tint is dropped while the lens is on, blur is 2 px / 0.6 px, the rim glint is brighter and wider,
   and dispersion is off by default (`--glass-lens-dispersion` or the option turns it on).
 - The full-surface lens is a crease-free superellipse dome (pull along the gradient of `r = (|u|^3 + |v|^3)^(1/3)`), not a per-axis or edge-distance field, so it no longer reads as a four-faced diamond; tests check direction continuity across the diagonals and a positive 2D Jacobian.
-- **Fixes**: `Card` stays a server component (only a glass card renders the client `CardLens`);
-  the lens follows class, `data-glass`, opt-out and preference changes at runtime; area and
-  dispersion budgets are enforced on every resize; surfaces waiting for one of the 8 slots get one
-  when it frees; `useGlassLens` composes the consumer ref (React 19 cleanup, changing identity).
-  New `check:rsc` script.
-- `@jcsoftdev/ui/glass`: new `useGlassLens`, `computeDisplacementField`, `lensProfile`;
+- **Fixes**: `Card` stays a server component; the lens follows class, `data-glass`, opt-out and
+  preference changes at runtime; area and dispersion budgets are enforced on every resize;
+  surfaces waiting for one of the 8 slots get one when it frees. New `check:rsc` script.
+- `@jcsoftdev/ui/glass`: new `computeDisplacementField`, `lensProfile`;
   `createDisplacementMap` now returns a PNG data URI (browser only); `applyGlassRefraction` gains
   `dispersion`, `veil` and `auto`, and moves the blur into the filter. The default `scale` is 20.
 - New shared tokens `--liquid-*` (blur, saturate, filters, tints, dim, rim, depth). 
-- Material components and the `cn` merge group accept the new values. Components with a `ref` prop
-  on Card and ActionBar now forward it to the root.
+- Material components and the `cn` merge group accept the new values. Card and ActionBar type
+  their `ref` prop (it reaches the root).
 
 ### Liquid Glass
 

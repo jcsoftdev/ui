@@ -1,11 +1,9 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useRef } from "react";
-import { useGlassLens } from "../../glass/use-glass-lens.js";
+import { type CSSProperties, type ReactNode, useEffect, useRef } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material-class.js";
-import { useMaterialStyle } from "../../utils/use-material-style.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
 export interface SidebarLinkProps {
@@ -62,9 +60,13 @@ export interface SidebarProps {
   open?: boolean;
   onClose?: () => void;
   className?: string;
+  /** Inline style of the root (for example `liquidStyle()` options). */
+  style?: CSSProperties;
   /**
    * Surface material. Omitted keeps the default for this layer (opaque, glass in the glass
-   * preset); `"glass"` and `"glass-clear"` opt into Liquid Glass, `"solid"` forces opaque.
+   * preset); `"glass"` and `"glass-clear"` are frosted glass, `"liquid"` and `"liquid-clear"`
+   * Liquid Glass, `"solid"` forces opaque. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -91,19 +93,11 @@ export function Sidebar({
   onClose,
   material,
   className,
+  style,
   classNames,
 }: SidebarProps) {
-  const materialProps = useMaterialStyle(material);
   const shell = useAppShell();
-  const asideRef = useRef<HTMLElement | null>(null);
-  const lens = useGlassLens<HTMLElement>(undefined, { ownInteractive: true });
-  const setAside = useCallback(
-    (node: HTMLElement | null) => {
-      asideRef.current = node;
-      lens(node);
-    },
-    [lens],
-  );
+  const asideRef = useRef<HTMLElement>(null);
   const parentCompact = useCompactContainer(asideRef, (aside) => aside.parentElement, !shell);
   const isMobile = shell ? shell.compact : parentCompact;
   const closedOnMobile = isMobile && !open;
@@ -127,7 +121,7 @@ export function Sidebar({
   return (
     <>
       <aside
-        ref={setAside}
+        ref={asideRef}
         aria-label={ariaLabel}
         inert={closedOnMobile || undefined}
         className={cn(
@@ -148,7 +142,7 @@ export function Sidebar({
           classNames?.root,
           className,
         )}
-        {...materialProps}
+        style={style}
       >
         {header}
         {groups.map((group) => (
