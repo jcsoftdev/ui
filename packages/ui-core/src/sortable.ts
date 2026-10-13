@@ -112,9 +112,9 @@ export function keyboardTarget<T>(
 }
 
 /** Insert index for a pointer at `y`, from the vertical midpoints of the items left in a list. */
-export function dropIndex(midpoints: readonly number[], y: number): number {
+export function dropIndex(midpoints: readonly number[], y: number, reversed = false): number {
   let index = 0;
-  for (const mid of midpoints) if (y > mid) index += 1;
+  for (const mid of midpoints) if (reversed ? y < mid : y > mid) index += 1;
   return index;
 }
 
@@ -145,6 +145,14 @@ export interface SortableOptions<T> {
   listLabel?: (list: SortableList<T>) => string;
   /** Restricts the pointer drag start (touch usually requires a handle). */
   canStartPointer?: (event: PointerEvent, item: HTMLElement) => boolean;
+  /**
+   * `"x"` for a horizontal list (column headers): the pointer drop index follows the horizontal
+   * midpoints (mirrored in `rtl`) and the keyboard moves with ArrowLeft / ArrowRight inside the
+   * list. Default `"y"`.
+   */
+  axis?: "x" | "y";
+  /** Keys that pick an item up and drop it. Default `[" ", "Enter"]`; `[]` leaves the keyboard to the owner. */
+  grabKeys?: readonly string[];
 }
 
 export interface Sortable<T> {
@@ -169,6 +177,8 @@ const KEYS: readonly string[] = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDow
  */
 export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>): Sortable<T> {
   const threshold = options.threshold ?? 4;
+  const horizontal = options.axis === "x";
+  const grabKeys = options.grabKeys ?? [" ", "Enter"];
   const say = (message: string) => options.announce?.(message);
   const nameOf = (id: string) => {
     const at = locateItem(options.lists(), id, options.getId);
@@ -239,7 +249,7 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
     if (!el || event.target !== el) return;
     const id = el.dataset.sortableItem as string;
     const { key } = event;
-    if (key === " " || key === "Enter") {
+    if (grabKeys.includes(key)) {
       event.preventDefault();
       if (grabbed === id) {
         const move = moveFromDraft(id);
@@ -274,11 +284,19 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
           : flip && key === "ArrowRight"
             ? "ArrowLeft"
             : key;
-      const target = keyboardTarget(base, id, arrow as SortableKey, options.getId);
+      const axisKey = horizontal
+        ? arrow === "ArrowLeft"
+          ? "ArrowUp"
+          : arrow === "ArrowRight"
+            ? "ArrowDown"
+            : undefined
+        : arrow;
+      if (!axisKey) return;
+      const target = keyboardTarget(base, id, axisKey as SortableKey, options.getId);
       if (!target) return;
       const moveOptions = { enforceLimit: options.enforceLimit };
       let result = moveItem(base, id, target.listId, target.index, options.getId, moveOptions);
-      if (!result && (arrow === "ArrowLeft" || arrow === "ArrowRight")) {
+      if (!result && !horizontal && (arrow === "ArrowLeft" || arrow === "ArrowRight")) {
         // A full list is skipped: the item goes to the next list in that direction with room.
         const step = arrow === "ArrowRight" ? 1 : -1;
         for (let at = base.findIndex((l) => l.id === target.listId) + step; !result; at += step) {
@@ -321,9 +339,12 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
         .filter((node) => node.dataset.sortableItem !== id)
         .map((node) => {
           const r = node.getBoundingClientRect();
-          return r.top + r.height / 2;
+          return horizontal ? r.left + r.width / 2 : r.top + r.height / 2;
         });
-      return { listId, index: dropIndex(mids, y) };
+      return {
+        listId,
+        index: horizontal ? dropIndex(mids, x, options.rtl?.() === true) : dropIndex(mids, y),
+      };
     };
     const onMove = (e: PointerEvent) => {
       if (!active) {
