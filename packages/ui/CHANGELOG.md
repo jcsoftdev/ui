@@ -40,6 +40,8 @@
 
 ### Fixes
 
+- **PolarAreaChart hover no longer flickers.** The hovered sector steps out by 6px and was also the pointer target, so a still pointer near its inner edge fell outside the moved sector: hover, tooltip and dimming toggled about 25 times a second. Pointer events now go to invisible sectors at rest, with no gap between neighbours and covering the stepped-out area, as in DonutChart since 0.2.1. The tooltip stays inside the chart vertically too.
+- **DonutChart, PieChart and PolarAreaChart keep a tapped slice.** On touch and pen, lifting the finger fires `pointerleave`, which dropped the slice right after the tap: tooltip, centre value and dimming flashed for a frame and vanished. A tap now pins the slice until the next tap on another slice or outside the chart; the mouse still drops the hover when it leaves. `useIndexNavigation` returns `pointerLeave` for this.
 - **`AppShell` no longer re-renders the page during hydration.** Its context value changed in the first layout effect after hydration, which made Next.js client-render still-dehydrated Suspense boundaries (a hidden `div#S:0` stayed in the page). The value is now a store that never changes identity and reads `false` on the server and on the first client render; only `useAppShell` consumers update, once the width is measured.
 - **`OfflineBanner` takes an `action`** (for example a retry button) after the queue counter.
 - **`Checkbox` takes a `label`**: it renders a `<label>` bound to the box, so it names the checkbox and a click on it toggles. New `wrapper` and `label` parts.

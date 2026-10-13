@@ -297,6 +297,17 @@ function RosePlot({
             endAngle: startAngle + slot * (position + 1) - pad / 2,
             cornerRadius,
           }),
+          // The hovered sector steps out by EXPLODE. Pointer events go to this resting wedge, which
+          // has no gap to its neighbours and also covers the stepped-out area, never to the moving
+          // sector: a sector that moved away from a still pointer fired pointerleave and looped.
+          hit: arcPath({
+            cx,
+            cy,
+            innerRadius: inner,
+            outerRadius: Math.max(outer, inner + 1) + EXPLODE,
+            startAngle: startAngle + slot * position,
+            endAngle: startAngle + slot * (position + 1),
+          }),
         };
       }),
     [visible, items, startAngle, slot, cx, cy, inner, lengthAt, pad, cornerRadius],
@@ -380,7 +391,7 @@ function RosePlot({
           ))}
         </g>
 
-        {sectors.map((sector, position) => {
+        {sectors.map((sector) => {
           const item = items[sector.index];
           if (!item) return null;
           const focused = focusIndex === sector.index;
@@ -395,8 +406,23 @@ function RosePlot({
               dy={shift.y}
               originX={cx}
               originY={cy}
-              onEnter={(event) => nav.hover(position, event)}
-              onLeave={nav.leave}
+            />
+          );
+        })}
+
+        {sectors.map((sector, position) => {
+          const item = items[sector.index];
+          if (!item) return null;
+          return (
+            <path
+              key={item.datum.id}
+              data-sector-hit=""
+              data-chart-hit=""
+              d={sector.hit}
+              fill="transparent"
+              onPointerEnter={(event) => nav.hover(position, event)}
+              onPointerMove={(event) => nav.hover(position, event)}
+              onPointerLeave={nav.pointerLeave}
             />
           );
         })}
@@ -456,7 +482,13 @@ function RosePlot({
       />
 
       {tooltip && anchor && rows.length ? (
-        <ChartTooltip x={anchor.x} y={anchor.y} containerWidth={width} rows={rows} />
+        <ChartTooltip
+          x={anchor.x}
+          y={anchor.y}
+          containerWidth={width}
+          containerHeight={height}
+          rows={rows}
+        />
       ) : null}
     </div>
   );
@@ -470,8 +502,6 @@ interface SectorMarkProps {
   dy: number;
   originX: number;
   originY: number;
-  onEnter: (event: { clientX: number; clientY: number }) => void;
-  onLeave: () => void;
 }
 
 const SectorMark = memo(function SectorMark({
@@ -482,17 +512,12 @@ const SectorMark = memo(function SectorMark({
   dy,
   originX,
   originY,
-  onEnter,
-  onLeave,
 }: SectorMarkProps) {
   return (
     <path
       data-sector=""
       d={d}
-      onPointerEnter={onEnter}
-      onPointerMove={onEnter}
-      onPointerLeave={onLeave}
-      className="motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out"
+      className="pointer-events-none motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out"
       style={{
         fill: color,
         fillOpacity: 0.9,

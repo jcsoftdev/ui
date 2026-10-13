@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
+import { frame, holdPointer, innerEdgePoint, tapAndLift } from "../core/pointer.test-utils.js";
 import { DonutChart } from "./donut-chart.js";
 
 const meta = {
@@ -17,59 +18,6 @@ const revenueByService = [
   { id: "barba", name: "Perfilado de barba", value: 1200 },
   { id: "navaja", name: "Afeitado con navaja", value: 2400 },
 ];
-
-const frame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
-
-/**
- * A pointer that stays at one client point, re-hit-tested every frame the way the browser does
- * after layout or transform changes, firing the over/out pairs React turns into enter/leave.
- * Returns how many times the element under the pointer changed.
- */
-async function holdPointer(x: number, y: number, ms: number, onFrame: () => void) {
-  let current: Element | null = null;
-  let changes = 0;
-  const init = { bubbles: true, clientX: x, clientY: y, pointerType: "mouse", isPrimary: true };
-  const end = performance.now() + ms;
-  while (performance.now() < end) {
-    const next = document.elementFromPoint(x, y);
-    if (next !== current) {
-      if (current)
-        current.dispatchEvent(new PointerEvent("pointerout", { ...init, relatedTarget: next }));
-      if (next)
-        next.dispatchEvent(new PointerEvent("pointerover", { ...init, relatedTarget: current }));
-      if (current) changes++;
-      current = next;
-    }
-    next?.dispatchEvent(new PointerEvent("pointermove", init));
-    await frame();
-    onFrame();
-  }
-  return changes;
-}
-
-/** A point just inside the inner edge of the slice at its middle angle, at rest. */
-function innerEdgePoint(slice: SVGPathElement, svg: SVGSVGElement) {
-  const cx = svg.width.baseVal.value / 2;
-  const cy = svg.height.baseVal.value / 2;
-  let best: { x: number; y: number; r: number; deg: number }[] = [];
-  for (let deg = 0; deg < 360; deg += 1) {
-    const a = (deg * Math.PI) / 180;
-    for (let r = 4; r < Math.min(cx, cy); r += 1) {
-      const point = new DOMPoint(cx + Math.sin(a) * r, cy - Math.cos(a) * r);
-      if (slice.isPointInFill(point)) {
-        best.push({ x: point.x, y: point.y, r, deg });
-        break;
-      }
-    }
-  }
-  const mid = best.reduce((sum, p) => sum + p.deg, 0) / best.length;
-  best = best.sort((a, b) => Math.abs(a.deg - mid) - Math.abs(b.deg - mid));
-  const pick = best[0] as { x: number; y: number; r: number; deg: number };
-  const box = svg.getBoundingClientRect();
-  const a = (pick.deg * Math.PI) / 180;
-  // One pixel past the first filled radius, well inside the step-out distance.
-  return { x: box.left + pick.x + Math.sin(a), y: box.top + pick.y - Math.cos(a) };
-}
 
 export const HoverStaysStill: Story = {
   render: () => (
@@ -126,5 +74,50 @@ export const HoverStaysStill: Story = {
     await expect(card.bottom).toBeLessThanOrEqual(bounds.bottom);
     await expect(card.left).toBeGreaterThanOrEqual(bounds.left);
     await expect(card.right).toBeLessThanOrEqual(bounds.right);
+  },
+};
+
+export const TapKeepsDetails: Story = {
+  render: () => (
+    <div style={{ width: 320, padding: 16 }}>
+      <DonutChart
+        title="Ingresos por servicio"
+        data={revenueByService}
+        valueFormat="currency"
+        legend={false}
+        height={220}
+        animate={false}
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const svg = (await canvas.findByRole("img", {
+      name: "Ingresos por servicio",
+    })) as unknown as SVGSVGElement;
+    const hits = Array.from(svg.querySelectorAll<SVGPathElement>("[data-slice-hit]"));
+    await waitFor(() => expect(hits.length).toBe(5));
+    const container = svg.parentElement as HTMLElement;
+    const tooltip = () => container.querySelector<HTMLElement>(":scope > [aria-hidden='true']");
+
+    // Lifting the finger fires pointerleave; the tapped slice stays picked instead of flashing.
+    await tapAndLift(hits[0] as SVGPathElement, "touch");
+    for (let i = 0; i < 10; i++) await frame();
+    await expect(tooltip()).toHaveTextContent("Corte clásico");
+    await expect(svg).toHaveTextContent("S/ 7 200.00");
+
+    await tapAndLift(hits[1] as SVGPathElement, "touch");
+    await frame();
+    await expect(tooltip()).toHaveTextContent("Corte + barba");
+
+    // A press outside the slices lets the details go.
+    document.body.dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, pointerType: "touch", isPrimary: true }),
+    );
+    await waitFor(() => expect(tooltip()).toBeNull());
+
+    // A mouse leaving still drops the hover at once.
+    await tapAndLift(hits[2] as SVGPathElement, "mouse");
+    await waitFor(() => expect(tooltip()).toBeNull());
   },
 };
