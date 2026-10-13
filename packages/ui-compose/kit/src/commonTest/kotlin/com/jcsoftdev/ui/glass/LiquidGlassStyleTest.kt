@@ -164,4 +164,29 @@ class LiquidGlassStyleTest {
         val peak = (1..60).maxOf { x.getValueFromNanos(it * 20_000_000L) }
         assertTrue(peak > 1.02f, "overshoot $peak")
     }
+
+    @Test fun crystalIsAClearConvexLensWithoutAVeil() {
+        val c = LiquidGlassStyle.Crystal
+        assertEquals(LiquidProfile.Convex, c.profile)
+        assertEquals(1.67f, c.refraction)
+        assertEquals(0.05f, c.dispersion)
+        assertEquals(40.dp, c.bevelWidth)
+        assertEquals(0.dp, c.frost)
+        assertEquals(1f, c.fresnel)
+        assertEquals(LiquidInteraction.Drag, c.interaction)
+        assertFalse(c.preservesContrast, "no veil: the contrast guarantee is gone")
+        val veil = c.applyTo(tokens)
+        assertEquals(0f, veil.tint.alpha)
+        assertEquals(0f, veil.dim.alpha)
+        assertEquals(0.dp, veil.blur)
+    }
+
+    @Test fun theConvexProfileMinifiesAndReachesBeyondTheSurface() {
+        assertEquals(3f, LiquidProfile.Convex.shaderCode())
+        val convex = LiquidGlassStyle(profile = LiquidProfile.Convex)
+        assertTrue(convex.domeAmount() < 0f, "a negative dome samples a wider strip")
+        assertTrue(LiquidGlassStyle(profile = LiquidProfile.Convex, refraction = 2f).domeAmount() < convex.domeAmount())
+        assertEquals(0f, LiquidGlassStyle.Regular.convexReach(100f, 50f, 20f), "other profiles keep the surface bounds")
+        assertTrue(convex.convexReach(100f, 50f, 20f) > 20f)
+    }
 }

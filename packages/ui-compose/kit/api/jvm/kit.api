@@ -656,6 +656,7 @@ public final class com/jcsoftdev/ui/glass/LiquidGlassStyle {
 
 public final class com/jcsoftdev/ui/glass/LiquidGlassStyle$Companion {
 	public final fun getClear ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
+	public final fun getCrystal ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
 	public final fun getRegular ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
 	public final fun getThick ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
 }
@@ -705,6 +706,7 @@ public final class com/jcsoftdev/ui/glass/LiquidMotion$Companion {
 }
 
 public final class com/jcsoftdev/ui/glass/LiquidProfile : java/lang/Enum {
+	public static final field Convex Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public static final field Dome Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public static final field Full Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public static final field Rim Lcom/jcsoftdev/ui/glass/LiquidProfile;

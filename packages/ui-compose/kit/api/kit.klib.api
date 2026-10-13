@@ -109,6 +109,7 @@ final enum class com.jcsoftdev.ui.glass/LiquidInteraction : kotlin/Enum<com.jcso
 }
 
 final enum class com.jcsoftdev.ui.glass/LiquidProfile : kotlin/Enum<com.jcsoftdev.ui.glass/LiquidProfile> { // com.jcsoftdev.ui.glass/LiquidProfile|null[0]
+    enum entry Convex // com.jcsoftdev.ui.glass/LiquidProfile.Convex|null[0]
     enum entry Dome // com.jcsoftdev.ui.glass/LiquidProfile.Dome|null[0]
     enum entry Full // com.jcsoftdev.ui.glass/LiquidProfile.Full|null[0]
     enum entry Rim // com.jcsoftdev.ui.glass/LiquidProfile.Rim|null[0]
@@ -520,6 +521,8 @@ final class com.jcsoftdev.ui.glass/LiquidGlassStyle { // com.jcsoftdev.ui.glass/
     final object Companion { // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion|null[0]
         final val Clear // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Clear|{}Clear[0]
             final fun <get-Clear>(): com.jcsoftdev.ui.glass/LiquidGlassStyle // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Clear.<get-Clear>|<get-Clear>(){}[0]
+        final val Crystal // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Crystal|{}Crystal[0]
+            final fun <get-Crystal>(): com.jcsoftdev.ui.glass/LiquidGlassStyle // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Crystal.<get-Crystal>|<get-Crystal>(){}[0]
         final val Regular // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Regular|{}Regular[0]
             final fun <get-Regular>(): com.jcsoftdev.ui.glass/LiquidGlassStyle // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Regular.<get-Regular>|<get-Regular>(){}[0]
         final val Thick // com.jcsoftdev.ui.glass/LiquidGlassStyle.Companion.Thick|{}Thick[0]

@@ -248,7 +248,10 @@ private class LiquidShadowNode(
 
     // The shadow never shows inside the silhouette: under a translucent tint (no backdrop to hide it) it would darken the glass.
     override fun ContentDrawScope.draw() {
-        if (outline == null || outlineSize != size || outlineDirection != layoutDirection || outlineDensity != density ||
+        if (outline == null ||
+            outlineSize != size ||
+            outlineDirection != layoutDirection ||
+            outlineDensity != density ||
             outlineShape != shape
         ) {
             val made = shape.createOutline(size, layoutDirection, this)
@@ -366,7 +369,7 @@ private const val PRESS_LENS_GAIN = 0.35f
 private const val PRESS_BRIGHTEN = 0.14f
 private const val GLOW_RADIUS = 0.55f
 private const val SCALE_EPSILON = 0.002f
-private const val LENS_INPUTS = 12
+private const val LENS_INPUTS = 16
 
 private class GlassSurfaceNode(
     var shape: Shape,
@@ -583,8 +586,9 @@ private class GlassSurfaceNode(
         val materialize = dynamics?.materialize?.invoke() ?: 1f
         val strength =
             min(depth * STRENGTH_PER_DEPTH, MAX_REFRACTION.toPx()) * style.refraction.coerceAtLeast(0f) *
-                (1f + PRESS_LENS_GAIN * pressed) * materialize
-        val pad = ceil(radius).toInt()
+                (1f + PRESS_LENS_GAIN * pressed) * materialize * (if (style.profile == LiquidProfile.Convex) CONVEX_BEND else 1f)
+        val reach = style.convexReach(size.width / 2f, size.height / 2f, strength)
+        val pad = ceil(radius + reach).toInt()
         val width = size.width.toInt() + pad * 2
         val height = size.height.toInt() + pad * 2
         if (tokens.saturate != filterSaturation) {
@@ -603,7 +607,23 @@ private class GlassSurfaceNode(
                 }
             }
         }
-        val lensed = if (lens) lensFor(pad, depth, strength, radius, exponent, pressed) else null
+        val lensed =
+            if (lens) {
+                lensFor(
+                    pad,
+                    depth,
+                    strength,
+                    radius,
+                    exponent,
+                    pressed,
+                    reach > 0f,
+                    pad - dx,
+                    pad - dy,
+                    source.layer.size,
+                )
+            } else {
+                null
+            }
         lensApplied = lensed != null
         blurLayer.renderEffect = lensed ?: blurFor(radius)
         // The lens shader saturates the backdrop itself, before the veil.
@@ -652,6 +672,10 @@ private class GlassSurfaceNode(
         radius: Float,
         exponent: Float,
         pressed: Float,
+        wide: Boolean,
+        sourceLeft: Float,
+        sourceTop: Float,
+        sourceSize: IntSize,
     ): RenderEffect? {
         val pointer = dynamics?.pointer?.invoke()
         val follow = dynamics?.follow?.invoke() ?: 0f
@@ -677,6 +701,10 @@ private class GlassSurfaceNode(
         inputs[9] = shownGlow
         inputs[10] = rimDepth
         inputs[11] = exponent
+        inputs[12] = if (wide) sourceLeft else 0f
+        inputs[13] = if (wide) sourceTop else 0f
+        inputs[14] = sourceSize.width.toFloat()
+        inputs[15] = sourceSize.height.toFloat()
         if (!lensStale && lensEffect != null && inputs.contentEquals(lensInputs)) return lensEffect
         inputs.copyInto(lensInputs)
         lensStale = false
@@ -693,10 +721,12 @@ private class GlassSurfaceNode(
                 strength = strength,
                 dispersion = style.dispersion,
                 blur = radius,
-                boundsLeft = pad.toFloat(),
-                boundsTop = pad.toFloat(),
-                boundsRight = pad + size.width,
-                boundsBottom = pad + size.height,
+                // A wide (convex) lens reads beyond its own surface, up to the edge of the backdrop source (never past it, where
+                // nothing was recorded); the others stay inside the surface.
+                boundsLeft = if (wide) sourceLeft.coerceAtLeast(0f) else pad.toFloat(),
+                boundsTop = if (wide) sourceTop.coerceAtLeast(0f) else pad.toFloat(),
+                boundsRight = if (wide) (sourceLeft + sourceSize.width).coerceAtMost(size.width + pad * 2) else pad + size.width,
+                boundsBottom = if (wide) (sourceTop + sourceSize.height).coerceAtMost(size.height + pad * 2) else pad + size.height,
                 saturate = tokens.saturate,
                 tintR = tokens.tint.red,
                 tintG = tokens.tint.green,

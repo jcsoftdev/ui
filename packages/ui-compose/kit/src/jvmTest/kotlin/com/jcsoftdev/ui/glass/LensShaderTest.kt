@@ -196,4 +196,67 @@ class LensShaderTest {
         assertTrue(lit.green(100, 60) > base.green(100, 60), "glow at the finger")
         assertTrue(abs(lit.green(30, 100) - base.green(30, 100)) <= 1, "no glow far from the finger")
     }
+
+    /** The backdrop position (x when [vertical] is false, else y) each pixel of the convex lens shows, exact to 1/64 px. */
+    private fun convexMap(
+        vertical: Boolean,
+        exponent: Float,
+        radius: Float,
+        strength: Float,
+        dome: Float,
+    ): Array<FloatArray> {
+        val w = 900
+        val h = 600
+        // A coordinate packed into two channels: whole multiples of 4 in red, the remainder in green.
+        val axis = if (vertical) "c.y" else "c.x"
+        val encoded =
+            RuntimeShaderBuilder(
+                RuntimeEffect.makeForShader(
+                    "half4 main(float2 c) { return half4(floor($axis / 4.0) / 255.0, ($axis - floor($axis / 4.0) * 4.0) / 4.0, 0.0, 1.0); }",
+                ),
+            ).makeShader()
+        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
+        builder.child("content", encoded)
+        builder.uniform("size", 160f, 80f)
+        builder.uniform("origin", 300f, 260f)
+        builder.uniform("radii", radius, radius, radius, radius)
+        builder.uniform("exponent", exponent)
+        builder.uniform("strength", strength)
+        builder.uniform("dispersion", 0f)
+        builder.uniform("sat", 1f)
+        builder.uniform("profile", 3f)
+        builder.uniform("band", 0.3f)
+        builder.uniform("dome", dome)
+        // No rim shading: it would add to the encoded channels near the wall.
+        builder.uniform("thickness", 0f)
+        builder.uniform("glow", 0f, 0f, 1f, 0f)
+        builder.uniform("bounds", 0f, 0f, w.toFloat(), h.toFloat())
+        val surface = Surface.makeRasterN32Premul(w, h)
+        surface.canvas.drawRect(Rect.makeWH(w.toFloat(), h.toFloat()), Paint().apply { shader = builder.makeShader() })
+        val bitmap = Bitmap.makeFromImage(surface.makeImageSnapshot())
+        return Array(80) { yy ->
+            FloatArray(160) { xx ->
+                val argb = bitmap.getColor(300 + xx, 260 + yy)
+                ((argb shr 16) and 0xFF) * 4f + ((argb shr 8) and 0xFF) / 255f * 4f
+            }
+        }
+    }
+
+    @Test fun theConvexLensNeverFoldsAtMaxRefractionForAPillAndARectangle() {
+        for ((exponent, radius) in listOf(2f to 40f, 8f to 0f, 4f to 16f)) {
+            val sx = convexMap(false, exponent, radius, strength = 120f, dome = -0.64f)
+            val sy = convexMap(true, exponent, radius, strength = 120f, dome = -0.64f)
+            for (y in 4 until 76 step 2) {
+                for (x in 4 until 156 step 2) {
+                    val a = (sx[y][x + 1] - sx[y][x - 1]) / 2f
+                    val b = (sx[y + 1][x] - sx[y - 1][x]) / 2f
+                    val c = (sy[y][x + 1] - sy[y][x - 1]) / 2f
+                    val d = (sy[y + 1][x] - sy[y - 1][x]) / 2f
+                    assertTrue(a * d - b * c > 0.3f, "exponent $exponent at ($x,$y): jacobian ${a * d - b * c}")
+                }
+            }
+            // The whole surface minifies: the left edge reads from well outside the surface (x = 300 - something), not inside it.
+            assertTrue(sx[40][1] < 300f - 30f, "exponent $exponent: left edge samples ${sx[40][1]}")
+        }
+    }
 }

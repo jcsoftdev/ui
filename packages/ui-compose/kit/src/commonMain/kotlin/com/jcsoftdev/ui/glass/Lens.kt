@@ -179,7 +179,7 @@ half4 shade(float2 coord, float2 off, float d, float2 n) {
  * axis). The backdrop is sampled from further inside (so every sample stays within the visible surface), by an amount that is
  * strongest at the edge. Samples are clamped to the surface rectangle. Red and blue use slightly different amounts for a
  * subtle dispersion at the rim. The profile uniform picks how the displacement spreads: 0 across the whole surface, 1 only in
- * a band along the rim, 2 as a dome (a magnification with no bevel direction at all).
+ * a band along the rim, 2 as a dome (a magnification with no bevel direction at all), 3 as a convex lens (minify plus an outward rim bend).
  */
 internal const val LENS_SHADER: String =
     LENS_COMMON + """
@@ -213,9 +213,14 @@ half4 main(float2 coord) {
     float m = clamp((rr - (1.0 - band)) / max(band, 0.001), 0.0, 1.0);
     float rim = m * m;
     float isRim = step(0.5, profile) * (1.0 - step(1.5, profile));
-    float isDome = step(1.5, profile);
+    float isConvex = step(2.5, profile);
+    float isDome = step(1.5, profile) * (1.0 - isConvex);
     float mag = mix(mix(full, rim, isRim), 0.0, isDome);
-    float2 off = -dir * strength * mag - p * dome;
+    // Convex: the dome term is negative (the whole surface samples a wider strip: sample = center + (1 + k) * p), and the rim
+    // bend flips to push outward as well, so the sampled point always moves away from the center faster than the pixel does
+    // (the mapping never folds). Every other profile bends inward.
+    float bendSign = 1.0 - 2.0 * isConvex;
+    float2 off = -dir * strength * mag * bendSign - p * dome;
     return shade(coord, off, d, n);
 }
 """

@@ -20,6 +20,15 @@ public enum class LiquidProfile {
 
     /** A convex lens: the backdrop is magnified toward the middle with no directional bevel. */
     Dome,
+
+    /**
+     * A thick convex lens: the whole surface minifies the backdrop (a wide strip of the scene is squeezed into the surface) and
+     * the compression grows toward the rim, strongest at the rounded ends. Both terms only push the sampled point outward, so
+     * the image never folds or flips. [LiquidGlassStyle.refraction] sets how wide the strip is; the surface samples beyond its
+     * own bounds, so the backdrop behind a neighbouring area is part of what it shows. Ignored by [GlassEffectContainer], whose
+     * merged piece always uses the rim bend.
+     */
+    Convex,
 }
 
 /** How a Liquid surface reacts to touch. */
@@ -212,6 +221,30 @@ public data class LiquidGlassStyle(
                 shadow = LiquidShadow(spread = 20.dp, offsetY = 8.dp),
                 motion = LiquidMotion.Playful,
             )
+
+        /**
+         * A thick, fully clear acrylic lens: no frost, no tint or dim veil, a [LiquidProfile.Convex] profile that squeezes a wide
+         * strip of the backdrop into the surface and bends it hard toward the ends, strong dispersion and fresnel at the rim, a
+         * thin edge highlight. Drag squash is on, so it flexes while moved.
+         *
+         * It has no veil (opacity 0), so it **does not keep the text contrast guarantee** ([preservesContrast] is false): put
+         * only large, bold or shadowed labels on it, and never body text over a busy photo.
+         */
+        public val Crystal: LiquidGlassStyle =
+            LiquidGlassStyle(
+                refraction = 1.67f,
+                bevelWidth = 40.dp,
+                profile = LiquidProfile.Convex,
+                dispersion = 0.05f,
+                frost = 0.dp,
+                saturation = 1f,
+                opacity = 0f,
+                rim = 0.5f,
+                specular = LiquidSpecular(intensity = 0.6f),
+                fresnel = 1f,
+                shadow = LiquidShadow(opacity = 0.6f, spread = 18.dp, offsetY = 6.dp),
+                interaction = LiquidInteraction.Drag,
+            )
     }
 }
 
@@ -250,12 +283,13 @@ internal fun LiquidGlassStyle.applyTo(tokens: GlassMaterial): GlassMaterial {
     )
 }
 
-/** Shader code of the profile: 0 full, 1 rim, 2 dome. */
+/** Shader code of the profile: 0 full, 1 rim, 2 dome, 3 convex. */
 internal fun LiquidProfile.shaderCode(): Float =
     when (this) {
         LiquidProfile.Full -> 0f
         LiquidProfile.Rim -> 1f
         LiquidProfile.Dome -> 2f
+        LiquidProfile.Convex -> 3f
     }
 
 /** Magnification toward the center: Full keeps the faint dome, Rim none, Dome a strong one that grows with [refraction]. */
@@ -264,10 +298,32 @@ internal fun LiquidGlassStyle.domeAmount(): Float =
         LiquidProfile.Full -> BASE_DOME
         LiquidProfile.Rim -> 0f
         LiquidProfile.Dome -> BASE_DOME + DOME_GAIN * refraction.coerceIn(0f, 2f)
+        LiquidProfile.Convex -> -CONVEX_MINIFY * refraction.coerceIn(0f, 2f)
     }
 
 internal const val BASE_DOME: Float = 0.05f
 internal const val DOME_GAIN: Float = 0.16f
+
+/** How much wider a strip [LiquidProfile.Convex] samples per unit of refraction (the dome amount is minus this). */
+internal const val CONVEX_MINIFY: Float = 0.22f
+
+/** Share of the usual rim bend a [LiquidProfile.Convex] lens applies (outward). */
+internal const val CONVEX_BEND: Float = 0.5f
+
+/**
+ * How far beyond the surface edge a [LiquidProfile.Convex] lens samples, in px: the minify of the farthest corner plus the
+ * outward rim bend of [strength] px. The backdrop layer is padded by this much.
+ */
+internal fun LiquidGlassStyle.convexReach(
+    halfWidth: Float,
+    halfHeight: Float,
+    strength: Float,
+): Float =
+    if (profile != LiquidProfile.Convex) {
+        0f
+    } else {
+        kotlin.math.hypot(halfWidth, halfHeight) * CONVEX_MINIFY * refraction.coerceIn(0f, 2f) + strength.coerceAtLeast(0f)
+    }
 
 /** Surface size to the factor thickness shading and the shadow are scaled by: bigger is thicker, within sane bounds. */
 internal fun sizeScale(
