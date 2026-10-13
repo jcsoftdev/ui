@@ -35,6 +35,8 @@ export interface GridColumn<T> {
    */
   cellTag?: string;
   type?: ColumnType;
+  /** ISO 4217 code of a `currency` column, e.g. `PEN`. There is no default: without one the value shows as a plain number. */
+  currency?: string;
   /** Text shown for a value. */
   format?: (value: CellValue) => string;
   width?: number;
@@ -59,6 +61,8 @@ export function getCellValue<T>(row: T, column: GridColumn<T>): CellValue {
 export interface FormatOptions {
   /** BCP 47 tag; defaults to `en`. Dates, numbers and currencies follow it. */
   locale?: string;
+  /** Currency of `currency` columns that do not name their own. */
+  currency?: string;
   /** Text for booleans; defaults to English. */
   labels?: { yes?: string; no?: string };
 }
@@ -102,7 +106,8 @@ export function formatCellValue<T>(
     return Number.isNaN(value.getTime()) ? "" : dateFormat(locale).format(value);
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return "";
-    if (column.type === "currency") return formatCurrency(value, { locale });
+    if (column.type === "currency")
+      return formatCurrency(value, { locale, currency: column.currency ?? options.currency });
     if (column.type === "number") return formatNumber(value, { locale });
     return String(value);
   }
