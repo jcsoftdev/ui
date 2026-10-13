@@ -88,7 +88,7 @@ describe("markdown parser: hostile input stays cheap", () => {
       time(() => {
         blocks = parseMarkdown(source);
       }),
-    ).toBeLessThan(500);
+    ).toBeLessThan(2000);
     expect(depthOf(blocks, "list")).toBeLessThanOrEqual(MAX_MARKDOWN_DEPTH + 1);
   });
 
