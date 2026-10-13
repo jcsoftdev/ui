@@ -4,11 +4,13 @@ import {
   draftText,
   editorKind,
   formatDateDraft,
+  likeOriginal,
   normalizeOptions,
   parseDate,
   parseDraft,
   parseNumber,
   sameValue,
+  toDate,
   validateValue,
 } from "../src/grid/edit.ts";
 import type { GridColumn } from "../src/grid/model.ts";
@@ -150,5 +152,103 @@ describe("small helpers", () => {
       { value: 2, label: "Two" },
       { value: 3, label: "3" },
     ]);
+  });
+});
+
+describe("number text is strict about grouping and locale-neutral digits", () => {
+  it.each([
+    ["en-US", "1.234,5"],
+    ["en-US", "1,2,3"],
+    ["en-US", "12,34,567"],
+    ["de-DE", "1.234.5"],
+    ["de-DE", "1,234.5"],
+    ["en-US", "1,234.5.6"],
+    ["en-US", "-"],
+    ["en-US", "1,234,56"],
+  ])("%s refuses %j", (locale, text) => {
+    expect(parseNumber(text, locale)).toBeNull();
+  });
+
+  it.each([
+    ["en-US", "1,234,567.89", 1234567.89],
+    ["de-DE", "1.234.567,89", 1234567.89],
+    ["en-US", "−5", -5],
+    ["sv-SE", "\u22125,5", -5.5],
+    ["ar-EG", "\u0661\u0662\u0663", 123],
+    ["en-US", "\u200e-5", -5],
+    ["hi-IN", "1,23,456.7", 123456.7],
+  ])("%s reads %j", (locale, text, expected) => {
+    expect(parseNumber(text, locale)).toBe(expected);
+  });
+
+  it.each(["sv-SE", "nb-NO", "ar-EG", "fa-IR", "de-CH", "fr-FR", "en-US"])(
+    "the draft of a negative decimal reads back in %s",
+    (locale) => {
+      for (const value of [-5.5, -1234.25, 0.5, 1e-7]) {
+        const draft = draftText("number", value, locale);
+        expect(draft).not.toMatch(/[\u2212\u200e\u200f\u061c]/);
+        expect(/^[-0-9.,]+$/.test(draft)).toBe(true);
+        expect(parseNumber(draft, locale)).toBe(value);
+      }
+    },
+  );
+});
+
+describe("dates stay in the type they came in", () => {
+  it("a date-only ISO string is the local day, whatever the time zone", () => {
+    const day = toDate("2024-03-05") as Date;
+    expect([day.getFullYear(), day.getMonth(), day.getDate(), day.getHours()]).toEqual([
+      2024, 2, 5, 0,
+    ]);
+    expect(draftText("date", "2024-03-05", "en-US")).toBe("03/05/2024");
+    expect(draftText("date", "2024-03-05", "es-PE")).toBe("05/03/2024");
+    expect(toDate("nope")).toBeNull();
+  });
+
+  it("likeOriginal writes the original type back", () => {
+    const day = new Date(2024, 2, 7);
+    expect(likeOriginal(day, "2024-03-05")).toBe("2024-03-07");
+    expect(likeOriginal(day, new Date(2024, 2, 5, 14, 30, 15, 7))).toEqual(
+      new Date(2024, 2, 7, 14, 30, 15, 7),
+    );
+    expect(likeOriginal(day, null)).toBe(day);
+    const stamp = likeOriginal(day, "2024-03-05T10:20:30.000Z") as string;
+    expect(stamp).toMatch(/^2024-03-0[67]T/);
+    expect(new Date(stamp).getMinutes()).toBe(new Date("2024-03-05T10:20:30.000Z").getMinutes());
+    expect(likeOriginal(42, "17")).toBe("42");
+    expect(likeOriginal(42, 17)).toBe(42);
+    expect(likeOriginal(null, "17")).toBeNull();
+  });
+
+  it("a two-digit year lands within 50 years of today", () => {
+    const now = new Date().getFullYear();
+    for (const yy of [0, 24, 49, 50, 75, 99]) {
+      const year = (parseDate(`1/2/${String(yy).padStart(2, "0")}`, "en-US") as Date).getFullYear();
+      expect(Math.abs(year - now)).toBeLessThanOrEqual(50);
+      expect(year % 100).toBe(yy);
+    }
+  });
+
+  it("a custom parse that returns NaN is an error", () => {
+    expect(parseDraft(col({ parse: () => Number.NaN }), "text", "x", { n: 1 }, "en")).toEqual({
+      error: "parse",
+    });
+  });
+
+  it("validate receives the abort signal", async () => {
+    let seen: AbortSignal | undefined;
+    const controller = new AbortController();
+    await validateValue(
+      col({
+        validate: (_value, _row, signal) => {
+          seen = signal;
+          return null;
+        },
+      }),
+      1,
+      { n: 1 },
+      controller.signal,
+    );
+    expect(seen).toBe(controller.signal);
   });
 });

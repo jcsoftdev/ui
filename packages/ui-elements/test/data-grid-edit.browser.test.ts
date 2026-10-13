@@ -2,7 +2,7 @@ import axe from "axe-core";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineDataGrid, type GridColumn, type UiDataGrid } from "../src/data-grid/data-grid.ts";
-import { frame, mount } from "./setup.ts";
+import { frame, mount, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineDataGrid();
@@ -57,8 +57,6 @@ const grid = async (
   }
   await frame();
   await frame();
-  // The editor chunk loads after the first render: wait for the hooks to be in.
-  await new Promise((resolve) => setTimeout(resolve, 60));
   return el;
 };
 
@@ -120,7 +118,7 @@ describe("ui-data-grid editing", () => {
     const changes = events(el, "cellchange");
     await open(el, "p1", "name");
     expect(input(el).value).toBe("Person 1");
-    expect(input(el).getAttribute("aria-label")).toBe("Name");
+    expect(input(el).getAttribute("aria-label")).toBe("Name, Person 1");
     expect(cell(el, "p1", "name").contains(input(el))).toBe(true);
     expect(active()).toBe(input(el));
     await userEvent.keyboard("Ana{Enter}");
@@ -347,7 +345,8 @@ describe("ui-data-grid editing", () => {
       await vi.waitFor(() => expect(input(el).getAttribute("aria-invalid")).toBe("true"));
       const message = document.getElementById(input(el).getAttribute("aria-describedby") ?? "");
       await vi.waitFor(() => expect(message?.textContent).toBe("Use at least 3 letters"));
-      expect(message?.getAttribute("role")).toBe("alert");
+      // One announcement: the description and the status region, not a live region of its own.
+      expect(message?.hasAttribute("role")).toBe(false);
       expect(changes).toEqual([]);
       expect(active()).toBe(input(el));
       await userEvent.keyboard("c");
@@ -608,6 +607,331 @@ describe("ui-data-grid editing", () => {
     await userEvent.keyboard("{Enter}");
     await editorClosed(el);
     expect(cell(el, "p0", "name").textContent).toBe("Keep");
+  });
+});
+
+describe("review fixes", () => {
+  const stored = (el: UiDataGrid, index = 0) => (el.rows as Person[])[index] as Person;
+
+  describe("B1: an untouched editor commits nothing", () => {
+    it("a select whose value is outside its options keeps it", async () => {
+      const rows = people(3);
+      (rows[0] as Person).city = "Arequipa";
+      const el = await grid("", undefined, rows);
+      const changes = events(el, "cellchange");
+      await open(el, "p0", "city");
+      await userEvent.keyboard("{Enter}");
+      await editorClosed(el);
+      expect(stored(el).city).toBe("Arequipa");
+      expect(changes).toEqual([]);
+      await open(el, "p0", "city");
+      document.body.insertAdjacentHTML("beforeend", "<button id=away>x</button>");
+      (document.getElementById("away") as HTMLElement).focus();
+      await editorClosed(el);
+      expect(stored(el).city).toBe("Arequipa");
+    });
+
+    it("a date-only ISO string is the local day, stays a string, and an edit keeps the format", async () => {
+      const rows = people(3) as unknown as Array<Record<string, unknown>>;
+      (rows[0] as Record<string, unknown>).born = "2024-03-05";
+      const el = await grid('locale="es-PE"', undefined, rows as unknown as Person[]);
+      const changes = events(el, "cellchange");
+      await open(el, "p0", "born");
+      expect(input(el).value).toBe("05/03/2024");
+      await userEvent.keyboard("{Enter}");
+      await editorClosed(el);
+      expect(changes).toEqual([]);
+      expect(rows[0]?.born).toBe("2024-03-05");
+      await open(el, "p0", "born");
+      await userEvent.keyboard("07/03/2024{Enter}");
+      await editorClosed(el);
+      expect(rows[0]?.born).toBe("2024-03-07");
+    });
+
+    it("a Date keeps its time of day; a numeric string stays a string; a null boolean stays null", async () => {
+      const rows = people(3) as unknown as Array<Record<string, unknown>>;
+      (rows[0] as Record<string, unknown>).born = new Date(2024, 2, 5, 14, 30);
+      (rows[0] as Record<string, unknown>).age = "41";
+      (rows[1] as Record<string, unknown>).active = null;
+      const el = await grid('locale="es-PE"', undefined, rows as unknown as Person[]);
+      await open(el, "p0", "born");
+      await userEvent.keyboard("07/03/2024{Enter}");
+      await editorClosed(el);
+      expect(rows[0]?.born).toEqual(new Date(2024, 2, 7, 14, 30));
+      await open(el, "p0", "age");
+      await userEvent.keyboard("42{Enter}");
+      await editorClosed(el);
+      expect(rows[0]?.age).toBe("42");
+      await open(el, "p1", "active");
+      await userEvent.keyboard("{Enter}");
+      await editorClosed(el);
+      expect(rows[1]?.active).toBeNull();
+    });
+  });
+
+  describe("M3: typing during async validation", () => {
+    it("discards the pending verdict, keeps the editor and validates the new text", async () => {
+      const seen: string[] = [];
+      let release: Array<(message: string | null) => void> = [];
+      const el = await grid("", (g) => {
+        g.columns = [
+          {
+            id: "name",
+            header: "Name",
+            editable: true,
+            validate: (value) => {
+              seen.push(String(value));
+              return new Promise<string | null>((resolve) => release.push(resolve));
+            },
+          },
+        ];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      const changes = events(el, "cellchange");
+      await open(el, "p0", "name");
+      await userEvent.keyboard("A{Enter}");
+      await vi.waitFor(() => expect(seen).toEqual(["A"]));
+      await userEvent.keyboard("B");
+      release[0]?.(null);
+      await wait(30);
+      expect(editor(el)).toBeTruthy();
+      expect(changes).toEqual([]);
+      expect(input(el).value).toBe("AB");
+      await userEvent.keyboard("{Enter}");
+      await vi.waitFor(() => expect(seen).toEqual(["A", "AB"]));
+      release[1]?.(null);
+      await editorClosed(el);
+      expect(stored(el).name).toBe("AB");
+      release = [];
+    });
+
+    it("Escape aborts the validator's signal", async () => {
+      let signal: AbortSignal | undefined;
+      const el = await grid("", (g) => {
+        g.columns = [
+          {
+            id: "name",
+            header: "Name",
+            editable: true,
+            validate: (_value, _row, abort) => {
+              signal = abort;
+              return new Promise<string | null>(() => {});
+            },
+          },
+        ];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      await open(el, "p0", "name");
+      await userEvent.keyboard("A{Enter}");
+      await vi.waitFor(() => expect(signal).toBeTruthy());
+      expect(signal?.aborted).toBe(false);
+      await userEvent.keyboard("{Escape}");
+      await editorClosed(el);
+      expect(signal?.aborted).toBe(true);
+      expect(stored(el).name).toBe("Person 0");
+    });
+  });
+
+  describe("M4: an edit that cannot be written is refused", () => {
+    it("frozen rows and function accessors without a setter are not editable in mutate mode", async () => {
+      const rows = people(2).map((row) => Object.freeze(row));
+      const el = await grid("", undefined, rows);
+      expect(await el.editCell("p0", "name")).toBe(false);
+      expect(editor(el)).toBeNull();
+      const fn = await grid("", (g) => {
+        g.columns = [
+          { id: "full", header: "Full", editable: true, accessor: (r: Person) => r.name },
+        ];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      expect(await fn.editCell("p0", "full")).toBe(false);
+      const emitting = await grid('edit-mode="emit"', undefined, rows);
+      expect(await emitting.editCell("p0", "name")).toBe(true);
+    });
+
+    it("a setter that throws keeps the editor open with an error", async () => {
+      const el = await grid("", (g) => {
+        g.columns = [
+          {
+            id: "name",
+            header: "Name",
+            editable: true,
+            setter: () => {
+              throw new Error("read-only");
+            },
+          },
+        ];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      await open(el, "p0", "name");
+      await userEvent.keyboard("X{Enter}");
+      await vi.waitFor(() => expect(input(el).getAttribute("aria-invalid")).toBe("true"));
+      expect(document.querySelector("[data-ui-part=edit-error]")?.textContent).toMatch(/saved/);
+      warn.mockRestore();
+    });
+
+    it("a refused edit moves neither focus nor scroll", async () => {
+      const el = await grid("", undefined, people(300));
+      const viewport = el.querySelector<HTMLElement>("[data-ui-part=viewport]") as HTMLElement;
+      const focused = active();
+      const top = viewport.scrollTop;
+      expect(await el.editCell("p250", "readonly")).toBe(false);
+      el.addEventListener("beforecelledit", (event) => event.preventDefault());
+      expect(await el.editCell("p250", "name")).toBe(false);
+      await frame();
+      expect(viewport.scrollTop).toBe(top);
+      expect(active()).toBe(focused);
+    });
+  });
+
+  describe("M5 / M6: numbers in the grid's locale", () => {
+    it.each(["sv-SE", "nb-NO", "ar-EG"])("a negative decimal round-trips in %s", async (locale) => {
+      const rows = people(2);
+      (rows[0] as Person).age = -5.5;
+      const el = await grid(`locale="${locale}"`, undefined, rows);
+      const changes = events(el, "cellchange");
+      await open(el, "p0", "age");
+      expect(input(el).value).not.toMatch(/[\u2212\u200e\u200f\u061c]/);
+      expect(input(el).value.startsWith("-")).toBe(true);
+      // Touch it (type the same text back) and commit: it must parse, not complain.
+      const draft = input(el).value;
+      input(el).select();
+      await userEvent.keyboard(`${draft}0{Enter}`);
+      await editorClosed(el);
+      expect(stored(el).age).toBe(changes.length ? stored(el).age : -5.5);
+      expect(editor(el)).toBeNull();
+    });
+
+    it("native digits and the true minus are read", async () => {
+      const el = await grid('locale="ar-EG"');
+      await open(el, "p0", "age");
+      await userEvent.keyboard("\u0661\u0662\u0663{Enter}");
+      await editorClosed(el);
+      expect(stored(el).age).toBe(123);
+      const sv = await grid('locale="sv-SE"');
+      await open(sv, "p0", "age");
+      await userEvent.keyboard("\u22125{Enter}");
+      await editorClosed(sv);
+      expect(stored(sv).age).toBe(-5);
+    });
+
+    it.each([
+      ["en-US", "1.234,5"],
+      ["en-US", "1,2,3"],
+      ["de-DE", "1.234.5"],
+      ["de-DE", "1,234.5"],
+    ])("%s refuses %j", async (locale, text) => {
+      const el = await grid(`locale="${locale}"`);
+      const changes = events(el, "cellchange");
+      await open(el, "p0", "age");
+      await userEvent.keyboard(`${text}{Enter}`);
+      await vi.waitFor(() => expect(input(el).getAttribute("aria-invalid")).toBe("true"));
+      expect(changes).toEqual([]);
+    });
+  });
+
+  describe("minors", () => {
+    it("m1: disconnecting the grid mid-edit cancels, it does not commit", async () => {
+      const el = await grid();
+      const changes = events(el, "cellchange");
+      await open(el, "p0", "name");
+      await userEvent.keyboard("Half typed");
+      const host = el.parentElement as HTMLElement;
+      host.remove();
+      await wait(50);
+      expect(changes).toEqual([]);
+      expect(stored(el).name).toBe("Person 0");
+      document.body.append(host);
+    });
+
+    it("m3: with an error, clicking away hides the message until focus returns", async () => {
+      const el = await grid("", (g) => {
+        g.columns = [{ id: "name", header: "Name", editable: true, validate: () => "Nope" }];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      await open(el, "p0", "name");
+      await userEvent.keyboard("x{Enter}");
+      const tip = () => document.querySelector<HTMLElement>("[data-ui-part=edit-error]");
+      await vi.waitFor(() => expect(tip()?.matches(":popover-open")).toBe(true));
+      await userEvent.click(document.body);
+      await vi.waitFor(() => expect(tip()?.matches(":popover-open")).toBe(false));
+      expect(input(el).getAttribute("aria-invalid")).toBe("true");
+      input(el).focus();
+      await vi.waitFor(() => expect(tip()?.matches(":popover-open")).toBe(true));
+    });
+
+    it("m4: cells that cannot be edited are aria-readonly, only in an editing grid", async () => {
+      const el = await grid();
+      await vi.waitFor(() =>
+        expect(cell(el, "p0", "readonly").getAttribute("aria-readonly")).toBe("true"),
+      );
+      expect(cell(el, "p0", "name").hasAttribute("aria-readonly")).toBe(false);
+      const plain = await grid("", (g) => {
+        g.columns = [{ id: "name", header: "Name" }];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      expect(cell(plain, "p0", "name").hasAttribute("aria-readonly")).toBe(false);
+    });
+
+    it("m5: a commit is announced in the status region", async () => {
+      const el = await grid();
+      await open(el, "p0", "name");
+      await userEvent.keyboard("Zed{Enter}");
+      await vi.waitFor(() =>
+        expect(el.querySelector("[data-ui-part=status]")?.textContent).toBe("Name updated"),
+      );
+    });
+
+    it("m6: AltGr characters and emoji start an edit; an IME key opens it unseeded", async () => {
+      const el = await grid();
+      const key = (cellKey: string, init: KeyboardEventInit) => {
+        const target = cell(el, cellKey, "name");
+        target.focus();
+        target.dispatchEvent(
+          new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init }),
+        );
+      };
+      key("p0", { key: "\u20ac", ctrlKey: true, altKey: true });
+      await editorOpen(el);
+      expect(input(el).value).toBe("\u20ac");
+      await userEvent.keyboard("{Escape}");
+      await editorClosed(el);
+      key("p0", { key: "\u{1F600}" });
+      await editorOpen(el);
+      expect(input(el).value).toBe("\u{1F600}");
+      await userEvent.keyboard("{Escape}");
+      await editorClosed(el);
+      key("p0", { key: "Process" });
+      await editorOpen(el);
+      expect(input(el).value).toBe("Person 0");
+    });
+
+    it("m7: Tab on the last editable cell commits and leaves the grid in one press", async () => {
+      const el = await grid("", undefined, people(2));
+      el.parentElement?.insertAdjacentHTML("afterend", '<button id="after">after</button>');
+      await open(el, "p1", "born");
+      await userEvent.keyboard("{Tab}");
+      await vi.waitFor(() => expect(active().id).toBe("after"));
+      expect(editor(el)).toBeNull();
+    });
+
+    it("m9: Escape and commit both keep the editor semantics for a NaN from parse", async () => {
+      const el = await grid("", (g) => {
+        g.columns = [{ id: "age", header: "Age", editable: true, parse: () => Number.NaN }];
+        g.rows = people(2);
+        g.rowKey = "id";
+      });
+      await open(el, "p0", "age");
+      await userEvent.keyboard("5{Enter}");
+      await vi.waitFor(() => expect(input(el).getAttribute("aria-invalid")).toBe("true"));
+    });
   });
 });
 

@@ -84,6 +84,10 @@ export interface GridLabels {
   invalidNumber?: string;
   invalidDate?: string;
   invalidValue?: string;
+  /** Shown when the edited value cannot be stored (a frozen row, a refusing setter). */
+  unwritable?: string;
+  /** Announced after a cell is edited, after the column header. */
+  cellUpdated?: string;
 }
 
 const LABELS: GridLabels = {
@@ -157,7 +161,7 @@ const ATTRIBUTE_FLAGS: Record<string, number> = {
   "sort-manual": F_VIEW,
   "column-menu": F_PAINT,
   reorderable: F_PAINT,
-  editable: F_PAINT,
+  editable: F_CONTENT,
 };
 
 // biome-ignore lint/suspicious/noExplicitAny: rows are whatever the consumer passes.
@@ -287,7 +291,11 @@ const validTag = (tag: string | undefined): tag is string =>
  * `aria-describedby` point at the message and the cell is `aria-busy` while it is pending. The
  * value is written with `column.setter`, else the property accessor; with `edit-mode="emit"` the
  * row is never touched and the consumer applies `cellchange` (`{rowKey, columnId, row, oldValue,
- * newValue}`), e.g. for immutable data.
+ * newValue}`), e.g. for immutable data: until the consumer replaces `rows` the cell shows the old
+ * value again. A row that cannot be written (frozen, or a function accessor without `setter`) is not
+ * editable in `mutate` mode. `validate` receives an `AbortSignal` that fires when the edit is
+ * cancelled or changed. A failed chunk load fires `editerror` and is retried by the next edit.
+ * Cells that cannot be edited get `aria-readonly` while the grid has editing.
  *
  * Attributes: `label`, `locale`, `editable`, `edit-mode` (`mutate` | `emit`), `selection` (`none` | `single` | `multi`; multi adds a checkbox
  * column), `density` (`compact` | `normal` | `comfortable`) or `row-height` (px), `sort`
@@ -390,7 +398,11 @@ export class UiDataGrid extends ElementBase {
   #revealActive = false;
   #entered: HTMLElement | null = null;
   #editing: { key: string; id: string } | null = null;
-  #editLoad: Promise<typeof import("./edit.js")> | undefined;
+  #editLoad: Promise<typeof import("./edit.js") | undefined> | undefined;
+  /** The editor chunk is installed (`true`), failed to load (`false`) or not asked for yet. */
+  #edit: boolean | undefined;
+  /** The grid has editing: the `editable` attribute or a column with `editable`. */
+  #editOn = false;
   #scrolled = { start: false, end: false };
   #dragging = false;
   #resizeFrame = 0;
@@ -707,7 +719,9 @@ export class UiDataGrid extends ElementBase {
     columnId: string,
     options: { trigger?: EditTrigger; seed?: string } = {},
   ): Promise<boolean> {
-    return this.#loadEdit().then((edit) => edit.beginEdit(this, rowKey, columnId, options));
+    return this.#loadEdit().then(
+      (edit) => edit?.beginEdit(this, rowKey, columnId, options) ?? false,
+    );
   }
 
   /**
@@ -729,11 +743,28 @@ export class UiDataGrid extends ElementBase {
       : { rowKey: this.#keyAt(v), columnId: this.#renderIds[at % n] as string };
   }
 
-  #loadEdit(): Promise<typeof import("./edit.js")> {
-    this.#editLoad ??= import("./edit.js").then((edit) => {
-      edit.install(this);
-      return edit;
-    });
+  #editable(column: Col, row: Row): boolean {
+    const editable = column.editable;
+    return (
+      row != null &&
+      (typeof editable === "function" ? editable(row) : (editable ?? this.hasAttribute("editable")))
+    );
+  }
+
+  /** Loads the editor chunk; a failure fires `editerror`, resolves to `undefined` and can be retried. */
+  #loadEdit(): Promise<typeof import("./edit.js") | undefined> {
+    this.#editLoad ??= import("./edit.js")
+      .then((edit) => {
+        edit.install(this, { emit, getCellValue });
+        this.#edit = true;
+        return edit;
+      })
+      .catch((error) => {
+        this.#edit = false;
+        this.#editLoad = undefined;
+        emit(this, "editerror", { error });
+        return undefined;
+      });
     return this.#editLoad;
   }
 
@@ -1118,7 +1149,10 @@ export class UiDataGrid extends ElementBase {
       this.#computeLayout();
       this.#geoEpoch += 1;
     }
-    if (flags & F_CONTENT) this.#contentEpoch += 1;
+    if (flags & F_CONTENT) {
+      this.#contentEpoch += 1;
+      this.#editOn = this.hasAttribute("editable") || this.#columns.some((c) => c.editable);
+    }
     if (flags & (F_VIEW | F_GEOMETRY)) this.#clampActive();
     if (flags & (F_VIEW | F_GEOMETRY | F_CONTENT)) this.#applyMetrics();
     if (flags & (F_VIEW | F_CONTENT | F_GEOMETRY | F_PAINT)) {
@@ -1141,8 +1175,7 @@ export class UiDataGrid extends ElementBase {
       this.#syncTabStop();
     }
     this.#applySelection();
-    if (!this.#editLoad && (this.hasAttribute("editable") || this.#columns.some((c) => c.editable)))
-      void this.#loadEdit();
+    if (this.#editOn && this.#edit === undefined && !this.#editLoad) void this.#loadEdit();
   }
 
   #hasFocus(): boolean {
@@ -1491,6 +1524,8 @@ export class UiDataGrid extends ElementBase {
     if (!column) return;
     const align = columnAlign(column);
     if (cell.dataset.align !== align) cell.dataset.align = align;
+    // In an editing grid, the cells that cannot be edited say so.
+    cell.ariaReadOnly = this.#editOn && !this.#editable(column, row) ? "true" : null;
     const value: CellValue = getCellValue(row, column);
     const formatted = formatCellValue(value, column, {
       locale: this.#locale,
@@ -1765,6 +1800,23 @@ export class UiDataGrid extends ElementBase {
       if (mod && event.key.toLowerCase() === "a" && this.selection === "multi") {
         event.preventDefault();
         this.#setSelection(toggleAll(EMPTY_SELECTION, "multi", this.#selectionRows()));
+        return;
+      }
+      const typed = event.key.length === 1 && event.key !== " " && !mod && !event.altKey;
+      const column = this.#byId.get(id);
+      // The editor chunk is still on its way: its first keys must not be lost or mean something else.
+      if (
+        this.#editOn &&
+        !this.#edit &&
+        column &&
+        (typed || event.key === "Enter" || event.key === "F2") &&
+        this.#editable(column, this.#rowAt(row - 1))
+      ) {
+        event.preventDefault();
+        void this.editCell(key, id, {
+          trigger: typed ? "type" : (event.key.toLowerCase() as "enter" | "f2"),
+          seed: typed ? event.key : undefined,
+        });
         return;
       }
       if (event.key === "Enter" || event.key === "F2") {

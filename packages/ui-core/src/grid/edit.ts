@@ -42,34 +42,60 @@ export function normalizeOptions(
   );
 }
 
-interface Separators {
+interface NumberFormat {
   group: string;
   decimal: string;
+  /** Native digit -> ASCII digit, and native separators -> the Latin ones (e.g. Arabic-Indic). */
+  native: Map<string, string>;
+  /** Groups of 2 digits above the first three (hi-IN, en-IN). */
+  indian: boolean;
 }
 
-const separators = new Map<string, Separators>();
+const formats = new Map<string, NumberFormat>();
 
-function separatorsOf(locale: string): Separators {
-  let found = separators.get(locale);
+function numberFormat(locale: string): NumberFormat {
+  let found = formats.get(locale);
   if (!found) {
-    const parts = new Intl.NumberFormat(locale).formatToParts(-12345.6);
-    const pick = (type: string, fallback: string) =>
+    const pick = (parts: Intl.NumberFormatPart[], type: string, fallback: string) =>
       parts.find((part) => part.type === type)?.value ?? fallback;
-    found = { group: pick("group", ","), decimal: pick("decimal", ".") };
-    separators.set(locale, found);
+    const latin = new Intl.NumberFormat(locale, { numberingSystem: "latn" }).formatToParts(
+      -12345.6,
+    );
+    const local = new Intl.NumberFormat(locale);
+    const group = pick(latin, "group", ",");
+    const decimal = pick(latin, "decimal", ".");
+    const native = new Map<string, string>();
+    const parts = local.formatToParts(-12345.6);
+    native.set(pick(parts, "group", group), group);
+    native.set(pick(parts, "decimal", decimal), decimal);
+    const digits = new Intl.NumberFormat(locale, { useGrouping: false });
+    for (let digit = 0; digit < 10; digit += 1) native.set(digits.format(digit), String(digit));
+    found = { group, decimal, native, indian: /\D\d{2}\D\d{3}$/.test(local.format(1234567)) };
+    formats.set(locale, found);
   }
   return found;
 }
 
+/** Bidi marks, and the true minus sign (sv-SE, nb-NO) read as a hyphen. */
+const normalizeSigns = (text: string) =>
+  text
+    .replace(/[\u200e\u200f\u061c\u202a-\u202e\u2066-\u2069]/g, "")
+    .replace(/[\u2212\u2012-\u2014]/g, "-");
+
 /**
- * A number from text typed in `locale`: its group separator (any kind of space included) is
- * dropped and its decimal mark is read as the point. A lone group mark followed by fewer or more
- * than three digits is read as the decimal mark (`12,5` in English), the way people type it.
- * `null` when the text is not a number (empty text included: callers check it first).
+ * A number from text typed in `locale`: native digits and separators are read as Latin ones, any
+ * kind of space is dropped, and the decimal mark is the locale's. Group marks are only valid in the
+ * integer part and every three digits (`1,234,567`); `1,2,3` or `1.234.5` are not numbers. A lone
+ * group mark followed by other than three digits is read as the decimal mark (`12,5` in English),
+ * the way people type it. `null` when the text is not a number (empty text included).
  */
 export function parseNumber(text: string, locale: string): number | null {
-  const { group, decimal } = separatorsOf(locale);
-  let clean = text.replace(/[\s  ]/g, "");
+  const { group, decimal, native, indian } = numberFormat(locale);
+  let clean = "";
+  for (const char of normalizeSigns(text).replace(/[\s\u00a0\u202f]/g, ""))
+    clean += native.get(char) ?? char;
+  const sign = /^[+-]/.test(clean) ? (clean.startsWith("-") ? -1 : 1) : 0;
+  if (sign) clean = clean.slice(1);
   const marks = (mark: string) => clean.split(mark).length - 1;
   if (
     !clean.includes(decimal) &&
@@ -77,10 +103,15 @@ export function parseNumber(text: string, locale: string): number | null {
     !new RegExp(`\\${group}\\d{3}$`).test(clean)
   )
     clean = clean.replace(group, decimal);
-  clean = clean.split(group).join("").replace(decimal, ".");
-  if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(clean)) return null;
-  const value = Number(clean);
-  return Number.isFinite(value) ? value : null;
+  if (marks(decimal) > 1) return null;
+  const [whole = "", fraction = ""] = clean.split(decimal);
+  const g = `\\${group}`;
+  const pattern = indian ? `\\d{1,2}(${g}\\d{2})*${g}\\d{3}` : `\\d{1,3}(${g}\\d{3})+`;
+  const grouped = new RegExp(`^(${pattern}|\\d+)$`);
+  if (!grouped.test(whole) && whole !== "") return null;
+  if (!/^\d*$/.test(fraction) || (whole === "" && fraction === "")) return null;
+  const value = Number(`${whole.split(group).join("") || "0"}.${fraction || "0"}`);
+  return Number.isFinite(value) ? (sign < 0 ? -value : value) : null;
 }
 
 interface DatePattern {
@@ -97,6 +128,7 @@ function patternOf(locale: string): DatePattern {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
+      numberingSystem: "latn",
     }).formatToParts(new Date(2000, 10, 22));
     const order = parts
       .map((part) => part.type)
@@ -112,6 +144,8 @@ function patternOf(locale: string): DatePattern {
   }
   return found;
 }
+
+const pad = (value: number, size: number) => String(value).padStart(size, "0");
 
 /** The date as it is typed in `locale`: two-digit day and month, four-digit year (`22/11/2000`). */
 export function formatDateDraft(date: Date, locale: string): string {
@@ -132,11 +166,18 @@ export function datePlaceholder(locale: string): string {
     .join(separator);
 }
 
-const pad = (value: number, size: number) => String(value).padStart(size, "0");
+/** A two-digit year in the century that puts it within 50 years of `now`. */
+function expandYear(year: number, now = new Date().getFullYear()): number {
+  let full = Math.floor(now / 100) * 100 + year;
+  if (full - now > 50) full -= 100;
+  else if (now - full >= 50) full += 100;
+  return full;
+}
 
 /**
  * A date from text typed in `locale` (day, month and year in that locale's order) or as ISO
- * `yyyy-mm-dd`. A two-digit year is read as 20xx. `null` for an impossible date such as 31/02.
+ * `yyyy-mm-dd`, as a LOCAL date at midnight. A two-digit year is read within 50 years of today.
+ * `null` for an impossible date such as 31/02.
  */
 export function parseDate(text: string, locale: string): Date | null {
   const parts = text.trim().split(/\D+/).filter(Boolean);
@@ -145,7 +186,7 @@ export function parseDate(text: string, locale: string): Date | null {
   const order = iso ? (["year", "month", "day"] as const) : patternOf(locale).order;
   const get = (name: string) => Number(parts[order.indexOf(name as "day")]);
   let year = get("year");
-  if (!iso && (parts[order.indexOf("year")] as string).length <= 2) year += 2000;
+  if (!iso && (parts[order.indexOf("year")] as string).length <= 2) year = expandYear(year);
   const month = get("month");
   const day = get("day");
   const date = new Date(year, month - 1, day);
@@ -155,18 +196,54 @@ export function parseDate(text: string, locale: string): Date | null {
     : null;
 }
 
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** A stored date value as a Date: a date-only ISO string is the LOCAL day, not UTC midnight. */
+export function toDate(value: CellValue): Date | null {
+  if (value instanceof Date) return value;
+  if (typeof value !== "string") return null;
+  const day = DATE_ONLY.exec(value);
+  const date = day ? new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3])) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 /** The text an editor starts with for a stored value. */
 export function draftText(kind: EditorKind | "custom", value: CellValue, locale: string): string {
   if (value === null || value === undefined) return "";
   if (kind === "date") {
-    const date = value instanceof Date ? value : new Date(value as string);
-    return Number.isNaN(date.getTime()) ? String(value) : formatDateDraft(date, locale);
+    const date = toDate(value);
+    return date ? formatDateDraft(date, locale) : String(value);
   }
   if (kind === "number" && typeof value === "number")
-    return new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 20 }).format(
-      value,
+    return normalizeSigns(
+      new Intl.NumberFormat(locale, {
+        useGrouping: false,
+        maximumFractionDigits: 20,
+        numberingSystem: "latn",
+      }).format(value),
     );
   return String(value);
+}
+
+/**
+ * The value to store for an edited `value`, in the type of the `original`: a date-only ISO string
+ * stays a date-only string, an ISO timestamp keeps its time of day and format, a date keeps its
+ * time of day, and a numeric string stays a string. Anything else is returned as is.
+ */
+export function likeOriginal(value: CellValue, original: CellValue): CellValue {
+  if (value === null || value === undefined) return value;
+  if (value instanceof Date && original !== null && original !== undefined) {
+    const at = toDate(original);
+    if (!at) return value;
+    const next = new Date(value.getTime());
+    next.setHours(at.getHours(), at.getMinutes(), at.getSeconds(), at.getMilliseconds());
+    if (typeof original !== "string") return next;
+    return DATE_ONLY.test(original)
+      ? `${pad(value.getFullYear(), 4)}-${pad(value.getMonth() + 1, 2)}-${pad(value.getDate(), 2)}`
+      : next.toISOString();
+  }
+  if (typeof value === "number" && typeof original === "string") return String(value);
+  return value;
 }
 
 export type DraftResult =
@@ -175,7 +252,7 @@ export type DraftResult =
 
 /**
  * The value a text editor stores: the column's `parse`, else the built-in for its kind. Empty text
- * stores `null` for numbers and dates and `""` for text.
+ * stores `null` for numbers and dates and `""` for text. A `parse` that returns `NaN` is an error.
  */
 export function parseDraft<T>(
   column: GridColumn<T>,
@@ -186,6 +263,7 @@ export function parseDraft<T>(
 ): DraftResult {
   if (column.parse) {
     const result = column.parse(text, { row, locale });
+    if (typeof result === "number" && Number.isNaN(result)) return { error: "parse" };
     if (typeof result === "object" && result !== null && !(result instanceof Date))
       return { error: "parse", message: result.error };
     return { value: result };
@@ -199,17 +277,19 @@ export function parseDraft<T>(
 }
 
 /**
- * Runs the column's `validate`, which may be asynchronous. Resolves to the error message, or
- * `null` when the value is accepted. A validator that throws refuses the value with its message.
+ * Runs the column's `validate`, which may be asynchronous and gets an `AbortSignal` that fires
+ * when the edit is cancelled, changed or superseded. Resolves to the error message, or `null`
+ * when the value is accepted. A validator that throws refuses the value with its message.
  */
 export async function validateValue<T>(
   column: GridColumn<T>,
   value: CellValue,
   row: T,
+  signal?: AbortSignal,
 ): Promise<string | null> {
   if (!column.validate) return null;
   try {
-    return (await column.validate(value, row)) || null;
+    return (await column.validate(value, row, signal)) || null;
   } catch (error) {
     return error instanceof Error && error.message ? error.message : "Invalid value";
   }

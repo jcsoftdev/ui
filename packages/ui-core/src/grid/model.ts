@@ -101,6 +101,7 @@ export interface GridColumn<T> {
   validate?: (
     value: CellValue,
     row: T,
+    signal?: AbortSignal,
   ) => string | null | undefined | Promise<string | null | undefined>;
   /** Turns the editor's text into the value to store (text, number and date editors). */
   parse?: (text: string, context: { row: T; locale: string }) => CellParseResult;
