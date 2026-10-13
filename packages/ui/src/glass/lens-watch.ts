@@ -1,3 +1,5 @@
+import { supportsBackdropRefraction } from "./support.js";
+
 /** Preferences that flip the `--glass-lens` flag in CSS; the engine is brought back when cleared. */
 const PREFERENCES = [
   "(prefers-reduced-transparency: reduce)",
@@ -19,7 +21,9 @@ export function watchGlassLens(element: HTMLElement, ownInteractive: boolean): (
   let stop: (() => void) | undefined;
   let loading = false;
   let gone = false;
+  // Where the engine cannot paint (Safari, Firefox) it would never install: it is not even loaded.
   const wants = () =>
+    supportsBackdropRefraction() &&
     !element.closest('[data-glass-lens="off"]') &&
     getComputedStyle(element).getPropertyValue("--glass-lens").trim() === "1";
   const check = () => {

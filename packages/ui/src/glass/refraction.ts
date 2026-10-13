@@ -1,18 +1,16 @@
 import {
   bezelFor,
-  createCrystalMap,
   createDisplacementMap,
-  createSpecularMap,
-  crystalAmplitude,
-  crystalMargin,
   FULL_CAP,
   isWhole,
   type LensCoverage,
   scaleFor,
   VEIL_FLOOR,
 } from "./displacement-map.js";
+import type { CrystalLens } from "./lens-crystal.js";
 import { startLiquidMotion } from "./liquid-motion.js";
 import { LIQUID_DEFAULTS, liquidShadow } from "./liquid-options.js";
+import { createSpecularMap } from "./specular-map.js";
 import { supportsBackdropRefraction } from "./support.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -107,37 +105,32 @@ const MAX_ACTIVE = 8;
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
 
-/** Ancestors that cut the backdrop: whatever lies past their edge is not there for a backdrop filter. */
-function clippingAncestors(element: Element): Element[] {
-  const found: Element[] = [];
-  for (let node = element.parentElement; node; node = node.parentElement) {
-    const style = getComputedStyle(node);
-    const clips =
-      style.clipPath !== "none" ||
-      [style.overflowX, style.overflowY].some((value) => value !== "visible") ||
-      /paint|strict|content/.test(style.contain);
-    if (clips) found.push(node);
-  }
-  return found;
-}
-
 /**
- * How much backdrop lies past each side of `element`, in px, up to `margin` and rounded down to
- * `step` (so a surface dragged along an edge does not rebuild its map on every pixel).
+ * The opt-in parts of the lens are their own lazy chunks, imported the first time a surface asks
+ * for them: a plain lens never loads the crystal layer or the dispersion passes.
  */
-function backdropRoom(element: Element, clips: Element[], margin: number, step = 12) {
-  const box = element.getBoundingClientRect();
-  const room = { left: margin, right: margin, top: margin, bottom: margin };
-  for (const clip of clips) {
-    const edge = clip.getBoundingClientRect();
-    room.left = Math.min(room.left, box.left - edge.left);
-    room.right = Math.min(room.right, edge.right - box.right);
-    room.top = Math.min(room.top, box.top - edge.top);
-    room.bottom = Math.min(room.bottom, edge.bottom - box.bottom);
+const features = {
+  crystal: undefined as typeof import("./lens-crystal.js") | undefined,
+  dispersion: undefined as typeof import("./lens-dispersion.js") | undefined,
+};
+const loaders = {
+  crystal: () => import("./lens-crystal.js"),
+  dispersion: () => import("./lens-dispersion.js"),
+};
+const pending = new Map<keyof typeof features, Promise<void>>();
+/** Loads a feature once; resolves when it is there (a failed chunk leaves the plain liquid look). */
+function loadFeature(name: keyof typeof features): Promise<void> {
+  let promise = pending.get(name);
+  if (!promise) {
+    promise = loaders[name]().then(
+      (module) => {
+        (features as Record<string, unknown>)[name] = module;
+      },
+      () => {},
+    );
+    pending.set(name, promise);
   }
-  for (const side of ["left", "right", "top", "bottom"] as const)
-    room[side] = Math.min(margin, Math.max(0, Math.floor(room[side] / step) * step));
-  return room;
+  return promise;
 }
 
 let counter = 0;
@@ -304,8 +297,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     schedule(next);
   };
 
-  /** The crystal lens lives on a layer that extends past the surface; this puts the surface back. */
-  let undoCrystal = () => {};
+  /** The crystal lens lives on a layer that extends past the surface; `undo` puts the surface back. */
+  let crystalLens: CrystalLens | undefined;
 
   const uninstall = () => {
     if (!installed) return;
@@ -320,7 +313,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     if (originalPrefixed) element.style.setProperty("-webkit-backdrop-filter", originalPrefixed);
     else element.style.removeProperty("-webkit-backdrop-filter");
     delete element.dataset.glassRefraction;
-    undoCrystal();
+    crystalLens?.undo();
+    crystalLens = undefined;
     element.style.removeProperty("--glass-veil");
     element.style.removeProperty("--glass-lens-tint");
     element.style.removeProperty("--liquid-size");
@@ -351,6 +345,20 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       }
       return;
     }
+    const dispersion = dispersionFor(element.offsetWidth * element.offsetHeight);
+    const crystal = coverageFor() === "crystal";
+    const missing = [
+      ...(crystal && !features.crystal ? [loadFeature("crystal")] : []),
+      ...(dispersion > 0 && !features.dispersion ? [loadFeature("dispersion")] : []),
+    ];
+    if (missing.length) {
+      // Keep the plain liquid look until the parts this surface needs have loaded.
+      Promise.all(missing).then(() => {
+        if ((features.crystal || !crystal) && (features.dispersion || dispersion <= 0))
+          schedule(sync);
+      });
+      return;
+    }
     const displacers: Array<{ node: Element; factor: number }> = [];
     let baseScale = options.scale ?? 0;
     let level = options.animate === false || !intro ? 1 : 0;
@@ -359,8 +367,6 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       for (const { node: target, factor } of displacers)
         target.setAttribute("scale", String(baseScale * factor * level));
     };
-    const dispersion = dispersionFor(element.offsetWidth * element.offsetHeight);
-    const crystal = coverageFor() === "crystal";
     let specularImage: SVGElement | undefined;
     const id = `ui-glass-lens-${++counter}`;
     const filter = document.createElementNS(SVG_NS, "filter");
@@ -378,7 +384,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     // pre-filtering they alias into sparkle (and into rainbow noise with dispersion).
     if (crystal)
       node("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "0.7", result: "pre" });
-    const displace = (channel: string | undefined, factor: number) =>
+    const displace = (channel: string, factor: number) =>
       displacers.push({
         node: node("feDisplacementMap", {
           in: crystal ? "pre" : "SourceGraphic",
@@ -390,42 +396,9 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         }),
         factor,
       });
-    // Chromatic dispersion: the three colour channels are displaced by slightly different
-    // amounts (blue the least, red the most, so the rim fringes like real glass) and added back.
-    if (dispersion > 0) {
-      const keep = {
-        r: "1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0",
-        g: "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0",
-        b: "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0",
-      } as const;
-      // The crystal's offsets are large, so the same fraction would paint a noisy rainbow.
-      const spread = crystal ? dispersion * 0.6 : dispersion;
-      const factors = { r: 1 + spread, g: 1, b: 1 - spread } as const;
-      for (const c of ["r", "g", "b"] as const) {
-        displace(c, factors[c]);
-        node("feColorMatrix", { in: `d${c}`, type: "matrix", values: keep[c], result: c });
-      }
-      node("feComposite", {
-        in: "r",
-        in2: "g",
-        operator: "arithmetic",
-        k1: "0",
-        k2: "1",
-        k3: "1",
-        k4: "0",
-        result: "rg",
-      });
-      node("feComposite", {
-        in: "rg",
-        in2: "b",
-        operator: "arithmetic",
-        k1: "0",
-        k2: "1",
-        k3: "1",
-        k4: "0",
-        result: "lens",
-      });
-    } else displace("lens", 1);
+    if (dispersion > 0 && features.dispersion)
+      features.dispersion.addDispersion({ node, displace }, dispersion, crystal);
+    else displace("lens", 1);
     // Frosted middle, sharp rim: the blue channel of the map says how soft the backdrop is. The
     // lens is blurred in here (not by the CSS blur, which would soften the rim too) and mixed
     // back with the sharp lens by that weight.
@@ -573,91 +546,18 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
 
     const blur = rest;
 
-    // The crystal lens samples the backdrop outside the surface (it minifies), which a filter on
-    // the surface itself cannot see. So the filter goes on a layer that extends past the surface
-    // by the largest offset, clipped back to the silhouette; the surface's own backdrop filter,
-    // background and inset shadows move to (or under) that layer's siblings, because the layer
-    // must be the lowest thing in the surface.
-    let layer: HTMLElement | undefined;
-    if (crystal) {
-      const saved = {
-        position: element.style.position,
-        isolation: element.style.isolation,
-        overflow: element.style.overflow,
-        boxShadow: element.style.boxShadow,
-        backgroundImage: element.style.backgroundImage,
-        backgroundColor: element.style.backgroundColor,
-        backdropFilter: original,
-      };
-      if (getComputedStyle(element).position === "static") element.style.position = "relative";
-      element.style.isolation = "isolate";
-      element.style.overflow = "visible";
-      element.style.backgroundImage = "none";
-      element.style.backgroundColor = "transparent";
-      element.style.setProperty("--glass-lens-tint", "transparent");
-      const border = element.matches(".liquid-clear")
-        ? "--glass-clear-border"
-        : "--glass-regular-border";
-      // Nothing the surface paints may sit under the layer: the lens would minify its own ring and
-      // drop shadow into view. They all move to the skin, which paints above the layer.
-      element.style.boxShadow = "none";
-      const make = (css: string) => {
-        const span = document.createElement("span");
-        span.setAttribute("aria-hidden", "true");
-        span.style.cssText = `position:absolute;z-index:-1;pointer-events:none;${css}`;
-        return span;
-      };
-      layer = make("border-radius:0;");
-      layer.dataset.glassLensLayer = "";
-      layer.style.backdropFilter = `${blur}url(#${id})`;
-      layer.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
-      const skin = make(
-        "inset:0;border-radius:inherit;" +
-          "background-image:var(--glass-noise),radial-gradient(circle at var(--liquid-glow-x,50%) var(--liquid-glow-y,50%),color-mix(in srgb,white calc(var(--liquid-glow,0)*15%),transparent),transparent 70%),linear-gradient(var(--liquid-tint-fill),var(--liquid-tint-fill)),linear-gradient(var(--liquid-veil-fill),var(--liquid-veil-fill));" +
-          `box-shadow:var(--liquid-rim-auto,var(--liquid-rim-custom,var(--liquid-rim))),var(--liquid-depth),0 0 0 1px var(${border}),var(--liquid-shadow-custom,var(--liquid-shadow-auto,var(--liquid-shadow)));`,
-      );
-      skin.dataset.glassLensSkin = "";
-      element.prepend(skin);
-      element.prepend(layer);
-      const watch =
-        typeof MutationObserver === "function"
-          ? new MutationObserver(() => {
-              if (!layer?.isConnected || !skin.isConnected) schedule(sync);
-            })
-          : undefined;
-      watch?.observe(element, { childList: true });
-      undoCrystal = () => {
-        watch?.disconnect();
-        roomWatch?.disconnect();
-        layer?.remove();
-        skin.remove();
-        for (const [name, value] of Object.entries(saved)) {
-          if (name === "backdropFilter") continue;
-          element.style.setProperty(
-            name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`),
-            value,
-          );
-        }
-        undoCrystal = () => {};
-      };
-    }
-
-    // A surface that is moved towards the edge of a clipping ancestor (dragged, scrolled) loses
-    // backdrop on that side: the layer's overlap with the nearest clip tells when to look again.
-    let roomWatch: IntersectionObserver | undefined;
-    let roomRoot: Element | undefined;
-    const trackRoom = (clips: Element[]) => {
-      const root = clips[0];
-      if (root === roomRoot || !layer || typeof IntersectionObserver !== "function") return;
-      roomWatch?.disconnect();
-      roomRoot = root;
-      if (!root) return;
-      roomWatch = new IntersectionObserver(() => schedule(update), {
-        root,
-        threshold: Array.from({ length: 51 }, (_, i) => i / 50),
+    if (crystal && features.crystal)
+      crystalLens = features.crystal.installCrystal({
+        element,
+        id,
+        blur,
+        original,
+        filter,
+        image,
+        reinstall: () => schedule(sync),
+        resize: () => schedule(update),
       });
-      roomWatch.observe(layer);
-    };
+
     let key = "";
     let built = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -690,57 +590,19 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
           Math.round(Math.min(Math.max(Math.sqrt(width * height) / 240, 0.7), 1.5) * 100) / 100,
         ),
       );
-      if (crystal) {
-        const amplitude = crystalAmplitude(width, height, settings.refraction);
-        const margin = crystalMargin(amplitude, dispersion * 0.6);
-        const round = Math.min(radius, width / 2, height / 2);
-        const clips = clippingAncestors(element);
-        const room = backdropRoom(element, clips, margin);
-        const reach = 1 + dispersion * 0.6;
-        const wide = width + room.left + room.right;
-        const tall = height + room.top + room.bottom;
-        trackRoom(clips);
-        const crystalKey = [
-          "c",
+      if (crystalLens) {
+        const scale = crystalLens.update(
           width,
           height,
-          round,
-          amplitude,
-          margin,
+          radius,
+          settings.refraction,
+          dispersion,
           dpr,
-          room.left,
-          room.right,
-          room.top,
-          room.bottom,
-        ].join("x");
-        if (crystalKey === key) return;
-        key = crystalKey;
-        built = performance.now();
-        baseScale = (2 * Math.max(amplitude, 1) * 255) / 254;
-        applyScale();
-        const border = getComputedStyle(element);
-        const left = -(room.left + (Number.parseFloat(border.borderLeftWidth) || 0));
-        const top = -(room.top + (Number.parseFloat(border.borderTopWidth) || 0));
-        if (layer) {
-          layer.style.left = `${left}px`;
-          layer.style.top = `${top}px`;
-          layer.style.width = `${wide}px`;
-          layer.style.height = `${tall}px`;
-          layer.style.clipPath = `inset(${room.top}px ${room.right}px ${room.bottom}px ${room.left}px round ${round}px)`;
-        }
-        for (const [target, name, value] of [
-          [filter, "x", "0"],
-          [filter, "y", "0"],
-          [filter, "width", String(wide)],
-          [filter, "height", String(tall)],
-          [image, "width", String(wide)],
-          [image, "height", String(tall)],
-        ] as const)
-          target.setAttribute(name, value);
-        image.setAttribute(
-          "href",
-          createCrystalMap({ width, height, amplitude, dpr, margin, room, reach }),
         );
+        if (scale === undefined) return;
+        built = performance.now();
+        baseScale = scale;
+        applyScale();
         return;
       }
       const next = [

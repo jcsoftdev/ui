@@ -307,3 +307,80 @@ for (const [name, code] of [
   );
 }
 console.log("liquid glass lazy loading OK");
+
+// Liquid Glass tiers: each lazy step brings only its own feature. The lens watcher does not hold
+// the engine, the engine does not hold the crystal layer or the dispersion passes.
+{
+  const tiers = await build({
+    stdin: {
+      contents: `import { Topbar } from "@jcsoftdev/ui/shell"; console.log(Topbar);`,
+      resolveDir: process.cwd(),
+      loader: "js",
+    },
+    bundle: true,
+    splitting: true,
+    outdir: "out",
+    minify: true,
+    format: "esm",
+    write: false,
+    metafile: true,
+    external: ["react", "react-dom", "react/jsx-runtime", "react-dom/*"],
+  });
+  const outputs = tiers.metafile.outputs;
+  const holder = (module) =>
+    Object.keys(outputs).find((name) =>
+      Object.keys(outputs[name].inputs).some((input) => input.endsWith(module)),
+    );
+  const closure = (name, seen = new Set()) => {
+    if (seen.has(name)) return seen;
+    seen.add(name);
+    for (const dep of outputs[name].imports)
+      if (dep.kind === "import-statement" && !dep.external) closure(dep.path, seen);
+    return seen;
+  };
+  const inputsOf = (module) =>
+    [...closure(holder(module))].flatMap((name) => Object.keys(outputs[name].inputs));
+  const expectTier = (module, banned) => {
+    const inputs = inputsOf(module);
+    for (const other of banned)
+      assert.ok(!inputs.some((f) => f.includes(other)), `${module} must not hold "${other}"`);
+  };
+  expectTier("glass/lens-watch.js", [
+    "glass/refraction",
+    "glass/displacement-map",
+    "glass/liquid-motion",
+    "glass/liquid-options",
+  ]);
+  expectTier("glass/refraction.js", [
+    "glass/lens-crystal",
+    "glass/crystal-map",
+    "glass/lens-dispersion",
+  ]);
+  expectTier("glass/lens-dispersion.js", ["glass/lens-crystal", "glass/crystal-map"]);
+  for (const module of ["glass/lens-crystal.js", "glass/lens-dispersion.js"])
+    assert.ok(holder(module) !== holder("glass/refraction.js"), `${module} is its own lazy chunk`);
+}
+const preset = await keptFor(
+  `import { LIQUID_PRESET_CRYSTAL } from "@jcsoftdev/ui/glass"; console.log(LIQUID_PRESET_CRYSTAL);`,
+);
+for (const banned of [
+  "glass/refraction",
+  "glass/liquid-motion",
+  "glass/displacement-map",
+  "glass/crystal-map",
+])
+  assert.ok(
+    !preset.kept.some((f) => f.includes(banned)),
+    `a preset import must not include "${banned}"`,
+  );
+const plainMap = await keptFor(
+  `import { createDisplacementMap } from "@jcsoftdev/ui/glass"; console.log(createDisplacementMap);`,
+);
+for (const banned of ["glass/crystal-map", "glass/specular-map", "glass/refraction"])
+  assert.ok(
+    !plainMap.kept.some((f) => f.includes(banned)),
+    `createDisplacementMap must not include "${banned}"`,
+  );
+console.log(
+  `liquid glass tiers OK (preset ${preset.bytes} bytes, displacement map ${plainMap.bytes} bytes)`,
+);

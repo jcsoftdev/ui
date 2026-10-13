@@ -10,6 +10,18 @@
   imports the watcher after it mounts; the engine stays lazy as before. Non-liquid entries shrink
   by about 1.4 to 2 kB gzip (`shell` 12225 to 10437 B, `overlays` 29334 to 27564 B, `palette`
   19448 to 18019 B). No API change; `materialStyle` and `withMaterialStyle` stay synchronous.
+- The lens engine is split along its features. The crystal layer (`lens-crystal`, with
+  `crystal-map`) and the chromatic dispersion passes (`lens-dispersion`) are lazy chunks the engine
+  imports only for a surface that resolves to them, so a plain lens never fetches them and the
+  `crystal` preset fetches both. The specular and crystal map builders moved out of
+  `displacement-map` into `specular-map` and `crystal-map` (same exports from
+  `@jcsoftdev/ui/glass`). The lens watcher checks `supportsBackdropRefraction()` first, so
+  Safari and Firefox never load the engine.
+- Each preset is its own export: `LIQUID_PRESET_CLEAR`, `LIQUID_PRESET_REGULAR`,
+  `LIQUID_PRESET_THICK`, `LIQUID_PRESET_CRYSTAL` (`LIQUID_PRESETS` is unchanged).
+- `check:size` measures the liquid tiers of a Topbar (no liquid, lens watcher, options object,
+  refraction lens, crystal preset), and `check:treeshake` asserts that each lazy step holds only
+  its own feature.
 - A server loads the mapping at startup, so server-rendered markup keeps the `--liquid-*`
   variables of a material object. On a client-only render the first liquid material object
   shows the theme's liquid look until the chunk lands (one request, shared with the lens engine).

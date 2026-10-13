@@ -1,5 +1,5 @@
 {
-  "_comment": "gzip budgets in bytes per entry (~5-8% headroom); JS entries count the entry chunk and its static imports, not lazy import() chunks; see scripts/check-size.mjs. Raise only with a reason.",
+  "_comment": "gzip budgets in bytes per entry (~5-8% headroom); JS entries count the entry chunk and its static imports, not lazy import() chunks; entries with `lazy` are tiers that also count those lazy chunks; see scripts/check-size.mjs. Raise only with a reason.",
   "entries": [
     {
       "id": "ui-tokens (createTheme, toCss)",
@@ -47,7 +47,7 @@
       "id": "ui/glass",
       "kind": "js",
       "file": "packages/ui/dist/glass/index.js",
-      "maxGzip": 13000
+      "maxGzip": 12200
     },
     {
       "id": "ui/ai",
@@ -144,6 +144,55 @@
       "kind": "js",
       "file": "packages/ui/dist/xlsx/index.js",
       "maxGzip": 4150
+    },
+    {
+      "id": "liquid tier 0: Topbar, no liquid",
+      "kind": "js",
+      "file": "packages/ui/dist/shell/topbar/topbar.js",
+      "maxGzip": 9800
+    },
+    {
+      "id": "liquid tier 1: + base liquid (lens watcher)",
+      "kind": "js",
+      "file": "packages/ui/dist/shell/topbar/topbar.js",
+      "maxGzip": 10400,
+      "lazy": [
+        "glass/lens-watch.js"
+      ]
+    },
+    {
+      "id": "liquid tier 2: + liquid options object",
+      "kind": "js",
+      "file": "packages/ui/dist/shell/topbar/topbar.js",
+      "maxGzip": 12150,
+      "lazy": [
+        "glass/lens-watch.js",
+        "utils/material-style.js"
+      ]
+    },
+    {
+      "id": "liquid tier 3: + refraction lens",
+      "kind": "js",
+      "file": "packages/ui/dist/shell/topbar/topbar.js",
+      "maxGzip": 20450,
+      "lazy": [
+        "glass/lens-watch.js",
+        "utils/material-style.js",
+        "glass/refraction.js"
+      ]
+    },
+    {
+      "id": "liquid tier 4: + crystal preset",
+      "kind": "js",
+      "file": "packages/ui/dist/shell/topbar/topbar.js",
+      "maxGzip": 22500,
+      "lazy": [
+        "glass/lens-watch.js",
+        "utils/material-style.js",
+        "glass/refraction.js",
+        "glass/lens-crystal.js",
+        "glass/lens-dispersion.js"
+      ]
     }
   ]
 }

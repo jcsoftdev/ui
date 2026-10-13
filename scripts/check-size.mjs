@@ -2,7 +2,9 @@
 // gzips it and fails when it exceeds the budget in size-budgets.json. Run after `pnpm build`.
 // A JS entry is measured as a consumer's bundler loads it: the entry chunk plus the chunks it
 // imports statically. A dynamic `import()` (the Liquid Glass lens engine) becomes its own lazy
-// chunk and is not counted, since it is only fetched when a surface needs it.
+// chunk and is not counted, since it is only fetched when a surface needs it. An entry with `lazy`
+// is a tier: it also counts the lazy chunks that hold those modules (and what they import), which
+// is what a page fetches once a surface uses that feature.
 //   node scripts/check-size.mjs [--update]   --update prints suggested budgets (+8%, rounded up).
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -14,7 +16,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { build } = createRequire(join(root, "packages/ui/package.json"))("esbuild");
 const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")).entries;
 
-async function measure({ file, kind }) {
+async function measure({ file, kind, lazy = [] }) {
   const path = join(root, file);
   let code;
   if (kind === "css") {
@@ -45,6 +47,13 @@ async function measure({ file, kind }) {
         if (dep.kind === "import-statement" && !dep.external) visit(dep.path);
     };
     visit(entry);
+    for (const module of lazy) {
+      const chunk = Object.keys(outputs).find((name) =>
+        Object.keys(outputs[name].inputs).some((input) => input.endsWith(module)),
+      );
+      if (!chunk) throw new Error(`no chunk holds ${module}`);
+      visit(chunk);
+    }
     code = Buffer.concat([...eager].map((name) => Buffer.from(files.get(join(root, name)))));
   }
   return gzipSync(code, { level: 9 }).length;
