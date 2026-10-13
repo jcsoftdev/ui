@@ -1,5 +1,8 @@
 // Size budget gate. Bundles each JS entry (react external, minified) or reads each CSS file,
 // gzips it and fails when it exceeds the budget in size-budgets.json. Run after `pnpm build`.
+// A JS entry is measured as a consumer's bundler loads it: the entry chunk plus the chunks it
+// imports statically. A dynamic `import()` (the Liquid Glass lens engine) becomes its own lazy
+// chunk and is not counted, since it is only fetched when a surface needs it.
 //   node scripts/check-size.mjs [--update]   --update prints suggested budgets (+8%, rounded up).
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -17,17 +20,32 @@ async function measure({ file, kind }) {
   if (kind === "css") {
     code = readFileSync(path);
   } else {
+    const outdir = join(root, ".size-check");
     const result = await build({
       entryPoints: [path],
       bundle: true,
+      splitting: true,
       minify: true,
       format: "esm",
       platform: "browser",
       write: false,
+      metafile: true,
+      outdir,
       external: ["react", "react-dom", "react/jsx-runtime", "react-dom/*"],
       logLevel: "silent",
     });
-    code = Buffer.from(result.outputFiles[0].contents);
+    const files = new Map(result.outputFiles.map((out) => [out.path, out.contents]));
+    const outputs = result.metafile.outputs;
+    const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint);
+    const eager = new Set();
+    const visit = (name) => {
+      if (eager.has(name)) return;
+      eager.add(name);
+      for (const dep of outputs[name].imports)
+        if (dep.kind === "import-statement" && !dep.external) visit(dep.path);
+    };
+    visit(entry);
+    code = Buffer.concat([...eager].map((name) => Buffer.from(files.get(join(root, name)))));
   }
   return gzipSync(code, { level: 9 }).length;
 }

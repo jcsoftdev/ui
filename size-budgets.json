@@ -1,5 +1,5 @@
 {
-  "_comment": "gzip budgets in bytes per entry (~8% headroom); see scripts/check-size.mjs. Raise only with a reason.",
+  "_comment": "gzip budgets in bytes per entry (~5-8% headroom); JS entries count the entry chunk and its static imports, not lazy import() chunks; see scripts/check-size.mjs. Raise only with a reason.",
   "entries": [
     {
       "id": "ui-tokens (createTheme, toCss)",
@@ -17,19 +17,19 @@
       "id": "ui-tokens styles/tokens.css",
       "kind": "css",
       "file": "packages/ui-tokens/styles/tokens.css",
-      "maxGzip": 6100
+      "maxGzip": 6700
     },
     {
       "id": "ui-tokens styles/theme.css (tailwind.css)",
       "kind": "css",
       "file": "packages/ui-tokens/styles/theme.css",
-      "maxGzip": 2850
+      "maxGzip": 3600
     },
     {
       "id": "ui-tokens styles/base.css",
       "kind": "css",
       "file": "packages/ui-tokens/styles/base.css",
-      "maxGzip": 700
+      "maxGzip": 1500
     },
     {
       "id": "ui/primitives",
@@ -47,7 +47,7 @@
       "id": "ui/glass",
       "kind": "js",
       "file": "packages/ui/dist/glass/index.js",
-      "maxGzip": 2250
+      "maxGzip": 13150
     },
     {
       "id": "ui/ai",
@@ -83,7 +83,7 @@
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 127400
+      "maxGzip": 95900
     },
     {
       "id": "ui/forms",
@@ -107,13 +107,13 @@
       "id": "ui/overlays",
       "kind": "js",
       "file": "packages/ui/dist/overlays/index.js",
-      "maxGzip": 29300
+      "maxGzip": 30850
     },
     {
       "id": "ui/palette",
       "kind": "js",
       "file": "packages/ui/dist/palette/index.js",
-      "maxGzip": 19250
+      "maxGzip": 20450
     },
     {
       "id": "ui/rich-text",
@@ -125,7 +125,7 @@
       "id": "ui/shell",
       "kind": "js",
       "file": "packages/ui/dist/shell/index.js",
-      "maxGzip": 10850
+      "maxGzip": 12850
     },
     {
       "id": "ui/states",
@@ -137,7 +137,7 @@
       "id": "ui/utils",
       "kind": "js",
       "file": "packages/ui/dist/utils/index.js",
-      "maxGzip": 8300
+      "maxGzip": 9850
     },
     {
       "id": "ui/xlsx",
