@@ -50,16 +50,16 @@
   outline: var(--focus-ring-width) solid var(--focus-ring-color);
   outline-offset: -2px;
 }
+[data-ui="floating-toc"] [data-ui-part="label"] {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 [data-ui="floating-toc"] [data-level="2"] > a > [data-ui-part="label"] {
   padding-inline-start: 12px;
 }
 [data-ui="floating-toc"] [data-level="3"] > a > [data-ui-part="label"] {
   padding-inline-start: 24px;
-}
-[data-ui="floating-toc"] [data-ui-part="label"] {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 @media (prefers-reduced-motion: reduce) {
   [data-ui="floating-toc"] a {
