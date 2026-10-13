@@ -68,8 +68,12 @@ export function createStickToBottom({
     shown = show;
     onJumpChange?.(show);
   };
-  const toBottom = (smooth = false) =>
+  const toBottom = (smooth = false) => {
     scroller.scrollTo({ top: scroller.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    // The scroll event arrives a frame later and coalesces with any reader scroll in between, so
+    // the position we scrolled to is the baseline that tells "scrolled up" from "grew".
+    if (!smooth) lastTop = scroller.scrollTop;
+  };
   const onScroll = () => {
     stuck = nextStuck(stuck, scroller, lastTop);
     lastTop = scroller.scrollTop;
