@@ -2,6 +2,7 @@
 
 import {
   type ClipboardEvent,
+  type DragEvent,
   type KeyboardEvent,
   type ReactNode,
   useCallback,
@@ -122,6 +123,39 @@ function selectionIn(root: HTMLElement | null): Range | null {
   return root.contains(range.commonAncestorContainer) ? range : null;
 }
 
+/** Sanitized HTML for transferred data: its `text/html`, else its `text/plain` as paragraphs, else "". */
+function htmlFromTransfer(data: DataTransfer | null, fallbackText = ""): string {
+  const html = data?.getData("text/html") ?? "";
+  const text = data?.getData("text/plain") || fallbackText;
+  if (html) return sanitizeHtml(html);
+  if (!text) return "";
+  return sanitizeHtml(
+    text
+      .split(/\r?\n/)
+      .map((line) => `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`)
+      .join(""),
+  );
+}
+
+/** Moves the caret to the point under the pointer, when that point is inside `root`. */
+function placeCaretAt(root: HTMLElement, x: number, y: number) {
+  const d = document as Document & {
+    caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
+  };
+  let range: Range | null = null;
+  const position = d.caretPositionFromPoint?.(x, y);
+  if (position) {
+    range = document.createRange();
+    range.setStart(position.offsetNode, position.offset);
+    range.collapse(true);
+  } else {
+    range = document.caretRangeFromPoint?.(x, y) ?? null;
+  }
+  if (!range || !root.contains(range.startContainer)) return;
+  window.getSelection()?.removeAllRanges();
+  window.getSelection()?.addRange(range);
+}
+
 /**
  * Rich text editor on a plain `contenteditable`, with no dependencies. Supports bold, italic,
  * underline, a title, bullet and numbered lists and links (Ctrl/Cmd+B, I, U, K). Everything that
@@ -235,7 +269,10 @@ export function RichTextEditor({
     restoreSelection();
     const selection = window.getSelection();
     if (selection?.isCollapsed) {
-      document.execCommand("insertHTML", false, sanitizeHtml(`<a href="${href}">${href}</a>`));
+      const anchor = document.createElement("a");
+      anchor.setAttribute("href", href);
+      anchor.textContent = href;
+      document.execCommand("insertHTML", false, sanitizeHtml(anchor.outerHTML));
     } else {
       document.execCommand("createLink", false, href);
     }
@@ -257,21 +294,63 @@ export function RichTextEditor({
     }
   };
 
+  const insertClean = useCallback(
+    (clean: string) => {
+      const node = editor.current;
+      if (!clean || !node) return;
+      node.focus();
+      if (!selectionIn(node)) {
+        const end = document.createRange();
+        end.selectNodeContents(node);
+        end.collapse(false);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(end);
+      }
+      document.execCommand("insertHTML", false, clean);
+      emit();
+    },
+    [emit],
+  );
+
   const onPaste = (event: ClipboardEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const html = event.clipboardData.getData("text/html");
-    const text = event.clipboardData.getData("text/plain");
-    const clean = html
-      ? sanitizeHtml(html)
-      : sanitizeHtml(
-          text
-            .split(/\r?\n/)
-            .map((line) => `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p>`)
-            .join(""),
-        );
-    document.execCommand("insertHTML", false, clean);
-    emit();
+    insertClean(htmlFromTransfer(event.clipboardData));
   };
+
+  const onDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (editor.current) placeCaretAt(editor.current, event.clientX, event.clientY);
+    insertClean(htmlFromTransfer(event.dataTransfer));
+  };
+
+  // Whatever the browser would insert by itself from foreign data goes through the sanitizer.
+  // React's onBeforeInput is not the native event, so this listens directly.
+  useEffect(() => {
+    const node = editor.current;
+    if (!node) return;
+    const onBeforeInput = (event: InputEvent) => {
+      if (
+        event.inputType !== "insertFromDrop" &&
+        event.inputType !== "insertFromPaste" &&
+        event.inputType !== "insertReplacementText"
+      )
+        return;
+      event.preventDefault();
+      const target = event.getTargetRanges?.()[0];
+      if (target && event.inputType === "insertReplacementText") {
+        const range = document.createRange();
+        range.setStart(target.startContainer, target.startOffset);
+        range.setEnd(target.endContainer, target.endOffset);
+        if (node.contains(range.commonAncestorContainer)) {
+          window.getSelection()?.removeAllRanges();
+          window.getSelection()?.addRange(range);
+        }
+      }
+      insertClean(htmlFromTransfer(event.dataTransfer, event.data ?? ""));
+    };
+    node.addEventListener("beforeinput", onBeforeInput);
+    return () => node.removeEventListener("beforeinput", onBeforeInput);
+  }, [insertClean]);
 
   const onToolbarKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const buttons = Array.from(
@@ -439,6 +518,7 @@ export function RichTextEditor({
           spellCheck
           onInput={emit}
           onPaste={onPaste}
+          onDrop={onDrop}
           onKeyDown={onEditorKeyDown}
           onBlur={emit}
           style={{ minHeight: `${minHeightRem}rem` }}
