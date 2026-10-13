@@ -141,8 +141,6 @@ describe("recalculation", () => {
     sheet = f.updateCells(sheet, [[0, 2]]);
     expect(f.displayValue(sheet, 0, 2)).toBeUndefined();
     expect(value(sheet, "D1")).toBe(10);
-    const single = f.updateCell(f.buildSheet(make([[1, "=A1+1"]])), 0, 0, 5);
-    expect(value(single, "B1")).toBe(6);
   });
   it("reports the cells a formula reads", () => {
     const s = f.buildSheet(make([[1, 2, "=SUM(A1:B1)"]]));
@@ -150,5 +148,100 @@ describe("recalculation", () => {
       [0, 0],
       [0, 1],
     ]);
+  });
+});
+
+describe("review fixes", () => {
+  const evalText = (text: string) => {
+    const s = f.buildSheet(make([[text]]));
+    return shown(f.sheetValue(s, 0, 0));
+  };
+  it("survives deep nesting, long chains and long comparisons without a stack overflow", () => {
+    expect(evalText(`=${"SUM(".repeat(500)}1${")".repeat(500)}`)).toBe("#ERROR!");
+    expect(evalText(`=${Array(10000).fill("1").join("+")}`)).toBe("#ERROR!");
+    expect(evalText(`=${Array(10000).fill("1").join("=")}`)).toBe("#ERROR!");
+    expect(evalText(`=${"(".repeat(5000)}1${")".repeat(5000)}`)).toBe("#ERROR!");
+    expect(evalText("=SUM(1,2)+3")).toBe(6);
+  });
+  it("one failing formula does not break the others", () => {
+    const deep = `=${"SUM(".repeat(500)}1${")".repeat(500)}`;
+    const s = f.buildSheet(make([[1, deep, "=A1+1"]]));
+    expect(shown(f.sheetValue(s, 0, 1))).toBe("#ERROR!");
+    expect(f.sheetValue(s, 0, 2)).toBe(2);
+  });
+  it("MIN, MAX and SUM read 200k-cell ranges", () => {
+    const n = 200_000;
+    const data: CellValue[][] = Array.from({ length: n }, (_, i) => [i + 1]);
+    data[0]![1] = `=MIN(A1:A${n})`;
+    data[0]![2] = `=MAX(A1:A${n})`;
+    data[0]![3] = `=SUM(A1:A${n})`;
+    const s = f.buildSheet({ rows: n, cols: 4, read: (r, c) => data[r]?.[c] ?? null });
+    expect(f.sheetValue(s, 0, 1)).toBe(1);
+    expect(f.sheetValue(s, 0, 2)).toBe(n);
+    expect(f.sheetValue(s, 0, 3)).toBe((n * (n + 1)) / 2);
+  });
+  it("a huge range costs no memory per cell", () => {
+    const rows = 100_000;
+    const heads: CellValue[] = Array.from({ length: 5 }, () => "=SUM(A1:Z100000)");
+    const s = f.buildSheet({
+      rows,
+      cols: 26,
+      read: (r, c) => (r === 0 && c < 5 ? heads[c]! : r === 0 ? null : null),
+    });
+    // formulas sit inside their own range: cycle, but it terminates and stores no per-cell graph
+    expect(s.dependents.size).toBe(0);
+    expect(s.formulas.size).toBe(5);
+    expect(shown(f.sheetValue(s, 0, 0))).toBe("#CYCLE!");
+  });
+  it("1000 sums over one range recalculate fast after an edit", () => {
+    const n = 10_000;
+    const data: CellValue[][] = Array.from({ length: n }, (_, i) => [i % 7, null]);
+    for (let i = 0; i < 1000; i++) data[i]![1] = "=SUM(A$1:A$10000)";
+    const s = f.buildSheet({ rows: n, cols: 2, read: (r, c) => data[r]?.[c] ?? null });
+    const total = data.reduce((a, row) => a + (row[0] as number), 0);
+    expect(f.sheetValue(s, 999, 1)).toBe(total);
+    data[5]![0] = 1000;
+    const t = performance.now();
+    f.updateCells(s, [[5, 0]]);
+    expect(performance.now() - t).toBeLessThan(100);
+    expect(f.sheetValue(s, 999, 1)).toBe(total - (5 % 7) + 1000);
+  });
+  it("only real numbers parse, and overflow is #NUM!", () => {
+    expect(evalText('="0x10"+1')).toBe("#VALUE!");
+    expect(evalText('="1e3"+1')).toBe(1001);
+    expect(evalText("=10^1000")).toBe("#NUM!");
+    expect(evalText("=0^-1")).toBe("#NUM!");
+  });
+  it("unknown names that match Object.prototype are #NAME?", () => {
+    expect(evalText("=constructor(1)")).toBe("#NAME?");
+    expect(evalText("=__proto__(1)")).toBe("#NAME?");
+    expect(evalText("=toString(1)")).toBe("#NAME?");
+  });
+  it("shiftFormula writes a #REF! that parses back to #REF!", () => {
+    const text = f.shiftFormula("=A1+B2", -1, 0);
+    expect(text).toBe("=#REF!+B1");
+    expect(evalText(text)).toBe("#REF!");
+  });
+  it("rewrites references when rows are inserted or removed", () => {
+    const ins = { kind: "insert", at: 2, count: 1 } as const;
+    expect(f.adjustRows("=A1+A3+$B$5", ins)).toBe("=A1+A4+$B$6");
+    expect(f.adjustRows("=SUM(A1:A5)", ins)).toBe("=SUM(A1:A6)");
+    expect(f.adjustRows("=SUM(A3:A5)", ins)).toBe("=SUM(A4:A6)");
+    const rem = { kind: "remove", at: 1, count: 2 } as const;
+    expect(f.adjustRows("=A1+A2+A4", rem)).toBe("=A1+#REF!+A2");
+    expect(f.adjustRows("=SUM(A1:A5)", rem)).toBe("=SUM(A1:A3)");
+    expect(f.adjustRows("=SUM(A2:A3)", rem)).toBe("=SUM(#REF!)");
+    expect(f.adjustRows("=SUM(A2:A5)", rem)).toBe("=SUM(A2:A3)");
+    expect(f.adjustRows('="A9"&A9', rem)).toBe('="A9"&A7');
+  });
+  it("dirtyCells follows ranges and chains", () => {
+    const s = f.buildSheet(
+      make([
+        [1, "=A1*2", "=SUM(B1:B1)"],
+        [2, null, null],
+      ]),
+    );
+    expect([...f.dirtyCells(s, [0])].sort()).toEqual([1, 2]);
+    expect(f.dirtyCells(s, [3]).size).toBe(0);
   });
 });

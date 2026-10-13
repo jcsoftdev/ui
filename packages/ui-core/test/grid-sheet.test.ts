@@ -403,6 +403,9 @@ describe("planWrites with formulas", () => {
     const off = planWrites(targets, cellAt, { locale: "en", messages });
     expect(off.changes).toEqual([]);
     expect(off.skipped).toHaveLength(1);
+  });
+});
+
 describe("review fixes", () => {
   it("treats a quote that is never closed as an ordinary character", () => {
     expect(parseTSV('"abc\tdef')).toEqual([['"abc', "def"]]);
