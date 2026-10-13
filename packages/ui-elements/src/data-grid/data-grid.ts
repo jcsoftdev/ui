@@ -527,7 +527,7 @@ export class UiDataGrid extends ElementBase {
       view: this.#view,
       ids: this.#renderIds,
       off: this.#offsets,
-      reveal: (row: number, col: number) => this.#revealCell(row, col),
+      reveal: this.#revealCell.bind(this),
     };
   }
   /**
@@ -838,7 +838,7 @@ export class UiDataGrid extends ElementBase {
     const row = this.#rowAt(v);
     const write = this.getAttribute("edit-mode") !== "emit";
     if (row == null || typeof row !== "object" || (write && Object.isFrozen(row))) {
-      console.warn(`ui-data-grid: "${rowKey}" is frozen.`);
+      console.warn("ui-data-grid: read-only.");
       return false;
     }
     if (write && !column.setter && typeof accessor === "function") return false;
@@ -1697,7 +1697,7 @@ export class UiDataGrid extends ElementBase {
   /** What a cell shows and sorts on: the stored value, or the result of its formula. */
   #display(row: Row, column: Col): CellValue {
     const stored = getCellValue(row, column);
-    return this._x ? this._x(stored, row, column.id) : stored;
+    return this._x?.(stored, row, column.id) ?? stored;
   }
 
   /** The cell's content: the only place the column renderer runs. */

@@ -83,8 +83,8 @@ describe("planPaste", () => {
       { maxR: 2, maxC: 2 },
     );
     expect(plan.targets).toEqual([
-      { r: 2, c: 1, text: "a" },
-      { r: 2, c: 2, text: "b" },
+      { r: 2, c: 1, text: "a", i: 0, j: 0 },
+      { r: 2, c: 2, text: "b", i: 0, j: 1 },
     ]);
     expect(plan.clipped).toBe(4);
   });
@@ -104,7 +104,9 @@ describe("planPaste", () => {
       ["3", "4"],
     ];
     const mine = planPaste(table, { r: 1, c: 1 }, { maxR: 2, maxC: 5 }).targets;
-    expect(mine).toEqual(reactEdit.planPaste(table, { r: 1, c: 1 }, { maxR: 2, maxC: 5 }));
+    const theirs = reactEdit.planPaste(table, { r: 1, c: 1 }, { maxR: 2, maxC: 5 });
+    // The table position (i, j) is an addition of this grid.
+    expect(mine.map(({ r, c, text }) => ({ r, c, text }))).toEqual(theirs);
   });
 });
 

@@ -123,8 +123,8 @@ export interface PasteTarget {
   c: number;
   text: string;
   /** Line and field of the pasted table this text came from (0, 0 for a single value filling). */
-  i: number;
-  j: number;
+  i?: number;
+  j?: number;
 }
 
 export interface PastePlan {

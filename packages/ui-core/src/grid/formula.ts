@@ -599,7 +599,7 @@ function rangeOf(a: CellRef, b: CellRef, ctx: EvalContext): Value {
 function eachCell(
   range: RangeValue,
   ctx: EvalContext,
-  visit: (value: FormulaValue) => boolean | void,
+  visit: (value: FormulaValue) => unknown,
 ): void {
   for (let r = range.r0; r <= range.r1; r += 1)
     for (let c = range.c0; c <= range.c1; c += 1) if (visit(ctx.cell(r, c)) === false) return;
@@ -998,7 +998,10 @@ function register(sheet: FormulaSheet, key: number, formula: SheetFormula): void
   sheet.formulas.set(key, formula);
   for (const dep of formula.refs) {
     let set = sheet.dependents.get(dep);
-    if (!set) sheet.dependents.set(dep, (set = new Set()));
+    if (!set) {
+      set = new Set();
+      sheet.dependents.set(dep, set);
+    }
     set.add(key);
   }
   if (formula.ranges.length > 0) formula.filed = [];
@@ -1006,7 +1009,10 @@ function register(sheet: FormulaSheet, key: number, formula: SheetFormula): void
     for (let col = range.c0; col <= range.c1; col += 1) {
       const entry: RangeEntry = { r0: range.r0, r1: range.r1, key };
       let set = sheet.ranges.get(col);
-      if (!set) sheet.ranges.set(col, (set = new Set()));
+      if (!set) {
+        set = new Set();
+        sheet.ranges.set(col, set);
+      }
       set.add(entry);
       formula.filed?.push({ col, entry });
     }
@@ -1014,7 +1020,10 @@ function register(sheet: FormulaSheet, key: number, formula: SheetFormula): void
   const col = key % cols;
   const row = Math.floor(key / cols);
   let rows = sheet.formulaRows.get(col);
-  if (!rows) sheet.formulaRows.set(col, (rows = []));
+  if (!rows) {
+    rows = [];
+    sheet.formulaRows.set(col, rows);
+  }
   const at = lowerBound(rows, row);
   if (rows[at] !== row) rows.splice(at, 0, row);
 }
