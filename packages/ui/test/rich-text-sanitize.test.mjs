@@ -187,3 +187,25 @@ test("a safe link padded with unicode whitespace keeps working, trimmed", () => 
     '<a href="https://a.pe/x" rel="noopener noreferrer nofollow" target="_blank">y</a>',
   );
 });
+
+test("hostile nesting stays cheap and idempotent", () => {
+  const payloads = {
+    openThenBlocks: "<b>".repeat(40000) + "<p>".repeat(40000),
+    openThenStrayCloser: "<b>".repeat(70000) + "</p>".repeat(70000),
+    scripts: "<script></script>".repeat(20000),
+  };
+  for (const [name, input] of Object.entries(payloads)) {
+    const start = performance.now();
+    const out = sanitizeHtml(input);
+    const elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+    assert.equal(sanitizeHtml(out), out, name);
+  }
+});
+
+test("elements nested deeper than 128 are unwrapped and keep their text", () => {
+  const out = sanitizeHtml(`${"<b>".repeat(300)}text${"</b>".repeat(300)}`);
+  assert.equal(out.match(/<strong>/g)?.length, 128);
+  assert.ok(out.includes("text"));
+  assert.equal(sanitizeHtml(out), out);
+});
