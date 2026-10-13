@@ -1,5 +1,13 @@
 import { type AxisTick, thinTicks } from "./axis.ts";
-import { bandScale, formatDate, pointScale, shortMonth, timeScale } from "./scale.ts";
+import {
+  bandScale,
+  type DateLocaleOptions,
+  dayOfMonth,
+  formatDate,
+  pointScale,
+  shortMonth,
+  timeScale,
+} from "./scale.ts";
 
 /** A category or time stamp on the category axis. */
 export type XValue = string | number | Date;
@@ -19,7 +27,7 @@ export interface CategoryAxis {
   indexAt(pixel: number): number;
 }
 
-export interface CategoryAxisOptions {
+export interface CategoryAxisOptions extends DateLocaleOptions {
   mode: CategoryAxisMode;
   /** Tick label of a category; dates get "6 oct", others `String`. */
   format?: (value: XValue) => string;
@@ -32,14 +40,14 @@ export interface CategoryAxisOptions {
 }
 
 /** Short default label: "6 oct" for dates, the value itself otherwise. */
-export function defaultCategoryLabel(value: XValue): string {
-  if (value instanceof Date) return `${value.getDate()} ${shortMonth(value)}`;
+export function defaultCategoryLabel(value: XValue, options: DateLocaleOptions = {}): string {
+  if (value instanceof Date) return `${dayOfMonth(value, options)} ${shortMonth(value, options)}`;
   return String(value);
 }
 
 /** Long label for tooltips and tables: "mar 6 oct 2026" for dates. */
-export function fullCategoryLabel(value: XValue): string {
-  return value instanceof Date ? formatDate(value) : String(value);
+export function fullCategoryLabel(value: XValue, options: DateLocaleOptions = {}): string {
+  return value instanceof Date ? formatDate(value, options) : String(value);
 }
 
 /** True when every category is a Date, so a time scale makes sense. */
@@ -54,20 +62,17 @@ export function allDates(categories: readonly XValue[]): boolean {
 export function buildCategoryAxis(
   categories: readonly XValue[],
   width: number,
-  {
-    mode,
-    format = defaultCategoryLabel,
-    paddingInner = 0.25,
-    padding,
-    tickCount,
-  }: CategoryAxisOptions,
+  { mode, format, locale, timeZone, paddingInner = 0.25, padding, tickCount }: CategoryAxisOptions,
 ): CategoryAxis {
   const count = categories.length;
+  const label = format ?? ((value: XValue) => defaultCategoryLabel(value, { locale, timeZone }));
   if (mode === "time" && allDates(categories)) {
     const times = categories.map((value) => +(value as Date));
     const scale = timeScale({
       domain: [Math.min(...times), Math.max(...times)],
       range: [0, width],
+      locale,
+      timeZone,
     });
     const positions = times.map((time) => scale.map(time));
     let step = width;
@@ -107,7 +112,7 @@ export function buildCategoryAxis(
     categories.map((value, index) => ({
       key: index,
       position: positions[index] as number,
-      label: format(value),
+      label: label(value),
     })),
   );
   return {

@@ -1,6 +1,13 @@
 // Chart scales: linear, log, time (calendar ticks, es-PE labels), band and point.
+import {
+  type Calendar,
+  calendarFor,
+  type DateLocaleOptions,
+  dateFormat,
+} from "../internal/chart-calendar.ts";
 import { clean, linearTicks, niceDomain, tickStep } from "../internal/chart-ticks.ts";
 
+export type { DateLocaleOptions };
 export { clean, linearTicks, niceDomain, tickStep };
 
 export interface ContinuousScale {
@@ -114,66 +121,86 @@ const INTERVALS: Interval[] = [
   { unit: "year", every: 1, approx: 365.25 * DAY },
 ];
 
-const LOCALE = "es-PE";
-const monthFormat = new Intl.DateTimeFormat(LOCALE, { month: "short" });
-const weekdayFormat = new Intl.DateTimeFormat(LOCALE, { weekday: "short" });
-
-/** Short Spanish month without the period Intl appends ("oct", not "oct."). */
-export function shortMonth(date: Date): string {
-  return monthFormat.format(date).replace(".", "").toLowerCase();
+/** Short month without the period Intl appends ("oct", not "oct."). Spanish (es-PE) by default. */
+export function shortMonth(date: Date, options: DateLocaleOptions = {}): string {
+  return dateFormat({ month: "short" }, options).format(date).replace(".", "").toLowerCase();
 }
 
-/** Short Spanish weekday without the trailing period ("lun"). */
-export function shortWeekday(date: Date): string {
-  return weekdayFormat.format(date).replace(".", "").toLowerCase();
+/** Short weekday without the trailing period ("lun"). Spanish (es-PE) by default. */
+export function shortWeekday(date: Date, options: DateLocaleOptions = {}): string {
+  return dateFormat({ weekday: "short" }, options).format(date).replace(".", "").toLowerCase();
+}
+
+/** Day of the month of `date` in the zone of `options`. */
+export function dayOfMonth(date: Date, options: DateLocaleOptions = {}): number {
+  const cal = calendarFor(options.timeZone);
+  return cal.date(cal.wall(+date));
 }
 
 /** "lun 6 oct 2026": the full label used by tooltips and the data table. */
-export function formatDate(value: Date | number): string {
+export function formatDate(value: Date | number, options: DateLocaleOptions = {}): string {
   const date = new Date(value);
-  return `${shortWeekday(date)} ${date.getDate()} ${shortMonth(date)} ${date.getFullYear()}`;
+  const cal = calendarFor(options.timeZone);
+  const wall = cal.wall(+date);
+  return `${shortWeekday(date, options)} ${cal.date(wall)} ${shortMonth(date, options)} ${cal.year(wall)}`;
 }
 
-function firstTick(t0: number, interval: Interval): Date {
-  const d = new Date(t0);
-  d.setHours(0, 0, 0, 0);
-  if (d.getTime() < t0) d.setDate(d.getDate() + 1);
+function firstTick(t0: number, interval: Interval, cal: Calendar): Date {
+  const d = cal.wall(t0);
+  cal.midnight(d);
+  if (cal.instant(d) < t0) cal.setDate(d, cal.date(d) + 1);
   if (interval.unit === "week") {
-    d.setDate(d.getDate() + ((8 - d.getDay()) % 7));
+    cal.setDate(d, cal.date(d) + ((8 - cal.day(d)) % 7));
   } else if (interval.unit !== "day") {
-    if (d.getDate() !== 1) {
-      d.setDate(1);
-      d.setMonth(d.getMonth() + 1);
+    if (cal.date(d) !== 1) {
+      cal.setDate(d, 1);
+      cal.setMonth(d, cal.month(d) + 1);
     }
     const every = interval.unit === "year" ? 12 : interval.every;
-    while (d.getMonth() % every !== 0) d.setMonth(d.getMonth() + 1);
+    while (cal.month(d) % every !== 0) cal.setMonth(d, cal.month(d) + 1);
   }
   return d;
 }
 
-function advance(d: Date, interval: Interval): void {
-  if (interval.unit === "day") d.setDate(d.getDate() + interval.every);
-  else if (interval.unit === "week") d.setDate(d.getDate() + 7 * interval.every);
-  else if (interval.unit === "month") d.setMonth(d.getMonth() + interval.every);
-  else d.setFullYear(d.getFullYear() + interval.every);
+function advance(d: Date, interval: Interval, cal: Calendar): void {
+  if (interval.unit === "day") cal.setDate(d, cal.date(d) + interval.every);
+  else if (interval.unit === "week") cal.setDate(d, cal.date(d) + 7 * interval.every);
+  else if (interval.unit === "month") cal.setMonth(d, cal.month(d) + interval.every);
+  else cal.setYear(d, cal.year(d) + interval.every);
 }
 
-function tickLabel(date: Date, unit: TimeUnit, first: boolean, spanDays: number): string {
-  if (unit === "year") return String(date.getFullYear());
+function tickLabel(
+  wall: Date,
+  instant: Date,
+  unit: TimeUnit,
+  first: boolean,
+  spanDays: number,
+  cal: Calendar,
+  options: DateLocaleOptions,
+): string {
+  if (unit === "year") return String(cal.year(wall));
   if (unit === "month") {
-    return first || date.getMonth() === 0
-      ? `${shortMonth(date)} ${date.getFullYear()}`
-      : shortMonth(date);
+    return first || cal.month(wall) === 0
+      ? `${shortMonth(instant, options)} ${cal.year(wall)}`
+      : shortMonth(instant, options);
   }
-  if (unit === "day" && spanDays <= 14) return `${shortWeekday(date)} ${date.getDate()}`;
-  return `${date.getDate()} ${shortMonth(date)}`;
+  if (unit === "day" && spanDays <= 14) {
+    return `${shortWeekday(instant, options)} ${cal.date(wall)}`;
+  }
+  return `${cal.date(wall)} ${shortMonth(instant, options)}`;
 }
 
 /**
- * Calendar-aligned ticks (local midnight, Mondays, first of the month, January)
- * with es-PE labels. Picks the finest interval that keeps at most `count` ticks.
+ * Calendar-aligned ticks (midnight, Mondays, first of the month, January) in the local time
+ * zone or `options.timeZone`, labelled in es-PE or `options.locale`. Picks the finest interval
+ * that keeps at most `count` ticks.
  */
-export function timeTicks(start: number, end: number, count = 6): TimeTick[] {
+export function timeTicks(
+  start: number,
+  end: number,
+  count = 6,
+  options: DateLocaleOptions = {},
+): TimeTick[] {
   const t0 = Math.min(start, end);
   const t1 = Math.max(start, end);
   const span = t1 - t0;
@@ -184,20 +211,30 @@ export function timeTicks(start: number, end: number, count = 6): TimeTick[] {
     approx: 0,
   };
   const spanDays = span / DAY;
+  const cal = calendarFor(options.timeZone);
   const out: TimeTick[] = [];
-  const cursor = firstTick(t0, interval);
-  while (cursor.getTime() <= t1 && out.length < 500) {
+  const cursor = firstTick(t0, interval, cal);
+  while (cal.instant(cursor) <= t1 && out.length < 500) {
+    const value = cal.instant(cursor);
     out.push({
-      value: cursor.getTime(),
+      value,
       unit: interval.unit,
-      label: tickLabel(cursor, interval.unit, out.length === 0, spanDays),
+      label: tickLabel(
+        cursor,
+        new Date(value),
+        interval.unit,
+        out.length === 0,
+        spanDays,
+        cal,
+        options,
+      ),
     });
-    advance(cursor, interval);
+    advance(cursor, interval, cal);
   }
   return out;
 }
 
-export interface TimeScaleOptions {
+export interface TimeScaleOptions extends DateLocaleOptions {
   domain: readonly [Date | number, Date | number];
   range: readonly [number, number];
 }
@@ -206,18 +243,19 @@ export interface TimeScale extends ContinuousScale {
   timeTicks(count?: number): TimeTick[];
 }
 
-export function timeScale({ domain, range }: TimeScaleOptions): TimeScale {
+export function timeScale({ domain, range, locale, timeZone }: TimeScaleOptions): TimeScale {
   const d0 = +domain[0];
   const d1 = +domain[1] === d0 ? d0 + DAY : +domain[1];
   const [r0, r1] = range;
+  const labels = { locale, timeZone };
   return {
     type: "time",
     domain: [d0, d1],
     range,
     map: (value) => r0 + ((value - d0) / (d1 - d0)) * (r1 - r0),
     invert: (pixel) => d0 + ((pixel - r0) / (r1 - r0 || 1)) * (d1 - d0),
-    ticks: (count = 6) => timeTicks(d0, d1, count).map((tick) => tick.value),
-    timeTicks: (count = 6) => timeTicks(d0, d1, count),
+    ticks: (count = 6) => timeTicks(d0, d1, count, labels).map((tick) => tick.value),
+    timeTicks: (count = 6) => timeTicks(d0, d1, count, labels),
   };
 }
 

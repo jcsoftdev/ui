@@ -16,6 +16,8 @@ export type ValueFormat =
   | ValueFormatter;
 
 const NBSP = " ";
+/** Locales that keep the no-break thousands space; any other locale uses its own separators. */
+const NBSP_LOCALES = new Set(["es-PE", "es"]);
 const cache = new Map<string, Intl.NumberFormat>();
 
 function numberFormat(locale: string, options: Intl.NumberFormatOptions): Intl.NumberFormat {
@@ -30,6 +32,7 @@ function numberFormat(locale: string, options: Intl.NumberFormatOptions): Intl.N
 
 /** Joins Intl parts, swapping the group separator and literal spaces for a no-break space. */
 function spaced(format: Intl.NumberFormat, value: number): string {
+  if (!NBSP_LOCALES.has(format.resolvedOptions().locale)) return format.format(value);
   return format
     .formatToParts(value)
     .map((part) =>
@@ -117,38 +120,64 @@ export function formatCompact(value: number, options: CompactFormatOptions = {})
   return `${prefix}${text}`;
 }
 
+export interface FormatLocaleOptions {
+  /** BCP 47 tag; each preset keeps its es-PE default when omitted. */
+  locale?: string;
+  /** ISO 4217 code of the "currency" preset (default "PEN"). */
+  currency?: string;
+}
+
 /** Turns a `ValueFormat` into a function. Undefined means plain numbers. */
-export function resolveFormat(format: ValueFormat | undefined): ValueFormatter {
+export function resolveFormat(
+  format: ValueFormat | undefined,
+  { locale, currency }: FormatLocaleOptions = {},
+): ValueFormatter {
   if (typeof format === "function") return format;
   switch (format) {
     case "integer":
-      return (value) => formatNumber(value, { maximumFractionDigits: 0 });
+      return (value) => formatNumber(value, { maximumFractionDigits: 0, locale });
     case "currency":
-      return (value) => formatCurrency(value);
+      return (value) => formatCurrency(value, { currency, locale });
     case "percent":
-      return (value) => formatPercent(value);
+      return (value) => formatPercent(value, { locale });
     case "compact":
-      return (value) => formatCompact(value);
+      return (value) => formatCompact(value, { locale });
     default:
-      return (value) => formatNumber(value);
+      return (value) => formatNumber(value, { locale });
   }
+}
+
+/** Currency symbol of `currency` in `locale` ("S/", "$"), for compact money prefixes. */
+function currencySymbol(currency: string, locale: string | undefined): string {
+  const part = numberFormat(locale ?? "es-PE", { style: "currency", currency })
+    .formatToParts(0)
+    .find((p) => p.type === "currency");
+  return part?.value ?? currency;
 }
 
 /**
  * Shorter variant for axis ticks: currency drops the cents and turns compact
  * from ten thousand up ("S/ 12 mil"); plain numbers turn compact from 10 000.
  */
-export function resolveAxisFormat(format: ValueFormat | undefined): ValueFormatter {
+export function resolveAxisFormat(
+  format: ValueFormat | undefined,
+  { locale, currency }: FormatLocaleOptions = {},
+): ValueFormatter {
   if (typeof format === "function") return format;
   switch (format) {
-    case "currency":
+    case "currency": {
+      const prefix = `${currency ? currencySymbol(currency, locale) : "S/"}${NBSP}`;
       return (value) =>
         Math.abs(value) >= 10_000
-          ? formatCompact(value, { prefix: `S/${NBSP}` })
-          : formatCurrency(value, { decimals: 0 });
+          ? formatCompact(value, { prefix, locale })
+          : formatCurrency(value, { decimals: 0, currency, locale });
+    }
     case "percent":
-      return (value) => formatPercent(value, { decimals: 0 });
+      return (value) => formatPercent(value, { decimals: 0, locale });
     default:
-      return (value) => (Math.abs(value) >= 10_000 ? formatCompact(value) : formatNumber(value));
+      return (value) =>
+        Math.abs(value) >= 10_000
+          ? formatCompact(value, { locale })
+          : formatNumber(value, { locale });
   }
 }

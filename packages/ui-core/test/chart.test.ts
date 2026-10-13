@@ -10,6 +10,7 @@ import * as reactPalette from "../../ui/src/charts/core/palette.ts";
 import * as reactPath from "../../ui/src/charts/core/path.ts";
 import * as reactScales from "../../ui/src/charts/core/scales/index.ts";
 import * as reactStack from "../../ui/src/charts/core/stack.ts";
+import * as reactTimeRange from "../../ui/src/charts/core/time-range.ts";
 import * as axis from "../src/chart/axis.ts";
 import * as categoryAxis from "../src/chart/category-axis.ts";
 import * as colorScale from "../src/chart/color-scale.ts";
@@ -19,6 +20,7 @@ import * as palette from "../src/chart/palette.ts";
 import * as path from "../src/chart/path.ts";
 import * as scale from "../src/chart/scale.ts";
 import * as stack from "../src/chart/stack.ts";
+import * as timeRange from "../src/chart/time-range.ts";
 
 let seed = 7;
 const rand = () => {
@@ -261,9 +263,6 @@ describe("format parity", () => {
         reactFormat.formatNumber(v, { minimumFractionDigits: 2, maximumFractionDigits: 1 }),
       );
       expect(format.formatCurrency(v)).toBe(reactFormat.formatCurrency(v));
-      expect(format.formatCurrency(v, { currency: "USD", decimals: 0, locale: "en-US" })).toBe(
-        reactFormat.formatCurrency(v, { currency: "USD", decimals: 0, locale: "en-US" }),
-      );
       expect(format.formatPercent(v)).toBe(reactFormat.formatPercent(v));
       expect(format.formatPercent(v, { input: "whole", decimals: 0 })).toBe(
         reactFormat.formatPercent(v, { input: "whole", decimals: 0 }),
@@ -474,5 +473,164 @@ describe("downsample parity", () => {
         reactDownsample.sharedSampleIndices(series, threshold),
       );
     }
+  });
+});
+
+describe("time-range parity", () => {
+  it("shifts dates and resolves windows like React (local time)", () => {
+    const units = ["day", "week", "month", "year"] as const;
+    for (let i = 0; i < 400; i++) {
+      const date = new Date(
+        Date.UTC(2018, 0, 1) +
+          Math.floor(rand() * 3000) * 86_400_000 +
+          Math.floor(rand() * 86_400_000),
+      );
+      const unit = units[Math.floor(rand() * 4)] as (typeof units)[number];
+      const count = Math.floor(rand() * 14);
+      expect(+timeRange.shiftDate(date, unit, count)).toBe(
+        +reactTimeRange.shiftDate(date, unit, count),
+      );
+    }
+    for (const [y, m, d] of [
+      [2024, 2, 29],
+      [2025, 2, 31],
+      [2026, 0, 31],
+      [2026, 4, 31],
+    ] as const) {
+      for (const unit of units) {
+        const date = new Date(y, m, d, 9);
+        expect(+timeRange.shiftDate(date, unit, 1)).toBe(+reactTimeRange.shiftDate(date, unit, 1));
+      }
+    }
+    for (let i = 0; i < 200; i++) {
+      let t = Date.UTC(2024, 0, 1);
+      const dates = times(Math.floor(rand() * 120), () => {
+        t += Math.floor(between(0.2, 5) * 86_400_000);
+        return new Date(t);
+      });
+      const preset = {
+        unit: ([...units, "all"] as const)[Math.floor(rand() * 5)] as "all",
+        count: rand() > 0.2 ? Math.floor(between(1, 12)) : undefined,
+      };
+      expect(timeRange.rangeWindow(dates, preset)).toEqual(
+        reactTimeRange.rangeWindow(dates, preset),
+      );
+      expect(timeRange.rangeWindow(dates.map(Number), preset)).toEqual(
+        reactTimeRange.rangeWindow(dates.map(Number), preset),
+      );
+    }
+  });
+
+  it("works in a given time zone", () => {
+    const utc = (y: number, m: number, d: number, h = 0) => Date.UTC(y, m, d, h);
+    expect(
+      timeRange.shiftDate(new Date(utc(2026, 2, 31, 10)), "month", 1, "UTC").toISOString(),
+    ).toBe("2026-02-28T10:00:00.000Z");
+    expect(
+      timeRange.shiftDate(new Date(utc(2024, 2, 31, 10)), "year", 1, "UTC").toISOString(),
+    ).toBe("2023-03-31T10:00:00.000Z");
+    // 03:00 UTC on 10 Mar 2026 is 23:00 on 9 Mar in New York (after the DST jump): one day back keeps the wall clock.
+    expect(
+      timeRange
+        .shiftDate(new Date(utc(2026, 2, 10, 3)), "day", 9, "America/New_York")
+        .toISOString(),
+    ).toBe("2026-03-01T04:00:00.000Z");
+    const dates = [0, 1, 2, 3, 4, 5].map((k) => utc(2026, 0, 31) + k * 30 * 86_400_000);
+    expect(timeRange.rangeWindow(dates, { unit: "month", count: 2 }, "UTC")).toEqual([3, 5]);
+  });
+});
+
+describe("locale and time zone options", () => {
+  const utc = { locale: "en-US", timeZone: "UTC" };
+  const at = (y: number, m: number, d: number, h = 0) => Date.UTC(y, m, d, h);
+
+  it("defaults are byte-identical to React when the options are omitted or undefined", () => {
+    const a = at(2026, 0, 3, 5);
+    for (const days of [3, 40, 400, 3000]) {
+      const b = a + days * 86_400_000;
+      expect(scale.timeTicks(a, b, 6, {})).toEqual(reactScales.timeTicks(a, b, 6));
+      expect(scale.timeTicks(a, b, 6, { locale: undefined, timeZone: undefined })).toEqual(
+        reactScales.timeTicks(a, b, 6),
+      );
+      expect(
+        scale.timeScale({ domain: [a, b], range: [0, 500], locale: undefined }).timeTicks(),
+      ).toEqual(reactScales.timeScale({ domain: [a, b], range: [0, 500] }).timeTicks());
+    }
+    expect(format.resolveFormat("currency", {})(1234.5)).toBe(
+      reactFormat.resolveFormat("currency")(1234.5),
+    );
+    expect(format.resolveAxisFormat("currency", {})(25_000)).toBe(
+      reactFormat.resolveAxisFormat("currency")(25_000),
+    );
+    expect(categoryAxis.defaultCategoryLabel(new Date(2026, 9, 6), {})).toBe(
+      reactCategory.defaultCategoryLabel(new Date(2026, 9, 6)),
+    );
+  });
+
+  it("golden: en-US labels in UTC", () => {
+    const ticks = (a: number, b: number, count: number) =>
+      scale.timeTicks(a, b, count, utc).map((t) => `${t.value}|${t.unit}|${t.label}`);
+    expect(ticks(at(2026, 0, 3, 5), at(2026, 3, 1, 5), 6)).toEqual([
+      `${at(2026, 1, 1)}|month|feb 2026`,
+      `${at(2026, 2, 1)}|month|mar`,
+      `${at(2026, 3, 1)}|month|apr`,
+    ]);
+    expect(ticks(at(2026, 0, 3, 5), at(2026, 0, 8, 5), 6)).toEqual([
+      `${at(2026, 0, 4)}|day|sun 4`,
+      `${at(2026, 0, 5)}|day|mon 5`,
+      `${at(2026, 0, 6)}|day|tue 6`,
+      `${at(2026, 0, 7)}|day|wed 7`,
+      `${at(2026, 0, 8)}|day|thu 8`,
+    ]);
+    expect(ticks(at(2026, 0, 3, 5), at(2029, 0, 1), 4)).toEqual([
+      `${at(2027, 0, 1)}|year|2027`,
+      `${at(2028, 0, 1)}|year|2028`,
+      `${at(2029, 0, 1)}|year|2029`,
+    ]);
+    expect(scale.formatDate(at(2026, 9, 6, 23), utc)).toBe("tue 6 oct 2026");
+    expect(scale.formatDate(at(2026, 9, 6, 23), { locale: "en-US", timeZone: "Asia/Tokyo" })).toBe(
+      "wed 7 oct 2026",
+    );
+    expect(categoryAxis.defaultCategoryLabel(new Date(at(2026, 9, 6, 23)), utc)).toBe("6 oct");
+    expect(scale.shortMonth(new Date(at(2026, 4, 1)), { locale: "fr-FR", timeZone: "UTC" })).toBe(
+      "mai",
+    );
+  });
+
+  it("ticks sit on local midnights of the requested zone, across DST", () => {
+    const timeZone = "America/New_York";
+    const hour = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hourCycle: "h23" });
+    const ticks = scale.timeTicks(at(2026, 2, 1), at(2026, 3, 20), 40, {
+      locale: "en-US",
+      timeZone,
+    });
+    expect(ticks.length).toBeGreaterThan(20);
+    for (const tick of ticks) expect(Number(hour.format(tick.value))).toBe(0);
+    const sundays = scale.timeTicks(at(2026, 1, 1), at(2026, 5, 1), 12, {
+      locale: "en-US",
+      timeZone,
+    });
+    expect(sundays[0]?.unit).toBe("week");
+    for (const tick of sundays)
+      expect(
+        new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short" }).format(tick.value),
+      ).toBe("Mon");
+  });
+
+  it("golden: en-US number formats use the locale's own separators", () => {
+    const us = { locale: "en-US" };
+    expect(format.resolveFormat("number", us)(1_234_567.891)).toBe("1,234,567.89");
+    expect(format.resolveFormat("currency", { locale: "en-US", currency: "USD" })(1234.5)).toBe(
+      "$1,234.50",
+    );
+    expect(format.resolveAxisFormat("currency", { locale: "en-US", currency: "USD" })(25_000)).toBe(
+      "$\u00a025K",
+    );
+    expect(format.resolveAxisFormat("currency", { locale: "en-US", currency: "USD" })(2500)).toBe(
+      "$2,500",
+    );
+    expect(format.resolveFormat("compact", us)(1234)).toBe("1.2K");
+    expect(format.resolveFormat("percent", us)(0.125)).toBe("12.5%");
+    expect(format.formatNumber(1234.5, { locale: "de-DE" })).toBe("1.234,5");
   });
 });
