@@ -129,8 +129,8 @@ export function createRichText(editor: HTMLElement, options: RichTextOptions = {
     );
   };
 
-  const insertClean = (clean: string) => {
-    if (!clean) return;
+  const insertClean = (clean: string): boolean => {
+    if (!clean) return false;
     editor.focus();
     if (!selectionRange()) {
       const end = doc.createRange();
@@ -141,6 +141,7 @@ export function createRichText(editor: HTMLElement, options: RichTextOptions = {
     }
     doc.execCommand("insertHTML", false, clean);
     emit();
+    return true;
   };
 
   const caretAt = (x: number, y: number) => {
@@ -169,10 +170,29 @@ export function createRichText(editor: HTMLElement, options: RichTextOptions = {
     insertClean(htmlFrom(event.clipboardData));
   };
 
+  // A drag that starts inside this editor moves its selection; one from elsewhere copies.
+  let dragSource: Range | null = null;
+  const onDragStart = () => {
+    const range = selectionRange();
+    dragSource = range && !range.collapsed ? range.cloneRange() : null;
+  };
+  const onDragEnd = () => {
+    dragSource = null;
+  };
+
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
+    const source = dragSource;
+    dragSource = null;
     caretAt(event.clientX, event.clientY);
-    insertClean(htmlFrom(event.dataTransfer));
+    if (source) {
+      const target = selectionRange();
+      if (target && source.isPointInRange(target.startContainer, target.startOffset)) return;
+    }
+    if (insertClean(htmlFrom(event.dataTransfer)) && source) {
+      source.deleteContents();
+      emit();
+    }
   };
 
   // Anything the browser would insert by itself from foreign data goes through the sanitizer instead.
@@ -220,6 +240,8 @@ export function createRichText(editor: HTMLElement, options: RichTextOptions = {
   editor.addEventListener("input", emit);
   editor.addEventListener("blur", emit);
   editor.addEventListener("paste", onPaste);
+  editor.addEventListener("dragstart", onDragStart);
+  editor.addEventListener("dragend", onDragEnd);
   editor.addEventListener("drop", onDrop);
   editor.addEventListener("beforeinput", onBeforeInput);
   editor.addEventListener("keydown", onKeyDown);
@@ -269,6 +291,8 @@ export function createRichText(editor: HTMLElement, options: RichTextOptions = {
       editor.removeEventListener("input", emit);
       editor.removeEventListener("blur", emit);
       editor.removeEventListener("paste", onPaste);
+      editor.removeEventListener("dragstart", onDragStart);
+      editor.removeEventListener("dragend", onDragEnd);
       editor.removeEventListener("drop", onDrop);
       editor.removeEventListener("beforeinput", onBeforeInput);
       editor.removeEventListener("keydown", onKeyDown);

@@ -217,6 +217,52 @@ describe("createRichText", () => {
     expect(rich.getHtml()).toContain("insertFromDrop");
   });
 
+  it("moves the selection on a drag inside the editor and copies one from elsewhere", () => {
+    const { el, rich } = editable("<p>move me</p><p>target</p>");
+    el.focus();
+    const [first, second] = Array.from(el.querySelectorAll("p"));
+    const range = document.createRange();
+    range.selectNodeContents(first as HTMLElement);
+    getSelection()?.removeAllRanges();
+    getSelection()?.addRange(range);
+    const drop = (dataTransfer: DataTransfer) => {
+      const rect = (second as HTMLElement).getBoundingClientRect();
+      el.dispatchEvent(
+        new DragEvent("drop", {
+          dataTransfer,
+          bubbles: true,
+          cancelable: true,
+          clientX: rect.left + 2,
+          clientY: rect.top + rect.height / 2,
+        }),
+      );
+    };
+    const transfer = () => {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("text/html", "<b>move me</b>");
+      return dataTransfer;
+    };
+    el.dispatchEvent(new DragEvent("dragstart", { bubbles: true }));
+    drop(transfer());
+    expect(rich.getHtml().split("move me").length - 1).toBe(1);
+    expect(rich.getHtml()).toContain("target");
+
+    const other = editable("<p>target</p>");
+    other.el.focus();
+    const rect = (other.el.querySelector("p") as HTMLElement).getBoundingClientRect();
+    other.el.dispatchEvent(
+      new DragEvent("drop", {
+        dataTransfer: transfer(),
+        bubbles: true,
+        cancelable: true,
+        clientX: rect.left + 2,
+        clientY: rect.top + rect.height / 2,
+      }),
+    );
+    expect(other.rich.getHtml()).toContain("move me");
+    expect(rich.getHtml().split("move me").length - 1).toBe(1);
+  });
+
   it("ignores a paste or drop that carries only a file", () => {
     const { el, rich } = editable();
     el.focus();
