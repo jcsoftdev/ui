@@ -51,6 +51,25 @@ describe("stick-to-bottom", () => {
     expect(jumps.at(-1)).toBe(false);
     stick.destroy();
   });
+
+  it("releases when the reader scrolls up before the follow scroll event is delivered", async () => {
+    document.body.innerHTML = `<div id="s" style="height:100px;overflow:auto"><div id="c"></div></div>`;
+    const scroller = document.getElementById("s") as HTMLElement;
+    const content = document.getElementById("c") as HTMLElement;
+    const stick = createStickToBottom({ scroller, content });
+    // Runs right after the follow-scroll in the same resize pass, before its scroll event is
+    // dispatched: the browser then coalesces both moves into one event.
+    const reader = new ResizeObserver(() => {
+      if (scroller.scrollTop === 400) scroller.scrollTop = 100;
+    });
+    reader.observe(content);
+    content.style.height = "500px";
+    await frame();
+    reader.disconnect();
+    expect(scroller.scrollTop).toBe(100);
+    expect(stick.stuck).toBe(false);
+    stick.destroy();
+  });
 });
 
 describe("online", () => {
