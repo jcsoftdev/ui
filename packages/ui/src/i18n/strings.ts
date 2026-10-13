@@ -11,6 +11,8 @@ export interface UiStrings {
   somethingWrong: string;
   actions: string;
   notifications: string;
+  copy: string;
+  copied: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -29,6 +31,8 @@ export const uiStrings = {
     somethingWrong: "Something went wrong. Try again.",
     actions: "Actions",
     notifications: "Notifications",
+    copy: "Copy",
+    copied: "Copied",
   },
   es: {
     retry: "Reintentar",
@@ -43,5 +47,7 @@ export const uiStrings = {
     somethingWrong: "Algo salió mal. Inténtalo de nuevo.",
     actions: "Acciones",
     notifications: "Notificaciones",
+    copy: "Copiar",
+    copied: "Copiado",
   },
 } as const satisfies Record<UiLocale, UiStrings>;
