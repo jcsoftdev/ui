@@ -1,10 +1,14 @@
 ---
 import { Code } from "@astrojs/starlight/components";
 import Landing from "../layouts/Landing.astro";
+import "../styles/glass-demo.css";
 import { BentoGrid } from "../components/landing/bento";
 import PresetSwitcher from "../components/landing/PresetSwitcher";
 import PresetDock from "../components/landing/PresetDock";
-import HeroScene from "../components/landing/HeroScene";
+import HeroGlass from "../components/glass/HeroGlass";
+import CatalogGrid from "../components/landing/CatalogGrid";
+import LiquidShowcase from "../components/landing/LiquidShowcase";
+import ThemeColorDemo from "../components/landing/ThemeColorDemo";
 import DashboardTile from "../components/landing/DashboardTile";
 import GlobeTile from "../components/landing/GlobeTile";
 import CrossfilterTile from "../components/landing/CrossfilterTile";
@@ -29,6 +33,45 @@ const stats = [
   { value: 0, label: "runtime theming JS" },
 ];
 
+const catalogMeta: Record<string, { blurb: string; href: string }> = {
+  atoms: {
+    blurb: "Buttons, chips, switches, avatars, progress.",
+    href: "/docs/components/button/",
+  },
+  forms: {
+    blurb: "Inputs, selects, ratings, date and file fields.",
+    href: "/docs/components/input/",
+  },
+  navigation: { blurb: "Tabs, segmented controls, breadcrumbs.", href: "/docs/components/tabs/" },
+  containers: {
+    blurb: "Cards, KPIs, data grids, banners, layout.",
+    href: "/docs/components/card/",
+  },
+  overlays: {
+    blurb: "Dialogs, sheets, menus, popovers, toasts.",
+    href: "/docs/components/dialog/",
+  },
+  states: { blurb: "Empty, error and loading states.", href: "/docs/components/banner/" },
+  ai: { blurb: "Chat, streaming text, tool calls, sources.", href: "/docs/components/attachment/" },
+  brand: { blurb: "Logo marks and brand building blocks.", href: "/docs/components/logo-mark/" },
+  calendar: { blurb: "Month, week and agenda calendars.", href: "/docs/components/calendar/" },
+  palette: {
+    blurb: "Command palette with fuzzy search.",
+    href: "/docs/components/command-palette/",
+  },
+  shell: { blurb: "App shell, sidebars and top bars.", href: "/docs/components/app-shell/" },
+  charts: { blurb: "SVG charts with keyboard support.", href: "/docs/components/area-chart/" },
+};
+const catalog = manifest.categories
+  .filter((c: { id: string }) => catalogMeta[c.id])
+  .map((c: { id: string; title: string; count: number }) => ({
+    id: c.id,
+    title: c.title,
+    count: c.count,
+    ...catalogMeta[c.id]!,
+  }));
+const gradle = `implementation("com.jcsoftdev:ui-compose:0.1.0")`;
+const themeCli = `npx ui-theme build my-tokens.json --out src/theme`;
 const install = "pnpm add @jcsoftdev/ui react react-dom";
 const cssSnippet = `/* app.css */
 @import "tailwindcss";
@@ -58,65 +101,7 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
   title="@jcsoftdev/ui — React components that restyle with one attribute"
   description="A React component library with 260+ components, charts, a spreadsheet DataGrid and an AI kit. Six style presets, accents, dark mode and density switch with data attributes and zero runtime JavaScript."
 >
-  <section id="hero" class="landing-hero">
-    <div class="landing-wrap grid items-start gap-10 pb-16 pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:pt-20">
-      <div class="min-w-0">
-        <p class="landing-kicker">
-          <span class="pole w-10" aria-hidden="true"></span> Design system for React + Tailwind
-        </p>
-        <h1 class="landing-h1">One token file. Six looks. Zero runtime.</h1>
-        <p class="landing-lead">
-          {manifest.counts.components} accessible components, {chartCount} chart types, a
-          spreadsheet-grade DataGrid and an AI chat kit. Switch the whole look with a data
-          attribute: the CSS does the rest. Try it on the right, the entire page restyles.
-        </p>
-        <div class="mt-7 flex flex-wrap items-center gap-3">
-          <a
-            href="/docs/getting-started/"
-            class="inline-flex h-11 items-center rounded-button bg-accent px-5 font-semibold text-on-accent no-underline pressable hover:brightness-110 focus-visible:focus-ring"
-          >
-            Get started
-          </a>
-          <a
-            href="#live"
-            class="inline-flex h-11 items-center rounded-button border-card px-5 font-semibold text-ink no-underline surface-card pressable hover:surface-2 focus-visible:focus-ring"
-          >
-            See it live
-          </a>
-        </div>
-        <div class="mt-6 flex max-w-xl items-center gap-2 rounded-card border-card p-2 pl-4 surface-card">
-          <code class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-[0.875rem] text-ink">
-            {install}
-          </code>
-          <button
-            type="button"
-            data-copy={install}
-            class="h-8 shrink-0 cursor-pointer rounded-button px-3 text-[0.8125rem] font-semibold text-ink-2 surface-2 pressable hover:text-ink focus-visible:focus-ring"
-          >
-            Copy
-          </button>
-        </div>
-        <ul class="landing-feature-list">
-          <li>
-            Role tokens in plain CSS: presets, accents, dark mode, density and radius are attribute
-            selectors.
-          </li>
-          <li>
-            Container queries everywhere, so components adapt to the space they get, not to the
-            viewport.
-          </li>
-          <li>
-            Docs for people and for LLMs: every page also ships as Markdown, plus{" "}
-            <a href="/llms.txt">llms.txt</a>.
-          </li>
-        </ul>
-      </div>
-      <div class="flex min-w-0 flex-col gap-4">
-        <PresetSwitcher client:load />
-        <HeroScene client:load />
-      </div>
-    </div>
-  </section>
+  <HeroGlass client:load components={manifest.counts.components} charts={chartCount} />
 
   <section class="landing-section" id="stats" aria-label="The library in numbers">
     <div class="landing-wrap grid grid-cols-2 gap-density md:grid-cols-3 lg:grid-cols-6">
@@ -129,6 +114,35 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
           <span>{stat.label}</span>
         </div>
       ))}
+    </div>
+  </section>
+
+  <section class="landing-section" id="included">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">What is included</p>
+        <h2 class="landing-h2">{manifest.counts.components} components, grouped by job</h2>
+        <p class="landing-lead">
+          Every card is a live component from the package. Click one to read its docs.
+        </p>
+      </div>
+      <CatalogGrid client:visible entries={catalog} />
+    </div>
+  </section>
+
+  <section class="landing-section" id="liquid-glass">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Liquid Glass</p>
+        <h2 class="landing-h2">Glass that bends what is behind it</h2>
+        <p class="landing-lead">
+          An SVG displacement lens with rim light, dispersion and spring motion. Chromium renders
+          the refraction; other browsers keep the frosted material. Drag the pills.{" "}
+          <a href="/playground/">Tune every option in the playground</a>, or read the{" "}
+          <a href="/docs/glass/">glass docs</a>.
+        </p>
+      </div>
+      <LiquidShowcase client:visible />
     </div>
   </section>
 
@@ -173,6 +187,96 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
       <div class="reveal">
         <PresetsGallery />
       </div>
+      <div class="reveal mt-10 grid items-start gap-density lg:grid-cols-2">
+        <div class="min-w-0">
+          <h3 class="landing-h3">Your brand colour, live</h3>
+          <p class="landing-lead">
+            Tokens are plain CSS variables. There is no <code>createTheme()</code>: author a tokens
+            JSON, run <code>ui-theme build</code>, and switch with data attributes. Or override a
+            few variables on any scope, as below.
+          </p>
+          <div class="landing-code">
+            <Code code={themeCli} lang="bash" />
+          </div>
+          <div class="mt-4">
+            <PresetSwitcher client:visible />
+          </div>
+        </div>
+        <ThemeColorDemo client:visible />
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="platforms">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Platform parity</p>
+        <h2 class="landing-h2">Web and Compose, one design language</h2>
+        <p class="landing-lead">
+          The same tokens, names and behaviours ship as a React package and a Compose Multiplatform
+          kit (Android, iOS, desktop). 43 components are mirrored one to one.
+        </p>
+      </div>
+      <div class="reveal platform-grid">
+        <div class="platform-card border-card shadow-card surface-card">
+          <h3>Web: @jcsoftdev/ui</h3>
+          <ul class="badge-row" aria-label="Web package facts">
+            <li>npm</li>
+            <li>React 18+</li>
+            <li>zero runtime deps</li>
+          </ul>
+          <div class="landing-code">
+            <Code code={install} lang="bash" />
+          </div>
+        </div>
+        <div class="platform-card border-card shadow-card surface-card">
+          <h3>Compose: ui-compose</h3>
+          <ul class="badge-row" aria-label="Compose package facts">
+            <li>Maven Central</li>
+            <li>Android</li>
+            <li>iOS</li>
+            <li>Desktop</li>
+          </ul>
+          <div class="landing-code">
+            <Code code={gradle} lang="kotlin" />
+          </div>
+          <p>
+            Compose Liquid Glass lives on a feature branch and is not part of the published 0.1.0
+            artifact yet.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="principles">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Principles</p>
+        <h2 class="landing-h2">Small, predictable, yours to change</h2>
+      </div>
+      <ul class="reveal principles" role="list">
+        <li class="border-card shadow-card surface-card">
+          <strong>Zero runtime dependencies</strong>
+          <span>Nothing to audit but this package.</span>
+        </li>
+        <li class="border-card shadow-card surface-card">
+          <strong>Tree-shakable</strong>
+          <span>{manifest.counts.entries} subpaths; import only what you ship.</span>
+        </li>
+        <li class="border-card shadow-card surface-card">
+          <strong>RSC-safe</strong>
+          <span>Server components render; islands hydrate only where needed.</span>
+        </li>
+        <li class="border-card shadow-card surface-card">
+          <strong>Accessible</strong>
+          <span>Roles, focus rings, keyboard paths, reduced motion.</span>
+        </li>
+        <li class="border-card shadow-card surface-card">
+          <strong>Customizable</strong>
+          <span>Tokens, data attributes and class overrides, no fork needed.</span>
+        </li>
+      </ul>
     </div>
   </section>
 
@@ -239,7 +343,7 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
     <div class="landing-wrap">
       <div class="reveal mb-8 max-w-3xl">
         <p class="landing-kicker">Install</p>
-        <h2 class="landing-h2">Three snippets and you are in</h2>
+        <h2 class="landing-h2">Getting started in three snippets</h2>
       </div>
       <div class="reveal grid gap-density lg:grid-cols-2">
         <div class="flex min-w-0 flex-col gap-density">

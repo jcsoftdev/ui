@@ -155,7 +155,7 @@ test("glass and glass-clear gate the blur and fall back to an opaque fill", () =
     assert.match(css, /@media \(forced-colors: active\) \{[^}]*Canvas/);
     assert.match(
       css,
-      /:where\(\.glass, \.glass-clear, \.surface-overlay, \.surface-nav, \.surface-side\) & \{[^}]*--glass-nested-tint/,
+      /:where\(\.glass, \.glass-clear, \.liquid, \.liquid-clear, \.surface-overlay, \.surface-nav, \.surface-side\) & \{[^}]*--glass-nested-tint/,
     );
   }
   assert.match(utility("glass-clear"), /linear-gradient\(var\(--glass-clear-dim\)/);

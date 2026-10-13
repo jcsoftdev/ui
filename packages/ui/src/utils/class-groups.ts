@@ -531,6 +531,8 @@ export const GROUPS: GroupEntry[] = [
       "surface-side",
       "glass",
       "glass-clear",
+      "liquid",
+      "liquid-clear",
       "surface-solid",
     ],
   ],

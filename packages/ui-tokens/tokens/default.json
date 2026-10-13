@@ -1503,6 +1503,170 @@
     "usage": "Glass inside glass: Apple avoids stacking glass, so a glass element nested in another one uses this fill and drops its own blur. Opaque (--float) except in the glass preset, where it is a near-solid tint."
    },
    {
+    "name": "liquid-regular-blur",
+    "value": "2px",
+    "usage": "Liquid glass, regular: backdrop blur radius at the centre. Low on purpose: the rim lens and the specular layers carry the look. Raised only if legibility needs it."
+   },
+   {
+    "name": "liquid-clear-blur",
+    "value": ".6px",
+    "usage": "Liquid glass, clear: backdrop blur radius."
+   },
+   {
+    "name": "liquid-saturate",
+    "value": {
+     "light": "1.5",
+     "dark": "1.45"
+    },
+    "usage": "Liquid glass: backdrop saturation. Higher than frosted, so colour bleeds through the thin blur."
+   },
+   {
+    "name": "liquid-regular-filter",
+    "value": "blur(var(--liquid-regular-blur)) saturate(var(--liquid-saturate))",
+    "usage": "Liquid glass, regular: reference value of the backdrop-filter. The utilities compose the same filter from `--liquid-regular-blur`, `--liquid-saturate` and the per-surface options (`--liquid-frost`, `--liquid-saturation`, `--liquid-brightness-fn`), so overriding this token alone changes nothing."
+   },
+   {
+    "name": "liquid-clear-filter",
+    "value": "blur(var(--liquid-clear-blur)) saturate(var(--liquid-saturate)) brightness(var(--glass-clear-brightness))",
+    "usage": "Liquid glass, clear: reference value of the backdrop-filter (see `liquid-regular-filter`)."
+   },
+   {
+    "name": "liquid-regular-tint",
+    "value": {
+     "light": "rgba(255,255,255,.2)",
+     "dark": "rgba(24,24,28,.36)"
+    },
+    "usage": "Liquid glass, regular: translucent fill. Thinner than frosted; the dim layer below keeps text legible."
+   },
+   {
+    "name": "liquid-regular-dim",
+    "value": {
+     "light": "rgba(255,255,255,.6)",
+     "dark": "rgba(0,0,0,.54)"
+    },
+    "usage": "Liquid glass, regular: legibility veil. Keeps text-ink at 4.5:1 and text-ink-2 at 3.5:1 on white, black, split and striped backdrops; the text halo adds to that for real text."
+   },
+   {
+    "name": "liquid-clear-tint",
+    "value": {
+     "light": "rgba(255,255,255,.05)",
+     "dark": "rgba(255,255,255,.03)"
+    },
+    "usage": "Liquid glass, clear: translucent fill."
+   },
+   {
+    "name": "liquid-clear-dim",
+    "value": {
+     "light": "rgba(255,255,255,.47)",
+     "dark": "rgba(0,0,0,.38)"
+    },
+    "usage": "Liquid glass, clear: thin legibility veil. Keeps text-ink at 4.5:1; secondary text (text-ink-2) is only guaranteed 2:1, so use regular glass for small secondary copy."
+   },
+   {
+    "name": "liquid-halo",
+    "value": {
+     "light": "0 0 .6em rgba(255,255,255,.7)",
+     "dark": "0 0 .6em rgba(0,0,0,.6)"
+    },
+    "usage": "Liquid glass: soft halo behind text on a liquid surface (text-shadow, inherited), the content-side scrim that keeps copy legible over a busy backdrop now that the veil is thin."
+   },
+   {
+    "name": "liquid-shadow",
+    "value": {
+     "light": "0 10px 30px -6px rgba(8,10,30,.2), 0 2px 6px rgba(8,10,30,.08)",
+     "dark": "0 12px 34px -6px rgba(0,0,0,.55), 0 2px 6px rgba(0,0,0,.3)"
+    },
+    "usage": "Liquid glass: outer shadow. Deeper than the frosted one so the lens reads as an object lifting off a busy or light backdrop; override per surface to ease it over plain light content."
+   },
+   {
+    "name": "liquid-rim-lit",
+    "value": {
+     "light": ".95",
+     "dark": ".7"
+    },
+    "usage": "Liquid glass: opacity of the highlight on the wall that faces the light. Read by a configured rim (`rim`, `specular.angle`), which scales it."
+   },
+   {
+    "name": "liquid-rim-back",
+    "value": {
+     "light": ".7",
+     "dark": ".4"
+    },
+    "usage": "Liquid glass: opacity of the highlight on the wall opposite the light."
+   },
+   {
+    "name": "liquid-rim-ring",
+    "value": {
+     "light": ".5",
+     "dark": ".22"
+    },
+    "usage": "Liquid glass: opacity of the hairline ring all around the surface."
+   },
+   {
+    "name": "liquid-shadow-ink",
+    "value": {
+     "light": "rgb(8,10,30)",
+     "dark": "rgb(0,0,0)"
+    },
+    "usage": "Liquid glass: Colour of the outer shadow (opaque; `liquid-shadow-alpha` sets its strength), for a configured shadow (`shadow`)."
+   },
+   {
+    "name": "liquid-shadow-alpha",
+    "value": {
+     "light": ".2",
+     "dark": ".55"
+    },
+    "usage": "Liquid glass: opacity of the main outer shadow layer, which a configured shadow (`shadow.opacity`) multiplies."
+   },
+   {
+    "name": "liquid-shadow-drop",
+    "value": {
+     "light": "10px",
+     "dark": "12px"
+    },
+    "usage": "Liquid glass: vertical offset of the outer shadow at the reference size. Read by the lens engine's size-scaled shadow, so an installed lens keeps the theme's shadow."
+   },
+   {
+    "name": "liquid-shadow-blur",
+    "value": {
+     "light": "30px",
+     "dark": "34px"
+    },
+    "usage": "Liquid glass: blur of the outer shadow at the reference size (see `liquid-shadow-drop`); a configured shadow (`shadow.spread`) adds to the 30px base instead."
+   },
+   {
+    "name": "liquid-shadow-contact",
+    "value": {
+     "light": ".4",
+     "dark": ".545"
+    },
+    "usage": "Liquid glass: strength of the tight contact shadow under the surface, as a fraction of `liquid-shadow-alpha`."
+   },
+   {
+    "name": "liquid-rim",
+    "value": {
+     "light": "inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5)",
+     "dark": "inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22)"
+    },
+    "usage": "Liquid glass: specular rim as inset shadows: a bright 1.5px highlight on the lit (top-left) and a weaker one on the opposite (bottom-right) edge, plus a ring all around. Unlike a masked gradient it follows the radius and survives scrolling."
+   },
+   {
+    "name": "liquid-depth",
+    "value": {
+     "light": "inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2)",
+     "dark": "inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5)"
+    },
+    "usage": "Liquid glass: inner top highlight, edge glow and lower inner shadow that give the glass thickness."
+   },
+   {
+    "name": "liquid-depth-active",
+    "value": {
+     "light": "inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16)",
+     "dark": "inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45)"
+    },
+    "usage": "Liquid glass: depth while an interactive surface is pressed (it lights up from within)."
+   },
+   {
     "name": "page-backdrop",
     "value": "none",
     "usage": "Imagen de fondo de la página. Solo el estilo vidrio la usa, para que la translucidez se note."
@@ -2020,29 +2184,61 @@
     "background-image": "var(--surface-glass-layer)",
     "-webkit-backdrop-filter": "var(--surface-filter)",
     "backdrop-filter": "var(--surface-filter)",
-    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     ":where([data-glass^=\"liquid\"][data-style=\"glass\"], [data-glass^=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass^=\"liquid\"]) &": {
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
+      "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+      "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+      "text-shadow": "var(--liquid-halo)",
+      "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
+      "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+      "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+      },
+      "@media (prefers-reduced-motion: no-preference)": {
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+        "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+        "scale": "1.02"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+        "scale": ".97"
+       }
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
      "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "&[data-glass-nested]": {
      "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
      "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-reduced-transparency: reduce)": {
      "background-color": "var(--surface-overlay-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-contrast: more)": {
      "background-color": "var(--surface-overlay-fallback)",
@@ -2051,7 +2247,8 @@
      ":where([data-style=\"glass\"]) &": {
       "outline": "1px solid var(--line-strong)"
      },
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (forced-colors: active)": {
      "background-color": "var(--surface-overlay-fallback)",
@@ -2060,7 +2257,8 @@
      ":where([data-style=\"glass\"]) &": {
       "outline": "1px solid CanvasText"
      },
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     }
    },
    "focus-ring": {
@@ -2082,30 +2280,62 @@
      "-webkit-backdrop-filter": "var(--glass-regular-filter)",
      "backdrop-filter": "var(--glass-regular-filter)"
     },
-    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     ":where([data-glass^=\"liquid\"]) &": {
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
+      "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+      "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+      "text-shadow": "var(--liquid-halo)",
+      "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
+      "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+      "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+      },
+      "@media (prefers-reduced-motion: no-preference)": {
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+        "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+        "scale": "1.02"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+        "scale": ".97"
+       }
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
      "background-color": "var(--glass-nested-tint)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
     },
     "&[data-glass-nested]": {
      "background-color": "var(--glass-nested-tint)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-reduced-transparency: reduce)": {
      "background-color": "var(--glass-regular-fallback)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-contrast: more)": {
      "background-color": "var(--glass-regular-fallback)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "box-shadow": "0 0 0 1px var(--line-strong), var(--shadow-overlay)"
+     "box-shadow": "0 0 0 1px var(--line-strong), var(--shadow-overlay)",
+     "--glass-lens": "0"
     },
     "@media (forced-colors: active)": {
      "background-color": "Canvas",
@@ -2113,7 +2343,8 @@
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
      "box-shadow": "none",
-     "outline": "1px solid CanvasText"
+     "outline": "1px solid CanvasText",
+     "--glass-lens": "0"
     }
    },
    "glass-clear": {
@@ -2125,30 +2356,62 @@
      "-webkit-backdrop-filter": "var(--glass-clear-filter)",
      "backdrop-filter": "var(--glass-clear-filter)"
     },
-    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     ":where([data-glass^=\"liquid\"]) &": {
+      "background-color": "var(--glass-lens-tint, var(--liquid-clear-tint))",
+      "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+      "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)))",
+      "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)))",
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+      "text-shadow": "var(--liquid-halo)",
+      "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-clear-dim)",
+      "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+      "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+      },
+      "@media (prefers-reduced-motion: no-preference)": {
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+        "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+        "scale": "1.02"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+        "scale": ".97"
+       }
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
      "background-color": "var(--glass-nested-tint)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
     },
     "&[data-glass-nested]": {
      "background-color": "var(--glass-nested-tint)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-reduced-transparency: reduce)": {
      "background-color": "var(--glass-clear-fallback)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
-     "backdrop-filter": "none"
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-contrast: more)": {
      "background-color": "var(--glass-clear-fallback)",
      "background-image": "none",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "box-shadow": "0 0 0 1px var(--line-strong), var(--shadow-overlay)"
+     "box-shadow": "0 0 0 1px var(--line-strong), var(--shadow-overlay)",
+     "--glass-lens": "0"
     },
     "@media (forced-colors: active)": {
      "background-color": "Canvas",
@@ -2156,7 +2419,8 @@
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
      "box-shadow": "none",
-     "outline": "1px solid CanvasText"
+     "outline": "1px solid CanvasText",
+     "--glass-lens": "0"
     }
    },
    "surface-nav": {
@@ -2164,29 +2428,61 @@
     "background-image": "var(--surface-glass-layer)",
     "-webkit-backdrop-filter": "var(--surface-filter)",
     "backdrop-filter": "var(--surface-filter)",
-    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     ":where([data-glass^=\"liquid\"][data-style=\"glass\"], [data-glass^=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass^=\"liquid\"]) &": {
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
+      "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+      "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+      "text-shadow": "var(--liquid-halo)",
+      "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
+      "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+      "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+      },
+      "@media (prefers-reduced-motion: no-preference)": {
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+        "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+        "scale": "1.02"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+        "scale": ".97"
+       }
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
      "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "&[data-glass-nested]": {
      "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
      "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-reduced-transparency: reduce)": {
      "background-color": "var(--surface-nav-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-contrast: more)": {
      "background-color": "var(--surface-nav-fallback)",
@@ -2195,7 +2491,8 @@
      ":where([data-style=\"glass\"]) &": {
       "outline": "1px solid var(--line-strong)"
      },
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (forced-colors: active)": {
      "background-color": "var(--surface-nav-fallback)",
@@ -2204,7 +2501,8 @@
      ":where([data-style=\"glass\"]) &": {
       "outline": "1px solid CanvasText"
      },
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     }
    },
    "surface-side": {
@@ -2212,29 +2510,61 @@
     "background-image": "var(--surface-glass-layer)",
     "-webkit-backdrop-filter": "var(--surface-filter)",
     "backdrop-filter": "var(--surface-filter)",
-    ":where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     ":where([data-glass^=\"liquid\"][data-style=\"glass\"], [data-glass^=\"liquid\"] [data-style=\"glass\"], [data-style=\"glass\"] [data-glass^=\"liquid\"]) &": {
+      "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
+      "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+      "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+      "text-shadow": "var(--liquid-halo)",
+      "--glass-lens": "1",
+      "--glass-lens-dim": "var(--liquid-regular-dim)",
+      "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+      "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+      },
+      "@media (prefers-reduced-motion: no-preference)": {
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+        "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+        "scale": "1.02"
+       },
+       "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+        "scale": ".97"
+       }
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
      "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "&[data-glass-nested]": {
      "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px)))": {
      "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-reduced-transparency: reduce)": {
      "background-color": "var(--surface-side-fallback)",
      "-webkit-backdrop-filter": "none",
      "backdrop-filter": "none",
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (prefers-contrast: more)": {
      "background-color": "var(--surface-side-fallback)",
@@ -2243,7 +2573,8 @@
      ":where([data-style=\"glass\"]) &": {
       "outline": "1px solid var(--line-strong)"
      },
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     },
     "@media (forced-colors: active)": {
      "background-color": "var(--surface-side-fallback)",
@@ -2252,7 +2583,8 @@
      ":where([data-style=\"glass\"]) &": {
       "outline": "1px solid CanvasText"
      },
-     "background-image": "none"
+     "background-image": "none",
+     "--glass-lens": "0"
     }
    },
    "surface-solid": {
@@ -2260,6 +2592,142 @@
     "background-image": "none",
     "-webkit-backdrop-filter": "none",
     "backdrop-filter": "none"
+   },
+   "liquid": {
+    "background-color": "var(--glass-regular-fallback)",
+    "box-shadow": "0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow)",
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     "background-color": "var(--glass-lens-tint, var(--liquid-regular-tint))",
+     "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+     "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+     "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, )",
+     "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+     "text-shadow": "var(--liquid-halo)",
+     "--glass-lens": "1",
+     "--glass-lens-dim": "var(--liquid-regular-dim)",
+     "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+     "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+     "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+     },
+     "@media (prefers-reduced-motion: no-preference)": {
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+       "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+      },
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+       "scale": "1.02"
+      },
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "scale": ".97"
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--glass-nested-tint)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
+    },
+    "&[data-glass-nested]": {
+     "background-color": "var(--glass-nested-tint)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
+    },
+    "@media (prefers-reduced-transparency: reduce)": {
+     "background-color": "var(--glass-regular-fallback)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
+    },
+    "@media (prefers-contrast: more)": {
+     "background-color": "var(--glass-regular-fallback)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "box-shadow": "0 0 0 1px var(--line-strong), var(--shadow-overlay)",
+     "--glass-lens": "0"
+    },
+    "@media (forced-colors: active)": {
+     "background-color": "Canvas",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "box-shadow": "none",
+     "outline": "1px solid CanvasText",
+     "--glass-lens": "0"
+    }
+   },
+   "liquid-clear": {
+    "background-color": "var(--glass-clear-fallback)",
+    "box-shadow": "0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow)",
+    "@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))": {
+     "background-color": "var(--glass-lens-tint, var(--liquid-clear-tint))",
+     "background-image": "var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill))",
+     "-webkit-backdrop-filter": "blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)))",
+     "backdrop-filter": "blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)))",
+     "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))",
+     "text-shadow": "var(--liquid-halo)",
+     "--glass-lens": "1",
+     "--glass-lens-dim": "var(--liquid-clear-dim)",
+     "--liquid-tint-fill": "color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent)",
+     "--liquid-veil-fill": "color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent)",
+     "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+      "box-shadow": "var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))"
+     },
+     "@media (prefers-reduced-motion: no-preference)": {
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive])": {
+       "transition": "scale var(--motion-duration, 180ms) var(--motion-ease, ease)"
+      },
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):hover": {
+       "scale": "1.02"
+      },
+      "&:is(button, a, [role=\"button\"], [data-glass-interactive]):active:not(:disabled)": {
+       "scale": ".97"
+      }
+     }
+    },
+    ":where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) &": {
+     "background-color": "var(--glass-nested-tint)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
+    },
+    "&[data-glass-nested]": {
+     "background-color": "var(--glass-nested-tint)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
+    },
+    "@media (prefers-reduced-transparency: reduce)": {
+     "background-color": "var(--glass-clear-fallback)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "--glass-lens": "0"
+    },
+    "@media (prefers-contrast: more)": {
+     "background-color": "var(--glass-clear-fallback)",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "box-shadow": "0 0 0 1px var(--line-strong), var(--shadow-overlay)",
+     "--glass-lens": "0"
+    },
+    "@media (forced-colors: active)": {
+     "background-color": "Canvas",
+     "background-image": "none",
+     "-webkit-backdrop-filter": "none",
+     "backdrop-filter": "none",
+     "box-shadow": "none",
+     "outline": "1px solid CanvasText",
+     "--glass-lens": "0"
+    }
    }
   }
  }

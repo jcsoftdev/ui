@@ -51,3 +51,46 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Liquid Glass presets: `data-glass="liquid-clear|liquid-thick|liquid-crystal"` switch the glass surfaces to the
+   liquid look (like `data-glass="liquid"`) and set the options below, which are the same
+   `--liquid-*` variables a `material={{ type: "liquid", ... }}` object writes. `liquid-crystal` is a
+   fully clear lens without a contrast guarantee. `liquid-regular`
+   is the theme look (no overrides). Generated from LIQUID_PRESETS (src/glass/liquid-options.ts);
+   a test keeps the two in sync. */
+[data-glass="liquid-clear"] {
+  --liquid-refraction: 0.9;
+  --liquid-frost: 0.6px;
+  --liquid-specular: 1.1;
+  --liquid-opacity: 0.75;
+  --liquid-shadow-opacity: 0.7;
+  --liquid-shadow-custom: 0 calc(var(--liquid-shadow-drop, 10px) * var(--liquid-size, 1)) calc(var(--liquid-shadow-blur, 30px) * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.7 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.7 * var(--liquid-shadow-contact, .4) * 100%)), transparent);
+}
+[data-glass="liquid-thick"] {
+  --liquid-refraction: 1;
+  --liquid-bevel: 32px;
+  --liquid-frost: 3px;
+  --liquid-rim-strength: 1.25;
+  --liquid-fresnel: 0.35;
+  --liquid-rim-custom: inset 1px 1.732px 0 -.5px color-mix(in srgb, white min(100%, calc(var(--liquid-rim-lit, .95) * 1.25 * 100%)), transparent), inset -1px -1.732px 0 -.5px color-mix(in srgb, white min(100%, calc(var(--liquid-rim-back, .7) * 1.25 * 100%)), transparent), inset 0 0 0 1px color-mix(in srgb, white min(100%, calc(var(--liquid-rim-ring, .5) * 1.25 * 100%)), transparent), inset 0 0 18px color-mix(in srgb, white min(100%, calc(0.14 * 100%)), transparent);
+  --liquid-shadow-opacity: 1.2;
+  --liquid-shadow-spread: 12;
+  --liquid-shadow-offset: 16;
+  --liquid-shadow-custom: 0 calc(16px * var(--liquid-size, 1)) calc(42px * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 1.2 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 1.2 * var(--liquid-shadow-contact, .4) * 100%)), transparent);
+}
+[data-glass="liquid-crystal"] {
+  --liquid-refraction: 1.67;
+  --liquid-profile: crystal;
+  --liquid-dispersion: 0.05;
+  --liquid-frost: 0px;
+  --liquid-saturation: 1;
+  --liquid-tint-color: transparent;
+  --liquid-tint-amount: 0;
+  --liquid-rim-strength: 0.6;
+  --liquid-specular: 0;
+  --liquid-fresnel: 1;
+  --liquid-rim-custom: inset 1px 1.732px 0 -.5px color-mix(in srgb, white min(100%, calc(var(--liquid-rim-lit, .95) * 0.6 * 100%)), transparent), inset -1px -1.732px 0 -.5px color-mix(in srgb, white min(100%, calc(var(--liquid-rim-back, .7) * 0.6 * 100%)), transparent), inset 0 0 0 1px color-mix(in srgb, white min(100%, calc(var(--liquid-rim-ring, .5) * 0.6 * 100%)), transparent), inset 0 0 18px color-mix(in srgb, white min(100%, calc(0.4 * 100%)), transparent);
+  --liquid-opacity: 0;
+  --liquid-shadow-opacity: 0.8;
+  --liquid-shadow-custom: 0 calc(var(--liquid-shadow-drop, 10px) * var(--liquid-size, 1)) calc(var(--liquid-shadow-blur, 30px) * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.8 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.8 * var(--liquid-shadow-contact, .4) * 100%)), transparent);
+}

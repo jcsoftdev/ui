@@ -89,6 +89,7 @@
     "check:dist-imports": "node test/dist-imports.mjs",
     "check:pack": "node test/pack-consumer.mjs",
     "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs",
+    "check:rsc": "node test/rsc.mjs",
     "sync:tokens": "node scripts/sync-tokens.mjs",
     "prepare": "node scripts/sync-tokens.mjs",
     "prepack": "node scripts/sync-tokens.mjs",

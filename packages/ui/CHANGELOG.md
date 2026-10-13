@@ -2,6 +2,90 @@
 
 ## 0.3.0 (unreleased)
 
+### Crystal lens
+
+- **`profile: "crystal"`** and the `crystal` preset (`data-glass="liquid-crystal"`): a thick, fully clear convex lens that minifies the backdrop, bends it hard towards the rim, splits colour at the edge and has no frost, veil or tint. `refraction` accepts 0 to 2 for it (defaults and the other profiles are unchanged; above 1 they behave as 1). The minifying map cannot fold; the filter runs on a layer that extends past the surface and is clipped to it. No contrast guarantee.
+
+### Configurable Liquid Glass and liquid motion
+
+- **`LiquidGlassOptions`**: `material={{ type: "liquid" | "liquid-clear", ...options }}` on every
+  component with a `material` prop (the string values are unchanged). Options: `refraction`,
+  `bevelWidth`, `profile` (`"full"`, `"dome"`, `"rim"`), `dispersion`, `frost`, `saturation`,
+  `brightness`, `tint`, `rim`, `specular`, `fresnel`, `grain`, `radius`, `opacity`, `shadow`,
+  `interactive`, `motion`. Each maps to a `--liquid-*` custom property that the CSS and the lens
+  read, so a scope or the theme can set them and a change applies live. Exported from
+  `@jcsoftdev/ui/glass` with `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle` and `liquidVars`.
+- **`data-glass` presets**: `liquid-clear`, `liquid-regular` and `liquid-thick` (in `base.css`).
+  The global switch is now `[data-glass^="liquid"]`.
+- **Optics**: the `dome` profile (round contours), a size-scaled outer shadow, fresnel glow, film
+  grain, and a specular glint that follows `specular.angle`. Defaults are unchanged.
+- **Motion**: an in-house spring and one rAF loop: the lens materialises by spring, a press deepens
+  it, swells the surface and lights a touch glow that follows the pointer (the rim light turns
+  towards it), and `interactive: "drag"` pulls the surface through a rubber band with a velocity
+  squash (mismatched X/Y springs) and a jelly settle. Off under `prefers-reduced-motion` and with
+  `motion: false`.
+- New tokens: `liquid-rim-lit`, `liquid-rim-back`, `liquid-rim-ring`, `liquid-shadow-ink`,
+  `liquid-shadow-alpha`, `liquid-shadow-drop`, `liquid-shadow-blur`, `liquid-shadow-contact` (the
+  engine's size-scaled shadow now follows the theme in light and dark). The liquid utilities compose their backdrop filter from the blur and
+  saturate tokens and the per-surface options; overriding `--liquid-regular-filter` alone no longer
+  changes anything.
+- A lower `opacity`, a `tint` or `grain` void the contrast guarantee of the defaults.
+- Fix: a removed element released its lens only after the rebuild throttle; it is now immediate.
+- Motion hardening: the motion is written to `translate`/`scale` composed with the author's own
+  (an author `transform` is untouched; inline values are restored at rest, nothing is pinned); a
+  drag ignores presses on buttons, links and fields inside the surface, captures the pointer only
+  after 6 px, and swallows just its own gesture's click (within ~350 ms); no style reads per frame
+  and no config refresh from the motion's own writes; `--liquid-motion` and `--liquid-interactive`
+  are live; a moved surface follows its new ancestors; the overlays (dialog, popover, sidebar,
+  drawer) read `--liquid-interactive` only from their own inline style.
+
+### Liquid variant of the glass (lensing)
+
+Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it.
+
+- **`liquid` and `liquid-clear` utilities and `material="liquid" | "liquid-clear"`**: thin blur, higher
+  saturation, specular rim (lit top-left edge and a fainter opposite one), inner highlight, edge
+  glow and lower inner shadow for thickness, press flex on interactive surfaces (brightens and
+  scales; no transition under reduced motion; `backdrop-filter` is never animated). `glass` and
+  `glass-clear` render exactly as in 0.2 (a golden test pins their CSS).
+- **Global switch**: `data-glass="liquid"` on `<html>` or any scope makes `glass`, `glass-clear` and
+  the glass-preset chrome surfaces render liquid. Content (`surface-card`) stays solid.
+- **Lens by default for liquid surfaces in Chromium**: Dialog, Drawer, popper content (Popover,
+  DropdownMenu, ContextMenu, HoverCard), Topbar, Sidebar, ActionBar and Card call the new
+  `useGlassLens` internally. It lazy-loads the engine only when the surface resolves to a liquid
+  material, so frosted and solid surfaces never load it. The displacement map is rasterised from a
+  rounded-rect signed distance field with a Snell's-law squircle profile, DPR aware; chromatic
+  dispersion on surfaces up to 100,000 px squared; the blur and legibility veil move into the
+  filter so the rim stays sharp while the middle stays frosted. Budgets: 8 lenses, 640,000 px
+  squared, rebuilds throttled, one coalesced pass per frame. Opt out with `data-glass-lens="off"`
+  (element or ancestor) or `--glass-lens: 0`. Other engines get the base liquid look.
+- **Closer to Apple** (liquid only): refraction only across a bevel as wide as the corner radius
+  (centre shows the backdrop undisplaced), strength equal to the bevel width, blur 4px / 1.5px,
+  saturation 1.5, thinner veil (regular .6 light / .54 dark, clear .47 / .38) with a text halo
+  (`--liquid-halo`), a directional specular layer in the filter (glint tinted by the backdrop,
+  dark contour, faint inner shadow, second `feImage`), dispersion 0.05, a materialise ramp and a
+  press lift on the refraction, and a `--liquid-shadow` token. Liquid contrast floors are now
+  documented per variant (regular 4.5 / 3.5, clear 4.5 / 2).
+- **Full-surface lens** (liquid): the lens now bends the whole surface (smooth dome, strongest at the
+  rim, 24 px cap) instead of a bevel only; `coverage: "rim"` / `--glass-lens-coverage: rim` keeps the
+  old extent. The serrated edge of the first lenses was a fold-over of the displacement (offset
+  falling faster than 1 px per px); both profiles are now fold-free, with a regression test. The
+  veil moved fully into the filter and is adaptive (only where the backdrop is close to the ink), the
+  tint is dropped while the lens is on, blur is 2 px / 0.6 px, the rim glint is brighter and wider,
+  and dispersion is off by default (`--glass-lens-dispersion` or the option turns it on).
+- The full-surface lens is a crease-free superellipse dome (pull along the gradient of `r = (|u|^3 + |v|^3)^(1/3)`), not a per-axis or edge-distance field, so it no longer reads as a four-faced diamond; tests check direction continuity across the diagonals and a positive 2D Jacobian.
+- **Fixes**: `Card` stays a server component (only a glass card renders the client `CardLens`);
+  the lens follows class, `data-glass`, opt-out and preference changes at runtime; area and
+  dispersion budgets are enforced on every resize; surfaces waiting for one of the 8 slots get one
+  when it frees; `useGlassLens` composes the consumer ref (React 19 cleanup, changing identity).
+  New `check:rsc` script.
+- `@jcsoftdev/ui/glass`: new `useGlassLens`, `computeDisplacementField`, `lensProfile`;
+  `createDisplacementMap` now returns a PNG data URI (browser only); `applyGlassRefraction` gains
+  `dispersion`, `veil` and `auto`, and moves the blur into the filter. The default `scale` is 20.
+- New shared tokens `--liquid-*` (blur, saturate, filters, tints, dim, rim, depth). 
+- Material components and the `cn` merge group accept the new values. Components with a `ref` prop
+  on Card and ActionBar now forward it to the root.
+
 ### Liquid Glass
 
 Apple-style glass for the control and navigation layer, with content kept solid.
