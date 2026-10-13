@@ -11,6 +11,7 @@ const USAGE = `Usage:
 build generates tokens.css, theme.css, tailwind.css, fonts.css and Theme.kt from a tokens file.
 Without a tokens file the bundled default theme is used.
 --kotlin-library emits the explicit-API, @Immutable flavour used by the Compose kit.
+--no-kotlin skips Theme.kt, so tokens with var() or oklch() colors build.
 --no-css skips the CSS outputs.
 
 generate derives a WCAG AA color set (light and dark) from seed colors, merges it into the bundled
@@ -63,11 +64,13 @@ if (command === "generate") {
   }
   extra["tokens.json"] = `${JSON.stringify(tokens, null, 2)}\n`;
 }
-const files = { ...extra, ...buildTheme(tokens, { kotlinPackage, kotlinLibrary }) };
+const files = {
+  ...extra,
+  ...buildTheme(tokens, { kotlinPackage, kotlinLibrary, kotlin: !noKotlin }),
+};
 
 mkdirSync(resolve(out), { recursive: true });
 for (const [name, content] of Object.entries(files)) {
-  if (noKotlin && name.endsWith(".kt")) continue;
   if (noCss && name.endsWith(".css")) continue;
   writeFileSync(join(resolve(out), name), content);
   console.log(`wrote ${join(out, name)}`);

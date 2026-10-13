@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -79,4 +89,46 @@ test("the size-only font scale is emitted as UiFontSizes in both Kotlin flavours
   const plain = buildTheme(scaled)["Theme.kt"];
   assert.match(plain, /object UiFontSizes \{/);
   assert.match(plain, /val fs160 = 16\.sp/);
+});
+
+const withColor = (value) => ({
+  ...tokens,
+  color: {
+    ...tokens.color,
+    tokens: [{ name: "brand", value }, ...tokens.color.tokens.slice(1)],
+  },
+});
+const cssFiles = ["fonts.css", "tailwind.css", "theme.css", "tokens.css"];
+
+test("kotlin: false builds only the CSS, even with var() and oklch() colors", () => {
+  const files = buildTheme(withColor("oklch(0.7 0.1 200)"), { kotlin: false });
+  assert.deepEqual(Object.keys(files).sort(), cssFiles);
+  assert.match(files["tokens.css"], /oklch\(0\.7 0\.1 200\)/);
+  assert.deepEqual(
+    Object.keys(buildTheme(withColor("var(--brand-500)"), { kotlin: false })).sort(),
+    cssFiles,
+  );
+});
+
+test("kotlin colors that are not hex or rgb(a) name the token and suggest --no-kotlin", () => {
+  assert.throws(() => buildTheme(withColor("oklch(0.7 0.1 200)")), /"brand".*oklch.*--no-kotlin/);
+  assert.throws(() => buildTheme(withColor("var(--brand-500)")), /"brand".*var\(--brand-500\)/);
+  assert.ok("Theme.kt" in buildTheme(withColor("#336699")));
+});
+
+test("ui-theme build --no-kotlin writes only CSS and succeeds with oklch() colors", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ui-theme-"));
+  try {
+    const input = join(dir, "tokens.json");
+    writeFileSync(input, JSON.stringify(withColor("oklch(0.7 0.1 200)")));
+    const bin = join(here, "../bin/ui-theme.mjs");
+    const out = join(dir, "out");
+    execFileSync("node", [bin, "build", input, "--out", out, "--no-kotlin"]);
+    assert.deepEqual(readdirSync(out).sort(), cssFiles);
+    assert.throws(() =>
+      execFileSync("node", [bin, "build", input, "--out", out], { stdio: "pipe" }),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

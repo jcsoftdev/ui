@@ -127,6 +127,7 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 
 ### Fixes
 
+- **`ui-theme build --no-kotlin` no longer builds Kotlin.** It used to generate `Theme.kt` and discard it, so `var(...)` and `oklch(...)` colors still threw "Unsupported color for Kotlin". Without the flag, the error now names the token and suggests `--no-kotlin`. The builders in `@jcsoftdev/ui-tokens/build` take `kotlin: false` and have typed `buildTokensCss`, `buildThemeCss`, `buildFontsCss` and `buildThemeKt`.
 - **DonutChart / PieChart no longer flicker on hover.** The hovered slice steps out by `explode`
   and was also the pointer target, so a still pointer near its edge ended up outside the moved
   slice, the hover dropped, the slice slid back under the pointer and the loop repeated (tooltip,
