@@ -22,7 +22,7 @@ const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")
 const coreEntries = [];
 for (const item of readdirSync(join(root, "packages/ui-core/src"), { withFileTypes: true })) {
   if (item.isFile() && item.name.endsWith(".ts")) coreEntries.push(item.name.slice(0, -3));
-  else if (item.isDirectory() && item.name !== "liquid")
+  else if (item.isDirectory() && item.name !== "liquid" && item.name !== "internal")
     for (const part of readdirSync(join(root, "packages/ui-core/src", item.name)))
       if (part.endsWith(".ts")) coreEntries.push(`${item.name}/${part.slice(0, -3)}`);
 }
