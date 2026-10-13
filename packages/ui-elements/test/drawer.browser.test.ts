@@ -65,8 +65,9 @@ describe("ui-drawer", () => {
     expect(drawer.panel?.contains(document.activeElement)).toBe(true);
     await userEvent.keyboard("{Escape}");
     expect(drawer.open).toBe(false);
-    expect(closed).toHaveBeenCalledTimes(1);
+    // `close` fires once the slide-out ended and focus is back.
     await vi.waitFor(() => expect(drawer.panel?.open).toBe(false));
+    expect(closed).toHaveBeenCalledTimes(1);
     expect(document.body.style.overflow).toBe("");
     expect(document.activeElement?.id).toBe("opener");
   });
@@ -206,6 +207,96 @@ describe("ui-drawer", () => {
     await vi.waitFor(() => expect(drawer.panel?.open).toBe(false));
     expect(document.body.style.overflow).toBe("");
     expect(document.activeElement?.id).toBe("opener");
+  });
+
+  it("ignores jitter and stale or tiny flicks, but a real fast flick still dismisses", async () => {
+    const host = mount(DRAWER);
+    const drawer = host.querySelector<UiDrawer>("ui-drawer")!;
+    drawer.show();
+    await wait(260);
+    const handle = drawer.querySelector("[data-ui-part=handle]")!;
+    const box = drawer.panel!.getBoundingClientRect();
+    const x = box.left + 5;
+    await wait(50);
+    // 4 px of jitter: under the slop, nothing moves, nothing closes.
+    await swipe(handle, [x, 200], [4, 0], 5);
+    expect(drawer.open).toBe(true);
+    expect(drawer.panel?.hasAttribute("data-dragging")).toBe(false);
+    // A fast but tiny move (8 px in 10 ms): below the minimum offset for a flick.
+    await swipe(handle, [x, 200], [8, 0], 2);
+    expect(drawer.open).toBe(true);
+    // A fast flick that then rests before release: the velocity is stale.
+    const init = (cx: number) => ({
+      bubbles: true,
+      composed: true,
+      pointerId: 8,
+      pointerType: "touch",
+      isPrimary: true,
+      clientX: cx,
+      clientY: 200,
+    });
+    handle.dispatchEvent(new PointerEvent("pointerdown", init(x)));
+    for (const dx of [10, 25, 40]) {
+      handle.dispatchEvent(new PointerEvent("pointermove", init(x + dx)));
+      await wait(4);
+    }
+    await wait(200);
+    handle.dispatchEvent(new PointerEvent("pointerup", init(x + 40)));
+    expect(drawer.open).toBe(true);
+    // A genuine flick: 60 px in ~15 ms.
+    await swipe(handle, [x, 200], [60, 0], 4);
+    expect(drawer.open).toBe(false);
+  });
+
+  it("keeps clicks on header controls, including ARIA-role controls", async () => {
+    const host = mount(`<ui-drawer id="d">
+        <div data-drawer-header><h2 data-drawer-title>Title</h2>
+          <button id="hb">Native</button><span id="rb" role="button" tabindex="0">Role</span></div>
+        <div data-drawer-body>Body</div></ui-drawer>`);
+    const drawer = host.querySelector<UiDrawer>("ui-drawer")!;
+    drawer.show();
+    await wait(260);
+    const clicks: string[] = [];
+    for (const id of ["hb", "rb"])
+      host.querySelector(`#${id}`)!.addEventListener("click", () => clicks.push(id));
+    await wait(50);
+    await userEvent.click(host.querySelector("#hb")!);
+    await userEvent.click(host.querySelector("#rb")!);
+    // A plain click on the header text must not capture the pointer either.
+    await userEvent.click(host.querySelector("[data-drawer-title]")!);
+    expect(clicks).toEqual(["hb", "rb"]);
+    expect(drawer.open).toBe(true);
+  });
+
+  it("blocking hides the grabber and cannot be swiped", async () => {
+    const host = mount(DRAWER);
+    const drawer = host.querySelector<UiDrawer>("ui-drawer")!;
+    drawer.setAttribute("blocking", "");
+    drawer.show();
+    await wait(260);
+    const handle = drawer.querySelector<HTMLElement>("[data-ui-part=handle]")!;
+    expect(handle.hidden).toBe(true);
+    await wait(50);
+    await swipe(drawer.querySelector("[data-drawer-header]")!, [innerWidth - 100, 30], [400, 0]);
+    expect(drawer.open).toBe(true);
+  });
+
+  it("is inert while it slides out, so Escape and focus do nothing, and a close handler's focus sticks", async () => {
+    const host = mount(`${DRAWER}<button id="other">Other</button>`);
+    const drawer = host.querySelector<UiDrawer>("ui-drawer")!;
+    const cancel = vi.fn();
+    drawer.addEventListener("cancel", cancel);
+    (host.querySelector("#opener") as HTMLElement).focus();
+    drawer.show();
+    await wait(260);
+    drawer.addEventListener("close", () => host.querySelector<HTMLElement>("#other")!.focus());
+    drawer.close();
+    expect(drawer.panel?.inert).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    expect(cancel).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(drawer.panel?.open).toBe(false));
+    expect(drawer.panel?.inert).toBe(false);
+    expect(document.activeElement?.id).toBe("other");
   });
 
   it("registers under a custom prefix", () => {

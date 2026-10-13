@@ -20,6 +20,12 @@ export interface PointerDragOptions {
   /** Return `false` to refuse the press. */
   onStart?: (point: DragPoint, event: PointerEvent) => boolean | undefined;
   onMove?: (point: DragPoint, event: PointerEvent) => void;
+  /**
+   * Distance in px the pointer must travel before the press becomes a drag. Until then nothing is
+   * captured and no move or end is reported, so a tap or click on a child still reaches it.
+   * Default 0 (capture on press).
+   */
+  slop?: number;
   /** `cancelled` is true for `pointercancel` and for {@link PointerDrag.cancel}. */
   onEnd?: (point: DragPoint, cancelled: boolean) => void;
 }
@@ -47,6 +53,7 @@ export function createPointerDrag(
   let originX = 0;
   let originY = 0;
   let last: DragPoint | undefined;
+  let pending = false;
 
   const point = (event: PointerEvent): DragPoint => {
     const rect = (options.bounds?.() ?? target).getBoundingClientRect();
@@ -64,6 +71,11 @@ export function createPointerDrag(
     if (pointerId === undefined) return;
     const id = pointerId;
     pointerId = undefined;
+    if (pending) {
+      pending = false;
+      last = undefined;
+      return;
+    }
     try {
       if (target.hasPointerCapture(id)) target.releasePointerCapture(id);
     } catch {}
@@ -80,8 +92,12 @@ export function createPointerDrag(
     if (options.onStart?.(start, event) === false) return;
     pointerId = event.pointerId;
     last = start;
+    if ((options.slop ?? 0) > 0) pending = true;
+    else capture(event.pointerId);
+  };
+  const capture = (id: number) => {
     try {
-      target.setPointerCapture(event.pointerId);
+      target.setPointerCapture(id);
     } catch {
       // A synthetic or already ended pointer cannot be captured; the drag still tracks the target.
     }
@@ -89,6 +105,11 @@ export function createPointerDrag(
   const onMove = (event: PointerEvent) => {
     if (event.pointerId !== pointerId) return;
     last = point(event);
+    if (pending) {
+      if (Math.hypot(last.dx, last.dy) < (options.slop ?? 0)) return;
+      pending = false;
+      capture(event.pointerId);
+    }
     options.onMove?.(last, event);
   };
   const onUp = (event: PointerEvent) => {

@@ -118,7 +118,7 @@ describe("ui-emoji-picker", () => {
     const submit = vi.fn((event: Event) => event.preventDefault());
     host.querySelector("form")!.addEventListener("submit", submit);
     const picked: string[] = [];
-    picker.addEventListener("select", (event) =>
+    picker.addEventListener("emoji-select", (event) =>
       picked.push((event as CustomEvent<{ emoji: string }>).detail.emoji),
     );
     cells(picker)[2]!.focus();
@@ -134,6 +134,28 @@ describe("ui-emoji-picker", () => {
     await userEvent.keyboard("{Enter}");
     expect(submit).not.toHaveBeenCalled();
     expect([...new FormData(host.querySelector("form")!).keys()].filter((key) => key)).toEqual([]);
+  });
+
+  it("does not mistake the search field's native select event for a pick, and pages with PageUp and PageDown", async () => {
+    const host = mount(`<ui-emoji-picker style="width:300px"></ui-emoji-picker>`);
+    const picker = host.querySelector<UiEmojiPicker>("ui-emoji-picker")!;
+    picker.categories = BIG;
+    await vi.waitFor(() => expect(cells(picker).length).toBeGreaterThan(0));
+    const events: string[] = [];
+    host.addEventListener("select", () => events.push("select"));
+    host.addEventListener("emoji-select", () => events.push("emoji-select"));
+    const input = picker.querySelector("input")!;
+    await userEvent.fill(input, "glyph");
+    input.select();
+    await vi.waitFor(() => expect(cells(picker).length).toBeGreaterThan(0));
+    expect(events).toEqual([]);
+    cells(picker)[0]!.focus();
+    await userEvent.keyboard("{PageDown}");
+    await vi.waitFor(() =>
+      expect(Number(document.activeElement?.getAttribute("data-index"))).toBeGreaterThan(8),
+    );
+    await userEvent.keyboard("{PageUp}");
+    await vi.waitFor(() => expect(document.activeElement?.getAttribute("data-index")).toBe("0"));
   });
 
   it("registers under a custom prefix", () => {

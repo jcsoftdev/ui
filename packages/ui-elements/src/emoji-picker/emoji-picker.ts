@@ -20,7 +20,16 @@ import css from "./emoji-picker.css.js";
 const CELL = 32;
 const GAP = 2;
 const ROW = CELL + GAP;
-const MOVE_KEYS = new Set(["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp", "Home", "End"]);
+const MOVE_KEYS = new Set([
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowDown",
+  "ArrowUp",
+  "Home",
+  "End",
+  "PageUp",
+  "PageDown",
+]);
 const SEARCH_ICON =
   '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
 
@@ -29,7 +38,7 @@ const label = (entry: EmojiEntry) => entry.name.split(" ").slice(0, 3).join(" ")
 /**
  * `<ui-emoji-picker>`: an emoji panel with a search field, category buttons and a virtualised grid
  * (only the visible rows exist in the DOM). Grid pattern: one tab stop, arrows move by cell and
- * row, Home and End jump to the first and last emoji, Enter or Space (the cell is a native
+ * row, Home and End jump to the first and last emoji, PageUp and PageDown move a page, Enter or Space (the cell is a native
  * button) picks. Light DOM; it holds no portal, so it works inline or inside `<ui-popover>`.
  *
  * The emoji dataset (the React kit's curated set, Spanish names) is a separate chunk fetched with
@@ -40,7 +49,8 @@ const label = (entry: EmojiEntry) => entry.name.split(" ").slice(0, 3).join(" ")
  * Attributes: `category` (initial category id), `placeholder` (search label, default "Buscar
  * emoji"), `categories-label` ("Categorías"), `results-label` ("Resultados") and `empty-label`
  * ("Sin resultados"). Property: `categories: EmojiCategory[]` replaces the dataset. Fires a
- * bubbling `select` with `detail: { emoji }`. `focusSearch()` focuses the search field.
+ * bubbling `emoji-select` with `detail: { emoji }` (not `select`, which is the native event of
+ * a text field's selection). `focusSearch()` focuses the search field.
  */
 export class UiEmojiPicker extends ElementBase {
   static observedAttributes = ["placeholder", "categories-label", "results-label", "empty-label"];
@@ -132,6 +142,8 @@ export class UiEmojiPicker extends ElementBase {
       this.#active = 0;
       this.#reset();
     });
+    // The text field's own `select` event must not read as a pick from the host.
+    this.#input.addEventListener("select", (event) => event.stopPropagation());
     // Inside a <form> Enter must not submit it: the picker is not a field.
     this.#input.addEventListener("keydown", (event) => {
       if (event.key === "Enter") event.preventDefault();
@@ -171,7 +183,7 @@ export class UiEmojiPicker extends ElementBase {
     this.#grid.addEventListener("click", (event) => {
       const cell = (event.target as Element).closest<HTMLElement>("[data-index]");
       const entry = cell ? this.#entries[Number(cell.dataset.index)] : undefined;
-      if (entry) emit(this, "select", { emoji: entry.emoji });
+      if (entry) emit(this, "emoji-select", { emoji: entry.emoji });
     });
 
     this.#empty = document.createElement("p");
@@ -195,11 +207,17 @@ export class UiEmojiPicker extends ElementBase {
     if (this.#loading || this.#custom) return;
     this.#loading = true;
     this.setAttribute("aria-busy", "true");
-    import("./emoji-data.js").then(({ EMOJI_CATEGORIES }) => {
-      this.#loading = false;
-      if (!this.#custom) this.#categories = EMOJI_CATEGORIES;
-      if (this.isConnected) this.#reset();
-    });
+    import("./emoji-data.js")
+      .then(({ EMOJI_CATEGORIES }) => {
+        this.#loading = false;
+        if (!this.#custom) this.#categories = EMOJI_CATEGORIES;
+        if (this.isConnected) this.#reset();
+      })
+      .catch(() => {
+        // A failed chunk fetch is retried by the next connect or by setting `categories`.
+        this.#loading = false;
+        this.removeAttribute("aria-busy");
+      });
   }
 
   /** Rebuilds the category buttons, the entries and the grid after the data or the query changed. */
@@ -361,7 +379,14 @@ export class UiEmojiPicker extends ElementBase {
   #onKey(event: KeyboardEvent): void {
     if (!MOVE_KEYS.has(event.key)) return;
     event.preventDefault();
-    const next = gridMove(event.key, this.#active, this.#columns, this.#entries.length);
+    const page = this.#columns * Math.max(1, Math.floor(this.#grid.clientHeight / ROW) - 1);
+    const last = this.#entries.length - 1;
+    const next =
+      event.key === "PageDown"
+        ? Math.min(last, this.#active + page)
+        : event.key === "PageUp"
+          ? Math.max(0, this.#active - page)
+          : gridMove(event.key, this.#active, this.#columns, this.#entries.length);
     this.#active = next;
     this.#list?.scrollToIndex(Math.floor(next / this.#columns));
     this.#list?.update();

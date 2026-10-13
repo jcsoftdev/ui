@@ -106,7 +106,7 @@ export abstract class ModalElement extends ElementBase {
     panel.addEventListener("cancel", (event) => {
       if (event.target !== panel) return;
       event.preventDefault();
-      this.requestClose();
+      this.#requestClose();
     });
     // A native close (form method=dialog, a close command, a forced Escape) keeps the state in step.
     panel.addEventListener("close", (event) => {
@@ -125,9 +125,9 @@ export abstract class ModalElement extends ElementBase {
     panel.addEventListener("click", (event) => {
       const backdrop = this.#pressedBackdrop && this.#onBackdrop(event);
       this.#pressedBackdrop = false;
-      if (backdrop) return this.requestClose();
+      if (backdrop) return this.#requestClose();
       const closer = (event.target as Element).closest(`[data-${this.ui}-close]`);
-      if (closer && closer.closest("dialog") === panel) this.requestClose(true);
+      if (closer && closer.closest("dialog") === panel) this.#requestClose(true);
     });
     this.#renderClose(panel);
     this.built(panel);
@@ -175,9 +175,15 @@ export abstract class ModalElement extends ElementBase {
   }
 
   /** Escape, the backdrop and close buttons: `cancel` can veto, `blocking` vetoes the first two. */
-  protected requestClose(explicit = false): void {
+  #requestClose(explicit = false): void {
+    if (!this.open) return;
     if (!explicit && this.hasAttribute("blocking")) return;
     if (emit(this, "cancel", undefined, true)) this.close();
+  }
+
+  /** Dismiss like Escape or the backdrop would (a cancelable `cancel` first); for subclasses. */
+  protected requestDismiss(): void {
+    this.#requestClose();
   }
 
   #sync(): void {
@@ -189,6 +195,7 @@ export abstract class ModalElement extends ElementBase {
       const resumed = this.#exiting !== undefined;
       this.#exiting?.cancel();
       this.#exiting = undefined;
+      panel.inert = false;
       if (!resumed) this.#returnFocus = document.activeElement as HTMLElement | null;
       if (!panel.open) {
         if (typeof panel.showModal === "function") panel.showModal();
@@ -221,11 +228,17 @@ export abstract class ModalElement extends ElementBase {
       this.#unlock = undefined;
       if (this.#returnFocus?.isConnected) this.#returnFocus.focus({ preventScroll: true });
       this.#returnFocus = null;
+      panel.inert = false;
+      // After the focus is back, so a `close` handler that moves focus has the last word.
+      if (notify) emit(this, "close");
     };
     const cancel = immediate ? undefined : this.exit(panel, finish);
     if (!cancel) finish();
-    else if (!finished) this.#exiting = { cancel, finish };
-    if (notify) emit(this, "close");
+    else if (!finished) {
+      // The panel is only animating out: nothing in it takes focus or presses meanwhile.
+      panel.inert = true;
+      this.#exiting = { cancel, finish };
+    }
   }
 
   /** Engines without `showModal()`: an `open` dialog with ui-core's focus trap and dismiss layer. */
@@ -243,7 +256,7 @@ export abstract class ModalElement extends ElementBase {
       ([{ createFocusScope }, { createDismissLayer }]) => {
         if (stopped) return;
         stops.push(createFocusScope(panel, { onUnmountAutoFocus: (e) => e.preventDefault() }));
-        stops.push(createDismissLayer(panel, { onDismiss: () => this.requestClose() }));
+        stops.push(createDismissLayer(panel, { onDismiss: () => this.#requestClose() }));
       },
     );
   }

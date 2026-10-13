@@ -96,7 +96,10 @@ export class UiEmojiReactionBar extends ElementBase {
       const chip = (event.target as Element).closest?.("[data-emoji]");
       if (!(chip instanceof UiEmojiReaction) || chip.parentElement !== this) return;
       event.stopPropagation();
-      emit(this, "react", { emoji: chip.emoji, reacted: chip.reacted });
+      emit(this, "react", {
+        emoji: chip.emoji,
+        reacted: (event as CustomEvent<{ reacted: boolean }>).detail.reacted,
+      });
     });
     this.append(this.#add);
   }
@@ -124,6 +127,7 @@ export class UiEmojiReactionBar extends ElementBase {
       chip.count = reaction.count;
       chip.reacted = reaction.reacted === true;
       chip.disabled = this.disabled;
+      chip.toggleAttribute("controlled", true);
       chip.dataset.uiPart = "reaction";
       if (chip.nextElementSibling !== before) this.insertBefore(chip, before);
       before = chip;
@@ -143,11 +147,26 @@ export class UiEmojiReactionBar extends ElementBase {
     if (this.#loading) return;
     this.#loading = true;
     const prefix = this.#prefix;
-    const [{ definePopover }, { defineEmojiPicker }] = await Promise.all([
-      import("../popover/popover.js"),
-      import("../emoji-picker/emoji-picker.js"),
-    ]);
+    this.#add.setAttribute("aria-busy", "true");
+    let modules: [
+      typeof import("../popover/popover.js"),
+      typeof import("../emoji-picker/emoji-picker.js"),
+    ];
+    try {
+      modules = await Promise.all([
+        import("../popover/popover.js"),
+        import("../emoji-picker/emoji-picker.js"),
+      ]);
+    } catch {
+      // A failed chunk fetch leaves the button usable: pressing it again retries.
+      this.#loading = false;
+      this.#add.removeAttribute("aria-busy");
+      this.#add.disabled = this.disabled;
+      return;
+    }
+    const [{ definePopover }, { defineEmojiPicker }] = modules;
     this.#loading = false;
+    this.#add.removeAttribute("aria-busy");
     if (!this.isConnected) return;
     if (!this.#popover) {
       definePopover({ prefix });
@@ -155,8 +174,9 @@ export class UiEmojiReactionBar extends ElementBase {
       const popover = document.createElement(`${prefix}-popover`) as PopoverLike;
       popover.dataset.uiPart = "popover";
       const picker = document.createElement(`${prefix}-emoji-picker`);
-      picker.addEventListener("select", (event) => {
+      picker.addEventListener("emoji-select", (event) => {
         event.stopPropagation();
+        if (!(event instanceof CustomEvent) || event.target !== picker) return;
         const { emoji } = (event as CustomEvent<{ emoji: string }>).detail;
         const existing = this.reactions.find((reaction) => reaction.emoji === emoji);
         emit(this, "react", { emoji, reacted: existing?.reacted !== true });

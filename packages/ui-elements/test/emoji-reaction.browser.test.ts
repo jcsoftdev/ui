@@ -39,12 +39,24 @@ describe("ui-emoji-reaction", () => {
     expect(chip.reacted).toBe(true);
     expect(change).toHaveBeenCalledTimes(3);
     expect(change.mock.results.map((result) => result.value)).toEqual([
-      { reacted: true },
-      { reacted: false },
-      { reacted: true },
+      { reacted: true, count: 2 },
+      { reacted: false, count: 1 },
+      { reacted: true, count: 2 },
     ]);
+    expect(chip.count).toBe(2);
     expect(submit).not.toHaveBeenCalled();
     expect([...new FormData(host.querySelector("form")!).keys()]).toEqual([]);
+  });
+
+  it("controlled: reports the requested state and leaves the chip and its count alone", async () => {
+    const host = mount(`<ui-emoji-reaction emoji="🔥" count="1" controlled></ui-emoji-reaction>`);
+    const chip = host.querySelector<UiEmojiReaction>("ui-emoji-reaction")!;
+    const change = vi.fn((event: Event) => (event as CustomEvent).detail);
+    chip.addEventListener("change", change);
+    await userEvent.click(chip);
+    expect(change.mock.results[0]?.value).toEqual({ reacted: true, count: 2 });
+    expect(chip.reacted).toBe(false);
+    expect(chip.count).toBe(1);
   });
 
   it("ignores presses when disabled and leaves the tab order", async () => {

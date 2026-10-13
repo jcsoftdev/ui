@@ -116,6 +116,22 @@ describe("ui-hover-card", () => {
     expect(style.width).toBe("288px");
   });
 
+  it("binds a trigger that is added after the card", async () => {
+    const host = mount(`<ui-hover-card for="late" open-delay="20"><p>Late</p></ui-hover-card>`);
+    const card = host.querySelector<UiHoverCard>("ui-hover-card")!;
+    const trigger = document.createElement("a");
+    trigger.id = "late";
+    trigger.href = "#x";
+    trigger.textContent = "@late";
+    host.append(trigger);
+    await vi.waitFor(() => {
+      trigger.blur();
+      trigger.focus();
+      expect(card.open).toBe(true);
+    });
+    expect(trigger.getAttribute("aria-describedby")).toBe(card.id);
+  });
+
   it("ignores touch pointers", async () => {
     const host = mount(CARD);
     const card = host.querySelector<UiHoverCard>("ui-hover-card")!;

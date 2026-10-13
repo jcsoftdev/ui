@@ -26,17 +26,19 @@ const number = (value: string | null, fallback: number) => {
 };
 
 /**
- * `<ui-hover-card for="id">`: a preview card for the element `for` names, shown when the pointer
- * rests on it (after `open-delay` ms, default 300) and at once on keyboard focus, closed on leave
- * (after `close-delay` ms, default 150), blur and Escape. It is a preview: focus stays on the
- * trigger and nothing in it takes focus on open. Leaving the trigger toward the card keeps it open
- * (ui-core's grace area between the two), and resting on the card holds it open. `role="tooltip"`,
- * wired to the trigger's `aria-describedby` while open, like the React kit. A manual popover in
- * the top layer on the `surface-overlay` surface.
+ * `<ui-hover-card for="id">`: a preview card for the element `for` names (it may appear after the
+ * card; the card binds when it does). It opens when a mouse or pen pointer rests on the trigger for
+ * `open-delay` ms (default 300) and at once when the trigger receives focus (any focus, as the
+ * React kit does). It closes `close-delay` ms (default 150) after the pointer leaves, on blur, and
+ * on Escape; Escape also cancels the key's default, so an enclosing dialog stays open for that
+ * press. Moving from the trigger toward the card keeps it open while the pointer is inside ui-core's
+ * grace area (about 300 ms), and resting on the card, or focus inside it, holds it open. It is a
+ * preview: nothing takes focus when it opens. `role="tooltip"`; while open the trigger's
+ * `aria-describedby` includes the card, like the React kit. A manual popover in the top layer on
+ * the `surface-overlay` surface. Touch pointers never open it.
  *
  * Attributes: `for`, `open-delay`, `close-delay`, `side` (default bottom), `align`, `side-offset`
  * (default 8), `anchor`, `open`, `material` and the `liquid-*` options. Fires `open` and `close`.
- * Touch pointers do not open it (a tap reaches the trigger's own action); focus does.
  */
 export class UiHoverCard extends AnchoredOverlay {
   static override observedAttributes = [...AnchoredOverlay.observedAttributes, "for"];
@@ -44,6 +46,7 @@ export class UiHoverCard extends AnchoredOverlay {
   protected readonly defaultOffset = 8;
   readonly #internals = this.attachInternals();
   #trigger: HTMLElement | null = null;
+  #watch: MutationObserver | undefined;
   #grace: { area: Point[]; until: number } | undefined;
   #graceTimer: ReturnType<typeof setTimeout> | undefined;
   readonly #intent = createHoverIntent({
@@ -74,10 +77,25 @@ export class UiHoverCard extends AnchoredOverlay {
   protected override connected(): void {
     this.dataset.ui = "hover-card";
     adoptStyles(rootOf(this), css);
-    this.#bind(byId(this, this.getAttribute("for")));
+    this.#resolve();
+  }
+
+  /** Binds the trigger `for` names, or waits (one observer) until it is added to the document. */
+  #resolve(): void {
+    this.#watch?.disconnect();
+    this.#watch = undefined;
+    const trigger = byId(this, this.getAttribute("for"));
+    this.#bind(trigger);
+    if (trigger || !this.getAttribute("for") || typeof MutationObserver === "undefined") return;
+    this.#watch = new MutationObserver(() => {
+      if (byId(this, this.getAttribute("for"))) this.#resolve();
+    });
+    this.#watch.observe(this.getRootNode(), { childList: true, subtree: true });
   }
 
   override disconnectedCallback(): void {
+    this.#watch?.disconnect();
+    this.#watch = undefined;
     this.#intent.cancel();
     this.#endGrace();
     super.disconnectedCallback();
@@ -85,7 +103,7 @@ export class UiHoverCard extends AnchoredOverlay {
   }
 
   override attributeChangedCallback(name: string): void {
-    if (name === "for" && this.isConnected) this.#bind(byId(this, this.getAttribute("for")));
+    if (name === "for" && this.isConnected) this.#resolve();
     else super.attributeChangedCallback(name);
   }
 

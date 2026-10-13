@@ -58,6 +58,34 @@ describe("ui-emoji-reaction-bar", () => {
       { emoji: "👍", reacted: false },
     ]);
     expect(el.reactions).toEqual(REACTIONS);
+    // Controlled: the bar only reports; the chips change when the app sets `reactions`.
+    expect(
+      (el.querySelector('[data-emoji="🔥"]') as HTMLElement & { reacted: boolean }).reacted,
+    ).toBe(false);
+    expect(
+      (el.querySelector('[data-emoji="👍"]') as HTMLElement & { reacted: boolean }).reacted,
+    ).toBe(true);
+  });
+
+  it("is not thrown off by the picker's native select event", async () => {
+    const { el } = bar();
+    const react = vi.fn();
+    const errors: unknown[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.error);
+    window.addEventListener("error", onError);
+    el.addEventListener("react", react);
+    await userEvent.click(el.querySelector("[data-ui-part=add]")!);
+    await vi.waitFor(() => expect(popover(el)?.matches(":popover-open")).toBe(true));
+    const input = el.querySelector<HTMLInputElement>("ui-emoji-picker input")!;
+    await userEvent.fill(input, "sonrisa");
+    input.select();
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll("button[data-index]").length).toBeGreaterThan(0),
+    );
+    window.removeEventListener("error", onError);
+    expect(errors).toEqual([]);
+    expect(react).not.toHaveBeenCalled();
+    expect(popover(el)?.matches(":popover-open")).toBe(true);
   });
 
   it("opens the picker in a popover on demand, picks, closes and returns focus to the add button", async () => {

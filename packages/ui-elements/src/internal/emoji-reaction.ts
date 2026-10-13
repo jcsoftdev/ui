@@ -7,12 +7,13 @@ import css from "./emoji-reaction.css.js";
  * `aria-pressed` through ElementInternals, named `"<emoji> <count>"` like the React kit's
  * `EmojiReactionButton`. Enter and Space (on key up, like a native button) and a click toggle it.
  *
- * Attributes: `emoji`, `count`, `reacted`, `disabled`. A press flips `reacted` and fires a bubbling
- * `change` with `detail: { reacted }`; the app owns the count, so set `count` (and `reacted` again
- * if it refused the change) in response. Not form-associated.
+ * Attributes: `emoji`, `count`, `reacted`, `disabled`, `controlled`. A press flips `reacted`, moves
+ * `count` by one and fires a bubbling `change` with `detail: { reacted, count }`. With `controlled`
+ * it changes nothing itself and only reports the requested state, for the app to apply. Not
+ * form-associated.
  */
 export class UiEmojiReaction extends ElementBase {
-  static observedAttributes = ["emoji", "count", "reacted", "disabled"];
+  static observedAttributes = ["emoji", "count", "reacted", "disabled", "controlled"];
 
   readonly #internals = this.attachInternals();
   readonly #emoji: HTMLElement;
@@ -66,11 +67,20 @@ export class UiEmojiReaction extends ElementBase {
     this.#render();
   }
 
-  /** Toggles as a user would: `reacted` flips and `change` fires. */
+  /**
+   * Toggles as a user would. Standalone it is optimistic: `reacted` flips, `count` follows by one,
+   * and `change` fires with the new `{ reacted, count }`. With `controlled` (what the reaction bar
+   * sets) nothing changes here: `change` reports the requested state and the app updates the chip.
+   */
   toggle(): void {
     if (this.disabled) return;
-    this.reacted = !this.reacted;
-    emit(this, "change", { reacted: this.reacted });
+    const reacted = !this.reacted;
+    const count = Math.max(0, this.count + (reacted ? 1 : -1));
+    if (!this.hasAttribute("controlled")) {
+      this.reacted = reacted;
+      this.count = count;
+    }
+    emit(this, "change", { reacted, count });
   }
 
   #render(): void {
