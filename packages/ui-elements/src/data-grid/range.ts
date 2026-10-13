@@ -14,6 +14,7 @@ import {
   rangeOf,
   refAt,
   refOfElement,
+  rowHeight,
   SELECT_ID,
   setRange,
   slotOf,
@@ -51,10 +52,33 @@ export function install(grid: UiDataGrid): void {
   const enabled = () => grid.hasAttribute("range-selection");
   const viewport = () => grid.querySelector<HTMLElement>("[data-ui-part=viewport]");
 
+  // Cells in the range say so to assistive technology (as the overlay is `aria-hidden`).
+  const markCells = (bounds: ReturnType<typeof rangeOf>) => {
+    const { view, ids } = grid._i();
+    const first = firstColumn(grid);
+    for (const row of grid.querySelectorAll<HTMLElement>("[role=row][data-key]")) {
+      const v = view.indexOfKey(row.dataset.key as string);
+      for (const cell of row.querySelectorAll<HTMLElement>("[role=gridcell]")) {
+        const c = ids.indexOf(cell.dataset.col as string);
+        if (c < first) continue;
+        const selected =
+          !!bounds && v >= bounds.r0 && v <= bounds.r1 && c >= bounds.c0 && c <= bounds.c1;
+        const value = selected ? "true" : "false";
+        if (cell.getAttribute("aria-selected") !== value) cell.setAttribute("aria-selected", value);
+      }
+    }
+  };
+
   const paint = () => {
-    const bounds = enabled() ? rangeOf(grid) : null;
+    const on = enabled();
+    const bounds = on ? rangeOf(grid) : null;
     const corner = layer.paint(bounds);
     for (const hook of slot.painted) hook(corner);
+    const gridEl = grid.querySelector("[role=grid]");
+    if (on) {
+      gridEl?.setAttribute("aria-multiselectable", "true");
+      markCells(bounds);
+    } else if (grid.selection !== "multi") gridEl?.removeAttribute("aria-multiselectable");
   };
   const previous = grid._after;
   grid._after = () => {
@@ -82,9 +106,9 @@ export function install(grid: UiDataGrid): void {
     }
     const columns = new Map(grid.columns.map((column) => [column.id, column]));
     const stats = rangeStats(bounds, (r, c) => {
-      const column = columns.get(grid._ids[c] as string);
-      return grid._view.kind(r) === "data" && column
-        ? getCellValue(grid.rows[grid._view.sourceAt(r)], column)
+      const column = columns.get(grid._i().ids[c] as string);
+      return grid._i().view.kind(r) === "data" && column
+        ? getCellValue(grid.rows[grid._i().view.sourceAt(r)], column)
         : undefined;
     });
     const cells = (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1);
@@ -136,14 +160,14 @@ export function install(grid: UiDataGrid): void {
       if (!enabled() || !cellTarget(event) || event.isComposing) return;
       const mod = event.ctrlKey || event.metaKey;
       const { key } = event;
-      const count = grid._view.count;
+      const count = grid._i().view.count;
       // A key another chunk took (the editor opening) still ends the range, below.
       if (!event.defaultPrevented && mod && !event.shiftKey && key.toLowerCase() === "a") {
         const first = firstColumn(grid);
-        if (count === 0 || grid._ids.length <= first) return;
+        if (count === 0 || grid._i().ids.length <= first) return;
         event.preventDefault();
         const anchor = refAt(grid, 0, first);
-        const focus = refAt(grid, count - 1, grid._ids.length - 1);
+        const focus = refAt(grid, count - 1, grid._i().ids.length - 1);
         if (anchor && focus) setRange(grid, { anchor, focus });
         return;
       }
@@ -153,16 +177,16 @@ export function install(grid: UiDataGrid): void {
         if (!from) return;
         const next = extendFocus(from, key, mod, {
           rows: count,
-          cols: grid._ids.length,
+          cols: grid._i().ids.length,
           minC: firstColumn(grid),
-          page: Math.max(1, Math.floor((viewport()?.clientHeight ?? 0) / grid._rowH) - 2),
+          page: Math.max(1, Math.floor((viewport()?.clientHeight ?? 0) / rowHeight(grid)) - 2),
           rtl: rtlOf(grid),
         });
         if (!next) return;
         event.preventDefault();
         event.stopPropagation();
         extendTo(next);
-        grid._reveal(next.r + 1, next.c);
+        grid._i().reveal(next.r + 1, next.c);
         return;
       }
       if (!event.defaultPrevented && slot.range && key === "Escape") {

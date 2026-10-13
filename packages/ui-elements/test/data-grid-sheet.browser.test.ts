@@ -127,7 +127,7 @@ describe("batched writes", () => {
   it("writes a batch with one cellschange and no per-cell events", async () => {
     const el = await grid("editable");
     const log = events(el, "beforecellchange", "cellchange", "beforecellschange", "cellschange");
-    const result = el.changeCells(
+    const result = await el.changeCells(
       [
         { rowKey: "r0", columnId: "name", value: "A" },
         { rowKey: "r1", columnId: "name", value: "B" },
@@ -153,7 +153,7 @@ describe("batched writes", () => {
     const el = await grid("editable");
     el.setSort([{ id: "qty", direction: "asc" }]);
     await frame();
-    el.changeCells(
+    await el.changeCells(
       [
         { rowKey: "r0", columnId: "qty", value: 1000 },
         { rowKey: "r1", columnId: "qty", value: 999 },
@@ -181,7 +181,7 @@ describe("batched writes", () => {
     const el = await grid("editable");
     el.addEventListener("beforecellschange", (event) => event.preventDefault());
     const log = events(el, "cellschange");
-    const result = el.changeCells([
+    const result = await el.changeCells([
       { rowKey: "r0", columnId: "name", value: "A" },
       { rowKey: "r1", columnId: "name", value: "B" },
     ]);
@@ -193,7 +193,7 @@ describe("batched writes", () => {
   it("emit mode: reports the batch and never touches the rows", async () => {
     const el = await grid("editable edit-mode=emit");
     const log = events(el, "cellschange");
-    el.changeCells([
+    await el.changeCells([
       { rowKey: "r0", columnId: "name", value: "A" },
       { rowKey: "r1", columnId: "name", value: "B" },
     ]);
@@ -259,14 +259,77 @@ describe("history", () => {
 
   it("emit mode: records what it emitted and undo emits the inverse", async () => {
     const el = await grid(`${FEATURES} edit-mode=emit`);
+    // The consumer applies every change it receives, as an emit-mode grid expects.
+    el.addEventListener("cellschange", (event) => {
+      for (const change of (event as CustomEvent).detail.changes)
+        change.row[change.columnId] = change.value;
+    });
     const log = events(el, "cellschange");
-    el.changeCells([{ rowKey: "r0", columnId: "name", value: "New" }]);
+    await el.changeCells([{ rowKey: "r0", columnId: "name", value: "New" }], { source: "edit" });
     expect(el.canUndo).toBe(true);
     expect(el.undo()).toBe(true);
     const undo = log.at(-1)?.detail;
     expect(undo.source).toBe("undo");
     expect(undo.changes[0]).toMatchObject({ rowKey: "r0", columnId: "name", value: "Item 1" });
     expect(el.rows[0].name).toBe("Item 1");
+  });
+
+  it("emit mode: skips a step whose cells do not hold the value it expects", async () => {
+    const el = await grid(`${FEATURES} edit-mode=emit`);
+    const log = events(el, "cellschange");
+    await el.changeCells([{ rowKey: "r0", columnId: "name", value: "New" }], { source: "edit" });
+    // The consumer ignored the change, so there is nothing for the undo to take back.
+    expect(el.undo()).toBe(false);
+    expect(log).toHaveLength(1);
+    expect(el.canUndo).toBe(false);
+  });
+
+  it("forgets its steps when rows are replaced from outside", async () => {
+    const el = await grid();
+    el.changeCell("r0", "name", "Edited");
+    expect(el.canUndo).toBe(true);
+    el.rows = items();
+    expect(el.undo()).toBe(false);
+    expect(el.canUndo).toBe(false);
+    expect(el.rows[0].name).toBe("Item 1");
+  });
+
+  it("leaves a cell that changed behind its back and reports a partial undo", async () => {
+    const el = await grid();
+    el.changeCell("r0", "name", "Edited");
+    el.changeCell("r1", "name", "Edited too");
+    await el.changeCells(
+      [
+        { rowKey: "r2", columnId: "name", value: "p" },
+        { rowKey: "r3", columnId: "name", value: "q" },
+      ],
+      { source: "paste" },
+    );
+    el.rows[3].name = "elsewhere";
+    expect(el.undo()).toBe(false);
+    expect(el.rows[2].name).toBe("Item 3");
+    expect(el.rows[3].name).toBe("elsewhere");
+    expect(el.undo()).toBe(true);
+    expect(el.rows[1].name).toBe("Item 2");
+  });
+
+  it("turns off with history-depth=0 and caps a huge depth", async () => {
+    const el = await grid(`${FEATURES} history-depth=0`);
+    el.changeCell("r0", "name", "x");
+    expect(el.canUndo).toBe(false);
+    expect(el.undo()).toBe(false);
+    const big = await grid(`${FEATURES} history-depth=99999999`);
+    for (let i = 0; i < 3; i += 1) big.changeCell("r0", "name", `v${i}`);
+    expect(big.canUndo).toBe(true);
+  });
+
+  it("records writes from code only with history-api", async () => {
+    const el = await grid();
+    await el.changeCells([{ rowKey: "r0", columnId: "name", value: "api" }]);
+    expect(el.canUndo).toBe(false);
+    const opted = await grid(`${FEATURES} history-api`);
+    await opted.changeCells([{ rowKey: "r0", columnId: "name", value: "api" }]);
+    expect(opted.canUndo).toBe(true);
   });
 
   it("leaves Ctrl+Z to a text editor that is open", async () => {
@@ -632,6 +695,37 @@ describe("fill", () => {
     await frame();
     expect(log[0]?.detail.applied).toBe(0);
     expect(log[0]?.detail.skipped).toHaveLength(2);
+  });
+});
+
+describe("range accessibility and the copy hook", () => {
+  it("marks the cells in the range and the grid as multiselectable", async () => {
+    const el = await grid();
+    await focus(el, "r0", "qty");
+    await shiftArrow("ArrowDown", 1);
+    await vi.waitFor(() =>
+      expect(cell(el, "r1", "qty").getAttribute("aria-selected")).toBe("true"),
+    );
+    expect(cell(el, "r0", "qty").getAttribute("aria-selected")).toBe("true");
+    expect(cell(el, "r2", "qty").getAttribute("aria-selected")).toBe("false");
+    expect(el.querySelector("[role=grid]")?.getAttribute("aria-multiselectable")).toBe("true");
+  });
+
+  it("lets a listener rewrite or cancel what is copied", async () => {
+    const el = await grid();
+    await focus(el, "r0", "name");
+    el.addEventListener("cellscopy", (event) => {
+      const detail = (event as CustomEvent).detail;
+      detail.text = detail.text.replace(/^(?=[=+\-@])/gm, "'");
+    });
+    el.changeCell("r0", "name", "=1+1");
+    expect(copy(cell(el, "r0", "name")).text).toBe("'=1+1");
+    const other = await grid();
+    other.addEventListener("cellscopy", (event) => event.preventDefault());
+    await focus(other, "r0", "name");
+    const { event, text } = copy(cell(other, "r0", "name"));
+    expect(text).toBe("");
+    expect(event.defaultPrevented).toBe(false);
   });
 });
 

@@ -1,3 +1,4 @@
+import { decimalsOf, roundTo } from "../internal/decimals.js";
 import type { CellValue } from "./model.js";
 
 /** A cell of the grid: `r` is the row of the view (0-based), `c` the rendered column (0-based). */
@@ -97,6 +98,7 @@ export function rangeStats(
 ): RangeStats {
   let count = 0;
   let numeric = 0;
+  let places = 0;
   let sum = 0;
   let min = Number.POSITIVE_INFINITY;
   let max = Number.NEGATIVE_INFINITY;
@@ -107,17 +109,20 @@ export function rangeStats(
       count += 1;
       if (typeof value === "number" && Number.isFinite(value)) {
         numeric += 1;
+        places = Math.max(places, decimalsOf(value));
         sum += value;
         min = Math.min(min, value);
         max = Math.max(max, value);
       }
     }
   }
+  // The sum of 0.1 and 0.2 is shown as 0.3: round to the decimals the values themselves have.
+  const total = numeric ? roundTo(sum, places) : null;
   return {
     count,
     numeric,
-    sum: numeric ? sum : null,
-    avg: numeric ? sum / numeric : null,
+    sum: total,
+    avg: total === null ? null : roundTo(total / numeric, Math.min(places + 4, 100)),
     min: numeric ? min : null,
     max: numeric ? max : null,
   };

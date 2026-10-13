@@ -9,10 +9,18 @@ import {
 } from "./edit.js";
 import type { CellValue, GridColumn } from "./model.js";
 
+/** Whether a quote that opened before `from` is closed later (`""` is an escaped quote). */
+function closes(text: string, from: number): boolean {
+  for (let i = text.indexOf('"', from); i >= 0; i = text.indexOf('"', i + 2))
+    if (text[i + 1] !== '"') return true;
+  return false;
+}
+
 /**
  * Parses tab separated text, the clipboard format of spreadsheets. A field that starts with a quote
  * runs to the closing quote and may hold tabs, line breaks and `""` for a quote. Rows end at
- * `\n`, `\r\n` or `\r`; one trailing line break does not add an empty row.
+ * `\n`, `\r\n` or `\r`; one trailing line break does not add an empty row. A quote that is never
+ * closed is an ordinary character.
  */
 export function parseTSV(text: string): string[][] {
   const rows: string[][] = [];
@@ -32,7 +40,7 @@ export function parseTSV(text: string): string[][] {
       } else quoted = false;
       continue;
     }
-    if (char === '"' && atStart) {
+    if (char === '"' && atStart && closes(text, i + 1)) {
       quoted = true;
       atStart = false;
       open = true;

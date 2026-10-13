@@ -82,20 +82,20 @@ export function refOfElement(element: Element | null): CellRef | null {
 
 /** First rendered column a range may cover. */
 export function firstColumn(grid: UiDataGrid): number {
-  return grid._ids[0] === SELECT_ID ? 1 : 0;
+  return grid._i().ids[0] === SELECT_ID ? 1 : 0;
 }
 
 export function posOf(grid: UiDataGrid, ref: CellRef): CellPos | null {
-  const r = grid._view.indexOfKey(ref.rowKey);
-  const c = grid._ids.indexOf(ref.columnId);
+  const r = grid._i().view.indexOfKey(ref.rowKey);
+  const c = grid._i().ids.indexOf(ref.columnId);
   return r < 0 || c < 0 ? null : { r, c };
 }
 
 export function refAt(grid: UiDataGrid, r: number, c: number): CellRef | null {
-  const columnId = grid._ids[c];
-  return r < 0 || r >= grid._view.count || columnId === undefined
+  const columnId = grid._i().ids[c];
+  return r < 0 || r >= grid._i().view.count || columnId === undefined
     ? null
-    : { rowKey: grid._view.keyAt(r), columnId };
+    : { rowKey: grid._i().view.keyAt(r), columnId };
 }
 
 /** The data cell at view row `r` and rendered column `c`; `null` for a group row or the checkbox. */
@@ -104,22 +104,26 @@ export function cellAt(
   r: number,
   c: number,
 ): { rowKey: string; columnId: string; row: Row; column: Col } | null {
-  const columnId = grid._ids[c];
+  const columnId = grid._i().ids[c];
   const column = columnId === undefined ? undefined : grid.columns.find((x) => x.id === columnId);
-  if (!column || r < 0 || r >= grid._view.count || grid._view.kind(r) !== "data") return null;
+  if (!column || r < 0 || r >= grid._i().view.count || grid._i().view.kind(r) !== "data")
+    return null;
   return {
-    rowKey: grid._view.keyAt(r),
+    rowKey: grid._i().view.keyAt(r),
     columnId: column.id,
-    row: grid.rows[grid._view.sourceAt(r)],
+    row: grid.rows[grid._i().view.sourceAt(r)],
     column,
   };
 }
 
-/** The active cell, `null` while the header or nothing has focus. */
+/** The focused cell of the grid, `null` while the header or something else has focus. */
 export function activeCell(grid: UiDataGrid): CellRef | null {
-  const { row, col } = grid._active;
-  return row === 0 ? null : refAt(grid, row - 1, col);
+  return refOfElement(grid.contains(document.activeElement) ? document.activeElement : null);
 }
+
+/** Row height in pixels, as the grid published it for the stylesheet. */
+export const rowHeight = (grid: UiDataGrid): number =>
+  Number.parseFloat(grid.style.getPropertyValue("--ui-data-grid-row")) || 40;
 
 // ---- range state --------------------------------------------------------------------------
 export interface Range {
@@ -229,12 +233,12 @@ export function createLayer(grid: UiDataGrid, name: string): Layer {
         return null;
       }
       if (!mount()) return null;
-      const lengths = ZONES.map((zone) => grid._off[zone].length - 1);
+      const lengths = ZONES.map((zone) => grid._i().off[zone].length - 1);
       let corner: HTMLElement | null = null;
       let from = 0;
       ZONES.forEach((zone, i) => {
         const { zone: el, box } = zones[zone];
-        const offsets = grid._off[zone];
+        const offsets = grid._i().off[zone];
         const to = from + (lengths[i] as number);
         const lo = Math.max(bounds.c0, from);
         const hi = Math.min(bounds.c1, to - 1);
@@ -245,8 +249,8 @@ export function createLayer(grid: UiDataGrid, name: string): Layer {
           const left = offsets[lo - from] ?? 0;
           box.style.insetInlineStart = `${left}px`;
           box.style.inlineSize = `${(offsets[hi - from + 1] ?? left) - left}px`;
-          box.style.insetBlockStart = `${bounds.r0 * grid._rowH}px`;
-          box.style.blockSize = `${(bounds.r1 - bounds.r0 + 1) * grid._rowH}px`;
+          box.style.insetBlockStart = `${bounds.r0 * rowHeight(grid)}px`;
+          box.style.blockSize = `${(bounds.r1 - bounds.r0 + 1) * rowHeight(grid)}px`;
           box.toggleAttribute("data-start", lo === bounds.c0);
           box.toggleAttribute("data-end", hi === bounds.c1);
           if (hi === bounds.c1) corner = box;
@@ -286,7 +290,7 @@ export function trackCells(
   const step = () => {
     frame = 0;
     const box = wrap.getBoundingClientRect();
-    const header = grid._rowH;
+    const header = rowHeight(grid);
     const dy = edgeScrollStep(y, box.top + header, box.bottom);
     const dx = edgeScrollStep(x, box.left, box.right);
     if (dx || dy) {
