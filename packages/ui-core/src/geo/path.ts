@@ -1,5 +1,5 @@
-import { geometryRings } from "./geo-topology.js";
-import type { AreaGeometry, Bounds, GeoFeature, Position } from "./internal/geo.js";
+import { geometryRings } from "./topology.js";
+import type { AreaGeometry, Bounds, GeoFeature, Position } from "../internal/geo.js";
 
 type Project = (lon: number, lat: number) => readonly [number, number];
 
@@ -152,4 +152,4 @@ export function labelAnchor(geometry: AreaGeometry): Position {
   return best;
 }
 
-export type { AreaGeometry, Bounds, GeoFeature, Position } from "./internal/geo.js";
+export type { AreaGeometry, Bounds, GeoFeature, Position } from "../internal/geo.js";

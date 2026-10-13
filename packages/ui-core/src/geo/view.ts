@@ -1,4 +1,4 @@
-import type { Bounds } from "./internal/geo.js";
+import type { Bounds } from "../internal/geo.js";
 
 /** Zoom and pan of a map: screen = point * k + (x, y). */
 export interface MapView {
@@ -99,4 +99,4 @@ export function revealPoint(
   return dx === 0 && dy === 0 ? view : { ...view, x: view.x + dx, y: view.y + dy };
 }
 
-export type { Bounds } from "./internal/geo.js";
+export type { Bounds } from "../internal/geo.js";

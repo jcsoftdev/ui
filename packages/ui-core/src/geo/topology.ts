@@ -5,7 +5,7 @@ import type {
   Position,
   Topology,
   TopologyGeometry,
-} from "./internal/geo.js";
+} from "../internal/geo.js";
 
 /**
  * Minimal TopoJSON decoder for area objects. Arcs are stored quantized and
@@ -104,4 +104,4 @@ export type {
   Topology,
   TopologyGeometry,
   TopologyObject,
-} from "./internal/geo.js";
+} from "../internal/geo.js";

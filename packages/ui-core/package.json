@@ -99,6 +99,10 @@
       "types": "./dist/chart/*.d.ts",
       "import": "./dist/chart/*.js"
     },
+    "./geo/*": {
+      "types": "./dist/geo/*.d.ts",
+      "import": "./dist/geo/*.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",

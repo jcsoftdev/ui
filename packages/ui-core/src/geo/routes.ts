@@ -1,4 +1,4 @@
-import type { Position } from "./internal/geo.js";
+import type { Position } from "../internal/geo.js";
 
 const RAD = Math.PI / 180;
 
@@ -94,4 +94,4 @@ export function routePolylinePath(
     .join("");
 }
 
-export type { Position } from "./internal/geo.js";
+export type { Position } from "../internal/geo.js";

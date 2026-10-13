@@ -1,4 +1,4 @@
-import type { Position } from "./internal/geo.js";
+import type { Position } from "../internal/geo.js";
 
 const RAD = Math.PI / 180;
 
@@ -308,4 +308,4 @@ export function globeArc(a: Position, b: Position, steps = 48, lift = 0): Vec3[]
   return points;
 }
 
-export type { Position } from "./internal/geo.js";
+export type { Position } from "../internal/geo.js";

@@ -7,13 +7,13 @@ import * as reactGlobe from "../../ui/src/charts/maps/geo/globe.ts";
 import * as reactProjection from "../../ui/src/charts/maps/geo/projection.ts";
 import * as reactTopo from "../../ui/src/charts/maps/geo/topojson.ts";
 import * as reactView from "../../ui/src/charts/maps/geo/view.ts";
-import * as globe from "../src/geo-globe.ts";
-import * as hex from "../src/geo-hex.ts";
-import { loadMap } from "../src/geo-maps.ts";
-import * as path from "../src/geo-path.ts";
-import * as projection from "../src/geo-projection.ts";
-import * as topo from "../src/geo-topology.ts";
-import * as view from "../src/geo-view.ts";
+import * as globe from "../src/geo/globe.ts";
+import * as hex from "../src/geo/hex.ts";
+import { loadMap } from "../src/geo/maps.ts";
+import * as path from "../src/geo/path.ts";
+import * as projection from "../src/geo/projection.ts";
+import * as topo from "../src/geo/topology.ts";
+import * as view from "../src/geo/view.ts";
 
 let seed = 7;
 const rand = () => {

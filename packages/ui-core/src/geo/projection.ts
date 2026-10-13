@@ -1,4 +1,4 @@
-import type { Position, ProjectionKind } from "./internal/geo.js";
+import type { Position, ProjectionKind } from "../internal/geo.js";
 
 const RAD = Math.PI / 180;
 /** Web Mercator cannot show the poles; latitudes are clamped here. */
@@ -176,4 +176,4 @@ export function fitProjection(
   };
 }
 
-export type { Position, ProjectionKind } from "./internal/geo.js";
+export type { Position, ProjectionKind } from "../internal/geo.js";
