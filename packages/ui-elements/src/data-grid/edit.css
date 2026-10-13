@@ -1,0 +1,67 @@
+[data-ui="data-grid"] [data-ui-part="cell"][data-editing] {
+  display: flex;
+  align-items: center;
+  overflow: visible;
+  padding: 0;
+  text-overflow: clip;
+}
+[data-ui="data-grid"] [data-ui-part="editor"] {
+  box-sizing: border-box;
+  flex: 1;
+  min-inline-size: 0;
+  inline-size: 100%;
+  block-size: calc(100% - 6px);
+  margin: 0;
+  padding-inline: 8px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-xs);
+  background-color: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  line-height: normal;
+  outline: none;
+}
+[data-ui="data-grid"] [data-ui-part="editor"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 0;
+}
+[data-ui="data-grid"] [data-ui-part="editor"][aria-invalid="true"] {
+  border-color: var(--danger);
+}
+[data-ui="data-grid"] [data-ui-part="editor"][type="checkbox"] {
+  flex: none;
+  inline-size: auto;
+  block-size: auto;
+  margin-inline: 12px;
+  accent-color: var(--accent);
+}
+[data-ui="data-grid"]
+  [data-ui-part="cell"][data-editing][data-align="end"]
+  [data-ui-part="editor"] {
+  text-align: end;
+}
+[data-ui="data-grid"]
+  [data-ui-part="cell"][data-editing][data-align="center"]
+  [data-ui-part="editor"] {
+  text-align: center;
+}
+[data-ui="data-grid"] [data-ui-part="cell"][aria-busy="true"] [data-ui-part="editor"] {
+  opacity: 0.7;
+}
+[data-ui="data-grid"] [data-ui-part="edit-error"] {
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  max-inline-size: 16rem;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-xs);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-overlay);
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: start;
+  white-space: normal;
+}

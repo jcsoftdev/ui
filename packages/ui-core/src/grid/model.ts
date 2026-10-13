@@ -21,6 +21,36 @@ export interface CellContext<T> {
  */
 export type CellContent = Node | string | null | undefined;
 
+/** One choice of the `select` editor: a plain value, or a value with its own label. */
+export type EditorOption = string | number | { value: string | number; label: string };
+
+/** Result of `GridColumn.parse`: the value to store, or a message that keeps the editor open. */
+export type CellParseResult = CellValue | { error: string };
+
+/** What an editor factory receives. */
+export interface EditContext<T> {
+  row: T;
+  rowId: string;
+  value: CellValue;
+  column: GridColumn<T>;
+  locale: string;
+  /** Text typed to start the edit (type-to-edit), `undefined` otherwise. */
+  seed: string | undefined;
+}
+
+/**
+ * A custom editor: an element mounted inside the edited cell. `value()` is read on commit. The
+ * grid handles Enter, Tab and Escape on it; the editor may call `commit()` or `cancel()` itself.
+ */
+export interface CellEditor {
+  element: HTMLElement;
+  value(): CellValue;
+  /** Moves focus into the editor; defaults to focusing `element`. */
+  focus?(): void;
+  /** Called with the error message (or `null`), e.g. to set `aria-invalid` on the real input. */
+  setError?(message: string | null): void;
+}
+
 /** Column definition. Same names as the React kit's `DataGridColumn` for the pieces D1 covers. */
 export interface GridColumn<T> {
   id: string;
@@ -47,6 +77,36 @@ export interface GridColumn<T> {
   pinnable?: boolean;
   resizable?: boolean;
   reorderable?: boolean;
+  /** Cells of this column can be edited (a function decides per row). The grid's `editable` attribute is the default. */
+  editable?: boolean | ((row: T) => boolean);
+  /**
+   * The editor: `text`, `number`, `select`, `boolean` or `date`; a custom element tag (gets a
+   * `value`, `row`, `rowId` and `column` property and is read through `value`); or a factory
+   * returning a `CellEditor`. Defaults from `options` and `type`.
+   */
+  editor?:
+    | "text"
+    | "number"
+    | "select"
+    | "boolean"
+    | "date"
+    | string
+    | ((context: EditContext<T>) => CellEditor);
+  /** Choices of the `select` editor. */
+  options?: readonly EditorOption[];
+  /**
+   * Checks the value about to be stored. Return a message to refuse it (the editor stays open and
+   * shows it) or nothing to accept; it may return a promise.
+   */
+  validate?: (
+    value: CellValue,
+    row: T,
+    signal?: AbortSignal,
+  ) => string | null | undefined | Promise<string | null | undefined>;
+  /** Turns the editor's text into the value to store (text, number and date editors). */
+  parse?: (text: string, context: { row: T; locale: string }) => CellParseResult;
+  /** Writes an edited value into the row; needed for a function `accessor` in `edit-mode="mutate"`. */
+  setter?: (row: T, value: CellValue) => void;
 }
 
 export function getCellValue<T>(row: T, column: GridColumn<T>): CellValue {
