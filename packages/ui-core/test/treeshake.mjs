@@ -2,6 +2,7 @@
 // Behaviour entries must stay independent; the liquid tiers must load only their own modules eagerly
 // (the rest stays behind dynamic import()).
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -38,12 +39,24 @@ export async function eagerModules(code, resolveDir = dist) {
   return [...inputs].sort();
 }
 
-const behaviours = ["focus", "roving", "popper", "dismiss", "typeahead", "state"];
+// Behaviours are the top-level modules (src/<name>.ts), discovered so a new one needs no edit here.
+// The phase-1 set is fully independent; any behaviour may build on other behaviours, never on the
+// liquid engine.
+const independent = new Set(["focus", "roving", "popper", "dismiss", "typeahead", "state"]);
+const behaviours = readdirSync(join(dist, "..", "src"))
+  .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
+  .map((file) => file.slice(0, -3));
 for (const name of behaviours) {
   const modules = await eagerModules(`export * from "./${name}.js";`);
-  assert.deepEqual(modules, [name], `${name} pulls in only itself`);
+  if (independent.has(name)) assert.deepEqual(modules, [name], `${name} pulls in only itself`);
+  assert.ok(modules.includes(name), `${name} is built`);
+  assert.deepEqual(
+    modules.filter((module) => module.startsWith("liquid/")),
+    [],
+    `${name}: no liquid module`,
+  );
 }
-console.log(`behaviours: ${behaviours.length} entries independent`);
+console.log(`behaviours: ${behaviours.length} entries checked`);
 
 // Liquid tiers: an entry pulls only its own tier eagerly; the rest is behind import().
 const tiers = {

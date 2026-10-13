@@ -31,30 +31,6 @@
     "LICENSE"
   ],
   "exports": {
-    "./focus": {
-      "types": "./dist/focus.d.ts",
-      "import": "./dist/focus.js"
-    },
-    "./roving": {
-      "types": "./dist/roving.d.ts",
-      "import": "./dist/roving.js"
-    },
-    "./popper": {
-      "types": "./dist/popper.d.ts",
-      "import": "./dist/popper.js"
-    },
-    "./dismiss": {
-      "types": "./dist/dismiss.d.ts",
-      "import": "./dist/dismiss.js"
-    },
-    "./typeahead": {
-      "types": "./dist/typeahead.d.ts",
-      "import": "./dist/typeahead.js"
-    },
-    "./state": {
-      "types": "./dist/state.d.ts",
-      "import": "./dist/state.js"
-    },
     "./liquid": {
       "types": "./dist/liquid/attach.d.ts",
       "import": "./dist/liquid/attach.js"
@@ -99,7 +75,11 @@
       "types": "./dist/liquid/presets/*.d.ts",
       "import": "./dist/liquid/presets/*.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    }
   },
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
