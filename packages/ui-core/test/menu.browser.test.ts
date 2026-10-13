@@ -204,4 +204,34 @@ describe("submenus", () => {
     expect(parent.isMovingToSubmenu({ x: 310, y: 50 })).toBe(true);
     expect(parent.isMovingToSubmenu({ x: 20, y: 500 })).toBe(false);
   });
+
+  it("arms the grace area on pointerout, before the parent refocuses itself on leaving an item", async () => {
+    const host = mount(SUB);
+    (host.querySelector("#menu") as HTMLElement).style.width = "150px";
+    const sub = host.querySelector("#submenu") as HTMLElement;
+    sub.style.cssText = "position:fixed;left:300px;top:0;width:100px;height:200px";
+    sub.setAttribute("data-side", "right");
+    const trigger = host.querySelector("#sub") as HTMLElement;
+    const menu = host.querySelector("#menu") as HTMLElement;
+    const parent = createMenuContent(menu);
+    bindSubmenuTrigger(trigger, {
+      parent,
+      getContent: () => sub,
+      isOpen: () => true,
+      setOpen: () => {},
+    });
+    trigger.focus();
+    const rect = trigger.getBoundingClientRect();
+    // pointerout reaches the trigger's listener first, then the content's (which refocuses it).
+    trigger.dispatchEvent(
+      new PointerEvent("pointerout", {
+        pointerType: "mouse",
+        clientX: rect.right,
+        clientY: rect.top + 5,
+        relatedTarget: sub,
+        bubbles: true,
+      }),
+    );
+    expect(document.activeElement).toBe(trigger);
+  });
 });
