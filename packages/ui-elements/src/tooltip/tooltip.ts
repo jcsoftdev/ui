@@ -1,3 +1,4 @@
+import { createHoverIntent, createSkipWindow } from "@jcsoftdev/ui-core/hover-intent";
 import { AnchoredOverlay } from "../internal/anchored.js";
 import {
   adoptStyles,
@@ -11,9 +12,8 @@ import css from "./tooltip.css.js";
 
 /** Hover delay before a tooltip opens, and the window in which the next one opens at once. */
 const DELAY = 700;
-const SKIP_DELAY = 300;
 const LEAVE_GRACE = 100;
-let lastClosed = 0;
+const skipWindow = createSkipWindow(300);
 
 /**
  * `<ui-tooltip for="id">`: a short description of the element `for` names, shown on hover (after
@@ -29,15 +29,25 @@ export class UiTooltip extends AnchoredOverlay {
   protected override defaultSide = "top" as const;
   readonly #internals = this.attachInternals();
   #anchor: HTMLElement | null = null;
-  #timer: ReturnType<typeof setTimeout> | undefined;
+  readonly #intent = createHoverIntent({
+    onChange: (open) => {
+      this.open = open;
+    },
+    openDelay: () => {
+      const delay = Number.parseFloat(this.getAttribute("delay") ?? "");
+      return Number.isFinite(delay) ? delay : DELAY;
+    },
+    closeDelay: LEAVE_GRACE,
+    skip: skipWindow,
+  });
   #arrow: HTMLElement | null = null;
 
   constructor() {
     super();
     this.#internals.role = "tooltip";
     // Hoverable content (WCAG 1.4.13): staying on the tooltip keeps it open.
-    this.addEventListener("pointerenter", () => clearTimeout(this.#timer));
-    this.addEventListener("pointerleave", () => this.#schedule(false, LEAVE_GRACE));
+    this.addEventListener("pointerenter", () => this.#intent.hold());
+    this.addEventListener("pointerleave", () => this.#intent.leave());
   }
 
   protected override arrow(): HTMLElement | null {
@@ -57,7 +67,7 @@ export class UiTooltip extends AnchoredOverlay {
   }
 
   override disconnectedCallback(): void {
-    clearTimeout(this.#timer);
+    this.#intent.cancel();
     super.disconnectedCallback();
     this.#bind(null);
   }
@@ -73,7 +83,7 @@ export class UiTooltip extends AnchoredOverlay {
 
   protected override closed(): void {
     document.removeEventListener("keydown", this.#onKey, true);
-    lastClosed = Date.now();
+    skipWindow.markClosed();
   }
 
   #bind(anchor: HTMLElement | null): void {
@@ -96,23 +106,12 @@ export class UiTooltip extends AnchoredOverlay {
     if (!ids.includes(id)) anchor.setAttribute("aria-describedby", [...ids, id].join(" "));
   }
 
-  #schedule(open: boolean, delay: number): void {
-    clearTimeout(this.#timer);
-    if (delay <= 0) this.open = open;
-    else this.#timer = setTimeout(() => (this.open = open), delay);
-  }
-
-  #enter = (event: Event) => {
-    if ((event as PointerEvent).pointerType === "touch") return;
-    const delay = Number.parseFloat(this.getAttribute("delay") ?? "");
-    const wait = Date.now() - lastClosed < SKIP_DELAY ? 0 : Number.isFinite(delay) ? delay : DELAY;
-    this.#schedule(true, wait);
-  };
+  #enter = (event: Event) => this.#intent.enter(event as PointerEvent);
   /** Leaving the anchor closes after a grace period, so the pointer can move onto the tooltip. */
-  #leave = () => this.#schedule(false, LEAVE_GRACE);
-  #close = () => this.#schedule(false, 0);
+  #leave = () => this.#intent.leave();
+  #close = () => this.#intent.close();
   #focus = () => {
-    if (this.#anchor?.matches(":focus-visible")) this.#schedule(true, 0);
+    if (this.#anchor?.matches(":focus-visible")) this.#intent.focus();
   };
   #onKey = (event: KeyboardEvent) => {
     if (event.key !== "Escape" || !this.open) return;

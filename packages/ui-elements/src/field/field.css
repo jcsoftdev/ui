@@ -1,0 +1,36 @@
+[data-ui="field"] {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: 5px;
+  font-family: var(--font-sans);
+}
+[data-ui="field"][hidden] {
+  display: none;
+}
+[data-ui="field"] > [data-ui-part="label"] {
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+[data-ui="field"] [data-ui-part="optional"] {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+[data-ui="field"] > [data-ui-part="hint"],
+[data-ui="field"] > [data-ui-part="error"] {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+[data-ui="field"] > [data-ui-part="hint"] {
+  color: var(--ink-3);
+}
+[data-ui="field"] > [data-ui-part="error"] {
+  color: var(--danger);
+  font-weight: 600;
+}
+[data-ui="field"] > [hidden] {
+  display: none;
+}

@@ -42,14 +42,68 @@ export async function eagerModules(code, resolveDir = dist) {
 // Behaviours are the top-level modules (src/<name>.ts), discovered so a new one needs no edit here.
 // The phase-1 set is fully independent; any behaviour may build on other behaviours, never on the
 // liquid engine.
-const independent = new Set(["focus", "roving", "popper", "dismiss", "typeahead", "state"]);
-const behaviours = readdirSync(join(dist, "..", "src"))
-  .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
-  .map((file) => file.slice(0, -3));
+const independent = new Set([
+  "focus",
+  "roving",
+  "popper",
+  "dismiss",
+  "typeahead",
+  "state",
+  "observe",
+  "clipboard",
+  "number",
+  "date",
+  "context",
+]);
+// Chart entries may build on each other only as listed; everything else stays separate.
+const chartDeps = {
+  "chart/color-scale": ["chart/palette"],
+  "chart/category-axis": ["chart/axis", "chart/scale"],
+  "chart/category-axis-time": [
+    "chart/axis",
+    "chart/category-axis",
+    "chart/scale",
+    "chart/scale-time",
+  ],
+};
+// Grid entries: each is usable alone; only the listed ones build on another entry.
+const gridDeps = {
+  "grid/model": ["chart/format"],
+  "grid/sort": ["grid/model"],
+  "grid/columns": [],
+  "grid/pin": ["column-pin"],
+  "grid/virtual": ["virtual-list"],
+  "grid/keyboard": [],
+  "grid/select": [],
+  "grid/resize": ["grid/columns"],
+  "grid/reorder": ["sortable"],
+  "grid/view": [],
+};
+const behaviours = [];
+for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
+  if (item.isFile() && item.name.endsWith(".ts") && !item.name.endsWith(".d.ts"))
+    behaviours.push(item.name.slice(0, -3));
+  else if (item.isDirectory() && item.name !== "liquid")
+    for (const part of readdirSync(join(dist, "..", "src", item.name)))
+      if (part.endsWith(".ts")) behaviours.push(`${item.name}/${part.slice(0, -3)}`);
+}
 for (const name of behaviours) {
   const modules = await eagerModules(`export * from "./${name}.js";`);
   if (independent.has(name)) assert.deepEqual(modules, [name], `${name} pulls in only itself`);
-  assert.ok(modules.includes(name), `${name} is built`);
+  if (name.startsWith("chart/"))
+    assert.deepEqual(
+      modules.filter((module) => module !== name && !module.startsWith("internal/")),
+      chartDeps[name] ?? [],
+      `${name}: eager modules besides itself and internal/*`,
+    );
+  if (name.startsWith("grid/"))
+    assert.deepEqual(
+      modules.filter((module) => module !== name && !module.startsWith("internal/")).sort(),
+      [...(gridDeps[name] ?? [])].sort(),
+      `${name}: eager modules besides itself and internal/*`,
+    );
+  if (name !== "internal/geo" && name !== "internal/tree-types")
+    assert.ok(modules.includes(name), ` is built`); // type-only modules emit nothing
   assert.deepEqual(
     modules.filter((module) => module.startsWith("liquid/")),
     [],
@@ -96,4 +150,49 @@ for (const output of Object.values(lazy.metafile.outputs))
 assert.equal(dynamic.size, 5, "attachLiquid: lens + 4 features are separate lazy chunks");
 console.log(
   `liquid: ${Object.keys(tiers).length} tier entries pull only their own modules; ${dynamic.size} lazy chunks`,
+);
+
+// Geo (C7): every entry is usable alone. Topology data is JSON behind import(), never eager.
+const geoExpected = {
+  "geo/projection": ["geo/projection"],
+  "geo/simplify": ["geo/simplify"],
+  "geo/cluster": ["geo/cluster"],
+  "geo/view": ["geo/view"],
+  "geo/routes": ["geo/routes"],
+  "geo/match": ["geo/match"],
+  "geo/globe": ["geo/globe"],
+  "geo/hex": ["geo/hex"],
+  "geo/topology": ["geo/topology"],
+  "geo/path": ["geo/path", "geo/topology"],
+  "geo/maps": ["geo/maps"],
+};
+for (const [entry, expected] of Object.entries(geoExpected)) {
+  const modules = await eagerModules(`export * from "./${entry}.js";`);
+  assert.deepEqual(modules, expected, `${entry} eager modules`);
+}
+const geoLazy = await build({
+  entryPoints: [join(dist, "geo/maps.js")],
+  bundle: true,
+  splitting: true,
+  format: "esm",
+  write: false,
+  metafile: true,
+  outdir: join(dist, ".treeshake"),
+  logLevel: "silent",
+});
+const geoOutputs = Object.entries(geoLazy.metafile.outputs);
+const geoEntry = geoOutputs.find(([, output]) => output.entryPoint?.endsWith("geo/maps.js"));
+assert.ok(geoEntry, "geo/maps entry chunk");
+assert.deepEqual(
+  Object.keys(geoEntry[1].inputs).filter((input) => input.includes("geo-data")),
+  [],
+  "geo/maps: no topology in the entry chunk",
+);
+const geoChunks = geoOutputs.filter(
+  ([name, output]) =>
+    name !== geoEntry[0] && Object.keys(output.inputs).some((i) => i.includes("geo-data")),
+);
+assert.equal(geoChunks.length, 2, "world and peru are separate lazy chunks");
+console.log(
+  `geo: ${Object.keys(geoExpected).length} entries independent; ${geoChunks.length} lazy topology chunks`,
 );

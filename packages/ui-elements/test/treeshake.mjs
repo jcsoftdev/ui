@@ -51,6 +51,8 @@ for (const { name, dist, define, budget } of elements) {
   const { inputs, lazy } = await graph(dist);
   const liquid = inputs.filter((file) => /liquid/.test(file));
   assert.deepEqual(liquid, [], `${name}: no liquid module loads eagerly`);
+  const data = inputs.filter((file) => /-data\.js$/.test(file));
+  assert.deepEqual(data, [], `${name}: no dataset module loads eagerly (import() it)`);
   for (const other of names.filter((n) => n !== name && !name.startsWith(`${n}-`)))
     assert.ok(
       !inputs.some((file) => file.startsWith(`dist/${other}/`)),
@@ -58,3 +60,61 @@ for (const { name, dist, define, budget } of elements) {
     );
   console.log(`${name.padEnd(12)} ${inputs.length} modules eager, ${lazy} lazy import(s)`);
 }
+
+// Static icons: `icon` plus `icons/<name>` is the whole eager graph. No registry, no other glyph.
+{
+  const result = await build({
+    stdin: {
+      contents:
+        'import { defineIcon } from "./dist/icon/icon.js"; defineIcon(); import "./dist/icon/glyphs/x.js"; import "./dist/icon/glyphs/bell.js";',
+      resolveDir: root,
+    },
+    absWorkingDir: root,
+    bundle: true,
+    splitting: true,
+    format: "esm",
+    write: false,
+    metafile: true,
+    outdir: join(root, ".treeshake"),
+    logLevel: "silent",
+  });
+  const outputs = result.metafile.outputs;
+  const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint === "<stdin>");
+  const eager = new Set();
+  const visit = (name) => {
+    if (eager.has(name)) return;
+    eager.add(name);
+    for (const dep of outputs[name].imports) if (dep.kind === "import-statement") visit(dep.path);
+  };
+  visit(entry);
+  const inputs = [...eager].flatMap((name) => Object.keys(outputs[name].inputs));
+  assert.ok(
+    inputs.some((file) => file.endsWith("icon/icon.js")),
+    "icon is bundled",
+  );
+  assert.ok(
+    inputs.some((file) => file.endsWith("icon/glyphs/x.js")),
+    "static x is bundled",
+  );
+  assert.ok(
+    !inputs.some((file) => file.endsWith("icon/registry.js")),
+    "static icons do not load the registry",
+  );
+  assert.ok(
+    !inputs.some((file) => /icon\/glyphs\/(?!x\.js|bell\.js)/.test(file)),
+    "static icons pull no other glyph",
+  );
+  console.log("icons/x + icons/bell: no registry, no other glyph in the eager graph");
+}
+
+// The default pin-input must not pay for the `cells` variant: `createOtp` stays behind import().
+const pin = await graph("dist/pin-input/pin-input.js");
+assert.ok(
+  !pin.inputs.some((file) => /ui-core\/dist\/otp\.js$/.test(file)),
+  "pin-input: the default graph excludes createOtp (ui-core otp)",
+);
+assert.ok(
+  pin.inputs.some((file) => /ui-core\/dist\/otp-sanitize\.js$/.test(file)),
+  "pin-input: sanitizeOtp comes from its own entry",
+);
+assert.ok(pin.lazy >= 1, "pin-input: the cells variant is a lazy import");

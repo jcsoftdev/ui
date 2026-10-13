@@ -1,0 +1,44 @@
+:host {
+  --ui-time-input-height: var(--input-height);
+  --ui-time-input-radius: var(--radius-input);
+  --ui-time-input-bg: var(--surface-control);
+  --ui-time-input-border: var(--border-color-control);
+  display: inline-block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+:host([hidden]) {
+  display: none;
+}
+[part="input"] {
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: var(--ui-time-input-height);
+  margin: 0;
+  padding: 0 12px;
+  border: var(--border-width-control) solid var(--ui-time-input-border);
+  border-radius: var(--ui-time-input-radius);
+  background-color: var(--ui-time-input-bg);
+  color: var(--ink);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--motion-duration) var(--motion-ease);
+}
+[part="input"]::placeholder {
+  color: var(--ink-3);
+}
+[part="input"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+  border-color: transparent;
+}
+[part="input"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+[part="input"][aria-invalid="true"] {
+  border-color: var(--danger);
+}

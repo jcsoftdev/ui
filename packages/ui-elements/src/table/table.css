@@ -1,0 +1,130 @@
+[data-ui="table"] {
+  display: block;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  container: table / inline-size;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+[data-ui="table"] table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+[data-ui="table"] caption {
+  padding: 8px 16px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  text-align: start;
+}
+[data-ui="table"] th {
+  padding: 10px 16px;
+  border-bottom: var(--border-width-divider) solid var(--border-color-divider);
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+[data-ui="table"] td {
+  padding: 11px 16px;
+  vertical-align: middle;
+}
+[data-ui="table"] tr {
+  border-bottom: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="table"] tbody tr:last-child {
+  border-bottom: 0;
+}
+[data-ui="table"] tbody tr:hover {
+  background-color: var(--surface-2);
+}
+[data-ui="table"] :is(th, td)[data-align="end"] {
+  text-align: end;
+}
+@container table (max-width: 24rem) {
+  [data-ui="table"] :is(th, td) {
+    padding-inline: 10px;
+  }
+}
+[data-ui="table"] [data-pinned] {
+  position: sticky;
+  z-index: 1;
+  background-color: var(--surface);
+}
+[data-ui="table"] th[data-pinned] {
+  z-index: 2;
+}
+[data-ui="table"] tbody tr:hover > [data-pinned] {
+  background-color: var(--surface-2);
+}
+[data-ui="table"] tbody tr:is([aria-selected="true"], [data-selected="true"]) > [data-pinned] {
+  background-color: var(--accent-soft);
+}
+[data-ui="table"] [data-pinned="left"][data-pin-shadow] {
+  box-shadow: var(--shadow-pinned-start);
+}
+[data-ui="table"] [data-pinned="right"][data-pin-shadow] {
+  box-shadow: var(--shadow-pinned-end);
+}
+[data-ui="table"] tr:has(a[data-row-link]) {
+  position: relative;
+}
+[data-ui="table"] tr:has(a[data-row-link]) > td:first-child {
+  padding: 0;
+}
+[data-ui="table"] a[data-row-link] {
+  display: block;
+  padding: 11px 16px;
+  color: var(--ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+[data-ui="table"] a[data-row-link]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+[data-ui="table"] a[data-row-link]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+[data-ui="table"] [data-ui-part="pin"] {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-inline-start: 4px;
+  vertical-align: middle;
+}
+[data-ui="table"] [data-ui-part="pin-button"] {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: 20px;
+  block-size: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+[data-ui="table"] [data-ui-part="pin-button"]:hover,
+[data-ui="table"] [data-ui-part="pin-button"]:focus-visible {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+[data-ui="table"] [data-ui-part="pin-button"][aria-pressed="true"] {
+  color: var(--accent-ink);
+}
+[data-ui="table"] [data-ui-part="pin-button"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="table"] [data-ui-part="icon"] {
+  inline-size: 14px;
+  block-size: 14px;
+}

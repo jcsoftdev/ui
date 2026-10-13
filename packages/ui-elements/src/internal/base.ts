@@ -120,23 +120,6 @@ export function onCommand(host: HTMLElement, handler: (command: string) => void)
   });
 }
 
-let locks = 0;
-let previousOverflow = "";
-/** Locks page scroll while at least one caller holds it; returns the release. */
-export function lockScroll(): () => void {
-  const html = document.documentElement;
-  if (locks++ === 0) {
-    previousOverflow = html.style.overflow;
-    html.style.overflow = "hidden";
-  }
-  let released = false;
-  return () => {
-    if (released) return;
-    released = true;
-    if (--locks === 0) html.style.overflow = previousOverflow;
-  };
-}
-
 /** The element `id` names in the root `from` lives in (document or shadow root). */
 export const byId = (from: Node, id: string | null): HTMLElement | null =>
   id ? ((from.getRootNode() as Document | ShadowRoot).getElementById?.(id) ?? null) : null;

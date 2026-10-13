@@ -37,6 +37,7 @@ export abstract class AnchoredOverlay extends ElementBase {
   protected abstract readonly popoverMode: "auto" | "manual";
   protected abstract readonly defaultOffset: number;
   protected defaultSide: Side = "bottom";
+  protected defaultAlign: Align = "center";
   protected arrow(): HTMLElement | null {
     return null;
   }
@@ -46,6 +47,10 @@ export abstract class AnchoredOverlay extends ElementBase {
   }
   set open(value: boolean) {
     this.toggleAttribute("open", value);
+  }
+  /** Places the open overlay again (the anchor moved). No-op while closed. */
+  reposition(): void {
+    if (this.#active) this.#place();
   }
   show(anchor?: HTMLElement | null): void {
     if (anchor) this.anchorElement = anchor;
@@ -62,6 +67,15 @@ export abstract class AnchoredOverlay extends ElementBase {
   protected connected(): void {}
   protected opened(): void {}
   protected closed(): void {}
+  /**
+   * Hides the element: call `hide` now (the default), or later to let an exit animation play
+   * (`waitForExit` from ui-core's presence). Returns a cancel for a pending hide, called when the
+   * overlay reopens or disconnects first.
+   */
+  protected exit(hide: () => void): (() => void) | undefined {
+    hide();
+    return undefined;
+  }
 
   /** Set once connected: on upgrade, attribute callbacks run before `connectedCallback`. */
   #ready = false;
@@ -77,6 +91,8 @@ export abstract class AnchoredOverlay extends ElementBase {
 
   disconnectedCallback(): void {
     this.#ready = false;
+    this.#cancelExit?.();
+    this.#cancelExit = undefined;
     // Removing a showing popover hides it without toggle events: settle the state here, keeping
     // the `open` attribute so a reconnect (a move) shows it again.
     if (this.#active) {
@@ -116,11 +132,14 @@ export abstract class AnchoredOverlay extends ElementBase {
   }
 
   #active = false;
+  #cancelExit: (() => void) | undefined;
 
   #sync(): void {
     const native = hasPopover();
     const showing = () => (native ? this.matches(":popover-open") : !this.hidden);
     if (this.open && !this.#active) {
+      this.#cancelExit?.();
+      this.#cancelExit = undefined;
       this.anchorElement ??= byId(this, this.getAttribute("anchor")) ?? findTrigger(this, null);
       if (!showing()) {
         if (native) this.showPopover();
@@ -133,11 +152,14 @@ export abstract class AnchoredOverlay extends ElementBase {
       emit(this, "open");
     } else if (!this.open && this.#active) {
       this.#active = false;
-      if (showing()) {
-        if (native) this.hidePopover();
-        else this.hidden = true;
-      }
-      this.#stop();
+      this.#cancelExit = this.exit(() => {
+        this.#cancelExit = undefined;
+        if (showing()) {
+          if (native) this.hidePopover();
+          else this.hidden = true;
+        }
+        this.#stop();
+      });
       this.closed();
       emit(this, "close");
     }
@@ -152,7 +174,7 @@ export abstract class AnchoredOverlay extends ElementBase {
     const offset = Number.parseFloat(this.getAttribute("side-offset") ?? "");
     this.#stopPosition = autoPosition(anchor, this, {
       side: SIDES.has(side) ? (side as Side) : this.defaultSide,
-      align: ALIGNS.has(align) ? (align as Align) : "center",
+      align: ALIGNS.has(align) ? (align as Align) : this.defaultAlign,
       sideOffset: Number.isFinite(offset) ? offset : this.defaultOffset,
       collisionPadding: 8,
       arrow: this.arrow(),

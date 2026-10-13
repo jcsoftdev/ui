@@ -1,0 +1,37 @@
+:host {
+  --ui-avatar-size: 26px;
+  --ui-avatar-bg: var(--sunken);
+  --ui-avatar-ink: var(--ink-2);
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  inline-size: var(--ui-avatar-size);
+  block-size: var(--ui-avatar-size);
+  overflow: hidden;
+  border-radius: var(--radius-avatar);
+  background-color: var(--ui-avatar-bg);
+  color: var(--ui-avatar-ink);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+:host([hidden]) {
+  display: none;
+}
+:host([size="lg"]) {
+  --ui-avatar-size: 32px;
+  font-size: 11px;
+}
+:host([highlighted]) {
+  --ui-avatar-bg: var(--accent);
+  --ui-avatar-ink: var(--on-accent);
+}
+[part="image"] {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+[hidden] {
+  display: none;
+}

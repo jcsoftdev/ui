@@ -1,0 +1,54 @@
+:host {
+  --ui-status-pill-color: var(--success);
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  block-size: var(--control-height-sm);
+  box-sizing: border-box;
+  padding-inline: 10px;
+  white-space: nowrap;
+  border: var(--border-width-divider) solid var(--border-color-divider);
+  border-radius: var(--radius-badge);
+  background-color: var(--surface-control);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+:host([hidden]) {
+  display: none;
+}
+:host(:not([interactive])) {
+  cursor: default;
+}
+:host([interactive]:hover) {
+  border-color: var(--line-strong);
+}
+:host(:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+:host([status="warning"]) {
+  --ui-status-pill-color: var(--warning);
+}
+:host([status="danger"]) {
+  --ui-status-pill-color: var(--danger);
+}
+:host([status="idle"]) {
+  --ui-status-pill-color: var(--ink-3);
+}
+[part="dot"] {
+  flex-shrink: 0;
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: var(--radius-pill);
+  background-color: var(--ui-status-pill-color);
+}
+@container (max-width: 700px) {
+  [part="label"] {
+    display: none;
+  }
+}

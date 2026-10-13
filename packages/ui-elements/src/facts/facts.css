@@ -1,0 +1,30 @@
+[data-ui="facts"] {
+  display: block;
+  min-width: 0;
+  container: facts / inline-size;
+}
+[data-ui="facts"] > dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border-top: var(--border-width-divider) dashed var(--border-color-divider);
+}
+[data-ui="facts"] dt {
+  color: var(--ink-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+[data-ui="facts"] dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 620;
+  overflow-wrap: break-word;
+}
+@container facts (max-width: 560px) {
+  [data-ui="facts"] > dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
