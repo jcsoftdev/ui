@@ -155,6 +155,32 @@ describe("markdown parser: hostile input stays cheap", () => {
     for (const source of lines) expect(parseMarkdown(source)).toEqual(react.parseMarkdown(source));
   });
 
+  it("caps table width and keeps list and heading scans linear", () => {
+    const table = `${"|".repeat(10000)}\n${"-|".repeat(10000)}\n${"x|\n".repeat(13000)}`;
+    let start = performance.now();
+    const [block] = parseMarkdown(table);
+    expect(performance.now() - start).toBeLessThan(200);
+    if (block?.t !== "table") throw new Error("expected a table");
+    expect(block.head.length).toBeLessThanOrEqual(64);
+    expect(block.align.length).toBeLessThanOrEqual(64);
+    expect(block.rows.every((row) => row.length <= 64)).toBe(true);
+    for (const source of [
+      `- ${" ".repeat(100000)}x y`,
+      `# ${" ".repeat(100000)}x y`,
+      `-${"\t".repeat(50000)}x\u2028y`,
+    ]) {
+      start = performance.now();
+      parseMarkdown(source);
+      expect(performance.now() - start).toBeLessThan(200);
+    }
+  });
+
+  it("treats only space and tab as heading whitespace", () => {
+    expect(parseMarkdown("# a\u2028b")[0]?.t).toBe("heading");
+    expect(parseMarkdown("#\u2028a")[0]?.t).toBe("p");
+    expect(parseMarkdown("#\u00a0a")[0]?.t).toBe("p");
+  });
+
   it("still parses ordinary links", () => {
     expect(parseInline("[a](https://a.example)")).toEqual(
       react.parseInline("[a](https://a.example)"),
