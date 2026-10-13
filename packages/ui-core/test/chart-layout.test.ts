@@ -13,6 +13,7 @@ import * as reactUnits from "../../ui/src/charts/core/units.ts";
 import { fitCenterText as reactFitCenterText } from "../../ui/src/charts/donut-chart/center-fit.ts";
 import * as reactGauge from "../../ui/src/charts/gauge-chart/gauge-layout.ts";
 import * as chord from "../src/chart/chord.ts";
+import * as dendrogram from "../src/chart/dendrogram.ts";
 import * as funnel from "../src/chart/funnel.ts";
 import * as gauge from "../src/chart/gauge.ts";
 import * as hierarchyModel from "../src/chart/hierarchy.ts";
@@ -21,11 +22,25 @@ import * as partition from "../src/chart/partition.ts";
 import * as polar from "../src/chart/polar.ts";
 import * as sankey from "../src/chart/sankey.ts";
 import * as tree from "../src/chart/tree.ts";
+import * as treeEdge from "../src/chart/tree-edge.ts";
+import * as treeFit from "../src/chart/tree-fit.ts";
+import * as treeNav from "../src/chart/tree-nav.ts";
+import * as treeRadial from "../src/chart/tree-radial.ts";
 import * as treemap from "../src/chart/treemap.ts";
 
 const TAU = Math.PI * 2;
 // Each React module became several independent entries; the tests read them as one surface.
-const hierarchy = { ...hierarchyModel, ...treemap, ...partition, ...tree };
+const hierarchy = {
+  ...hierarchyModel,
+  ...treemap,
+  ...partition,
+  ...tree,
+  ...treeEdge,
+  ...treeFit,
+  ...treeNav,
+  ...treeRadial,
+  ...dendrogram,
+};
 
 // niceRadarMax lives inside the radar component, whose import would drag the whole React kit
 // into this package's typecheck. Its source is lifted from the file instead, so the parity
