@@ -1,4 +1,7 @@
+import { type BoxEdges, graceArea, isPointInPolygon, type Point } from "./hover-intent.ts";
 import { nextTypeaheadIndex } from "./typeahead.ts";
+
+export { type BoxEdges, graceArea, isPointInPolygon, type Point };
 
 /**
  * Framework-free behaviour of a menu (WAI-ARIA menu button pattern), ported from the React kit's
@@ -20,17 +23,6 @@ export type MenuDirection = "ltr" | "rtl";
 export type FocusIntent = "first" | "last" | "none";
 export type MenuMove = "next" | "prev" | "first" | "last";
 export type CheckedState = boolean | "indeterminate";
-
-export interface Point {
-  x: number;
-  y: number;
-}
-export interface BoxEdges {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
-}
 
 const SUB_OPEN_KEYS: Record<MenuDirection, string[]> = {
   ltr: ["Enter", " ", "ArrowRight"],
@@ -59,36 +51,6 @@ export function moveIndex(count: number, current: number, move: MenuMove, loop =
   const next = current + (move === "next" ? 1 : -1);
   if (next >= 0 && next < count) return next;
   return loop ? (next + count) % count : current;
-}
-
-/**
- * Area between the pointer leaving a submenu trigger and the submenu box, so the pointer can
- * cross other items on its way without closing the submenu.
- */
-export function graceArea(exit: Point, side: "left" | "right", box: BoxEdges): Point[] {
-  const rightSide = side === "right";
-  const bleed = rightSide ? -5 : 5;
-  const near = rightSide ? box.left : box.right;
-  const far = rightSide ? box.right : box.left;
-  return [
-    { x: exit.x + bleed, y: exit.y },
-    { x: near, y: box.top },
-    { x: far, y: box.top },
-    { x: far, y: box.bottom },
-    { x: near, y: box.bottom },
-  ];
-}
-
-/** Ray-casting point-in-polygon test. */
-export function isPointInPolygon(point: Point, polygon: readonly Point[]): boolean {
-  const { x, y } = point;
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const a = polygon[i] as Point;
-    const b = polygon[j] as Point;
-    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) inside = !inside;
-  }
-  return inside;
 }
 
 /** Next state of a checkbox item once chosen: a mixed item becomes checked. */
