@@ -1,0 +1,298 @@
+[data-ui="data-grid"] {
+  /* Component variables: --ui-data-grid-height (default 24rem), --ui-data-grid-row (set from the density). */
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: var(--ui-data-grid-height, 24rem);
+  overflow: hidden;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-tile);
+  background-color: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+[data-ui="data-grid"][hidden] {
+  display: none;
+}
+[data-ui="data-grid"] [data-ui-part="viewport"] {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+[data-ui="data-grid"] [data-ui-part="sizer"] {
+  position: relative;
+  min-inline-size: 100%;
+}
+[data-ui="data-grid"] [data-ui-part="head"] {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
+  background-color: var(--surface);
+}
+[data-ui="data-grid"] [data-ui-part="body"] {
+  position: relative;
+}
+[data-ui="data-grid"] [data-ui-part="row"] {
+  box-sizing: border-box;
+  display: flex;
+  block-size: var(--ui-data-grid-row);
+  background-color: var(--surface);
+}
+[data-ui="data-grid"] [data-ui-part="body"] > [data-ui-part="row"] {
+  position: absolute;
+  inset-inline: 0;
+}
+[data-ui="data-grid"] [data-ui-part="body"] > [data-ui-part="row"]:hover {
+  background-color: var(--surface-2);
+}
+[data-ui="data-grid"] [data-ui-part="body"] > [data-ui-part="row"][aria-selected="true"] {
+  background-color: var(--accent-soft);
+}
+[data-ui="data-grid"] [data-ui-part="zone"] {
+  position: relative;
+  flex: none;
+  block-size: 100%;
+  background-color: inherit;
+}
+[data-ui="data-grid"] [data-ui-part="zone"][data-zone="start"] {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 2;
+}
+[data-ui="data-grid"] [data-ui-part="zone"][data-zone="end"] {
+  position: sticky;
+  inset-inline-end: 0;
+  z-index: 2;
+}
+[data-ui="data-grid"][data-pin-start][data-scrolled-start] [data-zone="start"] {
+  box-shadow: var(--shadow-pinned-start);
+}
+[data-ui="data-grid"][data-pin-end][data-scrolled-end] [data-zone="end"] {
+  box-shadow: var(--shadow-pinned-end);
+}
+[data-ui="data-grid"] :is([data-ui-part="cell"], [data-ui-part="hcell"]) {
+  position: absolute;
+  inset-block: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding-inline: 12px;
+  border-block-end: var(--border-width-divider) solid var(--border-color-divider);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="data-grid"] [data-ui-part="cell"] {
+  line-height: calc(var(--ui-data-grid-row) - 1px);
+}
+[data-ui="data-grid"] [data-ui-part="cell"][data-align="end"] {
+  text-align: end;
+}
+[data-ui="data-grid"] [data-ui-part="cell"][data-align="center"] {
+  text-align: center;
+}
+[data-ui="data-grid"] :is([data-ui-part="cell"], [data-ui-part="hcell"]):focus {
+  outline: none;
+}
+[data-ui="data-grid"] :is([data-ui-part="cell"], [data-ui-part="hcell"]):focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+[data-ui="data-grid"] [data-ui-part="hcell"] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  user-select: none;
+}
+[data-ui="data-grid"] [data-ui-part="hcell"][aria-sort="ascending"],
+[data-ui="data-grid"] [data-ui-part="hcell"][aria-sort="descending"] {
+  color: var(--ink);
+}
+[data-ui="data-grid"] [data-ui-part="hcell"][aria-sort]:not([aria-sort="none"]) {
+  cursor: pointer;
+}
+[data-ui="data-grid"] [data-ui-part="label"] {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+[data-ui="data-grid"] [data-ui-part="hcell"][data-align="end"] [data-ui-part="label"] {
+  text-align: end;
+}
+[data-ui="data-grid"] [data-ui-part="sort"]::after {
+  color: var(--accent-ink);
+  font-size: 10px;
+}
+[data-ui="data-grid"] [aria-sort="ascending"] [data-ui-part="sort"]::after {
+  content: "▲";
+}
+[data-ui="data-grid"] [aria-sort="descending"] [data-ui-part="sort"]::after {
+  content: "▼";
+}
+[data-ui="data-grid"] [data-ui-part="handle"] {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+[data-ui="data-grid"] [data-ui-part="handle"][data-edge="start"] {
+  inset-inline: 0 auto;
+}
+[data-ui="data-grid"] [data-ui-part="handle"]::after {
+  content: "";
+  position: absolute;
+  inset-block: 25%;
+  inset-inline-end: 3px;
+  inline-size: 2px;
+  border-radius: var(--radius-xs);
+  background-color: var(--border-color-divider);
+}
+[data-ui="data-grid"] [data-ui-part="handle"][data-edge="start"]::after {
+  inset-inline: 3px auto;
+}
+[data-ui="data-grid"] [data-ui-part="handle"]:hover::after {
+  background-color: var(--accent-ink);
+}
+[data-ui="data-grid"] [data-ui-part="grip"] {
+  display: none;
+  flex: none;
+  place-items: center;
+  inline-size: var(--touch-target);
+  min-inline-size: 24px;
+  margin-inline-start: -8px;
+  cursor: grab;
+  touch-action: none;
+}
+[data-ui="data-grid"] [data-ui-part="grip"]::before {
+  content: "⠿";
+  font-size: 14px;
+}
+[data-ui="data-grid"] [data-reorderable] [data-ui-part="grip"] {
+  display: none;
+}
+@media (pointer: coarse) {
+  [data-ui="data-grid"] [data-reorderable] [data-ui-part="grip"] {
+    display: grid;
+  }
+  [data-ui="data-grid"] [data-ui-part="handle"] {
+    inline-size: max(var(--touch-target), 24px);
+  }
+  [data-ui="data-grid"] [data-ui-part="handle"]::after {
+    inset-inline-end: calc(max(var(--touch-target), 24px) / 2 - 1px);
+  }
+  [data-ui="data-grid"] [data-ui-part="handle"][data-edge="start"]::after {
+    inset-inline: calc(max(var(--touch-target), 24px) / 2 - 1px) auto;
+  }
+}
+[data-ui="data-grid"] [data-ui-part="menu-button"] {
+  display: grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: max(20px, var(--touch-target));
+  block-size: max(20px, var(--touch-target));
+  max-block-size: 100%;
+  margin-inline-end: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 14px;
+  cursor: pointer;
+}
+[data-ui="data-grid"] [data-ui-part="menu-button"]:hover,
+[data-ui="data-grid"] [data-ui-part="menu-button"]:focus-visible {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+[data-ui="data-grid"] [data-ui-part="hcell"][data-drop] {
+  position: absolute;
+}
+[data-ui="data-grid"] [data-ui-part="hcell"][data-drop]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inline-size: 2px;
+  background-color: var(--accent-ink);
+}
+[data-ui="data-grid"] [data-drop="before"]::before {
+  inset-inline-start: 0;
+}
+[data-ui="data-grid"] [data-drop="after"]::before {
+  inset-inline-end: 0;
+}
+[data-ui="data-grid"] [data-ui-part="check"] {
+  margin: 0;
+  vertical-align: middle;
+  accent-color: var(--accent-ink);
+}
+[data-ui="data-grid"] [data-ui-part="cell"]:has(> [data-ui-part="check"]),
+[data-ui="data-grid"] [data-ui-part="hcell"]:has(> [data-ui-part="check"]) {
+  display: grid;
+  place-items: center;
+  padding-inline: 0;
+}
+[data-ui="data-grid"] [data-ui-part="empty"] {
+  position: sticky;
+  inset-inline-start: 0;
+  padding: 24px 16px;
+  color: var(--ink-3);
+}
+[data-ui="data-grid"] [data-ui-part="empty"][hidden] {
+  display: none;
+}
+[data-ui="data-grid"] [data-ui-part="status"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-ui-part="menu"] {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  min-inline-size: 180px;
+  padding: 4px;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-popover);
+  background-color: var(--surface-overlay);
+  box-shadow: var(--shadow-pop);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+[data-ui-part="menu"] button {
+  display: block;
+  inline-size: 100%;
+  min-block-size: max(var(--control-height-sm), var(--touch-target));
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+[data-ui-part="menu"] button:hover,
+[data-ui-part="menu"] button:focus-visible {
+  background-color: var(--surface-2);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="data-grid"] * {
+    transition: none;
+  }
+}
