@@ -11,6 +11,7 @@ const meta = {
     defaultValue: { control: "inline-radio", options: ["dia", "semana", "mes"] },
     value: { control: false },
     disabled: { control: "boolean" },
+    allowDeselect: { control: "boolean" },
     onValueChange: { control: false },
     children: { control: false },
   },
@@ -27,6 +28,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** Pressing the selected item again clears the selection. */
+export const Deselectable: Story = { args: { allowDeselect: true } };
 
 export const Disabled: Story = { args: { disabled: true } };
 
