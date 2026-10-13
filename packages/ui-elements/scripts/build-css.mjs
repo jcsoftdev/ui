@@ -27,6 +27,7 @@ const minify = (css) =>
     .replace(/\s+/g, " ")
     .replace(/\s*([{};])\s*/g, "$1")
     .replace(/,\s+/g, ",")
+    .replace(/([\w-]):\s+/g, "$1:")
     .replace(/;}/g, "}")
     .trim();
 
