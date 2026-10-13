@@ -13,11 +13,14 @@ import css from "./chart-data-table.css.js";
  * `<ui-chart-data-table>`: the numbers of the chart it sits in (or the one `for` names) as a real
  * `<table>`: a caption, a column header per series and one row header per category, so the data is
  * reachable by screen readers and copy/paste without relying on color. Visually hidden by default;
- * add `visible` to show it. Using it replaces the chart's own lazy fallback table.
- * Attributes: `for` (chart id), `visible`.
+ * add `visible` to show it. Using it replaces the chart's own lazy fallback table. At most `limit`
+ * rows are rendered (default 500; `0` for all), followed by a "N more rows" note, and the table is
+ * rebuilt only when the chart's data changed.
+ * Attributes: `for` (chart id), `visible`, `limit`. Property: `more` (the note, `{n}` is the count).
  */
 export class UiChartDataTable extends ElementBase {
-  static observedAttributes = ["for"];
+  static observedAttributes = ["for", "limit"];
+  more: string | undefined;
   #unbind: (() => void) | undefined;
   readonly #table = document.createElement("table");
 
@@ -29,8 +32,13 @@ export class UiChartDataTable extends ElementBase {
       chart.claimTable(true);
       const render = () => {
         const snapshot = chart.chartSnapshot;
-        if (snapshot) renderTable(this.#table, snapshot);
-        else this.#table.replaceChildren();
+        if (snapshot) {
+          const limit = this.getAttribute("limit");
+          renderTable(this.#table, snapshot, {
+            limit: limit === null ? undefined : Math.max(0, Number(limit) || 0),
+            more: this.more,
+          });
+        } else this.#table.replaceChildren();
       };
       chart.addEventListener(CHART_EVENT.data, render);
       render();

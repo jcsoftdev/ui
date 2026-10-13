@@ -48,6 +48,8 @@ export interface SerializedSvg {
   markup: string;
   width: number;
   height: number;
+  /** `href` of every external `<image>` left out: a standalone file cannot load it. */
+  dropped: string[];
 }
 
 /** File name from a chart title: lower case, accents removed, dashes, with the extension. */
@@ -75,6 +77,22 @@ export function stackLayout(
     return position;
   });
   return { positions, width, height: Math.max(0, y - (sizes.length > 0 ? gap : 0)) };
+}
+
+const href = (node: Element) =>
+  node.getAttribute("href") ?? node.getAttributeNS("http://www.w3.org/1999/xlink", "href") ?? "";
+
+/** Interaction wiring that means nothing (and is noise) in a file: focus, roles and ARIA. */
+function stripInteractive(root: Element, dropped: string[]): void {
+  for (const node of [root, ...root.querySelectorAll("*")]) {
+    for (const { name } of [...node.attributes])
+      if (name === "tabindex" || name === "role" || name.startsWith("aria-"))
+        node.removeAttribute(name);
+    if (node.localName === "image" && !href(node).startsWith("data:")) {
+      dropped.push(href(node));
+      node.remove();
+    }
+  }
 }
 
 function inlinePaint(source: Element, target: Element): void {
@@ -136,16 +154,17 @@ export function serializeSvg(
       h: (sizes[i] ?? { height: 0 }).height,
     }));
   if (leading) drawings.unshift({ source: leading, x: 0, y: 0, w: lead.width, h: lead.height });
+  const dropped: string[] = [];
   for (const { source, x, y, w, h } of drawings) {
     const clone = source.cloneNode(true) as SVGSVGElement;
     inlinePaint(source, clone);
     for (const skip of clone.querySelectorAll("[data-export-skip]")) skip.remove();
+    stripInteractive(clone, dropped);
     clone.setAttribute("x", String(x));
     clone.setAttribute("y", String(y));
     clone.setAttribute("width", String(w));
     clone.setAttribute("height", String(h));
     clone.removeAttribute("class");
-    clone.removeAttribute("aria-hidden");
     for (const layoutProperty of ["position", "left", "top", "pointer-events"]) {
       clone.style.removeProperty(layoutProperty);
     }
@@ -155,6 +174,7 @@ export function serializeSvg(
     markup: new XMLSerializer().serializeToString(root),
     width: layout.width,
     height: layout.height,
+    dropped,
   };
 }
 
@@ -169,32 +189,57 @@ function save(blob: Blob, fileName: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** The page background is the sensible default behind an exported drawing. */
-function pageBackground(): string {
-  const value = getComputedStyle(document.body).backgroundColor;
-  return value && value !== "rgba(0, 0, 0, 0)" ? value : "#ffffff";
+/**
+ * The background behind an exported drawing: the first opaque background from `element` up to the
+ * page (so a chart on a dark card exports on that card), else white.
+ */
+export function backgroundOf(element: Element | null): string {
+  for (let node = element; node; node = node.parentElement) {
+    const value = getComputedStyle(node).backgroundColor;
+    if (value && value !== "rgba(0, 0, 0, 0)" && value !== "transparent") return value;
+  }
+  return "#ffffff";
 }
 
 export interface ExportOptions extends SerializeOptions {
   fileName: string;
+  /** Where to take the background from when `background` is not given. */
+  from?: Element | null;
 }
 
+/** Downloads the drawing as SVG. Returns the external images that had to be left out. */
 export function downloadSvg(
   input: SVGSVGElement | readonly SVGSVGElement[],
-  { fileName, ...options }: ExportOptions,
-): void {
-  const { markup } = serializeSvg(input, { background: pageBackground(), ...options });
+  { fileName, from, ...options }: ExportOptions,
+): string[] {
+  const { markup, dropped } = serializeSvg(input, {
+    background: backgroundOf(from ?? null),
+    ...options,
+  });
   save(new Blob([markup], { type: "image/svg+xml;charset=utf-8" }), fileName);
+  return dropped;
 }
 
 /** Rasterizes through an `<img>` and a canvas; `scale` 2 gives retina sharpness. */
 export async function downloadPng(
   input: SVGSVGElement | readonly SVGSVGElement[],
-  { fileName, scale = 2, ...options }: ExportOptions & { scale?: number },
-): Promise<void> {
-  const { markup, width, height } = serializeSvg(input, {
-    background: pageBackground(),
+  {
+    fileName,
+    scale = 2,
+    from,
+    layer,
+    ...options
+  }: ExportOptions & {
+    scale?: number;
+    /** A canvas layer the chart drew under its SVG (`ctx.canvas()`); painted first. */
+    layer?: HTMLCanvasElement;
+  },
+): Promise<string[]> {
+  const background = options.background ?? backgroundOf(from ?? null);
+  const { markup, width, height, dropped } = serializeSvg(input, {
     ...options,
+    // With a layer the background is painted on the canvas, below it, not over it.
+    background: layer ? undefined : background,
   });
   const url = URL.createObjectURL(new Blob([markup], { type: "image/svg+xml;charset=utf-8" }));
   try {
@@ -210,9 +255,15 @@ export async function downloadPng(
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas is not available.");
     context.scale(scale, scale);
+    if (layer) {
+      context.fillStyle = background;
+      context.fillRect(0, 0, width, height);
+      context.drawImage(layer, 0, 0, layer.clientWidth || width, layer.clientHeight || height);
+    }
     context.drawImage(image, 0, 0, width, height);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
     if (blob) save(blob, fileName);
+    return dropped;
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -220,12 +271,20 @@ export async function downloadPng(
 
 // ---- tabular export ---------------------------------------------------------------------------
 
-/** Escapes one CSV field (RFC 4180). Text that a spreadsheet would run as a formula gets a leading `'`. */
+/** A plain number written as text ("-5", "+1.5e3"): spreadsheets read it as a number, not a formula. */
+const NUMERIC = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i;
+
+/**
+ * Escapes one CSV field (RFC 4180). A field with a separator (`,` or `;`, which spreadsheets in many
+ * locales use), a quote, a line break or a tab is quoted. Text that a spreadsheet would run as a
+ * formula (`=`, `+`, `-`, `@`, tab or CR first) gets a leading `'`, except plain numeric strings.
+ */
 function csvField(value: string | number | Date | null | undefined): string {
   if (value == null) return "";
   let text = value instanceof Date ? value.toISOString() : String(value);
-  if (typeof value === "string" && /^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  if (typeof value === "string" && /^[=+\-@\t\r]/.test(text) && !NUMERIC.test(text))
+    text = `'${text}`;
+  return /[;,"\r\n\t]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
 /** The snapshot as CSV text: a header row, then one row per category with raw values. */
