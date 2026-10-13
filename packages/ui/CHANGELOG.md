@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.1 (2026-10-13)
+
+### Fixes
+
+- **DonutChart / PieChart no longer flicker on hover.** The hovered slice steps out by `explode`
+  and was also the pointer target, so a still pointer near its edge ended up outside the moved
+  slice, the hover dropped, the slice slid back under the pointer and the loop repeated (tooltip,
+  dimming and centre total blinking). Pointer events now go to fixed, invisible hit arcs that leave
+  no gap between slices and also cover the stepped-out ring.
+- `ChartTooltip` takes an optional `containerHeight` and keeps the card inside it vertically
+  (DonutChart passes it), so a slice near the top no longer pushes the card past the chart edge.
+
 ## 0.2.0 (2026-10-11)
 
 Zero runtime dependencies, a published headless layer, per-part customization and a configurable
