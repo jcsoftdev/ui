@@ -1,0 +1,28 @@
+[data-ui="popover"] {
+  box-sizing: border-box;
+  min-width: min(14.375rem, var(--ui-popper-available-width, 100vw));
+  max-width: var(--ui-popper-available-width, 100vw);
+  max-height: var(--ui-popper-available-height, 100vh);
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  border: 0;
+  border-radius: var(--radius-popover);
+  outline: none;
+  background-color: var(--float);
+  color: var(--ink);
+  box-shadow: var(--shadow-overlay);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  inset: auto;
+}
+[data-ui="popover"]:not([popover]) {
+  position: fixed;
+  z-index: 85;
+}
+[data-ui="popover"][hidden] {
+  display: none;
+}
+[data-ui="popover"][data-placing] {
+  visibility: hidden;
+}

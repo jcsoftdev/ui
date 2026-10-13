@@ -1,0 +1,31 @@
+[data-ui="generic-row"] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 11px 16px;
+  border-top: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="generic-row"]:first-child {
+  border-top: 0;
+}
+[data-ui="generic-row"] > [data-end] {
+  grid-column: 3;
+}
+[data-ui="generic-row-content"] {
+  display: block;
+  grid-column: 2;
+  min-width: 0;
+}
+[data-ui="generic-row-title"] {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: break-word;
+}
+[data-ui="generic-row-meta"] {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12px;
+  overflow-wrap: break-word;
+}

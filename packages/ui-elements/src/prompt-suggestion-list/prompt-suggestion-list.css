@@ -1,0 +1,6 @@
+[data-ui="prompt-suggestion-list"] {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--gap-density-sm);
+}

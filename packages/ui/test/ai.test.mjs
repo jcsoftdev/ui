@@ -184,3 +184,86 @@ test("prompt input submit key", () => {
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: false, isComposing: true }), false);
   assert.equal(keys.shouldSubmit({ key: "a", shiftKey: false, isComposing: false }), false);
 });
+
+test("markdown: pathological nesting and link scans stay bounded", () => {
+  const cases = {
+    quotes: `${">".repeat(20000)}x`,
+    lists: Array.from({ length: 2000 }, (_, n) => `${"  ".repeat(n)}- item`).join("\n"),
+    links: "[](".repeat(10000),
+    brackets: "[".repeat(20000),
+  };
+  for (const [name, src] of Object.entries(cases)) {
+    const start = performance.now();
+    assert.doesNotThrow(() => md.parseMarkdown(src), name);
+    const elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  }
+});
+
+test("markdown: nesting beyond the cap degrades to literal text", () => {
+  const depthOf = (blocks) => {
+    let depth = 0;
+    let level = blocks;
+    while (level[0]?.t === "quote") {
+      depth += 1;
+      level = level[0].c;
+    }
+    return depth;
+  };
+  assert.equal(depthOf(md.parseMarkdown(`${">".repeat(10)}x`)), 10);
+  assert.equal(depthOf(md.parseMarkdown(`${">".repeat(500)}x`)), 33);
+});
+
+test("markdown: whitespace-heavy lines do not trigger quadratic regexes", () => {
+  const n = 80_000;
+  const sp = " ".repeat(n);
+  const cases = {
+    trailingSpaces: `a${sp}b\nc`,
+    heading: `# a${sp}b`,
+    tableRule: `a|b\n${sp}-x`,
+  };
+  for (const [name, src] of Object.entries(cases)) {
+    const start = performance.now();
+    md.parseMarkdown(src);
+    const elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  }
+});
+
+test("markdown: heading closing run and table rules keep their meaning", () => {
+  const h = (s) => md.parseMarkdown(s)[0];
+  assert.equal(flat(h("## Title ##").c), "Title");
+  assert.equal(flat(h("# a#").c), "a#");
+  assert.equal(h("#nospace").t, "p");
+  assert.equal(h("a|b\n:-|-:\n1|2").t, "table");
+  assert.equal(h("a|b\n|---|---|\n1|2").t, "table");
+  assert.equal(h("a|b\n--x|--\n1|2").t, "p");
+});
+
+test("markdown: wide tables are capped and list/heading scans stay linear", () => {
+  const table = `${"|".repeat(10000)}\n${"-|".repeat(10000)}\n${"x|\n".repeat(13000)}`;
+  let start = performance.now();
+  const [block] = md.parseMarkdown(table);
+  let elapsed = performance.now() - start;
+  assert.equal(block.t, "table");
+  assert.ok(block.head.length <= 64 && block.align.length <= 64);
+  assert.ok(block.rows.every((row) => row.length <= 64));
+  assert.ok(elapsed < 200, `table took ${elapsed.toFixed(0)}ms`);
+
+  for (const src of [
+    `- ${" ".repeat(100000)}x y`,
+    `# ${" ".repeat(100000)}x y`,
+    `-${"\t".repeat(50000)}x\u2028y`,
+  ]) {
+    start = performance.now();
+    md.parseMarkdown(src);
+    elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${JSON.stringify(src.slice(0, 8))} took ${elapsed.toFixed(0)}ms`);
+  }
+});
+
+test("markdown: only space and tab separate a heading marker", () => {
+  assert.equal(md.parseMarkdown("# a\u2028b")[0].t, "heading");
+  assert.equal(md.parseMarkdown("#\u2028a")[0].t, "p");
+  assert.equal(md.parseMarkdown("#\u00a0a")[0].t, "p");
+});

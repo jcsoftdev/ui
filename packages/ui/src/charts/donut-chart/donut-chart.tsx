@@ -725,7 +725,7 @@ function DonutPlot({
               d={d}
               clickable={onSliceClick != null}
               onEnter={(event) => nav.hover(position, event)}
-              onLeave={nav.leave}
+              onLeave={nav.pointerLeave}
               onClick={onSliceClick ? () => onSliceClick(item.datum) : undefined}
             />
           );
@@ -830,8 +830,8 @@ const SliceMark = memo(function SliceMark({
 interface SliceHitAreaProps {
   d: string;
   clickable: boolean;
-  onEnter: (event: { clientX: number; clientY: number }) => void;
-  onLeave: () => void;
+  onEnter: (event: { clientX: number; clientY: number; pointerType?: string }) => void;
+  onLeave: (event: { pointerType?: string }) => void;
   onClick?: () => void;
 }
 
@@ -841,6 +841,7 @@ function SliceHitArea({ d, clickable, onEnter, onLeave, onClick }: SliceHitAreaP
     // biome-ignore lint/a11y/noStaticElementInteractions: pointer hover only; keyboard goes through the chart slider.
     <path
       data-slice-hit=""
+      data-chart-hit=""
       d={d}
       fill="transparent"
       onPointerEnter={onEnter}

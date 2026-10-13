@@ -1966,6 +1966,11 @@
      "name": "gap-density-lg",
      "value": "18px",
      "usage": "Separación entre bloques de una vista."
+    },
+    {
+     "name": "touch-target",
+     "value": "0px",
+     "usage": "Alto mínimo de un control interactivo pequeño: 0 salvo en data-density=touch, donde es 44px."
     }
    ],
    "scaled": [
@@ -1977,7 +1982,8 @@
     "pad-card",
     "gap-density-sm",
     "gap-density",
-    "gap-density-lg"
+    "gap-density-lg",
+    "touch-target"
    ],
    "levels": [
     {
@@ -2003,7 +2009,8 @@
       "control-height": "44px",
       "control-height-sm": "44px",
       "control-height-lg": "52px",
-      "input-height": "48px"
+      "input-height": "48px",
+      "touch-target": "44px"
      }
     }
    ]

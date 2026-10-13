@@ -75,6 +75,11 @@ From the 0.3.0 previews (`main` before this change):
 
 From 0.2.x: nothing changes unless you adopt Liquid Glass.
 
+### Security
+
+- **RichTextEditor sanitizer: `javascript:` href bypass via Unicode whitespace.** The URL check ignored only ASCII and a few invisible characters, while the emitted `href` was `decodeEntities(href).trim()`, and `trim()` also strips U+00A0, U+1680, U+2000-200A, U+202F, U+205F and U+3000. A link such as `<a href="&nbsp;javascript:alert(1)">` passed the check and was emitted as `href="javascript:alert(1)"` (stored XSS for apps that render sanitized HTML as markup); the output was not idempotent. The href is now normalized once, that exact string is validated (all whitespace and format characters ignored, then a protocol allowlist through `new URL`), and the same string is emitted. Anyone using `sanitizeHtml` or `isSafeUrl` should upgrade; stored content is re-sanitized on the next pass.
+- **Markdown parser (low): bounded nesting and link scan.** Blockquote and list nesting is capped at 32 levels (deeper levels render as literal text), which removes a stack overflow on `>` x 20000 and a multi-second parse on deeply nested lists, and the link-target scan is bounded so `[](` repeated thousands of times is no longer quadratic.
+
 ### App-level building blocks
 
 - **Tone palettes.** `tonePalettes` in a token file (optional) emits `--tone-<name>`, `--tone-<name>-soft` and `--tone-<name>-ink` for light and dark, plus `--color-tone-*` in `theme.css`. Names are kebab-case; `fill` and `soft` are required, `ink` falls back to `fill`. `buildTheme`, `buildTokensCss`, `buildThemeCss` and `ui-theme build` all honour it; files without the section build byte-identically.
@@ -108,6 +113,8 @@ From 0.2.x: nothing changes unless you adopt Liquid Glass.
 
 ### Fixes
 
+- **PolarAreaChart hover no longer flickers.** The hovered sector steps out by 6px and was also the pointer target, so a still pointer near its inner edge fell outside the moved sector: hover, tooltip and dimming toggled about 25 times a second. Pointer events now go to invisible sectors at rest, with no gap between neighbours and covering the stepped-out area, as in DonutChart since 0.2.1. The tooltip stays inside the chart vertically too.
+- **DonutChart, PieChart and PolarAreaChart keep a tapped slice.** On touch and pen, lifting the finger fires `pointerleave`, which dropped the slice right after the tap: tooltip, centre value and dimming flashed for a frame and vanished. A tap now pins the slice until the next tap on another slice or outside the chart; the mouse still drops the hover when it leaves. `useIndexNavigation` returns `pointerLeave` for this.
 - **`AppShell` no longer re-renders the page during hydration.** Its context value changed in the first layout effect after hydration, which made Next.js client-render still-dehydrated Suspense boundaries (a hidden `div#S:0` stayed in the page). The value is now a store that never changes identity and reads `false` on the server and on the first client render; only `useAppShell` consumers update, once the width is measured.
 - **`OfflineBanner` takes an `action`** (for example a retry button) after the queue counter.
 - **`Checkbox` takes a `label`**: it renders a `<label>` bound to the box, so it names the checkbox and a click on it toggles. New `wrapper` and `label` parts.

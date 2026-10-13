@@ -1,0 +1,78 @@
+{
+  "name": "@jcsoftdev/ui-elements",
+  "version": "0.2.0",
+  "description": "ui-* custom elements (button, input, checkbox, switch, radio-group, dialog, popover, tooltip, tabs, toast) with precompiled token CSS and opt-in, per-feature Liquid Glass. No framework, no Tailwind.",
+  "author": "jcsoftdev",
+  "license": "MIT",
+  "homepage": "https://ui.jcsoftdev.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcsoftdev/ui.git",
+    "directory": "packages/ui-elements"
+  },
+  "bugs": {
+    "url": "https://github.com/jcsoftdev/ui/issues"
+  },
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "form-associated",
+    "design-system",
+    "liquid-glass",
+    "vanilla-js"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./dist/icon/glyphs/*.js"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./css/*": "./dist/css/*",
+    "./icons/*": {
+      "types": "./dist/icon/glyphs/*.d.ts",
+      "import": "./dist/icon/glyphs/*.js"
+    },
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./dist/*/*.d.ts",
+      "import": "./dist/*/*.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && pnpm prepare:src && tsc -p tsconfig.build.json && node scripts/build-css.mjs --dist",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "pnpm prepare:src && tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "test": "pnpm build && node --test test/*.test.mjs && vitest run --project unit --passWithNoTests",
+    "test:browser": "pnpm prepare:src && vitest run --project browser",
+    "check:treeshake": "node test/treeshake.mjs",
+    "check:pack": "node ../../scripts/pack-check.mjs packages/ui-tokens packages/ui-core packages/ui-elements",
+    "prepare:src": "node scripts/gen-index.mjs && node scripts/build-css.mjs",
+    "new": "node scripts/new-element.mjs"
+  },
+  "dependencies": {
+    "@jcsoftdev/ui-core": "workspace:^",
+    "@jcsoftdev/ui-tokens": "workspace:^"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^20",
+    "@vitest/browser-playwright": "4.1.11",
+    "axe-core": "4.14.0",
+    "esbuild": "^0.28.2",
+    "playwright": "1.64.0",
+    "typescript": "^5.5.4",
+    "vitest": "4.1.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

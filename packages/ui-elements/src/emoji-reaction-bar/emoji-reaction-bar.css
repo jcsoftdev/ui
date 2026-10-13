@@ -1,0 +1,53 @@
+[data-ui="emoji-reaction-bar"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-density-sm);
+  font-family: var(--font-sans);
+}
+[data-ui="emoji-reaction-bar"][hidden] {
+  display: none;
+}
+[data-ui="emoji-reaction-bar"] > [data-ui-part="add"] {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  block-size: var(--control-height-sm);
+  aspect-ratio: 1;
+  padding: 0;
+  border-width: var(--border-width-control);
+  border-style: solid;
+  border-color: var(--border-color-control);
+  border-radius: var(--radius-badge);
+  background-color: var(--surface-control);
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: scale var(--motion-duration) var(--motion-ease);
+}
+[data-ui="emoji-reaction-bar"] > [data-ui-part="add"]:hover {
+  color: var(--ink);
+}
+[data-ui="emoji-reaction-bar"] > [data-ui-part="add"]:active:not(:disabled) {
+  scale: var(--press-scale);
+}
+[data-ui="emoji-reaction-bar"] > [data-ui-part="add"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="emoji-reaction-bar"] > [data-ui-part="add"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/* The picker is its own surface: the popover around it only places it. */
+[data-ui="emoji-reaction-bar"] > [data-ui-part="popover"] {
+  width: 18rem;
+  max-width: var(--ui-popper-available-width, 100vw);
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  box-shadow: var(--shadow-overlay);
+  border-radius: var(--radius-popover);
+}
+[data-ui="emoji-reaction-bar"] > [data-ui-part="popover"] > [data-ui="emoji-picker"] {
+  max-width: none;
+}

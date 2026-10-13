@@ -1,0 +1,60 @@
+:host {
+  --ui-radio-size: 18px;
+  --ui-radio-border: var(--line-control);
+  --ui-radio-bg: var(--surface-control);
+  --ui-radio-checked: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:host([hidden]) {
+  display: none;
+}
+:host([data-disabled]) {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+:host(:focus-visible) {
+  outline: none;
+}
+:host(:focus-visible) [part="circle"] {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[part="circle"] {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  inline-size: var(--ui-radio-size);
+  block-size: var(--ui-radio-size);
+  border: 1.5px solid var(--ui-radio-border);
+  border-radius: 50%;
+  background-color: var(--ui-radio-bg);
+  transition: border-color var(--motion-duration) var(--motion-ease);
+}
+[part="dot"] {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background-color: var(--ui-radio-checked);
+  scale: 0;
+  transition: scale var(--motion-duration) var(--motion-ease);
+}
+:host([data-state="checked"]) [part="circle"] {
+  border-color: var(--ui-radio-checked);
+}
+:host([data-state="checked"]) [part="dot"] {
+  scale: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  [part="dot"] {
+    transition: none;
+  }
+}

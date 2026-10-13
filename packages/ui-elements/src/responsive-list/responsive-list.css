@@ -1,0 +1,121 @@
+[data-ui="responsive-list"] {
+  display: block;
+  min-width: 0;
+  container: responsive-list / inline-size;
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+[data-ui="responsive-list"] > [data-ui-part="table-wrapper"] {
+  display: none;
+  overflow-x: auto;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+[data-ui="responsive-list"] > [data-ui-part="cards"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-density);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@container responsive-list (min-width: 48rem) {
+  [data-ui="responsive-list"] > [data-ui-part="table-wrapper"] {
+    display: block;
+  }
+  [data-ui="responsive-list"] > [data-ui-part="cards"] {
+    display: none;
+  }
+}
+[data-ui="responsive-list"] table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+[data-ui="responsive-list"] caption {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-ui="responsive-list"] th {
+  padding: 10px 16px;
+  border-bottom: var(--border-width-divider) solid var(--border-color-divider);
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+[data-ui="responsive-list"] td {
+  padding: 11px 16px;
+  vertical-align: middle;
+}
+[data-ui="responsive-list"] tr {
+  border-bottom: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="responsive-list"] tbody tr:last-child {
+  border-bottom: 0;
+}
+[data-ui="responsive-list"] tbody tr:hover {
+  background-color: var(--surface-2);
+}
+[data-ui="responsive-list"] :is(th, td)[data-align="end"] {
+  text-align: end;
+}
+[data-ui="responsive-list"] [data-ui-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+[data-ui="responsive-list"] td [data-ui-part="actions"] {
+  justify-content: flex-end;
+}
+[data-ui="responsive-list"] [data-ui-part="card"] {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: var(--pad-card);
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+[data-ui="responsive-list"] [data-ui-part="card-title"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  font-weight: 600;
+}
+[data-ui="responsive-list"] [data-ui-part="card-details"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+[data-ui="responsive-list"] [data-ui-part="card-detail"] {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+[data-ui="responsive-list"] [data-ui-part="card-label"] {
+  flex-shrink: 0;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+[data-ui="responsive-list"] [data-ui-part="card-value"] {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  text-align: end;
+}
