@@ -99,56 +99,61 @@ export const LIQUID_DEFAULTS = {
   motion: "snappy",
 } as const satisfies LiquidGlassOptions;
 
-/** Names of the `data-glass` presets and of `material.preset`. */
+/** Names of the `data-glass` presets. */
 export type LiquidPresetName = "clear" | "regular" | "thick" | "crystal";
+
+/** The `clear` preset (`data-glass="liquid-clear"`): thin, lighter frost and veil. */
+export const LIQUID_PRESET_CLEAR: LiquidGlassOptions = {
+  frost: 0.6,
+  opacity: 0.75,
+  refraction: 0.9,
+  shadow: { opacity: 0.7 },
+  specular: { intensity: 1.1 },
+};
+
+/** The `regular` preset: the theme's look. */
+export const LIQUID_PRESET_REGULAR: LiquidGlassOptions = {};
+
+/**
+ * The `crystal` preset: a thick, fully clear convex lens. The backdrop is minified and bent hard
+ * towards the rim, the colour channels split at the edge, no frost, no veil, a thin bright rim.
+ * Over busy content text is not legible: there is no contrast guarantee, put short bold labels
+ * with a text shadow on it. On a lensed surface it loads the crystal and dispersion parts.
+ */
+export const LIQUID_PRESET_CRYSTAL: LiquidGlassOptions = {
+  profile: "crystal",
+  refraction: 1.67,
+  dispersion: 0.05,
+  frost: 0,
+  saturation: 1,
+  opacity: 0,
+  tint: { color: "transparent", amount: 0 },
+  rim: 0.6,
+  specular: { intensity: 0 },
+  fresnel: 1,
+  shadow: { opacity: 0.8 },
+};
+
+/** The `thick` preset (`data-glass="liquid-thick"`): a wide bevel, more frost, a deeper shadow. */
+export const LIQUID_PRESET_THICK: LiquidGlassOptions = {
+  bevelWidth: 32,
+  frost: 3,
+  refraction: 1,
+  rim: 1.25,
+  fresnel: 0.35,
+  shadow: { opacity: 1.2, spread: 12, offsetY: 16 },
+};
 
 /**
  * The same presets that `data-glass="liquid-clear|liquid-regular|liquid-thick"` selects in
  * `base.css`. `regular` is the theme's look.
  */
 export const LIQUID_PRESETS: Record<LiquidPresetName, LiquidGlassOptions> = {
-  clear: {
-    frost: 0.6,
-    opacity: 0.75,
-    refraction: 0.9,
-    shadow: { opacity: 0.7 },
-    specular: { intensity: 1.1 },
-  },
-  regular: {},
-  /**
-   * A thick, fully clear convex lens: the backdrop is minified and bent hard towards the rim, the
-   * colour channels split at the edge, no frost, no veil, a thin bright rim. Over busy content text
-   * is not legible: there is no contrast guarantee, put short bold labels with a text shadow on it.
-   */
-  crystal: {
-    profile: "crystal",
-    refraction: 1.67,
-    dispersion: 0.05,
-    frost: 0,
-    saturation: 1,
-    opacity: 0,
-    tint: { color: "transparent", amount: 0 },
-    rim: 0.6,
-    specular: { intensity: 0 },
-    fresnel: 1,
-    shadow: { opacity: 0.8 },
-  },
-  thick: {
-    bevelWidth: 32,
-    frost: 3,
-    refraction: 1,
-    rim: 1.25,
-    fresnel: 0.35,
-    shadow: { opacity: 1.2, spread: 12, offsetY: 16 },
-  },
+  clear: LIQUID_PRESET_CLEAR,
+  regular: LIQUID_PRESET_REGULAR,
+  crystal: LIQUID_PRESET_CRYSTAL,
+  thick: LIQUID_PRESET_THICK,
 };
-
-/** `Material` value for a liquid surface that carries options. */
-export interface LiquidMaterial extends LiquidGlassOptions {
-  type: "liquid" | "liquid-clear";
-  /** Starting point; the fields of this object win over it. */
-  preset?: LiquidPresetName;
-}
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 const round = (value: number) => Math.round(value * 1000) / 1000;
@@ -169,12 +174,6 @@ export function mergeLiquid(
   if (base?.tint || over?.tint)
     out.tint = { ...base?.tint, ...over?.tint } as LiquidGlassOptions["tint"];
   return out;
-}
-
-/** The options of a material object: its preset underneath its own fields. */
-export function liquidOptionsOf(material: LiquidMaterial): LiquidGlassOptions {
-  const { type: _type, preset, ...own } = material;
-  return mergeLiquid(preset ? LIQUID_PRESETS[preset] : undefined, own);
 }
 
 /** Highlight alphas are themed tokens (`--liquid-rim-lit|back|ring`); this scales them. */

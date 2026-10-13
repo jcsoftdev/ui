@@ -9,9 +9,6 @@ test("no options, no variables: the theme look is untouched", () => {
   assert.deepEqual(glass.liquidVars(), {});
   assert.deepEqual(glass.liquidVars({}), {});
   assert.deepEqual(glass.liquidStyle({}), {});
-  assert.equal(glass.materialStyle("liquid"), undefined);
-  assert.equal(glass.materialStyle(undefined), undefined);
-  assert.equal(glass.withMaterialStyle("glass", { color: "red" }).color, "red");
 });
 
 test("every option maps to its --liquid-* variable", () => {
@@ -101,12 +98,9 @@ test("the rim follows the light: the lit wall is on the side the angle points to
 });
 
 test("presets sit under explicit fields, grouped fields merge one level deep", () => {
-  const merged = glass.liquidOptionsOf({
-    type: "liquid",
-    preset: "thick",
-    frost: 1,
-    shadow: { offsetY: 2 },
-  });
+  assert.equal(glass.LIQUID_PRESETS.thick, glass.LIQUID_PRESET_THICK);
+  assert.equal(glass.LIQUID_PRESETS.crystal, glass.LIQUID_PRESET_CRYSTAL);
+  const merged = glass.mergeLiquid(glass.LIQUID_PRESET_THICK, { frost: 1, shadow: { offsetY: 2 } });
   assert.equal(merged.frost, 1);
   assert.equal(merged.bevelWidth, 32);
   assert.deepEqual(merged.shadow, { opacity: 1.2, spread: 12, offsetY: 2 });
@@ -121,17 +115,19 @@ test("the defaults describe the theme look", () => {
   assert.deepEqual(d.specular, { intensity: 1, angle: -120 });
 });
 
-test("a liquid material object picks its class and writes its variables on the component", () => {
-  const spec = { type: "liquid-clear", frost: 3 };
-  assert.equal(material.materialClass(spec, "surface-solid"), "liquid-clear");
-  assert.equal(material.materialClass({ type: "liquid" }, "surface-solid"), "liquid");
+test("a liquid material takes its options from liquidStyle() in style, in the server markup", () => {
+  const vars = glass.liquidStyle({ frost: 3 });
+  assert.equal(material.materialClass("liquid-clear", "surface-solid"), "liquid-clear");
   assert.equal(material.materialClass("liquid", "surface-solid"), "liquid");
-  assert.deepEqual(glass.materialStyle(spec), { "--liquid-frost": "3px" });
-  assert.match(material.cardStyle(spec), /--liquid-frost:3px/);
-  assert.match(material.cardStyle(spec, { color: "red" }), /--liquid-frost:3px;color:red/);
-  assert.match(material.cardClass(spec), /\bliquid-clear\b/);
-  assert.match(material.actionBarStyle(spec), /--liquid-frost:3px/);
-  assert.match(material.topbarStyle(spec), /--liquid-frost:3px/);
+  assert.deepEqual(vars, { "--liquid-frost": "3px" });
+  assert.match(material.cardStyle("liquid-clear", vars), /--liquid-frost:3px/);
+  assert.match(
+    material.cardStyle("liquid", { ...vars, color: "red" }),
+    /--liquid-frost:3px;color:red/,
+  );
+  assert.match(material.cardClass("liquid-clear"), /\bliquid-clear\b/);
+  assert.match(material.actionBarStyle("liquid", vars), /--liquid-frost:3px/);
+  assert.match(material.topbarStyle("liquid", vars), /--liquid-frost:3px/);
 });
 
 test("the default shadow is built from the themed tokens, an explicit one from its numbers", () => {

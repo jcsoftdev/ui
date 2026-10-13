@@ -54,7 +54,7 @@ body {
 
 /* Liquid Glass presets: `data-glass="liquid-clear|liquid-thick|liquid-crystal"` switch the glass surfaces to the
    liquid look (like `data-glass="liquid"`) and set the options below, which are the same
-   `--liquid-*` variables a `material={{ type: "liquid", ... }}` object writes. `liquid-crystal` is a
+   `--liquid-*` variables `liquidStyle()` writes. `liquid-crystal` is a
    fully clear lens without a contrast guarantee. `liquid-regular`
    is the theme look (no overrides). Generated from LIQUID_PRESETS (src/glass/liquid-options.ts);
    a test keeps the two in sync. */

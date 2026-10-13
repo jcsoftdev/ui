@@ -252,6 +252,50 @@
       "kind": "js",
       "file": "packages/ui-elements/dist/internal/liquid.js",
       "maxGzip": 4650
+    },
+    {
+      "id": "ui/liquid",
+      "kind": "js",
+      "file": "packages/ui/dist/liquid/index.js",
+      "maxGzip": 3950
+    },
+    {
+      "id": "liquid tier 0: Topbar, no liquid",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nconsole.log(Topbar);",
+      "maxGzip": 9250
+    },
+    {
+      "id": "liquid tier 1: + liquidStyle options",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle);",
+      "maxGzip": 10850
+    },
+    {
+      "id": "liquid tier 2: + <LiquidGlass /> watcher",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "maxGzip": 12100
+    },
+    {
+      "id": "liquid tier 3: + refraction lens (lazy)",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "lazy": [
+        "glass/refraction.js"
+      ],
+      "maxGzip": 20600
+    },
+    {
+      "id": "liquid tier 4: + crystal and dispersion (lazy)",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "lazy": [
+        "glass/refraction.js",
+        "glass/lens-crystal.js",
+        "glass/lens-dispersion.js"
+      ],
+      "maxGzip": 22650
     }
   ]
 }

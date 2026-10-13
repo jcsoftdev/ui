@@ -4,6 +4,7 @@ import { expect, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
 import { ActionBar } from "../containers/action-bar/action-bar.js";
 import { Card, CardBody, CardHeader } from "../containers/card/card.js";
+import { LiquidGlass } from "../glass/liquid-glass.js";
 import {
   LIQUID_DEFAULTS,
   LIQUID_MOTIONS,
@@ -12,8 +13,8 @@ import {
   type LiquidMotion,
   type LiquidPresetName,
   type LiquidProfile,
+  liquidStyle,
 } from "../glass/liquid-options.js";
-import { useGlassLens } from "../glass/use-glass-lens.js";
 import { useGlassRefraction } from "../glass/use-glass-refraction.js";
 import {
   Dialog,
@@ -26,6 +27,15 @@ import {
 const meta = {
   title: "Foundations/Liquid Glass",
   parameters: { layout: "fullscreen" },
+  // The lens is opt-in: an app renders <LiquidGlass /> once, near the root.
+  decorators: [
+    (Story) => (
+      <>
+        <LiquidGlass />
+        <Story />
+      </>
+    ),
+  ],
 } satisfies Meta;
 
 export default meta;
@@ -55,9 +65,8 @@ function Pane({
   className: string;
   children?: ReactNode;
 }) {
-  const lens = useGlassLens<HTMLDivElement>();
   return (
-    <div ref={lens} className={`${className} w-72 rounded-dialog p-5 text-ink`}>
+    <div className={`${className} w-72 rounded-dialog p-5 text-ink`}>
       <h3 className="m-0 text-card-title">{title}</h3>
       <p className="m-0 mt-1 text-body text-ink-2">Legible over stripes, blobs and photos.</p>
       {children}
@@ -196,11 +205,10 @@ function TextBackdrop({ children }: { children: ReactNode }) {
   );
 }
 
-/** A pill button on a glass utility, with the real lens (it only applies to liquid classes). */
+/** A pill button on a glass utility; <LiquidGlass /> lenses it when it resolves to liquid. */
 function GlassButton({ className }: { className: string }) {
-  const lens = useGlassLens<HTMLButtonElement>();
   return (
-    <button ref={lens} type="button" className={`${className} rounded-pill px-6 py-2 text-ink`}>
+    <button type="button" className={`${className} rounded-pill px-6 py-2 text-ink`}>
       Button
     </button>
   );
@@ -272,7 +280,7 @@ function LensCard({ title, material }: { title: string; material: "glass" | "liq
 }
 
 export const LiquidComponents: Story = {
-  name: 'Components with material="liquid" lens themselves',
+  name: 'Components with material="liquid", lensed by <LiquidGlass />',
   render: () => (
     <Stage>
       <div className="flex flex-wrap items-start justify-center gap-6">
@@ -450,7 +458,8 @@ export const Playground: StoryObj<PlaygroundArgs> = {
       <Card
         data-testid="playground"
         data-glass-interactive=""
-        material={{ type: args.variant, ...optionsOf(args) }}
+        material={args.variant}
+        style={liquidStyle(optionsOf(args))}
         className={`${SHAPES[args.shape]} grid place-content-center gap-1 p-5 text-center text-ink`}
       >
         <strong className="text-card-title">Liquid glass</strong>
@@ -485,7 +494,8 @@ export const Profiles: Story = {
           <Card
             key={profile}
             data-testid={`profile-${profile}`}
-            material={{ type: "liquid", profile }}
+            material="liquid"
+            style={liquidStyle({ profile })}
             className="grid h-44 w-72 place-content-center p-5 text-center text-ink"
           >
             <span className="text-body">{PROFILE_LABEL[profile]}</span>
@@ -538,13 +548,15 @@ export const Motion: Story = {
         <Card
           data-testid="drag"
           data-glass-interactive=""
-          material={{ type: "liquid", interactive: "drag", motion: "jelly" }}
+          material="liquid"
+          style={liquidStyle({ interactive: "drag", motion: "jelly" })}
           className="grid h-32 w-56 place-content-center text-center text-ink"
         >
           Drag me: it stretches with your speed and settles like jelly
         </Card>
         <Card
-          material={{ type: "liquid", motion: false }}
+          material="liquid"
+          style={liquidStyle({ motion: false })}
           className="grid h-32 w-56 place-content-center text-center text-ink"
         >
           motion: false

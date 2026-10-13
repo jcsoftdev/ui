@@ -58,7 +58,9 @@ describe("liquid engine parity with the React kit", () => {
       const core = surface(options);
       const stopReact = applyGlassRefraction(react, { refraction: "force" });
       const stopCore = attachLiquid(core, { ...options, support: "force" });
-      await until(() => core.dataset.glassRefraction === "on");
+      await until(
+        () => core.dataset.glassRefraction === "on" && react.dataset.glassRefraction === "on",
+      );
       expect(react.dataset.glassRefraction).toBe("on");
       expect(filterOf(core)).toBe(filterOf(react));
       const filter = filterOf(core);
