@@ -1,6 +1,7 @@
 package com.jcsoftdev.ui.glass
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -9,8 +10,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEvent
@@ -25,12 +27,17 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.IntSize
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.UiTheme
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.tanh
 
@@ -122,7 +129,7 @@ internal fun swellFraction(
 /**
  * Everything a Liquid surface reads in the draw and layer phases (never during composition, so touches do not recompose):
  * press [lift], the lens [materialize] amount, where the finger is ([pointer], null when there is none) and how strongly the
- * highlight follows it ([follow]), and the drag squash.
+ * highlight follows it ([follow]), and the drag squash. [touching] is the one answer to "is a finger on it".
  */
 internal class LiquidDynamics(
     val lift: () -> Float,
@@ -133,7 +140,39 @@ internal class LiquidDynamics(
     val scaleY: () -> Float,
     val observer: Modifier,
     val motionOn: Boolean,
+    val touching: () -> Boolean = { false },
 )
+
+/** The squash target at rest. */
+private val SquashRest = Squash(1f, 1f)
+
+/** How long a pointer may stay still, while down, before the squash relaxes (the velocity of a finger at rest is zero). */
+internal const val STILL_MILLIS: Long = 60L
+
+private fun Squash.quantized() = Squash((x * 100f).roundToInt() / 100f, (y * 100f).roundToInt() / 100f)
+
+/**
+ * Whether a finger is on the surface: the press the interaction source reports, or a pointer the Drag observer sees. The two
+ * are never written into the animation separately; [touching] is the only thing the lift and the highlight follow.
+ */
+internal class TouchState {
+    var sourceDown: Boolean by mutableStateOf(false)
+    var pointerDown: Boolean by mutableStateOf(false)
+    var pressPosition: Offset = Offset.Zero
+    val touching: Boolean get() = sourceDown || pointerDown
+}
+
+// The springs of a motion spec, made once instead of on every pointer move.
+private class Springs(
+    motion: LiquidMotion?,
+) {
+    val press: SpringSpec<Float> = (motion?.press ?: LiquidMotion.Standard.press).spec()
+    val follow: SpringSpec<Float> = (motion?.follow ?: LiquidMotion.Standard.follow).spec()
+    val followOffset: SpringSpec<Offset> = (motion?.follow ?: LiquidMotion.Standard.follow).spec()
+    val squashX: SpringSpec<Float> = (motion?.squashX ?: LiquidMotion.Standard.squashX).spec()
+    val squashY: SpringSpec<Float> = (motion?.squashY ?: LiquidMotion.Standard.squashY).spec()
+    val materialize: SpringSpec<Float> = (motion?.materialize ?: LiquidMotion.Standard.follow).spec()
+}
 
 @Composable
 internal fun rememberLiquidDynamics(
@@ -143,99 +182,138 @@ internal fun rememberLiquidDynamics(
     val theme = UiTheme.motion
     val spec = style.motion
     val on = liquidMotionActive(style, theme)
-    val scope = rememberCoroutineScope()
+    val drag = style.interaction == LiquidInteraction.Drag
+    val springs = remember(spec) { Springs(spec) }
+    val touch = remember { TouchState() }
 
-    var touching by remember { mutableStateOf(false) }
+    // The materialize ramp plays once for a surface instance: a LazyColumn that scrolls it away and back does not replay it.
+    val materialized = rememberSaveable { mutableStateOf(false) }
+    val ramps = on && spec?.materialize != null
     val lift = remember { Animatable(0f) }
-    val materialize = remember { Animatable(if (on && spec?.materialize != null) 0f else 1f) }
+    val materialize = remember { Animatable(if (ramps && !materialized.value) 0f else 1f) }
     val follow = remember { Animatable(0f) }
     val pointer = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
+    val dragPointer = remember { mutableStateOf(Offset.Zero) }
     val squashX = remember { Animatable(1f) }
     val squashY = remember { Animatable(1f) }
+    val squashTarget = remember { MutableStateFlow(SquashRest) }
 
-    LaunchedEffect(touching, on, spec) {
-        val target = if (touching) 1f else 0f
-        if (on && spec != null) lift.animateTo(target, spec.press.spec()) else lift.animateTo(target, snapOrTween(theme))
-    }
     LaunchedEffect(on, spec) {
-        val materializer = spec?.materialize
-        if (on && materializer != null) materialize.animateTo(1f, materializer.spec()) else materialize.snapTo(1f)
+        if (ramps && materialize.value < 1f) {
+            materialize.animateTo(1f, springs.materialize)
+            materialized.value = true
+        } else {
+            materialize.snapTo(1f)
+            if (ramps) materialized.value = true
+        }
     }
-    LaunchedEffect(source, on, spec) {
+    LaunchedEffect(source, touch, drag) {
         source?.interactions?.collect { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
-                    touching = true
-                    if (on && spec != null) {
-                        if (follow.value <
-                            0.01f
-                        ) {
-                            pointer.snapTo(interaction.pressPosition)
-                        } else {
-                            pointer.animateTo(interaction.pressPosition, spec.follow.spec())
-                        }
-                        launch { follow.animateTo(1f, spec.follow.spec()) }
+                    touch.pressPosition = interaction.pressPosition
+                    if (drag && !touch.pointerDown) dragPointer.value = interaction.pressPosition
+                    touch.sourceDown = true
+                }
+                is PressInteraction.Release, is PressInteraction.Cancel -> touch.sourceDown = false
+                else -> Unit
+            }
+        }
+    }
+    // Press and release drive the lift and the highlight from one place, whoever reports the finger.
+    LaunchedEffect(on, spec, drag) {
+        snapshotFlow { touch.touching }.collectLatest { down ->
+            val animated = on && spec != null
+            launch {
+                if (animated) {
+                    lift.animateTo(
+                        if (down) 1f else 0f,
+                        springs.press,
+                    )
+                } else {
+                    lift.animateTo(if (down) 1f else 0f, snapOrTween(theme))
+                }
+            }
+            if (down && animated) {
+                if (!drag) {
+                    if (follow.value <
+                        0.01f
+                    ) {
+                        pointer.snapTo(touch.pressPosition)
+                    } else {
+                        launch { pointer.animateTo(touch.pressPosition, springs.followOffset) }
                     }
                 }
-                is PressInteraction.Release, is PressInteraction.Cancel -> {
-                    touching = false
-                    follow.animateTo(0f, (spec?.follow ?: LiquidMotion.Standard.follow).spec())
+                follow.animateTo(1f, springs.follow)
+            } else if (!down) {
+                follow.animateTo(0f, springs.follow)
+            }
+        }
+    }
+    // The squash target follows the velocity (one collector, no coroutine per pointer move) and relaxes when the finger rests.
+    LaunchedEffect(on, spec, drag) {
+        if (!drag || !on || spec == null) return@LaunchedEffect
+        squashTarget.collectLatest { target ->
+            coroutineScope {
+                launch { squashX.animateTo(target.x, springs.squashX) }
+                launch { squashY.animateTo(target.y, springs.squashY) }
+                if (target != SquashRest) {
+                    delay(STILL_MILLIS)
+                    squashTarget.value = SquashRest
                 }
-                else -> Unit
             }
         }
     }
 
     val observer =
-        if (style.interaction == LiquidInteraction.Drag) {
+        if (drag) {
             remember(on, spec) {
-                Modifier.observePointer { position, velocity, pressed ->
-                    touching = pressed
-                    if (!on || spec == null) return@observePointer
-                    scope.launch {
-                        if (pressed) {
-                            pointer.snapTo(position)
-                            follow.animateTo(1f, spec.follow.spec())
-                        } else {
-                            follow.animateTo(0f, spec.follow.spec())
-                        }
+                Modifier.observePointer { position, velocity, down ->
+                    touch.pointerDown = down
+                    if (down) dragPointer.value = position
+                    if (on && spec != null) {
+                        squashTarget.value =
+                            if (down) {
+                                squashFor(
+                                    velocity.x / VELOCITY_REFERENCE,
+                                    velocity.y / VELOCITY_REFERENCE,
+                                ).quantized()
+                            } else {
+                                SquashRest
+                            }
                     }
-                    val target =
-                        if (pressed) {
-                            squashFor(
-                                velocity.x / VELOCITY_REFERENCE,
-                                velocity.y / VELOCITY_REFERENCE,
-                            )
-                        } else {
-                            Squash(1f, 1f)
-                        }
-                    scope.launch { squashX.animateTo(target.x, spec.squashX.spec()) }
-                    scope.launch { squashY.animateTo(target.y, spec.squashY.spec()) }
                 }
             }
         } else {
             Modifier
         }
 
-    return remember(observer, on) {
+    return remember(observer, on, drag) {
         LiquidDynamics(
             lift = { lift.value },
             materialize = { materialize.value },
-            pointer = { if (follow.value > 0.001f) pointer.value else null },
+            pointer = { if (follow.value > 0.001f) (if (drag) dragPointer.value else pointer.value) else null },
             follow = { follow.value },
             scaleX = { squashX.value },
             scaleY = { squashY.value },
             observer = observer,
             motionOn = on,
+            touching = { touch.touching },
         )
     }
 }
 
 private fun snapOrTween(theme: Motion) = theme.tween<Float>(Motion.FAST)
 
-// Reads pointer events on the way down without consuming them, and keeps sharing them with siblings, so the surface can be
-// dragged by whatever handles the gesture while it squashes. Velocity is measured in root coordinates: a surface dragged by its
-// own finger does not move in its own space.
+// Reads pointer events without consuming them, and keeps sharing them with siblings, so the surface can be dragged by whatever
+// handles the gesture while it squashes. Velocity is measured in root coordinates: a surface dragged by its own finger does not
+// move in its own space.
+//
+// The gesture is the pointers together: it begins with the first finger and ends when the last one lifts; the position and
+// velocity follow one finger at a time (the next one takes over when it lifts). It is watched in the Final pass, after the
+// handlers had their turn, to tell a drag of this surface from a scroll: movement consumed by a handler *outside* it (a scroll
+// container) ends the squash for the rest of that gesture, while movement consumed by the surface's own handlers (placed after
+// `material`, or in its content) is a drag.
 private fun Modifier.observePointer(onChange: (Offset, Offset, Boolean) -> Unit): Modifier = this then PointerObserverElement(onChange)
 
 private class PointerObserverElement(
@@ -263,6 +341,9 @@ private class PointerObserverNode(
     GlobalPositionAwareModifierNode {
     private val tracker = VelocityTracker()
     private var coordinates: LayoutCoordinates? = null
+    private var primary = NO_POINTER
+    private var consumedBeforeUs = false
+    private var yielded = false
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
@@ -273,29 +354,59 @@ private class PointerObserverNode(
         pass: PointerEventPass,
         bounds: IntSize,
     ) {
-        if (pass != PointerEventPass.Initial) return
-        val change = pointerEvent.changes.firstOrNull() ?: return
-        val root = coordinates?.takeIf { it.isAttached }?.localToRoot(change.position) ?: change.position
-        when (pointerEvent.type) {
-            PointerEventType.Press -> {
-                tracker.resetTracking()
-                tracker.addPosition(change.uptimeMillis, root)
-                onChange(change.position, Offset.Zero, true)
-            }
-            PointerEventType.Move ->
-                if (change.pressed) {
-                    tracker.addPosition(change.uptimeMillis, root)
-                    val v = tracker.calculateVelocity()
-                    onChange(change.position, Offset(v.x, v.y), true)
-                }
-            PointerEventType.Release -> onChange(change.position, Offset.Zero, false)
+        when (pass) {
+            // Main runs inner to outer: whatever is consumed by now was consumed inside this surface.
+            PointerEventPass.Main -> consumedBeforeUs = pointerEvent.changes.firstOrNull { it.id.value == primary }?.isConsumed == true
+            PointerEventPass.Final -> observe(pointerEvent)
             else -> Unit
         }
     }
 
-    override fun onCancelPointerInput() {
+    private fun observe(event: PointerEvent) {
+        val changes = event.changes
+        if (changes.none { it.pressed }) {
+            endGesture()
+            return
+        }
+        if (yielded) return
+        var lead = changes.firstOrNull { it.id.value == primary && it.pressed }
+        val taken = lead == null
+        if (lead == null) {
+            lead = changes.first { it.pressed }
+            primary = lead.id.value
+            tracker.resetTracking()
+        }
+        val root = coordinates?.takeIf { it.isAttached }?.localToRoot(lead.position) ?: lead.position
+        if (taken) {
+            tracker.addPosition(lead.uptimeMillis, root)
+            onChange(lead.position, Offset.Zero, true)
+            return
+        }
+        if (event.type == PointerEventType.Move) {
+            if (lead.isConsumed && !consumedBeforeUs) {
+                yielded = true
+                onChange(Offset.Zero, Offset.Zero, false)
+                return
+            }
+            tracker.addPosition(lead.uptimeMillis, root)
+            val v = tracker.calculateVelocity()
+            onChange(lead.position, Offset(v.x, v.y), true)
+        }
+    }
+
+    private fun endGesture() {
+        if (primary == NO_POINTER && !yielded) return
+        primary = NO_POINTER
+        yielded = false
+        consumedBeforeUs = false
         onChange(Offset.Zero, Offset.Zero, false)
     }
 
+    override fun onCancelPointerInput() = endGesture()
+
     override fun sharePointerInputWithSiblings(): Boolean = true
+
+    private companion object {
+        const val NO_POINTER = Long.MIN_VALUE
+    }
 }
