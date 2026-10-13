@@ -5,7 +5,8 @@ import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { Menu, Search } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, materialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material-class.js";
+import { useMaterialStyle } from "../../utils/use-material-style.js";
 
 function isApplePlatform(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -67,6 +68,7 @@ export function Topbar({
   className,
   classNames,
 }: TopbarProps) {
+  const materialProps = useMaterialStyle(material);
   const [shortcut, setShortcut] = useState("Ctrl+K");
   const lens = useGlassLens<HTMLElement>();
 
@@ -96,7 +98,7 @@ export function Topbar({
         classNames?.root,
         className,
       )}
-      style={materialStyle(material)}
+      {...materialProps}
     >
       <div
         className={cn(

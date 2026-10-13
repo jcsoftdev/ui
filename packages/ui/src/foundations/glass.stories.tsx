@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
 import { ActionBar } from "../containers/action-bar/action-bar.js";
 import { Card, CardBody, CardHeader } from "../containers/card/card.js";
@@ -463,7 +463,10 @@ export const Playground: StoryObj<PlaygroundArgs> = {
   play: async ({ canvasElement, args }) => {
     const surface = within(canvasElement).getByTestId("playground");
     const style = getComputedStyle(surface);
-    await expect(style.getPropertyValue("--liquid-profile").trim()).toBe(args.profile);
+    // The option mapping is a lazy chunk: on a client-only render it lands just after mount.
+    await waitFor(() =>
+      expect(style.getPropertyValue("--liquid-profile").trim()).toBe(args.profile),
+    );
     await expect(style.getPropertyValue("--liquid-frost").trim()).toBe(`${args.frost}px`);
     await expect(style.getPropertyValue("--liquid-motion").trim()).toBe(args.motion);
   },
@@ -497,11 +500,13 @@ export const Profiles: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     for (const profile of ["full", "dome", "rim"])
-      await expect(
-        getComputedStyle(canvas.getByTestId(`profile-${profile}`))
-          .getPropertyValue("--liquid-profile")
-          .trim(),
-      ).toBe(profile);
+      await waitFor(() =>
+        expect(
+          getComputedStyle(canvas.getByTestId(`profile-${profile}`))
+            .getPropertyValue("--liquid-profile")
+            .trim(),
+        ).toBe(profile),
+      );
   },
 };
 

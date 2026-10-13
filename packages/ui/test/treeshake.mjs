@@ -254,3 +254,56 @@ console.log(
   `primitives: popover ${popover.bytes}, dialog ${dialog.bytes}, menu ${menu.bytes}, commandScore ${scorer.bytes} bytes`,
 );
 console.log("primitives tree-shaking OK");
+
+// Liquid Glass: a surface that takes a `material` prop or a lens loads the option mapping, the
+// lens watcher and the engine only through dynamic imports, so a non-liquid page never pays for them.
+for (const [name, code] of [
+  ["Topbar", `import { Topbar } from "@jcsoftdev/ui/shell"; console.log(Topbar);`],
+  [
+    "DialogContent",
+    `import { DialogContent } from "@jcsoftdev/ui/overlays"; console.log(DialogContent);`,
+  ],
+  ["Card", `import { Card } from "@jcsoftdev/ui/containers/card"; console.log(Card);`],
+]) {
+  const liquid = await build({
+    stdin: { contents: code, resolveDir: process.cwd(), loader: "js" },
+    bundle: true,
+    splitting: true,
+    outdir: "out",
+    minify: true,
+    format: "esm",
+    write: false,
+    metafile: true,
+    external: ["react", "react-dom", "react/jsx-runtime", "react-dom/*"],
+  });
+  const outputs = Object.values(liquid.metafile.outputs);
+  const entry = outputs.find((output) => output.entryPoint);
+  const eager = new Set();
+  const visit = (output) => {
+    if (eager.has(output)) return;
+    eager.add(output);
+    for (const dep of output.imports)
+      if (dep.kind === "import-statement" && !dep.external)
+        visit(liquid.metafile.outputs[dep.path]);
+  };
+  visit(entry);
+  const eagerInputs = [...eager].flatMap((output) => Object.keys(output.inputs));
+  for (const banned of [
+    "glass/liquid-options",
+    "glass/lens-watch",
+    "glass/refraction",
+    "utils/material-style",
+  ]) {
+    assert.ok(
+      !eagerInputs.some((f) => f.includes(banned)),
+      `${name} must load "${banned}" lazily, not in its eager chunks`,
+    );
+  }
+  assert.ok(
+    outputs.some((output) =>
+      Object.keys(output.inputs).some((f) => f.includes("glass/liquid-options")),
+    ),
+    `${name} still emits the liquid option mapping as a lazy chunk`,
+  );
+}
+console.log("liquid glass lazy loading OK");

@@ -17,7 +17,8 @@ import {
 import { Check } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material-class.js";
+import { useMaterialStyle } from "../../utils/use-material-style.js";
 
 interface ContextMenuState {
   open: (x: number, y: number) => void;
@@ -177,6 +178,7 @@ export function ContextMenuContent({
   style,
   ...props
 }: ContextMenuContentProps) {
+  const materialProps = useMaterialStyle(material, style);
   return (
     <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content
@@ -194,7 +196,7 @@ export function ContextMenuContent({
           materialClass(material, "surface-solid"),
           className,
         )}
-        style={withMaterialStyle(material, style)}
+        {...materialProps}
         {...props}
       />
     </MenuPrimitive.Portal>

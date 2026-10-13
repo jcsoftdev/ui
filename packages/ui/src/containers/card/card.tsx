@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef, Ref } from "react";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material-class.js";
 import { CardLens } from "./card-lens.js";
 
 export type CardProps = ComponentPropsWithoutRef<"div">;
@@ -18,7 +18,8 @@ const GLASS_CLASS = /(?:^|\s)(?:glass|glass-clear|liquid|liquid-clear)(?:\s|$)/;
 
 /**
  * A server component. Only a glass card (a glass `material`, or a glass utility in `className`)
- * renders through the client `CardLens`, which gives it its lens; every other card ships no JS.
+ * renders through the client `CardLens`, which gives it its lens and the variables of a liquid
+ * material object; every other card ships no JS.
  */
 export function Card({ className, material, style, ref, ...props }: CardRootProps) {
   const classes = cn(
@@ -27,11 +28,10 @@ export function Card({ className, material, style, ref, ...props }: CardRootProp
     className,
   );
   const glass = (material !== undefined && material !== "solid") || GLASS_CLASS.test(classes);
-  const merged = withMaterialStyle(material, style);
   return glass ? (
-    <CardLens ref={ref} className={classes} style={merged} {...props} />
+    <CardLens ref={ref} material={material} className={classes} style={style} {...props} />
   ) : (
-    <div ref={ref} className={classes} style={merged} {...props} />
+    <div ref={ref} className={classes} style={style} {...props} />
   );
 }
 

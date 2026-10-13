@@ -2,6 +2,18 @@
 
 ## 0.3.0 (unreleased)
 
+### Liquid Glass loads only where it is used
+
+- The liquid option mapping (`liquid-options`) and the lens watcher are lazy chunks. A component
+  with a `material` prop loads the mapping only when it receives a liquid material object, and a
+  lens-capable surface (Popper content, Sidebar, Topbar, Dialog, Drawer, ActionBar, glass Card)
+  imports the watcher after it mounts; the engine stays lazy as before. Non-liquid entries shrink
+  by about 1.4 to 2 kB gzip (`shell` 12225 to 10437 B, `overlays` 29334 to 27564 B, `palette`
+  19448 to 18019 B). No API change; `materialStyle` and `withMaterialStyle` stay synchronous.
+- A server loads the mapping at startup, so server-rendered markup keeps the `--liquid-*`
+  variables of a material object. On a client-only render the first liquid material object
+  shows the theme's liquid look until the chunk lands (one request, shared with the lens engine).
+
 ### Crystal lens
 
 - **`profile: "crystal"`** and the `crystal` preset (`data-glass="liquid-crystal"`): a thick, fully clear convex lens that minifies the backdrop, bends it hard towards the rim, splits colour at the edge and has no frost, veil or tint. `refraction` accepts 0 to 2 for it (defaults and the other profiles are unchanged; above 1 they behave as 1). The minifying map cannot fold; the filter runs on a layer that extends past the surface and is clipped to it. No contrast guarantee.

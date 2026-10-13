@@ -3,21 +3,12 @@
 import { type Ref, type RefCallback, useEffect, useState } from "react";
 import { useComposedRefs } from "../utils/compose.js";
 
-/** Preferences that flip the `--glass-lens` flag in CSS; the engine is brought back when cleared. */
-const PREFERENCES = [
-  "(prefers-reduced-transparency: reduce)",
-  "(prefers-contrast: more)",
-  "(forced-colors: active)",
-  "(prefers-reduced-motion: reduce)",
-];
-/** What can change whether a surface resolves to a liquid material. */
-const WATCHED = ["class", "data-glass", "data-glass-lens", "data-style", "data-theme"];
-
 /**
  * Gives a glass component its lens. Put the returned ref on the surface element (it composes the
- * ref you pass in, so a changed ref or a React 19 ref cleanup keeps working). While the surface
- * resolves to a liquid material, the engine (`./refraction.js`, a separate lazy chunk) is imported
- * and applied; a frosted or solid surface never loads it, so the cost is this file only. The
+ * ref you pass in, so a changed ref or a React 19 ref cleanup keeps working). This hook only holds
+ * the element: once it is mounted, the watcher (`./lens-watch.js`, a small lazy chunk) is imported
+ * and decides. While the surface resolves to a liquid material, the engine (`./refraction.js`,
+ * another lazy chunk) is imported and applied; a frosted or solid surface never loads it. The
  * decision follows the page: it is re-evaluated when the element's classes or `data-glass`
  * change, when an ancestor's `data-glass`, `data-glass-lens`, `data-style` or class change (the
  * theme-level switch, an opt-out, a nested glass), and when a transparency, contrast or motion
@@ -35,41 +26,14 @@ export function useGlassLens<T extends HTMLElement>(
   const [element, setElement] = useState<T | null>(null);
   const ref = useComposedRefs<T>(forwarded, setElement);
   useEffect(() => {
-    if (!element || typeof getComputedStyle !== "function") return;
+    if (!element) return;
     let stop: (() => void) | undefined;
-    let loading = false;
     let gone = false;
-    const wants = () =>
-      !element.closest('[data-glass-lens="off"]') &&
-      getComputedStyle(element).getPropertyValue("--glass-lens").trim() === "1";
-    const check = () => {
-      if (gone) return;
-      const want = wants();
-      if (!want) {
-        stop?.();
-        stop = undefined;
-      } else if (!stop && !loading) {
-        loading = true;
-        import("./refraction.js").then(({ applyGlassRefraction }) => {
-          loading = false;
-          // It may have stopped being wanted while the chunk loaded; the next change re-checks.
-          if (!gone && wants())
-            stop = applyGlassRefraction(element, { auto: true, ownInteractive });
-        });
-      }
-    };
-    check();
-    const observer =
-      typeof MutationObserver === "function" ? new MutationObserver(check) : undefined;
-    for (let node: Element | null = element; node; node = node.parentElement)
-      observer?.observe(node, { attributes: true, attributeFilter: WATCHED });
-    const lists =
-      typeof matchMedia === "function" ? PREFERENCES.map((query) => matchMedia(query)) : [];
-    for (const list of lists) list.addEventListener("change", check);
+    import("./lens-watch.js").then(({ watchGlassLens }) => {
+      if (!gone) stop = watchGlassLens(element, ownInteractive);
+    });
     return () => {
       gone = true;
-      observer?.disconnect();
-      for (const list of lists) list.removeEventListener("change", check);
       stop?.();
     };
   }, [element, ownInteractive]);

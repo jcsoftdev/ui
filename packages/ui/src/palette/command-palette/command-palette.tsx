@@ -5,7 +5,8 @@ import { Search } from "../../icons/index.js";
 import * as Command from "../../primitives/command/command.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, materialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material-class.js";
+import { useMaterialStyle } from "../../utils/use-material-style.js";
 
 export interface CommandPaletteItem {
   id: string;
@@ -94,6 +95,7 @@ export function CommandPalette({
   className,
   classNames,
 }: CommandPaletteProps) {
+  const materialProps = useMaterialStyle(material);
   return (
     <Command.Dialog
       open={open}
@@ -108,7 +110,7 @@ export function CommandPalette({
         classNames?.root,
         className,
       )}
-      contentStyle={materialStyle(material)}
+      contentStyle={materialProps.style}
     >
       <div
         className={cn(

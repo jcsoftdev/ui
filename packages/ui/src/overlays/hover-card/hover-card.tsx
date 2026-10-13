@@ -16,8 +16,9 @@ import {
 } from "react";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material-class.js";
 import { Slot } from "../../utils/slot.js";
+import { useMaterialStyle } from "../../utils/use-material-style.js";
 
 interface HoverCardContextValue {
   contentId: string;
@@ -161,6 +162,7 @@ export function HoverCardContent({
   style,
   ...props
 }: HoverCardContentProps) {
+  const materialProps = useMaterialStyle(material, style);
   const card = useHoverCard();
   return (
     <PopoverPrimitive.Portal container={container}>
@@ -188,7 +190,7 @@ export function HoverCardContent({
           materialClass(material, "surface-solid"),
           className,
         )}
-        style={withMaterialStyle(material, style)}
+        {...materialProps}
         {...props}
       />
     </PopoverPrimitive.Portal>

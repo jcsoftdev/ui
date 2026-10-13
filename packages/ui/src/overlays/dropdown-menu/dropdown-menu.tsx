@@ -4,7 +4,8 @@ import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { Check, ChevronRight } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material-class.js";
+import { useMaterialStyle } from "../../utils/use-material-style.js";
 
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
@@ -38,13 +39,14 @@ export function DropdownMenuContent({
   style,
   ...props
 }: DropdownMenuContentProps) {
+  const materialProps = useMaterialStyle(material, style);
   return (
     <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(surface, materialClass(material, "surface-solid"), className)}
-        style={withMaterialStyle(material, style)}
+        {...materialProps}
         {...props}
       />
     </MenuPrimitive.Portal>

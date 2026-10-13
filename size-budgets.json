@@ -35,7 +35,7 @@
       "id": "ui/primitives",
       "kind": "js",
       "file": "packages/ui/dist/primitives/index.js",
-      "maxGzip": 19850
+      "maxGzip": 19500
     },
     {
       "id": "ui/icons",
@@ -47,13 +47,13 @@
       "id": "ui/glass",
       "kind": "js",
       "file": "packages/ui/dist/glass/index.js",
-      "maxGzip": 13150
+      "maxGzip": 13000
     },
     {
       "id": "ui/ai",
       "kind": "js",
       "file": "packages/ui/dist/ai/index.js",
-      "maxGzip": 32500
+      "maxGzip": 32000
     },
     {
       "id": "ui/atoms",
@@ -83,13 +83,13 @@
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 95900
+      "maxGzip": 94050
     },
     {
       "id": "ui/forms",
       "kind": "js",
       "file": "packages/ui/dist/forms/index.js",
-      "maxGzip": 31200
+      "maxGzip": 30500
     },
     {
       "id": "ui/i18n",
@@ -107,13 +107,13 @@
       "id": "ui/overlays",
       "kind": "js",
       "file": "packages/ui/dist/overlays/index.js",
-      "maxGzip": 30850
+      "maxGzip": 28950
     },
     {
       "id": "ui/palette",
       "kind": "js",
       "file": "packages/ui/dist/palette/index.js",
-      "maxGzip": 20450
+      "maxGzip": 18950
     },
     {
       "id": "ui/rich-text",
@@ -125,7 +125,7 @@
       "id": "ui/shell",
       "kind": "js",
       "file": "packages/ui/dist/shell/index.js",
-      "maxGzip": 12850
+      "maxGzip": 11000
     },
     {
       "id": "ui/states",
