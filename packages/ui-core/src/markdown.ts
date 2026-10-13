@@ -44,7 +44,7 @@ const ESCAPABLE = /[\\`*_[\]()#+\-.!|>~]/;
 /** Deepest nesting of quotes and lists; deeper content is kept as plain text. */
 export const MAX_MARKDOWN_DEPTH = 32;
 /** Longest link label or destination scanned, so hostile `[](` runs stay linear. */
-const MAX_LINK_SCAN = 2048;
+const MAX_LINK_SCAN = 512;
 
 /** Index of the `)` that closes a link destination, honoring balanced inner parentheses. */
 function closingParen(src: string, from: number): number {
@@ -129,7 +129,9 @@ export function parseInline(src: string): Inline[] {
       }
     }
     if (ch === "\n") {
-      buf = buf.replace(/ +$/, "");
+      let keep = buf.length;
+      while (keep > 0 && buf[keep - 1] === " ") keep -= 1;
+      buf = buf.slice(0, keep);
       flush();
       out.push({ t: "br" });
       i += 1;
@@ -143,10 +145,30 @@ export function parseInline(src: string): Inline[] {
 }
 
 const FENCE = /^\s{0,3}(`{3,}|~{3,})\s*([\w+#.-]*)/;
-const HEADING = /^\s{0,3}(#{1,6})\s+(.*?)(?:\s+#+)?\s*$/;
+const HEADING_OPEN = /^\s{0,3}(#{1,6})(?=\s)/;
+
+/** ATX heading of a line, or null. Plain string code: a lazy regex here is quadratic on long lines. */
+function parseHeading(line: string): { level: 1 | 2 | 3 | 4 | 5 | 6; text: string } | null {
+  const open = HEADING_OPEN.exec(line);
+  if (!open) return null;
+  let text = line.slice(open[0].length).trim();
+  let hashes = text.length;
+  while (hashes > 0 && text[hashes - 1] === "#") hashes -= 1;
+  if (hashes > 0 && hashes < text.length && /\s/.test(text[hashes - 1] as string))
+    text = text.slice(0, hashes).trimEnd();
+  return { level: (open[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6, text };
+}
 const HR = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/;
 const ITEM = /^(\s*)([-*+]|\d{1,9}[.)])\s+(.*)$/;
-const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+const TABLE_CELL = /^:?-+:?$/;
+
+/** A table delimiter row such as `| :-- | --: |`, checked cell by cell. */
+function isTableRule(line: string): boolean {
+  let row = line.trim();
+  if (row.startsWith("|")) row = row.slice(1);
+  if (row.endsWith("|")) row = row.slice(0, -1);
+  return row.split("|").every((cell) => TABLE_CELL.test(cell.trim()));
+}
 
 function splitRow(line: string): string[] {
   let row = line.trim();
@@ -164,13 +186,13 @@ function alignOf(cell: string): TableAlign {
 }
 
 function isTableStart(line: string, next: string | undefined): boolean {
-  return line.includes("|") && !!next?.includes("-") && TABLE_RULE.test(next);
+  return line.includes("|") && !!next?.includes("-") && isTableRule(next);
 }
 
 function startsBlock(line: string, next: string | undefined): boolean {
   return (
     FENCE.test(line) ||
-    HEADING.test(line) ||
+    parseHeading(line) !== null ||
     HR.test(line) ||
     ITEM.test(line) ||
     /^\s{0,3}>/.test(line) ||
@@ -213,13 +235,9 @@ function parseBlocks(src: string, depth: number): Block[] {
       blocks.push({ t: "code", lang: fence[2] ?? "", v: body.join("\n") });
       continue;
     }
-    const heading = HEADING.exec(line);
+    const heading = parseHeading(line);
     if (heading) {
-      blocks.push({
-        t: "heading",
-        level: (heading[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6,
-        c: parseInline(heading[2] as string),
-      });
+      blocks.push({ t: "heading", level: heading.level, c: parseInline(heading.text) });
       i += 1;
       continue;
     }

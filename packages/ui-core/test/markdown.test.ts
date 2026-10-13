@@ -110,6 +110,51 @@ describe("markdown parser: hostile input stays cheap", () => {
       expect(time(() => parseMarkdown(source))).toBeLessThan(1000);
   });
 
+  it("handles the long-line payloads that made three regexes quadratic", () => {
+    const n = 80_000;
+    for (const source of [
+      `a${" ".repeat(n)}b\nc`,
+      `# a${" ".repeat(n)}b`,
+      `a|b\n${" ".repeat(n)}-x`,
+      `# a${" ".repeat(n)}#`,
+      `|${" ".repeat(n)}-`,
+    ])
+      expect(time(() => parseMarkdown(source))).toBeLessThan(1000);
+  });
+
+  it("keeps heading and table behaviour identical to React on normal lines", () => {
+    const lines = [
+      "# a",
+      "#",
+      "# ",
+      "#\ta",
+      "## a ##",
+      "## a #",
+      "# a #b",
+      "# ## ",
+      "### ###",
+      "#### a   ###   ",
+      "   # x",
+      "    # x",
+      "####### x",
+      "#x",
+      "# a # #",
+      "# a\\#",
+      "a|b\n|--|--|",
+      "a|b\n:-:|--:",
+      "a|b\n- | -",
+      "a|b\n|",
+      "a|b\n||--",
+      "a|b\n--||",
+      "a|b\n| :--- |\n| 1 | 2 |",
+      "a|b\n -- ",
+      "a|b\n:-",
+      "a|b\n:",
+      "a|b\n-:-",
+    ];
+    for (const source of lines) expect(parseMarkdown(source)).toEqual(react.parseMarkdown(source));
+  });
+
   it("still parses ordinary links", () => {
     expect(parseInline("[a](https://a.example)")).toEqual(
       react.parseInline("[a](https://a.example)"),
