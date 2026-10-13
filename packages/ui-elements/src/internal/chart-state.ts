@@ -8,9 +8,10 @@ import css from "./chart-state.css.js";
 export function stateNode(
   host: HTMLElement,
   kind: "loading" | "empty",
-  text: string,
+  label: string | undefined,
   skeleton: string,
 ): HTMLElement {
+  const text = label ?? (kind === "loading" ? "Loading chart" : "No data to show");
   adoptStyles(rootOf(host), css);
   const node = document.createElement("div");
   node.dataset.uiPart = "state";

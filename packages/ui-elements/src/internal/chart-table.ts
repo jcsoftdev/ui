@@ -79,7 +79,7 @@ const fallbacks = new WeakMap<HTMLElement, { el?: HTMLElement; timer?: number }>
  * changing for a moment (a burst of updates builds it once, and a 10k-point chart never pays for
  * it on the redraw); without, removes it.
  */
-export function syncFallback(chart: ChartHost, on: boolean, more: string): void {
+export function syncFallback(chart: ChartHost, on: boolean, more?: string): void {
   const state = fallbacks.get(chart) ?? {};
   fallbacks.set(chart, state);
   clearTimeout(state.timer);
@@ -89,8 +89,9 @@ export function syncFallback(chart: ChartHost, on: boolean, more: string): void 
     return;
   }
   state.timer = window.setTimeout(() => {
+    if (!chart.isConnected) return;
     const snapshot = chart.chartSnapshot;
-    if (!snapshot || !chart.isConnected) return;
+    if (!snapshot) return;
     if (!state.el) {
       state.el = document.createElement("div");
       state.el.dataset.uiPart = "fallback-table";

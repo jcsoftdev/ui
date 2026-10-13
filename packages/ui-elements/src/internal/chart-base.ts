@@ -21,7 +21,7 @@ const DEFAULT_HEIGHT = 240;
 const FALLBACK_HEIGHT = 300;
 const PRESETS = new Set(["number", "integer", "currency", "percent", "compact"]);
 /** Events the chart keeps from the moment it is touched until the interaction chunk is ready. */
-const WAKE = ["focusin", "pointerenter", "pointerdown", "pointerup"] as const;
+const WAKE = ["focusin", "pointerenter", "pointerdown", "pointerup", "click"] as const;
 
 /** Visible strings of the base. English defaults; override with `chart.labels = { ... }`. */
 export interface ChartLabels {
@@ -31,23 +31,12 @@ export interface ChartLabels {
   chart: string;
   /** `aria-roledescription` of the drawing: how a screen reader names this kind of element. */
   roledescription: string;
-  /** Header of the category column in the data table. */
-  category: string;
-  /** Header of the value column of a single-series table. */
-  value: string;
   /** Closing row of a table cut at its row limit; `{n}` is the number of rows left out. */
   more: string;
 }
 
-const DEFAULT_LABELS: ChartLabels = {
-  empty: "No data to show",
-  loading: "Loading chart",
-  chart: "Chart",
-  roledescription: "chart",
-  category: "Category",
-  value: "Value",
-  more: "{n} more rows; use export to get them all",
-};
+/** Defaults of the labels the base itself needs; `empty`, `loading` and `more` live in their chunks. */
+const DEFAULT_LABELS = { chart: "Chart", roledescription: "chart" };
 
 /** A focusable mark: the element that takes focus and the accessible name it gets. */
 export interface ChartMark {
@@ -67,6 +56,9 @@ export interface VirtualMarks {
   element?(index: number): SVGElement | null;
 }
 
+/** Where a keyboard move goes from the current mark; see `DrawResult.nav`. */
+export type NavIntent = "left" | "right" | "up" | "down" | "home" | "end" | "parent" | "child";
+
 /** Why a draw runs: the first one, new data (or a legend toggle), or a new size. */
 export type DrawPhase = "enter" | "update" | "resize";
 
@@ -85,6 +77,15 @@ export interface DrawContext {
   format: ValueFormatter;
   /** True when entry animation may play: the phase is `enter` and motion is allowed. */
   animate: boolean;
+  /** False when the user prefers reduced motion or the chart has `animate="off"`: tween data-to-data changes only if true. */
+  motion: boolean;
+  /** True for a frame asked for with `requestDraw("transient")`: nothing about the data changed. */
+  transient: boolean;
+  /**
+   * The mark whose details are shown (hovered, keyboard-focused or pinned), or `null`. A chart that
+   * redraws from scratch can draw its crosshair or highlight from this, so it survives the redraw.
+   */
+  hover: number | null;
   /** Color of series `index`: the `palette` property, else the chart palette tokens. */
   color(index: number, override?: string): string;
   /**
@@ -120,6 +121,16 @@ export interface DrawResult {
   hit?(x: number, y: number, target: Element | null, radius: number): number;
   /** Tooltip content and anchor of mark `index`. */
   hover?(index: number, source: HoverSource): HoverContent | null;
+  /**
+   * Keyboard navigation for marks that are not a line: the mark to move to from `index` for an
+   * `intent`, or `index` / `-1` / `undefined` to stay. Without it the arrows walk the marks in
+   * reading order. The arrows send `left`, `right`, `up`, `down` (`left` and `right` are already
+   * swapped in a right-to-left page), Home and End send `home` and `end`, Backspace sends `parent`
+   * and Shift+Enter sends `child` after it fires `chart-drill`.
+   */
+  nav?(index: number, intent: NavIntent): number | undefined;
+  /** Most rows `hover()` ever returns. The docked tooltip reserves that much height so nothing below it moves. */
+  maxHoverRows?: number;
 }
 
 export const CHART_ATTRIBUTES = [
@@ -191,6 +202,8 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   #observer: ResizeObserver | undefined;
   #frame = 0;
   #dirty = true;
+  #transient = false;
+  #dpr: AbortController | undefined;
   #retain = false;
   #stateKind: "loading" | "empty" | undefined;
   #width = 0;
@@ -268,7 +281,11 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   get reduced(): boolean {
     return matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
-  get resolvedLabels(): ChartLabels {
+  /** Rows the docked tooltip reserves space for. */
+  get maxHoverRows(): number | undefined {
+    return this.#result?.maxHoverRows;
+  }
+  get resolvedLabels(): Partial<ChartLabels> & typeof DEFAULT_LABELS {
     return { ...DEFAULT_LABELS, ...this.labels };
   }
 
@@ -306,9 +323,15 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#withInteract((interact) => interact.drill(index));
   }
 
-  /** Schedules a redraw. Call it after changing data; attribute changes call it for you. */
-  requestDraw(kind: "data" | "size" = "data"): void {
+  /**
+   * Schedules a redraw. Call it after changing data; attribute changes call it for you. Redraws
+   * asked for in the same frame run once. `"transient"` is for frames that change how the chart
+   * looks but not what it says (a tween, a pan, a brush in progress): the snapshot is not rebuilt,
+   * the revision stays, the table does not sync and no `chart-data` fires. `"size"` re-lays out.
+   */
+  requestDraw(kind: "data" | "size" | "transient" = "data"): void {
     if (kind === "data") this.#dirty = true;
+    else if (kind === "transient") this.#transient = true;
     if (!this.#frame && this.isConnected)
       this.#frame = requestAnimationFrame(() =>
         formatter ? this.#run() : loadFormat().then(() => this.#frame && this.#run()),
@@ -351,6 +374,8 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#wake = [];
     this.#setup?.abort();
     this.#setup = undefined;
+    this.#dpr?.abort();
+    this.#dpr = undefined;
     this.teardown();
   }
 
@@ -375,26 +400,28 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   /** Loading and empty: the previous result is gone, the SVG object is kept for the next `enter`. */
   #toState(kind: "loading" | "empty"): void {
     const drawing = this.drawing;
-    const hadFocus = drawing.contains(document.activeElement);
-    this.#result = undefined;
-    this.#marks = [];
-    this.#virtual = undefined;
-    this.#stateKind = kind;
-    this.#dirty = false;
-    this.#revision++;
-    this.#interact?.reset();
-    this.#syncTable();
-    emit(this, CHART_EVENT.data, null);
-    // Focus on a mark that is about to go away stays in the chart: it moves to the frame.
-    if (hadFocus) {
-      drawing.tabIndex = -1;
-      drawing.focus({ preventScroll: true });
+    // The same state again (a new size, a changed label): redraw the screen, announce nothing.
+    if (this.#stateKind !== kind || this.#result) {
+      const hadFocus = drawing.contains(document.activeElement);
+      this.#result = undefined;
+      this.#marks = [];
+      this.#virtual = undefined;
+      this.#stateKind = kind;
+      this.#dirty = false;
+      this.#revision++;
+      this.#interact?.reset();
+      this.#syncTable();
+      emit(this, CHART_EVENT.data, null);
+      // Focus on a mark that is about to go away stays in the chart: it moves to the frame.
+      if (hadFocus) {
+        drawing.tabIndex = -1;
+        drawing.focus({ preventScroll: true });
+      }
     }
     import("./chart-state.js").then(({ stateNode }) => {
       if (this.#stateKind !== kind || !this.isConnected) return;
-      const labels = this.resolvedLabels;
       drawing.replaceChildren(
-        stateNode(this, kind, labels[kind], this.getAttribute("skeleton") ?? "bars"),
+        stateNode(this, kind, this.labels[kind], this.getAttribute("skeleton") ?? "bars"),
       );
     });
   }
@@ -411,9 +438,29 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     canvas.width = Math.round(width * scale);
     canvas.height = Math.round(height * scale);
     if (!canvas.isConnected) this.drawing.prepend(canvas);
+    this.#watchDpr();
     const context = canvas.getContext("2d") as CanvasRenderingContext2D;
     context.setTransform(scale, 0, 0, scale, 0, 0);
     return context;
+  }
+
+  /** A window dragged to a screen with another pixel ratio, or a browser zoom, redraws the canvas layer sharp. */
+  #watchDpr(): void {
+    if (this.#dpr) return;
+    const stop = new AbortController();
+    this.#dpr = stop;
+    const arm = () => {
+      matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener(
+        "change",
+        () => {
+          if (stop.signal.aborted) return;
+          this.requestDraw("size");
+          arm();
+        },
+        { once: true, signal: stop.signal },
+      );
+    };
+    arm();
   }
 
   #run(): void {
@@ -439,7 +486,13 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     const active = document.activeElement;
     const hadFocus = !!active && drawing.contains(active);
     const focused = hadFocus ? this.#indexOf(active) : -1;
-    const phase: DrawPhase = !this.#result ? "enter" : this.#dirty ? "update" : "resize";
+    const transient = this.#transient;
+    this.#transient = false;
+    const phase: DrawPhase = !this.#result
+      ? "enter"
+      : this.#dirty || transient
+        ? "update"
+        : "resize";
     this.#svg ??= svg("svg");
     const root = this.#svg;
     if (phase === "enter" || !(this.#retain || (this.constructor as typeof ChartElement).retain))
@@ -455,6 +508,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     );
     this.#canvasUsed = false;
     this.#stateKind = undefined;
+    const motion = this.getAttribute("animate") !== "off" && !this.reduced;
     const result = this.draw({
       svg: root,
       width,
@@ -464,7 +518,10 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       locale: this.locale,
       timeZone: this.timeZone,
       format,
-      animate: phase === "enter" && this.getAttribute("animate") !== "off" && !this.reduced,
+      animate: phase === "enter" && motion,
+      motion,
+      transient,
+      hover: this.#interact?.info()?.index ?? null,
       color: (index, override) =>
         override ?? palette?.[index % palette.length] ?? seriesColor(index),
       retain: () => {
@@ -553,9 +610,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       !!this.#result && !this.#claims && this.tableFallback && this.getAttribute("table") !== "off";
     if (!on && !this.#tableLoaded) return;
     this.#tableLoaded = true;
-    import("./chart-table.js").then(({ syncFallback }) =>
-      syncFallback(this, on, this.resolvedLabels.more),
-    );
+    import("./chart-table.js").then(({ syncFallback }) => syncFallback(this, on, this.labels.more));
   }
 
   // ---- marks -------------------------------------------------------------------------------------

@@ -49,14 +49,16 @@ export function swatch(color: string, shape: MarkShape = "square"): Element {
   return node;
 }
 
+const warned = new WeakSet<Element>();
 const joined = new WeakMap<Element, Map<string | number, Element>>();
 
 /**
  * Keyed data join for retained rendering: makes `parent` hold exactly one element per item, in item
  * order, reusing the element of an item whose key is still present. `enter` builds an element for a
  * new key, `update` (called for new and kept elements) sets its attributes, and `exit` handles an
- * element whose key is gone (default: remove it). `parent` must belong to this join alone.
- * Returns the elements in item order.
+ * element whose key is gone (default: remove it). `parent` must belong to this join alone. An item
+ * whose key repeats an earlier one gets no element of its own (it maps to the first one, which is
+ * not updated for it) and a warning is logged. Returns the elements in item order.
  */
 export function join<T, E extends Element>(
   parent: Element,
@@ -70,8 +72,16 @@ export function join<T, E extends Element>(
   const next = new Map<string | number, E>();
   const out: E[] = [];
   let cursor = parent.firstChild;
+  let duplicates = 0;
   items.forEach((item, index) => {
     const k = key(item, index);
+    const seen = next.get(k);
+    if (seen) {
+      // A repeated key has no element of its own: it shares the first one, so nothing leaks.
+      duplicates += 1;
+      out.push(seen);
+      return;
+    }
     const element = previous.get(k) ?? enter(item, index);
     previous.delete(k);
     next.set(k, element);
@@ -80,6 +90,10 @@ export function join<T, E extends Element>(
     else parent.insertBefore(element, cursor);
     out.push(element);
   });
+  if (duplicates && !warned.has(parent)) {
+    warned.add(parent);
+    console.warn(`join(): ${duplicates} item(s) repeat a key; keys must be unique.`);
+  }
   for (const element of previous.values()) exit(element);
   joined.set(parent, next);
   return out;

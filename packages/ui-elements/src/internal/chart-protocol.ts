@@ -44,6 +44,29 @@ export interface SnapshotSeries {
   text: readonly string[];
 }
 
+/** One entry of a legend: what a reader can toggle, which need not be a column of the data table. */
+export interface LegendItem {
+  /** What `toggleSeries(id)`, `isHidden(id)` and `chart-series` use. */
+  id: string;
+  name: string;
+  color: string;
+  shape?: MarkShape;
+}
+
+/** A continuous color scale, drawn by the legend as a gradient bar from `min` to `max`. */
+export interface LegendScale {
+  min: number;
+  max: number;
+  /** Colors from `min` to `max`; evenly spaced unless `stops` says where each one sits. */
+  colors: readonly string[];
+  /** Offset of each color, 0 to 1, ascending; one per entry of `colors`. */
+  stops?: readonly number[];
+  /** Formats the two end values (default: `String`). */
+  format?: (value: number) => string;
+  /** Accessible name of the bar, e.g. "Revenue". */
+  label?: string;
+}
+
 /** What a chart publishes for legend, data table and export: its data, formatted and raw. */
 export interface ChartSnapshot {
   title: string;
@@ -52,7 +75,15 @@ export interface ChartSnapshot {
   categories: readonly string[];
   /** Row headers as data (a `Date` becomes a real date in XLSX); defaults to `categories`. */
   categoryValues?: ReadonlyArray<string | number | Date>;
+  /** Columns of the data table, CSV and XLSX. */
   series: readonly SnapshotSeries[];
+  /**
+   * What the legend lists and `toggleSeries` hides, when that is not the columns: the slices of a
+   * donut, the categories of a map. Defaults to one item per entry of `series`.
+   */
+  legend?: readonly LegendItem[];
+  /** A continuous scale (a heatmap, a choropleth): the legend draws a gradient bar instead of items. */
+  scale?: LegendScale;
 }
 
 export interface TooltipRow {
@@ -78,7 +109,7 @@ export interface HoverContent {
   x: number;
   y: number;
   /** Preferred side of the anchor; the tooltip flips when it does not fit. */
-  side?: "left" | "right";
+  side?: "left" | "right" | "top" | "bottom";
   /** Category the mark belongs to, when it is not the mark index (a stacked or grouped mark). */
   category?: number;
 }
@@ -99,6 +130,8 @@ export interface ChartHost extends HTMLElement {
   /** The sized box that holds the drawing (tooltip coordinates are relative to it). */
   readonly drawing: HTMLElement;
   readonly hover: HoverInfo | null;
+  /** Most rows the chart's details ever show (`DrawResult.maxHoverRows`): the docked tooltip reserves that much. */
+  readonly maxHoverRows?: number;
   /** The selected (pinned) mark index, or `null`. */
   readonly selected: number | null;
   /** Selects mark `index` (`null` clears): pins its details and fires `chart-select`. */

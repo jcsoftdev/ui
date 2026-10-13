@@ -33,9 +33,11 @@ export class UiChartDataTable extends ElementBase {
       const render = () => {
         const snapshot = chart.chartSnapshot;
         if (snapshot) {
-          const limit = this.getAttribute("limit");
+          // A missing, empty or invalid limit is the default (500); `0` explicitly means every row.
+          const raw = this.getAttribute("limit")?.trim();
+          const limit = raw ? Number(raw) : Number.NaN;
           renderTable(this.#table, snapshot, {
-            limit: limit === null ? undefined : Math.max(0, Number(limit) || 0),
+            limit: Number.isFinite(limit) && limit >= 0 ? Math.floor(limit) : undefined,
             more: this.more,
           });
         } else this.#table.replaceChildren();

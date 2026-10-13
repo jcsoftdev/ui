@@ -1,6 +1,6 @@
 import { getRovingIntent } from "@jcsoftdev/ui-core/roving";
 import { adoptStyles, emit, rootOf, uid } from "./base.js";
-import type { DrawResult, VirtualMarks } from "./chart-base.js";
+import type { DrawResult, NavIntent, VirtualMarks } from "./chart-base.js";
 import { SR_ONLY } from "./chart-dom.js";
 import css from "./chart-interact.css.js";
 import { CHART_EVENT, type ChartHost, type HoverInfo, type HoverSource } from "./chart-protocol.js";
@@ -54,6 +54,18 @@ export interface Interact {
   detach(): void;
 }
 
+const NAV_KEYS: Record<string, NavIntent | undefined> = {
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+  Home: "home",
+  End: "end",
+  Backspace: "parent",
+};
+const rtlSwap = (intent: NavIntent, rtl: boolean): NavIntent =>
+  rtl ? (intent === "left" ? "right" : intent === "right" ? "left" : intent) : intent;
+
 /** Pixels a finger may travel during a tap before it counts as a scroll or a drag. */
 export const TAP_SLOP = 10;
 /** Hit radius of a mouse, in pixels, for charts that snap to the nearest point. */
@@ -65,7 +77,9 @@ export function attach(api: InteractApi): Interact {
   adoptStyles(rootOf(host), css);
   const stop = new AbortController();
   const opts = { signal: stop.signal };
-  let last: { x: number; y: number } | undefined;
+  let last: { x: number; y: number; type: string } | undefined;
+  /** The gesture in progress was claimed by the chart (it called `preventDefault`): it is not a selection. */
+  let claimed = false;
   let tap: { id: number; x: number; y: number; moved: boolean } | undefined;
   let live: HTMLElement | undefined;
   let option: HTMLElement | undefined;
@@ -174,6 +188,10 @@ export function attach(api: InteractApi): Interact {
     return token > 0 ? token : FALLBACK_TOUCH;
   };
 
+  /** The element at a viewport point, in the root the chart lives in (the document or a shadow root). */
+  const under = (x: number, y: number): Element | null =>
+    (drawing.getRootNode() as Document | ShadowRoot).elementFromPoint?.(x, y) ?? null;
+
   const hitAt = (clientX: number, clientY: number, target: Element | null, type: string) => {
     const svg = api.svg();
     const hit = api.result()?.hit;
@@ -234,6 +252,19 @@ export function attach(api: InteractApi): Interact {
     { signal: stop.signal, capture: true },
   );
 
+  /** Moves to mark `index` the way a keyboard does: focus (or the proxy's active option) and details. */
+  const move = (index: number) => {
+    if (api.virtual()) {
+      markKey(index);
+      setHover(index, "keyboard");
+    } else (api.markEl(index) as SVGElement | null)?.focus();
+  };
+  /** Asks the chart where `intent` leads from `from`, and goes there when that is another mark. */
+  const go = (from: number, intent: NavIntent) => {
+    const to = api.result()?.nav?.(from, intent);
+    if (typeof to === "number" && to >= 0 && to < api.count() && to !== from) move(to);
+  };
+
   const focusIndex = (target: Element | null): number =>
     target === api.proxy() ? api.active : api.indexOf(target);
 
@@ -243,20 +274,29 @@ export function attach(api: InteractApi): Interact {
       if (tap && tap.id === event.pointerId && !tap.moved)
         tap.moved = Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > TAP_SLOP;
       if (event.pointerType === "touch") return;
-      last = { x: event.clientX, y: event.clientY };
+      last = { x: event.clientX, y: event.clientY, type: event.pointerType };
       setHover(
         hitAt(event.clientX, event.clientY, event.target as Element, event.pointerType),
         "pointer",
       );
     },
     pointerdown(event: PointerEvent) {
-      if (event.pointerType === "mouse") return;
+      claimed = event.defaultPrevented;
+      tap = undefined;
+      if (event.pointerType === "mouse" || claimed) return;
       tap = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
     },
     pointerup(event: PointerEvent) {
       const down = tap;
       tap = undefined;
-      if (event.pointerType === "mouse" || !down || down.id !== event.pointerId || down.moved)
+      if (event.defaultPrevented) claimed = true;
+      if (
+        claimed ||
+        event.pointerType === "mouse" ||
+        !down ||
+        down.id !== event.pointerId ||
+        down.moved
+      )
         return;
       if (Math.hypot(event.clientX - down.x, event.clientY - down.y) > TAP_SLOP) return;
       toggle(
@@ -274,10 +314,12 @@ export function attach(api: InteractApi): Interact {
       if (hoverSource === "pointer") setHover(-1, "pointer");
     },
     click(event: MouseEvent) {
+      if (event.defaultPrevented || claimed) return;
       if (event.detail === 0 || (event as PointerEvent).pointerType !== "mouse") return;
       toggle(hitAt(event.clientX, event.clientY, event.target as Element, "mouse"), "pointer");
     },
     dblclick(event: MouseEvent) {
+      if (event.defaultPrevented || claimed) return;
       const index = hitAt(event.clientX, event.clientY, event.target as Element, "mouse");
       if (index >= 0) drill(index);
     },
@@ -293,7 +335,7 @@ export function attach(api: InteractApi): Interact {
       if (hoverSource === "keyboard") setHover(-1, "keyboard");
     },
     keydown(event: KeyboardEvent) {
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
       if (event.key === "Escape") {
         if (hoverIndex >= 0) setHover(-1, "keyboard");
         else if (selected !== null) select(null, "keyboard");
@@ -303,11 +345,19 @@ export function attach(api: InteractApi): Interact {
       if (current < 0) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        if (event.shiftKey && event.key === "Enter") drill(current);
-        else toggle(current, "keyboard");
+        if (event.shiftKey && event.key === "Enter") {
+          drill(current);
+          go(current, "child");
+        } else toggle(current, "keyboard");
         return;
       }
       const dir = getComputedStyle(host).direction === "rtl" ? "rtl" : "ltr";
+      const intent2d = api.result()?.nav && NAV_KEYS[event.key];
+      if (intent2d) {
+        event.preventDefault();
+        go(current, rtlSwap(intent2d, dir === "rtl"));
+        return;
+      }
       const intent = getRovingIntent(event.key, { dir });
       if (!intent) return;
       event.preventDefault();
@@ -318,10 +368,7 @@ export function attach(api: InteractApi): Interact {
           : intent === "last"
             ? end
             : Math.min(end, Math.max(0, current + (intent === "next" ? 1 : -1)));
-      if (api.virtual()) {
-        markKey(next);
-        setHover(next, "keyboard");
-      } else (api.markEl(next) as SVGElement | null)?.focus();
+      move(next);
     },
   };
   for (const [type, handler] of Object.entries(handlers))
@@ -334,8 +381,9 @@ export function attach(api: InteractApi): Interact {
       (handlers[type] as ((event: Event) => void) | undefined)?.(event);
     },
     toggleSeries(id) {
-      const visible = (host.chartSnapshot?.series ?? []).filter(
-        (s) => !api.hidden.has(s.id),
+      const snapshot = host.chartSnapshot;
+      const visible = (snapshot?.legend ?? snapshot?.series ?? []).filter(
+        (item) => !api.hidden.has(item.id),
       ).length;
       if (api.hidden.has(id)) api.hidden.delete(id);
       else if (visible > 1) api.hidden.add(id);
@@ -351,7 +399,7 @@ export function attach(api: InteractApi): Interact {
     refresh() {
       dim();
       if (last && hoverSource === "pointer" && hoverIndex >= 0)
-        hoverIndex = hitAt(last.x, last.y, null, "mouse");
+        hoverIndex = hitAt(last.x, last.y, under(last.x, last.y), last.type);
       publish();
       if (api.virtual() && api.proxy() === document.activeElement) renderOption(api.active);
     },
@@ -382,6 +430,12 @@ export function attach(api: InteractApi): Interact {
     detach() {
       stop.abort();
       live?.remove();
+      // Leave nothing behind for the next attach: a reconnect must not find a stale option or flags.
+      option?.remove();
+      api.proxy()?.removeAttribute("aria-activedescendant");
+      for (const node of api.svg()?.querySelectorAll("[data-active],[data-selected],[data-dim]") ??
+        [])
+        for (const flag of ["data-active", "data-selected", "data-dim"]) node.removeAttribute(flag);
     },
   };
 }
