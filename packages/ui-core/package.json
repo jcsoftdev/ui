@@ -55,6 +55,50 @@
       "types": "./dist/state.d.ts",
       "import": "./dist/state.js"
     },
+    "./liquid": {
+      "types": "./dist/liquid/attach.d.ts",
+      "import": "./dist/liquid/attach.js"
+    },
+    "./liquid/options": {
+      "types": "./dist/liquid/options.d.ts",
+      "import": "./dist/liquid/options.js"
+    },
+    "./liquid/support": {
+      "types": "./dist/liquid/support.d.ts",
+      "import": "./dist/liquid/support.js"
+    },
+    "./liquid/spring": {
+      "types": "./dist/liquid/spring.d.ts",
+      "import": "./dist/liquid/spring.js"
+    },
+    "./liquid/lens": {
+      "types": "./dist/liquid/lens.d.ts",
+      "import": "./dist/liquid/lens.js"
+    },
+    "./liquid/lens-map": {
+      "types": "./dist/liquid/lens-map.d.ts",
+      "import": "./dist/liquid/lens-map.js"
+    },
+    "./liquid/specular": {
+      "types": "./dist/liquid/specular.d.ts",
+      "import": "./dist/liquid/specular.js"
+    },
+    "./liquid/dispersion": {
+      "types": "./dist/liquid/dispersion.d.ts",
+      "import": "./dist/liquid/dispersion.js"
+    },
+    "./liquid/crystal": {
+      "types": "./dist/liquid/crystal.d.ts",
+      "import": "./dist/liquid/crystal.js"
+    },
+    "./liquid/motion": {
+      "types": "./dist/liquid/motion.d.ts",
+      "import": "./dist/liquid/motion.js"
+    },
+    "./liquid/presets/*": {
+      "types": "./dist/liquid/presets/*.d.ts",
+      "import": "./dist/liquid/presets/*.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

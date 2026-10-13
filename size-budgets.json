@@ -180,6 +180,72 @@
       "kind": "js",
       "file": "packages/ui-core/dist/state.js",
       "maxGzip": 250
+    },
+    {
+      "id": "ui-core/liquid tier: base frosted",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-base.mjs",
+      "maxGzip": 2950
+    },
+    {
+      "id": "ui-core/liquid tier: + refraction",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-refraction.mjs",
+      "maxGzip": 8250
+    },
+    {
+      "id": "ui-core/liquid tier: default look",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-default.mjs",
+      "maxGzip": 11400
+    },
+    {
+      "id": "ui-core/liquid tier: Crystal",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-crystal.mjs",
+      "maxGzip": 12850
+    },
+    {
+      "id": "ui-core/liquid/options",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/options.js",
+      "maxGzip": 1750
+    },
+    {
+      "id": "ui-core/liquid/lens",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/lens.js",
+      "maxGzip": 6350
+    },
+    {
+      "id": "ui-core/liquid/specular",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/specular.js",
+      "maxGzip": 1450
+    },
+    {
+      "id": "ui-core/liquid/dispersion",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/dispersion.js",
+      "maxGzip": 350
+    },
+    {
+      "id": "ui-core/liquid/crystal",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/crystal.js",
+      "maxGzip": 2850
+    },
+    {
+      "id": "ui-core/liquid/motion",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/motion.js",
+      "maxGzip": 3050
+    },
+    {
+      "id": "ui-core/liquid/presets/crystal",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/presets/crystal.js",
+      "maxGzip": 200
     }
   ]
 }

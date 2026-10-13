@@ -63,7 +63,7 @@ Route legend: inline = written by this worker in the worktree; no further delega
   - Acceptance: subpath exports; SSR import of every entry in Node; unit tests for geometry,
     typeahead, roving intent, tab wrap, controllable; Chromium tests for focus trap, dismiss
     stacking (Escape + outside pointer), roving tabindex, autoPosition flip.
-- [ ] T2 ui-core liquid (options, presets, support, spring, lens, specular, dispersion, crystal,
+- [x] T2 ui-core liquid (options, presets, support, spring, lens, specular, dispersion, crystal,
   motion, attach). Route: inline.
   - Acceptance: pure-math golden parity with the React kit (fields, vars, springs) by importing
     both sources in tests; attach loads only the features its resolved options need (Chromium
@@ -92,9 +92,22 @@ Release note: the new package names (`@jcsoftdev/ui-core`, `@jcsoftdev/ui-elemen
 trusted-publisher setup by the maintainer before they are added to `.github/publish-packages.json`.
 
 ## Open questions (conservative choice taken)
-(filled during implementation)
+1. Base tier semantics: React applies the lens whenever the material is liquid. Here the base tier
+   (CSS only) is what non-Chromium engines, users with reduced transparency/contrast/motion and
+   `lens: false` get; there is no "refraction: 0 means no engine" shortcut (React runs a flat
+   lens). Conservative: kept React's semantics; the tier switch is `lens: false` / `lens="off"`.
+2. ui-core tests import `packages/ui/src/glass/*` and `primitives/popper/geometry.ts` read-only to
+   pin parity. If `perf/lazy-liquid-material` moves those files, the parity imports need updating.
 
 ## Progress / evidence
 - T1 (slice a): ui-core behaviours. Checks observed: lint, typecheck, unit 11 + SSR 7 (node),
   browser 6 (Chromium), check:treeshake (6 entries independent), check:pack (6 entries import in
   Node), check:size ui-core entries ok. Route: inline (single package, mechanical port).
+- T2 (slice b): ui-core liquid, split per feature. Checks observed: lint, typecheck, unit 18 (incl.
+  value-for-value parity with the React sources: presets, liquidVars x300, displacement/specular/
+  crystal fields byte-equal, springs), SSR 22, browser 15 (filter graph + backdrop + vars identical
+  to React's applyGlassRefraction for 4 tiers; lazy fetch per tier from the resource timeline),
+  check:treeshake (8 tier entries, 5 lazy chunks), check:pack 20 entries. Gzip per tier: base 2768,
+  + refraction 7811, default look 10851, Crystal 12197. Route: inline.
+  Note: core filter ids are `ui-liquid-lens-N` in `#ui-liquid-defs` (React uses `ui-glass-*`) so
+  both engines can share a page.

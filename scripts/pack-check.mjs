@@ -45,7 +45,7 @@ try {
       const specs = [];
       if (key.includes("*")) {
         const [before, after] = file.split("*");
-        const folder = join(installed, dirname(before));
+        const folder = join(installed, before.endsWith("/") ? before : dirname(before));
         for (const entry of readdirSync(folder))
           if (entry.endsWith(after.replace(/^.*\//, "")) && !entry.endsWith(".d.ts"))
             specs.push(`${name}/${key.slice(2).replace("*", entry.slice(0, entry.length - after.length))}`);
