@@ -98,14 +98,13 @@ export class UiCarousel extends ElementBase {
       if (this.#travelling) {
         // A programmatic scroll is under way: the index is already its target. Re-read it once
         // the track stops moving, so a half-way frame never flickers the dots.
-        clearTimeout(this.#settle);
-        this.#settle = setTimeout(() => {
-          this.#travelling = false;
-          this.#syncIndex();
-        }, 120);
+        this.#arm(120);
         return;
       }
       this.#frame = requestAnimationFrame(() => this.#syncIndex());
+    });
+    this.#track.addEventListener("scrollend", () => {
+      if (this.#travelling) this.#land();
     });
     this.#track.addEventListener("keydown", (event) => {
       const forward = isRtl(this) ? "ArrowLeft" : "ArrowRight";
@@ -115,6 +114,18 @@ export class UiCarousel extends ElementBase {
       else if (event.key === "Home") this.#key(event, () => this.goTo(0));
       else if (event.key === "End") this.#key(event, () => this.goTo(this.count - 1));
     });
+  }
+
+  /** Gives a programmatic scroll `ms` to show a first frame before the index is re-read. */
+  #arm(ms: number): void {
+    clearTimeout(this.#settle);
+    this.#settle = setTimeout(() => this.#land(), ms);
+  }
+
+  #land(): void {
+    clearTimeout(this.#settle);
+    this.#travelling = false;
+    this.#syncIndex();
   }
 
   get count(): number {
@@ -169,7 +180,7 @@ export class UiCarousel extends ElementBase {
     const s = slide.getBoundingClientRect();
     const delta = rtl ? s.right - t.right : s.left - t.left;
     this.#travelling = delta !== 0;
-    clearTimeout(this.#settle);
+    if (this.#travelling) this.#arm(600);
     track.scrollBy({ left: delta, behavior: prefersReducedMotion() ? "auto" : "smooth" });
     this.#setIndex(target);
   }
