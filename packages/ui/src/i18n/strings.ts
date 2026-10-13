@@ -15,6 +15,8 @@ export interface UiStrings {
   live: string;
   reconnecting: string;
   offline: string;
+  copy: string;
+  copied: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -37,6 +39,8 @@ export const uiStrings = {
     live: "Live",
     reconnecting: "Reconnecting…",
     offline: "Offline",
+    copy: "Copy",
+    copied: "Copied",
   },
   es: {
     retry: "Reintentar",
@@ -55,5 +59,7 @@ export const uiStrings = {
     live: "En vivo",
     reconnecting: "Reconectando…",
     offline: "Sin conexión",
+    copy: "Copiar",
+    copied: "Copiado",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

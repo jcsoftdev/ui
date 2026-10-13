@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 import { Breadcrumbs } from "../../src/navigation/breadcrumbs/breadcrumbs.js";
 import { LiveStatusBar } from "../../src/states/live-status-bar/live-status-bar.js";
+import { CopyField } from "../../src/forms/copy-field/copy-field.js";
+export { copyText } from "../../src/forms/copy-field/copy.js";
 import { Form, FormError, FormStatus } from "../../src/forms/form/form.js";
 import { Grid } from "../../src/containers/grid/grid.js";
 
@@ -45,6 +47,13 @@ export const html = {
     renderToStaticMarkup(
       <UiStringsProvider locale="es">
         <LiveStatusBar status="offline" />
+      </UiStringsProvider>,
+    ),
+  copyField: () => renderToStaticMarkup(<CopyField label="Webhook URL" value="https://x.test/hook" />),
+  copyFieldEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <CopyField label="Enlace" value="abc" />
       </UiStringsProvider>,
     ),
 };

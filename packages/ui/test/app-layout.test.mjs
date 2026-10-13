@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { html } = await loadCases("app-layout-cases.tsx");
+const { html, copyText } = await loadCases("app-layout-cases.tsx");
 
 test("Grid fits columns from the minimum width unless a count is given", () => {
   assert.match(
@@ -56,4 +56,27 @@ test("LiveStatusBar is a polite status with a text per connection state", () => 
   }
   assert.match(html.liveBar("live", { live: "Connected" }), /Connected/);
   assert.match(html.liveBarEs(), /Sin conexión/);
+});
+
+test("copyText writes to the clipboard and reports whether it worked", async () => {
+  const written = [];
+  const clipboard = { writeText: async (text) => void written.push(text) };
+  assert.equal(await copyText("abc", clipboard), true);
+  assert.deepEqual(written, ["abc"]);
+
+  const refusing = {
+    writeText: async () => {
+      throw new Error("denied");
+    },
+  };
+  assert.equal(await copyText("abc", refusing), false);
+  assert.equal(await copyText("abc", undefined), false);
+});
+
+test("CopyField shows the value, names its button after the label and has a live region", () => {
+  const markup = html.copyField();
+  assert.match(markup, /https:\/\/x\.test\/hook/);
+  assert.match(markup, /<button[^>]*aria-label="Copy: Webhook URL"[^>]*>.*Copy.*<\/button>/);
+  assert.match(markup, /<span role="status" class="sr-only"><\/span>/);
+  assert.match(html.copyFieldEs(), /aria-label="Copiar: Enlace"/);
 });
