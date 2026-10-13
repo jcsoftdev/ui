@@ -38,9 +38,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// Low on the page: a stationary pointer at (0, 0) must not end up over the popup, where the menu
+// would (correctly) move focus to the hovered area and make keyboard assertions racy.
 const setup = async (attrs = "") => {
   const host = mount(
-    `<div style="width:400px"><ui-test-bars label="Weekly sales" height="160" locale="en-US">
+    `<div style="width:400px;margin-top:300px"><ui-test-bars label="Weekly sales" height="160" locale="en-US">
        <ui-chart-export-menu ${attrs}></ui-chart-export-menu></ui-test-bars></div>`,
   );
   await frame();
