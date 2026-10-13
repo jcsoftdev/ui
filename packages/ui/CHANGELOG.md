@@ -2,8 +2,26 @@
 
 ## 0.3.0 (unreleased)
 
+### App layout pieces
+
+- **Layout**: `Page`, `Stack` and `Grid` (`@jcsoftdev/ui/containers/page`, `/stack`, `/grid`). `Page` is the `page` container, so `Cols` and `SettingsLayout` inside it react to the page width. `Grid` is intrinsic by default (`minColumnWidth`) or fixed with `columns`; `Stack` takes `direction`, `gap` and `align`.
+- **Forms**: `Form`, `FormError` (`role="alert"`) and `FormStatus` (`role="status"`) in `@jcsoftdev/ui/forms/form`; the two messages render nothing for `null`, `undefined` or an empty `message`.
+- **`CopyField`** (`@jcsoftdev/ui/forms/copy-field`): read-only value with a copy button, a polite status announcement and localized `copy`/`copied` text. `copyText` is exported for custom controls.
+- **`Breadcrumbs`** (`@jcsoftdev/ui/navigation/breadcrumbs`): a named `nav` with an ordered list, `aria-current="page"` on the last item and a `renderLink` hook. `PageHeader` takes a `breadcrumbs` slot that renders it on its own row.
+- **`LiveStatusBar`** (`@jcsoftdev/ui/states/live-status-bar`): `live`, `reconnecting` and `offline` states as a polite `role="status"` with a dot and localized text.
+- **`BottomNav`** (`@jcsoftdev/ui/shell/bottom-nav`): phone navigation bar for `Sidebar` items; the items past the fifth slot go behind a "More" button that opens a drawer. It hides itself once the `AppShell` is 900 px wide.
+- New localized strings: `breadcrumbs`, `live`, `reconnecting`, `offline`, `copy`, `copied`, `more`.
+
+### Behavior change
+
+- **`Segmented` keeps the selected item selected.** Pressing the selected `SegmentedItem` again used to clear the selection (value `""`); a single-select group now stays on it. Pass `deselectable` on `Segmented` to keep the old behavior.
+
 ### Fixes
 
+- **`AppShell` no longer re-renders the page during hydration.** Its context value changed in the first layout effect after hydration, which made Next.js client-render still-dehydrated Suspense boundaries (a hidden `div#S:0` stayed in the page). The value is now a store that never changes identity and reads `false` on the server and on the first client render; only `useAppShell` consumers update, once the width is measured.
+- **`Topbar` search is optional.** Without `onSearch` there is no trigger and no Cmd/Ctrl+K; `searchLabel` falls back to `searchPlaceholder`.
+- **`OfflineBanner` takes an `action`** (for example a retry button) after the queue counter.
+- **`Checkbox` takes a `label`**: it renders a `<label>` bound to the box, so it names the checkbox and a click on it toggles. New `wrapper` and `label` parts.
 - **Checkbox looks like a checkbox.** The box is square (`rounded-xs`, the 4px small-radius token, 3px in the compact theme) instead of a circle, and the checked and indeterminate fill is the accent (as in Switch and the selected RadioGroup row) instead of the success green. Round plus green read as a radio button in multi-select lists. Sizes, 44px touch hit area, focus ring, disabled state and the `box`/`indicator`/`icon` parts are unchanged; The indeterminate state draws a dash instead of a check mark, and a disabled checkbox is dimmed (`opacity-50`, `cursor-not-allowed`) like the other form controls. RadioGroup stays round.
 
 ### Theme builder
