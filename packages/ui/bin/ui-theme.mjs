@@ -9,6 +9,7 @@ const USAGE = `Usage: ui-theme build [tokens.json] --out <dir> [--kotlin-package
 Generates tokens.css, theme.css, fonts.css and Theme.kt from a tokens file.
 Without a tokens file the bundled default theme is used.
 --kotlin-library emits the explicit-API, @Immutable flavour used by the Compose kit.
+--no-kotlin skips Theme.kt, so tokens with var() or oklch() colors build.
 --no-css skips the CSS outputs.`;
 
 const args = process.argv.slice(2);
@@ -39,11 +40,14 @@ if (command !== "build" || !out) {
 
 const here = dirname(fileURLToPath(import.meta.url));
 const file = resolve(tokensFlag ?? positional ?? join(here, "../tokens/default.json"));
-const files = buildTheme(JSON.parse(readFileSync(file, "utf8")), { kotlinPackage, kotlinLibrary });
+const files = buildTheme(JSON.parse(readFileSync(file, "utf8")), {
+  kotlinPackage,
+  kotlinLibrary,
+  kotlin: !noKotlin,
+});
 
 mkdirSync(resolve(out), { recursive: true });
 for (const [name, content] of Object.entries(files)) {
-  if (noKotlin && name.endsWith(".kt")) continue;
   if (noCss && name.endsWith(".css")) continue;
   writeFileSync(join(resolve(out), name), content);
   console.log(`wrote ${join(out, name)}`);
