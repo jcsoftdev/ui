@@ -91,7 +91,7 @@ export function Checkbox({
       >
         <span
           className={cn(
-            "grid size-4.5 place-items-center rounded-pill border-[1.5px] border-line-strong group-data-[state=checked]:border-success group-data-[state=checked]:bg-success group-data-[state=indeterminate]:border-success group-data-[state=indeterminate]:bg-success",
+            "grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent",
             classNames?.box,
           )}
         >

@@ -19,3 +19,12 @@ test("only an interactive chip enlarges under touch", () => {
   assert.match(html.chipInteractive(), /in-data-\[density=touch\]:min-h-11/);
   assert.doesNotMatch(html.chipStatic(), /min-h-11/);
 });
+
+test("checkbox is a square box filled with the accent, not a round success badge", () => {
+  const markup = html.checkbox();
+  assert.match(markup, /rounded-xs/);
+  assert.doesNotMatch(markup, /rounded-pill|success/);
+  assert.match(markup, /group-data-\[state=checked\]:bg-accent/);
+  assert.match(markup, /group-data-\[state=indeterminate\]:bg-accent/);
+  assert.match(html.radio(), /rounded-pill/);
+});
