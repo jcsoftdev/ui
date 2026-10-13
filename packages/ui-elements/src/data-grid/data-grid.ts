@@ -88,6 +88,20 @@ export interface GridLabels {
   unwritable?: string;
   /** Announced after a cell is edited, after the column header. */
   cellUpdated?: string;
+  /** Spreadsheet features (each has an English default in its chunk). */
+  rangeSelected?: (info: {
+    cells: number;
+    numeric: number;
+    sum: string;
+    average: string;
+    min: string;
+    max: string;
+  }) => string;
+  copied?: (cells: number) => string;
+  pasted?: (applied: number, skipped: number, clipped: number) => string;
+  filled?: (cells: number) => string;
+  undone?: (cells: number) => string;
+  redone?: (cells: number) => string;
 }
 
 const LABELS: GridLabels = {
@@ -167,6 +181,35 @@ const ATTRIBUTE_FLAGS: Record<string, number> = {
 // biome-ignore lint/suspicious/noExplicitAny: rows are whatever the consumer passes.
 type Row = any;
 type Col = GridColumn<Row>;
+
+/** What produced a cell change. `undo` and `redo` come from the history; `api` from code. */
+export type ChangeSource = "edit" | "paste" | "fill" | "undo" | "redo" | "api";
+
+/** One cell to write: the row key, the column id and the value. */
+export interface CellChange {
+  rowKey: string;
+  columnId: string;
+  value: CellValue;
+}
+
+/** A change as events report it. `newValue` is an alias of `value`. */
+export interface AppliedChange extends CellChange {
+  row: Row;
+  oldValue: CellValue;
+  newValue: CellValue;
+}
+
+export interface ChangeResult {
+  /** Changes that were stored (or, in `emit` mode, emitted). */
+  applied: AppliedChange[];
+  /** Cells that could not be written: unknown, frozen, or without a way to write. */
+  rejected: { rowKey: string; columnId: string }[];
+  /** A `beforecellchange` or `beforecellschange` listener cancelled the write. */
+  cancelled: boolean;
+}
+
+/** The opt-in spreadsheet features; `features.js` loads the chunk of each one that is on. */
+const FEATURES = ["history", "range-selection", "clipboard", "fill-handle"];
 type RowKey = string | ((row: Row, index: number) => string);
 
 interface CellEl extends HTMLElement {
@@ -297,6 +340,41 @@ const validTag = (tag: string | undefined): tag is string =>
  * cancelled or changed. A failed chunk load fires `editerror` and is retried by the next edit.
  * Cells that cannot be edited get `aria-readonly` while the grid has editing.
  *
+ * Batched writes: `changeCells(changes, {source})` writes many cells as one batch (`source` is
+ * `edit`, `paste`, `fill`, `undo`, `redo` or `api`). The cancelable `beforecellschange`
+ * `{changes, source}` fires first, then every row is written and refilled once, the view is
+ * invalidated once and ONE `cellschange` `{changes, source, rejected}` reports it, also in `emit`
+ * mode, so a paste is a single event the consumer applies in one go. A one-cell batch also fires
+ * `beforecellchange` / `cellchange`, which carry the `source` too.
+ *
+ * Spreadsheet features, each opt-in by attribute and each its own lazy chunk (a grid that uses none
+ * downloads none of them):
+ * - `history` (+ `history-depth`, default 100): undo / redo of every `cellschange` that is not itself
+ *   an undo or redo, so a paste or a fill undoes as one step. Ctrl / Cmd + Z, Shift + Ctrl / Cmd + Z
+ *   and Ctrl + Y; `undo()`, `redo()`, `canUndo`, `canRedo` (defined once the chunk has loaded) and
+ *   the `historychange` event `{canUndo, canRedo, undoCount, redoCount}`. In `emit` mode the history
+ *   records what the grid EMITTED and undo emits the inverse as a normal `cellschange` (source
+ *   `undo`), so it only makes sense when the consumer applies the changes it receives.
+ * - `range-selection`: a rectangle of cells, kept apart from row selection and drawn by an overlay
+ *   (no cell is rebound). Shift + arrows (Ctrl / Cmd to the edge; Home, End, PageUp, PageDown),
+ *   Shift + click, pointer drag with edge auto-scroll, Ctrl / Cmd + A (all data cells; with it the
+ *   row-selection Ctrl + A is replaced), Escape or any other key clears it. `rangechange`
+ *   `{anchor, focus, from, to, cells, stats}` with `stats` `{count, numeric, sum, avg, min, max}`; the
+ *   count, sum and average are announced politely.
+ * - `clipboard`: Ctrl / Cmd + C copies the range (or the active cell) as TSV in the editor's format
+ *   (`cellscopy`); Ctrl / Cmd + V pastes TSV from the active cell or over the range as ONE batch with
+ *   source `paste`. Each text is read like typed text (the column's `parse`, numbers and dates in the
+ *   grid's `locale`, a select's label, a boolean's true / false / yes / no). Only SYNCHRONOUS
+ *   `validate` results are enforced: a validator that returns a promise gets an aborted signal, is
+ *   not awaited, and its cell is written and listed as `unvalidated`. Cells that are not editable or
+ *   do not parse are skipped, and a block past the last row or column is cut; `cellspaste`
+ *   `{applied, unchanged, skipped, clipped, unvalidated}` reports it all.
+ * - `fill-handle` (needs `range-selection`): a handle at the range's bottom-right corner; drag it
+ *   down, up, right or left. Numbers continue linearly, dates by day or month (`date-step`: `auto`,
+ *   `day`, `month`), text ending in a number counts up, anything else repeats; up / left run it
+ *   backwards. Ctrl / Cmd + D / R fill down / right by copying. One batch with source `fill`;
+ *   `cellsfill` `{direction, applied, skipped, unvalidated}` reports it.
+ *
  * Attributes: `label`, `locale`, `editable`, `edit-mode` (`mutate` | `emit`), `selection` (`none` | `single` | `multi`; multi adds a checkbox
  * column), `density` (`compact` | `normal` | `comfortable`) or `row-height` (px), `sort`
  * (`name:asc,price:desc`), `sort-manual` (report sorts without sorting), `pinned-left` /
@@ -338,13 +416,15 @@ export class UiDataGrid extends ElementBase {
     "reorderable",
     "storage-key",
     "editable",
+    ...FEATURES,
   ];
 
   // data
   #columns: Col[] = [];
   #rows: Row[] = [];
   #rowKey: RowKey | undefined;
-  #view: GridView = buildView({ keys: [] });
+  /** @internal The view of rows the spreadsheet chunks read. */
+  _view: GridView = buildView({ keys: [] });
   #sort: SortRule[] = [];
   #selection: SelectionState = EMPTY_SELECTION;
   #labels: GridLabels = LABELS;
@@ -357,12 +437,15 @@ export class UiDataGrid extends ElementBase {
   #stored = false;
   #arr: ColumnArrangement = arrangeColumns([], [], {});
   #shown: Record<string, number> = {};
-  #renderIds: string[] = [];
+  /** @internal Ids of the rendered columns, in order (the checkbox column included). */
+  _ids: string[] = [];
   #colIndex = new Map<string, number>();
   #zonePos = new Map<string, number>();
   #byId = new Map<string, Col>();
-  #offsets: Record<GridZone, number[]> = { start: [0], center: [0], end: [0] };
-  #rowHeight = 40;
+  /** @internal Cumulative column offsets of each zone. */
+  _off: Record<GridZone, number[]> = { start: [0], center: [0], end: [0] };
+  /** @internal Row height in pixels. */
+  _rowH = 40;
   #width = 0;
   #pinOverflow = false;
 
@@ -388,7 +471,8 @@ export class UiDataGrid extends ElementBase {
   #cellPool: CellEl[] = [];
   #headCells = new Map<string, CellEl>();
   #meta = new WeakMap<HTMLElement, Meta>();
-  #active = { row: 0, col: 0 };
+  /** @internal The active cell: `row` 0 is the header. */
+  _active = { row: 0, col: 0 };
   #activeKey: string | null = null;
   /** Id of the active column: the index shifts when columns are pinned, hidden or added. */
   #activeId: string | null = null;
@@ -398,6 +482,16 @@ export class UiDataGrid extends ElementBase {
   #revealActive = false;
   #entered: HTMLElement | null = null;
   #editing: { key: string; id: string } | null = null;
+  /** @internal Called after every render pass; the range overlay repaints from it. */
+  _after: (() => void) | undefined;
+  /**
+   * Reverts the last recorded change. Defined, with `redo`, `canUndo` and `canRedo`, by the history
+   * chunk once it has loaded (the `history` attribute): a grid without history has none of them.
+   */
+  declare undo: () => boolean;
+  declare redo: () => boolean;
+  declare readonly canUndo: boolean;
+  declare readonly canRedo: boolean;
   #editLoad: Promise<typeof import("./edit.js") | undefined> | undefined;
   /** The editor chunk is installed (`true`), failed to load (`false`) or not asked for yet. */
   #edit: boolean | undefined;
@@ -554,6 +648,7 @@ export class UiDataGrid extends ElementBase {
     this.addEventListener("dblclick", this.#onDoubleClick);
     this.addEventListener("pointerdown", this.#onPointerDown);
     this.#ensureReorder();
+    this.#features();
     this.#watchLang();
     this.#pending |= F_ALL;
     this.#flush();
@@ -579,6 +674,7 @@ export class UiDataGrid extends ElementBase {
   attributeChangedCallback(name: string): void {
     if (!this.#built) return;
     if (name === "reorderable") this.#ensureReorder();
+    this.#features();
     if (name === "storage-key" && this.getAttribute("storage-key")) {
       // A new key brings its own layout; without a valid one the code defaults apply.
       this.#layout = this.#baseLayout();
@@ -605,7 +701,7 @@ export class UiDataGrid extends ElementBase {
       return;
     }
     const c = this.#colIndex.get(String(col));
-    const v = row === null ? -1 : this.#view.indexOfKey(String(row));
+    const v = row === null ? -1 : this._view.indexOfKey(String(row));
     if (c !== undefined && (row === null || v >= 0)) this.#focusCell(v + 1, c, true);
   }
 
@@ -621,7 +717,7 @@ export class UiDataGrid extends ElementBase {
 
   /** Scrolls a row (by key or index) into view. */
   scrollToRow(row: string | number): void {
-    const v = typeof row === "number" ? row : this.#view.indexOfKey(row);
+    const v = typeof row === "number" ? row : this._view.indexOfKey(row);
     if (v >= 0) this.#grid?.scrollToRow(v);
   }
 
@@ -661,51 +757,82 @@ export class UiDataGrid extends ElementBase {
   }
 
   /**
-   * Stores `value` for a cell after the cancelable `beforecellchange`, then refills the row and
-   * fires `cellchange` (`{rowKey, columnId, row, oldValue, value, newValue}`). The row is written
-   * through the column's `setter`, else through its property accessor; with `edit-mode="emit"` it
-   * is not written at all and the consumer applies the change. Returns `false` when the event was
-   * cancelled or the row cannot be written.
+   * Stores `value` for a cell: `changeCells` with one change and `source: "edit"`. Returns `false`
+   * when the write was cancelled or the row cannot be written.
    */
   changeCell(rowKey: string, columnId: string, value: CellValue): boolean {
-    const v = this.#view.indexOfKey(rowKey);
-    const column = this.#byId.get(columnId);
-    if (v < 0 || !column) return false;
-    const accessor = column.accessor ?? column.id;
-    const row = this.#rowAt(v);
+    return this.changeCells([{ rowKey, columnId, value }], { source: "edit" }).applied.length > 0;
+  }
+
+  /**
+   * Writes several cells as one batch. The cancelable `beforecellschange` (`{changes, source}`)
+   * fires first, then every row is written and refilled once, the view is invalidated once, and
+   * a single `cellschange` (`{changes, source, rejected}`) reports it; each change is
+   * `{rowKey, columnId, row, oldValue, value, newValue}`. A batch of one cell also fires the
+   * per-cell `beforecellchange` (cancelable) and `cellchange`, with the same `source`
+   * (`edit`, `paste`, `fill`, `undo`, `redo` or `api`, the default).
+   *
+   * Rows are written through the column's `setter`, else its property accessor; with
+   * `edit-mode="emit"` nothing is written and the consumer applies the one event. A cell that
+   * cannot be written (unknown, frozen, no setter) is left out and listed in `rejected`.
+   */
+  changeCells(
+    changes: readonly CellChange[],
+    { source = "api" }: { source?: ChangeSource } = {},
+  ): ChangeResult {
     const write = this.getAttribute("edit-mode") !== "emit";
-    if (row == null || typeof row !== "object" || (write && Object.isFrozen(row))) {
-      console.warn(
-        `ui-data-grid: the row "${rowKey}" is frozen or not an object; it was not changed.`,
-      );
-      return false;
+    const applied: AppliedChange[] = [];
+    const rejected: ChangeResult["rejected"] = [];
+    for (const { rowKey, columnId, value } of changes) {
+      const column = this.#byId.get(columnId);
+      const row = this.#rowAt(this._view.indexOfKey(rowKey));
+      if (
+        column &&
+        typeof row === "object" &&
+        row &&
+        (!write ||
+          (!Object.isFrozen(row) &&
+            (column.setter || typeof (column.accessor ?? column.id) !== "function")))
+      )
+        applied.push({
+          rowKey,
+          columnId,
+          row,
+          oldValue: getCellValue(row, column),
+          value,
+          newValue: value,
+        });
+      else rejected.push({ rowKey, columnId });
     }
-    if (write && !column.setter && typeof accessor === "function") return false;
-    const detail = {
-      rowKey,
-      columnId,
-      row,
-      oldValue: getCellValue(row, column),
-      value,
-      newValue: value,
-    };
-    if (!emit(this, "beforecellchange", detail, true)) return false;
-    if (write) {
-      try {
-        if (column.setter) column.setter(row, value);
-        else row[accessor as string] = value;
-      } catch {
-        console.warn(
-          `ui-data-grid: "${String(accessor)}" of row "${rowKey}" is read-only; it was not changed.`,
-        );
-        return false;
+    const [only] = applied;
+    if (
+      (applied.length === 1 && !emit(this, "beforecellchange", { ...only, source }, true)) ||
+      (applied.length && !emit(this, "beforecellschange", { changes: applied, source }, true))
+    )
+      return { applied: [], rejected, cancelled: true };
+    if (write)
+      for (const change of [...applied]) {
+        const column = this.#byId.get(change.columnId) as Col;
+        try {
+          if (column.setter) column.setter(change.row, change.value);
+          else change.row[(column.accessor ?? column.id) as string] = change.value;
+        } catch {
+          rejected.push(applied.splice(applied.indexOf(change), 1)[0] as AppliedChange);
+        }
       }
-      this.refreshRows([rowKey]);
-      // Re-run the view when a stage (sort, later filter and group) reads the edited column.
-      if (this.#viewColumns().has(columnId)) this.#invalidate(F_VIEW);
+    if (rejected.length)
+      console.warn(
+        "ui-data-grid: some cells could not be written (frozen row or read-only property).",
+      );
+    if (write) {
+      this.refreshRows(applied.map((change) => change.rowKey));
+      // Re-run the view when a stage (sort, later filter and group) reads an edited column.
+      const stage = this.#viewColumns();
+      if (applied.some((change) => stage.has(change.columnId))) this.#invalidate(F_VIEW);
     }
-    emit(this, "cellchange", detail);
-    return true;
+    if (applied.length === 1) emit(this, "cellchange", { ...applied[0], source });
+    if (applied.length) emit(this, "cellschange", { changes: applied, source, rejected });
+    return { applied, rejected, cancelled: false };
   }
 
   /**
@@ -734,13 +861,13 @@ export class UiDataGrid extends ElementBase {
     rows: number,
     cols: number,
   ): { rowKey: string; columnId: string } | null {
-    const n = this.#renderIds.length;
+    const n = this._ids.length;
     const at =
-      (this.#view.indexOfKey(rowKey) + rows) * n + (this.#colIndex.get(columnId) ?? -1) + cols;
+      (this._view.indexOfKey(rowKey) + rows) * n + (this.#colIndex.get(columnId) ?? -1) + cols;
     const v = Math.floor(at / n);
-    return at < 0 || v >= this.#view.count
+    return at < 0 || v >= this._view.count
       ? null
-      : { rowKey: this.#keyAt(v), columnId: this.#renderIds[at % n] as string };
+      : { rowKey: this.#keyAt(v), columnId: this._ids[at % n] as string };
   }
 
   #editable(column: Col, row: Row): boolean {
@@ -749,6 +876,12 @@ export class UiDataGrid extends ElementBase {
       row != null &&
       (typeof editable === "function" ? editable(row) : (editable ?? this.hasAttribute("editable")))
     );
+  }
+
+  /** Loads the chunks of the opt-in features whose attribute is set; a grid with none loads nothing. */
+  #features(): void {
+    if (FEATURES.some((name) => this.hasAttribute(name)))
+      void import("./features.js").then((f) => f.install(this));
   }
 
   /** Loads the editor chunk; a failure fires `editerror`, resolves to `undefined` and can be retried. */
@@ -770,7 +903,7 @@ export class UiDataGrid extends ElementBase {
 
   /** The rows of the view in order (group rows included), for export. A snapshot, not live. */
   get viewRows(): ReadonlyArray<ViewRow & { row: Row | undefined }> {
-    const view = this.#view;
+    const view = this._view;
     return Array.from({ length: view.count }, (_, v) => {
       const entry = view.row(v);
       return { ...entry, row: entry.source >= 0 ? this.#rows[entry.source] : undefined };
@@ -857,9 +990,9 @@ export class UiDataGrid extends ElementBase {
     if (all || only === "density" || only === "row-height") {
       const explicit = Number(this.getAttribute("row-height"));
       const density = this.getAttribute("density") as keyof typeof DENSITY | null;
-      this.#rowHeight =
+      this._rowH =
         explicit >= 20 ? explicit : DENSITY[density && density in DENSITY ? density : "normal"];
-      this.style.setProperty("--ui-data-grid-row", `${this.#rowHeight}px`);
+      this.style.setProperty("--ui-data-grid-row", `${this._rowH}px`);
     }
     if ((all || only === "sort") && this.hasAttribute("sort"))
       this.#sort = parseSort(this.getAttribute("sort"));
@@ -970,7 +1103,7 @@ export class UiDataGrid extends ElementBase {
     const proxies: GridColumn<number>[] = sorted
       ? this.#columns.map((c) => ({ ...c, accessor: (i: number) => getCellValue(rows[i], c) }))
       : [];
-    this.#view = buildView({
+    this._view = buildView({
       keys,
       sort: sorted ? (indices) => sortRows(indices, proxies, this.#sort, this.#locale) : undefined,
     });
@@ -983,16 +1116,16 @@ export class UiDataGrid extends ElementBase {
 
   /** The row object of view row `v`; `undefined` for a group row. */
   #rowAt(v: number): Row {
-    const source = this.#view.sourceAt(v);
+    const source = this._view.sourceAt(v);
     return source >= 0 ? this.#rows[source] : undefined;
   }
 
   #keyAt(v: number): string {
-    return this.#view.keyAt(v);
+    return this._view.keyAt(v);
   }
 
   #selectionRows(): SelectionRows {
-    const view = this.#view;
+    const view = this._view;
     // Selection ranges over data rows only; group rows are never selectable.
     return {
       count: view.dataCount,
@@ -1004,9 +1137,9 @@ export class UiDataGrid extends ElementBase {
   /** Header checkbox state, recomputed only when the selection or the view changed. */
   #selectionLevel(): "all" | "some" | "none" {
     const cached = this.#level;
-    if (cached && cached.sel === this.#selection && cached.view === this.#view) return cached.value;
+    if (cached && cached.sel === this.#selection && cached.view === this._view) return cached.value;
     const value = selectionLevel(this.#selection, this.#selectionRows());
-    this.#level = { sel: this.#selection, view: this.#view, value };
+    this.#level = { sel: this.#selection, view: this._view, value };
     return value;
   }
 
@@ -1061,7 +1194,7 @@ export class UiDataGrid extends ElementBase {
 
   /** Width of a zone. */
   #extent(zone: GridZone): number {
-    return this.#offsets[zone].at(-1) ?? 0;
+    return this._off[zone].at(-1) ?? 0;
   }
 
   #selectable(): boolean {
@@ -1105,13 +1238,13 @@ export class UiDataGrid extends ElementBase {
         )
       : { ...this.#layout.widths };
     const widthOf = (id: string) => (id === SELECT_ID ? SELECT_WIDTH : (this.#shown[id] ?? 160));
-    this.#offsets = {
+    this._off = {
       start: columnOffsets(this.#zoneList("start").map(widthOf)),
       center: columnOffsets(this.#arr.center.map(widthOf)),
       end: columnOffsets(this.#arr.end.map(widthOf)),
     };
-    this.#renderIds = ZONES.flatMap((zone) => this.#zoneList(zone));
-    this.#colIndex = new Map(this.#renderIds.map((id, i) => [id, i]));
+    this._ids = ZONES.flatMap((zone) => this.#zoneList(zone));
+    this.#colIndex = new Map(this._ids.map((id, i) => [id, i]));
     this.#zonePos = new Map();
     for (const zone of ZONES) {
       const list = this.#zoneList(zone);
@@ -1159,10 +1292,10 @@ export class UiDataGrid extends ElementBase {
       if (this.#grid) this.#grid.update(true);
       else
         this.#grid = createGridViewport(this.#viewport, {
-          rowCount: () => this.#view.count,
-          rowHeight: () => this.#rowHeight,
-          headerHeight: () => this.#rowHeight,
-          centerOffsets: () => this.#offsets.center,
+          rowCount: () => this._view.count,
+          rowHeight: () => this._rowH,
+          headerHeight: () => this._rowH,
+          centerOffsets: () => this._off.center,
           insetStart: () => this.#extent("start"),
           stickyStart: () => (this.#pinOverflow ? 0 : this.#extent("start")),
           rtl: () => this.#rtl(),
@@ -1170,11 +1303,12 @@ export class UiDataGrid extends ElementBase {
         });
       if (this.#revealActive || (this.#pinOverflow !== wasOverflow && this.#hasFocus())) {
         this.#revealActive = false;
-        this.#revealCell(this.#active.row, this.#active.col);
+        this._reveal(this._active.row, this._active.col);
       }
       this.#syncTabStop();
     }
     this.#applySelection();
+    this._after?.();
     if (this.#editOn && this.#edit === undefined && !this.#editLoad) void this.#loadEdit();
   }
 
@@ -1185,21 +1319,21 @@ export class UiDataGrid extends ElementBase {
   /** Sizes of the scroll area and the attributes that describe the whole grid. */
   #applyMetrics(): void {
     const total = this.#extent("start") + this.#extent("center") + this.#extent("end");
-    const rows = this.#view.count;
+    const rows = this._view.count;
     this.#sizer.style.inlineSize = `${total}px`;
-    this.#body.style.blockSize = `${rows * this.#rowHeight}px`;
-    this.#head.style.blockSize = `${this.#rowHeight}px`;
+    this.#body.style.blockSize = `${rows * this._rowH}px`;
+    this.#head.style.blockSize = `${this._rowH}px`;
     this.#gridEl.setAttribute("aria-rowcount", String(rows + 1));
-    this.#gridEl.setAttribute("aria-colcount", String(this.#renderIds.length));
+    this.#gridEl.setAttribute("aria-colcount", String(this._ids.length));
     this.toggleAttribute("data-pin-start", this.#zoneList("start").length > 0);
     this.toggleAttribute("data-pin-end", this.#arr.end.length > 0);
     this.toggleAttribute("data-pin-overflow", this.#pinOverflow);
     this.#empty.hidden = rows > 0;
     this.#empty.textContent = rows === 0 ? this.#labels.empty : "";
-    if (rows * this.#rowHeight > MAX_BODY_HEIGHT && !this.#warnedHeight) {
+    if (rows * this._rowH > MAX_BODY_HEIGHT && !this.#warnedHeight) {
       this.#warnedHeight = true;
       console.warn(
-        `ui-data-grid: ${rows} rows of ${this.#rowHeight}px are taller than browsers can scroll reliably; rows past the limit will not be reachable.`,
+        `ui-data-grid: ${rows} rows of ${this._rowH}px are taller than browsers can scroll reliably; rows past the limit will not be reachable.`,
       );
     }
   }
@@ -1262,8 +1396,8 @@ export class UiDataGrid extends ElementBase {
   /** Columns that stay mounted in a row even outside the window: the active and the edited cell. */
   #keepIds(row: number, key: string | null): string[] {
     const keep: string[] = [];
-    if (this.#active.row === row) {
-      const id = this.#renderIds[this.#active.col];
+    if (this._active.row === row) {
+      const id = this._ids[this._active.col];
       if (id !== undefined) keep.push(id);
     }
     if (key !== null && this.#editing?.key === key) keep.push(this.#editing.id);
@@ -1288,7 +1422,7 @@ export class UiDataGrid extends ElementBase {
           cell = this.#makeHead(id);
           this.#headCells.set(id, cell);
         }
-        const offset = this.#offsets[zone][this.#zonePos.get(id) ?? 0] ?? 0;
+        const offset = this._off[zone][this.#zonePos.get(id) ?? 0] ?? 0;
         this.#bindHead(cell, id, zone, offset);
         cells.push(cell);
         wanted.add(id);
@@ -1328,7 +1462,7 @@ export class UiDataGrid extends ElementBase {
     cell.setAttribute("aria-colindex", String(col + 1));
     cell.style.insetInlineStart = `${offset}px`;
     cell.style.inlineSize = `${id === SELECT_ID ? SELECT_WIDTH : (this.#shown[id] ?? 160)}px`;
-    cell.tabIndex = this.#active.row === 0 && this.#active.col === col ? 0 : -1;
+    cell.tabIndex = this._active.row === 0 && this._active.col === col ? 0 : -1;
     if (id === SELECT_ID) {
       const box = cell.firstElementChild as HTMLInputElement;
       box.setAttribute("aria-label", this.#labels.selectAll);
@@ -1386,15 +1520,15 @@ export class UiDataGrid extends ElementBase {
 
   #renderBody(win: GridWindow): void {
     const { start, end } = win.rows;
-    const count = this.#view.count;
+    const count = this._view.count;
     const wanted: number[] = [];
     for (let v = start; v < end; v += 1) wanted.push(v);
     const extra = (v: number) => {
       if (v >= 0 && v < count && (v < start || v >= end) && !wanted.includes(v))
         wanted.splice(v < start ? 0 : wanted.length, 0, v);
     };
-    extra(this.#active.row - 1);
-    if (this.#editing) extra(this.#view.indexOfKey(this.#editing.key));
+    extra(this._active.row - 1);
+    if (this.#editing) extra(this._view.indexOfKey(this.#editing.key));
 
     const keep = new Map<string, number>();
     for (const v of wanted) keep.set(this.#keyAt(v), v);
@@ -1451,14 +1585,14 @@ export class UiDataGrid extends ElementBase {
       rec.v = v;
       rec.g = geo;
       rec.el.setAttribute("aria-rowindex", String(v + 2));
-      rec.el.style.insetBlockStart = `${v * this.#rowHeight}px`;
+      rec.el.style.insetBlockStart = `${v * this._rowH}px`;
       for (const zone of ZONES) rec.zones[zone].style.inlineSize = `${this.#extent(zone)}px`;
     }
     this.#syncRowSelection(rec);
     // Group rows (D3) have no cells yet: they mount as an empty, labelled row.
-    const group = this.#view.kind(v) === "group";
+    const group = this._view.kind(v) === "group";
     rec.el.toggleAttribute("data-group", group);
-    if (group) rec.el.setAttribute("aria-level", String(this.#view.row(v).depth + 1));
+    if (group) rec.el.setAttribute("aria-level", String(this._view.row(v).depth + 1));
     else rec.el.removeAttribute("aria-level");
     const keep = this.#keepIds(v + 1, rec.key);
     for (const zone of ZONES) {
@@ -1471,7 +1605,7 @@ export class UiDataGrid extends ElementBase {
           rec.cells.set(id, cell);
         }
         if (cell._g !== geo || cell._v !== v)
-          this.#placeCell(cell, rec, id, this.#offsets[zone][this.#zonePos.get(id) ?? 0] ?? 0);
+          this.#placeCell(cell, rec, id, this._off[zone][this.#zonePos.get(id) ?? 0] ?? 0);
         const editing = this.#editing?.key === rec.key && this.#editing.id === id;
         if (!editing && (cell._c !== this.#contentEpoch || cell._row !== row || cell._col !== id))
           this.#fillCell(cell, rec, row, id);
@@ -1501,7 +1635,7 @@ export class UiDataGrid extends ElementBase {
     cell.setAttribute("aria-colindex", String(col + 1));
     cell.style.insetInlineStart = `${offset}px`;
     cell.style.inlineSize = `${id === SELECT_ID ? SELECT_WIDTH : (this.#shown[id] ?? 160)}px`;
-    cell.tabIndex = this.#active.row === rec.v + 1 && this.#active.col === col ? 0 : -1;
+    cell.tabIndex = this._active.row === rec.v + 1 && this._active.col === col ? 0 : -1;
   }
 
   /** The cell's content: the only place the column renderer runs. */
@@ -1574,7 +1708,7 @@ export class UiDataGrid extends ElementBase {
 
   #syncRowSelection(rec: RowRec): void {
     const selected =
-      this.selection === "none" || this.#view.kind(rec.v) === "group"
+      this.selection === "none" || this._view.kind(rec.v) === "group"
         ? null
         : this.#selection.keys.has(rec.key);
     if (rec.sel === selected) return;
@@ -1615,43 +1749,43 @@ export class UiDataGrid extends ElementBase {
   // ---- focus -------------------------------------------------------------------------------
   /** Keeps the active cell on the same row after the data changed, and inside the grid. */
   #clampActive(): void {
-    if (this.#active.row > 0 && this.#activeKey !== null) {
-      const v = this.#view.indexOfKey(this.#activeKey);
-      if (v >= 0) this.#active.row = v + 1;
+    if (this._active.row > 0 && this.#activeKey !== null) {
+      const v = this._view.indexOfKey(this.#activeKey);
+      if (v >= 0) this._active.row = v + 1;
     }
-    this.#active.row = Math.min(this.#active.row, this.#view.count);
+    this._active.row = Math.min(this._active.row, this._view.count);
     // Follow the column by id: pinning, hiding or adding columns moves its index.
     const moved = this.#activeId === null ? undefined : this.#colIndex.get(this.#activeId);
-    if (moved !== undefined) this.#active.col = moved;
-    this.#active.col = Math.min(this.#active.col, Math.max(0, this.#renderIds.length - 1));
-    this.#activeId = this.#renderIds[this.#active.col] ?? null;
-    this.#activeKey = this.#active.row > 0 ? this.#keyAt(this.#active.row - 1) : null;
+    if (moved !== undefined) this._active.col = moved;
+    this._active.col = Math.min(this._active.col, Math.max(0, this._ids.length - 1));
+    this.#activeId = this._ids[this._active.col] ?? null;
+    this.#activeKey = this._active.row > 0 ? this.#keyAt(this._active.row - 1) : null;
   }
 
   /** Exactly one cell is the tab stop: the active one, wherever the data moved it. */
   #syncTabStop(): void {
-    const next = this.#cellAt(this.#active.row, this.#active.col) ?? null;
+    const next = this.#cellAt(this._active.row, this._active.col) ?? null;
     if (this.#tabbed && this.#tabbed !== next) this.#tabbed.tabIndex = -1;
     if (next) next.tabIndex = 0;
     this.#tabbed = next;
   }
 
   #cellAt(row: number, col: number): CellEl | undefined {
-    const id = this.#renderIds[col];
+    const id = this._ids[col];
     if (id === undefined) return undefined;
     if (row === 0) return this.#headCells.get(id);
-    if (row > this.#view.count) return undefined;
+    if (row > this._view.count) return undefined;
     return this.#rowRecs.get(this.#keyAt(row - 1))?.cells.get(id);
   }
 
   #focusActive(): void {
-    this.#cellAt(this.#active.row, this.#active.col)?.focus({ preventScroll: true });
+    this.#cellAt(this._active.row, this._active.col)?.focus({ preventScroll: true });
   }
 
   #setActive(row: number, col: number): void {
-    this.#active = { row, col };
+    this._active = { row, col };
     this.#activeKey = row > 0 ? this.#keyAt(row - 1) : null;
-    this.#activeId = this.#renderIds[col] ?? null;
+    this.#activeId = this._ids[col] ?? null;
     this.#syncTabStop();
   }
 
@@ -1659,9 +1793,10 @@ export class UiDataGrid extends ElementBase {
    * Scrolls a cell into view without it hiding under a pinned zone. The header row never scrolls
    * the body: it is sticky, so focusing it leaves `scrollTop` alone.
    */
-  #revealCell(row: number, col: number): void {
+  /** @internal */
+  _reveal(row: number, col: number): void {
     const grid = this.#grid;
-    const id = this.#renderIds[col];
+    const id = this._ids[col];
     if (!grid || id === undefined) return;
     if (row > 0) grid.scrollToRow(row - 1);
     const zone = this.#arr.zoneOf.get(id) ?? "start";
@@ -1677,7 +1812,7 @@ export class UiDataGrid extends ElementBase {
 
   /** In overflow mode the pinned zones scroll with the grid, so a pinned cell can be off-screen. */
   #revealPinned(id: string, zone: GridZone): void {
-    const offsets = this.#offsets[zone];
+    const offsets = this._off[zone];
     const at = this.#zonePos.get(id) ?? 0;
     const base = zone === "start" ? 0 : this.#extent("start") + this.#extent("center");
     const left = base + (offsets[at] ?? 0);
@@ -1694,13 +1829,13 @@ export class UiDataGrid extends ElementBase {
   }
 
   #focusCell(row: number, col: number, focus: boolean): void {
-    const count = this.#renderIds.length;
+    const count = this._ids.length;
     if (!this.#built || count === 0 || !this.#grid) return;
-    const r = Math.min(Math.max(0, row), this.#view.count);
+    const r = Math.min(Math.max(0, row), this._view.count);
     const c = Math.min(Math.max(0, col), count - 1);
     this.#setActive(r, c);
-    const id = this.#renderIds[c] as string;
-    this.#revealCell(r, c);
+    const id = this._ids[c] as string;
+    this._reveal(r, c);
     const cell = this.#cellAt(r, c);
     if (cell) cell.tabIndex = 0;
     if (focus) this.#focusActive();
@@ -1725,7 +1860,7 @@ export class UiDataGrid extends ElementBase {
     const meta = cell ? this.#meta.get(cell) : undefined;
     if (!meta) return;
     const row = meta.rec ? meta.rec.v + 1 : 0;
-    if (row !== this.#active.row || meta.col !== this.#active.col) this.#setActive(row, meta.col);
+    if (row !== this._active.row || meta.col !== this._active.col) this.#setActive(row, meta.col);
   };
 
   // ---- interactive cell content ------------------------------------------------------------
@@ -1767,7 +1902,7 @@ export class UiDataGrid extends ElementBase {
     const row = meta.rec ? meta.rec.v + 1 : 0;
     const mod = event.ctrlKey || event.metaKey;
     const rtl = this.#rtl();
-    const id = this.#renderIds[meta.col] as string;
+    const id = this._ids[meta.col] as string;
 
     if (row === 0) {
       if (id === SELECT_ID) {
@@ -1839,11 +1974,11 @@ export class UiDataGrid extends ElementBase {
       key: event.key,
       mod,
       pos: { row, col: meta.col },
-      rowCount: this.#view.count,
-      colCount: this.#renderIds.length,
+      rowCount: this._view.count,
+      colCount: this._ids.length,
       pageSize: Math.max(
         1,
-        Math.floor((this.#viewport.clientHeight - this.#rowHeight) / this.#rowHeight) - 1,
+        Math.floor((this.#viewport.clientHeight - this._rowH) / this._rowH) - 1,
       ),
       rtl,
     });
@@ -1883,7 +2018,7 @@ export class UiDataGrid extends ElementBase {
     const cell = target.closest<HTMLElement>(CELL);
     const meta = cell ? this.#meta.get(cell) : undefined;
     if (!cell || !meta || !this.contains(cell)) return;
-    const id = this.#renderIds[meta.col] as string;
+    const id = this._ids[meta.col] as string;
     const isCheck = target.matches("[data-ui-part=check]");
     if (!meta.rec) {
       if (id === SELECT_ID) {
@@ -1925,7 +2060,7 @@ export class UiDataGrid extends ElementBase {
     if (!meta?.rec || target.closest(INTERACTIVE)) return;
     const detail = {
       rowKey: meta.rec.key,
-      columnId: this.#renderIds[meta.col],
+      columnId: this._ids[meta.col],
       row: this.#rowAt(meta.rec.v),
     };
     if (emit(this, "beforecelledit", { ...detail, trigger: "dblclick" }, true))
