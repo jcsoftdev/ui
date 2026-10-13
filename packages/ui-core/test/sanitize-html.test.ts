@@ -55,6 +55,25 @@ const VECTORS = [
 const ACTIVE =
   /<(script|img|svg|iframe|object|embed|style|link|meta|base|form|input|video|details|math)\b|\son[a-z]+\s*=|javascript:|vbscript:|data:/i;
 
+/** Unicode-whitespace prefixes: the React kit let these through (fixed upstream separately). */
+const UNICODE_SPACE_VECTORS = [
+  '<a href="&nbsp;javascript:alert(1)">x</a>',
+  '<a href="&#160;javascript:alert(1)">x</a>',
+  '<a href="&#xa0;vbscript:msgbox(1)">x</a>',
+  '<a href="&#xA0;data:text/html,<script>alert(1)</script>">x</a>',
+  '<a href="&#x1680;javascript:alert(1)">x</a>',
+  '<a href="&#x2003;javascript:alert(1)">x</a>',
+  '<a href="&#x202f;javascript:alert(1)">x</a>',
+  '<a href="&#x205f;javascript:alert(1)">x</a>',
+  '<a href="&#x3000;javascript:alert(1)">x</a>',
+  '<a href="\u00a0javascript:alert(1)">x</a>',
+  '<a href="java\u00a0script:alert(1)">x</a>',
+  '<a href="java&#x200b;script:alert(1)">x</a>',
+  '<a href="java&#xad;script:alert(1)">x</a>',
+  '<a href="&#x2060;javascript:alert(1)">x</a>',
+];
+VECTORS.push(...UNICODE_SPACE_VECTORS);
+
 describe("sanitizeHtml: XSS vectors", () => {
   for (const vector of VECTORS) {
     it(vector.slice(0, 60), () => {
@@ -85,6 +104,20 @@ describe("sanitizeHtml: XSS vectors", () => {
       }
     });
   }
+
+  it("drops the link when the href hides a scheme behind Unicode whitespace", () => {
+    for (const vector of UNICODE_SPACE_VECTORS) expect(sanitizeHtml(vector)).toBe("<a>x</a>");
+  });
+
+  it("emits exactly the string it validated", () => {
+    for (const vector of VECTORS) {
+      for (const [, href] of sanitizeHtml(vector).matchAll(/href="([^"]*)"/g)) {
+        const text = (href as string).replace(/&amp;/g, "&");
+        expect(isSafeUrl(text)).toBe(true);
+        expect(text).toBe(text.trim());
+      }
+    }
+  });
 
   it("is idempotent", () => {
     for (const vector of VECTORS) {
@@ -135,7 +168,7 @@ describe("sanitizeHtml: XSS vectors", () => {
 
 describe("sanitizeHtml: parity with the React kit", () => {
   const corpus = [
-    ...VECTORS,
+    ...VECTORS.filter((vector) => !UNICODE_SPACE_VECTORS.includes(vector)),
     "<h1>T</h1><h4>x</h4><div>d</div><strike>s</strike><del>d</del><i>i</i>",
     "<p>a<p>b<h2>c</h2>d",
     "<blockquote><p>q</p></blockquote>",

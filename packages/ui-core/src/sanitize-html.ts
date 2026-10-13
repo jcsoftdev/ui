@@ -107,16 +107,30 @@ function isInvisible(code: number): boolean {
   );
 }
 
+const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
+
+/** The one normalization of an href: entity-decoded and trimmed. It is validated and emitted as is. */
+function normalizeHref(raw: string): string {
+  return decodeEntities(raw).trim();
+}
+
+function isSafeNormalized(href: string): boolean {
+  // Drop every invisible, whitespace and format character ("java\tscript:", "\u00a0javascript:").
+  const url = Array.from(href)
+    .filter((char) => !isInvisible(char.codePointAt(0) ?? 0))
+    .join("")
+    .replace(/[\s\p{Cf}]/gu, "");
+  if (url === "") return false;
+  try {
+    return SAFE_PROTOCOLS.has(new URL(url, "https://invalid.invalid/").protocol);
+  } catch {
+    return false;
+  }
+}
+
 /** True for http(s), mailto, tel and scheme-less (relative or fragment) URLs. */
 export function isSafeUrl(raw: string): boolean {
-  // Browsers ignore control characters and whitespace inside the scheme ("java\tscript:").
-  const url = Array.from(decodeEntities(raw))
-    .filter((char) => !isInvisible(char.codePointAt(0) ?? 0))
-    .join("");
-  if (url === "") return false;
-  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url);
-  if (!scheme) return true;
-  return ["http", "https", "mailto", "tel"].includes((scheme[1] ?? "").toLowerCase());
+  return isSafeNormalized(normalizeHref(raw));
 }
 
 interface ParsedTag {
@@ -237,9 +251,10 @@ export function sanitizeHtml(input: string): string {
     if (name === "a") {
       closeTo("a");
       const href = tag.attributes.href;
-      if (href !== undefined && isSafeUrl(href)) {
+      const normalized = href === undefined ? "" : normalizeHref(href);
+      if (isSafeNormalized(normalized)) {
         out.push(
-          `<a href="${escapeAttribute(decodeEntities(href).trim())}" rel="noopener noreferrer nofollow" target="_blank">`,
+          `<a href="${escapeAttribute(normalized)}" rel="noopener noreferrer nofollow" target="_blank">`,
         );
       } else {
         out.push("<a>");
