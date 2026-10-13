@@ -91,6 +91,31 @@ describe("ui-scrolly", () => {
     expect(getComputedStyle(graphic).gridColumnStart).toBe("auto");
   });
 
+  it("clamps a forced step and re-resolves the root when its attribute changes", async () => {
+    const { root, el } = story('step="99"');
+    expect(el.step).toBe(2);
+    el.removeAttribute("step");
+    el.root = document.body;
+    el.setAttribute("root", "#scroller");
+    expect(el.root).toBe(root);
+    root.scrollTop = steps(el)[1]!.offsetTop - 100;
+    await vi.waitFor(() => expect(el.step).toBe(1));
+  });
+
+  it("takes the measured step again when it re-observes", async () => {
+    const { root, el } = story();
+    root.scrollTop = steps(el)[2]!.offsetTop - 100;
+    await vi.waitFor(() => expect(el.step).toBe(2));
+    const change = vi.fn();
+    el.addEventListener("change", change);
+    el.setAttribute("offset", "0.5");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(el.step).toBe(2);
+    expect(change).not.toHaveBeenCalled();
+    root.scrollTop = 0;
+    await vi.waitFor(() => expect(el.step).toBe(0));
+  });
+
   it("registers under a custom prefix", () => {
     expect(defineScrolly({ prefix: "acme" })).toBe("acme-scrolly");
   });

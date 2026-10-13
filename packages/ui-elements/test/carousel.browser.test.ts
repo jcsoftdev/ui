@@ -124,6 +124,43 @@ describe("ui-carousel", () => {
     expect(changes.mock.calls.length).toBe(settled);
   });
 
+  it("shows several slides per view and can still reach the last ones", async () => {
+    const host = mount(
+      `<div style="width:700px;margin:200px 0 0 200px"><ui-carousel label="Wide">${slides(4)}</ui-carousel></div>`,
+    );
+    const el = host.querySelector<UiCarousel>("ui-carousel")!;
+    const track = el.querySelector<HTMLElement>("[data-ui-part=track]")!;
+    await vi.waitFor(() => expect(el.snapCount).toBe(3));
+    expect(el.querySelectorAll("[data-ui-part=dot]")).toHaveLength(3);
+    const first = el.querySelectorAll<HTMLElement>("[data-ui-slide]");
+    expect(first[0]!.getBoundingClientRect().width).toBeLessThan(400);
+    el.querySelector<HTMLElement>("[data-ui-part=track]")!.focus();
+    await userEvent.keyboard("{End}");
+    await settle(el, 2);
+    await vi.waitFor(() => expect(Math.abs(track.scrollLeft)).toBeGreaterThan(700));
+    expect(el.querySelector<HTMLButtonElement>("[data-ui-part=next]")!.disabled).toBe(true);
+    // out-of-view slides are inert; the visible ones are not
+    await vi.waitFor(() => expect(first[0]!.inert).toBe(true));
+    expect(first[3]!.inert).toBe(false);
+    expect(el.querySelector("[data-ui-part=status]")!.textContent).toBe("3 of 4");
+    await userEvent.keyboard("{ArrowLeft}");
+    await settle(el, 1);
+  });
+
+  it("puts the rotation control before the slides and stops at the last slide", async () => {
+    const el = carousel('autoplay="120"', 2);
+    expect(el.firstElementChild!.getAttribute("data-ui-part")).toBe("pause");
+    await settle(el, 1);
+    await wait(400);
+    expect(el.hasAttribute("data-playing")).toBe(false);
+    expect(el.index).toBe(1);
+  });
+
+  it("hides the rotation control when nothing rotates", () => {
+    const el = carousel("", 3);
+    expect(el.querySelector<HTMLElement>("[data-ui-part=pause]")!.hidden).toBe(true);
+  });
+
   it("registers under a custom prefix", () => {
     expect(defineCarousel({ prefix: "acme" })).toBe("acme-carousel");
   });

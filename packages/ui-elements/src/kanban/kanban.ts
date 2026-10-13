@@ -87,7 +87,7 @@ const wip = (count: number, limit?: number) =>
  * set `columns` itself.
  */
 export class UiKanban extends ElementBase {
-  static observedAttributes = ["label", "enforce-limit", ...Object.keys(LABELS)];
+  static observedAttributes = ["label", ...Object.keys(LABELS)];
   #columns: KanbanColumn[] = [];
   #draft: SortableList<KanbanCard>[] | null = null;
   #sortable: Sortable<KanbanCard> | undefined;
@@ -95,6 +95,7 @@ export class UiKanban extends ElementBase {
   #status = el("div", "status");
   #instructions = el("p", "instructions");
   #ghost: HTMLElement | undefined;
+  #stopDrag: (() => void) | undefined;
   #renderCard: ((card: KanbanCard, container: HTMLElement) => void) | undefined;
 
   constructor() {
@@ -127,10 +128,14 @@ export class UiKanban extends ElementBase {
     this.append(this.#instructions, this.#status, this.#board);
     this.addEventListener("pointerdown", this.#onPointerDown, true);
     this.addEventListener("keydown", this.#onKeyDown);
+    const limited = () => this.hasAttribute("enforce-limit");
+    this.#sortable?.destroy();
     this.#sortable = createSortable<KanbanCard>(this.#board, {
       lists: () => this.#lists(this.#columns),
       getId: (card) => card.id,
-      enforceLimit: this.hasAttribute("enforce-limit"),
+      get enforceLimit() {
+        return limited();
+      },
       rtl: () => isRtl(this),
       itemLabel: (card) => card.title,
       listLabel: (list) => this.#column(list.id)?.title ?? list.id,
@@ -156,17 +161,12 @@ export class UiKanban extends ElementBase {
     this.removeEventListener("keydown", this.#onKeyDown);
     this.#sortable?.destroy();
     this.#sortable = undefined;
+    this.#stopDrag?.();
     this.#endDrag();
   }
 
-  attributeChangedCallback(name: string): void {
-    if (name === "enforce-limit" && this.isConnected) {
-      // The option is read once by ui-core; rebuild the behaviour so a toggle takes effect.
-      this.disconnectedCallback();
-      this.connectedCallback();
-      return;
-    }
-    if (this.isConnected) this.#render();
+  attributeChangedCallback(): void {
+    if (this.isConnected && this.#sortable) this.#render();
   }
 
   #text(name: keyof typeof LABELS): string {
@@ -191,14 +191,16 @@ export class UiKanban extends ElementBase {
     }));
   }
 
-  #drop(move: SortableMove, lists: SortableList<KanbanCard>[]): void {
+  #drop(move: SortableMove, lists: SortableList<KanbanCard>[]): boolean {
     const columns = this.#columns.map((c) => ({
       ...c,
       cards: lists.find((l) => l.id === c.id)?.items.slice() ?? c.cards,
     }));
     this.#draft = null;
-    if (emit(this, "move", { move, columns }, true)) this.#columns = columns;
+    const accepted = emit(this, "move", { move, columns }, true);
+    if (accepted) this.#columns = columns;
     this.#render();
+    return accepted;
   }
 
   #render(): void {
@@ -319,8 +321,11 @@ export class UiKanban extends ElementBase {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", stop);
       window.removeEventListener("pointercancel", stop);
+      this.#stopDrag = undefined;
       this.#endDrag();
     };
+    this.#stopDrag?.();
+    this.#stopDrag = stop;
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", stop);
     window.addEventListener("pointercancel", stop);

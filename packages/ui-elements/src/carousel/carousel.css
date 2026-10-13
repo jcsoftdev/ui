@@ -3,6 +3,7 @@
   --ui-carousel-gap: 12px;
   --ui-carousel-per-view: 1;
   display: flex;
+  position: relative;
   min-width: 0;
   flex-direction: column;
   gap: var(--ui-carousel-gap);
@@ -13,13 +14,14 @@
 [data-ui="carousel"][hidden] {
   display: none;
 }
+/* A container query cannot style its own container: the variable lives on the track. */
 @container ui-carousel (min-width: 32rem) {
-  [data-ui="carousel"] {
+  [data-ui="carousel"] > [data-ui-part="track"] {
     --ui-carousel-per-view: 2;
   }
 }
 @container ui-carousel (min-width: 48rem) {
-  [data-ui="carousel"] {
+  [data-ui="carousel"] > [data-ui-part="track"] {
     --ui-carousel-per-view: 3;
   }
 }
@@ -58,10 +60,23 @@
 [data-ui="carousel"] > [data-ui-part="controls"][hidden] {
   display: none;
 }
-[data-ui="carousel"] [data-ui-part="group"] {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+[data-ui="carousel"] > [data-ui-part="pause"] {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+}
+[data-ui="carousel"] > [data-ui-part="pause"][hidden] {
+  display: none;
+}
+[data-ui="carousel"] > [data-ui-part="status"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 [data-ui="carousel"] [data-ui-part="dots"] {
   display: flex;
@@ -71,8 +86,8 @@
   justify-content: center;
   gap: 6px;
 }
-[data-ui="carousel"] [data-ui-part="controls"] > button,
-[data-ui="carousel"] [data-ui-part="group"] > button {
+[data-ui="carousel"] > [data-ui-part="pause"],
+[data-ui="carousel"] [data-ui-part="controls"] > button {
   display: inline-flex;
   width: var(--control-height-sm);
   height: var(--control-height-sm);
@@ -86,8 +101,8 @@
   color: var(--ink-2);
   cursor: pointer;
 }
-[data-ui="carousel"] [data-ui-part="controls"] > button:hover,
-[data-ui="carousel"] [data-ui-part="group"] > button:hover {
+[data-ui="carousel"] > [data-ui-part="pause"]:hover,
+[data-ui="carousel"] [data-ui-part="controls"] > button:hover {
   color: var(--ink);
 }
 [data-ui="carousel"] [data-ui-part="previous"] svg,

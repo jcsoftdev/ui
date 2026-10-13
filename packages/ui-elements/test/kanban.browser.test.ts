@@ -120,8 +120,13 @@ describe("ui-kanban", () => {
     expect(el.columns[0]!.cards.map((c) => c.id)).toEqual(["a", "b", "c"]);
   });
 
-  it("refuses a drop into a column at its limit with enforce-limit", async () => {
+  it("skips a full column and refuses when no column has room", async () => {
     const el = kanban("enforce-limit");
+    card(el, "a").focus();
+    await userEvent.keyboard(" {ArrowRight}");
+    expect(status(el)).toBe("Moved Write spec: Done, 1 / 1.");
+    await userEvent.keyboard("{Escape}");
+    el.columns = board().map((c) => (c.id === "done" ? { ...c, wipLimit: 0 } : c));
     card(el, "a").focus();
     await userEvent.keyboard(" {ArrowRight}");
     expect(status(el)).toBe("That list reached its limit.");
@@ -176,6 +181,46 @@ describe("ui-kanban", () => {
     expect(move).toHaveBeenCalledTimes(1);
     expect(el.querySelector("[data-ui-part=ghost]")).toBeNull();
     expect(el.querySelector("[data-drop-indicator]")).toBeNull();
+  });
+
+  it("announces a vetoed move as cancelled, not dropped", async () => {
+    const el = kanban();
+    const said: string[] = [];
+    new MutationObserver(() => said.push(status(el) ?? "")).observe(
+      el.querySelector("[data-ui-part=status]")!,
+      { childList: true, characterData: true, subtree: true },
+    );
+    el.addEventListener("move", (event) => event.preventDefault());
+    card(el, "a").focus();
+    await userEvent.keyboard(" {ArrowDown} ");
+    await vi.waitFor(() => expect(status(el)).toBe("Move cancelled: Write spec stays in To do."));
+    expect(said.some((m) => m.startsWith("Dropped"))).toBe(false);
+  });
+
+  it("creates one controller when upgraded with enforce-limit", async () => {
+    document.body.innerHTML = `<ui-late-kanban label="x" enforce-limit></ui-late-kanban>`;
+    defineKanban({ prefix: "ui-late" });
+    const el = document.querySelector<UiKanban>("ui-late-kanban")!;
+    el.columns = board();
+    const said: string[] = [];
+    new MutationObserver(() => said.push(status(el) ?? "")).observe(
+      el.querySelector("[data-ui-part=status]")!,
+      { childList: true, characterData: true, subtree: true },
+    );
+    card(el, "b").focus();
+    await userEvent.keyboard(" {ArrowDown} ");
+    await vi.waitFor(() => expect(status(el)).toContain("Dropped Build it"));
+    expect(said.filter((m) => m.startsWith("Picked up"))).toHaveLength(1);
+    expect(said.some((m) => m.startsWith("Cancelled"))).toBe(false);
+    // toggling after connect takes effect on the next move
+    card(el, "a").focus();
+    await userEvent.keyboard(" {ArrowRight}");
+    expect(status(el)).toContain("Moved Write spec: Done");
+    await userEvent.keyboard("{Escape}");
+    el.removeAttribute("enforce-limit");
+    card(el, "a").focus();
+    await userEvent.keyboard(" {ArrowRight}");
+    expect(status(el)).toContain("Moved Write spec: Doing");
   });
 
   it("registers under a custom prefix", () => {

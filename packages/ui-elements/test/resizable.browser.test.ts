@@ -171,6 +171,53 @@ describe("ui-resizable", () => {
     expect(el.sizes).toEqual([30, 70]);
   });
 
+  it("clears the collapsed state when the panel grows and reports a 0 minimum", async () => {
+    const el = mount(
+      `<ui-resizable style="width:600px;height:100px"><ui-resizable-panel default-size="30" min-size="15" collapsible>A</ui-resizable-panel><ui-resizable-handle></ui-resizable-handle><ui-resizable-panel>B</ui-resizable-panel></ui-resizable>`,
+    ).querySelector<UiResizable>("ui-resizable")!;
+    const panel = el.querySelector("ui-resizable-panel")!;
+    expect(handleOf(el).getAttribute("aria-valuemin")).toBe("0");
+    handleOf(el).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(panel.hasAttribute("data-collapsed")).toBe(true);
+    await userEvent.keyboard("{ArrowRight}");
+    expect(el.sizes[0]).toBeGreaterThan(0);
+    expect(panel.hasAttribute("data-collapsed")).toBe(false);
+  });
+
+  it("does not collapse into a neighbour that cannot grow that far", async () => {
+    const el = mount(
+      `<ui-resizable style="width:600px;height:100px"><ui-resizable-panel default-size="30" collapsible>A</ui-resizable-panel><ui-resizable-handle></ui-resizable-handle><ui-resizable-panel max-size="80">B</ui-resizable-panel></ui-resizable>`,
+    ).querySelector<UiResizable>("ui-resizable")!;
+    const collapse = vi.fn();
+    el.addEventListener("collapse", collapse);
+    handleOf(el).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(el.sizes).toEqual([30, 70]);
+    expect(collapse).not.toHaveBeenCalled();
+  });
+
+  it("restores a collapsed panel inside its neighbour's minimum", async () => {
+    const el = mount(
+      `<ui-resizable style="width:600px;height:100px"><ui-resizable-panel default-size="30" collapsible>A</ui-resizable-panel><ui-resizable-handle></ui-resizable-handle><ui-resizable-panel min-size="60">B</ui-resizable-panel></ui-resizable>`,
+    ).querySelector<UiResizable>("ui-resizable")!;
+    handleOf(el).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(el.sizes).toEqual([0, 100]);
+    await userEvent.keyboard("{Enter}");
+    expect(el.sizes[1]).toBeGreaterThanOrEqual(60);
+  });
+
+  it("keeps sizes assigned before the panels exist", async () => {
+    const el = document.createElement("ui-resizable") as UiResizable;
+    el.style.cssText = "width:600px;height:100px";
+    el.sizes = [25, 75];
+    el.innerHTML =
+      "<ui-resizable-panel>A</ui-resizable-panel><ui-resizable-handle></ui-resizable-handle><ui-resizable-panel>B</ui-resizable-panel>";
+    document.body.append(el);
+    expect(el.sizes).toEqual([25, 75]);
+  });
+
   it("registers under a custom prefix", () => {
     expect(defineResizable({ prefix: "acme" })).toBe("acme-resizable");
   });

@@ -43,13 +43,15 @@ const findNode = (nodes: readonly FileTreeNode[], id: string): FileTreeNode | un
   return undefined;
 };
 
-/** A lazy folder with no children yet is still a folder: give it an empty list. */
-const openLazy = (nodes: FileTreeNode[]): void => {
-  for (const node of nodes) {
-    if (node.lazy && !node.children) node.children = [];
-    if (node.children) openLazy(node.children);
-  }
-};
+/** The caller's nodes with loaded children merged in; the caller's objects are never touched. */
+const withLoaded = (
+  nodes: readonly FileTreeNode[],
+  loaded: ReadonlyMap<string, FileTreeNode[]>,
+): FileTreeNode[] =>
+  nodes.map((node) => {
+    const children = loaded.get(node.id) ?? node.children ?? (node.lazy ? [] : undefined);
+    return children ? { ...node, children: withLoaded(children, loaded) } : node;
+  });
 
 /**
  * `<ui-file-tree>`: an expandable tree following the WAI-ARIA tree pattern, driven by data. One
@@ -71,6 +73,8 @@ export class UiFileTree extends ElementBase {
   #selected: string | null = null;
   #expanded = new Set<string>();
   #loading = new Set<string>();
+  #loaded = new Map<string, FileTreeNode[]>();
+  #view: FileTreeNode[] = [];
   #tree: Tree | undefined;
   #loader: ((node: FileTreeNode) => Promise<FileTreeNode[]>) | undefined;
 
@@ -85,8 +89,9 @@ export class UiFileTree extends ElementBase {
   }
   set nodes(value: FileTreeNode[]) {
     this.#nodes = value;
-    openLazy(value);
+    this.#loaded.clear();
     this.#render();
+    this.#loadOpen();
   }
   get selectedId(): string | null {
     return this.#selected;
@@ -101,12 +106,14 @@ export class UiFileTree extends ElementBase {
   set expandedIds(value: string[]) {
     this.#expanded = new Set(value);
     this.#render();
+    this.#loadOpen();
   }
   get loadChildren(): ((node: FileTreeNode) => Promise<FileTreeNode[]>) | undefined {
     return this.#loader;
   }
   set loadChildren(value: ((node: FileTreeNode) => Promise<FileTreeNode[]>) | undefined) {
     this.#loader = value;
+    this.#loadOpen();
   }
 
   connectedCallback(): void {
@@ -119,7 +126,7 @@ export class UiFileTree extends ElementBase {
         this.#expanded.add(id);
     }
     this.#tree = createTree(this.#list, {
-      nodes: () => this.#nodes,
+      nodes: () => this.#view,
       expanded: () => this.#expanded,
       selected: () => this.#selected,
       rtl: () => isRtl(this),
@@ -131,6 +138,7 @@ export class UiFileTree extends ElementBase {
       onExpandedChange: (ids) => this.#setExpanded(ids),
     });
     this.#render();
+    this.#loadOpen();
   }
 
   disconnectedCallback(): void {
@@ -142,28 +150,40 @@ export class UiFileTree extends ElementBase {
     if (name === "selected") this.#selected = this.getAttribute("selected");
     if (name === "expanded")
       this.#expanded = new Set((this.getAttribute("expanded") ?? "").split(/\s+/).filter(Boolean));
-    if (this.isConnected) this.#render();
+    if (this.isConnected) {
+      this.#render();
+      this.#loadOpen();
+    }
   }
 
   #setExpanded(ids: string[]): void {
-    const opened = ids.filter((id) => !this.#expanded.has(id));
     this.#expanded = new Set(ids);
     this.#render();
     emit(this, "expandedchange", { ids: [...ids] });
-    for (const id of opened) void this.#load(id);
+    this.#loadOpen();
+  }
+
+  /** Lazy folders that are open (set from an attribute, a property or the keyboard) load now. */
+  #loadOpen(): void {
+    for (const id of this.#expanded) void this.#load(id);
   }
 
   async #load(id: string): Promise<void> {
     const node = findNode(this.#nodes, id);
-    if (!node?.lazy || !this.#loader || this.#loading.has(id)) return;
+    if (!node?.lazy || !this.#loader || this.#loading.has(id) || this.#loaded.has(id)) return;
+    const owner = this.#nodes;
     this.#loading.add(id);
     this.#render();
     try {
-      node.children = await this.#loader(node);
-      node.lazy = false;
+      const children = await this.#loader(node);
+      // The data may have been replaced meanwhile; a stale answer is dropped.
+      if (this.#nodes === owner && findNode(this.#nodes, id)) this.#loaded.set(id, children);
     } catch (error) {
-      this.#expanded.delete(id);
-      emit(this, "loaderror", { id, error });
+      if (this.#nodes === owner) {
+        this.#expanded.delete(id);
+        emit(this, "loaderror", { id, error });
+        emit(this, "expandedchange", { ids: [...this.#expanded] });
+      }
     } finally {
       this.#loading.delete(id);
       this.#render();
@@ -177,10 +197,14 @@ export class UiFileTree extends ElementBase {
     const active = this.#list.contains(document.activeElement)
       ? (document.activeElement as HTMLElement).dataset.nodeId
       : undefined;
-    const rows = flattenTree(this.#nodes, this.#expanded);
+    this.#view = withLoaded(this.#nodes, this.#loaded);
+    const rows = flattenTree(this.#view, this.#expanded);
     this.#list.replaceChildren(...rows.map((row) => this.#row(row as TreeRow<FileTreeNode>)));
     this.#tree?.update();
-    if (active) this.#tree?.focus(active);
+    if (!active) return;
+    // A focused row that vanished (its folder closed, its node removed) hands focus to the tab stop.
+    const target = rows.some((row) => row.node.id === active) ? active : this.#tree?.tabStop();
+    if (target) this.#tree?.focus(target);
   }
 
   #row(row: TreeRow<FileTreeNode>): HTMLElement {

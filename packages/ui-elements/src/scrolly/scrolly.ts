@@ -67,8 +67,9 @@ export class UiScrolly extends ElementBase {
   }
 
   get step(): number {
-    const forced = this.getAttribute("step");
-    return forced === null ? this.#observed : Number(forced);
+    const forced = Number(this.getAttribute("step"));
+    const step = this.hasAttribute("step") && Number.isFinite(forced) ? forced : this.#observed;
+    return Math.min(Math.max(0, Math.trunc(step)), Math.max(0, this.#steps().length - 1));
   }
   set step(value: number | null) {
     if (value === null) this.removeAttribute("step");
@@ -109,6 +110,7 @@ export class UiScrolly extends ElementBase {
 
   attributeChangedCallback(name: string): void {
     if (!this.isConnected) return;
+    if (name === "root") this.#rootOverride = undefined;
     if (name === "offset" || name === "root") this.#observe();
     else this.#paint();
   }
@@ -133,23 +135,23 @@ export class UiScrolly extends ElementBase {
       offset: Number.isFinite(offset) ? offset : 0.5,
       onChange: (index) => this.#seen(index),
     });
+    // The new spy starts at 0 whatever the reader was on: take its measured step.
+    this.#seen(this.#spy.step);
     this.#paint();
   }
 
   #seen(index: number): void {
     if (index === this.#observed) return;
     const previous = this.#observed;
-    const before = this.step;
     this.#observed = index;
     this.#previous = previous;
     this.#paint();
     emit(this, "change", { step: index, previous });
-    void before;
   }
 
   #paint(): void {
     const steps = this.#steps();
-    const step = Math.min(this.step, Math.max(0, steps.length - 1));
+    const step = this.step;
     const label = this.getAttribute("label");
     if (label) {
       this.setAttribute("role", "region");

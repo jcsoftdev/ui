@@ -154,6 +154,51 @@ describe("ui-file-tree", () => {
     expect(item(el, "remote").hasAttribute("aria-busy")).toBe(false);
   });
 
+  it("loads a lazy folder that is open from the start and never mutates the caller's nodes", async () => {
+    const data: FileTreeNode[] = [{ id: "remote", name: "remote", lazy: true }];
+    const load = vi.fn(async () => [{ id: "r1", name: "one.txt" }]);
+    const el = tree('expanded="remote"', "ltr", data);
+    el.loadChildren = load;
+    await vi.waitFor(() => expect(item(el, "r1")).toBeTruthy());
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(data[0]).toEqual({ id: "remote", name: "remote", lazy: true });
+    el.expandedIds = [];
+    el.expandedIds = ["remote"];
+    expect(item(el, "r1")).toBeTruthy();
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports the collapse when a load fails", async () => {
+    const el = tree("", "ltr", [{ id: "remote", name: "remote", lazy: true }]);
+    el.loadChildren = () => Promise.reject(new Error("offline"));
+    const changed = vi.fn();
+    el.addEventListener("expandedchange", changed);
+    item(el, "remote").focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await vi.waitFor(() => expect(changed).toHaveBeenCalledTimes(2));
+    expect(changed).toHaveBeenLastCalledWith(expect.objectContaining({ detail: { ids: [] } }));
+  });
+
+  it("drops a stale answer when the nodes were replaced and moves focus off a removed row", async () => {
+    let release: (children: FileTreeNode[]) => void = () => {};
+    const el = tree("", "ltr", [{ id: "remote", name: "remote", lazy: true }]);
+    el.loadChildren = () =>
+      new Promise<FileTreeNode[]>((resolve) => {
+        release = resolve;
+      });
+    item(el, "remote").focus();
+    await userEvent.keyboard("{ArrowRight}");
+    el.nodes = [
+      { id: "other", name: "other" },
+      { id: "remote", name: "remote", lazy: true },
+    ];
+    release([{ id: "r1", name: "late.txt" }]);
+    await vi.waitFor(() => expect(item(el, "remote").hasAttribute("aria-busy")).toBe(false));
+    expect(item(el, "r1")).toBeNull();
+    el.nodes = [{ id: "other", name: "other" }];
+    expect(document.activeElement).toBe(item(el, "other"));
+  });
+
   it("registers under a custom prefix", () => {
     expect(defineFileTree({ prefix: "acme" })).toBe("acme-file-tree");
   });

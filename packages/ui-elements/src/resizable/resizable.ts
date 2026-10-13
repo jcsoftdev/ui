@@ -73,6 +73,7 @@ export class UiResizableHandle extends ResizablePart {
 export class UiResizable extends ElementBase {
   static observedAttributes = ["direction"];
   #sizes: number[] = [];
+  #pending: number[] | undefined;
   #count = -1;
   #drags: PointerDrag[] = [];
   #collapsed = new Map<number, number>();
@@ -91,7 +92,16 @@ export class UiResizable extends ElementBase {
     return [...this.#sizes];
   }
   set sizes(value: number[]) {
-    if (value.length !== this.#panels().length) return;
+    // Panels may not be upgraded or parsed yet: keep the request until they match.
+    this.#pending = value;
+    if (value.length === this.#panels().length) this.#applyPending();
+  }
+
+  #applyPending(): void {
+    const value = this.#pending;
+    if (!value || value.length !== this.#panels().length) return;
+    this.#pending = undefined;
+    this.#collapsed.clear();
     this.#sizes = normalizeSizes(value, this.#constraints());
     this.#paint();
   }
@@ -134,8 +144,10 @@ export class UiResizable extends ElementBase {
     if (panels.length !== this.#count) {
       this.#count = panels.length;
       this.#collapsed.clear();
+      const wanted = this.#pending?.length === panels.length ? this.#pending : undefined;
+      this.#pending = wanted ? undefined : this.#pending;
       this.#sizes = normalizeSizes(
-        panels.map((p) => number(p, "default-size")),
+        wanted ?? panels.map((p) => number(p, "default-size")),
         this.#constraints(),
       );
     }
@@ -175,6 +187,9 @@ export class UiResizable extends ElementBase {
   #apply(next: number[]): void {
     if (next === this.#sizes) return;
     this.#sizes = next;
+    // A panel that grew again is no longer collapsed.
+    for (const index of [...this.#collapsed.keys()])
+      if ((next[index] ?? 0) > 1e-9) this.#collapsed.delete(index);
     this.#paint();
     emit(this, "layout", { sizes: [...next] });
   }
@@ -215,11 +230,24 @@ export class UiResizable extends ElementBase {
     if (!panel?.hasAttribute("collapsible") || current === undefined || neighbour === undefined)
       return;
     event.preventDefault();
+    const constraints = this.#constraints();
+    const ca = constraints[index];
+    const cb = constraints[index + 1];
+    if (!ca || !cb) return;
     const restore = this.#collapsed.get(index);
     const total = current + neighbour;
-    const nextA = restore === undefined ? 0 : Math.min(restore, total);
-    if (restore === undefined) this.#collapsed.set(index, current);
-    else this.#collapsed.delete(index);
+    let nextA: number;
+    if (restore === undefined) {
+      // The neighbour cannot grow past its max, so the panel may only shrink as far as that allows.
+      nextA = Math.max(0, total - cb.max);
+      if (nextA > 1e-9) return;
+      this.#collapsed.set(index, current);
+    } else {
+      const low = Math.max(ca.min, total - cb.max);
+      const high = Math.min(ca.max, total - cb.min);
+      nextA = low <= high ? Math.min(high, Math.max(low, restore)) : restore;
+      this.#collapsed.delete(index);
+    }
     const next = this.#sizes.slice();
     next[index] = nextA;
     next[index + 1] = total - nextA;
@@ -247,7 +275,10 @@ export class UiResizable extends ElementBase {
       const panel = panels[i];
       if (panel) handle.setAttribute("aria-controls", panel.id);
       handle.setAttribute("aria-valuenow", String(Math.round(this.#sizes[i] ?? 0)));
-      handle.setAttribute("aria-valuemin", String(Math.round(range?.low ?? 0)));
+      handle.setAttribute(
+        "aria-valuemin",
+        String(panels[i]?.hasAttribute("collapsible") ? 0 : Math.round(range?.low ?? 0)),
+      );
       handle.setAttribute("aria-valuemax", String(Math.round(range?.high ?? 100)));
     });
   }

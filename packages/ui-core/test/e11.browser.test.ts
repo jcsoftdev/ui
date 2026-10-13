@@ -105,3 +105,97 @@ describe("createSortable rtl and labels", () => {
     expect(announce).toHaveBeenLastCalledWith("Moved First card: List B, 1 / 1.");
   });
 });
+
+describe("createSortable owner refusal and full lists", () => {
+  type Card = { id: string; title: string };
+  function setup(lists: SortableList<Card>[], onMove: () => boolean | undefined) {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const announce = vi.fn();
+    const render = (current: readonly SortableList<Card>[]) => {
+      host.innerHTML = current
+        .map(
+          (l) =>
+            `<ul data-sortable-list="${l.id}">${l.items
+              .map((i) => `<li tabindex="0" data-sortable-item="${i.id}">${i.title}</li>`)
+              .join("")}</ul>`,
+        )
+        .join("");
+    };
+    createSortable(host, {
+      lists: () => lists,
+      getId: (x) => x.id,
+      enforceLimit: true,
+      itemLabel: (x) => x.title,
+      listLabel: (l) => `List ${l.id.toUpperCase()}`,
+      announce,
+      onMove,
+      onDraft: (draft) => {
+        render(draft ?? lists);
+        (host.querySelector("[data-sortable-item]") as HTMLElement | null)?.focus();
+      },
+    });
+    render(lists);
+    (host.querySelector("[data-sortable-item]") as HTMLElement).focus();
+    return announce;
+  }
+
+  it("announces a refused move instead of a drop", async () => {
+    const announce = setup(
+      [
+        { id: "a", items: [{ id: "1", title: "One" }] },
+        { id: "b", items: [] },
+      ],
+      () => false,
+    );
+    await userEvent.keyboard(" {ArrowRight} ");
+    const said = announce.mock.calls.map((c) => c[0] as string);
+    expect(said.at(-1)).toBe("Move cancelled: One stays in List A.");
+    expect(said.some((m) => m.startsWith("Dropped"))).toBe(false);
+  });
+
+  it("announces the drop when the owner accepts", async () => {
+    const announce = setup(
+      [
+        { id: "a", items: [{ id: "1", title: "One" }] },
+        { id: "b", items: [] },
+      ],
+      () => undefined,
+    );
+    await userEvent.keyboard(" {ArrowRight} ");
+    expect(announce.mock.calls.at(-1)?.[0]).toBe("Dropped One: List B, 1 / 1.");
+  });
+
+  it("skips a full list to the next one with room", async () => {
+    const announce = setup(
+      [
+        { id: "a", items: [{ id: "1", title: "One" }] },
+        { id: "b", limit: 1, items: [{ id: "2", title: "Two" }] },
+        { id: "c", items: [] },
+      ],
+      () => undefined,
+    );
+    await userEvent.keyboard(" {ArrowRight}");
+    expect(announce.mock.calls.at(-1)?.[0]).toBe("Moved One: List C, 1 / 1.");
+  });
+});
+
+describe("tree typeahead folds diacritics", () => {
+  it("finds an accented name from the plain letter", async () => {
+    const nodes: TreeNode[] = [
+      { id: "a", name: "alpha" },
+      { id: "e", name: "Éxito" },
+    ];
+    const host = document.createElement("div");
+    document.body.append(host);
+    host.innerHTML = '<div data-node-id="a">a</div><div data-node-id="e">e</div>';
+    const tree = createTree(host, {
+      nodes: () => nodes,
+      expanded: () => new Set(),
+      onExpandedChange: () => {},
+    });
+    tree.focus("a");
+    await userEvent.keyboard("e");
+    expect(document.activeElement?.getAttribute("data-node-id")).toBe("e");
+  });
+});
