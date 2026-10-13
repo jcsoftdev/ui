@@ -2,11 +2,13 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineDialog, type UiDialog } from "../src/dialog/dialog.ts";
 import { defineDropdownMenu, type UiDropdownMenu } from "../src/dropdown-menu/dropdown-menu.ts";
+import { definePopover, type UiPopover } from "../src/popover/popover.ts";
 import { ax, frame, mount, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineDropdownMenu();
   defineDialog();
+  definePopover();
 });
 
 afterEach(() => {
@@ -185,6 +187,38 @@ describe("ui-dropdown-menu", () => {
     expect(dialog.open).toBe(true);
     await userEvent.keyboard("{Escape}");
     expect(dialog.open).toBe(false);
+  });
+
+  it("closes inside a popover on Escape without closing the popover", async () => {
+    const host = mount(
+      `<button popovertarget="pop" id="open">Open</button><ui-popover id="pop">${MENU()}</ui-popover>`,
+    );
+    const popover = host.querySelector<UiPopover>("ui-popover")!;
+    await userEvent.click(host.querySelector("#open")!);
+    expect(popover.open).toBe(true);
+    await userEvent.click(host.querySelector("#trigger")!);
+    expect(host.querySelector<UiDropdownMenu>("ui-dropdown-menu")!.open).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    expect(host.querySelector<UiDropdownMenu>("ui-dropdown-menu")!.open).toBe(false);
+    expect(popover.open).toBe(true);
+    await userEvent.keyboard("{Escape}");
+    expect(popover.open).toBe(false);
+  });
+
+  it("leaves focus in a dialog that an item opened", async () => {
+    const host = mount(
+      `${MENU()}<ui-dialog id="d"><div data-dialog-body><input id="field" aria-label="Name"></div></ui-dialog>`,
+    );
+    const dialog = host.querySelector<UiDialog>("ui-dialog")!;
+    host.addEventListener("select", (event) => {
+      if ((event.target as HTMLElement).id === "profile") dialog.show();
+    });
+    host.querySelector<UiDropdownMenu>("ui-dropdown-menu")!.show("first");
+    await frame();
+    await userEvent.click(host.querySelector("#profile")!);
+    expect(dialog.open).toBe(true);
+    await wait(250);
+    expect(dialog.panel?.contains(document.activeElement)).toBe(true);
   });
 
   it("keeps the content up until the exit animation ends, and reopens during it", async () => {
