@@ -1,0 +1,23 @@
+[data-ui="chart-legend"] [data-ui-part="scale"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="chart-legend"][align="center"] [data-ui-part="scale"] {
+  justify-content: center;
+}
+[data-ui="chart-legend"][align="end"] [data-ui-part="scale"] {
+  justify-content: flex-end;
+}
+[data-ui="chart-legend"] [data-ui-part="bar"] {
+  flex: 0 1 160px;
+  min-width: 60px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+}
+[data-ui="chart-legend"] > ul[hidden] {
+  display: none;
+}
