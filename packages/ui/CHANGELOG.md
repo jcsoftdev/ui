@@ -2,6 +2,10 @@
 
 ## 0.3.0 (unreleased)
 
+### Theme builder
+
+- **`@jcsoftdev/ui/theme-builder` stays available.** The subpath published in 0.2.2 (`buildTheme`, `buildTokensCss`, `buildThemeCss`, `buildFontsCss`, `buildThemeKt`; `buildTheme(tokens, { kotlin: false })`) is re-exported from `@jcsoftdev/ui-tokens` and shipped inside this package, so 0.2.2 consumers upgrade unchanged and nothing extra is installed.
+
 ### Crystal lens
 
 - **`profile: "crystal"`** and the `crystal` preset (`data-glass="liquid-crystal"`): a thick, fully clear convex lens that minifies the backdrop, bends it hard towards the rim, splits colour at the edge and has no frost, veil or tint. `refraction` accepts 0 to 2 for it (defaults and the other profiles are unchanged; above 1 they behave as 1). The minifying map cannot fold; the filter runs on a layer that extends past the surface and is clipped to it. No contrast guarantee.
@@ -127,6 +131,7 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 
 ### Fixes
 
+- **`ui-theme build --no-kotlin` no longer builds Kotlin.** It used to generate `Theme.kt` and discard it, so `var(...)` and `oklch(...)` colors still threw "Unsupported color for Kotlin". Without the flag, the error now names the token and suggests `--no-kotlin`. The builders in `@jcsoftdev/ui-tokens/build` take `kotlin: false` and have typed `buildTokensCss`, `buildThemeCss`, `buildFontsCss` and `buildThemeKt`.
 - **DonutChart / PieChart no longer flicker on hover.** The hovered slice steps out by `explode`
   and was also the pointer target, so a still pointer near its edge ended up outside the moved
   slice, the hover dropped, the slice slid back under the pointer and the loop repeated (tooltip,

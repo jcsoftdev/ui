@@ -71,6 +71,29 @@ try {
     "ui-theme generate works from the packed bin",
   );
 
+  assert.ok(existsSync(join(installed, "scripts/build-theme.mjs")), "theme-builder module packed");
+  assert.ok(existsSync(join(installed, "scripts/build-theme.d.mts")), "theme-builder types packed");
+  assert.ok(
+    !existsSync(join(consumer, "node_modules/@jcsoftdev/ui-tokens")),
+    "ui-tokens not installed",
+  );
+  writeFileSync(
+    join(consumer, "theme-builder.mjs"),
+    `import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import * as builder from "@jcsoftdev/ui/theme-builder";
+for (const name of ["buildTheme", "buildTokensCss", "buildThemeCss", "buildFontsCss", "buildThemeKt"]) {
+  assert.equal(typeof builder[name], "function", name);
+}
+const base = JSON.parse(readFileSync(new URL("./node_modules/@jcsoftdev/ui/tokens/default.json", import.meta.url), "utf8"));
+const tokens = { ...base, color: { ...base.color, tokens: [{ name: "brand", value: "oklch(0.7 0.1 200)" }, ...base.color.tokens.slice(1)] } };
+const files = builder.buildTheme(tokens, { kotlin: false });
+assert.ok(!("Theme.kt" in files));
+assert.match(files["tokens.css"], /oklch\\(0\\.7 0\\.1 200\\)/);
+`,
+  );
+  execFileSync("node", ["theme-builder.mjs"], { cwd: consumer, stdio: "pipe" });
+
   for (const entry of ["primitives", "rich-text"]) {
     assert.ok(existsSync(join(installed, `dist/${entry}/index.js`)), `dist/${entry} packed`);
     assert.ok(
