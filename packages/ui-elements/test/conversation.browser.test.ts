@@ -42,6 +42,12 @@ const setup = (children = "") => {
   };
 };
 
+/** Polls until `check` holds (smooth scrolling has no fixed duration, and CI is slower). */
+async function until(check: () => boolean, ms = 5000): Promise<void> {
+  const end = Date.now() + ms;
+  while (!check() && Date.now() < end) await wait(50);
+}
+
 const atBottom = (s: HTMLElement) => s.scrollHeight - s.scrollTop - s.clientHeight <= 2;
 
 describe("ui-conversation", () => {
@@ -80,7 +86,7 @@ describe("ui-conversation", () => {
     expect(jump.hidden).toBe(false);
     expect(await ax("button", "Más reciente")).toBeTruthy();
     jump.click();
-    await wait(900);
+    await until(() => atBottom(scroller));
     expect(atBottom(scroller)).toBe(true);
     expect(jump.hidden).toBe(true);
   });
