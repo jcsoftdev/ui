@@ -95,6 +95,10 @@
       "types": "./dist/observe/online.d.ts",
       "import": "./dist/observe/online.js"
     },
+    "./chart/*": {
+      "types": "./dist/chart/*.d.ts",
+      "import": "./dist/chart/*.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",

@@ -55,6 +55,17 @@ const independent = new Set([
   "date",
   "context",
 ]);
+// Chart entries may build on each other only as listed; everything else stays separate.
+const chartDeps = {
+  "chart/color-scale": ["chart/palette"],
+  "chart/category-axis": ["chart/axis", "chart/scale"],
+  "chart/category-axis-time": [
+    "chart/axis",
+    "chart/category-axis",
+    "chart/scale",
+    "chart/scale-time",
+  ],
+};
 const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
   if (item.isFile() && item.name.endsWith(".ts") && !item.name.endsWith(".d.ts"))
@@ -66,6 +77,12 @@ for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })
 for (const name of behaviours) {
   const modules = await eagerModules(`export * from "./${name}.js";`);
   if (independent.has(name)) assert.deepEqual(modules, [name], `${name} pulls in only itself`);
+  if (name.startsWith("chart/"))
+    assert.deepEqual(
+      modules.filter((module) => module !== name && !module.startsWith("internal/")),
+      chartDeps[name] ?? [],
+      `${name}: eager modules besides itself and internal/*`,
+    );
   assert.ok(modules.includes(name), `${name} is built`);
   assert.deepEqual(
     modules.filter((module) => module.startsWith("liquid/")),
