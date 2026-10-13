@@ -17,6 +17,8 @@ export interface ErrorStateProps {
   correlationLabel?: string;
   onRetry?: () => void;
   retryLabel?: string;
+  /** `outlined` draws a danger border around the state. */
+  variant?: "plain" | "outlined";
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export function ErrorState({
   correlationLabel,
   onRetry,
   retryLabel,
+  variant = "plain",
   className,
 }: ErrorStateProps) {
   const strings = useUiStrings();
@@ -39,6 +42,7 @@ export function ErrorState({
       role="alert"
       className={cn(
         "@container/state flex min-w-0 flex-col items-center gap-2 px-4 py-8 text-center @min-[360px]/state:px-6 @min-[360px]/state:py-10",
+        variant === "outlined" && "rounded-card border border-danger",
         className,
       )}
     >

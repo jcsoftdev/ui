@@ -2,7 +2,7 @@
 
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
@@ -15,7 +15,9 @@ export interface PopoverContentProps extends PopoverPrimitive.PopoverContentProp
   container?: HTMLElement | null;
   /**
    * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
+   * forces an opaque surface. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
 }
@@ -27,7 +29,6 @@ export function PopoverContent({
   collisionPadding = 8,
   container,
   material,
-  style,
   ...props
 }: PopoverContentProps) {
   return (
@@ -40,7 +41,6 @@ export function PopoverContent({
           materialClass(material, "surface-solid"),
           className,
         )}
-        style={withMaterialStyle(material, style)}
         {...props}
       />
     </PopoverPrimitive.Portal>

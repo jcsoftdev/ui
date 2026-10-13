@@ -98,3 +98,8 @@ export const FormSubmitAndReset: Story = {
     await expect(Object.fromEntries(new FormData(form))).toEqual({ terms: "si" });
   },
 };
+
+/** `label` renders a `<label>` tied to the box: it names the checkbox and a click on it toggles. */
+export const WithLabel: Story = {
+  args: { label: "Send me the receipt" },
+};

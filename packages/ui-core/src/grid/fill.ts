@@ -2,6 +2,7 @@
 // A numeric run continues linearly, dates continue by days, months or years, text ending in a
 // number counts up ("Silla 1" -> "Silla 2"), and anything else repeats. Dragging up or left runs
 // the series backwards (10, 20, 30 gives 0, -10; "Silla 3" gives "Silla 2").
+import { decimalsOf, roundTo } from "../internal/decimals.js";
 import type { CellValue } from "./model.js";
 
 export interface FillBounds {
@@ -190,6 +191,8 @@ function parseCounted(text: string): Counted | null {
   const match = TRAILING_NUMBER.exec(text);
   if (!match) return null;
   const digits = match[2] as string;
+  // Past 15 digits a number no longer holds every digit, so such text is copied, not counted.
+  if (digits.length > 15) return null;
   return {
     prefix: match[1] as string,
     value: Number(digits),
@@ -244,7 +247,10 @@ export function seriesFill(
     const step = constantStep(source);
     if (step === null) return copyFill(count, source.length);
     const last = source[source.length - 1] as number;
-    return Array.from({ length: count }, (_unused, i) => ({ value: last + step * (i + 1) }));
+    const places = Math.max(decimalsOf(last), decimalsOf(step));
+    return Array.from({ length: count }, (_unused, i) => ({
+      value: roundTo(last + step * (i + 1), places),
+    }));
   }
 
   if (source.every((value): value is Date => value instanceof Date)) {
@@ -273,7 +279,7 @@ export function seriesFill(
         const padded = items.some((item) => item.padded);
         const width = Math.max(...items.map((item) => item.width));
         return Array.from({ length: count }, (_unused, i) => ({
-          value: formatCounted(first.prefix, last.value + step * (i + 1), width, padded),
+          value: formatCounted(first.prefix, Math.max(0, last.value + step * (i + 1)), width, padded),
         }));
       }
     }

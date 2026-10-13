@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { TrendChip } from "../../atoms/trend-chip/trend-chip.js";
+import { Wallet } from "../../icons/index.js";
 import { Kpi } from "./kpi.js";
 
 const meta = {
@@ -54,4 +56,16 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const ToneDotIconTrend: Story = {
+  args: {
+    label: "Cobrado",
+    value: "S/ 4 280",
+    description: "Hoy",
+    tone: "success",
+    dot: true,
+    icon: <Wallet aria-hidden="true" />,
+    trend: <TrendChip value={12.5} />,
+  },
 };

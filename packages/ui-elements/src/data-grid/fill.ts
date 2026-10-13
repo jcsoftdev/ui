@@ -14,9 +14,11 @@ import {
 import { type CellValue, getCellValue } from "@jcsoftdev/ui-core/grid/model";
 import type { RangeBounds } from "@jcsoftdev/ui-core/grid/range";
 import { emit } from "../internal/base.js";
+import { changeCells } from "./batch.js";
 import type { UiDataGrid } from "./data-grid.js";
 import css from "./range.css.js";
 import {
+  activeCell,
   adoptCss,
   announce,
   cellAt,
@@ -114,7 +116,8 @@ function write(
       const from = "value" in result ? -1 : result.from;
       const origin = sources[from];
       if (shift && origin && isFormula(value)) {
-        const dr = grid._view.sourceAt(pos.r) - grid._view.sourceAt(lane.source[from]?.r ?? 0);
+        const dr =
+          grid._i().view.sourceAt(pos.r) - grid._i().view.sourceAt(lane.source[from]?.r ?? 0);
         const dc = indexOfColumn(grid, columnId) - indexOfColumn(grid, origin.columnId);
         value = shift(value, dr, dc);
       }
@@ -130,7 +133,7 @@ function write(
       if (!sameValue(value, current)) changes.push({ rowKey, columnId, value });
     });
   }
-  const result = grid.changeCells(changes, { source: "fill" });
+  const result = changeCells(grid, changes, "fill");
   emit(grid, "cellsfill", {
     direction: extent.direction,
     applied: result.applied.length,
@@ -171,8 +174,8 @@ export function install(grid: UiDataGrid): void {
     const preview = createLayer(grid, "fill");
     let extent: HandleExtent | null = null;
     const limits = () => ({
-      maxR: grid._view.count - 1,
-      maxC: grid._ids.length - 1,
+      maxR: grid._i().view.count - 1,
+      maxC: grid._i().ids.length - 1,
       minC: firstColumn(grid),
     });
     trackCells(
@@ -225,6 +228,6 @@ export function install(grid: UiDataGrid): void {
 }
 
 function singleCell(grid: UiDataGrid): RangeBounds | null {
-  const { row, col } = grid._active;
-  return row === 0 ? null : { r0: row - 1, r1: row - 1, c0: col, c1: col };
+  const at = posOf(grid, activeCell(grid) ?? { rowKey: "", columnId: "" });
+  return at && { r0: at.r, r1: at.r, c0: at.c, c1: at.c };
 }

@@ -295,7 +295,9 @@ describe("fill parity with React", () => {
     ["=A1", "=A2"],
   ];
   it.each(cases)("continues %j like the React kit", (...source) => {
-    for (const backward of [false, true]) {
+    // Counted text deliberately differs going backwards: it stops at 0 instead of going negative.
+    const counted = typeof source[0] === "string" && /\d$/.test(source[0]);
+    for (const backward of counted ? [false] : [false, true]) {
       const options = { backward };
       expect(fill.seriesFill(source as never, 4, options)).toEqual(
         reactFill.seriesFill(source as never, 4, options),
@@ -401,5 +403,32 @@ describe("planWrites with formulas", () => {
     const off = planWrites(targets, cellAt, { locale: "en", messages });
     expect(off.changes).toEqual([]);
     expect(off.skipped).toHaveLength(1);
+describe("review fixes", () => {
+  it("treats a quote that is never closed as an ordinary character", () => {
+    expect(parseTSV('"abc\tdef')).toEqual([['"abc', "def"]]);
+    expect(parseTSV('a\t"b')).toEqual([["a", '"b']]);
+    expect(parseTSV('"a""')).toEqual([['"a""']]);
+    expect(parseTSV('"a"\tb')).toEqual([["a", "b"]]);
+  });
+  it("rounds sums and averages to the decimals of the values", () => {
+    const stats = rangeStats({ r0: 0, r1: 0, c0: 0, c1: 2 }, (_r, c) => [0.1, 0.2, 0.3][c]);
+    expect(stats.sum).toBe(0.6);
+    const two = rangeStats({ r0: 0, r1: 0, c0: 0, c1: 1 }, (_r, c) => [0.1, 0.2][c]);
+    expect(two.sum).toBe(0.3);
+    expect(two.avg).toBe(0.15);
+  });
+  it("rounds a decimal series to the precision of its step", () => {
+    const values = fill.seriesFill([0.1, 0.2], 3).map((item) => (item as { value: number }).value);
+    expect(values).toEqual([0.3, 0.4, 0.5]);
+  });
+  it("does not count a counter below zero going backwards", () => {
+    const values = fill
+      .seriesFill(["Silla 1"], 3, { backward: true })
+      .map((item) => (item as { value: string }).value);
+    expect(values).toEqual(["Silla 0", "Silla 0", "Silla 0"]);
+  });
+  it("copies, not counts, text with more digits than a number holds", () => {
+    const [first] = fill.seriesFill(["id 12345678901234567890"], 1);
+    expect(first).toEqual({ from: 0 });
   });
 });

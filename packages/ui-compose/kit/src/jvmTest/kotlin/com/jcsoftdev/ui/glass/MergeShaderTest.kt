@@ -10,7 +10,7 @@ import kotlin.math.hypot
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** Runs [MERGE_SHADER] over a plain gray backdrop: alpha is the merged coverage. */
+/** Runs the dispersive merge program over a plain gray backdrop: alpha is the merged coverage. */
 class MergeShaderTest {
     private val width = 240
     private val height = 120
@@ -27,7 +27,7 @@ class MergeShaderTest {
         shapes: FloatArray = pills,
         count: Int = shapes.size / 5,
     ): Bitmap {
-        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(MERGE_SHADER))
+        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(Dispersion().mergeProgram.program.source))
         builder.child("content", content)
         builder.uniform("boxes", shapes.boxes())
         builder.uniform("roundness", shapes.roundness())

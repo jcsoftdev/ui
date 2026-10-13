@@ -135,8 +135,8 @@ export function install(grid: UiDataGrid): void {
     }
     const sources = new Set([...dirty].map((key) => Math.floor(key / sheet.cols)));
     const keys: string[] = [];
-    for (let v = 0; v < grid._view.count; v += 1)
-      if (sources.has(grid._view.sourceAt(v))) keys.push(grid._view.keyAt(v));
+    for (let v = 0; v < grid._i().view.count; v += 1)
+      if (sources.has(grid._i().view.sourceAt(v))) keys.push(grid._i().view.keyAt(v));
     grid.refreshRows(keys);
   });
 

@@ -1,6 +1,6 @@
 import { Button, Chip, Switch } from "@jcsoftdev/ui/atoms";
 import { Card } from "@jcsoftdev/ui/containers";
-import { LIQUID_PRESETS, liquidStyle, useGlassLens } from "@jcsoftdev/ui/glass";
+import { LIQUID_PRESETS, LiquidGlass, liquidStyle } from "@jcsoftdev/ui/liquid";
 import { useState } from "react";
 import { Photo } from "../glass/Photo";
 import { sceneById } from "../glass/scenes";
@@ -15,11 +15,10 @@ function Label({ children }: { children: string }) {
 
 /** Three real lenses (budget: 8) over one photo, side by side with the frosted material. */
 export default function LiquidShowcase() {
-  const regular = useGlassLens<HTMLDivElement>();
-  const crystalRef = useGlassLens<HTMLDivElement>();
   const [notify, setNotify] = useState(true);
   return (
     <div className="show-stage">
+      <LiquidGlass />
       <Photo scene={scene} sizes="(min-width: 1280px) 1200px, 100vw" />
       <div className="show-grid">
         <Card material="glass" className="show-card">
@@ -36,10 +35,10 @@ export default function LiquidShowcase() {
           </label>
         </Card>
         <div className="show-pills">
-          <div ref={regular} className="liquid-clear show-pill" style={thick}>
+          <div className="liquid-clear show-pill" style={thick}>
             <Label>Thick, draggable</Label>
           </div>
-          <div ref={crystalRef} className="liquid show-pill" style={crystal}>
+          <div className="liquid show-pill" style={crystal}>
             <Label>Crystal lens</Label>
           </div>
         </div>

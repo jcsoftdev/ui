@@ -99,8 +99,8 @@ export function install(grid: UiDataGrid): void {
       if (!enabled()) return false;
       const refs: RowRef<Row>[] = [];
       for (const key of new Set(keys)) {
-        const v = grid._view.indexOfKey(key);
-        const index = v < 0 ? -1 : grid._view.sourceAt(v);
+        const v = grid._i().view.indexOfKey(key);
+        const index = v < 0 ? -1 : grid._i().view.sourceAt(v);
         if (index >= 0) refs.push({ row: grid.rows[index], rowId: key, index });
       }
       return applyRows(grid, "remove", refs, source);

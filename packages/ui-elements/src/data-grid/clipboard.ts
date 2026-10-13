@@ -8,6 +8,7 @@ import {
 } from "@jcsoftdev/ui-core/grid/clipboard";
 import { getCellValue } from "@jcsoftdev/ui-core/grid/model";
 import { emit } from "../internal/base.js";
+import { changeCells } from "./batch.js";
 import type { UiDataGrid } from "./data-grid.js";
 import {
   announce,
@@ -58,16 +59,20 @@ export function install(grid: UiDataGrid): void {
     const bounds = targetBounds(grid);
     if (!bounds) return;
     const columns = new Map(grid.columns.map((column) => [column.id, column]));
+    const { ids, view } = grid._i();
     const text = formatTSV(bounds, (r, c) => {
-      const column = columns.get(grid._ids[c] as string);
-      if (!column || grid._view.kind(r) !== "data") return null;
-      const row = grid.rows[grid._view.sourceAt(r)];
+      const column = columns.get(ids[c] as string);
+      if (!column || view.kind(r) !== "data") return null;
+      const row = grid.rows[view.sourceAt(r)];
       return copyText(column, shown(grid, row, column), grid.locale);
     });
-    event.clipboardData.setData("text/plain", text);
-    event.preventDefault();
+    // A listener may rewrite `detail.text` (to escape cells that start with = + - @ before they
+    // reach a spreadsheet, say) or cancel the event to leave the clipboard alone.
     const cells = (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1);
-    emit(grid, "cellscopy", { text, cells });
+    const detail = { text, cells };
+    if (!emit(grid, "cellscopy", detail, true)) return;
+    event.clipboardData.setData("text/plain", detail.text);
+    event.preventDefault();
     announce(
       grid,
       grid.labels.copied?.(cells) ?? `${cells} ${cells === 1 ? "cell" : "cells"} copied`,
@@ -86,7 +91,7 @@ export function install(grid: UiDataGrid): void {
     const plan = planPaste(
       table,
       origin,
-      { maxR: grid._view.count - 1, maxC: grid._ids.length - 1 },
+      { maxR: grid._i().view.count - 1, maxC: grid._i().ids.length - 1 },
       rangeOf(grid) ?? bounds,
     );
     const writes = planWrites(
@@ -103,7 +108,7 @@ export function install(grid: UiDataGrid): void {
       },
       { locale: grid.locale, messages: messages(grid), formulas: grid.hasAttribute("formulas") },
     );
-    const result = grid.changeCells(writes.changes, { source: "paste" });
+    const result = changeCells(grid, writes.changes, "paste");
     const applied = result.applied.length;
     const skipped = writes.skipped.length + result.rejected.length;
     emit(grid, "cellspaste", {
@@ -121,10 +126,10 @@ export function install(grid: UiDataGrid): void {
       // The pasted block becomes the range, as in spreadsheets.
       const last = refAt(
         grid,
-        Math.min(origin.r + table.length - 1, grid._view.count - 1),
+        Math.min(origin.r + table.length - 1, grid._i().view.count - 1),
         Math.min(
           origin.c + Math.max(...table.map((line) => line.length)) - 1,
-          grid._ids.length - 1,
+          grid._i().ids.length - 1,
         ),
       );
       const first = refAt(grid, origin.r, origin.c);
