@@ -173,7 +173,9 @@ export function ConfiguredLiquid() {
 export function Crystal() {
   return (
     <Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
-      <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">Liquid Glass</span>
+      <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">
+        Liquid Glass
+      </span>
     </Card>
   );
 }
