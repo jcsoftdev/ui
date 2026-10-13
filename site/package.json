@@ -8,9 +8,9 @@
   "type": "module",
   "scripts": {
     "docs": "node scripts/build-docs.mjs",
-    "predev": "node scripts/build-docs.mjs",
+    "predev": "pnpm --filter @jcsoftdev/ui sync:tokens && node scripts/build-docs.mjs",
     "dev": "astro dev --port ${SITE_PORT:-4321}",
-    "prebuild": "node scripts/build-docs.mjs",
+    "prebuild": "pnpm --filter @jcsoftdev/ui sync:tokens && node scripts/build-docs.mjs",
     "build": "astro build",
     "start": "astro preview --host 127.0.0.1 --port ${SITE_PORT:-4321}",
     "typecheck": "node scripts/build-docs.mjs && astro check && tsc --noEmit",

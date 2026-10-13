@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Theme builder playground</title>
+  </head>
+  <body>
+    <main class="app">
+      <header class="bar">
+        <h1>Theme builder</h1>
+        <p class="sub">createTheme + applyTheme, no framework.</p>
+      </header>
+      <section class="panel controls" aria-label="Seeds">
+        <label>Brand <input type="color" id="brand" value="#6d28d9" /><code id="brand-hex">#6d28d9</code></label>
+        <label>Accent <input type="color" id="accent" value="#0ea5e9" /><input type="checkbox" id="accent-on" aria-label="Use accent seed" /></label>
+        <label>Neutral <input type="color" id="neutral" value="#64748b" /><input type="checkbox" id="neutral-on" aria-label="Use neutral seed" /></label>
+        <label>Danger <input type="color" id="danger" value="#dc2626" /><input type="checkbox" id="danger-on" aria-label="Use danger seed" /></label>
+        <label>Scheme
+          <select id="scheme"><option value="auto">System</option><option value="light">Light</option><option value="dark">Dark</option></select>
+        </label>
+        <output id="audit" class="audit" aria-live="polite"></output>
+      </section>
+      <section class="panel sample" aria-label="Sample UI">
+        <h2>Sample</h2>
+        <p class="muted">Secondary text and <a href="#" class="link">a brand link</a>.</p>
+        <div class="row">
+          <button class="btn primary" type="button">Primary action</button>
+          <button class="btn" type="button">Secondary</button>
+          <input class="field" placeholder="Text field" aria-label="Sample field" />
+        </div>
+        <div class="row">
+          <span class="chip danger">Error</span>
+          <span class="chip warning">Warning</span>
+          <span class="chip info">Info</span>
+          <span class="chip success">Success</span>
+        </div>
+        <div class="bars" id="bars" aria-label="Chart colors"></div>
+      </section>
+      <section class="panel" aria-label="Tokens">
+        <h2>Tokens</h2>
+        <div id="tokens" class="tokens"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,149 @@
+{
+  "_comment": "gzip budgets in bytes per entry (~8% headroom); see scripts/check-size.mjs. Raise only with a reason.",
+  "entries": [
+    {
+      "id": "ui-tokens (createTheme, toCss)",
+      "kind": "js",
+      "file": "packages/ui-tokens/dist/index.js",
+      "maxGzip": 4400
+    },
+    {
+      "id": "ui-tokens/dom (applyTheme)",
+      "kind": "js",
+      "file": "packages/ui-tokens/dist/dom.js",
+      "maxGzip": 650
+    },
+    {
+      "id": "ui-tokens styles/tokens.css",
+      "kind": "css",
+      "file": "packages/ui-tokens/styles/tokens.css",
+      "maxGzip": 6100
+    },
+    {
+      "id": "ui-tokens styles/theme.css (tailwind.css)",
+      "kind": "css",
+      "file": "packages/ui-tokens/styles/theme.css",
+      "maxGzip": 2850
+    },
+    {
+      "id": "ui-tokens styles/base.css",
+      "kind": "css",
+      "file": "packages/ui-tokens/styles/base.css",
+      "maxGzip": 700
+    },
+    {
+      "id": "ui/primitives",
+      "kind": "js",
+      "file": "packages/ui/dist/primitives/index.js",
+      "maxGzip": 19850
+    },
+    {
+      "id": "ui/icons",
+      "kind": "js",
+      "file": "packages/ui/dist/icons/index.js",
+      "maxGzip": 10100
+    },
+    {
+      "id": "ui/glass",
+      "kind": "js",
+      "file": "packages/ui/dist/glass/index.js",
+      "maxGzip": 2250
+    },
+    {
+      "id": "ui/ai",
+      "kind": "js",
+      "file": "packages/ui/dist/ai/index.js",
+      "maxGzip": 32500
+    },
+    {
+      "id": "ui/atoms",
+      "kind": "js",
+      "file": "packages/ui/dist/atoms/index.js",
+      "maxGzip": 19600
+    },
+    {
+      "id": "ui/brand",
+      "kind": "js",
+      "file": "packages/ui/dist/brand/index.js",
+      "maxGzip": 18300
+    },
+    {
+      "id": "ui/calendar",
+      "kind": "js",
+      "file": "packages/ui/dist/calendar/index.js",
+      "maxGzip": 12000
+    },
+    {
+      "id": "ui/charts",
+      "kind": "js",
+      "file": "packages/ui/dist/charts/index.js",
+      "maxGzip": 207800
+    },
+    {
+      "id": "ui/containers",
+      "kind": "js",
+      "file": "packages/ui/dist/containers/index.js",
+      "maxGzip": 127400
+    },
+    {
+      "id": "ui/forms",
+      "kind": "js",
+      "file": "packages/ui/dist/forms/index.js",
+      "maxGzip": 31200
+    },
+    {
+      "id": "ui/i18n",
+      "kind": "js",
+      "file": "packages/ui/dist/i18n/index.js",
+      "maxGzip": 600
+    },
+    {
+      "id": "ui/navigation",
+      "kind": "js",
+      "file": "packages/ui/dist/navigation/index.js",
+      "maxGzip": 11900
+    },
+    {
+      "id": "ui/overlays",
+      "kind": "js",
+      "file": "packages/ui/dist/overlays/index.js",
+      "maxGzip": 29300
+    },
+    {
+      "id": "ui/palette",
+      "kind": "js",
+      "file": "packages/ui/dist/palette/index.js",
+      "maxGzip": 19250
+    },
+    {
+      "id": "ui/rich-text",
+      "kind": "js",
+      "file": "packages/ui/dist/rich-text/index.js",
+      "maxGzip": 13450
+    },
+    {
+      "id": "ui/shell",
+      "kind": "js",
+      "file": "packages/ui/dist/shell/index.js",
+      "maxGzip": 10850
+    },
+    {
+      "id": "ui/states",
+      "kind": "js",
+      "file": "packages/ui/dist/states/index.js",
+      "maxGzip": 10400
+    },
+    {
+      "id": "ui/utils",
+      "kind": "js",
+      "file": "packages/ui/dist/utils/index.js",
+      "maxGzip": 8300
+    },
+    {
+      "id": "ui/xlsx",
+      "kind": "js",
+      "file": "packages/ui/dist/xlsx/index.js",
+      "maxGzip": 4150
+    }
+  ]
+}

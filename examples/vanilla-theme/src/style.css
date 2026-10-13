@@ -1,0 +1,28 @@
+* { box-sizing: border-box; }
+.app { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 16px; }
+.bar h1 { margin: 0; font-size: 24px; }
+.sub, .muted { color: var(--ink-2); margin: 4px 0 0; }
+.panel { background: var(--surface); border-radius: 16px; padding: 16px; box-shadow: 0 0 0 1px var(--hair); display: grid; gap: 12px; }
+.panel h2 { margin: 0; font-size: 16px; }
+.controls { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: center; }
+.controls label { display: flex; gap: 8px; align-items: center; color: var(--ink-2); }
+.controls input[type="color"] { width: 40px; height: 32px; padding: 0; border: 1px solid var(--line-control); border-radius: 8px; background: var(--surface); }
+.audit { grid-column: 1 / -1; font-size: 13px; color: var(--success); }
+.audit[data-ok="false"] { color: var(--danger); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: inherit; padding: 8px 16px; border-radius: 999px; border: 0; background: var(--surface-2); color: var(--ink); cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn:focus-visible, .field:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }
+.field { font: inherit; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line-control); background: var(--surface); color: var(--ink); }
+.link { color: var(--accent-ink); }
+.chip { padding: 4px 10px; border-radius: 999px; font-size: 13px; }
+.chip.danger { background: var(--danger-soft); color: var(--danger); }
+.chip.warning { background: var(--warning-soft); color: var(--warning); }
+.chip.info { background: var(--info-soft); color: var(--info); }
+.chip.success { background: var(--success-soft); color: var(--success); }
+.bars { display: flex; gap: 8px; align-items: flex-end; height: 80px; }
+.bar-i { width: 28px; border-radius: 6px 6px 0 0; }
+.tokens { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+.tok { display: grid; grid-template-columns: 28px 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; font-size: 12px; }
+.tok i { grid-row: 1 / 3; width: 28px; height: 28px; border-radius: 8px; box-shadow: 0 0 0 1px var(--hair); }
+.tok small { color: var(--ink-3); }

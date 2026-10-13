@@ -30,6 +30,8 @@ jobs:
       - run: pnpm check:treeshake
       - run: pnpm check:dist-imports
       - run: pnpm check:docs-examples
+      - run: pnpm check:size
+      - run: pnpm check:pack
       - name: Resolve Playwright version
         id: playwright
         run: echo "version=$(node -p "require('./packages/ui/node_modules/playwright/package.json').version")" >> "$GITHUB_OUTPUT"
@@ -44,5 +46,7 @@ jobs:
         env:
           STORYBOOK_DISABLE_TELEMETRY: "1"
         run: pnpm --filter @jcsoftdev/ui test:stories
+      - name: Theme builder playground in Chromium
+        run: pnpm --filter @jcsoftdev/example-vanilla-theme test:e2e
       - name: Build site
         run: pnpm build:site

@@ -8,8 +8,8 @@
       "!src/icons",
       "!src/utils/class-tokens.generated.ts",
       "src/icons/icon-base.tsx",
-      "bin/**",
       "scripts/**",
+      "!scripts/build-theme.mjs",
       "test/*.mjs",
       "tsup.config.ts"
     ]
