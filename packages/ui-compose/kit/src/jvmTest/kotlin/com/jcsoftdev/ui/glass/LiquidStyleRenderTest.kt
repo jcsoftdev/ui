@@ -17,7 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asSkiaBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -40,6 +42,10 @@ private fun styled(
     motion: Float = 0f,
     press: PressInteraction.Press? = null,
     drag: Boolean = false,
+    gradient: Boolean = false,
+    shape: Shape = RoundedCornerShape(16.dp),
+    withGlass: Boolean = true,
+    holdDrag: Boolean = false,
 ): Bitmap {
     lateinit var bmp: Bitmap
     runComposeUiTest {
@@ -50,9 +56,13 @@ private fun styled(
                     UiTheme(dark = false, motion = Motion(motion), liquidGlassStyle = style) {
                         val glass = rememberGlassState()
                         Box(Modifier.fillMaxSize().glassSource(glass)) {
-                            Row(Modifier.fillMaxSize()) {
-                                Box(Modifier.width(122.dp).fillMaxHeight().background(Color.Red))
-                                Box(Modifier.fillMaxSize().background(Color.Blue))
+                            if (gradient) {
+                                Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(Color.Black, Color.Red))))
+                            } else {
+                                Row(Modifier.fillMaxSize()) {
+                                    Box(Modifier.width(122.dp).fillMaxHeight().background(Color.Red))
+                                    Box(Modifier.fillMaxSize().background(Color.Blue))
+                                }
                             }
                         }
                         Box(
@@ -65,8 +75,8 @@ private fun styled(
                             Box(
                                 Modifier.fillMaxSize().material(
                                     material,
-                                    RoundedCornerShape(16.dp),
-                                    glass = glass,
+                                    shape,
+                                    glass = if (withGlass) glass else null,
                                     interactionSource = source,
                                 ),
                             )
@@ -76,15 +86,26 @@ private fun styled(
             }
         }
         if (press != null) runOnIdle { source.tryEmit(press) }
-        if (drag) {
-            onNodeWithTag("surface").performTouchInput {
-                down(center)
-                moveBy(Offset(40f, 0f), delayMillis = 16)
-                moveBy(Offset(40f, 0f), delayMillis = 16)
-                up()
+        if (holdDrag) {
+            // Capture while the finger is still down, a few frames into the drag.
+            mainClock.autoAdvance = false
+            onNodeWithTag("surface").performTouchInput { down(center) }
+            repeat(4) {
+                onNodeWithTag("surface").performTouchInput { moveBy(Offset(50f, 0f), delayMillis = 16) }
+                mainClock.advanceTimeBy(16)
             }
+            mainClock.advanceTimeBy(48)
+        } else {
+            if (drag) {
+                onNodeWithTag("surface").performTouchInput {
+                    down(center)
+                    moveBy(Offset(40f, 0f), delayMillis = 16)
+                    moveBy(Offset(40f, 0f), delayMillis = 16)
+                    up()
+                }
+            }
+            waitForIdle()
         }
-        waitForIdle()
         bmp = onNodeWithTag("frame").captureToImage().asSkiaBitmap()
     }
     return bmp
@@ -159,22 +180,83 @@ class LiquidStyleRenderTest {
     }
 
     @Test fun aPressedSurfaceSwellsWhenMotionIsOn() {
-        val idle = styled(LiquidGlassStyle(), motion = 1f).rgb(108, 60)
-        val pressed = styled(LiquidGlassStyle(), motion = 1f, press = PressInteraction.Press(Offset(10f, 10f))).rgb(108, 60)
-        assertTrue(pressed != idle, "swell reaches past the edge: idle=$idle pressed=$pressed")
+        val idle = styled(LiquidGlassStyle(), motion = 1f)
+        val pressed = styled(LiquidGlassStyle(), motion = 1f, press = PressInteraction.Press(Offset(10f, 10f)))
+        // The default swell is 16dp over a 120dp width (13%): the edge moves out by 8px on each side. 6px past the edge was
+        // plain backdrop (and a faint shadow) before; the swollen surface covers it with bright glass.
+        val before = idle.rgb(104, 60)
+        val after = pressed.rgb(104, 60)
+        assertTrue(after.second - before.second > 40, "swell reaches 6px past the resting edge: idle=$before pressed=$after")
+        // And it stops there: 12px out is still outside the swollen surface.
+        assertTrue(abs(pressed.rgb(98, 60).second - idle.rgb(98, 60).second) < 20, "swell stays within its amount")
     }
 
-    @Test fun aDragSettlesBackToTheRestingSurface() {
-        val rest = styled(LiquidGlassStyle(interaction = LiquidInteraction.Drag), motion = 1f)
-        val dragged = styled(LiquidGlassStyle(interaction = LiquidInteraction.Drag), motion = 1f, drag = true)
-        var worst = 0
-        for (x in listOf(100, 112, 140, 200, 235)) {
-            for (y in listOf(28, 60, 92)) {
-                val a = rest.rgb(x, y)
-                val b = dragged.rgb(x, y)
-                worst = maxOf(worst, abs(a.first - b.first), abs(a.third - b.third))
-            }
+    @Test fun swellKeepsTheBackdropUnderTheGlassWhereItWas() {
+        val flat =
+            LiquidGlassStyle(
+                refraction = 0f,
+                profile = LiquidProfile.Rim,
+                opacity = 0f,
+                dispersion = 0f,
+                frost = 0.dp,
+                saturation = 1f,
+                rim = 0f,
+                motion = LiquidMotion(glow = 0f),
+            )
+        val flatShape = LiquidGlassStyle(specular = LiquidSpecular(intensity = 0f), shadow = LiquidShadow(opacity = 0f))
+        val style = flat.copy(specular = flatShape.specular, shadow = flatShape.shadow)
+        val press = PressInteraction.Press(Offset(10f, 10f))
+        val still = styled(style, motion = 0f, press = press, gradient = true)
+        val swollen = styled(style, motion = 1f, press = press, gradient = true)
+        // Both are pressed (same brightening); only the swell differs. The surface spans x=110..230; the same screen pixel must
+        // show the same backdrop whether or not the layer is scaled: at the centre and a quarter of the width to either side.
+        for (x in listOf(140, 170, 200)) {
+            val a = still.rgb(x, 60).first
+            val b = swollen.rgb(x, 60).first
+            assertTrue(abs(a - b) <= 3, "x=$x: backdrop shifted under the swollen glass (still=$a swollen=$b)")
         }
-        assertTrue(worst <= 3, "after the jelly settles the surface is back: $worst")
+    }
+
+    @Test fun aDragSquashesWhileTheFingerMovesAndSettlesBackAfterwards() {
+        val style = LiquidGlassStyle(interaction = LiquidInteraction.Drag)
+        val rest = styled(style, motion = 1f)
+        val moving = styled(style, motion = 1f, holdDrag = true)
+        // The resting surface starts at x=110; stretched along the drag it is wider, so a pixel 8px outside it turns to glass.
+        val before = rest.rgb(102, 60)
+        val during = moving.rgb(102, 60)
+        assertTrue(during.second - before.second > 30, "the surface stretched mid-drag: rest=$before moving=$during")
+    }
+
+    // ---- shadows ----
+
+    private class Blob : Shape {
+        override fun createOutline(
+            size: androidx.compose.ui.geometry.Size,
+            layoutDirection: androidx.compose.ui.unit.LayoutDirection,
+            density: androidx.compose.ui.unit.Density,
+        ): androidx.compose.ui.graphics.Outline =
+            androidx.compose.ui.graphics.Outline.Generic(
+                androidx.compose.ui.graphics.Path().apply {
+                    moveTo(size.width * 0.1f, 0f)
+                    lineTo(size.width, 0f)
+                    lineTo(size.width * 0.9f, size.height)
+                    lineTo(0f, size.height)
+                    close()
+                },
+            )
+    }
+
+    @Test fun aFreeFormShapeCastsAShadowToo() {
+        val withShadow = styled(LiquidGlassStyle(), shape = Blob())
+        val without = styled(LiquidGlassStyle(shadow = LiquidShadow(opacity = 0f)), shape = Blob())
+        // 6px below the bottom edge (y=90), under the surface, over the blue half.
+        assertTrue(withShadow.rgb(170, 96).third < without.rgb(170, 96).third - 6, "shadow under a Generic outline")
+    }
+
+    @Test fun theShadowNeverDarkensTheInsideOfATranslucentTint() {
+        // Without a backdrop the glass is a tint over whatever is below; a shadow stack drawn under it would darken the middle.
+        val shadowed = styled(LiquidGlassStyle(), withGlass = false).rgb(170, 60)
+        val unshadowed = styled(LiquidGlassStyle(shadow = LiquidShadow(opacity = 0f)), withGlass = false).rgb(170, 60)
+        assertTrue(abs(shadowed.first - unshadowed.first) <= 1 && abs(shadowed.third - unshadowed.third) <= 1, "$shadowed vs $unshadowed")
     }
 }

@@ -16,17 +16,23 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.addOutline
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
@@ -34,7 +40,6 @@ import androidx.compose.ui.graphics.isUnspecified
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
@@ -44,9 +49,11 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.theme.GlassMaterial
 import com.jcsoftdev.ui.theme.UiTheme
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -232,10 +239,58 @@ private class LiquidShadowNode(
     var style: LiquidGlassStyle,
 ) : Modifier.Node(),
     DrawModifierNode {
+    private var outline: Outline? = null
+    private var inside: Path? = null
+    private var outlineSize = Size.Unspecified
+    private var outlineDirection: LayoutDirection? = null
+    private var outlineDensity = 0f
+    private var outlineShape: Shape? = null
+
+    // The shadow never shows inside the silhouette: under a translucent tint (no backdrop to hide it) it would darken the glass.
     override fun ContentDrawScope.draw() {
-        val rounded = shape.createOutline(size, layoutDirection, this).asRoundRect()
-        if (rounded != null) drawSoftShadow(rounded, style.shadow, min(size.width, size.height))
+        if (outline == null || outlineSize != size || outlineDirection != layoutDirection || outlineDensity != density ||
+            outlineShape != shape
+        ) {
+            val made = shape.createOutline(size, layoutDirection, this)
+            outline = made
+            inside = Path().apply { addOutline(made) }
+            outlineSize = size
+            outlineDirection = layoutDirection
+            outlineDensity = density
+            outlineShape = shape
+        }
+        clipPath(inside!!, ClipOp.Difference) { drawSoftShadow(outline!!, style.shadow, min(size.width, size.height)) }
         drawContent()
+    }
+}
+
+/** The step alpha of one ring of the shadow stack, so that all [SHADOW_STEPS] rings together reach the edge opacity. */
+internal fun shadowStepAlpha(shadow: LiquidShadow): Float {
+    val edge = (SHADOW_ALPHA * shadow.opacity).coerceIn(0f, 0.95f)
+    return (1.0 - (1.0 - edge).pow(1.0 / SHADOW_STEPS)).toFloat()
+}
+
+/** Draws the Liquid shadow of any [outline]: rounded shapes as a stack of grown silhouettes, free-form paths as a stack of strokes. */
+internal fun DrawScope.drawSoftShadow(
+    outline: Outline,
+    shadow: LiquidShadow,
+    shortSide: Float,
+) {
+    val rounded = outline.asRoundRect()
+    if (rounded != null) {
+        drawSoftShadow(rounded, shadow, shortSide)
+        return
+    }
+    val path = (outline as? Outline.Generic)?.path ?: return
+    val reach = shadow.spread.toPx() * sizeScale(shortSide, REFERENCE_SIZE.toPx())
+    if (reach <= 0f || shadow.opacity <= 0f) return
+    val color = Color.Black.copy(alpha = shadowStepAlpha(shadow))
+    translate(0f, shadow.offsetY.toPx()) {
+        for (k in SHADOW_STEPS downTo 1) {
+            val grow = reach * k / SHADOW_STEPS
+            drawPath(path, color)
+            drawPath(path, color, style = Stroke(width = grow * 2f, join = StrokeJoin.Round))
+        }
     }
 }
 
@@ -247,8 +302,7 @@ internal fun DrawScope.drawSoftShadow(
 ) {
     val reach = shadow.spread.toPx() * sizeScale(shortSide, REFERENCE_SIZE.toPx())
     if (reach <= 0f || shadow.opacity <= 0f) return
-    val edge = (SHADOW_ALPHA * shadow.opacity).coerceIn(0f, 0.95f)
-    val each = (1.0 - (1.0 - edge).pow(1.0 / SHADOW_STEPS)).toFloat()
+    val each = shadowStepAlpha(shadow)
     translate(0f, shadow.offsetY.toPx()) {
         for (k in SHADOW_STEPS downTo 1) {
             val grow = reach * k / SHADOW_STEPS
@@ -311,6 +365,8 @@ private const val CONTOUR_WIDTH_DP = 0.75f
 private const val PRESS_LENS_GAIN = 0.35f
 private const val PRESS_BRIGHTEN = 0.14f
 private const val GLOW_RADIUS = 0.55f
+private const val SCALE_EPSILON = 0.002f
+private const val LENS_INPUTS = 12
 
 private class GlassSurfaceNode(
     var shape: Shape,
@@ -340,6 +396,17 @@ private class GlassSurfaceNode(
     private var filterSaturation = -1f
     private var filter: ColorFilter? = null
 
+    // Reused between frames: the outline and what is derived from it, and the inputs the lens effect was last built for.
+    private var cachedOutline: Outline? = null
+    private var outlineSize = Size.Unspecified
+    private var outlineDirection: LayoutDirection? = null
+    private var outlineDensity = 0f
+    private val corners = FloatArray(4)
+    private var exponent = 2f
+    private var lensStale = true
+    private val lensInputs = FloatArray(LENS_INPUTS)
+    private val lensScratch = FloatArray(LENS_INPUTS)
+
     fun update(
         shape: Shape,
         tokens: GlassMaterial,
@@ -366,6 +433,8 @@ private class GlassSurfaceNode(
         this.state = state
         this.borderWidth = borderWidth
         this.observe = observe
+        cachedOutline = null
+        lensStale = true
         syncRegistration()
         invalidateDraw()
     }
@@ -407,7 +476,7 @@ private class GlassSurfaceNode(
     override fun ContentDrawScope.draw() {
         observe?.invoke()
         val pressed = dynamics?.lift?.invoke() ?: 0f
-        val outline = shape.createOutline(size, layoutDirection, this)
+        val outline = outline()
         val source = state
         val blurLayer = layer
         lensApplied = false
@@ -478,12 +547,21 @@ private class GlassSurfaceNode(
     // shape. (LENS_COVERAGE is the fraction of that distance the edge term spans; 1 is the full surface.)
     private fun ContentDrawScope.bevel(): Float = (min(size.width, size.height) * 0.5f * LENS_COVERAGE).coerceAtLeast(1f)
 
-    // Superellipse exponent of the lens height field from the sharpest corner: a pill or circle is an ellipse (2), a sharp
-    // rectangle fills its corners (8).
-    private fun ContentDrawScope.squareness(outline: Outline): Float {
+    // The outline of the current size, made once per size, with the corner radii and the superellipse exponent of the lens height
+    // field derived from it: from the sharpest corner, a pill or circle is an ellipse (2) and a sharp rectangle fills its corners (8).
+    private fun ContentDrawScope.outline(): Outline {
+        val kept = cachedOutline
+        if (kept != null && outlineSize == size && outlineDirection == layoutDirection && outlineDensity == density) return kept
+        val made = shape.createOutline(size, layoutDirection, this)
+        cachedOutline = made
+        outlineSize = size
+        outlineDirection = layoutDirection
+        outlineDensity = density
+        made.cornerRadiiInto(corners)
         val half = min(size.width, size.height) * 0.5f
-        val sharpest = outline.cornerRadii().min()
-        return 2f + 6f * (1f - (sharpest / half).coerceIn(0f, 1f))
+        exponent = 2f + 6f * (1f - (minOf(corners[0], corners[1], corners[2], corners[3]) / half.coerceAtLeast(1f)).coerceIn(0f, 1f))
+        lensStale = true
+        return made
     }
 
     private fun ContentDrawScope.drawBackdrop(
@@ -492,9 +570,14 @@ private class GlassSurfaceNode(
         outline: Outline,
         pressed: Float,
     ) {
-        val position = coordinates?.positionInRoot() ?: Offset.Zero
-        val dx = position.x - source.originX
-        val dy = position.y - source.originY
+        // Where the unscaled surface sits in the root. A swell or squash scales the layer this node is drawn in, so the position
+        // in the root is that of the scaled top left; the backdrop is recorded in unscaled space, so take the (scale invariant)
+        // center and recover the unscaled top left from it, and counter-scale the backdrop so it stays put under the glass.
+        measureRootFrame()
+        val scaleX = frameScaleX
+        val scaleY = frameScaleY
+        val dx = frameLeft - source.originX
+        val dy = frameTop - source.originY
         val radius = tokens.blur.toPx()
         val depth = bevel()
         val materialize = dynamics?.materialize?.invoke() ?: 1f
@@ -509,16 +592,49 @@ private class GlassSurfaceNode(
             filter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(tokens.saturate) })
         }
         blurLayer.topLeft = IntOffset(-pad, -pad)
+        val pivot = Offset(dx + size.width / 2f, dy + size.height / 2f)
         blurLayer.record(this, layoutDirection, IntSize(width, height)) {
             if (lens) drawRect(base)
-            translate(pad - dx, pad - dy) { drawLayer(source.layer) }
+            translate(pad - dx, pad - dy) {
+                if (scaleX == 1f && scaleY == 1f) {
+                    drawLayer(source.layer)
+                } else {
+                    scale(1f / scaleX, 1f / scaleY, pivot) { drawLayer(source.layer) }
+                }
+            }
         }
-        val lensed = if (lens) lensFor(outline, pad, depth, strength, radius, squareness(outline), pressed) else null
+        val lensed = if (lens) lensFor(pad, depth, strength, radius, exponent, pressed) else null
         lensApplied = lensed != null
         blurLayer.renderEffect = lensed ?: blurFor(radius)
         // The lens shader saturates the backdrop itself, before the veil.
         blurLayer.colorFilter = if (lensApplied) null else filter
         drawLayer(blurLayer)
+    }
+
+    private var frameLeft = 0f
+    private var frameTop = 0f
+    private var frameScaleX = 1f
+    private var frameScaleY = 1f
+
+    // Fills the frame* fields: the unscaled top left of this surface in the root and the scale of the layer it is drawn in.
+    private fun ContentDrawScope.measureRootFrame() {
+        val coords = coordinates?.takeIf { it.isAttached }
+        if (coords == null) {
+            frameLeft = 0f
+            frameTop = 0f
+            frameScaleX = 1f
+            frameScaleY = 1f
+            return
+        }
+        val topLeft = coords.localToRoot(Offset.Zero)
+        val bottomRight = coords.localToRoot(Offset(size.width, size.height))
+        val sx = ((bottomRight.x - topLeft.x) / size.width.coerceAtLeast(1f)).coerceIn(0.5f, 2f)
+        val sy = ((bottomRight.y - topLeft.y) / size.height.coerceAtLeast(1f)).coerceIn(0.5f, 2f)
+        frameLeft = (topLeft.x + bottomRight.x) / 2f - size.width / 2f
+        frameTop = (topLeft.y + bottomRight.y) / 2f - size.height / 2f
+        val flat = abs(sx - 1f) < SCALE_EPSILON && abs(sy - 1f) < SCALE_EPSILON
+        frameScaleX = if (flat) 1f else sx
+        frameScaleY = if (flat) 1f else sy
     }
 
     private fun blurFor(radius: Float): RenderEffect? {
@@ -530,7 +646,6 @@ private class GlassSurfaceNode(
     }
 
     private fun ContentDrawScope.lensFor(
-        outline: Outline,
         pad: Int,
         depth: Float,
         strength: Float,
@@ -538,22 +653,33 @@ private class GlassSurfaceNode(
         exponent: Float,
         pressed: Float,
     ): RenderEffect? {
-        val corners = outline.cornerRadii()
         val pointer = dynamics?.pointer?.invoke()
         val follow = dynamics?.follow?.invoke() ?: 0f
         val light = light(pointer, follow)
-        val rimDepth = style.bevelWidth.toPx().coerceAtMost(depth)
+        val rimDepth = rimDepthFor(style.bevelWidth.toPx(), depth)
         val half = min(size.width, size.height) * 0.5f
         val glowAlpha = (style.motion?.glow ?: 0f) * pressed
-        val glowAt =
-            if (pointer != null && glowAlpha > 0f) {
-                Offset(
-                    size.width / 2f + rubberBand(pointer.x - size.width / 2f, size.width / 2f),
-                    size.height / 2f + rubberBand(pointer.y - size.height / 2f, size.height / 2f),
-                )
-            } else {
-                Offset.Zero
-            }
+        val glowing = pointer != null && glowAlpha > 0f
+        val glowX = if (glowing) size.width / 2f + rubberBand(pointer!!.x - size.width / 2f, size.width / 2f) else 0f
+        val glowY = if (glowing) size.height / 2f + rubberBand(pointer!!.y - size.height / 2f, size.height / 2f) else 0f
+        val shownGlow = if (pointer != null) glowAlpha else 0f
+        // Everything that varies between frames; the effect is rebuilt only when one of them moved (a settled surface allocates nothing).
+        val inputs = lensScratch
+        inputs[0] = size.width
+        inputs[1] = size.height
+        inputs[2] = pad.toFloat()
+        inputs[3] = strength
+        inputs[4] = radius
+        inputs[5] = light.x
+        inputs[6] = light.y
+        inputs[7] = glowX
+        inputs[8] = glowY
+        inputs[9] = shownGlow
+        inputs[10] = rimDepth
+        inputs[11] = exponent
+        if (!lensStale && lensEffect != null && inputs.contentEquals(lensInputs)) return lensEffect
+        inputs.copyInto(lensInputs)
+        lensStale = false
         val params =
             LensParams(
                 width = size.width,
@@ -593,10 +719,10 @@ private class GlassSurfaceNode(
                 profile = style.profile.shaderCode(),
                 band = (rimDepth / half).coerceIn(0.05f, 1f),
                 thickness = style.rim * sizeScale(half, REFERENCE_SIZE.toPx() / 2f),
-                glowX = pad + glowAt.x,
-                glowY = pad + glowAt.y,
+                glowX = pad + glowX,
+                glowY = pad + glowY,
                 glowRadius = max(size.width, size.height) * GLOW_RADIUS,
-                glowAlpha = if (pointer != null) glowAlpha else 0f,
+                glowAlpha = shownGlow,
             )
         if (params != lensKey) {
             lensKey = params
@@ -606,18 +732,17 @@ private class GlassSurfaceNode(
     }
 }
 
-/** Top-left, top-right, bottom-right, bottom-left corner radius (x) of a rounded outline; zeros for anything else. */
-private fun Outline.cornerRadii(): FloatArray =
-    when (this) {
-        is Outline.Rounded ->
-            floatArrayOf(
-                roundRect.topLeftCornerRadius.x,
-                roundRect.topRightCornerRadius.x,
-                roundRect.bottomRightCornerRadius.x,
-                roundRect.bottomLeftCornerRadius.x,
-            )
-        else -> FloatArray(4)
+/** Fills [into] with the top-left, top-right, bottom-right, bottom-left corner radius (x) of a rounded outline; zeros for anything else. */
+private fun Outline.cornerRadiiInto(into: FloatArray) {
+    if (this is Outline.Rounded) {
+        into[0] = roundRect.topLeftCornerRadius.x
+        into[1] = roundRect.topRightCornerRadius.x
+        into[2] = roundRect.bottomRightCornerRadius.x
+        into[3] = roundRect.bottomLeftCornerRadius.x
+    } else {
+        into.fill(0f)
     }
+}
 
 /** A sweep (from 3 o'clock, clockwise) with a peak at each angle (degrees) that falls to [fade] [spread] degrees either side. */
 private fun sweepAround(

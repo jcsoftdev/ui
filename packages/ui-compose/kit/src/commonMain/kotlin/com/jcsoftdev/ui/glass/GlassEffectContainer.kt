@@ -4,21 +4,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -49,12 +53,29 @@ internal class MergedShape(
     val radius: Float,
 )
 
-/** The shapes a [GlassEffectContainer] merges, by slot, and whether it merges at all on this platform. */
+/**
+ * The shapes a [GlassEffectContainer] merges, by slot, whether it merges at all on this platform, and the [style] and
+ * [material] the container gives its children. Everything the container's draw reads is cached per [revision], so a frame in
+ * which no shape moved allocates nothing.
+ */
 @Stable
 internal class GlassEffectGroup {
-    val shapes = mutableStateMapOf<Int, MergedShape>()
-    var merged: Boolean by mutableStateOf(false)
+    private val table = HashMap<Int, MergedShape>()
+    private var sortedCache: List<MergedShape> = emptyList()
+    private var sortedRevision = -1
     private val taken = BooleanArray(MAX_MERGED_SHAPES)
+
+    /** Bumps whenever a shape is added, moved, resized or removed; the container's draw reads it to redraw. */
+    var revision: Int by mutableIntStateOf(0)
+        private set
+
+    /** Bumps whenever a slot is released, so a child that was over the cap can try to claim it. */
+    var released: Int by mutableIntStateOf(0)
+        private set
+    var merged: Boolean by mutableStateOf(false)
+    var style: LiquidGlassStyle by mutableStateOf(LiquidGlassStyle.Regular)
+    var material: SurfaceMaterial by mutableStateOf(SurfaceMaterial.Liquid)
+    var glass: GlassState? by mutableStateOf(null)
 
     /** The first free slot, or -1 when [MAX_MERGED_SHAPES] shapes are already merged. */
     fun claim(): Int {
@@ -66,11 +87,69 @@ internal class GlassEffectGroup {
     fun release(slot: Int) {
         if (slot < 0) return
         taken[slot] = false
-        shapes.remove(slot)
+        remove(slot)
+        released++
+    }
+
+    fun put(
+        slot: Int,
+        shape: MergedShape,
+    ) {
+        val old = table[slot]
+        if (old != null && old.sameAs(shape)) return
+        table[slot] = shape
+        revision++
+    }
+
+    fun remove(slot: Int) {
+        if (table.remove(slot) != null) revision++
+    }
+
+    /** The shapes in slot order. Reads [revision], so a draw that calls it is redrawn when a shape changes. */
+    fun sorted(): List<MergedShape> {
+        val current = revision
+        if (current != sortedRevision) {
+            sortedCache = table.entries.sortedBy { it.key }.map { it.value }
+            sortedRevision = current
+        }
+        return sortedCache
+    }
+
+    /**
+     * Whether a child that asks for [childStyle] and [childMaterial] (null: no preference) is drawn with the container's own
+     * look. A child that explicitly asks for something else is not merged: it is its own surface of what it asked for.
+     */
+    fun accepts(
+        childStyle: LiquidGlassStyle?,
+        childMaterial: SurfaceMaterial?,
+    ): Boolean = (childStyle == null || childStyle == style) && (childMaterial == null || childMaterial == material)
+}
+
+/** A child's hold on one slot of a [GlassEffectGroup]; released when the child leaves the composition or is abandoned. */
+internal class SlotClaim(
+    private val group: GlassEffectGroup,
+) : RememberObserver {
+    var slot: Int = group.claim()
+        private set
+
+    /** Tries again; [releasedCount] is the group's release counter, read by the caller so it recomposes when a slot frees up. */
+    fun retry(releasedCount: Int) {
+        if (slot < 0 && releasedCount >= 0) slot = group.claim()
+    }
+
+    override fun onRemembered() = Unit
+
+    override fun onForgotten() = giveBack()
+
+    override fun onAbandoned() = giveBack()
+
+    private fun giveBack() {
+        group.release(slot)
+        slot = -1
     }
 }
 
-private val LocalGlassEffectGroup = staticCompositionLocalOf<GlassEffectGroup?> { null }
+internal val LocalGlassEffectGroup = staticCompositionLocalOf<GlassEffectGroup?> { null }
 
 /**
  * Merges the Liquid shapes of its children into one piece of glass: where two shapes (marked with [glassEffect]) come within
@@ -80,8 +159,17 @@ private val LocalGlassEffectGroup = staticCompositionLocalOf<GlassEffectGroup?> 
  * is unavailable (older Android, `UiTheme(backdropBlur = false)`, reduced transparency), is drawn as its own separate
  * [SurfaceMaterial.Liquid] surface instead.
  *
+ * **Style and material precedence.** The container's [style] and [material] are what its children get: a child drawn merged is
+ * part of the one joined surface and takes both from the container, and a child that falls back to its own surface (over the
+ * cap, or where the lens shader is unavailable) is drawn with the container's [style] and [material] too, not with the theme
+ * default; the container's `glass` is the backdrop they sample as well. A child that passes its own `style` or `material` to [glassEffect] that differs from the container's wins: it is
+ * drawn as a separate surface of its own look and does not merge. (Child explicit, then container, then the theme.)
+ *
  * A merged piece is static: no press swell, drag squash or touch glow (use separate surfaces for those), and it draws the rim and
  * shadow of the style but no hairline border. Its refraction follows the joined outline in a band of [LiquidGlassStyle.bevelWidth].
+ * The shadow is cast once from the union of the shapes (each ring of the shadow stack is one path), so it does not double where
+ * shapes overlap. It does not follow the smooth neck itself: where shapes are closer than the shadow reaches, their shadows meet
+ * and fill the gap, and a neck wider than that shows less shadow under it than under the shapes.
  *
  * ```
  * GlassEffectContainer(Modifier.fillMaxWidth()) {
@@ -107,6 +195,9 @@ public fun GlassEffectContainer(
     val group = remember { GlassEffectGroup() }
     val merged = resolved.liquid && resolved.mode == SurfaceMode.Lens
     group.merged = merged
+    group.style = style
+    group.material = material
+    group.glass = glass
     val tokens = style.applyTo(glassTokens(resolved.variant, LocalUiDark.current))
     val base = UiTheme.colors.bg
     val surface =
@@ -123,21 +214,32 @@ public fun GlassEffectContainer(
 /**
  * Marks this node as one of the shapes of the enclosing [GlassEffectContainer], with [shape] as its outline (a rounded
  * rectangle: the sharpest corner radius is used for the merge). Outside a container, or when it does not merge, it is simply a
- * separate [SurfaceMaterial.Liquid] surface of [shape].
+ * separate Liquid surface of [shape].
+ *
+ * [style] and [material] default to null, meaning "the container's" (and, outside a container, [LocalLiquidGlassStyle] and
+ * [SurfaceMaterial.Liquid]). Passing one that differs from the container's makes this child a separate surface of that look
+ * instead of a merged shape; see [GlassEffectContainer] for the precedence.
  */
 @Composable
 public fun Modifier.glassEffect(
     shape: Shape,
-    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
-    material: SurfaceMaterial = SurfaceMaterial.Liquid,
+    style: LiquidGlassStyle? = null,
+    material: SurfaceMaterial? = null,
 ): Modifier {
     val group = LocalGlassEffectGroup.current
-    val slot = remember(group) { group?.claim() ?: -1 }
-    DisposableEffect(group, slot) { onDispose { group?.release(slot) } }
+    val joins = group != null && group.accepts(style, material)
+    val claim = remember(group, joins) { if (joins) SlotClaim(group!!) else null }
+    if (claim != null && claim.slot < 0) claim.retry(group!!.released)
+    val slot = claim?.slot ?: -1
     return if (group != null && group.merged && slot >= 0) {
         this then MergedChildElement(group, slot, shape)
     } else {
-        material(material, shape, style = style)
+        material(
+            material ?: group?.material ?: SurfaceMaterial.Liquid,
+            shape,
+            glass = if (group != null) group.glass else LocalGlassState.current,
+            style = style ?: group?.style ?: LocalLiquidGlassStyle.current,
+        )
     }
 }
 
@@ -179,12 +281,11 @@ private class MergedChildNode(
             }
                 ?: 0f
         val next = MergedShape(position.x + size.width / 2f, position.y + size.height / 2f, size.width / 2f, size.height / 2f, radius)
-        val old = group.shapes[slot]
-        if (old == null || !old.sameAs(next)) group.shapes[slot] = next
+        group.put(slot, next)
     }
 
     override fun onDetach() {
-        group.shapes.remove(slot)
+        group.remove(slot)
     }
 }
 
@@ -210,6 +311,7 @@ private data class MergedGlassElement(
         node.tokens = tokens
         node.base = base
         node.state = state
+        node.styleChanged()
         node.sync()
         node.invalidateDraw()
     }
@@ -235,6 +337,23 @@ private class MergedGlassNode(
     private var key: MergeParams? = null
     private var effect: RenderEffect? = null
 
+    // What the last draw computed, reused while the shapes, the container and the style stay as they were.
+    private var shapes: List<MergedShape> = emptyList()
+    private var relative = FloatArray(0)
+    private var shadowPaths: Array<Path>? = null
+    private var shadowKey: LiquidShadow? = null
+    private var shadowDensity = 0f
+    private var scratch = FloatArray(0)
+    private var smallestHalf = 1f
+    private var lastPad = -1
+    private var lastSize = Size.Unspecified
+    private var lastBlur = -1f
+    private var lastBlend = -1f
+    private var lastDensity = -1f
+    private var lastOrigin = Offset.Unspecified
+    private var seenOrigin = Offset.Unspecified
+    private var inputsStale = true
+
     override fun onAttach() {
         layer = requireGraphicsContext().createGraphicsLayer()
         sync()
@@ -254,34 +373,33 @@ private class MergedGlassNode(
         registered = state
     }
 
+    fun styleChanged() {
+        inputsStale = true
+        shadowPaths = null
+        shadowKey = null
+    }
+
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         this.coordinates = coordinates
+        // The backdrop under the container follows its position in the root, so a move redraws it even when no shape changed.
+        val origin = if (coordinates.isAttached) coordinates.positionInRoot() else Offset.Unspecified
+        if (origin != lastOrigin) {
+            lastOrigin = origin
+            invalidateDraw()
+        }
     }
 
     override fun ContentDrawScope.draw() {
         val source = state
         val backdrop = layer
         val origin = coordinates?.takeIf { it.isAttached }?.positionInRoot()
-        val shapes =
-            group.shapes.entries
-                .sortedBy { it.key }
-                .map { it.value }
-        if (source == null || backdrop == null || origin == null || !source.isRecording || shapes.isEmpty()) {
+        val current = group.sorted()
+        if (source == null || backdrop == null || origin == null || !source.isRecording || current.isEmpty()) {
             drawContent()
             return
         }
-        for (shape in shapes) {
-            val rect =
-                RoundRect(
-                    shape.centerX - origin.x - shape.halfWidth,
-                    shape.centerY - origin.y - shape.halfHeight,
-                    shape.centerX - origin.x + shape.halfWidth,
-                    shape.centerY - origin.y + shape.halfHeight,
-                    shape.radius,
-                    shape.radius,
-                )
-            drawSoftShadow(rect, style.shadow, min(shape.halfWidth, shape.halfHeight) * 2f)
-        }
+        val geometryChanged = syncShapes(current, origin)
+        drawShadow(geometryChanged)
         source.surfaceDraws++
         val blur = tokens.blur.toPx()
         val pad = ceil(blur).toInt()
@@ -294,23 +412,121 @@ private class MergedGlassNode(
             drawRect(base)
             translate(pad - dx, pad - dy) { drawLayer(source.layer) }
         }
-        val packed = FloatArray(shapes.size.coerceAtMost(MAX_MERGED_SHAPES) * 5)
-        shapes.take(MAX_MERGED_SHAPES).forEachIndexed { i, s ->
-            packed[i * 5] = s.centerX - origin.x + pad
-            packed[i * 5 + 1] = s.centerY - origin.y + pad
-            packed[i * 5 + 2] = s.halfWidth
-            packed[i * 5 + 3] = s.halfHeight
-            packed[i * 5 + 4] = s.radius
-        }
-        val smallestHalf = shapes.minOf { min(it.halfWidth, it.halfHeight) }.coerceAtLeast(1f)
-        val params = MergeParams(packed, packed.size / 5, style.blend.toPx().coerceAtLeast(0.5f), lensParams(pad, blur, smallestHalf))
-        if (params != key) {
-            key = params
-            effect = engine.merged(params)
-        }
-        backdrop.renderEffect = effect
+        backdrop.renderEffect = effectFor(geometryChanged, pad, blur)
         drawLayer(backdrop)
         drawContent()
+    }
+
+    // Container-relative geometry of the shapes. Returns true when it differs from the previous draw.
+    private fun syncShapes(
+        current: List<MergedShape>,
+        origin: Offset,
+    ): Boolean {
+        if (current === shapes && origin == seenOrigin) return false
+        shapes = current
+        seenOrigin = origin
+        val count = current.size.coerceAtMost(MAX_MERGED_SHAPES)
+        if (scratch.size != count * 5) scratch = FloatArray(count * 5)
+        for (i in 0 until count) {
+            val s = current[i]
+            scratch[i * 5] = s.centerX - origin.x
+            scratch[i * 5 + 1] = s.centerY - origin.y
+            scratch[i * 5 + 2] = s.halfWidth
+            scratch[i * 5 + 3] = s.halfHeight
+            scratch[i * 5 + 4] = s.radius
+        }
+        if (scratch.contentEquals(relative)) return false
+        val swap = relative
+        relative = scratch
+        scratch = if (swap.size == count * 5) swap else FloatArray(count * 5)
+        shadowPaths = null
+        smallestHalf = current.take(count).minOf { min(it.halfWidth, it.halfHeight) }.coerceAtLeast(1f)
+        return true
+    }
+
+    // One shadow for the joined outline: each ring of the stack is the union of the grown shapes, so it does not double where
+    // shapes overlap and it spans the neck between them.
+    private fun ContentDrawScope.drawShadow(geometryChanged: Boolean) {
+        val shadow = style.shadow
+        if (shadow.opacity <= 0f || shadow.spread.value <= 0f) return
+        if (geometryChanged || shadowPaths == null || shadowKey != shadow || shadowDensity != density) {
+            shadowPaths = buildShadowPaths(shadow)
+            shadowKey = shadow
+            shadowDensity = density
+        }
+        val paths = shadowPaths ?: return
+        val color = Color.Black.copy(alpha = shadowStepAlpha(shadow))
+        translate(0f, shadow.offsetY.toPx()) {
+            for (path in paths) drawPath(path, color)
+        }
+    }
+
+    private fun DrawScope.buildShadowPaths(shadow: LiquidShadow): Array<Path> {
+        val count = relative.size / 5
+        return Array(SHADOW_STEPS) { index ->
+            val k = SHADOW_STEPS - index
+            var ring = Path()
+            for (i in 0 until count) {
+                val halfW = relative[i * 5 + 2]
+                val halfH = relative[i * 5 + 3]
+                val reach = shadow.spread.toPx() * sizeScale(min(halfW, halfH) * 2f, REFERENCE_SIZE.toPx())
+                val grow = reach * k / SHADOW_STEPS
+                val radius = relative[i * 5 + 4] + grow
+                val one =
+                    Path().apply {
+                        addRoundRect(
+                            RoundRect(
+                                relative[i * 5] - halfW - grow,
+                                relative[i * 5 + 1] - halfH - grow,
+                                relative[i * 5] + halfW + grow,
+                                relative[i * 5 + 1] + halfH + grow,
+                                radius,
+                                radius,
+                            ),
+                        )
+                    }
+                ring = if (i == 0) one else Path.combine(PathOperation.Union, ring, one)
+            }
+            ring
+        }
+    }
+
+    private fun ContentDrawScope.effectFor(
+        geometryChanged: Boolean,
+        pad: Int,
+        blur: Float,
+    ): RenderEffect? {
+        val blend = style.blend.toPx().coerceAtLeast(0.5f)
+        val unchanged =
+            !geometryChanged &&
+                !inputsStale &&
+                pad == lastPad &&
+                size == lastSize &&
+                blur == lastBlur &&
+                blend == lastBlend &&
+                density == lastDensity
+        if (unchanged) return effect
+        lastPad = pad
+        lastSize = size
+        lastBlur = blur
+        lastBlend = blend
+        lastDensity = density
+        inputsStale = false
+        val count = relative.size / 5
+        val padded = FloatArray(count * 5)
+        for (i in 0 until count) {
+            padded[i * 5] = relative[i * 5] + pad
+            padded[i * 5 + 1] = relative[i * 5 + 1] + pad
+            padded[i * 5 + 2] = relative[i * 5 + 2]
+            padded[i * 5 + 3] = relative[i * 5 + 3]
+            padded[i * 5 + 4] = relative[i * 5 + 4]
+        }
+        val fresh = MergeParams(padded, count, blend, lensParams(pad, blur, smallestHalf))
+        if (fresh != key) {
+            key = fresh
+            effect = engine.merged(fresh)
+        }
+        return effect
     }
 
     private fun ContentDrawScope.lensParams(
@@ -345,11 +561,7 @@ private class MergedGlassNode(
             dimB = tokens.dim.blue,
             dimA = tokens.dim.alpha,
             veilEdge = 0.35f,
-            rimDepth =
-                style.bevelWidth
-                    .toPx()
-                    .coerceAtMost(smallestHalf)
-                    .coerceAtLeast(1f),
+            rimDepth = rimDepthFor(style.bevelWidth.toPx(), smallestHalf),
             glintWidth = 1.5f.dp.toPx(),
             glintStrength = tokens.edge.alpha * style.specular.intensity.coerceAtLeast(0f),
             lightX = light.x,

@@ -45,6 +45,18 @@ class LiquidGlassStyleTest {
         assertFalse(LiquidGlassStyle(brightness = 0.1f).preservesContrast)
     }
 
+    @Test fun aStrongRimOrHighlightDropsTheContrastGuarantee() {
+        assertFalse(LiquidGlassStyle(rim = 2.5f).preservesContrast)
+        assertFalse(LiquidGlassStyle(specular = LiquidSpecular(intensity = 2f)).preservesContrast)
+        assertTrue(LiquidGlassStyle(rim = 1.5f, specular = LiquidSpecular(intensity = 1.5f)).preservesContrast)
+    }
+
+    @Test fun theRimNeverReachesDeeperThanItsShareOfTheHalfSize() {
+        assertEquals(22f, rimDepthFor(22f, 60f), "a deep enough surface keeps the bevel it asked for")
+        assertEquals(MAX_RIM_SHARE * 28f, rimDepthFor(32f, 28f), 0.001f)
+        assertEquals(1f, rimDepthFor(0f, 28f), "never below one pixel")
+    }
+
     @Test fun frostSaturationAndTintColorReplaceTheTokenValues() {
         val out = LiquidGlassStyle(frost = 9.dp, saturation = 2f, tint = LiquidTint(color = Color(0xFF00FF00.toInt()))).applyTo(tokens)
         assertEquals(9.dp, out.blur)

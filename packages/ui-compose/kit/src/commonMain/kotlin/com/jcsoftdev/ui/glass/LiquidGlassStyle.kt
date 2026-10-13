@@ -30,7 +30,12 @@ public enum class LiquidInteraction {
     /** Lifts while pressed (needs the `interactionSource` of the surface): brightening, swell, touch glow, highlight toward the finger. */
     Press,
 
-    /** [Press] plus a velocity squash and jelly settle while the surface is dragged (the pointer is observed, never consumed). */
+    /**
+     * [Press] plus a velocity squash and jelly settle while the surface is dragged (the pointer is observed, never consumed). The
+     * squash follows drags handled by the surface or its content (a drag handler placed after `material`); movement consumed by
+     * a handler outside it, such as a scroll container, hands the gesture over and ends the touch. The squash relaxes when the
+     * finger rests, and the touch lasts until the last finger lifts.
+     */
     Drag,
 }
 
@@ -122,8 +127,13 @@ public data class LiquidShadow(
  * style tunes on top of them.
  *
  * **Contrast.** The default and the presets keep the glass tint and dim at full strength, which is what `GlassContrastTest`
- * pins (ink and ink2 at 4.5:1 or better over pure black or white). Lowering [opacity] or [tint] amount, recoloring the tint or
- * raising [brightness] drops that guarantee; [preservesContrast] tells whether a style stays within it.
+ * pins (ink and ink2 at 4.5:1 or better over pure black or white), and `LiquidContrastRenderTest` measures on what the shader
+ * draws: primary ink holds 4.5:1 over the text area of a resting surface of every preset down to a 56dp circle (the rim depth is
+ * capped at 75% of the half short side so a deep bevel cannot thin the veil under the text); ink2 holds it on surfaces about
+ * 100dp or larger, and on a small pill the veil still thins toward the rim. A pressed surface is brightened by 14% white for the
+ * moment of the press, which is not part of the guarantee. Lowering [opacity] or [tint] amount, recoloring the tint, raising
+ * [brightness], or taking [rim], [fresnel], [grain] or the [specular] intensity above their bounds drops it;
+ * [preservesContrast] tells whether a style stays within it.
  *
  * @param refraction how far the lens bends the backdrop, as a multiple of the default (0 turns the lens off).
  * @param bevelWidth the depth of the rim: how far in the veil thins, the thickness shading runs and, for [LiquidProfile.Rim], the lens reaches.
@@ -171,7 +181,9 @@ public data class LiquidGlassStyle(
                 tint.color == Color.Unspecified &&
                 brightness <= 0f &&
                 grain <= MAX_CONTRAST_GRAIN &&
-                fresnel <= MAX_CONTRAST_FRESNEL
+                fresnel <= MAX_CONTRAST_FRESNEL &&
+                rim <= MAX_CONTRAST_RIM &&
+                specular.intensity <= MAX_CONTRAST_SPECULAR
 
     public companion object {
         /** The default look. */
@@ -205,6 +217,21 @@ public data class LiquidGlassStyle(
 
 internal const val MAX_CONTRAST_GRAIN: Float = 0.05f
 internal const val MAX_CONTRAST_FRESNEL: Float = 0.5f
+internal const val MAX_CONTRAST_RIM: Float = 1.5f
+internal const val MAX_CONTRAST_SPECULAR: Float = 1.5f
+
+/**
+ * The rim never reaches deeper than this share of the half short side, whatever [LiquidGlassStyle.bevelWidth] asks for: the veil
+ * thins across the rim, so a deep bevel on a small pill would otherwise thin it over the text in the middle too. The default
+ * bevel is below this on every surface of 60dp or more.
+ */
+internal const val MAX_RIM_SHARE: Float = 0.75f
+
+/** The rim depth in pixels for a [bevel] width on a surface whose half short side is [half]. */
+internal fun rimDepthFor(
+    bevel: Float,
+    half: Float,
+): Float = bevel.coerceAtMost(half * MAX_RIM_SHARE).coerceAtLeast(1f)
 
 /** The style surfaces use: set it with `UiTheme(liquidGlassStyle = ...)` or provide it for a subtree. */
 public val LocalLiquidGlassStyle: ProvidableCompositionLocal<LiquidGlassStyle> = staticCompositionLocalOf { LiquidGlassStyle.Regular }
