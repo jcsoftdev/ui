@@ -2,6 +2,10 @@
 
 ## 0.3.0 (unreleased)
 
+### Fixes
+
+- **Checkbox looks like a checkbox.** The box is square (`rounded-xs`, the 4px small-radius token, 3px in the compact theme) instead of a circle, and the checked and indeterminate fill is the accent (as in Switch and the selected RadioGroup row) instead of the success green. Round plus green read as a radio button in multi-select lists. Sizes, 44px touch hit area, focus ring, disabled state and the `box`/`indicator`/`icon` parts are unchanged; The indeterminate state draws a dash instead of a check mark, and a disabled checkbox is dimmed (`opacity-50`, `cursor-not-allowed`) like the other form controls. RadioGroup stays round.
+
 ### Theme builder
 
 - **`@jcsoftdev/ui/theme-builder` stays available.** The subpath published in 0.2.2 (`buildTheme`, `buildTokensCss`, `buildThemeCss`, `buildFontsCss`, `buildThemeKt`; `buildTheme(tokens, { kotlin: false })`) is re-exported from `@jcsoftdev/ui-tokens` and shipped inside this package, so 0.2.2 consumers upgrade unchanged and nothing extra is installed.

@@ -42,6 +42,8 @@ export const html = {
       </UiStringsProvider>,
     ),
   checkbox: () => renderToStaticMarkup(<Checkbox />),
+  checkboxIndeterminate: () => renderToStaticMarkup(<Checkbox defaultChecked="indeterminate" />),
+  checkboxChecked: () => renderToStaticMarkup(<Checkbox defaultChecked />),
   switch: () => renderToStaticMarkup(<Switch />),
   radio: () => renderToStaticMarkup(<RadioGroup options={[{ value: "a", label: "A" }]} />),
   chipStatic: () => renderToStaticMarkup(<Chip>Paid</Chip>),
