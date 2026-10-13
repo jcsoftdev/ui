@@ -47,7 +47,7 @@
       "id": "ui/glass",
       "kind": "js",
       "file": "packages/ui/dist/glass/index.js",
-      "maxGzip": 12200
+      "maxGzip": 13150
     },
     {
       "id": "ui/ai",
@@ -101,7 +101,7 @@
       "id": "ui/liquid",
       "kind": "js",
       "file": "packages/ui/dist/liquid/index.js",
-      "maxGzip": 3150
+      "maxGzip": 3550
     },
     {
       "id": "ui/navigation",
@@ -167,7 +167,7 @@
       "id": "liquid tier 2: + <LiquidGlass /> watcher",
       "kind": "js",
       "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
-      "maxGzip": 11700
+      "maxGzip": 12100
     },
     {
       "id": "liquid tier 3: + refraction lens (lazy)",
@@ -176,7 +176,7 @@
       "lazy": [
         "glass/refraction.js"
       ],
-      "maxGzip": 19950
+      "maxGzip": 20600
     },
     {
       "id": "liquid tier 4: + crystal and dispersion (lazy)",
@@ -187,7 +187,7 @@
         "glass/lens-crystal.js",
         "glass/lens-dispersion.js"
       ],
-      "maxGzip": 21950
+      "maxGzip": 22650
     }
   ]
 }

@@ -1,6 +1,7 @@
 // Bundles a tiny consumer that imports one component and asserts nothing else is pulled in.
 // Run after `pnpm build`: node test/treeshake.mjs
 import assert from "node:assert/strict";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { build } from "esbuild";
 
 async function inputsFor(code) {
@@ -304,23 +305,32 @@ async function splitBuild(code) {
     closureOf: (module) => kept(closure(holder(module))),
   };
 }
-for (const path of [
-  "atoms",
-  "ai",
-  "containers",
-  "forms",
-  "navigation",
-  "overlays",
-  "palette",
-  "primitives",
-  "shell",
-  "utils",
-]) {
+// Every public JS entry except the two liquid ones, read from package.json and dist so a new entry
+// is covered without editing this list.
+const exportsMap = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+).exports;
+const named = Object.keys(exportsMap)
+  .filter((key) => /^\.\/[a-z-]+$/.test(key) && exportsMap[key])
+  .map((key) => key.slice(2));
+const wildcard = exportsMap["./*"]
+  ? readdirSync(new URL("../dist/", import.meta.url), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .filter((name) => existsSync(new URL(`../dist/${name}/index.js`, import.meta.url)))
+  : [];
+const nonLiquid = [...new Set([...named, ...wildcard])]
+  .filter((name) => name !== "glass" && name !== "liquid")
+  .sort();
+assert.ok(nonLiquid.length >= 15, `found the public entries (${nonLiquid.join(", ")})`);
+for (const path of nonLiquid) {
   const { all } = await splitBuild(`import * as m from "@jcsoftdev/ui/${path}"; console.log(m);`);
   const liquid = all.filter((f) => f.includes("/glass/"));
   assert.deepEqual(liquid, [], `@jcsoftdev/ui/${path} must not hold or fetch any glass module`);
 }
-console.log("liquid glass: non-liquid entries hold and fetch no glass module OK");
+console.log(
+  `liquid glass: ${nonLiquid.length} non-liquid entries hold and fetch no glass module OK`,
+);
 
 // Liquid Glass tiers: each step brings only its own feature. `liquidStyle` is the option mapping
 // alone; `<LiquidGlass />` adds the watcher and fetches the engine lazily; the engine does not hold

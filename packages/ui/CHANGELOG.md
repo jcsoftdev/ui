@@ -26,8 +26,16 @@ nothing to change).
   only thing that loads the lens. Render it once near the root. It watches the document (classes,
   `data-glass`, `data-glass-lens`, `data-style`, `data-theme`, added and removed nodes, and the
   transparency, contrast and motion preferences) and gives the lens to every surface whose CSS
-  resolves to `--glass-lens: 1`, fetching the engine the first time one does. It does nothing on
-  the server and nothing where the lens cannot paint (Safari, Firefox).
+  resolves to `--glass-lens: 1` (computed, so `md:liquid`, `dark:liquid`, container queries and an
+  inline `--glass-lens` count; a custom `@apply liquid` class needs `data-glass-lens="on"`),
+  fetching the engine the first time one does and retrying a failed fetch with a backoff. It does
+  nothing on the server and nothing where the lens cannot paint (Safari, Firefox).
+- **A lens applied by code and the watcher share an element safely.** Each element's lens keeps one
+  claim per owner: `applyGlassRefraction` / `useGlassRefraction` options win over the automatic
+  ones, the watcher never stops a manual lens, and after the manual cleanup the automatic lens takes
+  over again. A release left over from an ended claim is a no-op.
+- **Lens slots go to surfaces that can show one.** Hidden (`display: none`), zero-area and
+  far-offscreen surfaces take none of the 8 slots, and are lensed once they show.
 - **Options are `style={liquidStyle(options)}`**: synchronous custom properties, so the server
   markup and the first client paint are already right, nothing changes at hydration, and no option
   can go stale after it.
@@ -61,7 +69,7 @@ From the 0.3.0 previews (`main` before this change):
   and `liquidStyle` are exported from both `@jcsoftdev/ui/liquid` and `@jcsoftdev/ui/glass`.
 - The automatic lens reads the pointer mode (`interactive`) only from the surface itself, on every
   surface (before, only the overlays did).
-- A surface that leaves the page releases its lens in the next frame, not synchronously.
+- A surface that leaves the page releases its lens when the DOM mutation is observed (a microtask later), not synchronously.
 
 From 0.2.x: nothing changes unless you adopt Liquid Glass.
 

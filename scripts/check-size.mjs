@@ -52,7 +52,9 @@ async function measure({ file, code: source, kind, lazy = [] }) {
     visit(entry);
     for (const module of lazy) {
       const chunk = Object.keys(outputs).find((name) =>
-        Object.keys(outputs[name].inputs).some((input) => input.endsWith(module)),
+        Object.entries(outputs[name].inputs).some(
+          ([input, { bytesInOutput }]) => input.endsWith(module) && bytesInOutput > 0,
+        ),
       );
       if (!chunk) throw new Error(`no chunk holds ${module}`);
       visit(chunk);

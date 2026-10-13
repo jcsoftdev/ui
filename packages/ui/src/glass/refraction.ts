@@ -138,6 +138,30 @@ let active = 0;
 /** Surfaces that are eligible but found no free slot; the next one is woken when a slot frees. */
 const waiting = new Set<() => void>();
 
+/**
+ * Surfaces far outside the viewport give up their slot to visible ones. One observer for all of
+ * them; a change of side resyncs that surface.
+ */
+const offscreen = new WeakSet<Element>();
+const resyncs = new WeakMap<Element, () => void>();
+let viewport: IntersectionObserver | undefined;
+function visibility(): IntersectionObserver | undefined {
+  if (typeof IntersectionObserver !== "function") return undefined;
+  viewport ??= new IntersectionObserver(
+    (entries) => {
+      for (const { target, isIntersecting } of entries) {
+        if (offscreen.has(target) !== isIntersecting) continue;
+        if (isIntersecting) offscreen.delete(target);
+        else offscreen.add(target);
+        const resync = resyncs.get(target);
+        if (resync) schedule(resync);
+      }
+    },
+    { rootMargin: "50%" },
+  );
+  return viewport;
+}
+
 /** Size changes are coalesced into one pass per frame, whatever the number of surfaces. */
 const dirty = new Set<() => void>();
 let frame = 0;
@@ -257,22 +281,44 @@ function authorStyle(text: string | null): string {
     .join(";");
 }
 
+/** Who asked for a lens: code (`applyGlassRefraction`) or the page watcher (`<LiquidGlass />`). */
+export type LensOwner = "manual" | "auto";
+
 interface Controller {
-  configure(options: GlassRefractionOptions): void;
-  stop(): void;
+  /** Adds or updates the owner's claim; returns its release. The manual options win. */
+  claim(owner: LensOwner, options: GlassRefractionOptions): () => void;
 }
 
 /** One controller per element, so applying twice never stacks a second `url()` filter. */
 const controllers = new WeakMap<HTMLElement, Controller>();
 
-function createController(element: HTMLElement, initial: GlassRefractionOptions): Controller {
-  let options = initial;
+function createController(element: HTMLElement): Controller {
+  const claims: Partial<Record<LensOwner, GlassRefractionOptions>> = {};
+  /** Bumped each time an owner's claim starts, so a release from an earlier claim is a no-op. */
+  const generation: Record<LensOwner, number> = { manual: 0, auto: 0 };
+  let options: GlassRefractionOptions = {};
   let stopped = false;
   let installed:
     | { filter: SVGFilterElement; observer?: ResizeObserver; cancel: () => void }
     | undefined;
-  /** Watches the size of an eligible surface that is too large for now, so it lenses once it shrinks. */
+  /**
+   * Watches the size of an eligible surface that cannot take a lens for now (hidden, zero-area or
+   * too large), so it lenses once its size allows. Created once; only a real size change resyncs.
+   */
   let sizeWatch: ResizeObserver | undefined;
+  let sizeSeen = "";
+  const sizeKey = () => `${element.offsetWidth}x${element.offsetHeight}`;
+  const watchSize = () => {
+    if (sizeWatch || typeof ResizeObserver !== "function") return;
+    sizeSeen = sizeKey();
+    sizeWatch = new ResizeObserver(() => {
+      const now = sizeKey();
+      if (now === sizeSeen) return;
+      sizeSeen = now;
+      schedule(sync);
+    });
+    sizeWatch.observe(element);
+  };
   /** The first install of a controller materialises; later ones (theme change) do not. */
   let intro = true;
   const original = element.style.backdropFilter;
@@ -333,18 +379,20 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
 
   const install = () => {
     if (!element.isConnected) return;
+    const area = element.offsetWidth * element.offsetHeight;
+    if (area === 0 || area > MAX_AREA) {
+      // Hidden, empty or too large for the filter: no slot; look again when the size changes.
+      watchSize();
+      return;
+    }
+    // Far outside the viewport: no slot until it comes near (the visibility observer resyncs).
+    if (offscreen.has(element)) return;
     if (active >= MAX_ACTIVE) {
       waiting.add(sync);
       return;
     }
-    if (element.offsetWidth * element.offsetHeight > MAX_AREA) {
-      // Too large for the filter right now; stay on the plain liquid look and look again on resize.
-      if (typeof ResizeObserver === "function") {
-        sizeWatch = new ResizeObserver(() => schedule(sync));
-        sizeWatch.observe(element);
-      }
-      return;
-    }
+    sizeWatch?.disconnect();
+    sizeWatch = undefined;
     const dispersion = dispersionFor(element.offsetWidth * element.offsetHeight);
     const crystal = coverageFor() === "crystal";
     const missing = [
@@ -703,8 +751,6 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   function sync() {
     if (stopped) return;
     waiting.delete(sync);
-    sizeWatch?.disconnect();
-    sizeWatch = undefined;
     const was = installed !== undefined;
     uninstall();
     if (eligible()) install();
@@ -797,19 +843,37 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     waiting.delete(sync);
     sizeWatch?.disconnect();
     sizeWatch = undefined;
+    viewport?.unobserve(element);
+    resyncs.delete(element);
+    offscreen.delete(element);
     const was = installed !== undefined;
     uninstall();
     if (was) wake();
     controllers.delete(element);
   }
 
-  sync();
+  resyncs.set(element, sync);
+  visibility()?.observe(element);
+
+  const apply = () => {
+    const next = claims.manual ?? claims.auto;
+    if (!next) return stop();
+    options = next;
+    configSeen = configKey();
+    sync();
+  };
   return {
-    configure(next) {
-      options = next;
-      sync();
+    claim(owner, next) {
+      if (!claims[owner]) generation[owner]++;
+      const claimed = generation[owner];
+      claims[owner] = next;
+      apply();
+      return () => {
+        if (stopped || generation[owner] !== claimed || !claims[owner]) return;
+        delete claims[owner];
+        apply();
+      };
     },
-    stop,
   };
 }
 
@@ -822,20 +886,35 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
  * the user's preferences live: reduced transparency, more contrast, forced colors or reduced
  * motion remove it, and clearing them brings it back. Calling it again on the same element
  * updates the options instead of stacking a second filter. Returns the cleanup function (every
- * returned cleanup stops the same refraction). Never on by default: it re-rasterises the
+ * returned cleanup ends the same claim). These options win over `<LiquidGlass />` on the same
+ * element, and the watcher never stops this lens; after the cleanup, a surface the watcher also
+ * lenses keeps its automatic lens. Never on by default: it re-rasterises the
  * backdrop every frame.
  */
 export function applyGlassRefraction(
   element: HTMLElement,
   options: GlassRefractionOptions = {},
 ): () => void {
+  return claimLens(element, "manual", options);
+}
+
+/**
+ * Adds a claim on the element's lens for `owner` and returns its release. One controller per
+ * element: the manual options win over the automatic ones, and the lens stops only once every
+ * owner released it, so `<LiquidGlass />` never undoes or replaces a lens applied by code. Every
+ * release of one owner's claim ends that claim; a release left over from an earlier claim is a
+ * no-op.
+ */
+export function claimLens(
+  element: HTMLElement,
+  owner: LensOwner,
+  options: GlassRefractionOptions,
+): () => void {
   if (typeof document === "undefined" || typeof matchMedia !== "function") return () => {};
-  const existing = controllers.get(element);
-  if (existing) {
-    existing.configure(options);
-    return existing.stop;
+  let controller = controllers.get(element);
+  if (!controller) {
+    controller = createController(element);
+    controllers.set(element, controller);
   }
-  const controller = createController(element, options);
-  controllers.set(element, controller);
-  return controller.stop;
+  return controller.claim(owner, options);
 }
