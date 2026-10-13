@@ -1,6 +1,14 @@
 "use client";
 
-import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  type FocusEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useLeaveGrace } from "./leave-grace.js";
 
 export interface IndexNavigationOptions {
   /** Arrow keys wrap around the ends (circular charts). */
@@ -40,26 +48,39 @@ export function useIndexNavigation<T extends HTMLElement = HTMLDivElement>(
     setActive((current) => (current != null && current >= count ? null : current));
   }, [count]);
 
-  const hover = useCallback((index: number, event: HoverEvent) => {
-    const box = ref.current?.getBoundingClientRect();
-    if (!box) return;
-    setActive(index);
-    setPointer({ x: event.clientX - box.left, y: event.clientY - box.top });
-    setPinned(event.pointerType != null && event.pointerType !== "mouse");
-  }, []);
-
-  const leave = useCallback(() => {
+  const clear = useCallback(() => {
     setActive(null);
     setPointer(null);
     setPinned(false);
   }, []);
+  const { leave: leaveSoon, hold } = useLeaveGrace(clear);
 
-  /** `pointerleave` handler: a mouse leaving drops the item, a lifted finger or pen keeps it pinned. */
-  const pointerLeave = useCallback(
-    (event: { pointerType?: string }) => {
-      if (event.pointerType == null || event.pointerType === "mouse") leave();
+  const hover = useCallback(
+    (index: number, event: HoverEvent) => {
+      hold();
+      const box = ref.current?.getBoundingClientRect();
+      if (!box) return;
+      setActive(index);
+      setPointer({ x: event.clientX - box.left, y: event.clientY - box.top });
+      setPinned(event.pointerType != null && event.pointerType !== "mouse");
     },
-    [leave],
+    [hold],
+  );
+
+  const leave = useCallback(() => {
+    hold();
+    clear();
+  }, [hold, clear]);
+
+  /**
+   * `pointerleave` handler: a mouse leaving drops the item after a short grace (so crossing the
+   * gutter between two marks never shows an empty frame); a lifted finger or pen keeps it pinned.
+   */
+  const pointerLeave = useCallback(
+    (event?: { pointerType?: string }) => {
+      if (event?.pointerType == null || event.pointerType === "mouse") leaveSoon();
+    },
+    [leaveSoon],
   );
 
   useEffect(() => {
@@ -95,7 +116,10 @@ export function useIndexNavigation<T extends HTMLElement = HTMLDivElement>(
 
   const sliderProps = {
     onKeyDown,
-    onFocus: () => setActive((current) => current ?? 0),
+    onFocus: (event?: FocusEvent<HTMLElement>) => {
+      if (event && !event.currentTarget.matches(":focus-visible")) return;
+      setActive((current) => current ?? 0);
+    },
     onBlur: leave,
   };
 

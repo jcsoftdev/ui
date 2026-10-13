@@ -158,6 +158,18 @@ Every chart must keep these, so all families behave the same:
 - Entry animation through `useEntryAnimation` (line reveal by a clip rect, bars grow from their baseline with a short
   stagger, labels fade). Nothing animates with `prefers-reduced-motion` or `animate={false}`.
 - `loading` shows `ChartSkeleton`; no finite data shows `ChartEmpty`.
+- Touch: `ChartFrame` owns it, so a chart gets it by rendering inside the frame (`useTouchSelection`). Touch
+  `pointerover`/`pointerout` never reach the marks, so a lifted finger is not "leaving". A tap (up within 10px of the
+  press) replays a hover on the mark under the finger, or the nearest mark within 44px: marks flagged
+  `data-chart-hit` or `data-category` are snap targets. Tapping the pinned mark again (its details read the same),
+  tapping outside, tapping empty space or Escape unpins; a swipe never selects. Slider overlays must select from
+  keyboard focus only (`:focus-visible`), not from the focus a tap gives them.
+- Details: `ChartTooltip` floats beside the pointer, and docks into the frame's panel under the plot when the frame is
+  480px wide or less or the pointer is coarse (`dock="auto" | "always" | "never"`, also on `ChartFrame`). The panel is
+  a polite live region that reserves 160px, so nothing below it jumps; its rows are at least 44px tall. A floating
+  card only changes sides past a dead zone (65% / 55% of the width) and never animates the swap.
+- Leaving a mark: clear through `useLeaveGrace` (60ms) so the gutter between two marks never shows an empty frame, and
+  keep a category over the gaps between its units.
 
 ## Hierarchy and matrix charts
 

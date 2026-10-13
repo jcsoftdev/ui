@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { ChartDockMode } from "../chart-dock.js";
 import type { ValueFormat } from "../format.js";
 import type { Curve } from "../path.js";
 import type { StackMode } from "../stack.js";
@@ -139,6 +140,11 @@ export interface CartesianChartProps {
   legend?: boolean | "top" | "bottom";
   /** Shared tooltip (default true). */
   tooltip?: boolean;
+  /**
+   * Where the tooltip's details go: `auto` (default) docks them in a panel under the chart on
+   * containers 480px wide or less and on coarse pointers, `always` / `never` force it.
+   */
+  dock?: ChartDockMode;
   annotations?: readonly ChartAnnotation[];
   /** Tilts the category labels (degrees, e.g. -45) so long names fit; vertical charts only. */
   categoryLabelRotation?: number;

@@ -21,7 +21,7 @@ const revenueByService = [
 
 export const HoverStaysStill: Story = {
   render: () => (
-    <div style={{ width: 420, padding: 16 }}>
+    <div style={{ width: 560, padding: 16 }}>
       <DonutChart
         title="Ingresos por servicio"
         data={revenueByService}
@@ -97,8 +97,8 @@ export const TapKeepsDetails: Story = {
     })) as unknown as SVGSVGElement;
     const hits = Array.from(svg.querySelectorAll<SVGPathElement>("[data-slice-hit]"));
     await waitFor(() => expect(hits.length).toBe(5));
-    const container = svg.parentElement as HTMLElement;
-    const tooltip = () => container.querySelector<HTMLElement>(":scope > [aria-hidden='true']");
+    // A 320px chart docks its details under the plot; docked or floating, they carry this marker.
+    const tooltip = () => canvasElement.querySelector<HTMLElement>("[data-chart-tooltip]");
 
     // Lifting the finger fires pointerleave; the tapped slice stays picked instead of flashing.
     await tapAndLift(hits[0] as SVGPathElement, "touch");

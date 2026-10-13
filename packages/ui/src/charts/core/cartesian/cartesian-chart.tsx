@@ -109,6 +109,7 @@ export function CartesianChart({
   grid = true,
   legend,
   tooltip = true,
+  dock,
   annotations,
   categoryGroups,
   categoryLabelRotation,
@@ -232,6 +233,7 @@ export function CartesianChart({
       labels={labels}
       loading={loading}
       empty={empty}
+      dock={tooltip ? dock : "never"}
       skeleton={series.some((item) => item.kind === "column") ? "bars" : "line"}
       legendPosition={legendPlacement ?? "top"}
       legend={
@@ -724,8 +726,8 @@ function CartesianPlot({
     }
   };
 
-  const onPointerLeave = () => {
-    if (dragStart.current != null) return;
+  const onPointerLeave = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragStart.current != null || event.pointerType === "touch") return;
     setActive(null);
     setPointer(null);
     setNoteKey(null);
@@ -1158,7 +1160,9 @@ function CartesianPlot({
         aria-valuenow={(active ?? 0) + 1}
         aria-valuetext={valueText}
         onKeyDown={onKeyDown}
-        onFocus={() => setActive((current) => current ?? 0)}
+        onFocus={(event) => {
+          if (event.currentTarget.matches(":focus-visible")) setActive((current) => current ?? 0);
+        }}
         onBlur={() => setActive(null)}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}

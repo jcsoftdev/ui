@@ -1,12 +1,18 @@
 "use client";
 
 import { type ReactNode, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "../../utils/cn.js";
+import { type ChartDockMode, useChartDock } from "./chart-dock.js";
 import type { LegendShape } from "./legend.js";
 import { useIsomorphicLayoutEffect } from "./use-chart-size.js";
 
 const OFFSET = 14;
 const EDGE = 4;
+/** A card on the right moves left only past this share of the container width. */
+const FLIP_LEFT_AT = 0.65;
+/** A card on the left moves back right only below this share: a dead zone against jitter. */
+const FLIP_RIGHT_AT = 0.55;
 
 export interface TooltipRow {
   id: string;
@@ -34,8 +40,17 @@ export interface ChartTooltipProps {
   body?: string;
   /** Forces the side of the anchor the card opens on (when it fits); by default it follows the anchor. */
   side?: "left" | "right";
+  /**
+   * `auto` (default) docks the details in the frame's panel under the plot when the container is
+   * 480px wide or less, or the primary pointer is coarse; `always` and `never` force it. Docked
+   * details sit in normal flow, never as a floating card, and need an enclosing `ChartFrame`
+   * (without one the card floats).
+   */
+  dock?: ChartDockMode;
   className?: string;
 }
+
+type Side = "left" | "right";
 
 /**
  * Floating card that lists every series at the hovered position. Purely
@@ -44,6 +59,11 @@ export interface ChartTooltipProps {
  * the pointer never triggers layout. Its own width is measured so the card
  * always stays inside the container: it takes the side of the anchor with
  * room, and is clamped to the edges when neither side fits (narrow charts).
+ * The side only changes past a dead zone, and a side swap jumps instead of
+ * sliding across the pointer.
+ *
+ * Docked (see `dock`), the same rows render in the frame's live panel below
+ * the plot instead, which is how touch screens read them.
  */
 export function ChartTooltip({
   x,
@@ -54,9 +74,12 @@ export function ChartTooltip({
   rows,
   body,
   side,
+  dock = "auto",
   className,
 }: ChartTooltipProps) {
+  const frame = useChartDock();
   const ref = useRef<HTMLDivElement>(null);
+  const committed = useRef<Side | undefined>(undefined);
   const [size, setSize] = useState({ width: 0, height: 0 });
   useIsomorphicLayoutEffect(() => {
     const width = ref.current?.offsetWidth ?? 0;
@@ -64,15 +87,28 @@ export function ChartTooltip({
     if (Math.abs(width - size.width) > 0.5 || Math.abs(height - size.height) > 0.5)
       setSize({ width, height });
   });
-  const left = tooltipLeft(x, size.width, containerWidth, side);
+  const chosen = chooseTooltipSide(committed.current, x, size.width, containerWidth, side);
+  const swapped = committed.current != null && committed.current !== chosen;
+  useIsomorphicLayoutEffect(() => {
+    committed.current = chosen;
+  });
+
+  const docked = dock === "never" ? false : dock === "always" ? true : frame.docked;
+  if (docked && frame.slot) {
+    return createPortal(<DockedDetails title={title} body={body} rows={rows} />, frame.slot);
+  }
+
+  const left = leftOnSide(chosen, x, size.width, containerWidth);
   const top = containerHeight == null ? y : tooltipCenterY(y, size.height, containerHeight);
   return (
     <div
       ref={ref}
+      data-chart-tooltip=""
       aria-hidden="true"
       className={cn(
         "pointer-events-none absolute top-0 left-0 z-10 min-w-30 rounded-popover surface-overlay px-3 py-2.5 text-fs-120 shadow-overlay",
-        "motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out",
+        !swapped &&
+          "motion-safe:transition-transform motion-safe:duration-100 motion-safe:ease-out",
         className,
       )}
       style={{
@@ -80,6 +116,21 @@ export function ChartTooltip({
         transform: `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0) translateY(-50%)`,
       }}
     >
+      <TooltipBody title={title} body={body} rows={rows} />
+    </div>
+  );
+}
+
+interface BodyProps {
+  title?: ReactNode;
+  body?: string;
+  rows: readonly TooltipRow[];
+  rowClassName?: string;
+}
+
+function TooltipBody({ title, body, rows, rowClassName }: BodyProps) {
+  return (
+    <>
       {title ? <div className="mb-1.5 font-bold text-fs-120 text-ink">{title}</div> : null}
       {body ? <div className="text-ink-2 leading-snug">{body}</div> : null}
       <div className="flex flex-col gap-1">
@@ -89,6 +140,7 @@ export function ChartTooltip({
             className={cn(
               "flex items-center gap-2 text-ink-2",
               row.emphasis && "mt-0.5 border-t-divider pt-1.5 text-ink",
+              rowClassName,
             )}
           >
             {row.emphasis ? (
@@ -110,25 +162,61 @@ export function ChartTooltip({
           </div>
         ))}
       </div>
+    </>
+  );
+}
+
+/** Details inside the frame's docked panel: in flow, full width, rows at least 44px tall. */
+function DockedDetails({ title, body, rows }: BodyProps) {
+  return (
+    <div
+      data-chart-tooltip=""
+      data-docked=""
+      className="rounded-popover surface-overlay px-3 py-2 text-fs-130"
+    >
+      <TooltipBody title={title} body={body} rows={rows} rowClassName="min-h-11" />
     </div>
   );
 }
 
-/** Left edge of a tooltip `width` wide next to anchor `x`, kept inside `containerWidth`. */
-export function tooltipLeft(
+/**
+ * Side of the anchor a card `width` wide opens on. Unless `forced`, it keeps `previous` while that
+ * side fits and the pointer stays inside the dead zone (right of the anchor until 65% of the
+ * container, left of it until 55%), so a 1-2px move never swaps sides.
+ */
+export function chooseTooltipSide(
+  previous: Side | undefined,
   x: number,
   width: number,
   containerWidth: number,
-  side?: "left" | "right",
-): number {
-  const right = x + OFFSET;
-  const leftSide = x - OFFSET - width;
-  const preferLeft = side ? side === "left" : x > containerWidth * 0.6;
-  const fitsRight = right + width <= containerWidth - EDGE;
-  const fitsLeft = leftSide >= EDGE;
-  const chosen =
-    preferLeft && fitsLeft ? leftSide : fitsRight ? right : fitsLeft ? leftSide : right;
-  return Math.max(EDGE, Math.min(chosen, containerWidth - width - EDGE));
+  forced?: Side,
+): Side {
+  const share = containerWidth > 0 ? x / containerWidth : 0;
+  let wanted: Side;
+  if (forced) wanted = forced;
+  else if (previous === "left") wanted = share < FLIP_RIGHT_AT ? "right" : "left";
+  else if (previous === "right") wanted = share > FLIP_LEFT_AT ? "left" : "right";
+  else wanted = share > 0.6 ? "left" : "right";
+  const fitsRight = x + OFFSET + width <= containerWidth - EDGE;
+  const fitsLeft = x - OFFSET - width >= EDGE;
+  if (wanted === "left" ? fitsLeft : fitsRight) return wanted;
+  if (wanted === "left" ? fitsRight : fitsLeft) return wanted === "left" ? "right" : "left";
+  return "right";
+}
+
+function leftOnSide(side: Side, x: number, width: number, containerWidth: number): number {
+  const target = side === "left" ? x - OFFSET - width : x + OFFSET;
+  return Math.max(EDGE, Math.min(target, containerWidth - width - EDGE));
+}
+
+/** Left edge of a tooltip `width` wide next to anchor `x`, kept inside `containerWidth`. */
+export function tooltipLeft(x: number, width: number, containerWidth: number, side?: Side): number {
+  return leftOnSide(
+    chooseTooltipSide(undefined, x, width, containerWidth, side),
+    x,
+    width,
+    containerWidth,
+  );
 }
 
 /** Vertical centre of a card `height` tall at anchor `y`, kept inside `containerHeight` when it fits. */
