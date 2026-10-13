@@ -10,8 +10,8 @@ export interface SeriesMarkProps {
   dimmed: boolean;
   /** Id of the gradient (areas) defined in the chart `<defs>`. */
   gradientId?: string;
-  /** Static dots on every point (lines and areas). */
-  markers: boolean;
+  /** Static dots on every point (lines and areas), or only on the listed point indices. */
+  markers: boolean | ReadonlySet<number>;
   /** Stacked areas use a flatter fill so layers stay distinguishable. */
   stacked: boolean;
   /** Id of a gradient that strokes the line instead of the flat color. */
@@ -65,7 +65,7 @@ export const LineAreaMark = memo(function LineAreaMark({
       ) : null}
       {markers
         ? geometry.points.map((point, index) =>
-            point ? (
+            point && (markers === true || markers.has(index)) ? (
               <circle
                 // biome-ignore lint/suspicious/noArrayIndexKey: one marker per category index.
                 key={index}
