@@ -4,6 +4,8 @@ import { formatCurrency, formatNumber } from "../chart/format.js";
 export type CellValue = string | number | boolean | Date | null | undefined;
 
 export type ColumnType = "text" | "number" | "currency" | "date" | "status" | "boolean";
+/** How a column is filtered: `range` is numeric, `dateRange` by day, `select` / `set` by distinct value. */
+export type FilterKind = "text" | "range" | "dateRange" | "select" | "set";
 export type ColumnAlign = "start" | "center" | "end";
 
 /** What a custom cell renderer receives. */
@@ -74,6 +76,8 @@ export interface GridColumn<T> {
   grow?: number;
   align?: ColumnAlign;
   sortable?: boolean;
+  /** Overrides the filter kind picked from `type` (see `grid/filter`). */
+  filter?: FilterKind;
   pinnable?: boolean;
   resizable?: boolean;
   reorderable?: boolean;

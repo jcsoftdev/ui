@@ -1,6 +1,23 @@
 /** What a view row is: a source `data` row, or a `group` header that grouping inserts. */
 export type ViewRowKind = "data" | "group";
 
+/** What a `group` row knows about its group (set by the `grid/group` stage). */
+export interface GroupInfo {
+  /** Column the group level is built on. */
+  columnId: string;
+  /** The raw value shared by the group's rows. */
+  value: string | number | boolean | Date | null | undefined;
+  /** Text of the group header: the formatted value. */
+  label: string;
+  /** Data rows in the group, nested groups included, whether it is expanded or not. */
+  count: number;
+  expanded: boolean;
+  /** Group path, outermost level first; `key` is its JSON form. */
+  path: readonly string[];
+  /** Aggregates over all rows of the group, by column id. */
+  aggregates: Readonly<Record<string, string | number | boolean | Date | null | undefined>>;
+}
+
 /** One row of the view. A `group` row has no source row (`source` is `-1`). */
 export interface ViewRow {
   kind: ViewRowKind;
@@ -10,6 +27,8 @@ export interface ViewRow {
   source: number;
   /** Nesting level: `0` for top-level rows. */
   depth: number;
+  /** Present on `group` rows built by `grid/group`. */
+  group?: GroupInfo;
 }
 
 /**
