@@ -16,9 +16,10 @@ afterEach(() => {
 const slides = (n: number) =>
   Array.from({ length: n }, (_, i) => `<div style="height:60px">Slide ${i + 1}</div>`).join("");
 
+// Offset from the origin: a pointer parked at 0,0 would count as hovering and pause autoplay.
 const carousel = (attrs = "", n = 3, dir = "ltr") =>
   mount(
-    `<div dir="${dir}" style="width:400px"><ui-carousel label="Gallery" ${attrs}>${slides(n)}</ui-carousel></div>`,
+    `<div dir="${dir}" style="width:400px;margin:200px 0 0 200px"><ui-carousel label="Gallery" ${attrs}>${slides(n)}</ui-carousel></div>`,
   ).querySelector<UiCarousel>("ui-carousel")!;
 
 const settle = async (el: UiCarousel, index: number) =>
