@@ -1,7 +1,7 @@
 "use client";
 
 import { type ComponentProps, useRef } from "react";
-import { Check } from "../../icons/index.js";
+import { Check, Minus } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
@@ -76,7 +76,7 @@ export function Checkbox({
         {...props}
         ref={composedRef}
         className={cn(
-          "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
+          "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11 disabled:cursor-not-allowed disabled:opacity-50",
           classNames?.root,
           className,
         )}
@@ -102,10 +102,17 @@ export function Checkbox({
               style={{ pointerEvents: "none" }}
               className={classNames?.indicator}
             >
-              <Check
-                aria-hidden="true"
-                className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
-              />
+              {checked === "indeterminate" ? (
+                <Minus
+                  aria-hidden="true"
+                  className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
+                />
+              ) : (
+                <Check
+                  aria-hidden="true"
+                  className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
+                />
+              )}
             </span>
           )}
         </span>
