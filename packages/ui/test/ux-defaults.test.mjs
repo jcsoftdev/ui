@@ -155,3 +155,83 @@ test("ResponsiveList actions go in a last column and under each card, localized"
   assert.equal(markup.match(/Open a1/g)?.length, 2);
   assert.match(html.list(true, "es"), />Acciones</);
 });
+
+test("custom tones resolve through --tone-<name> variables; built-in tones keep their classes", () => {
+  const chip = html.chipTone("yape");
+  assert.match(chip, /--tone-c:var\(--tone-yape\)/);
+  assert.match(chip, /--tone-c-soft:var\(--tone-yape-soft\)/);
+  assert.match(chip, /--tone-c-ink:var\(--tone-yape-ink\)/);
+  assert.match(chip, /bg-\(--tone-c-soft\)/);
+  assert.match(html.chipTone("danger"), /bg-danger-soft/);
+  assert.doesNotMatch(html.chipTone("danger"), /--tone-c/);
+  assert.doesNotMatch(html.chipTone("Bad;Name"), /--tone-c/);
+
+  assert.match(html.statusDotTone("yape"), /bg-\(--tone-c\)/);
+  assert.match(html.statusDotTone("success"), /bg-success/);
+
+  const kpi = html.kpiTone("yape");
+  assert.match(kpi, /text-\(--tone-c-ink\)/);
+  assert.match(kpi, /bg-\(--tone-c\)/);
+  assert.match(kpi, /data-icon/);
+  assert.match(kpi, /data-trend/);
+  assert.match(html.kpiTone("success"), /text-success/);
+  assert.match(html.kpiDanger(), /text-danger/);
+  assert.doesNotMatch(html.kpiPlain(), /rounded-pill|data-icon/);
+
+  assert.match(html.avatarTone("yape"), /bg-\(--tone-c-soft\)/);
+  assert.match(html.avatarTone(), /bg-sunken/);
+});
+
+test("Avatar draws a labelled status dot only when asked", () => {
+  assert.match(html.avatarStatus(), /absolute right-0 bottom-0/);
+  assert.match(html.avatarStatus(), />Online</);
+  assert.doesNotMatch(html.avatarTone(), /absolute/);
+});
+
+test("KpiGroup auto-fit sets a minmax column template from minItemWidth", () => {
+  assert.match(html.kpiGroupAutoFit(), /repeat\(auto-fit, minmax\(min\(100%, 160px\), 1fr\)\)/);
+});
+
+test("CopyField takes its labels from the UI strings and has a live region", () => {
+  const field = html.copyField();
+  assert.match(field, /<span>Copy<\/span>/);
+  assert.match(field, /readOnly|readonly/);
+  assert.match(field, /role="status"/);
+  assert.match(html.copyField("es"), /<span>Copiar<\/span>/);
+});
+
+test("Topbar renders only the parts it is given", () => {
+  const bare = html.topbarBare();
+  assert.doesNotMatch(bare, /<nav/);
+  assert.doesNotMatch(bare, /Ctrl\+K|⌘K/);
+  assert.match(bare, /data-end/);
+  const full = html.topbarFull();
+  assert.match(full, /<nav[^>]*aria-label="Ruta"/);
+  assert.match(full, /aria-label="Buscar"/);
+});
+
+test("outlined, compact and slot variants add their markup", () => {
+  assert.match(html.emptyOutlined(), /border-dashed/);
+  assert.match(html.errorOutlined(), /border-danger/);
+  assert.match(html.pageHeaderCompact(), /data-compact/);
+  const header = html.cardHeaderSlots();
+  assert.match(header, /data-icon/);
+  assert.match(header, /Caja/);
+  assert.match(header, /data-action/);
+});
+
+test("Segmented renders options and a block layout", () => {
+  const plain = html.segmentedOptions();
+  assert.match(plain, /role="radio"[^>]*>Día</);
+  assert.match(plain, /inline-flex/);
+  const block = html.segmentedOptions(true);
+  assert.match(block, /flex w-full/);
+  assert.match(block, /flex-1/);
+});
+
+test("Button announces the UI string `loading` when no loadingLabel is given", () => {
+  const loading = html.buttonLoadingDefault();
+  assert.match(loading, />Save</);
+  assert.match(loading, /<span role="status" class="sr-only">Loading<\/span>$/);
+  assert.match(html.buttonLoadingDefaultEs(), /<span role="status" class="sr-only">Cargando<\/span>$/);
+});
