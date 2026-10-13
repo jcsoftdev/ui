@@ -1,25 +1,6 @@
-export type OtpCharset = "numeric" | "alphanumeric" | "any";
+import { type OtpCharset, sanitizeOtp } from "./otp-sanitize.js";
 
-const ALLOWED: Record<OtpCharset, RegExp> = {
-  numeric: /[0-9]/,
-  alphanumeric: /[a-z0-9]/i,
-  any: /\S/,
-};
-
-/** Keeps the characters the charset allows, in order, up to `length` (all of them when omitted). */
-export function sanitizeOtp(
-  text: string,
-  charset: OtpCharset = "numeric",
-  length = Infinity,
-): string {
-  const allowed = ALLOWED[charset];
-  let out = "";
-  for (const char of text) {
-    if (out.length >= length) break;
-    if (allowed.test(char)) out += char;
-  }
-  return out;
-}
+export { type OtpCharset, sanitizeOtp };
 
 /**
  * Writes `text` into the code from `index`: each character takes the next cell, and a paste that
@@ -93,6 +74,8 @@ export function createOtp(root: HTMLElement, options: OtpOptions = {}): Otp {
   };
 
   const onInput = (event: Event) => {
+    // An IME composition is settled on `compositionend`.
+    if ((event as InputEvent).isComposing) return;
     const index = indexOf(event.target);
     if (index === -1) return;
     const cell = cells()[index] as HTMLInputElement;
@@ -148,6 +131,7 @@ export function createOtp(root: HTMLElement, options: OtpOptions = {}): Otp {
   };
 
   root.addEventListener("input", onInput);
+  root.addEventListener("compositionend", onInput);
   root.addEventListener("paste", onPaste);
   root.addEventListener("keydown", onKeyDown);
   root.addEventListener("focusin", onFocusIn);
@@ -161,6 +145,7 @@ export function createOtp(root: HTMLElement, options: OtpOptions = {}): Otp {
     },
     destroy() {
       root.removeEventListener("input", onInput);
+      root.removeEventListener("compositionend", onInput);
       root.removeEventListener("paste", onPaste);
       root.removeEventListener("keydown", onKeyDown);
       root.removeEventListener("focusin", onFocusIn);
