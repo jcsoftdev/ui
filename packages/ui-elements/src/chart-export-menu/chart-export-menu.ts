@@ -146,7 +146,14 @@ export class UiChartExportMenu extends ElementBase {
     const open = (event as ToggleEvent).newState === "open";
     this.#trigger.setAttribute("aria-expanded", `${open}`);
     if (open) this.#place();
-    else this.#stopPosition?.();
+    else {
+      this.#stopPosition?.();
+      // Light dismiss (Escape, outside press) hides the popover natively; if focus was left inside
+      // it or dropped, it returns to the button. A press on another control keeps its focus.
+      const active = document.activeElement;
+      if (!active || active === document.body || this.#menu.contains(active))
+        this.#trigger.focus({ preventScroll: true });
+    }
   };
 
   #place(): void {

@@ -66,9 +66,8 @@ describe("ui-chart-export-menu", () => {
     await userEvent.keyboard("{ArrowDown}");
     expect(document.activeElement).toBe(item("png"));
     await userEvent.keyboard("{Escape}");
-    await wait(30);
-    expect(trigger.getAttribute("aria-expanded")).toBe("false");
-    expect(document.activeElement).toBe(trigger);
+    expect(await until(() => trigger.getAttribute("aria-expanded") === "false")).toBe(true);
+    expect(await until(() => document.activeElement === trigger)).toBe(true);
   });
 
   it("formats limits the items, and texts are replaceable", async () => {
