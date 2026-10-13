@@ -1,12 +1,13 @@
 "use client";
 
 import type { ComponentPropsWithoutRef } from "react";
+import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -70,14 +71,18 @@ export function DrawerContent({
   onPointerDownOutside,
   onInteractOutside,
   onCloseAutoFocus,
+  ref,
+  style,
   ...props
 }: DrawerContentProps) {
+  const lens = useGlassLens(ref, { ownInteractive: true });
   const previousFocusRef = usePreviousFocus();
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
       <DialogPrimitive.Content
+        ref={lens}
         className={cn(
           "@container/drawer fixed inset-y-0 right-0 z-70 flex h-full w-[min(430px,100%)] max-w-full flex-col overflow-y-auto outline-none surface-overlay shadow-overlay",
           materialClass(material, "surface-solid"),
@@ -100,6 +105,7 @@ export function DrawerContent({
           onCloseAutoFocus?.(event);
           restoreFocusOnClose(event, previousFocusRef);
         }}
+        style={withMaterialStyle(material, style)}
         {...props}
       >
         {children}

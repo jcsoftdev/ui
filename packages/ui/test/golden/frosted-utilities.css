@@ -1,0 +1,234 @@
+@utility glass {
+  background-color: var(--glass-regular-fallback);
+  box-shadow: inset 0 1px 0 var(--glass-regular-edge), 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--glass-regular-tint);
+    background-image: var(--glass-noise), var(--glass-sheen), linear-gradient(var(--glass-regular-dim), var(--glass-regular-dim));
+    -webkit-backdrop-filter: var(--glass-regular-filter);
+    backdrop-filter: var(--glass-regular-filter);
+  }
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-regular-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--glass-regular-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-overlay);
+  }
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    outline: 1px solid CanvasText;
+  }
+}
+
+@utility glass-clear {
+  background-color: var(--glass-clear-fallback);
+  box-shadow: inset 0 1px 0 var(--glass-clear-edge), 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--glass-clear-tint);
+    background-image: var(--glass-noise), var(--glass-sheen), linear-gradient(var(--glass-clear-dim), var(--glass-clear-dim));
+    -webkit-backdrop-filter: var(--glass-clear-filter);
+    backdrop-filter: var(--glass-clear-filter);
+  }
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-clear-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--glass-clear-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-overlay);
+  }
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    outline: 1px solid CanvasText;
+  }
+}
+
+@utility surface-overlay {
+  background-color: var(--surface-overlay);
+  background-image: var(--surface-glass-layer);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    :where([data-style="glass"]) & {
+      outline: 1px solid var(--line-strong);
+    }
+    background-image: none;
+  }
+  @media (forced-colors: active) {
+    background-color: var(--surface-overlay-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    :where([data-style="glass"]) & {
+      outline: 1px solid CanvasText;
+    }
+    background-image: none;
+  }
+}
+
+@utility surface-nav {
+  background-color: var(--surface-nav);
+  background-image: var(--surface-glass-layer);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    :where([data-style="glass"]) & {
+      outline: 1px solid var(--line-strong);
+    }
+    background-image: none;
+  }
+  @media (forced-colors: active) {
+    background-color: var(--surface-nav-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    :where([data-style="glass"]) & {
+      outline: 1px solid CanvasText;
+    }
+    background-image: none;
+  }
+}
+
+@utility surface-side {
+  background-color: var(--surface-side);
+  background-image: var(--surface-glass-layer);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  &[data-glass-nested] {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-image: none;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    :where([data-style="glass"]) & {
+      outline: 1px solid var(--line-strong);
+    }
+    background-image: none;
+  }
+  @media (forced-colors: active) {
+    background-color: var(--surface-side-fallback);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    :where([data-style="glass"]) & {
+      outline: 1px solid CanvasText;
+    }
+    background-image: none;
+  }
+}

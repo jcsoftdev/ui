@@ -17,7 +17,7 @@ import {
 import { Check } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
 
 interface ContextMenuState {
   open: (x: number, y: number) => void;
@@ -174,6 +174,7 @@ export function ContextMenuContent({
   material,
   collisionPadding = 8,
   onCloseAutoFocus,
+  style,
   ...props
 }: ContextMenuContentProps) {
   return (
@@ -193,6 +194,7 @@ export function ContextMenuContent({
           materialClass(material, "surface-solid"),
           className,
         )}
+        style={withMaterialStyle(material, style)}
         {...props}
       />
     </MenuPrimitive.Portal>

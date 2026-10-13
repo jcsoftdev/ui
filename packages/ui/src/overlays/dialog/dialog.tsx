@@ -1,12 +1,13 @@
 "use client";
 
 import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -72,14 +73,18 @@ export function DialogContent({
   onPointerDownOutside,
   onInteractOutside,
   onCloseAutoFocus,
+  ref,
+  style,
   ...props
 }: DialogContentProps) {
+  const lens = useGlassLens(ref, { ownInteractive: true });
   const previousFocusRef = usePreviousFocus();
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
       <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
       <DialogPrimitive.Content
+        ref={lens}
         className={cn(
           "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
           widthClasses[width],
@@ -103,6 +108,7 @@ export function DialogContent({
           onCloseAutoFocus?.(event);
           restoreFocusOnClose(event, previousFocusRef);
         }}
+        style={withMaterialStyle(material, style)}
         {...props}
       >
         {children}

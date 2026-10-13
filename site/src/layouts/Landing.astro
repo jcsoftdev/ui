@@ -6,13 +6,16 @@ import { presetInitScript } from "../lib/preset-script.mjs";
 interface Props {
   title: string;
   description: string;
+  /** Which nav link is the current page. */
+  active?: "playground";
 }
 
-const { title, description } = Astro.props;
+const { title, description, active } = Astro.props;
 const canonical = Astro.site ? new URL("/", Astro.site).href : undefined;
 const storybook = import.meta.env.PUBLIC_STORYBOOK_URL || "/storybook";
 const github = "https://github.com/jcsoftdev/ui";
 const links = [
+  { href: "/playground/", label: "Playground", id: "playground" },
   { href: "/docs/getting-started/", label: "Docs" },
   { href: "/docs/components/button/", label: "Components" },
   { href: storybook, label: "Storybook" },
@@ -51,13 +54,14 @@ const links = [
       <div class="landing-wrap flex h-14 items-center gap-4">
         <a href="/" class="flex items-center gap-2 text-ink" aria-label="@jcsoftdev/ui home">
           <img src="/favicon.svg" alt="" width="24" height="24" />
-          <strong class="text-[1.0625rem] tracking-tight">@jcsoftdev/ui</strong>
+          <strong class="max-[430px]:sr-only text-[1.0625rem] tracking-tight">@jcsoftdev/ui</strong>
         </a>
         <nav aria-label="Main" class="ml-auto flex items-center gap-1">
           {links.map((link, index) => (
             <a
-              class={index === 0 ? "landing-link" : "landing-link landing-link--extra"}
+              class={index < 2 ? "landing-link" : "landing-link landing-link--extra"}
               href={link.href}
+              aria-current={link.id && link.id === active ? "page" : undefined}
             >
               {link.label}
             </a>
@@ -75,6 +79,7 @@ const links = [
       <div class="landing-wrap flex flex-wrap items-center justify-between gap-4 text-[0.9375rem]">
         <p class="m-0">@jcsoftdev/ui · by jcsoftdev</p>
         <nav aria-label="Footer" class="flex flex-wrap gap-x-5 gap-y-2">
+          <a href="/playground/">Playground</a>
           <a href="/docs/">Documentation</a>
           <a href="/llms.txt">llms.txt</a>
           <a href="/llms-full.txt">llms-full.txt</a>

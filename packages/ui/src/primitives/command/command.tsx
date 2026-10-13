@@ -3,6 +3,7 @@
 import {
   type ChangeEvent,
   type ComponentProps,
+  type CSSProperties,
   createContext,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
@@ -572,6 +573,7 @@ export interface CommandDialogProps extends CommandRootProps {
   container?: HTMLElement | null;
   overlayClassName?: string;
   contentClassName?: string;
+  contentStyle?: CSSProperties;
   onOpenAutoFocus?: (event: Event) => void;
   onCloseAutoFocus?: (event: Event) => void;
   onEscapeKeyDown?: (event: KeyboardEvent) => void;
@@ -584,6 +586,7 @@ export function Dialog({
   container,
   overlayClassName,
   contentClassName,
+  contentStyle,
   onOpenAutoFocus,
   onCloseAutoFocus,
   onEscapeKeyDown,
@@ -604,6 +607,7 @@ export function Dialog({
           aria-labelledby={undefined}
           aria-describedby={undefined}
           className={contentClassName}
+          style={contentStyle}
           data-ui-command-dialog=""
           {...(onOpenAutoFocus ? { onOpenAutoFocus } : {})}
           {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}

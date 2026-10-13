@@ -26,6 +26,8 @@ export interface ChartTooltipProps {
   y: number;
   /** Width of the container; the tooltip prefers the left of the anchor past 60% and never leaves it. */
   containerWidth: number;
+  /** Height of the container; when given, the card is kept inside it vertically too. */
+  containerHeight?: number;
   title?: ReactNode;
   rows: readonly TooltipRow[];
   /** Wrapped sentence under the title, for notes that are not series values. */
@@ -47,6 +49,7 @@ export function ChartTooltip({
   x,
   y,
   containerWidth,
+  containerHeight,
   title,
   rows,
   body,
@@ -54,12 +57,15 @@ export function ChartTooltip({
   className,
 }: ChartTooltipProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState(0);
+  const [size, setSize] = useState({ width: 0, height: 0 });
   useIsomorphicLayoutEffect(() => {
-    const next = ref.current?.offsetWidth ?? 0;
-    if (Math.abs(next - size) > 0.5) setSize(next);
+    const width = ref.current?.offsetWidth ?? 0;
+    const height = ref.current?.offsetHeight ?? 0;
+    if (Math.abs(width - size.width) > 0.5 || Math.abs(height - size.height) > 0.5)
+      setSize({ width, height });
   });
-  const left = tooltipLeft(x, size, containerWidth, side);
+  const left = tooltipLeft(x, size.width, containerWidth, side);
+  const top = containerHeight == null ? y : tooltipCenterY(y, size.height, containerHeight);
   return (
     <div
       ref={ref}
@@ -71,7 +77,7 @@ export function ChartTooltip({
       )}
       style={{
         maxWidth: Math.max(120, Math.min(260, containerWidth - EDGE * 2)),
-        transform: `translate3d(${Math.round(left)}px, ${Math.round(y)}px, 0) translateY(-50%)`,
+        transform: `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0) translateY(-50%)`,
       }}
     >
       {title ? <div className="mb-1.5 font-bold text-fs-120 text-ink">{title}</div> : null}
@@ -123,4 +129,11 @@ export function tooltipLeft(
   const chosen =
     preferLeft && fitsLeft ? leftSide : fitsRight ? right : fitsLeft ? leftSide : right;
   return Math.max(EDGE, Math.min(chosen, containerWidth - width - EDGE));
+}
+
+/** Vertical centre of a card `height` tall at anchor `y`, kept inside `containerHeight` when it fits. */
+export function tooltipCenterY(y: number, height: number, containerHeight: number): number {
+  const min = height / 2 + EDGE;
+  const max = containerHeight - height / 2 - EDGE;
+  return max < min ? containerHeight / 2 : Math.max(min, Math.min(y, max));
 }

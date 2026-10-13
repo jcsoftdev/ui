@@ -374,13 +374,22 @@ function DonutPlot({
     const from = semi ? -Math.PI / 2 : degToRad(startAngle);
     const to = semi ? Math.PI / 2 : from + TAU;
     const pad = gap / Math.max(1, (inner + radius) / (variant === "pie" ? 1.6 : 2));
-    const slices = sliceAngles(
-      items.map((_, index) =>
-        visible.some((entry) => entry.index === index) ? (shown[index] ?? 0) : 0,
-      ),
-      { startAngle: from, endAngle: to, padAngle: pad },
+    const values = items.map((_, index) =>
+      visible.some((entry) => entry.index === index) ? (shown[index] ?? 0) : 0,
     );
-    return { visible: visible.map((entry) => entry.index), sum, radius, inner, cx, cy, slices };
+    const slices = sliceAngles(values, { startAngle: from, endAngle: to, padAngle: pad });
+    // Hit areas leave no gap between neighbours, so moving across slices never drops the hover.
+    const hits = sliceAngles(values, { startAngle: from, endAngle: to });
+    return {
+      visible: visible.map((entry) => entry.index),
+      sum,
+      radius,
+      inner,
+      cx,
+      cy,
+      slices,
+      hits,
+    };
   }, [
     items,
     shown,
@@ -396,7 +405,7 @@ function DonutPlot({
     startAngle,
   ]);
 
-  const { visible, sum, radius, inner, cx, cy, slices } = geometry;
+  const { visible, sum, radius, inner, cx, cy, slices, hits } = geometry;
   const nav = useIndexNavigation(visible.length, { wrap: true });
   const activeIndex = nav.active != null ? (visible[nav.active] ?? null) : null;
   const legendIndex = state.highlighted
@@ -420,6 +429,25 @@ function DonutPlot({
           : "",
       ),
     [slices, cx, cy, inner, radius, cornerRadius],
+  );
+  // The hovered slice steps out by `explode`. Pointer events go to these resting arcs, which
+  // also cover the stepped-out ring, never to the moving slice: a slice that moved away from a
+  // still pointer fired pointerleave, dropped the hover, slid back under the pointer and looped.
+  const hitPaths = useMemo(
+    () =>
+      hits.map((hit) =>
+        hit.fraction > 0
+          ? arcPath({
+              cx,
+              cy,
+              innerRadius: inner,
+              outerRadius: radius + Math.max(0, explode),
+              startAngle: hit.start,
+              endAngle: hit.end,
+            })
+          : "",
+      ),
+    [hits, cx, cy, inner, radius, explode],
   );
 
   // Outside labels -----------------------------------------------------------
@@ -570,7 +598,6 @@ function DonutPlot({
           const item = items[index];
           const path = paths[index];
           if (!item || !path) return null;
-          const position = visible.indexOf(index);
           const focused = focusIndex === index;
           const dimmed = focusIndex != null && !focused;
           const shift = focused ? polarPoint(0, 0, explode, slice.mid) : { x: 0, y: 0 };
@@ -584,10 +611,6 @@ function DonutPlot({
               dy={shift.y}
               originX={cx}
               originY={cy}
-              clickable={onSliceClick != null}
-              onEnter={(event) => nav.hover(position, event)}
-              onLeave={nav.leave}
-              onClick={onSliceClick ? () => onSliceClick(item.datum) : undefined}
             />
           );
         })}
@@ -643,6 +666,22 @@ function DonutPlot({
           );
         })}
 
+        {hitPaths.map((d, index) => {
+          const item = items[index];
+          if (!item || !d) return null;
+          const position = visible.indexOf(index);
+          return (
+            <SliceHitArea
+              key={item.datum.id}
+              d={d}
+              clickable={onSliceClick != null}
+              onEnter={(event) => nav.hover(position, event)}
+              onLeave={nav.leave}
+              onClick={onSliceClick ? () => onSliceClick(item.datum) : undefined}
+            />
+          );
+        })}
+
         {showCenter ? (
           <g data-fade="" {...DECORATIVE} textAnchor="middle" className="pointer-events-none">
             <text
@@ -691,7 +730,14 @@ function DonutPlot({
       />
 
       {tooltip && anchor && rows.length ? (
-        <ChartTooltip x={anchor.x} y={anchor.y} containerWidth={width} rows={rows} side={tipSide} />
+        <ChartTooltip
+          x={anchor.x}
+          y={anchor.y}
+          containerWidth={width}
+          containerHeight={height}
+          rows={rows}
+          side={tipSide}
+        />
       ) : null}
     </div>
   );
@@ -706,10 +752,6 @@ interface SliceMarkProps {
   dy: number;
   originX: number;
   originY: number;
-  clickable: boolean;
-  onEnter: (event: { clientX: number; clientY: number }) => void;
-  onLeave: () => void;
-  onClick?: () => void;
 }
 
 const SliceMark = memo(function SliceMark({
@@ -720,29 +762,12 @@ const SliceMark = memo(function SliceMark({
   dy,
   originX,
   originY,
-  clickable,
-  onEnter,
-  onLeave,
-  onClick,
 }: SliceMarkProps) {
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: pointer hover only; keyboard goes through the chart slider.
     <path
       data-slice=""
       d={d}
-      onPointerEnter={onEnter}
-      onPointerMove={onEnter}
-      onPointerLeave={onLeave}
-      onPointerUp={onClick}
-      onClick={(event) => {
-        // A mouse or touch press opens on pointer-up (a hover shift can move the slice
-        // between press and release and swallow the click); click is for keyboard and AT.
-        if (event.detail === 0) onClick?.();
-      }}
-      className={cn(
-        "motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out",
-        clickable && "cursor-pointer",
-      )}
+      className="pointer-events-none motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out"
       style={{
         fill: paint,
         opacity: dimmed ? 0.4 : 1,
@@ -752,6 +777,35 @@ const SliceMark = memo(function SliceMark({
     />
   );
 });
+
+interface SliceHitAreaProps {
+  d: string;
+  clickable: boolean;
+  onEnter: (event: { clientX: number; clientY: number }) => void;
+  onLeave: () => void;
+  onClick?: () => void;
+}
+
+/** Invisible, never-moving pointer target for one slice. */
+function SliceHitArea({ d, clickable, onEnter, onLeave, onClick }: SliceHitAreaProps) {
+  return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: pointer hover only; keyboard goes through the chart slider.
+    <path
+      data-slice-hit=""
+      d={d}
+      fill="transparent"
+      onPointerEnter={onEnter}
+      onPointerMove={onEnter}
+      onPointerLeave={onLeave}
+      onPointerUp={onClick}
+      onClick={(event) => {
+        // A mouse or touch press opens on pointer-up; click is for keyboard and AT.
+        if (event.detail === 0) onClick?.();
+      }}
+      className={cn(clickable && "cursor-pointer")}
+    />
+  );
+}
 
 const PATTERN_KINDS = 5;
 

@@ -1,7 +1,7 @@
 name: release
 
-# Publishes @jcsoftdev/ui to npm when a tag v<version> is pushed. Authenticates with npm
-# trusted publishing (OIDC, configured on npmjs.com for this repo and workflow): no token.
+# Publishes the packages listed in .github/publish-packages.json to npm when a tag v<version> is
+# pushed. Authenticates with npm trusted publishing (OIDC, configured on npmjs.com for this repo and workflow): no token.
 
 on:
   push:
@@ -22,13 +22,14 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
           registry-url: https://registry.npmjs.org
-      - name: Verify tag matches package version
+      - name: Plan release (lockstep versions, tag match, enabled packages)
+        id: plan
         run: |
-          version=$(node -p "require('./packages/ui/package.json').version")
-          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} does not match packages/ui version v${version}"
-            exit 1
-          fi
+          {
+            echo "dirs<<EOF"
+            node scripts/release-plan.mjs "${GITHUB_REF_NAME}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm test
@@ -37,6 +38,22 @@ jobs:
         run: pnpm typecheck
       - name: Upgrade npm (trusted publishing needs npm 11.5.1 or later)
         run: npm install -g npm@latest
-      - name: Publish to npm
-        working-directory: packages/ui
-        run: npm publish --access public --provenance
+      - name: Publish enabled packages
+        # .github/publish-packages.json lists the packages to publish, in dependency order. Add a
+        # package only after its trusted publisher is configured on npmjs.com (per package name:
+        # repo jcsoftdev/ui, workflow release.yml). pnpm pack rewrites workspace: specifiers;
+        # npm publish of the tarball keeps OIDC trusted publishing and provenance.
+        run: |
+          set -euo pipefail
+          while read -r dir; do
+            [ -n "$dir" ] || continue
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "$name@$version is already published, skipping"
+              continue
+            fi
+            tarball_dir=$(mktemp -d)
+            (cd "$dir" && pnpm pack --pack-destination "$tarball_dir")
+            npm publish "$tarball_dir"/*.tgz --access public --provenance
+          done <<< "${{ steps.plan.outputs.dirs }}"
