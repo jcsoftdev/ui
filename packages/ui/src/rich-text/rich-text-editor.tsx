@@ -180,6 +180,7 @@ export function RichTextEditor({
   const toolbar = useRef<HTMLDivElement>(null);
   const linkInput = useRef<HTMLInputElement>(null);
   const savedRange = useRef<Range | null>(null);
+  const dragSource = useRef<Range | null>(null);
   const lastEmitted = useRef<string>("");
   const [empty, setEmpty] = useState(() => htmlToText(sanitizeHtml(value ?? defaultValue)) === "");
   const [active, setActive] = useState<Set<Command>>(new Set());
@@ -295,9 +296,9 @@ export function RichTextEditor({
   };
 
   const insertClean = useCallback(
-    (clean: string) => {
+    (clean: string): boolean => {
       const node = editor.current;
-      if (!clean || !node) return;
+      if (!clean || !node) return false;
       node.focus();
       if (!selectionIn(node)) {
         const end = document.createRange();
@@ -308,6 +309,7 @@ export function RichTextEditor({
       }
       document.execCommand("insertHTML", false, clean);
       emit();
+      return true;
     },
     [emit],
   );
@@ -317,10 +319,29 @@ export function RichTextEditor({
     insertClean(htmlFromTransfer(event.clipboardData));
   };
 
+  // A drag that starts inside this editor moves its selection; one from elsewhere copies.
+  const onDragStart = () => {
+    const range = selectionIn(editor.current);
+    dragSource.current = range && !range.collapsed ? range.cloneRange() : null;
+  };
+
+  const onDragEnd = () => {
+    dragSource.current = null;
+  };
+
   const onDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+    const source = dragSource.current;
+    dragSource.current = null;
     if (editor.current) placeCaretAt(editor.current, event.clientX, event.clientY);
-    insertClean(htmlFromTransfer(event.dataTransfer));
+    if (source) {
+      const target = selectionIn(editor.current);
+      if (target && source.isPointInRange(target.startContainer, target.startOffset)) return;
+    }
+    if (insertClean(htmlFromTransfer(event.dataTransfer)) && source) {
+      source.deleteContents();
+      emit();
+    }
   };
 
   // Whatever the browser would insert by itself from foreign data goes through the sanitizer.
@@ -518,6 +539,8 @@ export function RichTextEditor({
           spellCheck
           onInput={emit}
           onPaste={onPaste}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
           onDrop={onDrop}
           onKeyDown={onEditorKeyDown}
           onBlur={emit}

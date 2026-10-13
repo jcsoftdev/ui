@@ -85,6 +85,47 @@ describe("RichTextEditor transfer handling", () => {
     expect(editor.innerHTML).toContain("insertFromDrop");
   });
 
+  test("a drag started inside the editor moves its selection; one from elsewhere copies", async () => {
+    const { editor } = await mount();
+    await act(async () => {
+      editor.innerHTML = "<p>move me</p><p>target</p>";
+    });
+    const [first, second] = Array.from(editor.querySelectorAll("p"));
+    const range = document.createRange();
+    range.selectNodeContents(first as HTMLElement);
+    getSelection()?.removeAllRanges();
+    getSelection()?.addRange(range);
+    const rect = (second as HTMLElement).getBoundingClientRect();
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData("text/html", "<b>move me</b>");
+    await act(async () => {
+      editor.dispatchEvent(new DragEvent("dragstart", { bubbles: true }));
+      editor.dispatchEvent(
+        new DragEvent("drop", {
+          dataTransfer,
+          bubbles: true,
+          cancelable: true,
+          clientX: rect.left + 2,
+          clientY: rect.top + rect.height / 2,
+        }),
+      );
+    });
+    expect(editor.innerHTML.split("move me").length - 1).toBe(1);
+    expect(editor.innerHTML).toContain("target");
+    await act(async () => {
+      editor.dispatchEvent(
+        new DragEvent("drop", {
+          dataTransfer,
+          bubbles: true,
+          cancelable: true,
+          clientX: rect.left + 2,
+          clientY: rect.top + rect.height / 2,
+        }),
+      );
+    });
+    expect(editor.innerHTML.split("move me").length - 1).toBe(2);
+  });
+
   test("a paste or drop carrying only a file inserts nothing", async () => {
     const { editor } = await mount();
     const before = editor.innerHTML;
