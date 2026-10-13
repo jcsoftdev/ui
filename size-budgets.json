@@ -248,42 +248,6 @@
       "maxGzip": 200
     },
     {
-      "id": "ui-elements (define all)",
-      "kind": "js",
-      "file": "packages/ui-elements/dist/index.js",
-      "maxGzip": 6350
-    },
-    {
-      "id": "ui-elements/button",
-      "kind": "js",
-      "file": "packages/ui-elements/dist/button/button.js",
-      "maxGzip": 2450
-    },
-    {
-      "id": "ui-elements/input",
-      "kind": "js",
-      "file": "packages/ui-elements/dist/input/input.js",
-      "maxGzip": 1900
-    },
-    {
-      "id": "ui-elements/checkbox",
-      "kind": "js",
-      "file": "packages/ui-elements/dist/checkbox/checkbox.js",
-      "maxGzip": 2250
-    },
-    {
-      "id": "ui-elements/switch",
-      "kind": "js",
-      "file": "packages/ui-elements/dist/switch/switch.js",
-      "maxGzip": 2150
-    },
-    {
-      "id": "ui-elements/radio-group",
-      "kind": "js",
-      "file": "packages/ui-elements/dist/radio-group/radio-group.js",
-      "maxGzip": 2900
-    },
-    {
       "id": "ui-elements material=\"liquid\" chunk (lazy)",
       "kind": "js",
       "file": "packages/ui-elements/dist/internal/liquid.js",

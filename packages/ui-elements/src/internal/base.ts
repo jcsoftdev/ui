@@ -97,3 +97,33 @@ export function emit(
 
 /** The `command` event of Invoker Commands (`<button commandfor="id" command="--open">`). */
 export type CommandEventLike = Event & { command?: string };
+
+let commandPolyfill = false;
+/**
+ * Calls `handler` with the command name when an invoker (`<button commandfor="id" command="--open">`)
+ * targets `host`. Browsers without Invoker Commands get a one-time click listener that dispatches
+ * the same `command` event.
+ */
+export function onCommand(host: HTMLElement, handler: (command: string) => void): void {
+  host.addEventListener("command", (event) => handler((event as CommandEventLike).command ?? ""));
+  if (commandPolyfill || typeof HTMLButtonElement === "undefined") return;
+  if ("commandForElement" in HTMLButtonElement.prototype) return;
+  commandPolyfill = true;
+  document.addEventListener("click", (event) => {
+    const invoker = (event.target as Element | null)?.closest?.("button[commandfor]");
+    if (!invoker || (invoker as HTMLButtonElement).disabled) return;
+    const root = invoker.getRootNode() as Document | ShadowRoot;
+    const target = root.getElementById?.(invoker.getAttribute("commandfor") ?? "");
+    const command = invoker.getAttribute("command");
+    if (!target || !command) return;
+    target.dispatchEvent(Object.assign(new Event("command", { cancelable: true }), { command }));
+  });
+}
+
+/** The element `id` names in the root `from` lives in (document or shadow root). */
+export const byId = (from: Node, id: string | null): HTMLElement | null =>
+  id ? ((from.getRootNode() as Document | ShadowRoot).getElementById?.(id) ?? null) : null;
+
+/** Whether the Popover API is available. */
+export const hasPopover = () =>
+  typeof HTMLElement !== "undefined" && Object.hasOwn(HTMLElement.prototype, "popover");

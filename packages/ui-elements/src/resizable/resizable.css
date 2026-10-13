@@ -1,0 +1,86 @@
+[data-ui="resizable"] {
+  /* Component variables are --ui-resizable-*; everything else must be a ui-tokens token. */
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+[data-ui="resizable"][hidden] {
+  display: none;
+}
+[data-ui="resizable"][data-direction="horizontal"] {
+  flex-direction: row;
+}
+[data-ui="resizable"][data-direction="vertical"] {
+  flex-direction: column;
+}
+[data-ui="resizable"] > :not([role="separator"]) {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+[data-ui="resizable"] > [role="separator"] {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+[data-ui="resizable"][data-direction="horizontal"] > [role="separator"] {
+  width: 8px;
+  cursor: col-resize;
+}
+[data-ui="resizable"][data-direction="vertical"] > [role="separator"] {
+  height: 8px;
+  cursor: row-resize;
+}
+[data-ui="resizable"] > [role="separator"]::before {
+  content: "";
+  background: var(--border-color-divider);
+  transition: background-color var(--motion-duration) var(--motion-ease);
+}
+[data-ui="resizable"][data-direction="horizontal"] > [role="separator"]::before {
+  width: 1px;
+  height: 100%;
+}
+[data-ui="resizable"][data-direction="vertical"] > [role="separator"]::before {
+  width: 100%;
+  height: 1px;
+}
+[data-ui="resizable"] > [role="separator"]::after {
+  content: "";
+  position: absolute;
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--radius-badge);
+  background: var(--surface-control);
+}
+[data-ui="resizable"][data-direction="horizontal"] > [role="separator"]::after {
+  width: 6px;
+  height: 24px;
+}
+[data-ui="resizable"][data-direction="vertical"] > [role="separator"]::after {
+  width: 24px;
+  height: 6px;
+}
+[data-ui="resizable"] > [role="separator"]:is(:hover, :focus-visible, [data-dragging])::before {
+  background: var(--accent);
+}
+[data-ui="resizable"] > [role="separator"]:focus-visible::after {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="resizable"] > [role="separator"]::before {
+    transition: none;
+  }
+}

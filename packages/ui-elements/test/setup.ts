@@ -5,6 +5,7 @@ import type { AxNode } from "./commands.ts";
 declare module "vitest/browser" {
   interface BrowserCommands {
     axTree: () => Promise<AxNode[]>;
+    reducedMotion: (value: "reduce" | "no-preference") => Promise<void>;
   }
 }
 

@@ -13,30 +13,50 @@
   "bugs": {
     "url": "https://github.com/jcsoftdev/ui/issues"
   },
-  "keywords": ["web-components", "custom-elements", "form-associated", "design-system", "liquid-glass", "vanilla-js"],
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "form-associated",
+    "design-system",
+    "liquid-glass",
+    "vanilla-js"
+  ],
   "type": "module",
-  "sideEffects": false,
-  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": [
+    "./dist/icon/glyphs/*.js"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
-    "./button": { "types": "./dist/button/button.d.ts", "import": "./dist/button/button.js" },
-    "./input": { "types": "./dist/input/input.d.ts", "import": "./dist/input/input.js" },
-    "./checkbox": { "types": "./dist/checkbox/checkbox.d.ts", "import": "./dist/checkbox/checkbox.js" },
-    "./switch": { "types": "./dist/switch/switch.d.ts", "import": "./dist/switch/switch.js" },
-    "./radio-group": { "types": "./dist/radio-group/radio-group.d.ts", "import": "./dist/radio-group/radio-group.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./css/*": "./dist/css/*",
-    "./package.json": "./package.json"
+    "./icons/*": {
+      "types": "./dist/icon/glyphs/*.d.ts",
+      "import": "./dist/icon/glyphs/*.js"
+    },
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./dist/*/*.d.ts",
+      "import": "./dist/*/*.js"
+    }
   },
   "scripts": {
-    "css": "node scripts/build-css.mjs",
-    "build": "rm -rf dist && node scripts/build-css.mjs && tsc -p tsconfig.build.json && node scripts/build-css.mjs --dist",
+    "build": "rm -rf dist && pnpm prepare:src && tsc -p tsconfig.build.json && node scripts/build-css.mjs --dist",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "typecheck": "node scripts/build-css.mjs && tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "typecheck": "pnpm prepare:src && tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
     "test": "pnpm build && node --test test/*.test.mjs && vitest run --project unit --passWithNoTests",
-    "test:browser": "node scripts/build-css.mjs && vitest run --project browser",
+    "test:browser": "pnpm prepare:src && vitest run --project browser",
     "check:treeshake": "node test/treeshake.mjs",
-    "check:pack": "node ../../scripts/pack-check.mjs packages/ui-tokens packages/ui-core packages/ui-elements"
+    "check:pack": "node ../../scripts/pack-check.mjs packages/ui-tokens packages/ui-core packages/ui-elements",
+    "prepare:src": "node scripts/gen-index.mjs && node scripts/build-css.mjs",
+    "new": "node scripts/new-element.mjs"
   },
   "dependencies": {
     "@jcsoftdev/ui-core": "workspace:^",
@@ -46,6 +66,7 @@
     "@biomejs/biome": "^2.2.0",
     "@types/node": "^20",
     "@vitest/browser-playwright": "4.1.11",
+    "axe-core": "4.14.0",
     "esbuild": "^0.28.2",
     "playwright": "1.64.0",
     "typescript": "^5.5.4",
