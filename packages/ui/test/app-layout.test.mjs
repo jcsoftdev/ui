@@ -159,3 +159,23 @@ test("OfflineBanner shows an optional action next to the queue counter", () => {
   assert.doesNotMatch(html.offlineActionOnly(), /tabular-nums/);
   assert.doesNotMatch(html.offlinePlain(), /<button/);
 });
+
+test("Checkbox label is a <label> bound to the checkbox button", () => {
+  const markup = html.checkboxLabel();
+  const id = markup.match(/<button[^>]*role="checkbox"[^>]*id="([^"]+)"/)?.[1];
+  assert.ok(id);
+  assert.match(
+    markup,
+    new RegExp(`<label for="${id.replace(/[:]/g, "\\$&")}"[^>]*>Remember me</label>`),
+  );
+
+  const custom = html.checkboxLabelId();
+  assert.match(custom, /id="remember"/);
+  assert.match(custom, /<label for="remember" data-disabled=""/);
+});
+
+test("Checkbox without label renders no label and no generated id", () => {
+  const bare = html.checkboxBare();
+  assert.doesNotMatch(bare, /<label/);
+  assert.doesNotMatch(bare, /<button[^>]*\sid=/);
+});

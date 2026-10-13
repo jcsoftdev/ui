@@ -10,6 +10,7 @@ import { AppShell, createAppShellStore, useAppShell } from "../../src/shell/app-
 export { createAppShellStore };
 import { Topbar } from "../../src/shell/topbar/topbar.js";
 import { OfflineBanner } from "../../src/states/offline-banner/offline-banner.js";
+import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
 import { Form, FormError, FormStatus } from "../../src/forms/form/form.js";
 import { Grid } from "../../src/containers/grid/grid.js";
 
@@ -109,4 +110,7 @@ export const html = {
   offlineActionOnly: () =>
     renderToStaticMarkup(<OfflineBanner message="Offline" action={<button type="button">Retry</button>} />),
   offlinePlain: () => renderToStaticMarkup(<OfflineBanner message="Offline" />),
+  checkboxLabel: () => renderToStaticMarkup(<Checkbox label="Remember me" />),
+  checkboxLabelId: () => renderToStaticMarkup(<Checkbox label="Remember me" id="remember" disabled />),
+  checkboxBare: () => renderToStaticMarkup(<Checkbox aria-label="Remember me" />),
 };
