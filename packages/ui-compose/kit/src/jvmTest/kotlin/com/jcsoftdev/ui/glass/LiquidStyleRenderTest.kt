@@ -122,20 +122,20 @@ private fun Bitmap.sameAs(other: Bitmap): Boolean {
 
 class LiquidStyleRenderTest {
     @Test fun theBaseMaterialWithTheDefaultFeaturesRendersExactlyLikeTheRegularPreset() {
-        val spelledOut = LiquidGlass(lens = RefractionLens(), dispersion = Dispersion(), interaction = LiquidInteraction.Press())
+        val spelledOut = LiquidGlass(lens = RefractionLens(dispersion = Dispersion()), interaction = LiquidInteraction.Press())
         assertTrue(styled(spelledOut).sameAs(styled(LiquidGlass.Regular)))
     }
 
     @Test fun refractionZeroTurnsTheLensOff() {
-        val lensed = styled(LiquidGlass.Regular.copy(lens = RefractionLens(1.5f))).rgb(114, 60)
-        val flat = styled(LiquidGlass.Regular.copy(lens = RefractionLens(0f, LiquidProfile.Rim))).rgb(114, 60)
+        val lensed = styled(LiquidGlass.Regular.copy(lens = RefractionLens(1.5f, dispersion = Dispersion()))).rgb(114, 60)
+        val flat = styled(LiquidGlass.Regular.copy(lens = RefractionLens(0f, LiquidProfile.Rim, dispersion = Dispersion()))).rgb(114, 60)
         assertTrue(lensed.third - flat.third > 10, "edge blue lensed=$lensed flat=$flat")
     }
 
     @Test fun profilesRenderDifferentSurfaces() {
-        val full = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Full)))
-        val rim = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Rim)))
-        val dome = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Dome)))
+        val full = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Full, dispersion = Dispersion())))
+        val rim = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Rim, dispersion = Dispersion())))
+        val dome = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Dome, dispersion = Dispersion())))
         assertTrue(!full.sameAs(rim) && !full.sameAs(dome) && !rim.sameAs(dome))
     }
 
@@ -163,8 +163,8 @@ class LiquidStyleRenderTest {
     }
 
     @Test fun frostBlursTheSeamHarder() {
-        val sharp = styled(LiquidGlass.Regular.copy(frost = 0.dp, lens = RefractionLens(0f, LiquidProfile.Rim)))
-        val soft = styled(LiquidGlass.Regular.copy(frost = 12.dp, lens = RefractionLens(0f, LiquidProfile.Rim)))
+        val sharp = styled(LiquidGlass.Regular.copy(frost = 0.dp, lens = RefractionLens(0f, LiquidProfile.Rim, dispersion = Dispersion())))
+        val soft = styled(LiquidGlass.Regular.copy(frost = 12.dp, lens = RefractionLens(0f, LiquidProfile.Rim, dispersion = Dispersion())))
         // The red/blue seam is at x=122: a hard blur makes the neighbours at 118 and 126 closer to each other.
         val sharpGap = abs(sharp.rgb(118, 60).first - sharp.rgb(126, 60).first)
         val softGap = abs(soft.rgb(118, 60).first - soft.rgb(126, 60).first)
@@ -196,7 +196,6 @@ class LiquidStyleRenderTest {
             LiquidGlass.Regular.copy(
                 lens = RefractionLens(0f, LiquidProfile.Rim),
                 opacity = 0f,
-                dispersion = null,
                 frost = 0.dp,
                 saturation = 1f,
                 rim = 0f,

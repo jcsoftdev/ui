@@ -4,12 +4,16 @@
 
 ### Opt-in Liquid features (breaking)
 
-Liquid Glass is now built from values the app passes, so an APK only contains the Liquid code it uses. R8 keeps a feature only when the app names it, because the kit reaches each feature's code through that value and nowhere else.
+Liquid Glass is now built from values the app passes, so an APK only contains the Liquid code it uses. R8 keeps a feature only when the app names it, because the kit reaches each feature's code through that value and nowhere else. `LiquidReachabilityTest` reads the compiled classes and fails if any kit class outside the Liquid files refers to Liquid code.
 
-- `SurfaceMaterial` is a sealed class: `Solid`, `Glass`, `GlassClear`, and `LiquidGlass`.
-- `LiquidGlass` takes optional features: `lens` (`RefractionLens(refraction, profile)` or `CrystalLens(refraction)`), `dispersion` (`Dispersion(amount)`) and `interaction` (`LiquidInteraction.Press(motion)` or `LiquidInteraction.Drag(motion)`). The look fields of the old `LiquidGlassStyle` stay where they were.
+- `SurfaceMaterial` is now a sealed class with the values `Solid`, `Glass`, `GlassClear` and `LiquidGlass`.
+- `LiquidGlass` takes two optional features:
+  - `lens`: `RefractionLens(refraction, profile, dispersion)` or `CrystalLens(refraction, dispersion)`.
+  - `interaction`: `LiquidInteraction.Press(motion)` or `LiquidInteraction.Drag(motion)`.
+- `Dispersion(amount)` is a parameter of the lens, so a material cannot have dispersion without a lens.
+- The look fields of the old `LiquidGlassStyle` keep their names and defaults.
 - `LiquidGlass()` with no features is the base material: veil, rim, specular, shadow and no shader.
-- `LiquidGlass.Regular`, `Clear`, `Thick` and `Crystal` are presets, each built in its own holder on first read.
+- `LiquidGlass.Regular`, `Clear`, `Thick` and `Crystal` are presets. Each is built in its own holder on first read.
 
 Measured with a minified release consumer (dex bytes; Liquid classes left by R8):
 
@@ -21,7 +25,8 @@ Measured with a minified release consumer (dex bytes; Liquid classes left by R8)
 
 Behaviour changes:
 
-- A `LiquidGlass` without an `interaction` is static: passing an `interactionSource` alone no longer animates it.
+- **The defaults changed.** `LiquidGlassStyle()` meant a full lens at refraction 1, dispersion 0.03, `Press` and `LiquidMotion.Standard`. `LiquidGlass()` has no lens, no dispersion and no interaction. A custom style therefore maps to `LiquidGlass.Regular.copy(...)`, not to `LiquidGlass(...)`. This also holds for the chrome material passed to `UiTheme(chromeGlass)`.
+- A `LiquidGlass` without an `interaction` is static. An `interactionSource` alone no longer animates it.
 - `GlassEffectContainer` merges only when its material has a lens.
 - There is no subtree-wide style any more. Pass the material to each surface, or set the chrome material with `UiTheme(chromeGlass)`.
 
@@ -31,19 +36,29 @@ Behaviour changes:
 | --- | --- |
 | `SurfaceMaterial.Liquid` | `LiquidGlass.Regular` |
 | `SurfaceMaterial.LiquidClear` | `LiquidGlass.Regular.copy(clear = true)` |
-| `LiquidGlassStyle(...)` / `LiquidGlassStyle.Regular` / `Clear` / `Thick` / `Crystal` | `LiquidGlass(...)` / `LiquidGlass.Regular` / `Clear` / `Thick` / `Crystal` |
-| `refraction = r, profile = P` | `lens = RefractionLens(r, P)` |
-| `profile = LiquidProfile.Convex` | `lens = CrystalLens(r)` |
-| `refraction = 0f` (lens off) | `lens = null` |
-| `dispersion = d` / `dispersion = 0f` | `dispersion = Dispersion(d)` / `dispersion = null` |
-| `interaction = LiquidInteraction.None` / `Press` / `Drag` with `motion = m` | `interaction = null` / `LiquidInteraction.Press(m)` / `LiquidInteraction.Drag(m)` |
+| `LiquidGlassStyle()` / `LiquidGlassStyle.Regular` | `LiquidGlass.Regular` (`LiquidGlass()` is the base material, without the old defaults) |
+| `LiquidGlassStyle(field = x, ...)` | `LiquidGlass.Regular.copy(field = x, ...)`, with the lens and interaction fields mapped as below |
+| `LiquidGlassStyle.Clear` / `Thick` / `Crystal` | `LiquidGlass.Clear` / `Thick` / `Crystal` |
+| `refraction = r, profile = P` | `lens = RefractionLens(r, P, Dispersion())` (`Dispersion()` keeps the old 0.03 default) |
+| `profile = LiquidProfile.Convex` | `lens = CrystalLens(r, Dispersion())` |
+| `refraction = 0f` | `lens = RefractionLens(refraction = 0f, ...)`: the shader still draws the glint, fresnel and grain, as before. Use `lens = null` only to drop the shader. |
+| `dispersion = d` / `dispersion = 0f` | `RefractionLens(..., dispersion = Dispersion(d))` / `RefractionLens(..., dispersion = null)` (also on `CrystalLens`) |
+| `interaction = LiquidInteraction.Press` / `Drag` with `motion = m` | `interaction = LiquidInteraction.Press(m)` / `LiquidInteraction.Drag(m)` |
+| `interaction = LiquidInteraction.None` | `interaction = null`. In 0.2.0 previews, `None` plus an `interactionSource` still made the press brightening and the materialize ramp; `null` makes neither. To keep them, use `LiquidInteraction.Press(m)` with `swell = 0.dp` in the motion. Kit components are unaffected: they never passed an `interactionSource` to the surface. |
 | `UiTheme(glassVariant = GlassVariant.Frosted)` | `UiTheme(chromeGlass = SurfaceMaterial.Glass)` (the default) |
-| `UiTheme(glassVariant = GlassVariant.Liquid, liquidGlassStyle = s)` | `UiTheme(chromeGlass = s)` |
+| `UiTheme(glassVariant = GlassVariant.Liquid)` | `UiTheme(chromeGlass = LiquidGlass.Regular)` |
+| `UiTheme(glassVariant = GlassVariant.Liquid, liquidGlassStyle = LiquidGlassStyle(...))` | `UiTheme(chromeGlass = LiquidGlass.Regular.copy(...))` |
 | `UiTheme.liquidGlassStyle`, `LocalLiquidGlassStyle` | `UiTheme.chromeGlass`; per surface, pass the material |
 | `Modifier.material(SurfaceMaterial.Liquid, shape, style = s)`, `MaterialSurface(..., style = s)` | `Modifier.material(s, shape)`, `MaterialSurface(s, ...)` |
 | `GlassEffectContainer(style = s)`, `glassEffect(shape, style = s, material = m)` | `GlassEffectContainer(material = s)`, `glassEffect(shape, material = s)` |
 
-An app that never used Liquid Glass changes nothing: `Solid`, `Glass`, `GlassClear` and the frosted default are unchanged.
+`SurfaceMaterial` was an enum and is now a sealed class. Code that treats it as an enum no longer compiles:
+
+- `SurfaceMaterial.entries`, `values()` and `valueOf(...)`. List the values you use yourself.
+- `.name` and `.ordinal`. Compare with `==` against `SurfaceMaterial.Solid`, `Glass` or `GlassClear`, or use `is LiquidGlass`.
+- An exhaustive `when` over the old constants. Branch on `SurfaceMaterial.Solid`, `Glass` and `GlassClear` with `==`, use `is LiquidGlass` for Liquid, and add an `else` branch.
+
+An app that never used Liquid Glass needs no changes unless it used the enum API above: `Solid`, `Glass`, `GlassClear` and the frosted default are unchanged.
 
 ### Liquid Glass
 

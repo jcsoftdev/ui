@@ -13,6 +13,7 @@ import kotlin.math.hypot
 @Immutable
 public data class CrystalLens(
     override val refraction: Float = 1.67f,
+    override val dispersion: Dispersion? = null,
 ) : LiquidLens() {
     override val profileCode: Float get() = 3f
 

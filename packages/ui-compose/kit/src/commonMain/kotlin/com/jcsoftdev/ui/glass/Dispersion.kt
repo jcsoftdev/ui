@@ -4,8 +4,8 @@ import androidx.compose.runtime.Immutable
 
 /**
  * Chromatic dispersion of a Liquid lens: the refraction is spread per channel, red bent further than green and blue less, so
- * the rim shows a thin rainbow. [amount] is the spread (0.03 is the kit's default, 0 none). It needs a [LiquidGlass.lens];
- * without one there is nothing to disperse.
+ * the rim shows a thin rainbow. [amount] is the spread (0.03 is the kit's default, 0 none). It is a parameter of
+ * the lens ([RefractionLens.dispersion], [CrystalLens.dispersion]), so it cannot exist without one.
  *
  * Its shader code is only in an app that passes a `Dispersion`: a lens without it takes one sample per pixel instead of three.
  */

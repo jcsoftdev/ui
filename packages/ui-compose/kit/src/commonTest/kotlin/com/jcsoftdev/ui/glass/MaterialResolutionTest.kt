@@ -114,7 +114,6 @@ class MaterialResolutionTest {
 
     @Test fun liquidWithoutALensIsTheBaseMaterialEvenWhereTheShaderRuns() {
         assertEquals(SurfaceMode.Blur, resolve(LiquidGlass(), lensAvailable = true).mode)
-        assertEquals(SurfaceMode.Blur, resolve(LiquidGlass(dispersion = Dispersion()), lensAvailable = true).mode)
     }
 
     @Test fun frostedNeverUsesTheLens() {

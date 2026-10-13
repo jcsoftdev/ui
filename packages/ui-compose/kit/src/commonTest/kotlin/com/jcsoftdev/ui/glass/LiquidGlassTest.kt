@@ -22,7 +22,6 @@ class LiquidGlassTest {
     @Test fun theBaseMaterialHasNoFeaturesAndLeavesTheTokensAlone() {
         val base = LiquidGlass()
         assertNull(base.lens)
-        assertNull(base.dispersion)
         assertNull(base.interaction)
         assertFalse(base.refracts, "no lens: it never resolves to the lens mode")
         assertSame(tokens, base.applyTo(tokens))
@@ -31,8 +30,7 @@ class LiquidGlassTest {
 
     @Test fun regularIsTheShippedLookAsFeatures() {
         val regular = LiquidGlass.Regular
-        assertEquals(RefractionLens(1f, LiquidProfile.Full), regular.lens)
-        assertEquals(Dispersion(0.03f), regular.dispersion)
+        assertEquals(RefractionLens(1f, LiquidProfile.Full, Dispersion(0.03f)), regular.lens)
         assertEquals(LiquidInteraction.Press(LiquidMotion.Standard), regular.interaction)
         assertTrue(regular.refracts)
         assertSame(regular, LiquidGlass.Regular, "a preset is one value")
@@ -204,8 +202,7 @@ class LiquidGlassTest {
 
     @Test fun crystalIsAClearConvexLensWithoutAVeil() {
         val c = LiquidGlass.Crystal
-        assertEquals(CrystalLens(1.67f), c.lens)
-        assertEquals(Dispersion(0.05f), c.dispersion)
+        assertEquals(CrystalLens(1.67f, Dispersion(0.05f)), c.lens)
         assertEquals(40.dp, c.bevelWidth)
         assertEquals(0.dp, c.frost)
         assertEquals(1f, c.fresnel)

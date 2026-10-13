@@ -49,7 +49,7 @@ public data class LiquidShadow(
  * feature is a value you pass, and only the features an app passes are in its APK:
  * - [lens]: [RefractionLens] bends the backdrop at the edges (Android 13+, Skia targets); [CrystalLens] is the thick convex
  *   lens of [Crystal]. Without a lens, or where the platform cannot run the shader, the surface is the base material.
- * - [dispersion]: [Dispersion] splits the refraction per channel (chromatic aberration). Needs a [lens].
+ *   A lens can carry a [Dispersion], which splits the refraction per channel (chromatic aberration).
  * - [interaction]: [LiquidInteraction.Press] lifts the surface while pressed and materializes the lens when it appears;
  *   [LiquidInteraction.Drag] adds the velocity squash. Without one the surface is static.
  *
@@ -67,7 +67,6 @@ public data class LiquidShadow(
  *
  * @param clear the clear token set: more transparent, with a stronger dim layer (the web `liquid-clear`).
  * @param lens the refraction; null keeps the base material.
- * @param dispersion per-channel spread of the refraction; null for none.
  * @param interaction how it reacts to touch, and its springs; null keeps it static.
  * @param bevelWidth the depth of the rim: how far in the veil thins, the thickness shading runs and, for [LiquidProfile.Rim], the lens reaches.
  * @param frost blur radius of the backdrop; unspecified keeps the token.
@@ -86,7 +85,6 @@ public data class LiquidShadow(
 public data class LiquidGlass(
     val clear: Boolean = false,
     val lens: LiquidLens? = null,
-    val dispersion: Dispersion? = null,
     val interaction: LiquidInteraction? = null,
     val bevelWidth: Dp = 22.dp,
     val frost: Dp = Dp.Unspecified,

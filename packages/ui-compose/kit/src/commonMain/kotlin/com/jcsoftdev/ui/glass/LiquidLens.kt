@@ -28,6 +28,9 @@ public sealed class LiquidLens {
     /** How far the lens bends the backdrop, as a multiple of the default (0 keeps the lens on with no bend). */
     public abstract val refraction: Float
 
+    /** Per-channel spread of the refraction, or null for one sample per pixel. Dispersion only exists on a lens. */
+    public abstract val dispersion: Dispersion?
+
     /** Shader code of the profile: 0 full, 1 rim, 2 dome, 3 convex. */
     internal abstract val profileCode: Float
 
@@ -77,12 +80,13 @@ public enum class LiquidProfile {
 
 /**
  * The Liquid lens: the backdrop is sampled from further inside the surface, by an amount that is strongest at the edge, so every
- * sample stays within the surface. [profile] picks how the bend spreads.
+ * sample stays within the surface. [profile] picks how the bend spreads; [dispersion] splits it per channel.
  */
 @Immutable
 public data class RefractionLens(
     override val refraction: Float = 1f,
     val profile: LiquidProfile = LiquidProfile.Full,
+    override val dispersion: Dispersion? = null,
 ) : LiquidLens() {
     override val profileCode: Float
         get() =
@@ -195,7 +199,7 @@ internal class LensRenderer {
         if (!stale && effect != null && inputs.contentEquals(last)) return effect
         inputs.copyInto(last)
         stale = false
-        val dispersion = material.dispersion
+        val dispersion = lens.dispersion
         val program = dispersion?.lensProgram ?: PlainLensProgram.value
         val params =
             LensParams(

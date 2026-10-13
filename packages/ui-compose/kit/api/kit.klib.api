@@ -414,13 +414,16 @@ final class com.jcsoftdev.ui.foundation/Motion { // com.jcsoftdev.ui.foundation/
 }
 
 final class com.jcsoftdev.ui.glass/CrystalLens : com.jcsoftdev.ui.glass/LiquidLens { // com.jcsoftdev.ui.glass/CrystalLens|null[0]
-    constructor <init>(kotlin/Float = ...) // com.jcsoftdev.ui.glass/CrystalLens.<init>|<init>(kotlin.Float){}[0]
+    constructor <init>(kotlin/Float = ..., com.jcsoftdev.ui.glass/Dispersion? = ...) // com.jcsoftdev.ui.glass/CrystalLens.<init>|<init>(kotlin.Float;com.jcsoftdev.ui.glass.Dispersion?){}[0]
 
+    final val dispersion // com.jcsoftdev.ui.glass/CrystalLens.dispersion|{}dispersion[0]
+        final fun <get-dispersion>(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/CrystalLens.dispersion.<get-dispersion>|<get-dispersion>(){}[0]
     final val refraction // com.jcsoftdev.ui.glass/CrystalLens.refraction|{}refraction[0]
         final fun <get-refraction>(): kotlin/Float // com.jcsoftdev.ui.glass/CrystalLens.refraction.<get-refraction>|<get-refraction>(){}[0]
 
     final fun component1(): kotlin/Float // com.jcsoftdev.ui.glass/CrystalLens.component1|component1(){}[0]
-    final fun copy(kotlin/Float = ...): com.jcsoftdev.ui.glass/CrystalLens // com.jcsoftdev.ui.glass/CrystalLens.copy|copy(kotlin.Float){}[0]
+    final fun component2(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/CrystalLens.component2|component2(){}[0]
+    final fun copy(kotlin/Float = ..., com.jcsoftdev.ui.glass/Dispersion? = ...): com.jcsoftdev.ui.glass/CrystalLens // com.jcsoftdev.ui.glass/CrystalLens.copy|copy(kotlin.Float;com.jcsoftdev.ui.glass.Dispersion?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.jcsoftdev.ui.glass/CrystalLens.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.jcsoftdev.ui.glass/CrystalLens.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.jcsoftdev.ui.glass/CrystalLens.toString|toString(){}[0]
@@ -445,7 +448,7 @@ final class com.jcsoftdev.ui.glass/GlassState { // com.jcsoftdev.ui.glass/GlassS
 }
 
 final class com.jcsoftdev.ui.glass/LiquidGlass : com.jcsoftdev.ui.glass/SurfaceMaterial { // com.jcsoftdev.ui.glass/LiquidGlass|null[0]
-    constructor <init>(kotlin/Boolean = ..., com.jcsoftdev.ui.glass/LiquidLens? = ..., com.jcsoftdev.ui.glass/Dispersion? = ..., com.jcsoftdev.ui.glass/LiquidInteraction? = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., kotlin/Float? = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidTint = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidSpecular = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidShadow = ..., androidx.compose.ui.unit/Dp = ...) // com.jcsoftdev.ui.glass/LiquidGlass.<init>|<init>(kotlin.Boolean;com.jcsoftdev.ui.glass.LiquidLens?;com.jcsoftdev.ui.glass.Dispersion?;com.jcsoftdev.ui.glass.LiquidInteraction?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;kotlin.Float?;kotlin.Float;com.jcsoftdev.ui.glass.LiquidTint;kotlin.Float;com.jcsoftdev.ui.glass.LiquidSpecular;kotlin.Float;kotlin.Float;kotlin.Float;com.jcsoftdev.ui.glass.LiquidShadow;androidx.compose.ui.unit.Dp){}[0]
+    constructor <init>(kotlin/Boolean = ..., com.jcsoftdev.ui.glass/LiquidLens? = ..., com.jcsoftdev.ui.glass/LiquidInteraction? = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., kotlin/Float? = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidTint = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidSpecular = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidShadow = ..., androidx.compose.ui.unit/Dp = ...) // com.jcsoftdev.ui.glass/LiquidGlass.<init>|<init>(kotlin.Boolean;com.jcsoftdev.ui.glass.LiquidLens?;com.jcsoftdev.ui.glass.LiquidInteraction?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;kotlin.Float?;kotlin.Float;com.jcsoftdev.ui.glass.LiquidTint;kotlin.Float;com.jcsoftdev.ui.glass.LiquidSpecular;kotlin.Float;kotlin.Float;kotlin.Float;com.jcsoftdev.ui.glass.LiquidShadow;androidx.compose.ui.unit.Dp){}[0]
 
     final val bevelWidth // com.jcsoftdev.ui.glass/LiquidGlass.bevelWidth|{}bevelWidth[0]
         final fun <get-bevelWidth>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.glass/LiquidGlass.bevelWidth.<get-bevelWidth>|<get-bevelWidth>(){}[0]
@@ -455,8 +458,6 @@ final class com.jcsoftdev.ui.glass/LiquidGlass : com.jcsoftdev.ui.glass/SurfaceM
         final fun <get-brightness>(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.brightness.<get-brightness>|<get-brightness>(){}[0]
     final val clear // com.jcsoftdev.ui.glass/LiquidGlass.clear|{}clear[0]
         final fun <get-clear>(): kotlin/Boolean // com.jcsoftdev.ui.glass/LiquidGlass.clear.<get-clear>|<get-clear>(){}[0]
-    final val dispersion // com.jcsoftdev.ui.glass/LiquidGlass.dispersion|{}dispersion[0]
-        final fun <get-dispersion>(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/LiquidGlass.dispersion.<get-dispersion>|<get-dispersion>(){}[0]
     final val fresnel // com.jcsoftdev.ui.glass/LiquidGlass.fresnel|{}fresnel[0]
         final fun <get-fresnel>(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.fresnel.<get-fresnel>|<get-fresnel>(){}[0]
     final val frost // com.jcsoftdev.ui.glass/LiquidGlass.frost|{}frost[0]
@@ -483,22 +484,21 @@ final class com.jcsoftdev.ui.glass/LiquidGlass : com.jcsoftdev.ui.glass/SurfaceM
         final fun <get-tint>(): com.jcsoftdev.ui.glass/LiquidTint // com.jcsoftdev.ui.glass/LiquidGlass.tint.<get-tint>|<get-tint>(){}[0]
 
     final fun component1(): kotlin/Boolean // com.jcsoftdev.ui.glass/LiquidGlass.component1|component1(){}[0]
-    final fun component10(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component10|component10(){}[0]
-    final fun component11(): com.jcsoftdev.ui.glass/LiquidSpecular // com.jcsoftdev.ui.glass/LiquidGlass.component11|component11(){}[0]
+    final fun component10(): com.jcsoftdev.ui.glass/LiquidSpecular // com.jcsoftdev.ui.glass/LiquidGlass.component10|component10(){}[0]
+    final fun component11(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component11|component11(){}[0]
     final fun component12(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component12|component12(){}[0]
     final fun component13(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component13|component13(){}[0]
-    final fun component14(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component14|component14(){}[0]
-    final fun component15(): com.jcsoftdev.ui.glass/LiquidShadow // com.jcsoftdev.ui.glass/LiquidGlass.component15|component15(){}[0]
-    final fun component16(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.glass/LiquidGlass.component16|component16(){}[0]
+    final fun component14(): com.jcsoftdev.ui.glass/LiquidShadow // com.jcsoftdev.ui.glass/LiquidGlass.component14|component14(){}[0]
+    final fun component15(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.glass/LiquidGlass.component15|component15(){}[0]
     final fun component2(): com.jcsoftdev.ui.glass/LiquidLens? // com.jcsoftdev.ui.glass/LiquidGlass.component2|component2(){}[0]
-    final fun component3(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/LiquidGlass.component3|component3(){}[0]
-    final fun component4(): com.jcsoftdev.ui.glass/LiquidInteraction? // com.jcsoftdev.ui.glass/LiquidGlass.component4|component4(){}[0]
+    final fun component3(): com.jcsoftdev.ui.glass/LiquidInteraction? // com.jcsoftdev.ui.glass/LiquidGlass.component3|component3(){}[0]
+    final fun component4(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.glass/LiquidGlass.component4|component4(){}[0]
     final fun component5(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.glass/LiquidGlass.component5|component5(){}[0]
-    final fun component6(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.glass/LiquidGlass.component6|component6(){}[0]
-    final fun component7(): kotlin/Float? // com.jcsoftdev.ui.glass/LiquidGlass.component7|component7(){}[0]
-    final fun component8(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component8|component8(){}[0]
-    final fun component9(): com.jcsoftdev.ui.glass/LiquidTint // com.jcsoftdev.ui.glass/LiquidGlass.component9|component9(){}[0]
-    final fun copy(kotlin/Boolean = ..., com.jcsoftdev.ui.glass/LiquidLens? = ..., com.jcsoftdev.ui.glass/Dispersion? = ..., com.jcsoftdev.ui.glass/LiquidInteraction? = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., kotlin/Float? = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidTint = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidSpecular = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidShadow = ..., androidx.compose.ui.unit/Dp = ...): com.jcsoftdev.ui.glass/LiquidGlass // com.jcsoftdev.ui.glass/LiquidGlass.copy|copy(kotlin.Boolean;com.jcsoftdev.ui.glass.LiquidLens?;com.jcsoftdev.ui.glass.Dispersion?;com.jcsoftdev.ui.glass.LiquidInteraction?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;kotlin.Float?;kotlin.Float;com.jcsoftdev.ui.glass.LiquidTint;kotlin.Float;com.jcsoftdev.ui.glass.LiquidSpecular;kotlin.Float;kotlin.Float;kotlin.Float;com.jcsoftdev.ui.glass.LiquidShadow;androidx.compose.ui.unit.Dp){}[0]
+    final fun component6(): kotlin/Float? // com.jcsoftdev.ui.glass/LiquidGlass.component6|component6(){}[0]
+    final fun component7(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component7|component7(){}[0]
+    final fun component8(): com.jcsoftdev.ui.glass/LiquidTint // com.jcsoftdev.ui.glass/LiquidGlass.component8|component8(){}[0]
+    final fun component9(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidGlass.component9|component9(){}[0]
+    final fun copy(kotlin/Boolean = ..., com.jcsoftdev.ui.glass/LiquidLens? = ..., com.jcsoftdev.ui.glass/LiquidInteraction? = ..., androidx.compose.ui.unit/Dp = ..., androidx.compose.ui.unit/Dp = ..., kotlin/Float? = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidTint = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidSpecular = ..., kotlin/Float = ..., kotlin/Float = ..., kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidShadow = ..., androidx.compose.ui.unit/Dp = ...): com.jcsoftdev.ui.glass/LiquidGlass // com.jcsoftdev.ui.glass/LiquidGlass.copy|copy(kotlin.Boolean;com.jcsoftdev.ui.glass.LiquidLens?;com.jcsoftdev.ui.glass.LiquidInteraction?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;kotlin.Float?;kotlin.Float;com.jcsoftdev.ui.glass.LiquidTint;kotlin.Float;com.jcsoftdev.ui.glass.LiquidSpecular;kotlin.Float;kotlin.Float;kotlin.Float;com.jcsoftdev.ui.glass.LiquidShadow;androidx.compose.ui.unit.Dp){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.jcsoftdev.ui.glass/LiquidGlass.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.jcsoftdev.ui.glass/LiquidGlass.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.jcsoftdev.ui.glass/LiquidGlass.toString|toString(){}[0]
@@ -621,8 +621,10 @@ final class com.jcsoftdev.ui.glass/LiquidTint { // com.jcsoftdev.ui.glass/Liquid
 }
 
 final class com.jcsoftdev.ui.glass/RefractionLens : com.jcsoftdev.ui.glass/LiquidLens { // com.jcsoftdev.ui.glass/RefractionLens|null[0]
-    constructor <init>(kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidProfile = ...) // com.jcsoftdev.ui.glass/RefractionLens.<init>|<init>(kotlin.Float;com.jcsoftdev.ui.glass.LiquidProfile){}[0]
+    constructor <init>(kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidProfile = ..., com.jcsoftdev.ui.glass/Dispersion? = ...) // com.jcsoftdev.ui.glass/RefractionLens.<init>|<init>(kotlin.Float;com.jcsoftdev.ui.glass.LiquidProfile;com.jcsoftdev.ui.glass.Dispersion?){}[0]
 
+    final val dispersion // com.jcsoftdev.ui.glass/RefractionLens.dispersion|{}dispersion[0]
+        final fun <get-dispersion>(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/RefractionLens.dispersion.<get-dispersion>|<get-dispersion>(){}[0]
     final val profile // com.jcsoftdev.ui.glass/RefractionLens.profile|{}profile[0]
         final fun <get-profile>(): com.jcsoftdev.ui.glass/LiquidProfile // com.jcsoftdev.ui.glass/RefractionLens.profile.<get-profile>|<get-profile>(){}[0]
     final val refraction // com.jcsoftdev.ui.glass/RefractionLens.refraction|{}refraction[0]
@@ -630,7 +632,8 @@ final class com.jcsoftdev.ui.glass/RefractionLens : com.jcsoftdev.ui.glass/Liqui
 
     final fun component1(): kotlin/Float // com.jcsoftdev.ui.glass/RefractionLens.component1|component1(){}[0]
     final fun component2(): com.jcsoftdev.ui.glass/LiquidProfile // com.jcsoftdev.ui.glass/RefractionLens.component2|component2(){}[0]
-    final fun copy(kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidProfile = ...): com.jcsoftdev.ui.glass/RefractionLens // com.jcsoftdev.ui.glass/RefractionLens.copy|copy(kotlin.Float;com.jcsoftdev.ui.glass.LiquidProfile){}[0]
+    final fun component3(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/RefractionLens.component3|component3(){}[0]
+    final fun copy(kotlin/Float = ..., com.jcsoftdev.ui.glass/LiquidProfile = ..., com.jcsoftdev.ui.glass/Dispersion? = ...): com.jcsoftdev.ui.glass/RefractionLens // com.jcsoftdev.ui.glass/RefractionLens.copy|copy(kotlin.Float;com.jcsoftdev.ui.glass.LiquidProfile;com.jcsoftdev.ui.glass.Dispersion?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.jcsoftdev.ui.glass/RefractionLens.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.jcsoftdev.ui.glass/RefractionLens.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.jcsoftdev.ui.glass/RefractionLens.toString|toString(){}[0]
@@ -1295,6 +1298,8 @@ sealed class com.jcsoftdev.ui.glass/LiquidInteraction { // com.jcsoftdev.ui.glas
 }
 
 sealed class com.jcsoftdev.ui.glass/LiquidLens { // com.jcsoftdev.ui.glass/LiquidLens|null[0]
+    abstract val dispersion // com.jcsoftdev.ui.glass/LiquidLens.dispersion|{}dispersion[0]
+        abstract fun <get-dispersion>(): com.jcsoftdev.ui.glass/Dispersion? // com.jcsoftdev.ui.glass/LiquidLens.dispersion.<get-dispersion>|<get-dispersion>(){}[0]
     abstract val refraction // com.jcsoftdev.ui.glass/LiquidLens.refraction|{}refraction[0]
         abstract fun <get-refraction>(): kotlin/Float // com.jcsoftdev.ui.glass/LiquidLens.refraction.<get-refraction>|<get-refraction>(){}[0]
 }

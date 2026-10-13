@@ -48,7 +48,7 @@ enum class InteractionChoice {
 
 /**
  * Every [LiquidGlass] field as the plain numbers the sliders edit. Lengths are dp values; [frost] and [saturation] are null while
- * they follow the material token. [dispersion] 0 means no [Dispersion].
+ * they follow the material token. [dispersion] 0 means the lens has no [Dispersion].
  */
 data class PlaygroundParams(
     val lens: LensChoice = LensChoice.Full,
@@ -76,7 +76,6 @@ data class PlaygroundParams(
     fun toMaterial(): LiquidGlass =
         LiquidGlass(
             lens = toLens(),
-            dispersion = if (dispersion > 0f) Dispersion(dispersion) else null,
             interaction = toInteraction(),
             bevelWidth = bevel.dp,
             frost = frost?.dp ?: Dp.Unspecified,
@@ -95,11 +94,13 @@ data class PlaygroundParams(
     private fun toLens(): LiquidLens? =
         when (lens) {
             LensChoice.None -> null
-            LensChoice.Rim -> RefractionLens(refraction, LiquidProfile.Rim)
-            LensChoice.Full -> RefractionLens(refraction, LiquidProfile.Full)
-            LensChoice.Dome -> RefractionLens(refraction, LiquidProfile.Dome)
-            LensChoice.Crystal -> CrystalLens(refraction)
+            LensChoice.Rim -> RefractionLens(refraction, LiquidProfile.Rim, toDispersion())
+            LensChoice.Full -> RefractionLens(refraction, LiquidProfile.Full, toDispersion())
+            LensChoice.Dome -> RefractionLens(refraction, LiquidProfile.Dome, toDispersion())
+            LensChoice.Crystal -> CrystalLens(refraction, toDispersion())
         }
+
+    private fun toDispersion(): Dispersion? = if (dispersion > 0f) Dispersion(dispersion) else null
 
     private fun toInteraction(): LiquidInteraction? =
         when (interaction) {
@@ -112,8 +113,7 @@ data class PlaygroundParams(
     fun toSnippet(): String {
         val d = Kit
         val args = mutableListOf<String>()
-        if (lens != d.lens || refraction != d.refraction) args += "lens = ${lensCode()}"
-        if (dispersion != d.dispersion) args += "dispersion = " + if (dispersion > 0f) "Dispersion(${f(dispersion)})" else "null"
+        if (lens != d.lens || refraction != d.refraction || dispersion != d.dispersion) args += "lens = ${lensCode()}"
         if (interaction != d.interaction || motion != d.motion) args += "interaction = ${interactionCode()}"
         if (bevel != d.bevel) args += "bevelWidth = ${dp(bevel)}"
         if (frost != null) args += "frost = ${dp(frost)}"
@@ -150,13 +150,26 @@ data class PlaygroundParams(
     private fun lensCode(): String =
         when (lens) {
             LensChoice.None -> "null"
-            LensChoice.Crystal -> if (refraction == CrystalLens().refraction) "CrystalLens()" else "CrystalLens(${f(refraction)})"
+            LensChoice.Crystal -> {
+                val parts = mutableListOf<String>()
+                if (refraction != CrystalLens().refraction) parts += "refraction = ${f(refraction)}"
+                dispersionCode()?.let { parts += it }
+                "CrystalLens(${parts.joinToString()})"
+            }
             else -> {
                 val parts = mutableListOf<String>()
                 if (refraction != 1f) parts += "refraction = ${f(refraction)}"
                 if (lens != LensChoice.Full) parts += "profile = LiquidProfile.${lens.name}"
+                dispersionCode()?.let { parts += it }
                 "RefractionLens(${parts.joinToString()})"
             }
+        }
+
+    private fun dispersionCode(): String? =
+        when {
+            dispersion <= 0f -> null
+            dispersion == Dispersion().amount -> "dispersion = Dispersion()"
+            else -> "dispersion = Dispersion(${f(dispersion)})"
         }
 
     private fun interactionCode(): String {
@@ -192,7 +205,7 @@ data class PlaygroundParams(
                     },
                 refraction = lens?.refraction ?: 1f,
                 bevel = material.bevelWidth.value,
-                dispersion = material.dispersion?.amount ?: 0f,
+                dispersion = lens?.dispersion?.amount ?: 0f,
                 frost = material.frost.takeIf { it != Dp.Unspecified }?.value,
                 saturation = material.saturation,
                 brightness = material.brightness,

@@ -37,7 +37,7 @@ class PlaygroundParamsTest {
         assertEquals(
             """
             LiquidGlass.Regular.copy(
-                lens = RefractionLens(refraction = 1.5f, profile = LiquidProfile.Dome),
+                lens = RefractionLens(refraction = 1.5f, profile = LiquidProfile.Dome, dispersion = Dispersion()),
                 interaction = LiquidInteraction.Press(LiquidMotion.Playful),
                 bevelWidth = 32.dp,
                 tint = LiquidTint(color = Color(0xFF4DA3FF)),
@@ -52,7 +52,10 @@ class PlaygroundParamsTest {
     @Test fun theInitialLookIsCrystalAndIsWrittenOutInFull() {
         assertEquals(LiquidGlass.Crystal, PlaygroundParams.Initial.toMaterial())
         val snippet = PlaygroundParams.Initial.toSnippet()
-        assertTrue("lens = CrystalLens()" in snippet && "frost = 0.dp" in snippet && "opacity = 0.0f" in snippet, snippet)
+        assertTrue(
+            "lens = CrystalLens(dispersion = Dispersion(0.05f))" in snippet && "frost = 0.dp" in snippet && "opacity = 0.0f" in snippet,
+            snippet,
+        )
         assertTrue("interaction = LiquidInteraction.Drag()" in snippet, snippet)
     }
 }

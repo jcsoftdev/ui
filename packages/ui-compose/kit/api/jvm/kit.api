@@ -587,12 +587,14 @@ public final class com/jcsoftdev/ui/foundation/PressKt {
 public final class com/jcsoftdev/ui/glass/CrystalLens : com/jcsoftdev/ui/glass/LiquidLens {
 	public static final field $stable I
 	public fun <init> ()V
-	public fun <init> (F)V
-	public synthetic fun <init> (FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (FLcom/jcsoftdev/ui/glass/Dispersion;)V
+	public synthetic fun <init> (FLcom/jcsoftdev/ui/glass/Dispersion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()F
-	public final fun copy (F)Lcom/jcsoftdev/ui/glass/CrystalLens;
-	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/CrystalLens;FILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/CrystalLens;
+	public final fun component2 ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public final fun copy (FLcom/jcsoftdev/ui/glass/Dispersion;)Lcom/jcsoftdev/ui/glass/CrystalLens;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/CrystalLens;FLcom/jcsoftdev/ui/glass/Dispersion;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/CrystalLens;
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
 	public fun getRefraction ()F
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -630,32 +632,30 @@ public final class com/jcsoftdev/ui/glass/GlassState {
 public final class com/jcsoftdev/ui/glass/LiquidGlass : com/jcsoftdev/ui/glass/SurfaceMaterial {
 	public static final field $stable I
 	public static final field Companion Lcom/jcsoftdev/ui/glass/LiquidGlass$Companion;
-	public synthetic fun <init> (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/Dispersion;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/Dispersion;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
-	public final fun component10 ()F
-	public final fun component11 ()Lcom/jcsoftdev/ui/glass/LiquidSpecular;
+	public final fun component10 ()Lcom/jcsoftdev/ui/glass/LiquidSpecular;
+	public final fun component11 ()F
 	public final fun component12 ()F
 	public final fun component13 ()F
-	public final fun component14 ()F
-	public final fun component15 ()Lcom/jcsoftdev/ui/glass/LiquidShadow;
-	public final fun component16-D9Ej5fM ()F
+	public final fun component14 ()Lcom/jcsoftdev/ui/glass/LiquidShadow;
+	public final fun component15-D9Ej5fM ()F
 	public final fun component2 ()Lcom/jcsoftdev/ui/glass/LiquidLens;
-	public final fun component3 ()Lcom/jcsoftdev/ui/glass/Dispersion;
-	public final fun component4 ()Lcom/jcsoftdev/ui/glass/LiquidInteraction;
+	public final fun component3 ()Lcom/jcsoftdev/ui/glass/LiquidInteraction;
+	public final fun component4-D9Ej5fM ()F
 	public final fun component5-D9Ej5fM ()F
-	public final fun component6-D9Ej5fM ()F
-	public final fun component7 ()Ljava/lang/Float;
-	public final fun component8 ()F
-	public final fun component9 ()Lcom/jcsoftdev/ui/glass/LiquidTint;
-	public final fun copy--G1uEsc (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/Dispersion;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;F)Lcom/jcsoftdev/ui/glass/LiquidGlass;
-	public static synthetic fun copy--G1uEsc$default (Lcom/jcsoftdev/ui/glass/LiquidGlass;ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/Dispersion;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/LiquidGlass;
+	public final fun component6 ()Ljava/lang/Float;
+	public final fun component7 ()F
+	public final fun component8 ()Lcom/jcsoftdev/ui/glass/LiquidTint;
+	public final fun component9 ()F
+	public final fun copy-_V7ryL4 (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;F)Lcom/jcsoftdev/ui/glass/LiquidGlass;
+	public static synthetic fun copy-_V7ryL4$default (Lcom/jcsoftdev/ui/glass/LiquidGlass;ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/LiquidGlass;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBevelWidth-D9Ej5fM ()F
 	public final fun getBlend-D9Ej5fM ()F
 	public final fun getBrightness ()F
 	public final fun getClear ()Z
-	public final fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
 	public final fun getFresnel ()F
 	public final fun getFrost-D9Ej5fM ()F
 	public final fun getGrain ()F
@@ -714,6 +714,7 @@ public final class com/jcsoftdev/ui/glass/LiquidInteraction$Press : com/jcsoftde
 
 public abstract class com/jcsoftdev/ui/glass/LiquidLens {
 	public static final field $stable I
+	public abstract fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
 	public abstract fun getRefraction ()F
 }
 
@@ -827,13 +828,15 @@ public final class com/jcsoftdev/ui/glass/MaterialSurfaceKt {
 public final class com/jcsoftdev/ui/glass/RefractionLens : com/jcsoftdev/ui/glass/LiquidLens {
 	public static final field $stable I
 	public fun <init> ()V
-	public fun <init> (FLcom/jcsoftdev/ui/glass/LiquidProfile;)V
-	public synthetic fun <init> (FLcom/jcsoftdev/ui/glass/LiquidProfile;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;)V
+	public synthetic fun <init> (FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()F
 	public final fun component2 ()Lcom/jcsoftdev/ui/glass/LiquidProfile;
-	public final fun copy (FLcom/jcsoftdev/ui/glass/LiquidProfile;)Lcom/jcsoftdev/ui/glass/RefractionLens;
-	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/RefractionLens;FLcom/jcsoftdev/ui/glass/LiquidProfile;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/RefractionLens;
+	public final fun component3 ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public final fun copy (FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;)Lcom/jcsoftdev/ui/glass/RefractionLens;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/RefractionLens;FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/RefractionLens;
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
 	public final fun getProfile ()Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public fun getRefraction ()F
 	public fun hashCode ()I

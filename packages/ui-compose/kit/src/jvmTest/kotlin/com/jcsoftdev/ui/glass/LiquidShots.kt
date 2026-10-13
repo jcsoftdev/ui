@@ -135,7 +135,7 @@ class LiquidShots {
         assumeTrue(dir != null)
         shot(
             "profile-rim",
-            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Rim)),
+            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Rim, dispersion = Dispersion())),
         ) { glass, source, material -> Samples(glass, source, material) }
     }
 
@@ -143,7 +143,7 @@ class LiquidShots {
         assumeTrue(dir != null)
         shot(
             "profile-full",
-            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Full)),
+            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Full, dispersion = Dispersion())),
         ) { glass, source, material -> Samples(glass, source, material) }
     }
 
@@ -151,7 +151,7 @@ class LiquidShots {
         assumeTrue(dir != null)
         shot(
             "profile-dome",
-            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Dome)),
+            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Dome, dispersion = Dispersion())),
         ) { glass, source, material -> Samples(glass, source, material) }
     }
 

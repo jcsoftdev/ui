@@ -519,7 +519,7 @@ private class MergedGlassNode(
             padded[i * 5 + 4] = relative[i * 5 + 4]
         }
         val fresh = MergeParams(padded, count, blend, lensParams(pad, blur, smallestHalf))
-        val program = material.dispersion?.mergeProgram ?: PlainMergeProgram.value
+        val program = lens.dispersion?.mergeProgram ?: PlainMergeProgram.value
         if (fresh != key || program !== keyProgram) {
             key = fresh
             keyProgram = program
@@ -544,7 +544,7 @@ private class MergedGlassNode(
             bl = 0f,
             exponent = 2f,
             strength = min(smallestHalf * 1.1f, 20.dp.toPx()) * lens.refraction.coerceAtLeast(0f),
-            dispersion = material.dispersion?.amount ?: 0f,
+            dispersion = lens.dispersion?.amount ?: 0f,
             blur = blur,
             boundsLeft = pad.toFloat(),
             boundsTop = pad.toFloat(),
