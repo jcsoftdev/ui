@@ -48,3 +48,5 @@ export const Narrow: Story = {
     ),
   ],
 };
+
+export const Outlined: Story = { args: { variant: "outlined" } };

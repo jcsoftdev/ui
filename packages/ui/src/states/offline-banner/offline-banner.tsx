@@ -7,6 +7,8 @@ export interface OfflineBannerProps {
   /** Screen reader text for the queue counter. */
   queuedLabel?: string;
   message: ReactNode;
+  /** Optional action next to the message, e.g. a retry `Button`. Shown after the queue counter. */
+  action?: ReactNode;
   className?: string;
 }
 
@@ -14,6 +16,7 @@ export function OfflineBanner({
   queuedChanges = 0,
   queuedLabel,
   message,
+  action,
   className,
 }: OfflineBannerProps) {
   return (
@@ -21,11 +24,16 @@ export function OfflineBanner({
       tone="warning"
       className={className}
       action={
-        queuedChanges > 0 ? (
-          <span className="font-semibold text-fs-120 tabular-nums">
-            <span aria-hidden="true">{queuedChanges}</span>
-            <span className="sr-only">{queuedLabel ?? String(queuedChanges)}</span>
-          </span>
+        queuedChanges > 0 || action ? (
+          <>
+            {queuedChanges > 0 ? (
+              <span className="font-semibold text-fs-120 tabular-nums">
+                <span aria-hidden="true">{queuedChanges}</span>
+                <span className="sr-only">{queuedLabel ?? String(queuedChanges)}</span>
+              </span>
+            ) : null}
+            {action}
+          </>
         ) : undefined
       }
     >

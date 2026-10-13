@@ -8,6 +8,7 @@ export interface BuildOptions {
 /** Generated files by name: tokens.css, theme.css, tailwind.css, fonts.css, and Theme.kt unless `kotlin: false`. */
 export function buildTheme(tokens: TokenFile, options?: BuildOptions): Record<string, string>;
 export function palettesOf(tokens: TokenFile): Map<string, Record<string, string>>;
+export function tonesOf(tokens: TokenFile): { name: string; value: unknown }[];
 export function stylesOf(tokens: TokenFile): unknown;
 export function glassOf(tokens: TokenFile): unknown;
 export function toKotlinColor(value: string): string;

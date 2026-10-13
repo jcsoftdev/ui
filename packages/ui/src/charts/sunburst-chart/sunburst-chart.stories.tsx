@@ -110,6 +110,16 @@ const meta = {
     onFocusChange: { control: false },
     onNodeClick: { control: false },
   },
+  // The rings fade in over 760 ms; axe sampling a half-faded label reads a false contrast failure.
+  play: async ({ canvasElement }) => {
+    const finite = canvasElement.ownerDocument
+      .getAnimations()
+      .filter(
+        (animation) =>
+          animation.effect?.getComputedTiming().iterations !== Number.POSITIVE_INFINITY,
+      );
+    await Promise.allSettled(finite.map((animation) => animation.finished));
+  },
   decorators: [
     (Story) => (
       <div style={{ maxWidth: 760, padding: 16 }}>

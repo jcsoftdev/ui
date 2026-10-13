@@ -40,3 +40,14 @@ export const AllTones: Story = {
     </div>
   ),
 };
+
+export const CustomTone: Story = {
+  args: { tone: "mint", label: "Yape" },
+  decorators: [
+    (Story) => (
+      <div style={{ "--tone-mint": "oklch(0.62 0.14 165)" } as React.CSSProperties}>
+        <Story />
+      </div>
+    ),
+  ],
+};

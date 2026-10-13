@@ -6,6 +6,7 @@ import type { ColorRange, ScaleColors } from "../core/color-scale.js";
 import { ChartDataTable } from "../core/data-table.js";
 import { resolveFormat, type ValueFormat } from "../core/format.js";
 import { formatDate } from "../core/scales/time.js";
+import type { TooltipRow } from "../core/tooltip.js";
 import { datetimeColumnLabels } from "./datetime-columns.js";
 import {
   type HeatmapCellInfo,
@@ -63,6 +64,8 @@ export interface HeatmapChartProps {
   loading?: boolean;
   labels?: Partial<HeatmapLabels>;
   onCellClick?: (cell: HeatmapCellInfo) => void;
+  /** Extra tooltip rows for a cell, shown under its value, e.g. an amount next to a count. */
+  cellDetail?: (row: number, column: number, value: number | null) => readonly TooltipRow[];
   className?: string;
 }
 
@@ -96,6 +99,7 @@ export function HeatmapChart({
   loading,
   labels: labelsProp,
   onCellClick,
+  cellDetail,
   className,
 }: HeatmapChartProps) {
   const labels = resolveHeatmapLabels(labelsProp);
@@ -182,6 +186,7 @@ export function HeatmapChart({
           tooltip={tooltip}
           animate={animate}
           onCellClick={onCellClick}
+          cellDetail={cellDetail}
         />
       )}
     </ChartFrame>

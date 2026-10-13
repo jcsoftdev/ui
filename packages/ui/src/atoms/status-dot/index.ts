@@ -1,5 +1,6 @@
 export {
   StatusDot,
+  type StatusDotBuiltinTone,
   type StatusDotPart,
   type StatusDotProps,
   type StatusDotShape,
