@@ -106,7 +106,14 @@ ${ids.map((id) => `  ${JSON.stringify(id)}: () => import("./glyphs/${id}.js"),`)
 export type IconName = keyof typeof registry;
 `;
 
-const render = (markup) => `${HEADER}\nexport default ${JSON.stringify(markup)};\n`;
+const render = (id, markup) => `${HEADER}
+// Importing this module registers the glyph for <ui-icon> synchronously (the static path).
+import { registerIcon } from "../icon.js";
+
+export const glyph = ${JSON.stringify(markup)};
+export default glyph;
+registerIcon(${JSON.stringify(id)}, glyph);
+`;
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const all = glyphs();
@@ -131,7 +138,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   } else {
     rmSync(outDir, { recursive: true, force: true });
     mkdirSync(outDir, { recursive: true });
-    for (const [id, markup] of all) writeFileSync(join(outDir, `${id}.ts`), render(markup));
+    for (const [id, markup] of all) writeFileSync(join(outDir, `${id}.ts`), render(id, markup));
     writeFileSync(registryFile, renderRegistry([...all.keys()].sort()));
     console.log(`generated ${all.size} glyph modules in src/icon/glyphs`);
   }

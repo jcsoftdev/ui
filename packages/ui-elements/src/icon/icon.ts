@@ -30,6 +30,12 @@ export function registerIcons(sources: Record<string, GlyphSource>): void {
 const markupOf = (value: string | { default: string }): string =>
   typeof value === "string" ? value : value.default;
 
+/** The markup of a glyph that is already registered as a string, or `undefined`. Synchronous. */
+export function peekIcon(name: string): string | undefined {
+  const source = custom.get(name);
+  return typeof source === "string" ? source : undefined;
+}
+
 /**
  * Resolves a glyph name to its SVG children. Built-in glyphs are one module each, fetched on first
  * use and cached; the lookup map is its own lazy chunk. Resolves `undefined` for an unknown name.
@@ -63,6 +69,10 @@ async function resolveGlyph(name: string): Promise<string | undefined> {
  * (px, default 24), `stroke-width` (default 1.8), `absolute-stroke-width` (keep the stroke constant
  * when `size` changes). The colour is `currentColor`. Without `name`, a slotted `<svg>` shows
  * instead (the React `icon` prop). Own glyphs: `registerIcon()`.
+ *
+ * Two ways to get a glyph: import `@jcsoftdev/ui-elements/icons/<name>` (static, tree-shakeable:
+ * registers the glyph synchronously, so it draws with no fetch and no flash and the registry is
+ * never loaded), or use the name alone and it loads lazily through the registry on first use.
  * Events: `load` (`detail.name`) once the glyph is drawn, `error` for an unknown name; like the
  * native ones they do not bubble (a bubbling `error` would reach `window.onerror`).
  */
@@ -131,6 +141,11 @@ export class UiIcon extends ElementBase {
       return;
     }
     if (!this.isConnected) return;
+    const ready = peekIcon(name);
+    if (ready !== undefined) {
+      this.#draw(name, ready);
+      return;
+    }
     loadIcon(name).then((markup) => {
       if (request !== this.#request) return;
       if (markup === undefined) {
@@ -140,11 +155,15 @@ export class UiIcon extends ElementBase {
         this.dispatchEvent(new CustomEvent("error", { detail: { name } }));
         return;
       }
-      this.#svg.innerHTML = markup;
-      this.#svg.toggleAttribute("hidden", false);
-      this.#shown = name;
-      this.dispatchEvent(new CustomEvent("load", { detail: { name } }));
+      this.#draw(name, markup);
     });
+  }
+
+  #draw(name: string, markup: string): void {
+    this.#svg.innerHTML = markup;
+    this.#svg.toggleAttribute("hidden", false);
+    this.#shown = name;
+    this.dispatchEvent(new CustomEvent("load", { detail: { name } }));
   }
 }
 
