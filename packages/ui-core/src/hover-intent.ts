@@ -10,10 +10,29 @@ export interface BoxEdges {
 }
 
 /**
- * Triangle-like area between the pointer leaving a submenu trigger and the submenu, so the pointer
- * can cross other items on its way without closing the submenu.
+ * Triangle-like area between the pointer leaving a trigger and the content on `side` of it (a
+ * submenu, a hover card), so the pointer can cross other items on its way without closing it.
+ * `left` and `right` are the React kit's submenu area; `top` and `bottom` are the same shape
+ * turned a quarter, for content placed above or below the trigger.
  */
-export function graceArea(exit: Point, side: "left" | "right", box: BoxEdges): Point[] {
+export function graceArea(
+  exit: Point,
+  side: "left" | "right" | "top" | "bottom",
+  box: BoxEdges,
+): Point[] {
+  if (side === "top" || side === "bottom") {
+    const below = side === "bottom";
+    const bleed = below ? -5 : 5;
+    const near = below ? box.top : box.bottom;
+    const far = below ? box.bottom : box.top;
+    return [
+      { x: exit.x, y: exit.y + bleed },
+      { x: box.left, y: near },
+      { x: box.left, y: far },
+      { x: box.right, y: far },
+      { x: box.right, y: near },
+    ];
+  }
   const rightSide = side === "right";
   const bleed = rightSide ? -5 : 5;
   const near = rightSide ? box.left : box.right;
