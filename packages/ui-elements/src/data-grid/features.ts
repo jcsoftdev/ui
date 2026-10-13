@@ -10,4 +10,6 @@ export function install(grid: UiDataGrid): void {
   if (grid.hasAttribute("range-selection")) void import("./range.js").then((f) => f.install(grid));
   if (grid.hasAttribute("clipboard")) void import("./clipboard.js").then((f) => f.install(grid));
   if (grid.hasAttribute("fill-handle")) void import("./fill.js").then((f) => f.install(grid));
+  if (grid.hasAttribute("formulas")) void import("./formula.js").then((f) => f.install(grid));
+  if (grid.hasAttribute("editable-rows")) void import("./rows.js").then((f) => f.install(grid));
 }

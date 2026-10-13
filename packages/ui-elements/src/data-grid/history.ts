@@ -4,6 +4,7 @@ import {
   DEFAULT_HISTORY_DEPTH,
   type HistoryCommand,
   pushCommand,
+  type RowRef,
   redoCommand,
   setHistoryDepth,
   summarizeHistory,
@@ -70,9 +71,25 @@ export function install(grid: UiDataGrid): void {
     });
   });
 
+  grid.addEventListener("rowschange", (event) => {
+    const { type, rows, source } = (event as CustomEvent).detail as {
+      type: "add" | "remove";
+      rows: RowRef<Row>[];
+      source: ChangeSource;
+    };
+    if (source === "undo" || source === "redo") return;
+    record({ kind: type === "add" ? "rows-add" : "rows-remove", rows });
+  });
+
   /** Applies a command through the grid. `false` when a listener cancelled it. */
   const apply = (command: HistoryCommand<Row>, source: "undo" | "redo"): boolean => {
-    if (command.kind !== "cells") return true;
+    if (command.kind !== "cells") {
+      // Only a grid with `editable-rows` records these, so its chunk is loaded by now.
+      void import("./rows.js").then((m) =>
+        m.applyRows(grid, command.kind === "rows-add" ? "add" : "remove", command.rows, source),
+      );
+      return true;
+    }
     return !grid.changeCells(
       command.changes.map((change) => ({
         rowKey: change.rowId,

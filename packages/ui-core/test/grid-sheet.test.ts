@@ -371,3 +371,35 @@ describe("history", () => {
     expect(history.canRedo(s)).toBe(false);
   });
 });
+
+describe("planWrites with formulas", () => {
+  const column: GridColumn<Record<string, unknown>> = {
+    id: "n",
+    header: "N",
+    type: "number",
+    validate: () => "never",
+  };
+  const messages = {
+    yes: "Yes",
+    no: "No",
+    invalidNumber: "n",
+    invalidDate: "d",
+    invalidValue: "v",
+  };
+  const cellAt = () => ({
+    rowKey: "k",
+    columnId: "n",
+    row: {},
+    column,
+    current: 1 as never,
+    editable: true,
+  });
+  it("stores text that starts with = as typed, skipping parse and validators", () => {
+    const targets = [{ r: 0, c: 0, text: "=A1+1" }];
+    const on = planWrites(targets, cellAt, { locale: "en", messages, formulas: true });
+    expect(on.changes).toEqual([{ rowKey: "k", columnId: "n", value: "=A1+1" }]);
+    const off = planWrites(targets, cellAt, { locale: "en", messages });
+    expect(off.changes).toEqual([]);
+    expect(off.skipped).toHaveLength(1);
+  });
+});

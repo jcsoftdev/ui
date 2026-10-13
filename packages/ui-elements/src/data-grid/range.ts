@@ -16,6 +16,7 @@ import {
   refOfElement,
   SELECT_ID,
   setRange,
+  shown,
   slotOf,
   trackCells,
 } from "./shared.js";
@@ -84,7 +85,7 @@ export function install(grid: UiDataGrid): void {
     const stats = rangeStats(bounds, (r, c) => {
       const column = columns.get(grid._ids[c] as string);
       return grid._view.kind(r) === "data" && column
-        ? getCellValue(grid.rows[grid._view.sourceAt(r)], column)
+        ? shown(grid, grid.rows[grid._view.sourceAt(r)], column)
         : undefined;
     });
     const cells = (bounds.r1 - bounds.r0 + 1) * (bounds.c1 - bounds.c0 + 1);

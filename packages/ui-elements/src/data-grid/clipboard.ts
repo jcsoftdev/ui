@@ -19,6 +19,7 @@ import {
   refAt,
   SELECT_ID,
   setRange,
+  shown,
   targetBounds,
 } from "./shared.js";
 
@@ -61,7 +62,7 @@ export function install(grid: UiDataGrid): void {
       const column = columns.get(grid._ids[c] as string);
       if (!column || grid._view.kind(r) !== "data") return null;
       const row = grid.rows[grid._view.sourceAt(r)];
-      return copyText(column, getCellValue(row, column), grid.locale);
+      return copyText(column, shown(grid, row, column), grid.locale);
     });
     event.clipboardData.setData("text/plain", text);
     event.preventDefault();
@@ -100,7 +101,7 @@ export function install(grid: UiDataGrid): void {
           }
         );
       },
-      { locale: grid.locale, messages: messages(grid) },
+      { locale: grid.locale, messages: messages(grid), formulas: grid.hasAttribute("formulas") },
     );
     const result = grid.changeCells(writes.changes, { source: "paste" });
     const applied = result.applied.length;

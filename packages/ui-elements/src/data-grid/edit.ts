@@ -103,7 +103,11 @@ function textEditor(ctx: Ctx, kind: EditorKind | "custom", seed: string | undefi
   input.spellcheck = false;
   if (kind === "number") input.inputMode = "decimal";
   if (kind === "date") input.placeholder = datePlaceholder(locale);
-  input.value = seed ?? draftText(kind, ctx.value, locale);
+  // With formulas on, a formula is edited as the text that was typed, not as a number or a date.
+  const formulas = ctx.grid.hasAttribute("formulas");
+  const isFormula = (text: unknown): text is string =>
+    formulas && typeof text === "string" && text.trimStart().startsWith("=");
+  input.value = seed ?? (isFormula(ctx.value) ? ctx.value : draftText(kind, ctx.value, locale));
   return {
     element: input,
     dirty: seed !== undefined,
@@ -113,6 +117,7 @@ function textEditor(ctx: Ctx, kind: EditorKind | "custom", seed: string | undefi
       else input.setSelectionRange(input.value.length, input.value.length);
     },
     read() {
+      if (isFormula(input.value)) return { ok: true, value: input.value };
       const result = parseDraft(column, kind, input.value, row, locale);
       if ("value" in result) return { ok: true, value: result.value };
       const message =
@@ -481,10 +486,15 @@ export async function beginEdit(
     try {
       const read = editor.read();
       let message = read.ok ? null : read.message;
-      const typed = (kind === "number" || kind === "date") && !column.parse;
+      const formula =
+        read.ok &&
+        grid.hasAttribute("formulas") &&
+        typeof read.value === "string" &&
+        read.value.trimStart().startsWith("=");
+      const typed = (kind === "number" || kind === "date") && !column.parse && !formula;
       const value = read.ok ? (typed ? likeOriginal(read.value, ctx.value) : read.value) : null;
       const changed = read.ok && !sameValue(value, ctx.value);
-      if (changed) {
+      if (changed && !formula) {
         validation = new AbortController();
         message = await validateValue(column, value, row, validation.signal);
       }

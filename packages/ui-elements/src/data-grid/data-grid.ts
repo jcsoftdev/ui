@@ -102,6 +102,14 @@ export interface GridLabels {
   filled?: (cells: number) => string;
   undone?: (cells: number) => string;
   redone?: (cells: number) => string;
+  /** Formula bar: its name, the address chip's name and the placeholder with no cell focused. */
+  formulaBar?: string;
+  formulaCell?: string;
+  formulaEmpty?: string;
+  /** Prefix of the tooltip on a cell that shows a formula error. */
+  formulaError?: string;
+  rowsAdded?: (count: number) => string;
+  rowsRemoved?: (count: number) => string;
 }
 
 const LABELS: GridLabels = {
@@ -209,7 +217,14 @@ export interface ChangeResult {
 }
 
 /** The opt-in spreadsheet features; `features.js` loads the chunk of each one that is on. */
-const FEATURES = ["history", "range-selection", "clipboard", "fill-handle"];
+const FEATURES = [
+  "history",
+  "range-selection",
+  "clipboard",
+  "fill-handle",
+  "formulas",
+  "editable-rows",
+];
 type RowKey = string | ((row: Row, index: number) => string);
 
 interface CellEl extends HTMLElement {
@@ -374,6 +389,22 @@ const validTag = (tag: string | undefined): tag is string =>
  *   `day`, `month`), text ending in a number counts up, anything else repeats; up / left run it
  *   backwards. Ctrl / Cmd + D / R fill down / right by copying. One batch with source `fill`;
  *   `cellsfill` `{direction, applied, skipped, unvalidated}` reports it.
+ * - `formulas`: a cell whose stored text starts with `=` shows its result (and sorts, copies and
+ *   sums on it) and is edited as text. `+ - * /`, parentheses, `A1` and `A1:B3` references (columns
+ *   count in `columns` order, rows in `rows` order, so addresses survive sorting, pinning, moving
+ *   and hiding columns) and `SUM AVG MIN MAX COUNT IF` and more; errors show as `#REF!`, `#DIV/0!`,
+ *   `#NAME?`, `#VALUE!`, `#CYCLE!` or `#ERROR!` (cells get `data-formula-error` and a title).
+ *   No `eval`. A write by the grid recalculates only what reads the changed cells; in `emit` mode
+ *   replace `rows` (or call `refresh()`) to recalculate. Filling shifts relative references;
+ *   pasted formula text is stored as typed. Add `formula-bar` for the address chip, `fx` and a
+ *   field with the focused cell's stored text (Enter stores it, Escape reverts); it sits outside
+ *   `role=grid` and shifts the grid down by `--ui-data-grid-bar`. Labels `formulaBar`,
+ *   `formulaCell`, `formulaEmpty`, `formulaError`.
+ * - `editable-rows`: `addRow()` appends what the `createRow` property returns,
+ *   `addRows([{row, index?}])` and `removeRows(keys?)` (default: the selected rows). Each fires a
+ *   cancelable `beforerowschange` and then `rowschange` `{type: "add" | "remove", rows: [{row,
+ *   rowId, index}], source}`. `mutate` mode replaces `rows` with a new array, `emit` only reports.
+ *   With `history`, they undo and redo as one step.
  *
  * Attributes: `label`, `locale`, `editable`, `edit-mode` (`mutate` | `emit`), `selection` (`none` | `single` | `multi`; multi adds a checkbox
  * column), `density` (`compact` | `normal` | `comfortable`) or `row-height` (px), `sort`
@@ -485,6 +516,11 @@ export class UiDataGrid extends ElementBase {
   /** @internal Called after every render pass; the range overlay repaints from it. */
   _after: (() => void) | undefined;
   /**
+   * Set by the `formulas` chunk: maps a cell's stored value to the one shown and sorted on; called
+   * without arguments it drops the computed sheet (the rows changed).
+   */
+  _x: ((value?: CellValue, row?: Row, columnId?: string) => CellValue) | undefined;
+  /**
    * Reverts the last recorded change. Defined, with `redo`, `canUndo` and `canRedo`, by the history
    * chunk once it has loaded (the `history` attribute): a grid without history has none of them.
    */
@@ -492,6 +528,15 @@ export class UiDataGrid extends ElementBase {
   declare redo: () => boolean;
   declare readonly canUndo: boolean;
   declare readonly canRedo: boolean;
+  /** Creates the row `addRow()` appends (`editable-rows`). */
+  declare createRow: (() => Row) | undefined;
+  // Defined on the instance by the `editable-rows` chunk.
+  declare addRow: () => boolean;
+  declare addRows: (
+    entries: readonly { row: Row; index?: number }[],
+    options?: { source?: ChangeSource },
+  ) => boolean;
+  declare removeRows: (keys?: readonly string[], options?: { source?: ChangeSource }) => boolean;
   #editLoad: Promise<typeof import("./edit.js") | undefined> | undefined;
   /** The editor chunk is installed (`true`), failed to load (`false`) or not asked for yet. */
   #edit: boolean | undefined;
@@ -723,6 +768,7 @@ export class UiDataGrid extends ElementBase {
 
   /** Re-sorts and re-renders every visible cell, for row objects that were changed in place. */
   refresh(): void {
+    this._x?.();
     this.#invalidate(F_VIEW | F_CONTENT);
   }
 
@@ -1101,7 +1147,13 @@ export class UiDataGrid extends ElementBase {
     const sorted =
       this.#sort.length > 0 && !this.hasAttribute("sort-manual") && this.#columns.length > 0;
     const proxies: GridColumn<number>[] = sorted
-      ? this.#columns.map((c) => ({ ...c, accessor: (i: number) => getCellValue(rows[i], c) }))
+      ? this.#columns.map((c) => ({
+          ...c,
+          accessor: (i: number) => {
+            const raw = getCellValue(rows[i], c);
+            return this._x ? this._x(raw, rows[i], c.id) : raw;
+          },
+        }))
       : [];
     this._view = buildView({
       keys,
@@ -1660,7 +1712,8 @@ export class UiDataGrid extends ElementBase {
     if (cell.dataset.align !== align) cell.dataset.align = align;
     // In an editing grid, the cells that cannot be edited say so.
     cell.ariaReadOnly = this.#editOn && !this.#editable(column, row) ? "true" : null;
-    const value: CellValue = getCellValue(row, column);
+    const stored: CellValue = getCellValue(row, column);
+    const value: CellValue = this._x ? this._x(stored, row, id) : stored;
     const formatted = formatCellValue(value, column, {
       locale: this.#locale,
       labels: { yes: this.#labels.yes, no: this.#labels.no },

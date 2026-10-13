@@ -1,7 +1,7 @@
 // Code shared by the lazy spreadsheet chunks (range, clipboard, fill, history). None of it is
 // imported by the grid itself, so a grid that opts into nothing never downloads it.
 import { edgeScrollStep } from "@jcsoftdev/ui-core/grid/fill";
-import type { GridColumn } from "@jcsoftdev/ui-core/grid/model";
+import { type CellValue, type GridColumn, getCellValue } from "@jcsoftdev/ui-core/grid/model";
 import { type CellPos, type RangeBounds, rangeBounds } from "@jcsoftdev/ui-core/grid/range";
 import type { UiDataGrid } from "./data-grid.js";
 
@@ -17,6 +17,16 @@ export interface CellRef {
   rowKey: string;
   columnId: string;
 }
+
+/** What a cell shows: the stored value, or the result of its formula when `formulas` is on. */
+export function shown(grid: UiDataGrid, row: Row, column: Col): CellValue {
+  const stored = getCellValue(row, column);
+  return grid._x ? grid._x(stored, row, column.id) : stored;
+}
+
+/** Whether a value is a formula as the grid stores it: text that starts with `=`. */
+export const isFormula = (value: unknown): value is string =>
+  typeof value === "string" && value.trimStart().startsWith("=");
 
 /** Announces through the grid's polite status region. */
 export function announce(grid: UiDataGrid, message: string): void {

@@ -284,7 +284,7 @@ const sameCell = (a: CellValue, b: CellValue) =>
 export function planWrites<T>(
   targets: readonly PasteTarget[],
   cellAt: (r: number, c: number) => (WriteCell<T> & { editable: boolean }) | null,
-  env: { locale: string; messages: PasteMessages },
+  env: { locale: string; messages: PasteMessages; formulas?: boolean },
 ): WritePlan {
   const plan: WritePlan = { changes: [], skipped: [], unvalidated: [], unchanged: 0 };
   for (const target of targets) {
@@ -298,12 +298,20 @@ export function planWrites<T>(
       plan.skipped.push({ rowKey, columnId, reason: "readonly" });
       continue;
     }
-    const parsed = parsePasted(column, target.text, row, current, env.locale, env.messages);
+    // With formulas on, text that starts with `=` is stored as typed, as the editor does.
+    const parsed: ParsedPaste =
+      env.formulas && target.text.trimStart().startsWith("=")
+        ? { ok: true, value: target.text }
+        : parsePasted(column, target.text, row, current, env.locale, env.messages);
     if (!parsed.ok) {
       plan.skipped.push({ rowKey, columnId, reason: "invalid", message: parsed.message });
       continue;
     }
-    const checked = validateSync(column, parsed.value, row);
+    const raw =
+      env.formulas && parsed.value === target.text && target.text.trimStart().startsWith("=");
+    const checked = raw
+      ? { message: null, unvalidated: false }
+      : validateSync(column, parsed.value, row);
     if (checked.message) {
       plan.skipped.push({ rowKey, columnId, reason: "invalid", message: checked.message });
       continue;
