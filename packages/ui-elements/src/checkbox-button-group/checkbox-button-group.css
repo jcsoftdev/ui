@@ -1,0 +1,8 @@
+[data-ui="checkbox-button-group"] {
+  display: grid;
+  gap: var(--gap-density-sm);
+  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
+}
+[data-ui="checkbox-button-group"][hidden] {
+  display: none;
+}
