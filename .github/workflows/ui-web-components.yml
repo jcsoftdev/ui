@@ -1,0 +1,62 @@
+name: ui-web-components
+
+# Browser checks for the framework-agnostic packages (ui-core, ui-elements) and their vanilla
+# example. The node-only checks (lint, unit, size, treeshake, pack) run in `ci`; this workflow adds
+# the real-Chromium tests, and only runs when those packages or their inputs change.
+
+on:
+  push:
+    paths:
+      - "packages/ui-core/**"
+      - "packages/ui-elements/**"
+      - "packages/ui-tokens/**"
+      - "examples/vanilla-elements/**"
+      - "scripts/pack-check.mjs"
+      - "scripts/check-size.mjs"
+      - "size-budgets.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/ui-web-components.yml"
+  pull_request:
+    paths:
+      - "packages/ui-core/**"
+      - "packages/ui-elements/**"
+      - "packages/ui-tokens/**"
+      - "examples/vanilla-elements/**"
+      - "scripts/pack-check.mjs"
+      - "scripts/check-size.mjs"
+      - "size-budgets.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/ui-web-components.yml"
+
+concurrency:
+  group: ui-web-components-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @jcsoftdev/ui-tokens build
+      - run: pnpm --filter @jcsoftdev/ui-core build
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('./packages/ui-core/node_modules/playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - name: Install Playwright Chromium
+        run: pnpm --filter @jcsoftdev/ui-core exec playwright install --with-deps chromium
+      - name: Browser tests (Chromium)
+        run: pnpm test:browser

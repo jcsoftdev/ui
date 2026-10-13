@@ -144,6 +144,42 @@
       "kind": "js",
       "file": "packages/ui/dist/xlsx/index.js",
       "maxGzip": 4150
+    },
+    {
+      "id": "ui-core/focus",
+      "kind": "js",
+      "file": "packages/ui-core/dist/focus.js",
+      "maxGzip": 1300
+    },
+    {
+      "id": "ui-core/roving",
+      "kind": "js",
+      "file": "packages/ui-core/dist/roving.js",
+      "maxGzip": 900
+    },
+    {
+      "id": "ui-core/popper",
+      "kind": "js",
+      "file": "packages/ui-core/dist/popper.js",
+      "maxGzip": 2550
+    },
+    {
+      "id": "ui-core/dismiss",
+      "kind": "js",
+      "file": "packages/ui-core/dist/dismiss.js",
+      "maxGzip": 900
+    },
+    {
+      "id": "ui-core/typeahead",
+      "kind": "js",
+      "file": "packages/ui-core/dist/typeahead.js",
+      "maxGzip": 350
+    },
+    {
+      "id": "ui-core/state",
+      "kind": "js",
+      "file": "packages/ui-core/dist/state.js",
+      "maxGzip": 250
     }
   ]
 }
