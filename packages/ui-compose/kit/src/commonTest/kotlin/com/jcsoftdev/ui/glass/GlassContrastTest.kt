@@ -53,7 +53,7 @@ class GlassContrastTest {
     }
 
     @Test fun regularGlassKeepsInkAndInk2Legible() {
-        for (m in listOf(SurfaceMaterial.Glass, SurfaceMaterial.Liquid)) {
+        for (m in listOf(SurfaceMaterial.Glass, LiquidGlass())) {
             for (dark in listOf(false, true)) {
                 check(m, dark, { it.ink }, 4.5f)
                 check(m, dark, { it.ink2 }, 4.5f)
@@ -62,7 +62,7 @@ class GlassContrastTest {
     }
 
     @Test fun clearGlassKeepsPrimaryInkLegible() {
-        for (m in listOf(SurfaceMaterial.GlassClear, SurfaceMaterial.LiquidClear)) {
+        for (m in listOf(SurfaceMaterial.GlassClear, LiquidGlass(clear = true))) {
             for (dark in listOf(false, true)) check(m, dark, { it.ink }, 4.5f)
         }
     }
@@ -71,6 +71,6 @@ class GlassContrastTest {
     // known limit so a regression shows up; it is not a promise that ink3 text on glass is accessible.
     @Test fun tertiaryInkIsDocumentedAsBelowAaOnGlass() {
         check(SurfaceMaterial.Glass, false, { it.ink3 }, 3.2f)
-        check(SurfaceMaterial.Liquid, false, { it.ink3 }, 3.0f)
+        check(LiquidGlass(), false, { it.ink3 }, 3.0f)
     }
 }

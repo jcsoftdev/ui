@@ -8,24 +8,25 @@ import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import android.graphics.RenderEffect as PlatformRenderEffect
 
-// RuntimeShader (AGSL) exists from Android 13.
-internal actual fun lensSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-
-// One shader per process, created lazily so the class stays loadable below API 33. Each effect snapshots the uniforms when it
-// is created, and effects are only built on the main thread, so every surface can reuse it.
-private val SharedShader: Any? by lazy { if (lensSupported()) RuntimeShader(LENS_SHADER) else null }
-private val SharedMergeShader: Any? by lazy { if (lensSupported()) RuntimeShader(MERGE_SHADER) else null }
+// One shader per program and process, compiled on first use (so the class stays loadable below API 33). Each effect snapshots
+// the uniforms when it is created, and effects are only built on the main thread, so every surface can reuse it.
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun LensProgram.shader(): RuntimeShader = compiled as? RuntimeShader ?: RuntimeShader(source).also { compiled = it }
 
 internal actual class LensEngine actual constructor() {
     // The platform blur that feeds the shader, kept while its radius holds (typed Any so the class loads below API 31).
     private var blurRadius = -1f
     private var blurEffect: Any? = null
 
-    actual fun effect(params: LensParams): RenderEffect? =
-        if (lensSupported()) agslEffect(SharedShader as RuntimeShader, params, blurFor(params.blur)) else null
+    actual fun effect(
+        program: LensProgram,
+        params: LensParams,
+    ): RenderEffect? = if (lensSupported()) agslEffect(program.shader(), params, blurFor(params.blur)) else null
 
-    actual fun merged(params: MergeParams): RenderEffect? =
-        if (lensSupported()) agslMerged(SharedMergeShader as RuntimeShader, params, blurFor(params.lens.blur)) else null
+    actual fun merged(
+        program: MergeProgram,
+        params: MergeParams,
+    ): RenderEffect? = if (lensSupported()) agslMerged(program.program.shader(), params, blurFor(params.lens.blur)) else null
 
     private fun blurFor(radius: Float): Any? {
         if (radius <= 0f || !lensSupported()) return null

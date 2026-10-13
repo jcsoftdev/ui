@@ -11,15 +11,13 @@ import androidx.compose.ui.text.font.FontFamily
 import com.jcsoftdev.ui.foundation.LocalMotion
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.foundation.rememberSystemMotion
-import com.jcsoftdev.ui.glass.GlassVariant
-import com.jcsoftdev.ui.glass.LiquidGlassStyle
 import com.jcsoftdev.ui.glass.LocalBackdropBlur
-import com.jcsoftdev.ui.glass.LocalGlassVariant
+import com.jcsoftdev.ui.glass.LocalChromeGlass
 import com.jcsoftdev.ui.glass.LocalHighContrast
-import com.jcsoftdev.ui.glass.LocalLiquidGlassStyle
 import com.jcsoftdev.ui.glass.LocalReduceTransparency
 import com.jcsoftdev.ui.glass.LocalUiDark
 import com.jcsoftdev.ui.glass.LocalUiStyle
+import com.jcsoftdev.ui.glass.SurfaceMaterial
 import com.jcsoftdev.ui.glass.rememberSystemHighContrast
 import com.jcsoftdev.ui.glass.rememberSystemReduceTransparency
 import com.jcsoftdev.ui.overlays.OverlayHost
@@ -60,15 +58,15 @@ public object UiTheme {
         @Composable @ReadOnlyComposable
         get() = LocalMotion.current
 
-    /** The chrome look: [UiStyle.Default] is opaque, [UiStyle.Glass] turns the control and navigation layer into glass (frosted by default, see `glassVariant`). */
+    /** The chrome look: [UiStyle.Default] is opaque, [UiStyle.Glass] turns the control and navigation layer into glass (frosted by default, see `chromeGlass`). */
     public val style: UiStyle
         @Composable @ReadOnlyComposable
         get() = LocalUiStyle.current
 
-    /** The Liquid Glass look surfaces use unless they get their own (see [LiquidGlassStyle]). */
-    public val liquidGlassStyle: LiquidGlassStyle
+    /** What chrome surfaces are made of under [UiStyle.Glass] when they name no material (see `chromeGlass`). */
+    public val chromeGlass: SurfaceMaterial
         @Composable @ReadOnlyComposable
-        get() = LocalLiquidGlassStyle.current
+        get() = LocalChromeGlass.current
 
     /** True when surfaces must not be translucent; glass is drawn opaque with a border. */
     public val reduceTransparency: Boolean
@@ -98,19 +96,18 @@ public object UiTheme {
  * @param sizes spacing, control heights, minimum touch target and disabled opacity; pass `ThemeSizes.Default.copy(...)`.
  * @param typography text styles by role; pass `ThemeTypography.Default.copy(...)`. The font family is [fontFamily].
  * @param strings fallback labels of the kit ([UiStrings.En] or [UiStrings.Es]); an explicit label parameter on a component wins.
- * @param style [UiStyle.Glass] makes the control and navigation layer Liquid Glass (see [com.jcsoftdev.ui.glass.SurfaceMaterial]);
- * the default keeps every surface opaque. A component's own `material` parameter wins over it.
+ * @param style [UiStyle.Glass] makes the control and navigation layer glass (of [chromeGlass]); the default keeps every surface
+ * opaque. A component's own `material` parameter wins over it.
  * @param reduceTransparency forces opaque surfaces; defaults to the OS setting where one exists (iOS Reduce Transparency;
  * Android has none).
  * @param highContrast forces opaque surfaces with a stronger border; defaults to the OS setting (iOS Increase Contrast,
  * Android high-contrast text and the Android 14 contrast level).
  * @param backdropBlur false keeps glass as the translucent tint everywhere (no backdrop capture or blur), for example to save
  * battery or GPU; the platform check (Android below API 31) already does this on its own.
- * @param glassVariant which glass chrome surfaces get with [UiStyle.Glass] and no `material`: [GlassVariant.Frosted] (default, blur
- * only, like the web preset) or [GlassVariant.Liquid] (opt in, the lensed Apple look). An explicit `material` is never changed by it.
- * @param liquidGlassStyle the optics, interaction and motion of every Liquid surface ([LiquidGlassStyle.Regular] is the shipped look;
- * [LiquidGlassStyle.Clear] and [LiquidGlassStyle.Thick] are presets). Provide `LocalLiquidGlassStyle` to change it for one subtree.
- * Styles that lower the tint or dim strength drop the contrast guarantee of the glass.
+ * @param chromeGlass what chrome surfaces are made of with [UiStyle.Glass] and no `material`: [SurfaceMaterial.Glass] (default,
+ * frosted, like the web preset), [SurfaceMaterial.GlassClear], or a [com.jcsoftdev.ui.glass.LiquidGlass] (opt in, the Apple look,
+ * for example `LiquidGlass.Regular`). Only the material passed here is in the app: the default ships no Liquid Glass code. An
+ * explicit `material` is never changed by it. A Liquid material that lowers the tint or dim strength drops the contrast guarantee.
  *
  * It also installs the [OverlayHost] that sheets, dialogs and toasts draw in; headless code can use [OverlayHost] without a
  * `UiTheme`.
@@ -134,8 +131,7 @@ public fun UiTheme(
     reduceTransparency: Boolean = rememberSystemReduceTransparency(),
     highContrast: Boolean = rememberSystemHighContrast(),
     backdropBlur: Boolean = true,
-    glassVariant: GlassVariant = GlassVariant.Frosted,
-    liquidGlassStyle: LiquidGlassStyle = LiquidGlassStyle.Regular,
+    chromeGlass: SurfaceMaterial = SurfaceMaterial.Glass,
     content: @Composable () -> Unit,
 ) {
     val themed = remember(colors, accent, dark) { colors.withPalette(resolveAccent(accent, dark, colors.accent)) }
@@ -153,8 +149,7 @@ public fun UiTheme(
         LocalReduceTransparency provides reduceTransparency,
         LocalHighContrast provides highContrast,
         LocalBackdropBlur provides backdropBlur,
-        LocalGlassVariant provides glassVariant,
-        LocalLiquidGlassStyle provides liquidGlassStyle,
+        LocalChromeGlass provides chromeGlass,
     ) {
         OverlayHost(content = content)
     }

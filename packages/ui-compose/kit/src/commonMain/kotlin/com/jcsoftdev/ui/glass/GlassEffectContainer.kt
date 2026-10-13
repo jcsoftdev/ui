@@ -54,8 +54,8 @@ internal class MergedShape(
 )
 
 /**
- * The shapes a [GlassEffectContainer] merges, by slot, whether it merges at all on this platform, and the [style] and
- * [material] the container gives its children. Everything the container's draw reads is cached per [revision], so a frame in
+ * The shapes a [GlassEffectContainer] merges, by slot, whether it merges at all on this platform, and the [material] the
+ * container gives its children. Everything the container's draw reads is cached per [revision], so a frame in
  * which no shape moved allocates nothing.
  */
 @Stable
@@ -73,8 +73,7 @@ internal class GlassEffectGroup {
     var released: Int by mutableIntStateOf(0)
         private set
     var merged: Boolean by mutableStateOf(false)
-    var style: LiquidGlassStyle by mutableStateOf(LiquidGlassStyle.Regular)
-    var material: SurfaceMaterial by mutableStateOf(SurfaceMaterial.Liquid)
+    var material: LiquidGlass? by mutableStateOf(null)
     var glass: GlassState? by mutableStateOf(null)
 
     /** The first free slot, or -1 when [MAX_MERGED_SHAPES] shapes are already merged. */
@@ -116,13 +115,10 @@ internal class GlassEffectGroup {
     }
 
     /**
-     * Whether a child that asks for [childStyle] and [childMaterial] (null: no preference) is drawn with the container's own
-     * look. A child that explicitly asks for something else is not merged: it is its own surface of what it asked for.
+     * Whether a child that asks for [childMaterial] (null: no preference) is drawn with the container's own look. A child that
+     * explicitly asks for something else is not merged: it is its own surface of what it asked for.
      */
-    fun accepts(
-        childStyle: LiquidGlassStyle?,
-        childMaterial: SurfaceMaterial?,
-    ): Boolean = (childStyle == null || childStyle == style) && (childMaterial == null || childMaterial == material)
+    fun accepts(childMaterial: LiquidGlass?): Boolean = childMaterial == null || childMaterial == material
 }
 
 /** A child's hold on one slot of a [GlassEffectGroup]; released when the child leaves the composition or is abandoned. */
@@ -153,23 +149,23 @@ internal val LocalGlassEffectGroup = staticCompositionLocalOf<GlassEffectGroup?>
 
 /**
  * Merges the Liquid shapes of its children into one piece of glass: where two shapes (marked with [glassEffect]) come within
- * [LiquidGlassStyle.blend] of each other they flow together like drops of liquid, with one lens, one rim and one shadow per shape
+ * [LiquidGlass.blend] of each other they flow together like drops of liquid, with one lens, one rim and one shadow per shape
  * across the joined outline. The shapes are joined with a signed-distance smooth union in the lens shader (Android 13+ AGSL, Skia
- * SkSL on desktop and iOS), so up to [MAX_MERGED_SHAPES] children merge; any further child, and every child where the lens shader
- * is unavailable (older Android, `UiTheme(backdropBlur = false)`, reduced transparency), is drawn as its own separate
- * [SurfaceMaterial.Liquid] surface instead.
+ * SkSL on desktop and iOS), so up to [MAX_MERGED_SHAPES] children merge; any further child, every child where the lens shader is
+ * unavailable (older Android, `UiTheme(backdropBlur = false)`, reduced transparency), and every child of a [material] without a
+ * [LiquidGlass.lens], is drawn as its own separate surface of [material] instead.
  *
- * **Style and material precedence.** The container's [style] and [material] are what its children get: a child drawn merged is
- * part of the one joined surface and takes both from the container, and a child that falls back to its own surface (over the
- * cap, or where the lens shader is unavailable) is drawn with the container's [style] and [material] too, not with the theme
- * default; the container's `glass` is the backdrop they sample as well. A child that passes its own `style` or `material` to [glassEffect] that differs from the container's wins: it is
- * drawn as a separate surface of its own look and does not merge. (Child explicit, then container, then the theme.)
+ * **Material precedence.** The container's [material] is what its children get: a child drawn merged is part of the one joined
+ * surface and takes it from the container, and a child that falls back to its own surface (over the cap, or where the lens shader
+ * is unavailable) is drawn with the container's [material] too; the container's `glass` is the backdrop they sample as well. A
+ * child that passes its own `material` to [glassEffect] that differs from the container's wins: it is drawn as a separate surface
+ * of its own look and does not merge. (Child explicit, then container.)
  *
  * A merged piece is static: no press swell, drag squash or touch glow (use separate surfaces for those), and it draws the rim and
- * shadow of the style but no hairline border. Its refraction follows the joined outline in a band of [LiquidGlassStyle.bevelWidth].
- * The shadow is cast once from the union of the shapes (each ring of the shadow stack is one path), so it does not double where
- * shapes overlap. It does not follow the smooth neck itself: where shapes are closer than the shadow reaches, their shadows meet
- * and fill the gap, and a neck wider than that shows less shadow under it than under the shapes.
+ * shadow of the material but no hairline border. Its refraction follows the joined outline in a band of [LiquidGlass.bevelWidth],
+ * whatever the lens profile. The shadow is cast once from the union of the shapes (each ring of the shadow stack is one path), so
+ * it does not double where shapes overlap. It does not follow the smooth neck itself: where shapes are closer than the shadow
+ * reaches, their shadows meet and fill the gap, and a neck wider than that shows less shadow under it than under the shapes.
  *
  * ```
  * GlassEffectContainer(Modifier.fillMaxWidth()) {
@@ -179,31 +175,29 @@ internal val LocalGlassEffectGroup = staticCompositionLocalOf<GlassEffectGroup?>
  * }
  * ```
  *
- * @param style the Liquid look, including how far shapes pull into each other ([LiquidGlassStyle.blend]).
- * @param material [SurfaceMaterial.Liquid] or [SurfaceMaterial.LiquidClear]: the base tint and blur.
+ * @param material the Liquid look, including how far shapes pull into each other ([LiquidGlass.blend]); it merges only with a lens.
  * @param glass the backdrop to refract; defaults to the one the overlay host provides.
  */
 @Composable
 public fun GlassEffectContainer(
     modifier: Modifier = Modifier,
-    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
-    material: SurfaceMaterial = SurfaceMaterial.Liquid,
+    material: LiquidGlass = LiquidGlass.Regular,
     glass: GlassState? = LocalGlassState.current,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val resolved = rememberResolvedMaterial(material, SurfaceRole.Content, glass)
     val group = remember { GlassEffectGroup() }
-    val merged = resolved.liquid && resolved.mode == SurfaceMode.Lens
+    val lens = material.lens
+    val merged = lens != null && resolved.mode == SurfaceMode.Lens
     group.merged = merged
-    group.style = style
     group.material = material
     group.glass = glass
     val surface =
         if (merged) {
             val dark = LocalUiDark.current
-            // Remembered so a custom style does not make new tokens, and update the merged node, on every recomposition.
-            val tokens = remember(resolved.variant, dark, style) { style.applyTo(glassTokens(resolved.variant, dark)) }
-            modifier then MergedGlassElement(group, style, tokens, UiTheme.colors.bg, glass)
+            // Remembered so a custom material does not make new tokens, and update the merged node, on every recomposition.
+            val tokens = remember(material, dark) { material.tokens(dark) }
+            modifier then MergedGlassElement(group, material, lens!!, tokens, UiTheme.colors.bg, glass)
         } else {
             modifier
         }
@@ -217,18 +211,17 @@ public fun GlassEffectContainer(
  * rectangle: the sharpest corner radius is used for the merge). Outside a container, or when it does not merge, it is simply a
  * separate Liquid surface of [shape].
  *
- * [style] and [material] default to null, meaning "the container's" (and, outside a container, [LocalLiquidGlassStyle] and
- * [SurfaceMaterial.Liquid]). Passing one that differs from the container's makes this child a separate surface of that look
- * instead of a merged shape; see [GlassEffectContainer] for the precedence.
+ * [material] defaults to null, meaning "the container's" (and, outside a container, [LiquidGlass.Regular]). Passing one that
+ * differs from the container's makes this child a separate surface of that look instead of a merged shape; see
+ * [GlassEffectContainer] for the precedence.
  */
 @Composable
 public fun Modifier.glassEffect(
     shape: Shape,
-    style: LiquidGlassStyle? = null,
-    material: SurfaceMaterial? = null,
+    material: LiquidGlass? = null,
 ): Modifier {
     val group = LocalGlassEffectGroup.current
-    val joins = group != null && group.accepts(style, material)
+    val joins = group != null && group.accepts(material)
     val claim = remember(group, joins) { if (joins) SlotClaim(group!!) else null }
     if (claim != null && claim.slot < 0) claim.retry(group!!.released)
     val slot = claim?.slot ?: -1
@@ -236,10 +229,9 @@ public fun Modifier.glassEffect(
         this then MergedChildElement(group, slot, shape)
     } else {
         material(
-            material ?: group?.material ?: SurfaceMaterial.Liquid,
+            material ?: group?.material ?: LiquidGlass.Regular,
             shape,
             glass = if (group != null) group.glass else LocalGlassState.current,
-            style = style ?: group?.style ?: LocalLiquidGlassStyle.current,
         )
     }
 }
@@ -299,20 +291,22 @@ private fun MergedShape.sameAs(other: MergedShape) =
 
 private data class MergedGlassElement(
     val group: GlassEffectGroup,
-    val style: LiquidGlassStyle,
+    val material: LiquidGlass,
+    val lens: LiquidLens,
     val tokens: GlassMaterial,
     val base: Color,
     val state: GlassState?,
 ) : ModifierNodeElement<MergedGlassNode>() {
-    override fun create() = MergedGlassNode(group, style, tokens, base, state)
+    override fun create() = MergedGlassNode(group, material, lens, tokens, base, state)
 
     override fun update(node: MergedGlassNode) {
         node.group = group
-        node.style = style
+        node.material = material
+        node.lens = lens
         node.tokens = tokens
         node.base = base
         node.state = state
-        node.styleChanged()
+        node.materialChanged()
         node.sync()
         node.invalidateDraw()
     }
@@ -324,7 +318,8 @@ private data class MergedGlassElement(
 
 private class MergedGlassNode(
     var group: GlassEffectGroup,
-    var style: LiquidGlassStyle,
+    var material: LiquidGlass,
+    var lens: LiquidLens,
     var tokens: GlassMaterial,
     var base: Color,
     var state: GlassState?,
@@ -336,9 +331,10 @@ private class MergedGlassNode(
     private var registered: GlassState? = null
     private val engine by lazy { LensEngine() }
     private var key: MergeParams? = null
+    private var keyProgram: MergeProgram? = null
     private var effect: RenderEffect? = null
 
-    // What the last draw computed, reused while the shapes, the container and the style stay as they were.
+    // What the last draw computed, reused while the shapes, the container and the material stay as they were.
     private var shapes: List<MergedShape> = emptyList()
     private var relative = FloatArray(0)
     private var shadowPaths: Array<Path>? = null
@@ -374,7 +370,7 @@ private class MergedGlassNode(
         registered = state
     }
 
-    fun styleChanged() {
+    fun materialChanged() {
         inputsStale = true
         shadowPaths = null
         shadowKey = null
@@ -448,7 +444,7 @@ private class MergedGlassNode(
     // One shadow for the joined outline: each ring of the stack is the union of the grown shapes, so it does not double where
     // shapes overlap and it spans the neck between them.
     private fun ContentDrawScope.drawShadow(geometryChanged: Boolean) {
-        val shadow = style.shadow
+        val shadow = material.shadow
         if (shadow.opacity <= 0f || shadow.spread.value <= 0f) return
         if (geometryChanged || shadowPaths == null || shadowKey != shadow || shadowDensity != density) {
             shadowPaths = buildShadowPaths(shadow)
@@ -470,7 +466,7 @@ private class MergedGlassNode(
             for (i in 0 until count) {
                 val halfW = relative[i * 5 + 2]
                 val halfH = relative[i * 5 + 3]
-                val reach = shadow.spread.toPx() * sizeScale(min(halfW, halfH) * 2f, REFERENCE_SIZE.toPx())
+                val reach = shadow.spread.toPx() * sizeScale(min(halfW, halfH) * 2f, REFERENCE_SIZE_DP.dp.toPx())
                 val grow = reach * k / SHADOW_STEPS
                 val radius = relative[i * 5 + 4] + grow
                 val one =
@@ -497,7 +493,7 @@ private class MergedGlassNode(
         pad: Int,
         blur: Float,
     ): RenderEffect? {
-        val blend = style.blend.toPx().coerceAtLeast(0.5f)
+        val blend = material.blend.toPx().coerceAtLeast(0.5f)
         val unchanged =
             !geometryChanged &&
                 !inputsStale &&
@@ -523,9 +519,11 @@ private class MergedGlassNode(
             padded[i * 5 + 4] = relative[i * 5 + 4]
         }
         val fresh = MergeParams(padded, count, blend, lensParams(pad, blur, smallestHalf))
-        if (fresh != key) {
+        val program = lens.dispersion?.mergeProgram ?: PlainMergeProgram.value
+        if (fresh != key || program !== keyProgram) {
             key = fresh
-            effect = engine.merged(fresh)
+            keyProgram = program
+            effect = engine.merged(program, fresh)
         }
         return effect
     }
@@ -535,7 +533,7 @@ private class MergedGlassNode(
         blur: Float,
         smallestHalf: Float,
     ): LensParams {
-        val light = lightFromAngle(style.specular.angleDegrees)
+        val light = lightFromAngle(material.specular.angleDegrees)
         return LensParams(
             width = size.width,
             height = size.height,
@@ -545,8 +543,8 @@ private class MergedGlassNode(
             br = 0f,
             bl = 0f,
             exponent = 2f,
-            strength = min(smallestHalf * 1.1f, 20.dp.toPx()) * style.refraction.coerceAtLeast(0f),
-            dispersion = style.dispersion,
+            strength = min(smallestHalf * 1.1f, 20.dp.toPx()) * lens.refraction.coerceAtLeast(0f),
+            dispersion = lens.dispersion?.amount ?: 0f,
             blur = blur,
             boundsLeft = pad.toFloat(),
             boundsTop = pad.toFloat(),
@@ -562,15 +560,15 @@ private class MergedGlassNode(
             dimB = tokens.dim.blue,
             dimA = tokens.dim.alpha,
             veilEdge = 0.35f,
-            rimDepth = rimDepthFor(style.bevelWidth.toPx(), smallestHalf),
+            rimDepth = rimDepthFor(material.bevelWidth.toPx(), smallestHalf),
             glintWidth = 1.5f.dp.toPx(),
-            glintStrength = tokens.edge.alpha * style.specular.intensity.coerceAtLeast(0f),
+            glintStrength = tokens.edge.alpha * material.specular.intensity.coerceAtLeast(0f),
             lightX = light.x,
             lightY = light.y,
-            fresnel = style.fresnel,
-            grain = style.grain,
-            brightness = style.brightness,
-            thickness = style.rim * sizeScale(smallestHalf, REFERENCE_SIZE.toPx() / 2f),
+            fresnel = material.fresnel,
+            grain = material.grain,
+            brightness = material.brightness,
+            thickness = material.rim * sizeScale(smallestHalf, REFERENCE_SIZE_DP.dp.toPx() / 2f),
         )
     }
 }

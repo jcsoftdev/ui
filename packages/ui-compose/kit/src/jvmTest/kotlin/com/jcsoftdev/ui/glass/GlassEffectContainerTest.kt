@@ -51,7 +51,11 @@ private fun pills(
                         CompositionLocalProvider(LocalLensSupport provides lens) {
                             val glass = rememberGlassState()
                             Box(Modifier.fillMaxSize().glassSource(glass).background(Color.Red))
-                            GlassEffectContainer(Modifier.fillMaxSize(), style = LiquidGlassStyle(blend = blend), glass = glass) {
+                            GlassEffectContainer(
+                                Modifier.fillMaxSize(),
+                                material = LiquidGlass.Regular.copy(blend = blend),
+                                glass = glass,
+                            ) {
                                 Row(Modifier.offset(40.dp, 30.dp), horizontalArrangement = Arrangement.spacedBy(gap)) {
                                     repeat(count) { Box(Modifier.size(pill).glassEffect(RoundedCornerShape(pill / 2))) }
                                 }
@@ -69,10 +73,9 @@ private fun pills(
 
 /** Three 60dp pills 100dp apart (so none merge) in a container with the given look; [child] picks each pill's own look. */
 private fun looks(
-    containerStyle: LiquidGlassStyle = LiquidGlassStyle(blend = 8.dp),
-    containerMaterial: SurfaceMaterial = SurfaceMaterial.Liquid,
+    container: LiquidGlass = LiquidGlass.Regular.copy(blend = 8.dp),
     lens: Boolean = true,
-    child: (Int) -> Pair<LiquidGlassStyle?, SurfaceMaterial?> = { null to null },
+    child: (Int) -> LiquidGlass? = { null },
 ): Bitmap {
     lateinit var bmp: Bitmap
     runComposeUiTest {
@@ -85,14 +88,12 @@ private fun looks(
                             Box(Modifier.fillMaxSize().glassSource(glass).background(Color.Red))
                             GlassEffectContainer(
                                 Modifier.fillMaxSize(),
-                                style = containerStyle,
-                                material = containerMaterial,
+                                material = container,
                                 glass = glass,
                             ) {
                                 Row(Modifier.offset(40.dp, 30.dp), horizontalArrangement = Arrangement.spacedBy(100.dp)) {
                                     repeat(3) { i ->
-                                        val (s, m) = child(i)
-                                        Box(Modifier.size(60.dp).glassEffect(RoundedCornerShape(30.dp), s, m))
+                                        Box(Modifier.size(60.dp).glassEffect(RoundedCornerShape(30.dp), child(i)))
                                     }
                                 }
                             }
@@ -155,39 +156,41 @@ class GlassEffectContainerTest {
         assertTrue(!many.isRedBackdrop(40 + 28, 60))
     }
 
-    @Test fun theContainersStyleReachesChildrenThatFallBackToSeparateSurfaces() {
-        val blue = LiquidGlassStyle(blend = 8.dp, tint = LiquidTint(Color.Blue))
+    @Test fun theContainersOpticsReachChildrenThatFallBackToSeparateSurfaces() {
+        val blue = LiquidGlass.Regular.copy(blend = 8.dp, tint = LiquidTint(Color.Blue))
         val plain = looks(lens = false).pixel(230)
-        val tinted = looks(containerStyle = blue, lens = false).pixel(230)
+        val tinted = looks(container = blue, lens = false).pixel(230)
         assertTrue(
             plain != tinted,
-            "the fallback surface must use the container style: plain=${plain.toString(16)} tinted=${tinted.toString(16)}",
+            "the fallback surface must use the container material: plain=${plain.toString(16)} tinted=${tinted.toString(16)}",
         )
     }
 
-    @Test fun theContainersMaterialReachesChildrenThatFallBackToSeparateSurfaces() {
+    @Test fun theContainersTokenSetReachesChildrenThatFallBackToSeparateSurfaces() {
         val liquid = looks(lens = false).pixel(230)
-        val clear = looks(containerMaterial = SurfaceMaterial.LiquidClear, lens = false).pixel(230)
-        assertTrue(liquid != clear, "LiquidClear and Liquid differ in tint: liquid=${liquid.toString(16)} clear=${clear.toString(16)}")
+        val clear = looks(container = LiquidGlass.Regular.copy(blend = 8.dp, clear = true), lens = false).pixel(230)
+        assertTrue(
+            liquid != clear,
+            "the clear and regular tokens differ in tint: liquid=${liquid.toString(16)} clear=${clear.toString(16)}",
+        )
     }
 
-    @Test fun aChildThatAsksForADifferentStyleWinsAndIsNotMerged() {
-        val bright = LiquidGlassStyle(blend = 8.dp, brightness = 0.35f)
-        val bmp = looks(child = { i -> if (i == 1) bright to null else null to null })
+    @Test fun aChildThatAsksForADifferentMaterialWinsAndIsNotMerged() {
+        val bright = LiquidGlass.Regular.copy(blend = 8.dp, brightness = 0.35f)
+        val bmp = looks(child = { i -> if (i == 1) bright else null })
         assertTrue(bmp.green(230) > bmp.green(70) + 15, "middle=${bmp.green(230)} first=${bmp.green(70)} last=${bmp.green(390)}")
         assertTrue(kotlin.math.abs(bmp.green(70) - bmp.green(390)) <= 2, "the others share the container look")
     }
 
-    @Test fun aChildThatRepeatsTheContainersStyleStillMerges() {
-        val same = LiquidGlassStyle(blend = 60.dp)
-        val bmp =
-            pillsWith(same) { _ -> same to SurfaceMaterial.Liquid }
-        assertTrue(!bmp.isRedBackdrop(108, 60), "an explicit but equal style still joins the merge")
+    @Test fun aChildThatRepeatsTheContainersMaterialStillMerges() {
+        val same = LiquidGlass.Regular.copy(blend = 60.dp)
+        val bmp = pillsWith(same) { _ -> same.copy() }
+        assertTrue(!bmp.isRedBackdrop(108, 60), "an explicit but equal material still joins the merge")
     }
 
     private fun pillsWith(
-        containerStyle: LiquidGlassStyle,
-        child: (Int) -> Pair<LiquidGlassStyle?, SurfaceMaterial?>,
+        container: LiquidGlass,
+        child: (Int) -> LiquidGlass?,
     ): Bitmap {
         lateinit var bmp: Bitmap
         runComposeUiTest {
@@ -197,11 +200,10 @@ class GlassEffectContainerTest {
                         UiTheme(dark = false, motion = Motion(0f)) {
                             val glass = rememberGlassState()
                             Box(Modifier.fillMaxSize().glassSource(glass).background(Color.Red))
-                            GlassEffectContainer(Modifier.fillMaxSize(), style = containerStyle, glass = glass) {
+                            GlassEffectContainer(Modifier.fillMaxSize(), material = container, glass = glass) {
                                 Row(Modifier.offset(40.dp, 30.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                     repeat(2) { i ->
-                                        val (s, m) = child(i)
-                                        Box(Modifier.size(60.dp).glassEffect(RoundedCornerShape(30.dp), s, m))
+                                        Box(Modifier.size(60.dp).glassEffect(RoundedCornerShape(30.dp), child(i)))
                                     }
                                 }
                             }
@@ -225,7 +227,7 @@ class GlassEffectContainerTest {
                         UiTheme(dark = false, motion = Motion(0f)) {
                             val glass = rememberGlassState()
                             Box(Modifier.fillMaxSize().glassSource(glass).background(Color.Red))
-                            GlassEffectContainer(Modifier.fillMaxSize(), style = LiquidGlassStyle(blend = 4.dp), glass = glass) {
+                            GlassEffectContainer(Modifier.fillMaxSize(), material = LiquidGlass.Regular.copy(blend = 4.dp), glass = glass) {
                                 group = LocalGlassEffectGroup.current
                                 Row {
                                     repeat(MAX_MERGED_SHAPES + 1) { i ->
