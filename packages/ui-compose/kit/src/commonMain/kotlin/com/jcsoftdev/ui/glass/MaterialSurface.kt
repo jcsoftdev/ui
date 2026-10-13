@@ -1,19 +1,18 @@
 package com.jcsoftdev.ui.glass
 
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.InteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
@@ -45,11 +44,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.GlassMaterial
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.math.ceil
+import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 
 /**
  * Fills this node with [material] clipped to [shape]: solid ([solid]), frosted glass (tint, dim, edge highlight, border and a
@@ -62,7 +62,9 @@ import kotlin.math.min
  * @param glass the backdrop to blur; defaults to the one the overlay host provides. Null draws the tint without blur.
  * @param solid fill used when the material resolves to opaque.
  * @param interactionSource when given, a press on it brightens a Liquid surface and strengthens its lens; with motion enabled
- * the surface also flexes (a small scale). Reduced motion keeps only the brightening.
+ * the surface also swells, glows at the finger and turns its highlight toward it. Reduced motion keeps only the brightening.
+ * @param style the Liquid look of this surface (optics, interaction, motion); defaults to [LocalLiquidGlassStyle], which
+ * `UiTheme(liquidGlassStyle = ...)` sets. It only affects [SurfaceMaterial.Liquid] and [SurfaceMaterial.LiquidClear].
  */
 @Composable
 public fun Modifier.material(
@@ -71,25 +73,15 @@ public fun Modifier.material(
     solid: Color = UiTheme.colors.float,
     glass: GlassState? = LocalGlassState.current,
     interactionSource: InteractionSource? = null,
+    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
 ): Modifier {
     val resolved = rememberResolvedMaterial(material, SurfaceRole.Content, glass)
-    val press = rememberPressProgress(interactionSource)
-    val flex = press != null && resolved.liquid && resolved.isGlass && UiTheme.motion.enabled
-    val flexed =
-        if (flex) {
-            graphicsLayer {
-                scaleX = 1f + FLEX * press!!()
-                scaleY = scaleX
-            }
-        } else {
-            this
-        }
-    return flexed.surfaceMaterial(resolved, shape, solid, UiTheme.colors.hair, glass, press = press)
+    return liquidSurface(resolved, shape, solid, glass, interactionSource, style)
 }
 
 /**
  * A [Box] filled with [material] that also marks its children as inside glass, so glass nested in it falls back to a
- * near-solid fill (Apple: no glass on glass). See [material] for [interactionSource].
+ * near-solid fill (Apple: no glass on glass). See [material] for [interactionSource] and [style].
  */
 @Composable
 public fun MaterialSurface(
@@ -99,34 +91,40 @@ public fun MaterialSurface(
     solid: Color = UiTheme.colors.float,
     glass: GlassState? = LocalGlassState.current,
     interactionSource: InteractionSource? = null,
+    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val resolved = rememberResolvedMaterial(material, SurfaceRole.Content, glass)
-    val press = rememberPressProgress(interactionSource)
-    val flex = press != null && resolved.liquid && resolved.isGlass && UiTheme.motion.enabled
-    val flexed =
-        if (flex) {
-            modifier.graphicsLayer {
-                scaleX = 1f + FLEX * press!!()
-                scaleY = scaleX
-            }
-        } else {
-            modifier
-        }
-    Box(flexed.surfaceMaterial(resolved, shape, solid, UiTheme.colors.hair, glass, press = press)) {
+    Box(modifier.liquidSurface(resolved, shape, solid, glass, interactionSource, style)) {
         GlassNesting(resolved) { content() }
     }
 }
 
-private const val FLEX = 0.03f
-
-/** 0 to 1 while [source] is pressed, animated with the theme motion (a jump cut when motion is off); null without a source. */
+// The surface plus, for live Liquid glass, its dynamics: press swell, drag squash and the pointer observer that feeds them.
 @Composable
-internal fun rememberPressProgress(source: InteractionSource?): (() -> Float)? {
-    if (source == null) return null
-    val pressed by source.collectIsPressedAsState()
-    val progress by animateFloatAsState(if (pressed) 1f else 0f, UiTheme.motion.tween(Motion.FAST), label = "glassPress")
-    return { progress }
+private fun Modifier.liquidSurface(
+    resolved: ResolvedMaterial,
+    shape: Shape,
+    solid: Color,
+    glass: GlassState?,
+    interactionSource: InteractionSource?,
+    style: LiquidGlassStyle,
+): Modifier {
+    val live = resolved.liquid && resolved.isGlass
+    val dynamics = if (live) rememberLiquidDynamics(style, interactionSource) else null
+    val reacts = dynamics != null && dynamics.motionOn && style.interaction != LiquidInteraction.None
+    val swell = style.motion?.swell
+    val flexed =
+        if (reacts && swell != null && (interactionSource != null || style.interaction == LiquidInteraction.Drag)) {
+            graphicsLayer {
+                val grow = 1f + dynamics!!.lift() * swellFraction(swell.toPx(), size.width)
+                scaleX = grow * dynamics.scaleX()
+                scaleY = grow * dynamics.scaleY()
+            }.then(dynamics!!.observer)
+        } else {
+            this
+        }
+    return flexed.surfaceMaterial(resolved, shape, solid, UiTheme.colors.hair, glass, dynamics = dynamics, style = style)
 }
 
 /** Provides the "inside glass" marker to [content] when [resolved] is a glass or nested surface. */
@@ -146,8 +144,8 @@ internal fun GlassNesting(
 /**
  * The single place a component's surface is drawn. [container] and [outline] are the component's own opaque colors, used
  * when the surface is solid (the forced-opaque case swaps the border for a stronger one under high contrast).
- * [observe] is read in the draw phase so the backdrop offset follows a state-driven translation of an ancestor; [press] is
- * a 0 to 1 press progress read the same way.
+ * [observe] is read in the draw phase so the backdrop offset follows a state-driven translation of an ancestor; [dynamics]
+ * carries the Liquid press, materialize and pointer state read the same way. [style] only matters for Liquid materials.
  */
 @Composable
 internal fun Modifier.surfaceMaterial(
@@ -157,7 +155,8 @@ internal fun Modifier.surfaceMaterial(
     outline: Color,
     glass: GlassState?,
     observe: (() -> Float)? = null,
-    press: (() -> Float)? = null,
+    dynamics: LiquidDynamics? = null,
+    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
 ): Modifier {
     val colors = UiTheme.colors
     val borderWidth = UiTheme.sizes.borderWidth
@@ -174,19 +173,9 @@ internal fun Modifier.surfaceMaterial(
         }
         SurfaceMode.Nested -> clip(shape).background(colors.float).border(borderWidth, colors.hair, shape)
         SurfaceMode.Tint, SurfaceMode.Blur, SurfaceMode.Lens -> {
-            val tokens = glassTokens(resolved.variant, LocalUiDark.current)
-            val shadowed =
-                if (resolved.liquid) {
-                    shadow(
-                        LIQUID_ELEVATION,
-                        shape,
-                        clip = false,
-                        ambientColor = ShadowAmbient,
-                        spotColor = ShadowSpot,
-                    )
-                } else {
-                    this
-                }
+            val base = glassTokens(resolved.variant, LocalUiDark.current)
+            val tokens = if (resolved.liquid) style.applyTo(base) else base
+            val shadowed = if (resolved.liquid) liquidShadow(shape, style) else this
             shadowed.clip(shape) then
                 GlassSurfaceElement(
                     shape = shape,
@@ -199,15 +188,79 @@ internal fun Modifier.surfaceMaterial(
                     state = glass,
                     borderWidth = borderWidth,
                     observe = observe,
-                    press = press,
+                    dynamics = dynamics,
+                    style = style,
                 )
         }
     }
 }
 
-private val LIQUID_ELEVATION: Dp = 14.dp
-private val ShadowAmbient = Color.Black.copy(alpha = 0.10f)
-private val ShadowSpot = Color.Black.copy(alpha = 0.22f)
+private val REFERENCE_SIZE: Dp = 56.dp
+
+// The shadow is a stack of slightly larger copies of the silhouette, each faint: their sum falls off smoothly from the edge, with
+// no blur or elevation API, so it looks the same on every target and can be pushed down by offsetY. It grows with the size of
+// the surface. The opaque base of the glass hides the part under the surface.
+@Composable
+private fun Modifier.liquidShadow(
+    shape: Shape,
+    style: LiquidGlassStyle,
+): Modifier = if (style.shadow.opacity <= 0f || style.shadow.spread.value <= 0f) this else this then LiquidShadowElement(shape, style)
+
+private const val SHADOW_ALPHA = 0.26f
+private const val SHADOW_STEPS = 14
+
+private data class LiquidShadowElement(
+    val shape: Shape,
+    val style: LiquidGlassStyle,
+) : ModifierNodeElement<LiquidShadowNode>() {
+    override fun create() = LiquidShadowNode(shape, style)
+
+    override fun update(node: LiquidShadowNode) {
+        node.shape = shape
+        node.style = style
+        node.invalidateDraw()
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "liquidShadow"
+    }
+}
+
+private class LiquidShadowNode(
+    var shape: Shape,
+    var style: LiquidGlassStyle,
+) : Modifier.Node(),
+    DrawModifierNode {
+    override fun ContentDrawScope.draw() {
+        val shadow = style.shadow
+        val reach = shadow.spread.toPx() * sizeScale(min(size.width, size.height), REFERENCE_SIZE.toPx())
+        val rounded = shape.createOutline(size, layoutDirection, this).asRoundRect()
+        if (rounded != null && reach > 0f) {
+            val edge = (SHADOW_ALPHA * shadow.opacity).coerceIn(0f, 0.95f)
+            val each = (1.0 - (1.0 - edge).pow(1.0 / SHADOW_STEPS)).toFloat()
+            translate(0f, shadow.offsetY.toPx()) {
+                for (k in SHADOW_STEPS downTo 1) {
+                    val grow = reach * k / SHADOW_STEPS
+                    drawRoundRect(
+                        Color.Black.copy(alpha = each),
+                        topLeft = Offset(rounded.left - grow, rounded.top - grow),
+                        size = Size(rounded.width + grow * 2f, rounded.height + grow * 2f),
+                        cornerRadius = CornerRadius(rounded.topLeftCornerRadius.x + grow, rounded.topLeftCornerRadius.y + grow),
+                    )
+                }
+            }
+        }
+        drawContent()
+    }
+}
+
+/** The outline as one rounded rectangle (its top-left corner radius stands for all four); null for free-form shapes. */
+private fun Outline.asRoundRect(): RoundRect? =
+    when (this) {
+        is Outline.Rounded -> roundRect
+        is Outline.Rectangle -> RoundRect(rect)
+        is Outline.Generic -> null
+    }
 
 private data class GlassSurfaceElement(
     val shape: Shape,
@@ -220,13 +273,14 @@ private data class GlassSurfaceElement(
     val state: GlassState?,
     val borderWidth: Dp,
     val observe: (() -> Float)?,
-    val press: (() -> Float)?,
+    val dynamics: LiquidDynamics?,
+    val style: LiquidGlassStyle,
 ) : ModifierNodeElement<GlassSurfaceNode>() {
     override fun create(): GlassSurfaceNode =
-        GlassSurfaceNode(shape, tokens, blur, lens, liquid, base, veil, state, borderWidth, observe, press)
+        GlassSurfaceNode(shape, tokens, blur, lens, liquid, base, veil, state, borderWidth, observe, dynamics, style)
 
     override fun update(node: GlassSurfaceNode) =
-        node.update(shape, tokens, blur, lens, liquid, base, veil, state, borderWidth, observe, press)
+        node.update(shape, tokens, blur, lens, liquid, base, veil, state, borderWidth, observe, dynamics, style)
 
     override fun InspectorInfo.inspectableProperties() {
         name = "glassSurface"
@@ -241,18 +295,14 @@ private const val TINT_VEIL_ALPHA = 0.9f
 // Kyant's backdrop lens uses a refraction height up to the smallest corner radius and an amount about twice that; our samples
 // stay inside the surface, so the amount is capped at the bevel itself.
 private const val STRENGTH_PER_DEPTH = 1.1f
-private val RIM_DEPTH: Dp = 22.dp
 private const val LENS_COVERAGE = 1f
-private const val DOME = 0.05f
 private val MAX_REFRACTION: Dp = 20.dp
-private const val LENS_SATURATION = 1.5f
 private const val VEIL_EDGE = 0.35f
-private const val DISPERSION = 0.03f
 private const val GLINT_WIDTH_DP = 1.5f
 private const val CONTOUR_WIDTH_DP = 0.75f
-private const val LIGHT_ANGLE = -125f
 private const val PRESS_LENS_GAIN = 0.35f
 private const val PRESS_BRIGHTEN = 0.14f
+private const val GLOW_RADIUS = 0.55f
 
 private class GlassSurfaceNode(
     var shape: Shape,
@@ -265,7 +315,8 @@ private class GlassSurfaceNode(
     var state: GlassState?,
     var borderWidth: Dp,
     var observe: (() -> Float)?,
-    var press: (() -> Float)?,
+    var dynamics: LiquidDynamics?,
+    var style: LiquidGlassStyle,
 ) : Modifier.Node(),
     DrawModifierNode,
     GlobalPositionAwareModifierNode {
@@ -292,11 +343,13 @@ private class GlassSurfaceNode(
         state: GlassState?,
         borderWidth: Dp,
         observe: (() -> Float)?,
-        press: (() -> Float)?,
+        dynamics: LiquidDynamics?,
+        style: LiquidGlassStyle,
     ) {
         this.lens = lens
         this.liquid = liquid
-        this.press = press
+        this.dynamics = dynamics
+        this.style = style
         this.base = base
         this.veil = veil
         this.shape = shape
@@ -333,9 +386,19 @@ private class GlassSurfaceNode(
         this.coordinates = coordinates
     }
 
+    // The light: the style's angle, turned toward the finger while it is down.
+    private fun ContentDrawScope.light(
+        pointer: Offset?,
+        follow: Float,
+    ): Offset {
+        val own = lightFromAngle(style.specular.angleDegrees)
+        val toward = pointer?.let { lightToward(it, size.width, size.height) }
+        return if (toward != null) blendLight(own, toward, follow.coerceIn(0f, 1f)) else own
+    }
+
     override fun ContentDrawScope.draw() {
         observe?.invoke()
-        val pressed = press?.invoke() ?: 0f
+        val pressed = dynamics?.lift?.invoke() ?: 0f
         val outline = shape.createOutline(size, layoutDirection, this)
         val source = state
         val blurLayer = layer
@@ -387,17 +450,18 @@ private class GlassSurfaceNode(
     private fun ContentDrawScope.drawDirectionalRim(outline: Outline) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val glint = GLINT_WIDTH_DP.dp.toPx()
-        val lit = tokens.edge
+        val angle = style.specular.angleDegrees
+        val lit = tokens.edge.copy(alpha = (tokens.edge.alpha * style.specular.intensity * style.rim).coerceIn(0f, 1f))
         val sweep =
             sweepAround(
                 center,
-                LIGHT_ANGLE to lit,
-                LIGHT_ANGLE + 180f to lit.copy(alpha = lit.alpha * 0.55f),
+                angle to lit,
+                angle + 180f to lit.copy(alpha = lit.alpha * 0.55f),
                 spread = 55f,
                 fade = Color.Transparent,
             )
         drawOutline(outline, sweep, style = Stroke(width = glint * 2f), blendMode = BlendMode.Plus)
-        val away = sweepAround(center, LIGHT_ANGLE + 180f to Color.Black.copy(alpha = 0.10f), spread = 90f, fade = Color.Transparent)
+        val away = sweepAround(center, angle + 180f to Color.Black.copy(alpha = 0.10f * style.rim), spread = 90f, fade = Color.Transparent)
         drawOutline(outline, away, style = Stroke(width = CONTOUR_WIDTH_DP.dp.toPx() * 2f))
         drawOutline(outline, tokens.border, style = Stroke(width = borderWidth.toPx() * 2f))
     }
@@ -425,7 +489,10 @@ private class GlassSurfaceNode(
         val dy = position.y - source.originY
         val radius = tokens.blur.toPx()
         val depth = bevel()
-        val strength = min(depth * STRENGTH_PER_DEPTH, MAX_REFRACTION.toPx()) * (1f + PRESS_LENS_GAIN * pressed)
+        val materialize = dynamics?.materialize?.invoke() ?: 1f
+        val strength =
+            min(depth * STRENGTH_PER_DEPTH, MAX_REFRACTION.toPx()) * style.refraction.coerceAtLeast(0f) *
+                (1f + PRESS_LENS_GAIN * pressed) * materialize
         val pad = ceil(radius).toInt()
         val width = size.width.toInt() + pad * 2
         val height = size.height.toInt() + pad * 2
@@ -438,7 +505,7 @@ private class GlassSurfaceNode(
             if (lens) drawRect(base)
             translate(pad - dx, pad - dy) { drawLayer(source.layer) }
         }
-        val lensed = if (lens) lensFor(outline, pad, depth, strength, radius, squareness(outline)) else null
+        val lensed = if (lens) lensFor(outline, pad, depth, strength, radius, squareness(outline), pressed) else null
         lensApplied = lensed != null
         blurLayer.renderEffect = lensed ?: blurFor(radius)
         // The lens shader saturates the backdrop itself, before the veil.
@@ -461,39 +528,67 @@ private class GlassSurfaceNode(
         strength: Float,
         radius: Float,
         exponent: Float,
+        pressed: Float,
     ): RenderEffect? {
         val corners = outline.cornerRadii()
+        val pointer = dynamics?.pointer?.invoke()
+        val follow = dynamics?.follow?.invoke() ?: 0f
+        val light = light(pointer, follow)
+        val rimDepth = style.bevelWidth.toPx().coerceAtMost(depth)
+        val half = min(size.width, size.height) * 0.5f
+        val glowAlpha = (style.motion?.glow ?: 0f) * pressed
+        val glowAt =
+            if (pointer != null && glowAlpha > 0f) {
+                Offset(
+                    size.width / 2f + rubberBand(pointer.x - size.width / 2f, size.width / 2f),
+                    size.height / 2f + rubberBand(pointer.y - size.height / 2f, size.height / 2f),
+                )
+            } else {
+                Offset.Zero
+            }
         val params =
             LensParams(
-                size.width,
-                size.height,
-                pad.toFloat(),
-                corners[0],
-                corners[1],
-                corners[2],
-                corners[3],
-                exponent,
-                strength,
-                DISPERSION,
-                radius,
-                pad.toFloat(),
-                pad.toFloat(),
-                pad + size.width,
-                pad + size.height,
-                tokens.saturate,
-                tokens.tint.red,
-                tokens.tint.green,
-                tokens.tint.blue,
-                tokens.tint.alpha,
-                tokens.dim.red,
-                tokens.dim.green,
-                tokens.dim.blue,
-                tokens.dim.alpha,
-                VEIL_EDGE,
-                RIM_DEPTH.toPx().coerceAtMost(depth),
-                DOME,
-                GLINT_WIDTH_DP.dp.toPx(),
-                tokens.edge.alpha,
+                width = size.width,
+                height = size.height,
+                pad = pad.toFloat(),
+                tl = corners[0],
+                tr = corners[1],
+                br = corners[2],
+                bl = corners[3],
+                exponent = exponent,
+                strength = strength,
+                dispersion = style.dispersion,
+                blur = radius,
+                boundsLeft = pad.toFloat(),
+                boundsTop = pad.toFloat(),
+                boundsRight = pad + size.width,
+                boundsBottom = pad + size.height,
+                saturate = tokens.saturate,
+                tintR = tokens.tint.red,
+                tintG = tokens.tint.green,
+                tintB = tokens.tint.blue,
+                tintA = tokens.tint.alpha,
+                dimR = tokens.dim.red,
+                dimG = tokens.dim.green,
+                dimB = tokens.dim.blue,
+                dimA = tokens.dim.alpha,
+                veilEdge = VEIL_EDGE,
+                rimDepth = rimDepth.coerceAtLeast(1f),
+                dome = style.domeAmount(),
+                glintWidth = GLINT_WIDTH_DP.dp.toPx(),
+                glintStrength = tokens.edge.alpha * style.specular.intensity.coerceAtLeast(0f),
+                lightX = light.x,
+                lightY = light.y,
+                fresnel = style.fresnel,
+                grain = style.grain,
+                brightness = style.brightness,
+                profile = style.profile.shaderCode(),
+                band = (rimDepth / half).coerceIn(0.05f, 1f),
+                thickness = style.rim * sizeScale(half, REFERENCE_SIZE.toPx() / 2f),
+                glowX = pad + glowAt.x,
+                glowY = pad + glowAt.y,
+                glowRadius = max(size.width, size.height) * GLOW_RADIUS,
+                glowAlpha = if (pointer != null) glowAlpha else 0f,
             )
         if (params != lensKey) {
             lensKey = params

@@ -28,6 +28,13 @@ class LensShaderTest {
         dispersion: Float = 0.06f,
         exponent: Float = 4f,
         veil: Boolean = false,
+        profile: Float = 0f,
+        band: Float = 0.3f,
+        dome: Float = 0f,
+        grain: Float = 0f,
+        bright: Float = 0f,
+        fresnel: Float = 0f,
+        glow: Float = 0f,
     ): Bitmap {
         val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
         builder.child("content", content)
@@ -44,7 +51,14 @@ class LensShaderTest {
             builder.uniform("veilEdge", 0f)
             builder.uniform("rimDepth", 10f)
         }
-        builder.uniform("sat", 1f)
+        builder.uniform("profile", profile)
+        builder.uniform("band", band)
+        builder.uniform("dome", dome)
+        builder.uniform("grain", grain)
+        builder.uniform("bright", bright)
+        builder.uniform("fresnel", fresnel)
+        builder.uniform("glow", 100f, 60f, 40f, glow)
+        builder.uniform("thickness", 1f)
         builder.uniform("bounds", 0f, 0f, width.toFloat(), height.toFloat())
         val surface = Surface.makeRasterN32Premul(width, height)
         surface.canvas.drawRect(Rect.makeWH(width.toFloat(), height.toFloat()), Paint().apply { shader = builder.makeShader() })
@@ -135,5 +149,51 @@ class LensShaderTest {
                 }
             }
         }
+    }
+
+    @Test fun everyProfileIsCreaseFreeAlongTheDiagonals() {
+        for (profile in listOf(0f, 1f, 2f)) {
+            for (exponent in listOf(2f, 4f, 8f)) {
+                val out = lens(exponent = exponent, profile = profile, band = 0.6f, dome = if (profile == 2f) 0.2f else 0.05f)
+                val walks = listOf((26..90).map { it to 40 }, (24..60).map { it to it + 6 }.map { (x, y) -> y to x })
+                for (walk in walks) {
+                    val shifts = walk.map { (x, y) -> out.shift(x, y) }
+                    for (i in 1 until shifts.size) {
+                        val jump = hypot(shifts[i].first - shifts[i - 1].first, shifts[i].second - shifts[i - 1].second)
+                        assertTrue(jump < 4f, "profile $profile exponent $exponent at ${walk[i]}: jump $jump")
+                    }
+                }
+            }
+        }
+    }
+
+    @Test fun theRimProfileRefractsOnlyABandAlongTheEdge() {
+        val rim = lens(profile = 1f, band = 0.2f)
+        assertTrue(rim.displacement(100, 60) < 1.5f, "center ${rim.displacement(100, 60)}")
+        assertTrue(rim.displacement(80, 60) < 1.5f, "mid ${rim.displacement(80, 60)}")
+        assertTrue(rim.displacement(22, 60) > 8f, "edge ${rim.displacement(22, 60)}")
+        val full = lens(profile = 0f)
+        assertTrue(full.displacement(40, 60) > rim.displacement(40, 60), "full reaches further in than rim")
+    }
+
+    @Test fun theDomeProfileMagnifiesTowardTheCenterWithoutABevelDirection() {
+        val dome = lens(profile = 2f, dome = 0.2f)
+        // A pixel 40px right of center reads 20% closer to the center: 100 + 40 * 0.8.
+        val read = dome.red(140, 60) * width / 255f
+        assertTrue(abs(read - 132f) < 3f, "dome sample $read")
+        assertTrue(dome.displacement(100, 60) < 1.5f)
+    }
+
+    @Test fun theOpticsUniformsChangeThePixels() {
+        val base = lens(veil = true)
+        assertTrue(lens(veil = true, bright = 0.2f).green(100, 60) > base.green(100, 60))
+        assertTrue(lens(veil = true, fresnel = 1f).green(23, 60) > base.green(23, 60), "fresnel brightens the wall")
+        assertTrue(abs(lens(veil = true, fresnel = 1f).green(100, 60) - base.green(100, 60)) <= 1, "fresnel leaves the middle")
+        val grainy = lens(veil = true, grain = 0.2f)
+        val values = (90..110).map { grainy.green(it, 60) }.toSet()
+        assertTrue(values.size > 3, "grain varies the pixels: $values")
+        val lit = lens(veil = true, glow = 0.3f)
+        assertTrue(lit.green(100, 60) > base.green(100, 60), "glow at the finger")
+        assertTrue(abs(lit.green(30, 100) - base.green(30, 100)) <= 1, "no glow far from the finger")
     }
 }
