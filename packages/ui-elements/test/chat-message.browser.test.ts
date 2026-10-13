@@ -11,6 +11,12 @@ afterEach(() => {
   (window as unknown as { hacked?: unknown }).hacked = undefined;
 });
 
+/** Polls until `check` holds: the markdown and sanitiser modules load lazily. */
+async function until(check: () => boolean, ms = 3000): Promise<void> {
+  const end = Date.now() + ms;
+  while (!check() && Date.now() < end) await wait(25);
+}
+
 const pwned = () => (window as unknown as { hacked?: unknown }).hacked;
 const bubble = (el: Element) => el.querySelector("[data-ui-part=bubble]") as HTMLElement;
 
@@ -70,7 +76,7 @@ describe("ui-chat-message", () => {
     const host = mount(`<ui-chat-message author="assistant" format="markdown"></ui-chat-message>`);
     const el = host.querySelector<UiChatMessage>("ui-chat-message")!;
     el.content = source;
-    await wait(100);
+    await until(() => !!bubble(el).querySelector("strong, b"));
     const body = bubble(el);
     expect(body.querySelector("strong, b")?.textContent).toBe("bold");
     expect(body.querySelectorAll("img").length).toBe(0);
@@ -91,7 +97,7 @@ describe("ui-chat-message", () => {
     ) as unknown as UiChatMessage[];
     assistant!.content = source;
     user!.content = source;
-    await wait(100);
+    await until(() => !!bubble(assistant!).querySelector("[data-ui-part=html]"));
     expect(bubble(assistant!).querySelector("p")?.textContent).toBe("hi");
     expect(bubble(assistant!).querySelectorAll("img, script").length).toBe(0);
     for (const a of bubble(assistant!).querySelectorAll("a"))

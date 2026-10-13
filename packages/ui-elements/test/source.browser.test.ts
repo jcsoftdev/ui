@@ -10,6 +10,12 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
+/** Polls until `check` holds: the safe-URL module loads lazily. */
+async function until(check: () => boolean, ms = 3000): Promise<void> {
+  const end = Date.now() + ms;
+  while (!check() && Date.now() < end) await wait(25);
+}
+
 const chips = (el: Element) => {
   const root = el.shadowRoot as ShadowRoot;
   return {
@@ -25,7 +31,7 @@ describe("ui-source", () => {
       `<ui-source index="2" heading="Doc" url="https://www.example.com/a" snippet="Excerpt"></ui-source>`,
     );
     const el = host.querySelector("ui-source")!;
-    await wait(50);
+    await until(() => !chips(el).link.hidden);
     const { link, button, card } = chips(el);
     expect(link.hidden).toBe(false);
     expect(button.hidden).toBe(true);
@@ -40,7 +46,7 @@ describe("ui-source", () => {
   it("never links a javascript: or data: URL", async () => {
     const host = mount(`<ui-source heading="x" url="javascript:window.hacked=1"></ui-source>`);
     const el = host.querySelector("ui-source")!;
-    await wait(50);
+    await wait(300);
     expect(chips(el).link.hidden).toBe(true);
     expect(chips(el).link.hasAttribute("href")).toBe(false);
     expect(chips(el).button.hidden).toBe(false);
