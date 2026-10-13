@@ -58,3 +58,49 @@ for (const { name, dist, define, budget } of elements) {
     );
   console.log(`${name.padEnd(12)} ${inputs.length} modules eager, ${lazy} lazy import(s)`);
 }
+
+// Static icons: `icon` plus `icons/<name>` is the whole eager graph. No registry, no other glyph.
+{
+  const result = await build({
+    stdin: {
+      contents:
+        'import { defineIcon } from "./dist/icon/icon.js"; defineIcon(); import "./dist/icon/glyphs/x.js"; import "./dist/icon/glyphs/bell.js";',
+      resolveDir: root,
+    },
+    absWorkingDir: root,
+    bundle: true,
+    splitting: true,
+    format: "esm",
+    write: false,
+    metafile: true,
+    outdir: join(root, ".treeshake"),
+    logLevel: "silent",
+  });
+  const outputs = result.metafile.outputs;
+  const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint === "<stdin>");
+  const eager = new Set();
+  const visit = (name) => {
+    if (eager.has(name)) return;
+    eager.add(name);
+    for (const dep of outputs[name].imports) if (dep.kind === "import-statement") visit(dep.path);
+  };
+  visit(entry);
+  const inputs = [...eager].flatMap((name) => Object.keys(outputs[name].inputs));
+  assert.ok(
+    inputs.some((file) => file.endsWith("icon/icon.js")),
+    "icon is bundled",
+  );
+  assert.ok(
+    inputs.some((file) => file.endsWith("icon/glyphs/x.js")),
+    "static x is bundled",
+  );
+  assert.ok(
+    !inputs.some((file) => file.endsWith("icon/registry.js")),
+    "static icons do not load the registry",
+  );
+  assert.ok(
+    !inputs.some((file) => /icon\/glyphs\/(?!x\.js|bell\.js)/.test(file)),
+    "static icons pull no other glyph",
+  );
+  console.log("icons/x + icons/bell: no registry, no other glyph in the eager graph");
+}

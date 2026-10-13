@@ -1,0 +1,16 @@
+[data-ui="highlight-line"] {
+  display: block;
+  max-inline-size: 70ch;
+  margin: 0 0 14px;
+  font-family: var(--font-sans);
+  font-size: 14.5px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+[data-ui="highlight-line"][hidden] {
+  display: none;
+}
+[data-ui="highlight-line"] strong {
+  color: var(--ink);
+}

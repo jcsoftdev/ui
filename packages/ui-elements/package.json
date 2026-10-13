@@ -22,7 +22,9 @@
     "vanilla-js"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/icon/glyphs/*.js"
+  ],
   "files": [
     "dist",
     "README.md",
@@ -34,6 +36,10 @@
       "import": "./dist/index.js"
     },
     "./css/*": "./dist/css/*",
+    "./icons/*": {
+      "types": "./dist/icon/glyphs/*.d.ts",
+      "import": "./dist/icon/glyphs/*.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*/*.d.ts",
