@@ -177,21 +177,25 @@ export function liquidRim(strength = 1, angle = -120, fresnel = 0): string {
 /**
  * The outer shadow of a surface. Its blur and drop scale with `--liquid-size`, which the lens
  * engine sets from the size of the surface (a bigger piece of glass is thicker, so its shadow is
- * deeper); without the engine the variable is 1.
+ * deeper); without the engine the variable is 1. What is not configured comes from the themed
+ * tokens (`--liquid-shadow-drop`, `-blur`, `-contact`, `-ink`, `-alpha`), so the shadow the
+ * engine paints is the one the theme's `--liquid-shadow` describes, in light and in dark.
  */
 export function liquidShadow({
   opacity = 1,
-  spread = 0,
-  offsetY = 10,
+  spread,
+  offsetY,
 }: NonNullable<LiquidGlassOptions["shadow"]> = {}): string {
   const a = round(clamp(opacity, 0, 2));
   const alpha = "var(--liquid-shadow-alpha, .2)";
-  const ink = (factor: number) =>
+  const ink = (factor: string) =>
     `color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(${alpha} * ${factor} * 100%)), transparent)`;
   const k = "var(--liquid-size, 1)";
+  const drop = offsetY === undefined ? "var(--liquid-shadow-drop, 10px)" : `${round(offsetY)}px`;
+  const blur = spread === undefined ? "var(--liquid-shadow-blur, 30px)" : `${round(30 + spread)}px`;
   return [
-    `0 calc(${round(offsetY)}px * ${k}) calc(${round(30 + spread)}px * ${k}) -6px ${ink(a)}`,
-    `0 calc(2px * ${k}) calc(6px * ${k}) ${ink(round(a * 0.4))}`,
+    `0 calc(${drop} * ${k}) calc(${blur} * ${k}) -6px ${ink(String(a))}`,
+    `0 calc(2px * ${k}) calc(6px * ${k}) ${ink(`${a} * var(--liquid-shadow-contact, .4)`)}`,
   ].join(", ");
 }
 

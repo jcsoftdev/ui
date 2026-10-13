@@ -21,11 +21,19 @@
   squash (mismatched X/Y springs) and a jelly settle. Off under `prefers-reduced-motion` and with
   `motion: false`.
 - New tokens: `liquid-rim-lit`, `liquid-rim-back`, `liquid-rim-ring`, `liquid-shadow-ink`,
-  `liquid-shadow-alpha`. The liquid utilities compose their backdrop filter from the blur and
+  `liquid-shadow-alpha`, `liquid-shadow-drop`, `liquid-shadow-blur`, `liquid-shadow-contact` (the
+  engine's size-scaled shadow now follows the theme in light and dark). The liquid utilities compose their backdrop filter from the blur and
   saturate tokens and the per-surface options; overriding `--liquid-regular-filter` alone no longer
   changes anything.
 - A lower `opacity`, a `tint` or `grain` void the contrast guarantee of the defaults.
 - Fix: a removed element released its lens only after the rebuild throttle; it is now immediate.
+- Motion hardening: the motion is written to `translate`/`scale` composed with the author's own
+  (an author `transform` is untouched; inline values are restored at rest, nothing is pinned); a
+  drag ignores presses on buttons, links and fields inside the surface, captures the pointer only
+  after 6 px, and swallows just its own gesture's click (within ~350 ms); no style reads per frame
+  and no config refresh from the motion's own writes; `--liquid-motion` and `--liquid-interactive`
+  are live; a moved surface follows its new ancestors; the overlays (dialog, popover, sidebar,
+  drawer) read `--liquid-interactive` only from their own inline style.
 
 ### Liquid variant of the glass (lensing)
 

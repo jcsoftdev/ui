@@ -1619,6 +1619,30 @@
     "usage": "Liquid glass: opacity of the main outer shadow layer, which a configured shadow (`shadow.opacity`) multiplies."
    },
    {
+    "name": "liquid-shadow-drop",
+    "value": {
+     "light": "10px",
+     "dark": "12px"
+    },
+    "usage": "Liquid glass: vertical offset of the outer shadow at the reference size. Read by the lens engine's size-scaled shadow, so an installed lens keeps the theme's shadow."
+   },
+   {
+    "name": "liquid-shadow-blur",
+    "value": {
+     "light": "30px",
+     "dark": "34px"
+    },
+    "usage": "Liquid glass: blur of the outer shadow at the reference size (see `liquid-shadow-drop`); a configured shadow (`shadow.spread`) adds to the 30px base instead."
+   },
+   {
+    "name": "liquid-shadow-contact",
+    "value": {
+     "light": ".4",
+     "dark": ".545"
+    },
+    "usage": "Liquid glass: strength of the tight contact shadow under the surface, as a fraction of `liquid-shadow-alpha`."
+   },
+   {
     "name": "liquid-rim",
     "value": {
      "light": "inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5)",

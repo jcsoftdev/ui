@@ -64,6 +64,13 @@ export interface GlassRefractionOptions {
    */
   animate?: boolean;
   /**
+   * Read the pointer mode (`--liquid-interactive`) only from the element itself (its inline
+   * style, or the value of `data-glass-interactive`), not from a scope or theme above it. The
+   * overlay components (dialog, popover, sidebar, drawer) set it, so a page-wide
+   * `--liquid-interactive` never makes them pressable or draggable. Default false.
+   */
+  ownInteractive?: boolean;
+  /**
    * Only refract while the surface resolves to a liquid material (the `--glass-lens` flag the
    * `liquid` utilities set). This is what the glass components use. Default false.
    */
@@ -180,9 +187,39 @@ const WATCHED_VARS = [
   "--liquid-frost",
   "--liquid-saturation",
   "--liquid-brightness",
+  "--liquid-motion",
+  "--liquid-interactive",
 ];
 /** What can change those variables on an element or an ancestor. */
 const CONFIG_ATTRIBUTES = ["style", "class", "data-glass", "data-glass-lens"];
+/** Inline properties the engine and its motion write on the surface itself every so often. */
+const ENGINE_WRITES = new Set([
+  "translate",
+  "scale",
+  "touch-action",
+  "backdrop-filter",
+  "-webkit-backdrop-filter",
+  "--glass-veil",
+  "--glass-lens-tint",
+  "--liquid-size",
+  "--liquid-shadow-auto",
+  "--liquid-glow",
+  "--liquid-glow-x",
+  "--liquid-glow-y",
+  "--liquid-rim-auto",
+]);
+
+/** A `style` attribute without the declarations the engine writes itself. */
+function authorStyle(text: string | null): string {
+  return (text ?? "")
+    .split(";")
+    .map((declaration) => declaration.trim())
+    .filter((declaration) => {
+      const name = declaration.slice(0, declaration.indexOf(":")).trim().toLowerCase();
+      return declaration !== "" && !ENGINE_WRITES.has(name);
+    })
+    .join(";");
+}
 
 interface Controller {
   configure(options: GlassRefractionOptions): void;
@@ -574,7 +611,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
                 applyScale();
               },
             },
-            { materialize: level < 1 },
+            { materialize: level < 1, ownInteractive: options.ownInteractive },
           );
     if (!motion) {
       // No motion (switched off, or not wanted): the lens is at full strength at once.
@@ -621,7 +658,12 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
   // `style` prop, a preset on `data-glass`), the filter is rebuilt once the values really differ.
   const configKey = () => {
     const computed = getComputedStyle(element);
-    return WATCHED_VARS.map((name) => computed.getPropertyValue(name).trim()).join("|");
+    return WATCHED_VARS.map((name) =>
+      // An overlay's pointer mode is its own: what a scope sets above it does not count.
+      name === "--liquid-interactive" && options.ownInteractive
+        ? element.style.getPropertyValue(name).trim()
+        : computed.getPropertyValue(name).trim(),
+    ).join("|");
   };
   let configSeen = configKey();
   const refresh = () => {
@@ -631,12 +673,55 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     configSeen = next;
     sync();
   };
+  /** The elements whose attributes are watched: the surface and its ancestors. */
+  let watched: Element[] = [];
+  const chain = () => {
+    const nodes: Element[] = [];
+    for (let node: Element | null = element; node; node = node.parentElement) nodes.push(node);
+    return nodes;
+  };
+  const sameChain = (nodes: Element[]) =>
+    nodes.length === watched.length && nodes.every((node, i) => node === watched[i]);
+  let styleSeen = element.getAttribute("style");
   const configObserver =
     typeof MutationObserver === "function"
-      ? new MutationObserver(() => schedule(refresh))
+      ? new MutationObserver((records) => {
+          let relevant = false;
+          for (const record of records) {
+            if (record.type === "childList") {
+              // Moved to another parent (or an ancestor was): watch the new chain.
+              const moved = (nodes: NodeList) => [...nodes].some((node) => node.contains(element));
+              if (moved(record.addedNodes) || moved(record.removedNodes)) relevant = true;
+              continue;
+            }
+            // The motion rewrites the surface's own `style` every frame: not a configuration change.
+            if (record.target === element && record.attributeName === "style") {
+              const now = element.getAttribute("style");
+              if (authorStyle(now) === authorStyle(styleSeen)) {
+                styleSeen = now;
+                continue;
+              }
+              styleSeen = now;
+            }
+            relevant = true;
+          }
+          if (!relevant) return;
+          if (!sameChain(chain())) watch();
+          schedule(refresh);
+        })
       : undefined;
-  for (let node: Element | null = element; node; node = node.parentElement)
-    configObserver?.observe(node, { attributes: true, attributeFilter: CONFIG_ATTRIBUTES });
+  /** (Re)observe the surface and its ancestors; childList of each catches a move of the chain. */
+  function watch() {
+    configObserver?.disconnect();
+    watched = chain();
+    for (const node of watched)
+      configObserver?.observe(node, {
+        attributes: true,
+        attributeFilter: CONFIG_ATTRIBUTES,
+        childList: node !== element,
+      });
+  }
+  watch();
 
   function stop() {
     if (stopped) return;

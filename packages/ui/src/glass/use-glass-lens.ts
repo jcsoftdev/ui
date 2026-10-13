@@ -23,8 +23,15 @@ const WATCHED = ["class", "data-glass", "data-glass-lens", "data-style", "data-t
  * theme-level switch, an opt-out, a nested glass), and when a transparency, contrast or motion
  * preference changes. Pass `data-glass-lens="off"` on the element or an ancestor, or set
  * `--glass-lens: 0` in CSS, to keep the plain liquid look.
+ *
+ * `ownInteractive` (the overlays: dialog, popover, sidebar, drawer): the lens's pointer mode
+ * (`--liquid-interactive`) is read only from the surface itself, so a scope or theme above it
+ * cannot make it pressable or draggable.
  */
-export function useGlassLens<T extends HTMLElement>(forwarded?: Ref<T>): RefCallback<T> {
+export function useGlassLens<T extends HTMLElement>(
+  forwarded?: Ref<T>,
+  { ownInteractive = false }: { ownInteractive?: boolean } = {},
+): RefCallback<T> {
   const [element, setElement] = useState<T | null>(null);
   const ref = useComposedRefs<T>(forwarded, setElement);
   useEffect(() => {
@@ -46,7 +53,8 @@ export function useGlassLens<T extends HTMLElement>(forwarded?: Ref<T>): RefCall
         import("./refraction.js").then(({ applyGlassRefraction }) => {
           loading = false;
           // It may have stopped being wanted while the chunk loaded; the next change re-checks.
-          if (!gone && wants()) stop = applyGlassRefraction(element, { auto: true });
+          if (!gone && wants())
+            stop = applyGlassRefraction(element, { auto: true, ownInteractive });
         });
       }
     };
@@ -64,6 +72,6 @@ export function useGlassLens<T extends HTMLElement>(forwarded?: Ref<T>): RefCall
       for (const list of lists) list.removeEventListener("change", check);
       stop?.();
     };
-  }, [element]);
+  }, [element, ownInteractive]);
   return ref;
 }

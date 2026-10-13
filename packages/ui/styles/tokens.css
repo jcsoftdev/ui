@@ -199,6 +199,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -343,6 +346,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -472,6 +478,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -632,6 +641,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -680,6 +692,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -720,6 +735,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -814,6 +832,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -856,6 +877,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -890,6 +914,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -984,6 +1011,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1036,6 +1066,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1080,6 +1113,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1174,6 +1210,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1219,6 +1258,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1256,6 +1298,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1350,6 +1395,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1401,6 +1449,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1445,6 +1496,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1540,6 +1594,9 @@
   --liquid-rim-ring: .5;
   --liquid-shadow-ink: rgb(8,10,30);
   --liquid-shadow-alpha: .2;
+  --liquid-shadow-drop: 10px;
+  --liquid-shadow-blur: 30px;
+  --liquid-shadow-contact: .4;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.95), inset -2px -2px 0 -.5px rgba(255,255,255,.7), inset 0 0 0 1px rgba(255,255,255,.5);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 16px rgba(255,255,255,.22), inset 0 -12px 18px -12px rgba(15,15,30,.2);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.7), inset 0 0 26px rgba(255,255,255,.4), inset 0 -12px 18px -12px rgba(15,15,30,.16);
@@ -1582,6 +1639,9 @@
     --liquid-rim-ring: .22;
     --liquid-shadow-ink: rgb(0,0,0);
     --liquid-shadow-alpha: .55;
+    --liquid-shadow-drop: 12px;
+    --liquid-shadow-blur: 34px;
+    --liquid-shadow-contact: .545;
     --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
     --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
     --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);
@@ -1616,6 +1676,9 @@
   --liquid-rim-ring: .22;
   --liquid-shadow-ink: rgb(0,0,0);
   --liquid-shadow-alpha: .55;
+  --liquid-shadow-drop: 12px;
+  --liquid-shadow-blur: 34px;
+  --liquid-shadow-contact: .545;
   --liquid-rim: inset 2px 2px 0 -.5px rgba(255,255,255,.7), inset -2px -2px 0 -.5px rgba(255,255,255,.4), inset 0 0 0 1px rgba(255,255,255,.22);
   --liquid-depth: inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 16px rgba(255,255,255,.07), inset 0 -12px 18px -12px rgba(0,0,0,.5);
   --liquid-depth-active: inset 0 1px 0 rgba(255,255,255,.34), inset 0 0 26px rgba(255,255,255,.16), inset 0 -12px 18px -12px rgba(0,0,0,.45);

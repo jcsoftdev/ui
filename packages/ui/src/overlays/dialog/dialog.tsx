@@ -77,7 +77,7 @@ export function DialogContent({
   style,
   ...props
 }: DialogContentProps) {
-  const lens = useGlassLens(ref);
+  const lens = useGlassLens(ref, { ownInteractive: true });
   const previousFocusRef = usePreviousFocus();
   const strings = useUiStrings();
   return (

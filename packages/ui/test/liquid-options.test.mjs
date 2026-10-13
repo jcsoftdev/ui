@@ -132,3 +132,13 @@ test("a liquid material object picks its class and writes its variables on the c
   assert.match(material.actionBarStyle(spec), /--liquid-frost:3px/);
   assert.match(material.topbarStyle(spec), /--liquid-frost:3px/);
 });
+
+test("the default shadow is built from the themed tokens, an explicit one from its numbers", () => {
+  const themed = glass.liquidShadow();
+  assert.match(themed, /var\(--liquid-shadow-drop, 10px\)/);
+  assert.match(themed, /var\(--liquid-shadow-blur, 30px\)/);
+  assert.match(themed, /var\(--liquid-shadow-contact, \.4\)/);
+  const explicit = glass.liquidShadow({ offsetY: 16, spread: 12 });
+  assert.match(explicit, /calc\(16px \* var\(--liquid-size, 1\)\) calc\(42px \*/);
+  assert.doesNotMatch(explicit, /--liquid-shadow-(drop|blur)/);
+});

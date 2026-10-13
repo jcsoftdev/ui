@@ -63,7 +63,7 @@ body {
   --liquid-specular: 1.1;
   --liquid-opacity: 0.75;
   --liquid-shadow-opacity: 0.7;
-  --liquid-shadow-custom: 0 calc(10px * var(--liquid-size, 1)) calc(30px * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.7 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.28 * 100%)), transparent);
+  --liquid-shadow-custom: 0 calc(var(--liquid-shadow-drop, 10px) * var(--liquid-size, 1)) calc(var(--liquid-shadow-blur, 30px) * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.7 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.7 * var(--liquid-shadow-contact, .4) * 100%)), transparent);
 }
 [data-glass="liquid-thick"] {
   --liquid-refraction: 1;
@@ -75,5 +75,5 @@ body {
   --liquid-shadow-opacity: 1.2;
   --liquid-shadow-spread: 12;
   --liquid-shadow-offset: 16;
-  --liquid-shadow-custom: 0 calc(16px * var(--liquid-size, 1)) calc(42px * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 1.2 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 0.48 * 100%)), transparent);
+  --liquid-shadow-custom: 0 calc(16px * var(--liquid-size, 1)) calc(42px * var(--liquid-size, 1)) -6px color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 1.2 * 100%)), transparent), 0 calc(2px * var(--liquid-size, 1)) calc(6px * var(--liquid-size, 1)) color-mix(in srgb, var(--liquid-shadow-ink, black) min(100%, calc(var(--liquid-shadow-alpha, .2) * 1.2 * var(--liquid-shadow-contact, .4) * 100%)), transparent);
 }

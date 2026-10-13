@@ -75,7 +75,7 @@ export function DrawerContent({
   style,
   ...props
 }: DrawerContentProps) {
-  const lens = useGlassLens(ref);
+  const lens = useGlassLens(ref, { ownInteractive: true });
   const previousFocusRef = usePreviousFocus();
   const strings = useUiStrings();
   return (

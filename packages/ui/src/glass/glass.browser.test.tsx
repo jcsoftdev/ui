@@ -1150,12 +1150,16 @@ describe("liquid motion", () => {
     await wait(500);
     expect(scale()).toBeGreaterThan(rest * 1.25);
     expect(scale()).toBeLessThanOrEqual(rest * 1.36);
-    expect(box().style.transform).toMatch(/scale\(1\.0\d+/);
+    expect(Number.parseFloat(box().style.scale)).toBeGreaterThan(1);
+    expect(Number.parseFloat(box().style.scale)).toBeLessThan(1.13);
+    expect(box().style.transform).toBe("");
     expect(Number(box().style.getPropertyValue("--liquid-glow"))).toBeCloseTo(1, 1);
     await act(async () => fire("pointerup", p.x, p.y));
     await wait(900);
     expect(scale()).toBeCloseTo(rest, 0);
-    expect(box().style.transform).toBe("");
+    // At rest the surface is given back: no `translate` or `scale` left behind.
+    expect(box().style.scale).toBe("");
+    expect(box().style.translate).toBe("");
   });
 
   test("a press moves the touch glow and the light with the pointer", async () => {
@@ -1181,10 +1185,10 @@ describe("liquid motion", () => {
     await act(async () => fire("pointerdown", p.x, p.y));
     await act(async () => fire("pointermove", p.x + 400, p.y));
     await wait(120);
-    const mid = /translate\(([-\d.]+)px/.exec(box().style.transform);
-    expect(Number(mid?.[1])).toBeGreaterThan(5);
+    const pulled = () => Number.parseFloat(getComputedStyle(box()).translate) || 0;
+    expect(pulled()).toBeGreaterThan(5);
     await wait(500);
-    const held = Number(/translate\(([-\d.]+)px/.exec(box().style.transform)?.[1]);
+    const held = pulled();
     expect(held).toBeGreaterThan(30);
     expect(held).toBeLessThanOrEqual(48);
     // The browser sends the click right after the pointer-up, in the same task.
@@ -1194,7 +1198,8 @@ describe("liquid motion", () => {
     });
     expect(clicks).not.toHaveBeenCalled();
     await wait(3500);
-    expect(box().style.transform).toBe("");
+    expect(box().style.translate).toBe("");
+    expect(box().style.scale).toBe("");
     // Not dragged: a plain click gets through.
     await act(async () => {
       box().click();
@@ -1202,15 +1207,48 @@ describe("liquid motion", () => {
     expect(clicks).toHaveBeenCalledTimes(1);
   });
 
-  test("motion off keeps the lens at full strength and moves nothing", async () => {
-    await mount(surface({ type: "liquid", motion: false }));
-    await vi.waitFor(() => expect(filters()).toBe(1));
-    expect(scale()).toBeGreaterThan(10);
+  /** Every pointer listener added to, and removed from, the surface while `run` executes. */
+  const listening = async (run: () => Promise<void>) => {
+    const added: Array<[string, EventListenerOrEventListenerObject]> = [];
+    const removed: Array<[string, EventListenerOrEventListenerObject]> = [];
+    const isBox = (target: EventTarget) =>
+      (target as Element).getAttribute?.("data-testid") === "box";
+    const add = EventTarget.prototype.addEventListener;
+    const remove = EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener = function (type, listener, ...rest) {
+      if (isBox(this) && listener && /^(pointer|lostpointer|click)/.test(type))
+        added.push([type, listener]);
+      return add.call(this, type, listener, ...(rest as [boolean?]));
+    };
+    EventTarget.prototype.removeEventListener = function (type, listener, ...rest) {
+      if (isBox(this) && listener) removed.push([type, listener]);
+      return remove.call(this, type, listener, ...(rest as [boolean?]));
+    };
+    try {
+      await run();
+    } finally {
+      EventTarget.prototype.addEventListener = add;
+      EventTarget.prototype.removeEventListener = remove;
+    }
+    return { added, removed };
+  };
+
+  test("motion off keeps the lens at full strength, listens to nothing and moves nothing", async () => {
+    const { added } = await listening(async () => {
+      await mount(surface({ type: "liquid", motion: false }));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await wait(100);
+    });
+    expect(added).toEqual([]);
+    const rest = scale();
+    expect(rest).toBeGreaterThan(10);
     const p = at();
     await act(async () => fire("pointerdown", p.x, p.y));
-    await wait(200);
-    expect(box().style.transform).toBe("");
-    expect(scale()).toBeLessThanOrEqual(2 * 24 * 1.01);
+    await wait(400);
+    expect(box().style.scale).toBe("");
+    expect(box().style.translate).toBe("");
+    expect(box().style.getPropertyValue("--liquid-glow")).toBe("");
+    expect(scale()).toBe(rest);
     await act(async () => fire("pointerup", p.x, p.y));
   });
 
@@ -1223,7 +1261,8 @@ describe("liquid motion", () => {
     await act(async () => fire("pointerdown", p.x, p.y));
     await wait(300);
     expect(scale()).toBeCloseTo(rest, 0);
-    expect(box().style.transform).toBe("");
+    expect(box().style.scale).toBe("");
+    expect(box().style.getPropertyValue("--liquid-glow")).toBe("");
     await act(async () => fire("pointerup", p.x, p.y));
   });
 
@@ -1236,22 +1275,266 @@ describe("liquid motion", () => {
     await act(async () => fire("pointerdown", p.x, p.y));
     await act(async () => fire("pointermove", p.x + 100, p.y));
     await wait(200);
-    expect(box().style.transform).toBe("");
+    expect(box().style.translate).toBe("");
+    expect(box().style.scale).toBe("");
     // The motion engine also refuses on its own.
     const { startLiquidMotion } = await import("./liquid-motion.js");
     expect(startLiquidMotion(box(), { onLevel() {} }, { materialize: true })).toBeUndefined();
   });
 
-  test("the motion is released with the lens: no listeners, no leftover styles", async () => {
-    await mount(surface("liquid"));
+  test("the motion is released with the lens: its listeners are removed and nothing is left behind", async () => {
+    let el: HTMLElement | undefined;
+    const { added, removed } = await listening(async () => {
+      await mount(
+        surface({ type: "liquid", interactive: "drag" }, { style: { touchAction: "pan-y" } }),
+      );
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      el = box();
+      const p = at();
+      await act(async () => fire("pointerdown", p.x, p.y));
+      await act(async () => fire("pointermove", p.x + 30, p.y));
+      await wait(100);
+      expect(el.style.touchAction).toBe("none");
+      expect(el.style.translate).not.toBe("");
+      await act(async () => root?.unmount());
+      root = undefined;
+    });
+    // Pointer events and the click guard were really attached, and every one was removed again.
+    expect(added.map(([type]) => type)).toEqual(
+      expect.arrayContaining(["pointerdown", "pointermove", "pointerup", "click"]),
+    );
+    for (const [type, listener] of added)
+      expect(removed.some(([t, l]) => t === type && l === listener)).toBe(true);
+    expect(el?.style.translate).toBe("");
+    expect(el?.style.scale).toBe("");
+    expect(el?.style.touchAction).toBe("pan-y");
+    expect(el?.style.getPropertyValue("--liquid-glow")).toBe("");
+    expect(el?.style.getPropertyValue("--liquid-rim-auto")).toBe("");
+    expect(filters()).toBe(0);
+  });
+
+  const drag = async (target: Element, dx: number) => {
+    const p = at();
+    await act(async () => fire("pointerdown", p.x, p.y, target));
+    await act(async () => fire("pointermove", p.x + dx, p.y, target));
+  };
+
+  test("a press on a button inside a draggable surface is the button's: no capture, no drag, its click lands", async () => {
+    const inner = vi.fn();
+    await mount(
+      surface(
+        { type: "liquid", interactive: "drag" },
+        {
+          children: (
+            <button type="button" data-testid="inner" onClick={inner}>
+              Go
+            </button>
+          ),
+        },
+      ),
+    );
     await vi.waitFor(() => expect(filters()).toBe(1));
-    const el = box();
+    await wait(700);
+    const capture = vi.spyOn(box(), "setPointerCapture");
+    const button = document.querySelector("[data-testid=inner]") as HTMLElement;
+    await drag(button, 80);
+    await wait(300);
+    expect(capture).not.toHaveBeenCalled();
+    expect(Number.parseFloat(getComputedStyle(box()).translate) || 0).toBe(0);
+    await act(async () => {
+      fire("pointerup", 0, 0, button);
+      button.click();
+    });
+    expect(inner).toHaveBeenCalledTimes(1);
+  });
+
+  test("the pointer is captured only once the drag passes the slop", async () => {
+    await mount(surface({ type: "liquid", interactive: "drag" }));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await wait(700);
+    const capture = vi.spyOn(box(), "setPointerCapture");
     const p = at();
     await act(async () => fire("pointerdown", p.x, p.y));
-    await act(async () => root?.unmount());
-    root = undefined;
-    expect(el.style.transform).toBe("");
-    expect(el.style.getPropertyValue("--liquid-glow")).toBe("");
-    expect(filters()).toBe(0);
+    expect(capture).not.toHaveBeenCalled();
+    await act(async () => fire("pointermove", p.x + 3, p.y));
+    expect(capture).not.toHaveBeenCalled();
+    await act(async () => fire("pointermove", p.x + 20, p.y));
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(capture).toHaveBeenCalledWith(7);
+    await act(async () => fire("pointerup", p.x + 20, p.y));
+  });
+
+  test("the click that ends a drag is swallowed even when it arrives late, and only that one", async () => {
+    const clicks = vi.fn();
+    await mount(surface({ type: "liquid", interactive: "drag" }, { onClick: clicks }));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await wait(700);
+    const p = at();
+    // A touch click can arrive well after the pointer-up.
+    await drag(box(), 200);
+    await act(async () => fire("pointerup", p.x + 200, p.y));
+    await wait(200);
+    await act(async () => box().click());
+    expect(clicks).not.toHaveBeenCalled();
+    // The next click is an ordinary one.
+    await act(async () => box().click());
+    expect(clicks).toHaveBeenCalledTimes(1);
+    // A click that never came is not kept for ever: past the window it passes.
+    await drag(box(), 200);
+    await act(async () => fire("pointerup", p.x + 200, p.y));
+    await wait(450);
+    await act(async () => box().click());
+    expect(clicks).toHaveBeenCalledTimes(2);
+    // And a new gesture drops a pending one.
+    await drag(box(), 200);
+    await act(async () => fire("pointerup", p.x + 200, p.y));
+    await act(async () => fire("pointerdown", p.x, p.y));
+    await act(async () => fire("pointerup", p.x, p.y));
+    await act(async () => box().click());
+    expect(clicks).toHaveBeenCalledTimes(3);
+  });
+
+  test("an author transform, scale and translate are kept while it moves and given back at rest", async () => {
+    await mount(
+      surface("liquid", {
+        style: { transform: "rotate(7deg)", scale: "1.1", translate: "3px 4px" },
+      }),
+    );
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await wait(700);
+    // Not pinned while idle (the old engine wrote `scale: 1` for the life of the lens).
+    expect(box().style.scale).toBe("1.1");
+    const p = at();
+    await act(async () => fire("pointerdown", p.x, p.y));
+    await wait(400);
+    expect(box().style.transform).toBe("rotate(7deg)");
+    const [sx] = box().style.scale.split(" ").map(Number);
+    expect(sx).toBeGreaterThan(1.1);
+    expect(sx).toBeLessThan(1.1 * 1.13);
+    expect(getComputedStyle(box()).translate).toBe("3px 4px");
+    await act(async () => fire("pointerup", p.x, p.y));
+    await wait(1200);
+    expect(box().style.transform).toBe("rotate(7deg)");
+    expect(box().style.scale).toBe("1.1");
+    expect(box().style.translate).toBe("3px 4px");
+  });
+
+  test("a press costs no style reads per frame", async () => {
+    await mount(surface("liquid"));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await wait(900);
+    const read = vi.spyOn(window, "getComputedStyle");
+    const p = at();
+    await act(async () => fire("pointerenter", p.x, p.y));
+    await act(async () => fire("pointerdown", p.x, p.y));
+    for (let i = 0; i < 8; i++) {
+      await act(async () => fire("pointermove", p.x + i, p.y));
+      await wait(60);
+    }
+    await act(async () => fire("pointerup", p.x, p.y));
+    await wait(700);
+    // About 70 frames ran; the old code read the style at least twice a frame.
+    expect(read.mock.calls.length).toBeLessThan(12);
+    read.mockRestore();
+  });
+
+  test("--liquid-motion and --liquid-interactive are live", async () => {
+    await mount(surface("liquid"));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await wait(700);
+    box().style.setProperty("--liquid-motion", "off");
+    await wait(300);
+    const p = at();
+    await act(async () => fire("pointerdown", p.x, p.y));
+    await wait(300);
+    expect(box().style.scale).toBe("");
+    expect(box().style.getPropertyValue("--liquid-glow")).toBe("");
+    await act(async () => fire("pointerup", p.x, p.y));
+    box().style.removeProperty("--liquid-motion");
+    box().style.setProperty("--liquid-interactive", "none");
+    await wait(300);
+    await act(async () => fire("pointerdown", p.x, p.y));
+    await wait(300);
+    expect(box().style.scale).toBe("");
+    await act(async () => fire("pointerup", p.x, p.y));
+    box().style.setProperty("--liquid-interactive", "press");
+    await wait(300);
+    await act(async () => fire("pointerdown", p.x, p.y));
+    await wait(300);
+    expect(box().style.scale).not.toBe("");
+    await act(async () => fire("pointerup", p.x, p.y));
+  });
+
+  test("a surface moved to another parent follows the new ancestors", async () => {
+    await mount(surface("liquid"));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await wait(700);
+    const el = box();
+    const parent = el.parentElement as HTMLElement;
+    const scope = document.createElement("div");
+    parent.appendChild(scope);
+    scope.appendChild(el);
+    try {
+      await wait(300);
+      scope.style.setProperty("--liquid-motion", "off");
+      await wait(300);
+      const p = at();
+      await act(async () => fire("pointerdown", p.x, p.y));
+      await wait(300);
+      expect(el.style.scale).toBe("");
+      await act(async () => fire("pointerup", p.x, p.y));
+    } finally {
+      parent.appendChild(el);
+      scope.remove();
+    }
+  });
+
+  test("an overlay's pointer mode is its own: a page-wide --liquid-interactive does not reach it", async () => {
+    document.documentElement.style.setProperty("--liquid-interactive", "drag");
+    try {
+      await mount(
+        <Dialog open>
+          <DialogContent material="liquid" aria-describedby={undefined}>
+            <DialogTitle>Liquid dialog</DialogTitle>
+          </DialogContent>
+        </Dialog>,
+      );
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      await wait(700);
+      const dialog = document.querySelector("[role=dialog]") as HTMLElement;
+      const r = dialog.getBoundingClientRect();
+      const x = r.left + 20;
+      const y = r.top + 20;
+      await act(async () => fire("pointerdown", x, y, dialog));
+      await act(async () => fire("pointermove", x + 120, y, dialog));
+      await wait(300);
+      expect(dialog.style.translate).toBe("");
+      expect(dialog.style.scale).toBe("");
+      await act(async () => fire("pointerup", x + 120, y, dialog));
+      // Its own declaration still counts.
+      dialog.style.setProperty("--liquid-interactive", "press");
+      await wait(300);
+      await act(async () => fire("pointerdown", x, y, dialog));
+      await wait(300);
+      expect(dialog.style.scale).not.toBe("");
+      await act(async () => fire("pointerup", x, y, dialog));
+    } finally {
+      document.documentElement.style.removeProperty("--liquid-interactive");
+    }
+  });
+
+  test("the auto shadow follows the theme, in light and in dark", async () => {
+    const shadow = async (theme: "light" | "dark") => {
+      document.documentElement.dataset.theme = theme;
+      await mount(surface("liquid"));
+      await vi.waitFor(() => expect(filters()).toBe(1));
+      const value = getComputedStyle(box()).getPropertyValue("--liquid-shadow-auto");
+      await act(async () => root?.unmount());
+      host?.remove();
+      root = host = undefined;
+      return value;
+    };
+    expect(await shadow("light")).toMatch(/calc\(10px \* [\d.]+\) calc\(30px \*/);
+    expect(await shadow("dark")).toMatch(/calc\(12px \* [\d.]+\) calc\(34px \*/);
   });
 });

@@ -154,7 +154,7 @@ export function ConfiguredLiquid() {
 | `radius` | `--liquid-radius` | px corner radius (the component's own) |
 | `opacity` | `--liquid-opacity` | 0 to 1: the legibility veil (1) |
 | `shadow` | `--liquid-shadow-opacity`, `--liquid-shadow-spread`, `--liquid-shadow-offset` | `{ opacity, spread, offsetY }` of the outer shadow (1, 0, 10) |
-| `interactive` | `--liquid-interactive` | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive` |
+| `interactive` | `--liquid-interactive` | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive`. It inherits, except on the overlays (dialog, popover, sidebar, drawer), which read it only from their own inline style |
 | `motion` | `--liquid-motion` | `"snappy"` (default), `"smooth"`, `"soft"`, `"jelly"` or `false` (`off`) |
 
 `LiquidGlassOptions`, `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle()` and `liquidVars()` are exported from `@jcsoftdev/ui/glass`; `liquidStyle(options)` is the `style` object for your own surfaces (pair it with `useGlassLens`). The values are clamped to ranges the lens can honour.
@@ -171,7 +171,7 @@ The lens engine drives its own springs (a damped spring written for the kit, no 
 
 - **Materialise**: when a lens first appears its strength springs from 0 to its target instead of fading.
 - **Press** (`interactive: "press"`, the default for buttons and links): the lens deepens by 35%, the surface swells by about 16 px over its width, a touch glow (a radial highlight at 15% opacity) follows the pointer and the rim light turns towards it.
-- **Drag** (`interactive: "drag"`): the surface follows the pointer through a rubber band (at most 48 px), stretches along its speed and squashes across it by at most 20% with two deliberately mismatched springs, and settles back like jelly when released. A drag swallows the click that ends it. The surface owns its `transform` and `scale` while it moves.
+- **Drag** (`interactive: "drag"`): the surface follows the pointer through a rubber band (at most 48 px), stretches along its speed and squashes across it by at most 20% with two deliberately mismatched springs, and settles back like jelly when released. A drag starts only on the surface itself (a press on a button, link or field inside it stays the child's) and takes the pointer once it has travelled 6 px. The click that ends a drag is swallowed (within about 350 ms, and only that gesture's). The motion is written to the individual `translate` and `scale` properties, composed with your own, so an author `transform` is never touched and your `translate` and `scale` are put back at rest.
 - **`motion`** picks the spring (`snappy`, `smooth`, `soft`, `jelly`); `motion: false` (or `--liquid-motion: off`) turns all of it off and shows the lens at full strength at once.
 
 Everything is off under `prefers-reduced-motion` (the lens is removed with it, as before) and wherever there is no lens (Safari, Firefox): the press flex of the CSS stays.

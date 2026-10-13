@@ -191,7 +191,7 @@ export function Content({
   const { anchor, arrow } = usePopperContext("PopperContent");
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [content, setContent] = useState<HTMLDivElement | null>(null);
-  const lens = useGlassLens<HTMLDivElement>(ref);
+  const lens = useGlassLens<HTMLDivElement>(ref, { ownInteractive: true });
   const composedRef = useComposedRefs<HTMLDivElement>(lens, setContent);
   const [placed, setPlaced] = useState<Placed>({
     side,

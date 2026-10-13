@@ -21,8 +21,13 @@ export const FOLLOW_LIMIT = 4;
 export const DRAG_LIMIT = 48;
 /** Pointer travel (px) after which a drag is a drag and the click that ends it is swallowed. */
 const DRAG_SLOP = 6;
+/** How long after a drag's pointer-up its click can still arrive (a touch click is delayed). */
+const SWALLOW_MS = 350;
 
 const AUTO_PRESSABLE = 'button, a, [role="button"], [data-glass-interactive]';
+/** A pointer-down on one of these inside the surface belongs to it, not to the surface's gesture. */
+const INTERACTIVE_CHILD =
+  'button, a, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
 
 export interface LiquidMotionHooks {
   /** The multiplier of the lens strength this frame: the materialise ramp times the press lift. */
@@ -34,6 +39,13 @@ export interface LiquidMotionOptions {
   materialize: boolean;
   /** `false`: no listeners, no springs; the lens is at full strength at once. */
   interactive?: boolean;
+  /**
+   * Read the pointer mode only from the element itself (its inline `--liquid-interactive` or its
+   * `data-glass-interactive` value), never from a scope or theme above it. For overlays (dialog,
+   * popover, sidebar, drawer): a page-level `--liquid-interactive: drag` must not make them
+   * draggable.
+   */
+  ownInteractive?: boolean;
 }
 
 export interface LiquidMotion {
@@ -45,14 +57,24 @@ const reduced = () =>
 
 const SPRING_NAMES = ["snappy", "smooth", "soft", "jelly"] as const;
 
-/** `--liquid-motion` / `--liquid-interactive` of an element, with the defaults of an unconfigured one. */
-export function readMotion(element: HTMLElement): {
+/**
+ * `--liquid-motion` / `--liquid-interactive` of an element, with the defaults of an unconfigured
+ * one. `own`: the pointer mode comes only from the element's inline style or
+ * `data-glass-interactive`, not from what it inherits.
+ */
+export function readMotion(
+  element: HTMLElement,
+  own = false,
+): {
   spring: SpringConfig | undefined;
   mode: "none" | "press" | "drag";
 } {
   const computed = getComputedStyle(element);
   const motion = computed.getPropertyValue("--liquid-motion").trim();
-  const interactive = computed.getPropertyValue("--liquid-interactive").trim();
+  const interactive = own
+    ? element.style.getPropertyValue("--liquid-interactive").trim() ||
+      (element.getAttribute("data-glass-interactive") ?? "").trim()
+    : computed.getPropertyValue("--liquid-interactive").trim();
   const mode =
     interactive === "none" || interactive === "press" || interactive === "drag"
       ? interactive
@@ -73,16 +95,21 @@ export function readMotion(element: HTMLElement): {
  * and swells the surface, lights a touch glow that follows the pointer and turns the rim light
  * towards it; `drag` also pulls the surface along (rubber band) with the speed squashing it, and
  * releases it into a jelly settle. `--liquid-motion: off` turns all of it off. Does nothing under
- * `prefers-reduced-motion`. The surface's `transform` and `scale` belong to the engine while it
- * moves and are given back at rest.
+ * `prefers-reduced-motion`.
+ *
+ * The motion is written to the individual `translate` and `scale` properties, composed with the
+ * author's own values (read when a burst of motion starts), so an author `transform` is never
+ * touched; at rest the author's inline `translate` and `scale` are put back. A drag starts only
+ * on the surface itself (not on a button, link or field inside it), captures the pointer only
+ * once it has travelled past the slop, and swallows only the click that ends that gesture.
  */
 export function startLiquidMotion(
   element: HTMLElement,
   hooks: LiquidMotionHooks,
-  { materialize, interactive = true }: LiquidMotionOptions,
+  { materialize, interactive = true, ownInteractive = false }: LiquidMotionOptions,
 ): LiquidMotion | undefined {
   if (reduced()) return undefined;
-  const { spring, mode } = readMotion(element);
+  const { spring, mode } = readMotion(element, ownInteractive);
   if (!spring || !interactive) return undefined;
 
   const intro = createSpring(materialize ? 0 : 1, 1);
@@ -99,15 +126,46 @@ export function startLiquidMotion(
   let dragging = false;
   let pressed = false;
   let moved = false;
+  let captured: number | undefined;
+  let swallow = false;
+  let swallowTimer: ReturnType<typeof setTimeout> | undefined;
   let origin = { x: 0, y: 0 };
   let lit = false;
   let frame = 0;
   let last = 0;
-  const priorScale = element.style.scale;
+  const priorTranslate = element.style.getPropertyValue("translate");
+  const priorScale = element.style.getPropertyValue("scale");
   const priorTouch = element.style.touchAction;
   const pointerMode = mode !== "none";
-  if (pointerMode) element.style.scale = "1";
   if (mode === "drag") element.style.touchAction = "none";
+  /** What one burst of motion reads once, so no frame reads layout or style after its writes. */
+  let base = {
+    translate: [] as string[],
+    scale: [] as number[],
+    width: 1,
+    strength: 1,
+    fresnel: 0,
+  };
+  const readBase = () => {
+    const computed = getComputedStyle(element);
+    const words = (value: string) => (value === "none" ? [] : value.split(/\s+/).filter(Boolean));
+    const number = (value: string) => {
+      const n = Number.parseFloat(value);
+      return value.endsWith("%") ? n / 100 : n;
+    };
+    const strength = Number.parseFloat(computed.getPropertyValue("--liquid-rim-strength"));
+    const fresnel = Number.parseFloat(computed.getPropertyValue("--liquid-fresnel"));
+    base = {
+      translate: words(computed.getPropertyValue("translate")),
+      scale: words(computed.getPropertyValue("scale")).map(number),
+      width: Math.max(element.offsetWidth, 1),
+      strength: Number.isFinite(strength) ? strength : 1,
+      fresnel: Number.isFinite(fresnel) ? fresnel : 0,
+    };
+  };
+  if (pointerMode) readBase();
+  const setProp = (name: string, value: string) =>
+    value ? element.style.setProperty(name, value) : element.style.removeProperty(name);
   const pointerUp = new Set<string>(["pointerup", "pointercancel"]);
 
   const tracked = [intro, press, glow, x, y, scaleX, scaleY, lightX, lightY];
@@ -116,35 +174,34 @@ export function startLiquidMotion(
   const apply = () => {
     hooks.onLevel(Math.max(intro.value, 0) * (1 + PRESS_LIFT * Math.max(press.value, 0)));
     if (!pointerMode) return;
-    const width = Math.max(element.offsetWidth, 1);
-    const swell = 1 + Math.min(SWELL_PX / width, SWELL_MAX) * press.value;
-    element.style.transform =
-      `translate(${x.value.toFixed(2)}px, ${y.value.toFixed(2)}px) ` +
-      `scale(${(scaleX.value * swell).toFixed(4)}, ${(scaleY.value * swell).toFixed(4)})`;
+    const swell = 1 + Math.min(SWELL_PX / base.width, SWELL_MAX) * press.value;
+    const [ax = "0px", ay = "0px", az] = base.translate;
+    setProp(
+      "translate",
+      `calc(${ax} + ${x.value.toFixed(2)}px) calc(${ay} + ${y.value.toFixed(2)}px)` +
+        (az ? ` ${az}` : ""),
+    );
+    const [sx = 1, sy = sx, sz] = base.scale;
+    setProp(
+      "scale",
+      `${(sx * scaleX.value * swell).toFixed(4)} ${(sy * scaleY.value * swell).toFixed(4)}` +
+        (sz === undefined ? "" : ` ${sz}`),
+    );
     element.style.setProperty("--liquid-glow", glow.value.toFixed(3));
     if (lit) {
       const angle = (Math.atan2(lightY.value, lightX.value) * 180) / Math.PI;
-      const style = getComputedStyle(element);
-      const strength = Number.parseFloat(style.getPropertyValue("--liquid-rim-strength"));
-      const fresnel = Number.parseFloat(style.getPropertyValue("--liquid-fresnel"));
-      element.style.setProperty(
-        "--liquid-rim-auto",
-        liquidRim(
-          Number.isFinite(strength) ? strength : 1,
-          angle,
-          Number.isFinite(fresnel) ? fresnel : 0,
-        ),
-      );
+      element.style.setProperty("--liquid-rim-auto", liquidRim(base.strength, angle, base.fresnel));
     }
   };
 
-  /** Everything reached its target: snap onto it, drop the transform, and with the pointer gone the glow. */
+  /** Everything reached its target: snap onto it, give `translate` and `scale` back, and with the pointer gone the glow. */
   const rest = () => {
     for (const s of tracked) settle(s);
     apply();
     if (!pointerMode || pressed) return;
-    // At identity there is nothing to keep: no transform (and the stacking context it implies).
-    element.style.removeProperty("transform");
+    // At identity there is nothing to keep: the author's own values (and their stacking context).
+    setProp("translate", priorTranslate);
+    setProp("scale", priorScale);
     if (!hovering) {
       element.style.removeProperty("--liquid-glow");
       element.style.removeProperty("--liquid-rim-auto");
@@ -180,6 +237,7 @@ export function startLiquidMotion(
   };
   const wake = () => {
     if (frame) return;
+    if (pointerMode) readBase();
     last = performance.now();
     frame = requestAnimationFrame(tick);
   };
@@ -214,8 +272,12 @@ export function startLiquidMotion(
     if (dragging) {
       const dx = event.clientX - origin.x;
       const dy = event.clientY - origin.y;
-      if (Math.hypot(dx, dy) > DRAG_SLOP) moved = true;
       const reach = Math.hypot(dx, dy);
+      if (reach > DRAG_SLOP && !moved) {
+        moved = true;
+        // Only a real drag takes the pointer: until then a press on a child is the child's.
+        if (mode === "drag") capture(event.pointerId);
+      }
       const limit = mode === "drag" ? DRAG_LIMIT : FOLLOW_LIMIT;
       const k = reach > 0 ? rubberBand(reach, limit) / reach : 0;
       x.target = dx * k;
@@ -226,16 +288,37 @@ export function startLiquidMotion(
   const onLeave = () => {
     hovering = false;
     // Without pointer capture the release would happen outside and never be heard.
-    if (pressed && mode !== "drag") return release();
+    if (pressed && captured === undefined) return release();
     if (!pressed) {
       glow.target = 0;
       wake();
     }
   };
+  const capture = (pointerId: number) => {
+    try {
+      element.setPointerCapture(pointerId);
+      captured = pointerId;
+    } catch {
+      // The pointer is gone already (or synthetic): the drag then ends with the next up event.
+    }
+  };
+  const clearSwallow = () => {
+    swallow = false;
+    clearTimeout(swallowTimer);
+    swallowTimer = undefined;
+  };
+  /** The click that ends a drag belongs to the drag; this one gesture's click, and no other. */
+  const onClick = (event: Event) => {
+    if (!swallow) return;
+    clearSwallow();
+    event.stopImmediatePropagation();
+    event.preventDefault();
+  };
   const release = () => {
     if (!pressed) return;
     pressed = false;
     dragging = false;
+    captured = undefined;
     press.target = 0;
     glow.target = hovering ? 0.4 : 0;
     x.target = 0;
@@ -243,15 +326,18 @@ export function startLiquidMotion(
     scaleX.target = 1;
     scaleY.target = 1;
     if (moved && mode === "drag") {
-      const swallow = (event: Event) => event.stopImmediatePropagation();
-      element.addEventListener("click", swallow, { capture: true, once: true });
-      setTimeout(() => element.removeEventListener("click", swallow, true), 0);
+      swallow = true;
+      swallowTimer = setTimeout(clearSwallow, SWALLOW_MS);
     }
     moved = false;
     wake();
   };
   const onDown = (event: PointerEvent) => {
     if (event.button > 0) return;
+    // A new gesture: whatever click the last drag left unswallowed is not this one's.
+    clearSwallow();
+    const inner = event.target instanceof Element ? event.target.closest(INTERACTIVE_CHILD) : null;
+    if (inner && inner !== element && element.contains(inner)) return;
     pressed = true;
     dragging = true;
     moved = false;
@@ -259,13 +345,6 @@ export function startLiquidMotion(
     press.target = 1;
     glow.target = 1;
     track(event);
-    if (mode === "drag") {
-      try {
-        element.setPointerCapture(event.pointerId);
-      } catch {
-        // The pointer is gone already (or synthetic): the drag then ends with the next up event.
-      }
-    }
     wake();
   };
 
@@ -276,6 +355,7 @@ export function startLiquidMotion(
     element.addEventListener("pointermove", onMove);
     for (const type of pointerUp) element.addEventListener(type, release);
     element.addEventListener("lostpointercapture", release);
+    element.addEventListener("click", onClick, true);
   }
   if (materialize) {
     apply();
@@ -293,12 +373,21 @@ export function startLiquidMotion(
         element.removeEventListener("pointermove", onMove);
         for (const type of pointerUp) element.removeEventListener(type, release);
         element.removeEventListener("lostpointercapture", release);
-        element.style.removeProperty("transform");
+        element.removeEventListener("click", onClick, true);
+        clearSwallow();
+        if (captured !== undefined) {
+          try {
+            element.releasePointerCapture(captured);
+          } catch {
+            // Already released.
+          }
+        }
+        setProp("translate", priorTranslate);
+        setProp("scale", priorScale);
         element.style.removeProperty("--liquid-glow");
         element.style.removeProperty("--liquid-glow-x");
         element.style.removeProperty("--liquid-glow-y");
         element.style.removeProperty("--liquid-rim-auto");
-        element.style.scale = priorScale;
         element.style.touchAction = priorTouch;
       }
     },

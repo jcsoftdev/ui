@@ -94,7 +94,7 @@ export function Sidebar({
 }: SidebarProps) {
   const shell = useAppShell();
   const asideRef = useRef<HTMLElement | null>(null);
-  const lens = useGlassLens<HTMLElement>();
+  const lens = useGlassLens<HTMLElement>(undefined, { ownInteractive: true });
   const setAside = useCallback(
     (node: HTMLElement | null) => {
       asideRef.current = node;
