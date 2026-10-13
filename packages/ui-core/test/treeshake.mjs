@@ -66,6 +66,18 @@ const chartDeps = {
     "chart/scale-time",
   ],
 };
+// Grid entries: each is usable alone; only the listed ones build on another entry.
+const gridDeps = {
+  "grid/model": ["chart/format"],
+  "grid/sort": ["grid/model"],
+  "grid/columns": [],
+  "grid/pin": ["column-pin"],
+  "grid/virtual": ["virtual-list"],
+  "grid/keyboard": [],
+  "grid/select": [],
+  "grid/resize": ["grid/columns"],
+  "grid/reorder": ["sortable"],
+};
 const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
   if (item.isFile() && item.name.endsWith(".ts") && !item.name.endsWith(".d.ts"))
@@ -81,6 +93,12 @@ for (const name of behaviours) {
     assert.deepEqual(
       modules.filter((module) => module !== name && !module.startsWith("internal/")),
       chartDeps[name] ?? [],
+      `${name}: eager modules besides itself and internal/*`,
+    );
+  if (name.startsWith("grid/"))
+    assert.deepEqual(
+      modules.filter((module) => module !== name && !module.startsWith("internal/")).sort(),
+      [...(gridDeps[name] ?? [])].sort(),
       `${name}: eager modules besides itself and internal/*`,
     );
   if (name !== "internal/geo" && name !== "internal/tree-types")
