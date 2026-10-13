@@ -63,14 +63,20 @@ describe("ui-chart-export-menu", () => {
     const trace: string[] = [];
     const focus = HTMLElement.prototype.focus;
     HTMLElement.prototype.focus = function (this: HTMLElement, ...args) {
-      trace.push(`${this.tagName}[${this.dataset.format ?? this.dataset.uiPart ?? ""}] ${new Error().stack?.split("\n").slice(2, 5).join(" | ")}`);
+      trace.push(
+        `${this.tagName}[${this.dataset.format ?? this.dataset.uiPart ?? ""}] ${new Error().stack?.split("\n").slice(2, 5).join(" | ")}`,
+      );
       return focus.apply(this, args);
     };
     trigger.focus();
     await userEvent.keyboard("{Enter}");
     await wait(30);
     HTMLElement.prototype.focus = focus;
-    if (document.activeElement !== item("svg")) console.log("FOCUS TRACE\n" + trace.join("\n"), document.activeElement?.outerHTML.slice(0, 100));
+    if (document.activeElement !== item("svg"))
+      console.log(
+        "FOCUS TRACE\n" + trace.join("\n"),
+        document.activeElement?.outerHTML.slice(0, 100),
+      );
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
     expect(document.activeElement).toBe(item("svg"));
     await userEvent.keyboard("{ArrowDown}");
