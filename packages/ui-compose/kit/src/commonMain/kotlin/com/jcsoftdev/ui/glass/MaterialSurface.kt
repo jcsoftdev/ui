@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
@@ -153,7 +154,8 @@ internal fun GlassNesting(
  * The single place a component's surface is drawn. [container] and [outline] are the component's own opaque colors, used
  * when the surface is solid (the forced-opaque case swaps the border for a stronger one under high contrast).
  * [observe] is read in the draw phase so the backdrop offset follows a state-driven translation of an ancestor; [dynamics]
- * carries the Liquid press, materialize and pointer state read the same way. [style] only matters for Liquid materials.
+ * carries the Liquid press, materialize and pointer state read the same way. [style] only matters for Liquid materials (null:
+ * [LocalLiquidGlassStyle]); solid, nested and frosted surfaces never read it.
  */
 @Composable
 internal fun Modifier.surfaceMaterial(
@@ -164,7 +166,7 @@ internal fun Modifier.surfaceMaterial(
     glass: GlassState?,
     observe: (() -> Float)? = null,
     dynamics: LiquidDynamics? = null,
-    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
+    style: LiquidGlassStyle? = null,
 ): Modifier {
     val colors = UiTheme.colors
     val borderWidth = UiTheme.sizes.borderWidth
@@ -181,23 +183,33 @@ internal fun Modifier.surfaceMaterial(
         }
         SurfaceMode.Nested -> clip(shape).background(colors.float).border(borderWidth, colors.hair, shape)
         SurfaceMode.Tint, SurfaceMode.Blur, SurfaceMode.Lens -> {
-            val base = glassTokens(resolved.variant, LocalUiDark.current)
-            val tokens = if (resolved.liquid) style.applyTo(base) else base
-            val shadowed = if (resolved.liquid) liquidShadow(shape, style) else this
+            val dark = LocalUiDark.current
+            val liquid = resolved.liquid
+            // Frosted glass draws the shared token constants and never reads the Liquid style.
+            val look = if (liquid) style ?: LocalLiquidGlassStyle.current else LiquidGlassStyle.Regular
+            val tokens =
+                if (liquid) {
+                    // A custom style builds new tokens; remembering them keeps the element equal across recompositions, so the
+                    // node is not updated (and its lens rebuilt) on every recomposition of the caller.
+                    remember(resolved.variant, dark, look) { look.applyTo(glassTokens(resolved.variant, dark)) }
+                } else {
+                    glassTokens(resolved.variant, dark)
+                }
+            val shadowed = if (liquid) liquidShadow(shape, look) else this
             shadowed.clip(shape) then
                 GlassSurfaceElement(
                     shape = shape,
                     tokens = tokens,
                     blur = resolved.mode == SurfaceMode.Blur || resolved.mode == SurfaceMode.Lens,
                     lens = resolved.mode == SurfaceMode.Lens,
-                    liquid = resolved.liquid,
+                    liquid = liquid,
                     base = colors.bg,
                     veil = if (resolved.mode == SurfaceMode.Tint) colors.float.copy(alpha = TINT_VEIL_ALPHA) else Color.Unspecified,
                     state = glass,
                     borderWidth = borderWidth,
                     observe = observe,
                     dynamics = dynamics,
-                    style = style,
+                    style = look,
                 )
         }
     }
@@ -208,7 +220,6 @@ internal val REFERENCE_SIZE: Dp = 56.dp
 // The shadow is a stack of slightly larger copies of the silhouette, each faint: their sum falls off smoothly from the edge, with
 // no blur or elevation API, so it looks the same on every target and can be pushed down by offsetY. It grows with the size of
 // the surface. The opaque base of the glass hides the part under the surface.
-@Composable
 private fun Modifier.liquidShadow(
     shape: Shape,
     style: LiquidGlassStyle,
@@ -371,6 +382,47 @@ private const val GLOW_RADIUS = 0.55f
 private const val SCALE_EPSILON = 0.002f
 private const val LENS_INPUTS = 16
 
+// What only a lensed surface needs: the platform engine, the last effect and the inputs it was built for, and the corner radii
+// and superellipse exponent of the outline. Made on the first lensed draw, so frosted and tint surfaces never allocate it.
+private class LensCache {
+    val engine = LensEngine()
+    var key: LensParams? = null
+    var effect: RenderEffect? = null
+    var stale = true
+    val inputs = FloatArray(LENS_INPUTS)
+    val scratch = FloatArray(LENS_INPUTS)
+    val corners = FloatArray(4)
+    var exponent = 2f
+    private var outline: Outline? = null
+
+    // From the sharpest corner, a pill or circle is an ellipse (2) and a sharp rectangle fills its corners (8).
+    fun sync(
+        made: Outline,
+        size: Size,
+    ) {
+        if (made === outline) return
+        outline = made
+        made.cornerRadiiInto(corners)
+        val half = min(size.width, size.height) * 0.5f
+        exponent = 2f + 6f * (1f - (minOf(corners[0], corners[1], corners[2], corners[3]) / half.coerceAtLeast(1f)).coerceIn(0f, 1f))
+        stale = true
+    }
+}
+
+// The directional rim of a Liquid surface without the lens: its two sweeps and strokes, rebuilt only when what they depend on
+// changes, so a redraw (an overlay animating in, a press) allocates nothing.
+private class RimCache {
+    var size = Size.Unspecified
+    var density = 0f
+    var angle = Float.NaN
+    var lit = Color.Unspecified
+    var shade = Float.NaN
+    lateinit var glint: Brush
+    lateinit var away: Brush
+    lateinit var glintStroke: Stroke
+    lateinit var contourStroke: Stroke
+}
+
 private class GlassSurfaceNode(
     var shape: Shape,
     var tokens: GlassMaterial,
@@ -388,27 +440,27 @@ private class GlassSurfaceNode(
     DrawModifierNode,
     GlobalPositionAwareModifierNode {
     private var coordinates: LayoutCoordinates? = null
+
+    // Made on the first draw that blurs (Android 12+ or Skia), so a tint surface never holds a layer.
     private var layer: GraphicsLayer? = null
     private var registered: GlassState? = null
     private var effectRadius = -1f
     private var effect: RenderEffect? = null
-    private val lensEngine by lazy { LensEngine() }
-    private var lensKey: LensParams? = null
-    private var lensEffect: RenderEffect? = null
+    private var lensCache: LensCache? = null
+    private var rimCache: RimCache? = null
     private var lensApplied = false
     private var filterSaturation = -1f
     private var filter: ColorFilter? = null
 
-    // Reused between frames: the outline and what is derived from it, and the inputs the lens effect was last built for.
+    // Reused between frames: the outline, the border stroke and the frosted edge gradient.
     private var cachedOutline: Outline? = null
     private var outlineSize = Size.Unspecified
     private var outlineDirection: LayoutDirection? = null
     private var outlineDensity = 0f
-    private val corners = FloatArray(4)
-    private var exponent = 2f
-    private var lensStale = true
-    private val lensInputs = FloatArray(LENS_INPUTS)
-    private val lensScratch = FloatArray(LENS_INPUTS)
+    private var cachedStroke: Stroke? = null
+    private var edgeBrush: Brush? = null
+    private var edgeColor = Color.Unspecified
+    private var edgeFade = -1f
 
     fun update(
         shape: Shape,
@@ -424,6 +476,7 @@ private class GlassSurfaceNode(
         dynamics: LiquidDynamics?,
         style: LiquidGlassStyle,
     ) {
+        if (shape != this.shape) cachedOutline = null
         this.lens = lens
         this.liquid = liquid
         this.dynamics = dynamics
@@ -436,14 +489,12 @@ private class GlassSurfaceNode(
         this.state = state
         this.borderWidth = borderWidth
         this.observe = observe
-        cachedOutline = null
-        lensStale = true
+        lensCache?.stale = true
         syncRegistration()
         invalidateDraw()
     }
 
     override fun onAttach() {
-        layer = requireGraphicsContext().createGraphicsLayer()
         syncRegistration()
     }
 
@@ -481,9 +532,9 @@ private class GlassSurfaceNode(
         val pressed = dynamics?.lift?.invoke() ?: 0f
         val outline = outline()
         val source = state
-        val blurLayer = layer
         lensApplied = false
-        if (blur && source != null && blurLayer != null && source.isRecording) {
+        if (blur && source != null && source.isRecording) {
+            val blurLayer = layer ?: requireGraphicsContext().createGraphicsLayer().also { layer = it }
             // Opaque base: where the source is transparent (or ends) the content under the surface must not show through.
             drawRect(base)
             source.surfaceDraws++
@@ -500,11 +551,7 @@ private class GlassSurfaceNode(
         if (liquid) {
             if (pressed > 0f) drawRect(Color.White.copy(alpha = PRESS_BRIGHTEN * pressed))
             if (lensApplied) {
-                drawOutline(
-                    outline,
-                    tokens.border,
-                    style = Stroke(width = borderWidth.toPx() * 2f),
-                )
+                drawOutline(outline, tokens.border, style = borderStroke())
             } else {
                 drawDirectionalRim(outline)
             }
@@ -514,44 +561,66 @@ private class GlassSurfaceNode(
         drawContent()
     }
 
+    private fun ContentDrawScope.borderStroke(): Stroke {
+        val width = borderWidth.toPx() * 2f
+        val kept = cachedStroke
+        if (kept != null && kept.width == width) return kept
+        return Stroke(width = width).also { cachedStroke = it }
+    }
+
     private fun ContentDrawScope.drawFrostedEdge(outline: Outline) {
-        val stroke = Stroke(width = borderWidth.toPx() * 2f)
+        val stroke = borderStroke()
         drawOutline(outline, tokens.border, style = stroke)
         val fade = EdgeFade.toPx().coerceAtMost(size.height).coerceAtLeast(1f)
-        drawOutline(
-            outline,
-            Brush.verticalGradient(0f to tokens.edge, 1f to Color.Transparent, startY = 0f, endY = fade),
-            style = stroke,
-        )
+        val edge = tokens.edge
+        val kept = edgeBrush
+        val brush =
+            if (kept != null && edgeColor == edge && edgeFade == fade) {
+                kept
+            } else {
+                edgeColor = edge
+                edgeFade = fade
+                Brush.verticalGradient(0f to edge, 1f to Color.Transparent, startY = 0f, endY = fade).also { edgeBrush = it }
+            }
+        drawOutline(outline, brush, style = stroke)
     }
 
     // A thin glint on the walls that face the light (top left, with a weaker one opposite), added on top of the glass so it
     // recolors the backdrop instead of painting white, plus a faint dark contour on the walls that face away.
     private fun ContentDrawScope.drawDirectionalRim(outline: Outline) {
-        val center = Offset(size.width / 2f, size.height / 2f)
-        val glint = GLINT_WIDTH_DP.dp.toPx()
+        val rim = rimCache ?: RimCache().also { rimCache = it }
         val angle = style.specular.angleDegrees
         val lit = tokens.edge.copy(alpha = (tokens.edge.alpha * style.specular.intensity * style.rim).coerceIn(0f, 1f))
-        val sweep =
-            sweepAround(
-                center,
-                angle to lit,
-                angle + 180f to lit.copy(alpha = lit.alpha * 0.55f),
-                spread = 55f,
-                fade = Color.Transparent,
-            )
-        drawOutline(outline, sweep, style = Stroke(width = glint * 2f), blendMode = BlendMode.Plus)
-        val away = sweepAround(center, angle + 180f to Color.Black.copy(alpha = 0.10f * style.rim), spread = 90f, fade = Color.Transparent)
-        drawOutline(outline, away, style = Stroke(width = CONTOUR_WIDTH_DP.dp.toPx() * 2f))
-        drawOutline(outline, tokens.border, style = Stroke(width = borderWidth.toPx() * 2f))
+        val shade = 0.10f * style.rim
+        if (rim.size != size || rim.density != density || rim.angle != angle || rim.lit != lit || rim.shade != shade) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            rim.glint =
+                sweepAround(
+                    center,
+                    angle to lit,
+                    angle + 180f to lit.copy(alpha = lit.alpha * 0.55f),
+                    spread = 55f,
+                    fade = Color.Transparent,
+                )
+            rim.away = sweepAround(center, angle + 180f to Color.Black.copy(alpha = shade), spread = 90f, fade = Color.Transparent)
+            rim.glintStroke = Stroke(width = GLINT_WIDTH_DP.dp.toPx() * 2f)
+            rim.contourStroke = Stroke(width = CONTOUR_WIDTH_DP.dp.toPx() * 2f)
+            rim.size = size
+            rim.density = density
+            rim.angle = angle
+            rim.lit = lit
+            rim.shade = shade
+        }
+        drawOutline(outline, rim.glint, style = rim.glintStroke, blendMode = BlendMode.Plus)
+        drawOutline(outline, rim.away, style = rim.contourStroke)
+        drawOutline(outline, tokens.border, style = borderStroke())
     }
 
     // The lens covers the whole surface: its profile runs from the rim to the medial axis, half the short side deep, for every
     // shape. (LENS_COVERAGE is the fraction of that distance the edge term spans; 1 is the full surface.)
     private fun ContentDrawScope.bevel(): Float = (min(size.width, size.height) * 0.5f * LENS_COVERAGE).coerceAtLeast(1f)
 
-    // The outline of the current size, made once per size, with the corner radii and the superellipse exponent of the lens height
-    // field derived from it: from the sharpest corner, a pill or circle is an ellipse (2) and a sharp rectangle fills its corners (8).
+    // The outline of the current size, made once per size (the lens derives its corner radii and exponent from it).
     private fun ContentDrawScope.outline(): Outline {
         val kept = cachedOutline
         if (kept != null && outlineSize == size && outlineDirection == layoutDirection && outlineDensity == density) return kept
@@ -560,10 +629,6 @@ private class GlassSurfaceNode(
         outlineSize = size
         outlineDirection = layoutDirection
         outlineDensity = density
-        made.cornerRadiiInto(corners)
-        val half = min(size.width, size.height) * 0.5f
-        exponent = 2f + 6f * (1f - (minOf(corners[0], corners[1], corners[2], corners[3]) / half.coerceAtLeast(1f)).coerceIn(0f, 1f))
-        lensStale = true
         return made
     }
 
@@ -591,10 +656,6 @@ private class GlassSurfaceNode(
         val pad = ceil(radius + reach).toInt()
         val width = size.width.toInt() + pad * 2
         val height = size.height.toInt() + pad * 2
-        if (tokens.saturate != filterSaturation) {
-            filterSaturation = tokens.saturate
-            filter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(tokens.saturate) })
-        }
         blurLayer.topLeft = IntOffset(-pad, -pad)
         val pivot = Offset(dx + size.width / 2f, dy + size.height / 2f)
         blurLayer.record(this, layoutDirection, IntSize(width, height)) {
@@ -609,12 +670,14 @@ private class GlassSurfaceNode(
         }
         val lensed =
             if (lens) {
+                val cache = lensCache ?: LensCache().also { lensCache = it }
+                cache.sync(outline, size)
                 lensFor(
+                    cache,
                     pad,
                     depth,
                     strength,
                     radius,
-                    exponent,
                     pressed,
                     reach > 0f,
                     pad - dx,
@@ -627,8 +690,16 @@ private class GlassSurfaceNode(
         lensApplied = lensed != null
         blurLayer.renderEffect = lensed ?: blurFor(radius)
         // The lens shader saturates the backdrop itself, before the veil.
-        blurLayer.colorFilter = if (lensApplied) null else filter
+        blurLayer.colorFilter = if (lensApplied) null else saturationFilter()
         drawLayer(blurLayer)
+    }
+
+    private fun saturationFilter(): ColorFilter? {
+        if (tokens.saturate != filterSaturation) {
+            filterSaturation = tokens.saturate
+            filter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(tokens.saturate) })
+        }
+        return filter
     }
 
     private var frameLeft = 0f
@@ -666,11 +737,11 @@ private class GlassSurfaceNode(
     }
 
     private fun ContentDrawScope.lensFor(
+        cache: LensCache,
         pad: Int,
         depth: Float,
         strength: Float,
         radius: Float,
-        exponent: Float,
         pressed: Float,
         wide: Boolean,
         sourceLeft: Float,
@@ -687,8 +758,10 @@ private class GlassSurfaceNode(
         val glowX = if (glowing) size.width / 2f + rubberBand(pointer!!.x - size.width / 2f, size.width / 2f) else 0f
         val glowY = if (glowing) size.height / 2f + rubberBand(pointer!!.y - size.height / 2f, size.height / 2f) else 0f
         val shownGlow = if (pointer != null) glowAlpha else 0f
+        val exponent = cache.exponent
+        val corners = cache.corners
         // Everything that varies between frames; the effect is rebuilt only when one of them moved (a settled surface allocates nothing).
-        val inputs = lensScratch
+        val inputs = cache.scratch
         inputs[0] = size.width
         inputs[1] = size.height
         inputs[2] = pad.toFloat()
@@ -705,9 +778,9 @@ private class GlassSurfaceNode(
         inputs[13] = if (wide) sourceTop else 0f
         inputs[14] = sourceSize.width.toFloat()
         inputs[15] = sourceSize.height.toFloat()
-        if (!lensStale && lensEffect != null && inputs.contentEquals(lensInputs)) return lensEffect
-        inputs.copyInto(lensInputs)
-        lensStale = false
+        if (!cache.stale && cache.effect != null && inputs.contentEquals(cache.inputs)) return cache.effect
+        inputs.copyInto(cache.inputs)
+        cache.stale = false
         val params =
             LensParams(
                 width = size.width,
@@ -754,11 +827,11 @@ private class GlassSurfaceNode(
                 glowRadius = max(size.width, size.height) * GLOW_RADIUS,
                 glowAlpha = shownGlow,
             )
-        if (params != lensKey) {
-            lensKey = params
-            lensEffect = lensEngine.effect(params)
+        if (params != cache.key) {
+            cache.key = params
+            cache.effect = cache.engine.effect(params)
         }
-        return lensEffect
+        return cache.effect
     }
 }
 

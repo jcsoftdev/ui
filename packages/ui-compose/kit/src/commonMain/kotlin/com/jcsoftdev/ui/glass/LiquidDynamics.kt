@@ -146,6 +146,9 @@ internal class LiquidDynamics(
 /** The squash target at rest. */
 private val SquashRest = Squash(1f, 1f)
 
+/** The scale of a surface that never squashes (Press and None). */
+private val Unsquashed: () -> Float = { 1f }
+
 /** How long a pointer may stay still, while down, before the squash relaxes (the velocity of a finger at rest is zero). */
 internal const val STILL_MILLIS: Long = 60L
 
@@ -160,6 +163,14 @@ internal class TouchState {
     var pointerDown: Boolean by mutableStateOf(false)
     var pressPosition: Offset = Offset.Zero
     val touching: Boolean get() = sourceDown || pointerDown
+}
+
+// What only a Drag surface tracks: the finger position and the squash springs. Press and None surfaces never allocate it.
+private class DragState {
+    val pointer = mutableStateOf(Offset.Zero)
+    val squashX = Animatable(1f)
+    val squashY = Animatable(1f)
+    val target = MutableStateFlow(SquashRest)
 }
 
 // The springs of a motion spec, made once instead of on every pointer move.
@@ -193,10 +204,7 @@ internal fun rememberLiquidDynamics(
     val materialize = remember { Animatable(if (ramps && !materialized.value) 0f else 1f) }
     val follow = remember { Animatable(0f) }
     val pointer = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    val dragPointer = remember { mutableStateOf(Offset.Zero) }
-    val squashX = remember { Animatable(1f) }
-    val squashY = remember { Animatable(1f) }
-    val squashTarget = remember { MutableStateFlow(SquashRest) }
+    val dragState = if (drag) remember { DragState() } else null
 
     LaunchedEffect(on, spec) {
         if (ramps && materialize.value < 1f) {
@@ -207,16 +215,18 @@ internal fun rememberLiquidDynamics(
             if (ramps) materialized.value = true
         }
     }
-    LaunchedEffect(source, touch, drag) {
-        source?.interactions?.collect { interaction ->
-            when (interaction) {
-                is PressInteraction.Press -> {
-                    touch.pressPosition = interaction.pressPosition
-                    if (drag && !touch.pointerDown) dragPointer.value = interaction.pressPosition
-                    touch.sourceDown = true
+    if (source != null) {
+        LaunchedEffect(source, touch, dragState) {
+            source.interactions.collect { interaction ->
+                when (interaction) {
+                    is PressInteraction.Press -> {
+                        touch.pressPosition = interaction.pressPosition
+                        if (dragState != null && !touch.pointerDown) dragState.pointer.value = interaction.pressPosition
+                        touch.sourceDown = true
+                    }
+                    is PressInteraction.Release, is PressInteraction.Cancel -> touch.sourceDown = false
+                    else -> Unit
                 }
-                is PressInteraction.Release, is PressInteraction.Cancel -> touch.sourceDown = false
-                else -> Unit
             }
         }
     }
@@ -251,28 +261,29 @@ internal fun rememberLiquidDynamics(
         }
     }
     // The squash target follows the velocity (one collector, no coroutine per pointer move) and relaxes when the finger rests.
-    LaunchedEffect(on, spec, drag) {
-        if (!drag || !on || spec == null) return@LaunchedEffect
-        squashTarget.collectLatest { target ->
-            coroutineScope {
-                launch { squashX.animateTo(target.x, springs.squashX) }
-                launch { squashY.animateTo(target.y, springs.squashY) }
-                if (target != SquashRest) {
-                    delay(STILL_MILLIS)
-                    squashTarget.value = SquashRest
+    if (dragState != null && on && spec != null) {
+        LaunchedEffect(on, spec, dragState) {
+            dragState.target.collectLatest { target ->
+                coroutineScope {
+                    launch { dragState.squashX.animateTo(target.x, springs.squashX) }
+                    launch { dragState.squashY.animateTo(target.y, springs.squashY) }
+                    if (target != SquashRest) {
+                        delay(STILL_MILLIS)
+                        dragState.target.value = SquashRest
+                    }
                 }
             }
         }
     }
 
     val observer =
-        if (drag) {
-            remember(on, spec) {
+        if (dragState != null) {
+            remember(on, spec, dragState) {
                 Modifier.observePointer { position, velocity, down ->
                     touch.pointerDown = down
-                    if (down) dragPointer.value = position
+                    if (down) dragState.pointer.value = position
                     if (on && spec != null) {
-                        squashTarget.value =
+                        dragState.target.value =
                             if (down) {
                                 squashFor(
                                     velocity.x / VELOCITY_REFERENCE,
@@ -288,14 +299,14 @@ internal fun rememberLiquidDynamics(
             Modifier
         }
 
-    return remember(observer, on, drag) {
+    return remember(observer, on, dragState) {
         LiquidDynamics(
             lift = { lift.value },
             materialize = { materialize.value },
-            pointer = { if (follow.value > 0.001f) (if (drag) dragPointer.value else pointer.value) else null },
+            pointer = { if (follow.value > 0.001f) (dragState?.pointer?.value ?: pointer.value) else null },
             follow = { follow.value },
-            scaleX = { squashX.value },
-            scaleY = { squashY.value },
+            scaleX = if (dragState != null) ({ dragState.squashX.value }) else Unsquashed,
+            scaleY = if (dragState != null) ({ dragState.squashY.value }) else Unsquashed,
             observer = observer,
             motionOn = on,
             touching = { touch.touching },

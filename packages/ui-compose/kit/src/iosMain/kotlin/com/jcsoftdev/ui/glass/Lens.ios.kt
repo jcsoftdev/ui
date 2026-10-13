@@ -12,9 +12,13 @@ internal actual fun lensSupported(): Boolean = true
 private val Effect: RuntimeEffect by lazy { RuntimeEffect.makeForShader(LENS_SHADER) }
 private val MergeEffect: RuntimeEffect by lazy { RuntimeEffect.makeForShader(MERGE_SHADER) }
 
+// Each builder compiles its shader on first use, so a surface that never merges never compiles the merge shader. The blur that
+// feeds the shader is kept while its radius holds; only the shader filter (which snapshots the uniforms) is made per change.
 internal actual class LensEngine actual constructor() {
-    private val builder = RuntimeShaderBuilder(Effect)
-    private val mergeBuilder = RuntimeShaderBuilder(MergeEffect)
+    private val builder by lazy(LazyThreadSafetyMode.NONE) { RuntimeShaderBuilder(Effect) }
+    private val mergeBuilder by lazy(LazyThreadSafetyMode.NONE) { RuntimeShaderBuilder(MergeEffect) }
+    private var blurRadius = -1f
+    private var blurFilter: ImageFilter? = null
 
     actual fun effect(params: LensParams): RenderEffect? {
         builder.uniform("size", params.width, params.height)
@@ -23,7 +27,7 @@ internal actual class LensEngine actual constructor() {
         builder.uniform("exponent", params.exponent)
         builder.uniform("dome", params.dome)
         builder.common(params)
-        return builder.filter(params)
+        return builder.filter(blurFor(params.blur))
     }
 
     actual fun merged(params: MergeParams): RenderEffect? {
@@ -32,7 +36,16 @@ internal actual class LensEngine actual constructor() {
         mergeBuilder.uniform("count", params.count.toFloat())
         mergeBuilder.uniform("blendK", params.blendDistance)
         mergeBuilder.common(params.lens)
-        return mergeBuilder.filter(params.lens)
+        return mergeBuilder.filter(blurFor(params.lens.blur))
+    }
+
+    private fun blurFor(radius: Float): ImageFilter? {
+        if (radius <= 0f) return null
+        if (radius != blurRadius || blurFilter == null) {
+            blurRadius = radius
+            blurFilter = ImageFilter.makeBlur(radius, radius, FilterTileMode.CLAMP)
+        }
+        return blurFilter
     }
 }
 
@@ -57,7 +70,5 @@ private fun RuntimeShaderBuilder.common(params: LensParams) {
     uniform("glow", params.glowX, params.glowY, params.glowRadius, params.glowAlpha)
 }
 
-private fun RuntimeShaderBuilder.filter(params: LensParams): RenderEffect {
-    val blur = if (params.blur > 0f) ImageFilter.makeBlur(params.blur, params.blur, FilterTileMode.CLAMP) else null
-    return ImageFilter.makeRuntimeShader(this, "content", blur).asComposeRenderEffect()
-}
+private fun RuntimeShaderBuilder.filter(blur: ImageFilter?): RenderEffect =
+    ImageFilter.makeRuntimeShader(this, "content", blur).asComposeRenderEffect()

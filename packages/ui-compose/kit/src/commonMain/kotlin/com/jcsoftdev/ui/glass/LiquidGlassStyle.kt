@@ -269,9 +269,11 @@ internal fun rimDepthFor(
 /** The style surfaces use: set it with `UiTheme(liquidGlassStyle = ...)` or provide it for a subtree. */
 public val LocalLiquidGlassStyle: ProvidableCompositionLocal<LiquidGlassStyle> = staticCompositionLocalOf { LiquidGlassStyle.Regular }
 
+private val DefaultTint = LiquidTint()
+
 /** The material tokens with this style's frost, saturation, tint and opacity applied. Identity for the default style. */
 internal fun LiquidGlassStyle.applyTo(tokens: GlassMaterial): GlassMaterial {
-    if (opacity == 1f && tint == LiquidTint() && frost == Dp.Unspecified && saturation == null) return tokens
+    if (opacity == 1f && tint == DefaultTint && frost == Dp.Unspecified && saturation == null) return tokens
     val base = if (tint.color == Color.Unspecified) tokens.tint else tint.color.copy(alpha = tokens.tint.alpha)
     return GlassMaterial(
         tint = base.copy(alpha = (base.alpha * opacity * tint.amount).coerceIn(0f, 1f)),
