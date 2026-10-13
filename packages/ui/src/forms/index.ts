@@ -5,6 +5,7 @@ export * from "./dropzone/index.js";
 export * from "./emoji-picker/index.js";
 export * from "./emoji-reaction-button/index.js";
 export * from "./field/index.js";
+export * from "./form/index.js";
 export * from "./form-grid/index.js";
 export * from "./inline-select/index.js";
 export * from "./input/index.js";
