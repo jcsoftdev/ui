@@ -238,7 +238,11 @@ test("markdown: wide tables are capped and list/heading scans stay linear", () =
   assert.ok(block.rows.every((row) => row.length <= 64));
   assert.ok(elapsed < 200, `table took ${elapsed.toFixed(0)}ms`);
 
-  for (const src of [`- ${" ".repeat(100000)}x y`, `# ${" ".repeat(100000)}x y`, `-${"\t".repeat(50000)}x\u2028y`]) {
+  for (const src of [
+    `- ${" ".repeat(100000)}x y`,
+    `# ${" ".repeat(100000)}x y`,
+    `-${"\t".repeat(50000)}x\u2028y`,
+  ]) {
     start = performance.now();
     md.parseMarkdown(src);
     elapsed = performance.now() - start;

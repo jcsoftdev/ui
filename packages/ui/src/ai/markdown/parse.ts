@@ -278,7 +278,11 @@ function parseBlocks(src: string, depth: number): Block[] {
       i += 2;
       while (i < lines.length && at(i).trim() && at(i).includes("|")) {
         const cells = splitRow(at(i));
-        rows.push(head.map((_, col) => (col < cells.length ? parseInline(cells[col] as string) : NO_INLINES)));
+        rows.push(
+          head.map((_, col) =>
+            col < cells.length ? parseInline(cells[col] as string) : NO_INLINES,
+          ),
+        );
         i += 1;
       }
       blocks.push({
