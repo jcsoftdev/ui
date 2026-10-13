@@ -12,9 +12,11 @@ import com.jcsoftdev.ui.foundation.LocalMotion
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.foundation.rememberSystemMotion
 import com.jcsoftdev.ui.glass.GlassVariant
+import com.jcsoftdev.ui.glass.LiquidGlassStyle
 import com.jcsoftdev.ui.glass.LocalBackdropBlur
 import com.jcsoftdev.ui.glass.LocalGlassVariant
 import com.jcsoftdev.ui.glass.LocalHighContrast
+import com.jcsoftdev.ui.glass.LocalLiquidGlassStyle
 import com.jcsoftdev.ui.glass.LocalReduceTransparency
 import com.jcsoftdev.ui.glass.LocalUiDark
 import com.jcsoftdev.ui.glass.LocalUiStyle
@@ -63,6 +65,11 @@ public object UiTheme {
         @Composable @ReadOnlyComposable
         get() = LocalUiStyle.current
 
+    /** The Liquid Glass look surfaces use unless they get their own (see [LiquidGlassStyle]). */
+    public val liquidGlassStyle: LiquidGlassStyle
+        @Composable @ReadOnlyComposable
+        get() = LocalLiquidGlassStyle.current
+
     /** True when surfaces must not be translucent; glass is drawn opaque with a border. */
     public val reduceTransparency: Boolean
         @Composable @ReadOnlyComposable
@@ -101,6 +108,9 @@ public object UiTheme {
  * battery or GPU; the platform check (Android below API 31) already does this on its own.
  * @param glassVariant which glass chrome surfaces get with [UiStyle.Glass] and no `material`: [GlassVariant.Frosted] (default, blur
  * only, like the web preset) or [GlassVariant.Liquid] (opt in, the lensed Apple look). An explicit `material` is never changed by it.
+ * @param liquidGlassStyle the optics, interaction and motion of every Liquid surface ([LiquidGlassStyle.Regular] is the shipped look;
+ * [LiquidGlassStyle.Clear] and [LiquidGlassStyle.Thick] are presets). Provide `LocalLiquidGlassStyle` to change it for one subtree.
+ * Styles that lower the tint or dim strength drop the contrast guarantee of the glass.
  *
  * It also installs the [OverlayHost] that sheets, dialogs and toasts draw in; headless code can use [OverlayHost] without a
  * `UiTheme`.
@@ -125,6 +135,7 @@ public fun UiTheme(
     highContrast: Boolean = rememberSystemHighContrast(),
     backdropBlur: Boolean = true,
     glassVariant: GlassVariant = GlassVariant.Frosted,
+    liquidGlassStyle: LiquidGlassStyle = LiquidGlassStyle.Regular,
     content: @Composable () -> Unit,
 ) {
     val themed = remember(colors, accent, dark) { colors.withPalette(resolveAccent(accent, dark, colors.accent)) }
@@ -143,6 +154,7 @@ public fun UiTheme(
         LocalHighContrast provides highContrast,
         LocalBackdropBlur provides backdropBlur,
         LocalGlassVariant provides glassVariant,
+        LocalLiquidGlassStyle provides liquidGlassStyle,
     ) {
         OverlayHost(content = content)
     }
