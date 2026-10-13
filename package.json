@@ -6,13 +6,15 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "pnpm --filter @jcsoftdev/ui build",
+    "build": "pnpm --filter @jcsoftdev/ui-tokens build && pnpm --filter @jcsoftdev/ui build",
     "build:site": "pnpm --filter @jcsoftdev/ui-site build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && node --test scripts/*.test.mjs",
     "check:treeshake": "pnpm --filter @jcsoftdev/ui check:treeshake",
     "check:dist-imports": "pnpm --filter @jcsoftdev/ui check:dist-imports",
-    "check:docs-examples": "pnpm --filter @jcsoftdev/ui check:docs-examples"
+    "check:docs-examples": "pnpm --filter @jcsoftdev/ui check:docs-examples",
+    "check:pack": "pnpm --filter @jcsoftdev/ui check:pack",
+    "check:size": "node scripts/check-size.mjs"
   }
 }

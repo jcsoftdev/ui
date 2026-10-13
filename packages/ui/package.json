@@ -72,12 +72,13 @@
     }
   },
   "scripts": {
-    "build": "pnpm build:styles && pnpm build:class-tokens && tsup && tsc -p tsconfig.build.json",
+    "build": "pnpm sync:tokens && pnpm build:class-tokens && tsup && tsc -p tsconfig.build.json",
     "build:icons": "node scripts/build-icons.mjs",
     "build:class-tokens": "node scripts/build-class-tokens.mjs",
-    "build:styles": "node bin/ui-theme.mjs build tokens/default.json --out styles",
     "lint": "biome check .",
+    "prestorybook": "node scripts/sync-tokens.mjs",
     "storybook": "storybook dev -p 6006",
+    "prebuild-storybook": "node scripts/sync-tokens.mjs",
     "build-storybook": "storybook build -o storybook-static",
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit",
@@ -86,7 +87,15 @@
     "test:glass": "vitest run --project glass",
     "check:treeshake": "node test/treeshake.mjs",
     "check:dist-imports": "node test/dist-imports.mjs",
-    "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs"
+    "check:pack": "node test/pack-consumer.mjs",
+    "check:docs-examples": "tsc -p tsconfig.docs.json && node test/docs-examples.mjs",
+    "sync:tokens": "node scripts/sync-tokens.mjs",
+    "prepare": "node scripts/sync-tokens.mjs",
+    "prepack": "node scripts/sync-tokens.mjs",
+    "pretest": "node scripts/sync-tokens.mjs",
+    "pretest:stories": "node scripts/sync-tokens.mjs",
+    "pretest:glass": "node scripts/sync-tokens.mjs",
+    "pretypecheck": "node scripts/sync-tokens.mjs"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -94,6 +103,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
+    "@jcsoftdev/ui-tokens": "workspace:^",
     "@storybook/addon-a11y": "10.6.0",
     "@storybook/addon-docs": "10.6.0",
     "@storybook/addon-vitest": "10.6.0",

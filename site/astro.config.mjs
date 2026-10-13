@@ -58,6 +58,8 @@ export default defineConfig({
             { slug: "docs/glass" },
             { slug: "docs/primitives" },
             { slug: "docs/theming/tokens" },
+            { slug: "docs/theming/contract" },
+            { slug: "docs/theming/theme-generator" },
           ],
         },
         { label: "Components", items: componentGroups },
