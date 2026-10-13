@@ -87,6 +87,7 @@ describe("ui-emoji-reaction-bar", () => {
     const react = vi.fn((event: Event) => (event as CustomEvent).detail);
     el.addEventListener("react", react);
     await userEvent.click(el.querySelector("[data-ui-part=add]")!);
+    await vi.waitFor(() => expect(popover(el)?.matches(":popover-open")).toBe(true));
     const picker = el.querySelector("ui-emoji-picker")!;
     await vi.waitFor(() =>
       expect(picker.querySelectorAll("button[data-index]").length).toBeGreaterThan(0),
