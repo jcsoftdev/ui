@@ -107,16 +107,32 @@ function isInvisible(code: number): boolean {
   );
 }
 
+const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
+const IGNORED_IN_URL = /[\s\p{Cf}]/gu;
+
+/** The one string that is validated and emitted: entities decoded once, ends trimmed. */
+function normalizeHref(raw: string): string {
+  return decodeEntities(raw).trim();
+}
+
+function isAllowedHref(href: string): boolean {
+  // Browsers ignore control characters and whitespace around and inside the scheme ("java\tscript:").
+  // Strip every whitespace and format character too, so no prefix can hide a scheme from this check.
+  const url = Array.from(href)
+    .filter((char) => !isInvisible(char.codePointAt(0) ?? 0))
+    .join("")
+    .replace(IGNORED_IN_URL, "");
+  if (url === "") return false;
+  try {
+    return ALLOWED_PROTOCOLS.has(new URL(url, "https://invalid.invalid/").protocol);
+  } catch {
+    return false;
+  }
+}
+
 /** True for http(s), mailto, tel and scheme-less (relative or fragment) URLs. */
 export function isSafeUrl(raw: string): boolean {
-  // Browsers ignore control characters and whitespace inside the scheme ("java\tscript:").
-  const url = Array.from(decodeEntities(raw))
-    .filter((char) => !isInvisible(char.codePointAt(0) ?? 0))
-    .join("");
-  if (url === "") return false;
-  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url);
-  if (!scheme) return true;
-  return ["http", "https", "mailto", "tel"].includes((scheme[1] ?? "").toLowerCase());
+  return isAllowedHref(normalizeHref(raw));
 }
 
 interface ParsedTag {
@@ -236,10 +252,10 @@ export function sanitizeHtml(input: string): string {
     }
     if (name === "a") {
       closeTo("a");
-      const href = tag.attributes.href;
-      if (href !== undefined && isSafeUrl(href)) {
+      const href = tag.attributes.href === undefined ? "" : normalizeHref(tag.attributes.href);
+      if (isAllowedHref(href)) {
         out.push(
-          `<a href="${escapeAttribute(decodeEntities(href).trim())}" rel="noopener noreferrer nofollow" target="_blank">`,
+          `<a href="${escapeAttribute(href)}" rel="noopener noreferrer nofollow" target="_blank">`,
         );
       } else {
         out.push("<a>");
