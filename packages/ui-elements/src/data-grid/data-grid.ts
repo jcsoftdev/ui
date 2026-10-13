@@ -9,6 +9,7 @@ import {
   reconcileLayout,
   serializeLayout,
 } from "@jcsoftdev/ui-core/grid/columns";
+import type { EditTrigger } from "@jcsoftdev/ui-core/grid/edit";
 import {
   type HeaderAction,
   headerAction,
@@ -79,6 +80,10 @@ export interface GridLabels {
   selected: (count: number) => string;
   /** Announced when a pin is refused because the pinned columns would fill the grid. */
   pinTooWide: (header: string) => string;
+  /** Editor messages (loaded with the editor, so they have defaults there): invalid number and date, a failed validator. */
+  invalidNumber?: string;
+  invalidDate?: string;
+  invalidValue?: string;
 }
 
 const LABELS: GridLabels = {
@@ -152,6 +157,7 @@ const ATTRIBUTE_FLAGS: Record<string, number> = {
   "sort-manual": F_VIEW,
   "column-menu": F_PAINT,
   reorderable: F_PAINT,
+  editable: F_PAINT,
 };
 
 // biome-ignore lint/suspicious/noExplicitAny: rows are whatever the consumer passes.
@@ -267,7 +273,23 @@ const validTag = (tag: string | undefined): tag is string =>
  * or F2 returns focus to the cell. The cancelable `beforecelledit` event fires first so an editor
  * can take over.
  *
- * Attributes: `label`, `locale`, `selection` (`none` | `single` | `multi`; multi adds a checkbox
+ * Editing (loaded on demand: a read-only grid never fetches it). The `editable` attribute makes
+ * every cell editable; a column's `editable` (`true`, `false` or `(row) => boolean`) overrides it.
+ * Enter, F2, double click or a printable key (which seeds the editor) opens the column's editor in
+ * the cell, after the cancelable `beforecelledit` (`detail.trigger` is `enter`, `f2`, `dblclick`,
+ * `type`, `tab` or `api`); `editCell(rowKey, columnId)` does it from code. Editors: `text`,
+ * `number`, `select` (`options`), `boolean` and `date`, chosen by `column.editor`, else by
+ * `options` and `type`; or a custom element tag / `(context) => CellEditor` factory. Number and date
+ * text is parsed in the grid's locale, or by `column.parse`. Enter commits and moves down
+ * (Shift+Enter up), Tab commits and opens the next editable cell (Shift+Tab the previous), Escape
+ * cancels, a click outside commits; focus returns to the cell. `column.validate(value, row)` may
+ * return a message (or a promise of one): the editor stays open, `aria-invalid` and
+ * `aria-describedby` point at the message and the cell is `aria-busy` while it is pending. The
+ * value is written with `column.setter`, else the property accessor; with `edit-mode="emit"` the
+ * row is never touched and the consumer applies `cellchange` (`{rowKey, columnId, row, oldValue,
+ * newValue}`), e.g. for immutable data.
+ *
+ * Attributes: `label`, `locale`, `editable`, `edit-mode` (`mutate` | `emit`), `selection` (`none` | `single` | `multi`; multi adds a checkbox
  * column), `density` (`compact` | `normal` | `comfortable`) or `row-height` (px), `sort`
  * (`name:asc,price:desc`), `sort-manual` (report sorts without sorting), `pinned-left` /
  * `pinned-right` (column ids; logical, so right-to-left works), `hidden-columns`, `column-menu` (a
@@ -307,6 +329,7 @@ export class UiDataGrid extends ElementBase {
     "column-menu",
     "reorderable",
     "storage-key",
+    "editable",
   ];
 
   // data
@@ -367,6 +390,7 @@ export class UiDataGrid extends ElementBase {
   #revealActive = false;
   #entered: HTMLElement | null = null;
   #editing: { key: string; id: string } | null = null;
+  #editLoad: Promise<typeof import("./edit.js")> | undefined;
   #scrolled = { start: false, end: false };
   #dragging = false;
   #resizeFrame = 0;
@@ -625,38 +649,92 @@ export class UiDataGrid extends ElementBase {
   }
 
   /**
-   * Writes `value` into a row through the column's accessor (a property name) after the cancelable
-   * `beforecellchange`, then refills the row and fires `cellchange`. Returns `false` when the event
-   * was cancelled or the column has no writable accessor. D2's editors commit through it.
+   * Stores `value` for a cell after the cancelable `beforecellchange`, then refills the row and
+   * fires `cellchange` (`{rowKey, columnId, row, oldValue, value, newValue}`). The row is written
+   * through the column's `setter`, else through its property accessor; with `edit-mode="emit"` it
+   * is not written at all and the consumer applies the change. Returns `false` when the event was
+   * cancelled or the row cannot be written.
    */
   changeCell(rowKey: string, columnId: string, value: CellValue): boolean {
     const v = this.#view.indexOfKey(rowKey);
     const column = this.#byId.get(columnId);
     if (v < 0 || !column) return false;
     const accessor = column.accessor ?? column.id;
-    if (typeof accessor === "function") return false;
     const row = this.#rowAt(v);
-    if (row == null || typeof row !== "object" || Object.isFrozen(row)) {
+    const write = this.getAttribute("edit-mode") !== "emit";
+    if (row == null || typeof row !== "object" || (write && Object.isFrozen(row))) {
       console.warn(
         `ui-data-grid: the row "${rowKey}" is frozen or not an object; it was not changed.`,
       );
       return false;
     }
-    const detail = { rowKey, columnId, row, oldValue: getCellValue(row, column), value };
+    if (write && !column.setter && typeof accessor === "function") return false;
+    const detail = {
+      rowKey,
+      columnId,
+      row,
+      oldValue: getCellValue(row, column),
+      value,
+      newValue: value,
+    };
     if (!emit(this, "beforecellchange", detail, true)) return false;
-    try {
-      row[accessor] = value;
-    } catch {
-      console.warn(
-        `ui-data-grid: "${String(accessor)}" of row "${rowKey}" is read-only; it was not changed.`,
-      );
-      return false;
+    if (write) {
+      try {
+        if (column.setter) column.setter(row, value);
+        else row[accessor as string] = value;
+      } catch {
+        console.warn(
+          `ui-data-grid: "${String(accessor)}" of row "${rowKey}" is read-only; it was not changed.`,
+        );
+        return false;
+      }
+      this.refreshRows([rowKey]);
+      // Re-run the view when a stage (sort, later filter and group) reads the edited column.
+      if (this.#viewColumns().has(columnId)) this.#invalidate(F_VIEW);
     }
-    this.refreshRows([rowKey]);
-    // Re-run the view when a stage (sort, later filter and group) reads the edited column.
-    if (this.#viewColumns().has(columnId)) this.#invalidate(F_VIEW);
     emit(this, "cellchange", detail);
     return true;
+  }
+
+  /**
+   * Starts editing a cell: scrolls to it, fires the cancelable `beforecelledit` (with the
+   * `trigger`) and opens the column's editor, loaded on first use. Resolves to `false` when the
+   * cell is not editable or the event was cancelled. `seed` replaces the editor's text, as typing
+   * does.
+   */
+  editCell(
+    rowKey: string,
+    columnId: string,
+    options: { trigger?: EditTrigger; seed?: string } = {},
+  ): Promise<boolean> {
+    return this.#loadEdit().then((edit) => edit.beginEdit(this, rowKey, columnId, options));
+  }
+
+  /**
+   * The cell `rows` rows and `cols` columns away (columns wrap into the next or previous row), or
+   * `null` past the ends. Group rows and the checkbox column are cells too.
+   */
+  stepCell(
+    rowKey: string,
+    columnId: string,
+    rows: number,
+    cols: number,
+  ): { rowKey: string; columnId: string } | null {
+    const n = this.#renderIds.length;
+    const at =
+      (this.#view.indexOfKey(rowKey) + rows) * n + (this.#colIndex.get(columnId) ?? -1) + cols;
+    const v = Math.floor(at / n);
+    return at < 0 || v >= this.#view.count
+      ? null
+      : { rowKey: this.#keyAt(v), columnId: this.#renderIds[at % n] as string };
+  }
+
+  #loadEdit(): Promise<typeof import("./edit.js")> {
+    this.#editLoad ??= import("./edit.js").then((edit) => {
+      edit.install(this);
+      return edit;
+    });
+    return this.#editLoad;
   }
 
   /** The rows of the view in order (group rows included), for export. A snapshot, not live. */
@@ -1063,6 +1141,8 @@ export class UiDataGrid extends ElementBase {
       this.#syncTabStop();
     }
     this.#applySelection();
+    if (!this.#editLoad && (this.hasAttribute("editable") || this.#columns.some((c) => c.editable)))
+      void this.#loadEdit();
   }
 
   #hasFocus(): boolean {
@@ -1296,6 +1376,7 @@ export class UiDataGrid extends ElementBase {
       if (!rec) {
         rec = this.#rowPool.pop() ?? this.#makeRow();
         rec.key = key;
+        rec.el.dataset.key = key;
         rec.g = 0;
         rec.sel = null;
         this.#rowRecs.set(key, rec);
@@ -1688,7 +1769,12 @@ export class UiDataGrid extends ElementBase {
       }
       if (event.key === "Enter" || event.key === "F2") {
         event.preventDefault();
-        const detail = { rowKey: key, columnId: id, row: this.#rowAt(row - 1) };
+        const detail = {
+          rowKey: key,
+          columnId: id,
+          row: this.#rowAt(row - 1),
+          trigger: event.key.toLowerCase(),
+        };
         // An editor takes over by cancelling this; otherwise Enter / F2 enters the cell's controls.
         if (!emit(this, "beforecelledit", detail, true)) return;
         if (event.key === "Enter") emit(this, "cellactivate", detail);
@@ -1790,7 +1876,8 @@ export class UiDataGrid extends ElementBase {
       columnId: this.#renderIds[meta.col],
       row: this.#rowAt(meta.rec.v),
     };
-    if (emit(this, "beforecelledit", detail, true)) emit(this, "cellactivate", detail);
+    if (emit(this, "beforecelledit", { ...detail, trigger: "dblclick" }, true))
+      emit(this, "cellactivate", detail);
   };
 
   readonly #onPointerDown = (event: PointerEvent): void => {
