@@ -13,11 +13,19 @@ import * as reactUnits from "../../ui/src/charts/core/units.ts";
 import { fitCenterText as reactFitCenterText } from "../../ui/src/charts/donut-chart/center-fit.ts";
 import * as reactGauge from "../../ui/src/charts/gauge-chart/gauge-layout.ts";
 import * as chord from "../src/chart/chord.ts";
-import * as hierarchy from "../src/chart/hierarchy.ts";
+import * as funnel from "../src/chart/funnel.ts";
+import * as gauge from "../src/chart/gauge.ts";
+import * as hierarchyModel from "../src/chart/hierarchy.ts";
+import * as parliament from "../src/chart/parliament.ts";
+import * as partition from "../src/chart/partition.ts";
 import * as polar from "../src/chart/polar.ts";
 import * as sankey from "../src/chart/sankey.ts";
+import * as tree from "../src/chart/tree.ts";
+import * as treemap from "../src/chart/treemap.ts";
 
 const TAU = Math.PI * 2;
+// Each React module became several independent entries; the tests read them as one surface.
+const hierarchy = { ...hierarchyModel, ...treemap, ...partition, ...tree };
 
 // niceRadarMax lives inside the radar component, whose import would drag the whole React kit
 // into this package's typecheck. Its source is lifted from the file instead, so the parity
@@ -116,7 +124,7 @@ describe("polar parity", () => {
         tapered: pick([true, false, undefined]),
       };
       const data = values(int(0, 8));
-      expect(polar.funnelStages(data, options)).toEqual(reactPolar.funnelStages(data, options));
+      expect(funnel.funnelStages(data, options)).toEqual(reactPolar.funnelStages(data, options));
     }
   });
 
@@ -137,9 +145,9 @@ describe("polar parity", () => {
         bandLabel: rand() > 0.5,
         valueChars: int(0, 14),
       };
-      expect(polar.layoutGauge(input)).toEqual(reactGauge.layoutGauge(input));
+      expect(gauge.layoutGauge(input)).toEqual(reactGauge.layoutGauge(input));
       const ticks = int(0, 6);
-      expect(polar.showEndLabels(input.endLabels, ticks)).toBe(
+      expect(gauge.showEndLabels(input.endLabels, ticks)).toBe(
         reactGauge.showEndLabels(input.endLabels, ticks),
       );
     }
@@ -160,18 +168,18 @@ describe("polar parity", () => {
         rows: pick([undefined, int(1, 12)]),
         innerRatio: pick([undefined, between(0, 1)]),
       };
-      expect(polar.parliamentLayout(total, options)).toEqual(
+      expect(parliament.parliamentLayout(total, options)).toEqual(
         reactUnits.parliamentLayout(total, options),
       );
-      expect(polar.parliamentRows(total, options.innerRatio)).toBe(
+      expect(parliament.parliamentRows(total, options.innerRatio)).toBe(
         reactUnits.parliamentRows(total, options.innerRatio),
       );
       const weights = values(int(0, 8));
-      expect(polar.largestRemainder(weights, total)).toEqual(
+      expect(parliament.largestRemainder(weights, total)).toEqual(
         reactUnits.largestRemainder(weights, total),
       );
       const counts = times(int(0, 6), () => int(0, 9));
-      expect(polar.assignUnits(counts)).toEqual(reactUnits.assignUnits(counts));
+      expect(parliament.assignUnits(counts)).toEqual(reactUnits.assignUnits(counts));
     }
   });
 });
@@ -197,7 +205,7 @@ const randomTree = (depth: number, label = "n"): Datum => {
 };
 
 /** Nodes link to their parent, which `toEqual` handles, but ids keep failures readable. */
-const flat = (node: hierarchy.HierarchyNode): unknown =>
+const flat = (node: hierarchyModel.HierarchyNode): unknown =>
   hierarchy.descendants(node).map((n) => ({
     ...n,
     parent: n.parent?.id,
@@ -246,7 +254,7 @@ describe("hierarchy parity", () => {
           minGroupSize: between(20, 120),
         },
       ]);
-      const cells = (layout: hierarchy.TreemapCell[]) =>
+      const cells = (layout: treemap.TreemapCell[]) =>
         layout.map((cell) => ({ ...cell, node: cell.node.id }));
       expect(cells(hierarchy.treemapLayout(ours, rect, options))).toEqual(
         cells(reactHierarchy.treemapLayout(theirs, rect, options)),
@@ -415,6 +423,46 @@ describe("sankey parity", () => {
       for (const node of ours.nodes.slice(0, 3)) {
         const mate = theirs.nodes.find((n) => n.id === node.id) as reactSankey.SankeyNode;
         expect(sankey.sankeyFlowOf(node)).toEqual(reactSankey.sankeyFlowOf(mate));
+      }
+    }
+  });
+
+  it("breakCycles terminates on any input and skips links that carry no flow", () => {
+    const nodeIds = ["a", "b", "c"];
+    const bad = [
+      { source: "a", target: "ghost", value: 5 },
+      { source: "ghost", target: "a", value: 5 },
+      { source: "a", target: "a", value: 5 },
+      { source: "a", target: "b", value: Number.NaN },
+      { source: "b", target: "c", value: -1 },
+      { source: "c", target: "a", value: Number.POSITIVE_INFINITY },
+      { source: "a", target: "b", value: 0 },
+    ];
+    expect(sankey.breakCycles(nodeIds, bad)).toEqual({ kept: [], cyclic: [] });
+    expect(sankey.breakCycles([], bad)).toEqual({ kept: [], cyclic: [] });
+    expect(sankey.breakCycles(nodeIds, [])).toEqual({ kept: [], cyclic: [] });
+    // Duplicate ids and a real cycle mixed with junk: only the valid links are classified.
+    const mixed = [
+      ...bad,
+      { source: "a", target: "b", value: 9 },
+      { source: "b", target: "a", value: 1 },
+    ];
+    const result = sankey.breakCycles(["a", "b", "a", "c"], mixed);
+    expect(result.kept).toEqual([{ source: "a", target: "b", value: 9 }]);
+    expect(result.cyclic).toEqual([{ source: "b", target: "a", value: 1 }]);
+    // Random junk never hangs and never leaks an invalid link.
+    for (let i = 0; i < 300; i++) {
+      const links = times(int(0, 25), () => ({
+        source: pick(["a", "b", "c", "d", "ghost"]),
+        target: pick(["a", "b", "c", "d", "ghost"]),
+        value: pick([between(1, 50), 0, -3, Number.NaN, Number.POSITIVE_INFINITY]),
+      }));
+      const out = sankey.breakCycles(["a", "b", "c", "d"], links);
+      expect(out.kept.length + out.cyclic.length).toBeLessThanOrEqual(links.length);
+      for (const link of [...out.kept, ...out.cyclic]) {
+        expect(link.source).not.toBe(link.target);
+        expect(link.value).toBeGreaterThan(0);
+        expect(Number.isFinite(link.value)).toBe(true);
       }
     }
   });

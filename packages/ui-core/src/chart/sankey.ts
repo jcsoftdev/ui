@@ -107,10 +107,21 @@ export function breakCycles(
   nodeIds: readonly string[],
   links: readonly SankeyLinkInput[],
 ): { kept: SankeyLinkInput[]; cyclic: SankeyLinkInput[] } {
+  // Links to unknown nodes, self-loops and non-positive or non-finite values carry no flow:
+  // they are left out of both lists, so any input terminates.
+  const known = new Set(nodeIds);
+  const valid = links.filter(
+    (link) =>
+      known.has(link.source) &&
+      known.has(link.target) &&
+      link.source !== link.target &&
+      Number.isFinite(link.value) &&
+      link.value > 0,
+  );
   const remaining = new Set(nodeIds);
   const outgoing = new Map<string, SankeyLinkInput[]>(nodeIds.map((id) => [id, []]));
   const incoming = new Map<string, SankeyLinkInput[]>(nodeIds.map((id) => [id, []]));
-  for (const link of links) {
+  for (const link of valid) {
     outgoing.get(link.source)?.push(link);
     incoming.get(link.target)?.push(link);
   }
@@ -141,7 +152,7 @@ export function breakCycles(
       }
     }
     if (remaining.size === 0) break;
-    let best = "";
+    let best = remaining.values().next().value as string;
     let bestScore = Number.NEGATIVE_INFINITY;
     for (const id of remaining) {
       const score =
@@ -159,8 +170,8 @@ export function breakCycles(
   const forward = (link: SankeyLinkInput) =>
     (position.get(link.source) ?? 0) < (position.get(link.target) ?? 0);
   return {
-    kept: links.filter(forward),
-    cyclic: links.filter((link) => !forward(link)),
+    kept: valid.filter(forward),
+    cyclic: valid.filter((link) => !forward(link)),
   };
 }
 
