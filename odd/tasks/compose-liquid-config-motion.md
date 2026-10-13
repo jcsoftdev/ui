@@ -15,11 +15,16 @@ Make the Compose Liquid Glass configurable and alive: a `LiquidGlassStyle` (app-
 Single delegated writer (this agent); work-unit commits on the feature branch.
 
 ## Tasks
-- [ ] LS1 `LiquidGlassStyle` model, presets, `LocalLiquidGlassStyle`, `UiTheme(liquidGlassStyle)`, tests for defaults/presets/mapping.
-- [ ] LS2 Shader optics: profile Rim/Full/Dome, fresnel, specular angle, grain, brightness, size-scaled thickness/shadow, shadow offset; uniform mapping; per-profile no-crease tests.
-- [ ] LS3 Motion: springs, press lift + swell, materialize, Drag velocity squash with jelly settle, touch glow, pointer-follow highlight, reduced-motion gating; tests.
-- [ ] LS4 `GlassEffectContainer` + `Modifier.glassEffect`: SDF smooth union shader (AGSL/SkSL), capped shapes, separate-shape fallback; tests.
-- [ ] LS5 Screenshots, CHANGELOG, apiDump, final checks.
+- [x] LS1 `LiquidGlassStyle` model, presets, `LocalLiquidGlassStyle`, `UiTheme(liquidGlassStyle)`, tests for defaults/presets/mapping.
+- [x] LS2 Shader optics: profile Rim/Full/Dome, fresnel, specular angle, grain, brightness, size-scaled thickness/shadow, shadow offset; uniform mapping; per-profile no-crease tests.
+- [x] LS3 Motion: springs, press lift + swell, materialize, Drag velocity squash with jelly settle, touch glow, pointer-follow highlight, reduced-motion gating; tests.
+- [x] LS4 `GlassEffectContainer` + `Modifier.glassEffect`: SDF smooth union shader (AGSL/SkSL), capped shapes, separate-shape fallback; tests.
+- [x] LS5 Screenshots, CHANGELOG, apiDump, final checks.
 
 ## Progress and verification evidence
-(filled as work lands)
+- Commits: 8163af6 (style model), 0da370c (optics, dynamics, merge shader); container, tests, shots, sample, apiDump and CHANGELOG in the commits that follow on the branch.
+- Shadow finding: Skiko layer shadows (Modifier.shadow and GraphicsLayer.shadowElevation) did not render below a translucent glass surface in the pixel tests and cannot be offset, so the Liquid shadow is now a stack of faint silhouettes (same on every target, supports offsetY; default offsetY 3dp).
+- Test-scene finding: `Modifier.size` inside the OverlayHost is overridden by tight parent constraints; the new tests use `wrapContentSize(TopStart).size(...)` so the surface really is 120x60.
+- Merge shader: gradient measured over a step and not normalized so the neck of merged shapes has no cusp.
+- Checks (packages/ui-compose): spotlessCheck, apiCheck OK; :kit:allTests -x iosSimulatorArm64Test OK (jvmTest 245 tests, 11 skipped gated shots, 0 failures; Android unit debug 73, release 73, 0 failures); :kit:compileKotlinIosSimulatorArm64, :kit:compileDebugKotlinAndroid, :sample:assembleRelease OK.
+- Device: sample StyleLab section on emulator API (AGSL compiles, merged container, profiles, drag pill) at scratchpad/cg2/android-stylelab.png; desktop shots in scratchpad/cg2.
