@@ -6,8 +6,8 @@ const STATUS_TONES = ["info", "success", "warning", "danger"] as const;
 
 /**
  * `<ui-chip>`: a compact label. It has no role of its own; give it `role="button"` and a
- * `tabindex` when it is interactive (the host then keeps the touch target in `data-density`
- * contexts through your own styles).
+ * `tabindex` when it is interactive; a `role="button"` chip then grows to the 44px touch target
+ * under `data-density="touch"` (a style container query on the inherited `--control-height-sm`).
  * Attributes: `tone` (`neutral` default, `danger`, `warning`, `success`, `accent`, `info`,
  * `solid`, `outline`), `square` (smaller radius instead of a pill), `status-icon` (prefixes the
  * `info`, `success`, `warning` and `danger` tones with their glyph). Slots: default content and

@@ -68,3 +68,8 @@
   block-size: 12px;
   flex-shrink: 0;
 }
+@container style(--control-height-sm: 44px) {
+  :host([role="button"]) {
+    min-block-size: 44px;
+  }
+}

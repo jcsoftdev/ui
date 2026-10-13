@@ -192,6 +192,19 @@ describe("ui-chip", () => {
   });
 });
 
+describe("ui-chip touch density", () => {
+  it("keeps an interactive chip at the 44px touch target under data-density=touch", () => {
+    const host = mount(
+      `<ui-chip role="button" tabindex="0">Plain</ui-chip>
+       <div data-density="touch"><ui-chip role="button" tabindex="0">Tap</ui-chip><ui-chip>Static</ui-chip></div>`,
+    );
+    const [normal, tap, label] = host.querySelectorAll("ui-chip");
+    expect(normal!.getBoundingClientRect().height).toBe(24);
+    expect(tap!.getBoundingClientRect().height).toBe(44);
+    expect(label!.getBoundingClientRect().height).toBe(24);
+  });
+});
+
 describe("ui-trend-chip", () => {
   it("matches the React trend logic value for value", () => {
     for (const value of [-250, -12.5, -0.04, 0, 0.04, 0.5, 3, 12.5, 99.95, 1234.56, Number.NaN]) {
