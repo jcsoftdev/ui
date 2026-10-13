@@ -76,16 +76,15 @@ import com.jcsoftdev.ui.theme.UiTheme
 import kotlinx.coroutines.delay
 import java.util.Locale
 
-/** What sits behind the glass: a photo (with its credit) or the scene drawn in code. */
+/** What sits behind the glass: a photo or the scene drawn in code. */
 enum class Backdrop(
     val label: String,
     val photo: Int?,
-    val credit: String,
 ) {
-    Rio("Rio", R.drawable.photo_rio, "\"Rio de Janeiro skyline and Sugarloaf Mountain at sunset\" by Wilfredor, CC0 1.0"),
-    Mountains("Mountains", R.drawable.photo_mountains, "\"Sunset in the mountains\" by Sergey Pesterev (sickle), CC0 1.0"),
-    Quebec("Quebec", R.drawable.photo_quebec, "\"Chateau Frontenac illuminated at night in Quebec City\" by Wilfredor, CC0 1.0"),
-    Scene("Scene", null, "Drawn in code: gradient, stripes and a fine grid."),
+    Rio("Rio", R.drawable.photo_rio),
+    Mountains("Mountains", R.drawable.photo_mountains),
+    Quebec("Quebec", R.drawable.photo_quebec),
+    Scene("Scene", null),
 }
 
 private val WideBreakpoint = 720.dp
@@ -152,7 +151,7 @@ fun GlassPlayground(
     }
 }
 
-/** The backdrop and its credit, with the glass state that glass on top of it samples. */
+/** The backdrop, with the glass state that glass on top of it samples. */
 @Composable
 private fun Stage(
     backdrop: Backdrop,
@@ -173,17 +172,6 @@ private fun Stage(
             SceneBackdrop(Modifier.fillMaxSize().glassSource(glass))
         }
         content(glass)
-        Text(
-            if (photo != null) "Photo: ${backdrop.credit}" else backdrop.credit,
-            Modifier
-                .align(Alignment.BottomStart)
-                .padding(8.dp)
-                .background(Color.Black.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
-                .padding(horizontal = 8.dp, vertical = 3.dp),
-            style = UiTheme.typography.meta.copy(fontSize = 10.sp),
-            color = Color.White,
-            maxLines = 2,
-        )
     }
 }
 
@@ -452,15 +440,6 @@ private fun ControlPanel(
                     Modifier.fillMaxWidth().background(colors.sunken, RoundedCornerShape(12.dp)).padding(12.dp),
                     style = UiTheme.typography.data.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp),
                 )
-                ControlSection("Credits")
-                for (b in Backdrop.entries.filter { it.photo != null }) {
-                    Text(
-                        "${b.credit}. Wikimedia Commons, CC0 1.0 Universal (public domain dedication).",
-                        Modifier.padding(bottom = 6.dp),
-                        style = UiTheme.typography.meta,
-                        color = colors.ink2,
-                    )
-                }
             }
         }
     }
