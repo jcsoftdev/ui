@@ -1,5 +1,5 @@
-import { geometryRings } from "./topology.js";
 import type { AreaGeometry, Bounds, GeoFeature, Position } from "../internal/geo.js";
+import { geometryRings } from "./topology.js";
 
 type Project = (lon: number, lat: number) => readonly [number, number];
 
