@@ -43,3 +43,43 @@ for (const name of behaviours) {
   assert.deepEqual(modules, [name], `${name} pulls in only itself`);
 }
 console.log(`behaviours: ${behaviours.length} entries independent`);
+
+// Liquid tiers: an entry pulls only its own tier eagerly; the rest is behind import().
+const tiers = {
+  "liquid/attach": ["liquid/attach", "liquid/options", "liquid/support"],
+  "liquid/lens": [
+    "liquid/lens",
+    "liquid/lens-map",
+    "liquid/options",
+    "liquid/raster",
+    "liquid/support",
+  ],
+  "liquid/specular": ["liquid/lens-map", "liquid/raster", "liquid/specular"],
+  "liquid/dispersion": ["liquid/dispersion"],
+  "liquid/crystal": ["liquid/crystal", "liquid/lens-map", "liquid/raster"],
+  "liquid/motion": ["liquid/motion", "liquid/options", "liquid/spring"],
+  "liquid/presets/crystal": ["liquid/presets/crystal"],
+  "liquid/options": ["liquid/options"],
+};
+for (const [entry, expected] of Object.entries(tiers)) {
+  const modules = await eagerModules(`export * from "./${entry}.js";`);
+  assert.deepEqual(modules, expected, `${entry} eager modules`);
+}
+// What attachLiquid can fetch lazily, and nothing more.
+const lazy = await build({
+  entryPoints: [join(dist, "liquid/attach.js")],
+  bundle: true,
+  splitting: true,
+  format: "esm",
+  write: false,
+  metafile: true,
+  outdir: join(dist, ".treeshake"),
+  logLevel: "silent",
+});
+const dynamic = new Set();
+for (const output of Object.values(lazy.metafile.outputs))
+  for (const dep of output.imports) if (dep.kind === "dynamic-import") dynamic.add(dep.path);
+assert.equal(dynamic.size, 5, "attachLiquid: lens + 4 features are separate lazy chunks");
+console.log(
+  `liquid: ${Object.keys(tiers).length} tier entries pull only their own modules; ${dynamic.size} lazy chunks`,
+);
