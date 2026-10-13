@@ -12,7 +12,7 @@ import {
 } from "../core/color-scale.js";
 import type { ValueFormatter } from "../core/format.js";
 import { EASE_OUT, fadeKeyframes, useEntryAnimation } from "../core/motion.js";
-import { ChartTooltip } from "../core/tooltip.js";
+import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import { type ChartLabels, DEFAULT_LABELS } from "../core/types.js";
 import { useCanvasPaint } from "../core/use-canvas.js";
 import type { HeatmapScale } from "./heatmap-scale.js";
@@ -66,6 +66,8 @@ export interface HeatmapGridProps {
   tooltip: boolean;
   animate: boolean;
   onCellClick?: (cell: HeatmapCellInfo) => void;
+  /** Extra tooltip rows under the cell value, e.g. a second measure of the same cell. */
+  cellDetail?: (row: number, column: number, value: number | null) => readonly TooltipRow[];
   /** Name of the value in the tooltip; the row label by default. */
   valueName?: string;
   /** "hex" lays the cells out as a honeycomb (odd rows shifted half a cell). */
@@ -113,6 +115,7 @@ export function HeatmapGrid({
   tooltip,
   animate,
   onCellClick,
+  cellDetail,
   valueName,
   shape = "rect",
   renderer = "svg",
@@ -519,6 +522,7 @@ export function HeatmapGrid({
               value: shownValue == null ? labels.noData : format(shownValue),
               color: shownColor,
             },
+            ...(cellDetail?.(shown.row, shown.column, shownValue ?? null) ?? []),
           ]}
         />
       ) : null}

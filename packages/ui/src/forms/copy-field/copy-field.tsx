@@ -1,98 +1,87 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
-import { Button } from "../../atoms/button/index.js";
+import { type ComponentPropsWithoutRef, type ReactNode, useId } from "react";
 import { useUiStrings } from "../../i18n/index.js";
+import { Check, Copy } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { copyText } from "./copy.js";
+import { useCopy } from "../../utils/use-copy.js";
 
-export type CopyFieldPart = "root" | "label" | "value" | "button";
+export type CopyFieldPart = "root" | "label" | "box" | "value" | "button";
 
 export interface CopyFieldProps
   extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onCopy"> {
-  label: string;
-  /** Text shown and copied. */
+  label: ReactNode;
+  /** Text shown in monospace and written to the clipboard. */
   value: string;
-  /** Replaces the localized button text. */
-  copyLabel?: string;
-  /** Replaces the localized text shown and announced after a successful copy. */
-  copiedLabel?: string;
-  /** Milliseconds the "copied" state lasts. Defaults to 1500. */
-  resetDelay?: number;
-  /** Called with the value after it was copied. */
+  /** Called after the value was copied. */
   onCopy?: (value: string) => void;
+  /** Accessible name of the button; defaults to the UI string `copy`. */
+  copyLabel?: string;
+  /** Announced and shown on the button after copying; defaults to the UI string `copied`. */
+  copiedLabel?: string;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CopyFieldPart>;
 }
 
-/**
- * Read-only value with a button that copies it. After a copy the button text changes and a polite
- * `role="status"` region announces it; if the clipboard refuses, nothing changes.
- */
 export function CopyField({
   label,
   value,
+  onCopy,
   copyLabel,
   copiedLabel,
-  resetDelay = 1500,
-  onCopy,
   className,
   classNames,
   ...props
 }: CopyFieldProps) {
   const strings = useUiStrings();
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const copy = copyLabel ?? strings.copy;
-  const done = copiedLabel ?? strings.copied;
-  const text = copied ? done : copy;
-
-  useEffect(() => {
-    return () => {
-      if (timer.current !== null) clearTimeout(timer.current);
-    };
-  }, []);
-
-  async function onClick() {
-    const ok = await copyText(value);
-    if (timer.current !== null) clearTimeout(timer.current);
-    setCopied(ok);
-    if (!ok) return;
-    onCopy?.(value);
-    timer.current = setTimeout(() => setCopied(false), resetDelay);
-  }
+  const id = useId();
+  const { copied, copy } = useCopy(1500);
+  const buttonLabel = copied ? (copiedLabel ?? strings.copied) : (copyLabel ?? strings.copy);
 
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-card bg-surface-2 px-4 py-3",
-        classNames?.root,
-        className,
-      )}
-      {...props}
-    >
-      <div className="flex min-w-0 flex-[1_1_14rem] flex-col gap-1">
-        <span className={cn("text-ink-3 text-meta", classNames?.label)}>{label}</span>
-        <p
+    <div {...props} className={cn("flex min-w-0 flex-col gap-1.5", classNames?.root, className)}>
+      <label htmlFor={id} className={cn("font-semibold text-ink-2 text-meta", classNames?.label)}>
+        {label}
+      </label>
+      <div
+        className={cn(
+          "flex min-w-0 items-center gap-2 rounded-input border-control bg-surface-control pr-1 pl-3",
+          classNames?.box,
+        )}
+      >
+        <input
+          id={id}
+          readOnly
+          value={value}
+          onFocus={(event) => event.currentTarget.select()}
           className={cn(
-            "m-0 font-mono text-ink text-control [overflow-wrap:anywhere]",
+            "h-input min-w-0 flex-1 truncate bg-transparent font-mono text-control text-ink focus:outline-none",
             classNames?.value,
           )}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            void copy(value);
+            onCopy?.(value);
+          }}
+          className={cn(
+            "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 rounded-button px-2.5 font-semibold text-ink-2 text-meta hover:bg-surface-2 hover:text-ink focus-visible:focus-ring in-data-[density=touch]:h-11",
+            copied && "text-success",
+            classNames?.button,
+          )}
         >
-          {value}
-        </p>
+          {copied ? (
+            <Check aria-hidden="true" className="size-4" />
+          ) : (
+            <Copy aria-hidden="true" className="size-4" />
+          )}
+          <span>{buttonLabel}</span>
+        </button>
       </div>
-      <Button
-        variant="secondary"
-        aria-label={`${text}: ${label}`}
-        className={cn("shrink-0", classNames?.button)}
-        onClick={onClick}
-      >
-        {text}
-      </Button>
       <span role="status" className="sr-only">
-        {copied ? done : null}
+        {copied ? (copiedLabel ?? strings.copied) : null}
       </span>
     </div>
   );

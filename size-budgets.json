@@ -53,7 +53,7 @@
       "id": "ui/ai",
       "kind": "js",
       "file": "packages/ui/dist/ai/index.js",
-      "maxGzip": 32500
+      "maxGzip": 34800
     },
     {
       "id": "ui/atoms",

@@ -234,7 +234,7 @@ export const SegmentedKeepsSelection: Story = {
 
 export const SegmentedDeselectAndDisabled: Story = {
   render: () => (
-    <Segmented aria-label="Vista" defaultValue="dia" deselectable>
+    <Segmented aria-label="Vista" defaultValue="dia" allowDeselect>
       <SegmentedItem value="dia">Día</SegmentedItem>
       <SegmentedItem value="semana" disabled>
         Semana
@@ -254,5 +254,31 @@ export const SegmentedDeselectAndDisabled: Story = {
     await userEvent.click(mes as HTMLElement);
     await expect(mes).toHaveAttribute("aria-checked", "false");
     await expect(dia).toHaveAttribute("data-state", "off");
+  },
+};
+
+export const SegmentedOptionsKeepSelection: Story = {
+  render: () => (
+    <Segmented
+      aria-label="Vista"
+      defaultValue="dia"
+      allowDeselect={false}
+      block
+      options={[
+        { value: "dia", label: "Día" },
+        { value: "mes", label: "Mes" },
+      ]}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [dia, mes] = canvas.getAllByRole("radio");
+    await userEvent.click(dia as HTMLElement);
+    await expect(dia).toHaveAttribute("data-state", "on");
+    await userEvent.click(mes as HTMLElement);
+    await expect(mes).toHaveAttribute("data-state", "on");
+    await expect(dia).toHaveAttribute("data-state", "off");
+    await userEvent.click(mes as HTMLElement);
+    await expect(mes).toHaveAttribute("data-state", "on");
   },
 };

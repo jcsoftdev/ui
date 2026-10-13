@@ -25,18 +25,18 @@ export type TopbarPart =
   | "shortcut";
 
 export interface TopbarProps {
-  /** Breadcrumb trail in order; the last entry is the current view. */
-  breadcrumbs: string[];
+  /** Breadcrumb trail in order; the last entry is the current view. Nothing renders when absent or empty. */
+  breadcrumbs?: string[];
   /** Accessible name of the breadcrumb landmark. */
-  breadcrumbsLabel: string;
+  breadcrumbsLabel?: string;
   /** Menu button (shown when the `AppShell` container is under 900 px, matching the Sidebar drawer) that opens the sidebar drawer. Needs an `@container/app` ancestor, which `AppShell` provides. Omitted when not set. */
   onOpenMenu?: () => void;
   menuLabel?: string;
   /** Ref to the menu button so the opener can restore focus when the drawer closes. */
   menuButtonRef?: Ref<HTMLButtonElement>;
-  /** Called by the search trigger and by Cmd/Ctrl+K. Omit it to render a topbar without search: no trigger and no shortcut. */
+  /** Called by the search trigger and by Cmd/Ctrl+K. The trigger and the shortcut are absent without it. */
   onSearch?: () => void;
-  /** Accessible name of the search trigger. Falls back to `searchPlaceholder`. */
+  /** Accessible name of the search trigger; defaults to the placeholder. */
   searchLabel?: string;
   searchPlaceholder?: string;
   /** Slot between the search trigger and the end block (status, notifications, primary action). */
@@ -86,8 +86,9 @@ export function Topbar({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onSearch]);
 
-  const current = breadcrumbs.at(-1);
-  const previous = breadcrumbs.slice(0, -1);
+  const trail = breadcrumbs ?? [];
+  const current = trail.at(-1);
+  const previous = trail.slice(0, -1);
 
   return (
     <header
@@ -121,34 +122,36 @@ export function Topbar({
           </button>
         ) : null}
 
-        <nav
-          aria-label={breadcrumbsLabel}
-          className={cn(
-            "flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta",
-            classNames?.breadcrumbs,
-          )}
-        >
-          {previous.map((crumb) => (
-            <span
-              key={crumb}
-              className={cn(
-                "flex items-center gap-2 @max-[560px]/topbar:hidden",
-                classNames?.crumb,
-              )}
-            >
-              <span>{crumb}</span>
-              <span aria-hidden="true" className={cn("text-line-control", classNames?.separator)}>
-                /
-              </span>
-            </span>
-          ))}
-          <strong
-            aria-current="page"
-            className={cn("min-w-0 truncate font-semibold text-ink", classNames?.current)}
+        {trail.length > 0 ? (
+          <nav
+            aria-label={breadcrumbsLabel}
+            className={cn(
+              "flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta",
+              classNames?.breadcrumbs,
+            )}
           >
-            {current}
-          </strong>
-        </nav>
+            {previous.map((crumb) => (
+              <span
+                key={crumb}
+                className={cn(
+                  "flex items-center gap-2 @max-[560px]/topbar:hidden",
+                  classNames?.crumb,
+                )}
+              >
+                <span>{crumb}</span>
+                <span aria-hidden="true" className={cn("text-line-control", classNames?.separator)}>
+                  /
+                </span>
+              </span>
+            ))}
+            <strong
+              aria-current="page"
+              className={cn("min-w-0 truncate font-semibold text-ink", classNames?.current)}
+            >
+              {current}
+            </strong>
+          </nav>
+        ) : null}
 
         {onSearch ? (
           <button

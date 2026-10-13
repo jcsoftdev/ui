@@ -5,17 +5,17 @@ const meta = {
   title: "Forms/CopyField",
   component: CopyField,
   tags: ["autodocs"],
-  args: { label: "Webhook URL", value: "https://example.com/webhooks/8f3a2c9d" },
+  args: { label: "URL del webhook", value: "https://api.example.com/webhooks/9f2c1" },
   argTypes: {
     label: { control: "text" },
     value: { control: "text" },
     copyLabel: { control: "text" },
     copiedLabel: { control: "text" },
-    resetDelay: { control: "number" },
+    onCopy: { action: "copy" },
   },
   decorators: [
     (Story) => (
-      <div className="max-w-lg">
+      <div className="max-w-md">
         <Story />
       </div>
     ),
@@ -26,3 +26,5 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const SpanishLabels: Story = { args: { copyLabel: "Copiar", copiedLabel: "Copiado" } };

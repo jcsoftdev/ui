@@ -121,6 +121,23 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** A second measure of the same cell in the tooltip. */
+export const CellDetail: Story = {
+  args: {
+    cellDetail: (row, column, value) =>
+      value == null
+        ? []
+        : [
+            {
+              id: "count",
+              name: "Citas",
+              value: `${Math.round(value / 8) + ((row + column) % 3)}`,
+              color: "transparent",
+            },
+          ],
+  },
+};
+
 export const CellLabels: Story = {
   args: { cellLabels: true, height: 300 },
 };

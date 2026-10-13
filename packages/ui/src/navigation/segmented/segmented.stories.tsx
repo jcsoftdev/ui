@@ -11,7 +11,7 @@ const meta = {
     defaultValue: { control: "inline-radio", options: ["dia", "semana", "mes"] },
     value: { control: false },
     disabled: { control: "boolean" },
-    deselectable: { control: "boolean" },
+    allowDeselect: { control: "boolean" },
     onValueChange: { control: false },
     children: { control: false },
   },
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** Pressing the selected item again clears the selection. */
-export const Deselectable: Story = { args: { deselectable: true } };
+export const Deselectable: Story = { args: { allowDeselect: true } };
 
 export const Disabled: Story = { args: { disabled: true } };
 
@@ -80,4 +80,22 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const FromOptions: Story = {
+  render: (args) => (
+    <Segmented
+      {...args}
+      options={[
+        { value: "dia", label: "Día" },
+        { value: "semana", label: "Semana" },
+        { value: "mes", label: "Mes" },
+      ]}
+    />
+  ),
+};
+
+export const BlockWithoutDeselect: Story = {
+  args: { block: true, allowDeselect: false },
+  render: FromOptions.render,
 };

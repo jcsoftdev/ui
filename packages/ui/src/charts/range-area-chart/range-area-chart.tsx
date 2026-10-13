@@ -15,6 +15,7 @@ import { linearScale } from "../core/scales/linear.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
 import {
   type ChartLabels,
+  resolveAxisBound,
   resolveLabels,
   type ValueAxisOptions,
   type XValue,
@@ -174,8 +175,8 @@ function Plot({
     const lo = Math.min(...all);
     const hi = Math.max(...all);
     const zero = yAxis?.zero ?? (all.length > 0 && lo <= hi * 0.35);
-    const domainLo = yAxis?.min ?? (zero ? Math.min(0, lo) : lo);
-    const domainHi = yAxis?.max ?? hi;
+    const domainLo = resolveAxisBound(yAxis?.min, zero ? Math.min(0, lo) : lo);
+    const domainHi = resolveAxisBound(yAxis?.max, hi);
     const innerHeight = height - MARGIN.top - MARGIN.bottom;
     const probe = linearScale({
       domain: all.length ? [domainLo, domainHi] : [0, 1],

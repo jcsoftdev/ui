@@ -108,6 +108,55 @@ export const WithBrush: Story = {
   },
 };
 
+/** Appends a row and a footer to the shared tooltip. */
+export const CustomTooltipRows: Story = {
+  args: {
+    series: [{ id: "cortes", name: "Cortes", kind: "line", data: cuts }],
+    tooltipRows: ({ index, rows }) => {
+      const previous = cuts[index - 1];
+      const change = previous ? Math.round((((cuts[index] ?? 0) - previous) / previous) * 100) : 0;
+      return {
+        rows: [
+          ...rows,
+          {
+            id: "change",
+            name: "Vs día anterior",
+            value: `${change > 0 ? "+" : ""}${change} %`,
+            color: "transparent",
+            emphasis: true,
+          },
+        ],
+        footer: "Solo días laborables",
+      };
+    },
+  },
+};
+
+/** Every second label, and a value axis rounded up to a multiple of 200. */
+export const TickEveryAndAxisMax: Story = {
+  args: {
+    categories: Array.from({ length: 31 }, (_, i) => `${i + 1}`),
+    series: [
+      {
+        id: "ventas",
+        name: "Ventas",
+        kind: "column",
+        data: Array.from({ length: 31 }, (_, i) => 300 + ((i * 53) % 260)),
+      },
+    ],
+    categoryTickEvery: (index) => index % 5 === 0 || index === 30,
+    yAxis: { max: (dataMax) => Math.ceil(dataMax / 200) * 200 },
+  },
+};
+
+/** Dots only on the chosen points. */
+export const HighlightedMarkers: Story = {
+  args: {
+    series: [{ id: "cortes", name: "Cortes", kind: "line", data: cuts }],
+    markers: [3, 5],
+  },
+};
+
 export const Loading: Story = { args: { loading: true } };
 
 export const Empty: Story = { args: { categories: [], series: [] } };

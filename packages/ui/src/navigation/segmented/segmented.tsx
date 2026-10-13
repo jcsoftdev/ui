@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithRef, createContext, useContext } from "react";
+import { type ComponentPropsWithRef, createContext, type ReactNode, useContext } from "react";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import {
@@ -17,11 +17,18 @@ interface SegmentedContextValue {
   value: string;
   setValue: (value: string) => void;
   disabled: boolean;
-  deselectable: boolean;
+  block: boolean;
+  allowDeselect: boolean;
   getItemProps: GetItemProps | null;
 }
 
 const SegmentedContext = createContext<SegmentedContextValue | null>(null);
+
+export interface SegmentedOption {
+  value: string;
+  label: ReactNode;
+  disabled?: boolean | undefined;
+}
 
 export interface SegmentedProps
   extends Omit<ComponentPropsWithRef<"div">, "dir" | "defaultValue" | "onChange"> {
@@ -31,10 +38,14 @@ export interface SegmentedProps
   onValueChange?: ((value: string) => void) | undefined;
   /** Disables every item. */
   disabled?: boolean | undefined;
-  /** Lets a second press on the selected item clear the selection. By default the selected item stays selected. */
-  deselectable?: boolean | undefined;
   /** Set to `false` to put every item in the tab order instead of roving. Defaults to `true`. */
   rovingFocus?: boolean | undefined;
+  /** Items from data, rendered when no children are given. */
+  options?: SegmentedOption[] | undefined;
+  /** Full-width selector with equal-width, control-height items. */
+  block?: boolean | undefined;
+  /** Lets a second press on the selected item clear the selection. Defaults to `false`: the selected item stays selected. */
+  allowDeselect?: boolean | undefined;
   orientation?: RovingOrientation | undefined;
   dir?: RovingDirection | undefined;
   loop?: boolean | undefined;
@@ -42,7 +53,7 @@ export interface SegmentedProps
 
 /**
  * Exclusive selector for 2-4 options. Like Radix `type="single"`, it uses the `radiogroup` role.
- * Pressing the selected item keeps it selected; pass `deselectable` to let it clear instead.
+ * Pressing the selected item keeps it selected; pass `allowDeselect` to let it clear instead.
  */
 export function Segmented({
   className,
@@ -50,8 +61,11 @@ export function Segmented({
   defaultValue,
   onValueChange,
   disabled = false,
-  deselectable = false,
   rovingFocus = true,
+  options,
+  block = false,
+  allowDeselect = false,
+  children,
   orientation,
   dir = "ltr",
   loop = true,
@@ -74,7 +88,8 @@ export function Segmented({
         value,
         setValue,
         disabled,
-        deselectable,
+        block,
+        allowDeselect,
         getItemProps: rovingFocus ? roving.getItemProps : null,
       }}
     >
@@ -86,10 +101,18 @@ export function Segmented({
         ref={composedRef}
         onFocus={rovingFocus ? composeHandlers(onFocus, rovingOnFocus) : onFocus}
         className={cn(
-          "inline-flex max-w-full overflow-x-auto rounded-button bg-seg-track p-0.75",
+          "max-w-full overflow-x-auto rounded-button bg-seg-track p-0.75",
+          block ? "flex w-full" : "inline-flex",
           className,
         )}
-      />
+      >
+        {children ??
+          options?.map((option) => (
+            <SegmentedItem key={option.value} value={option.value} disabled={option.disabled}>
+              {option.label}
+            </SegmentedItem>
+          ))}
+      </div>
     </SegmentedContext.Provider>
   );
 }
@@ -128,10 +151,11 @@ export function SegmentedItem({
       {...item}
       onClick={composeHandlers(onClick, () => {
         if (!disabled)
-          context.setValue(nextSegmentedValue(context.value, value, context.deselectable));
+          context.setValue(nextSegmentedValue(context.value, value, context.allowDeselect));
       })}
       className={cn(
         "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-button px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",
+        context.block && "h-control flex-1 shrink justify-center",
         className,
       )}
     />
