@@ -1,6 +1,7 @@
 packages:
   - "packages/ui-tokens"
   - "packages/ui-core"
+  - "packages/ui-elements"
   - "packages/ui"
   - "examples/*"
   - "site"

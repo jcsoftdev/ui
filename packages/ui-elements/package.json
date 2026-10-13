@@ -1,0 +1,57 @@
+{
+  "name": "@jcsoftdev/ui-elements",
+  "version": "0.2.0",
+  "description": "ui-* custom elements (button, input, checkbox, switch, radio-group, dialog, popover, tooltip, tabs, toast) with precompiled token CSS and opt-in, per-feature Liquid Glass. No framework, no Tailwind.",
+  "author": "jcsoftdev",
+  "license": "MIT",
+  "homepage": "https://ui.jcsoftdev.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcsoftdev/ui.git",
+    "directory": "packages/ui-elements"
+  },
+  "bugs": {
+    "url": "https://github.com/jcsoftdev/ui/issues"
+  },
+  "keywords": ["web-components", "custom-elements", "form-associated", "design-system", "liquid-glass", "vanilla-js"],
+  "type": "module",
+  "sideEffects": false,
+  "files": ["dist", "README.md", "LICENSE"],
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./button": { "types": "./dist/button/button.d.ts", "import": "./dist/button/button.js" },
+    "./input": { "types": "./dist/input/input.d.ts", "import": "./dist/input/input.js" },
+    "./checkbox": { "types": "./dist/checkbox/checkbox.d.ts", "import": "./dist/checkbox/checkbox.js" },
+    "./switch": { "types": "./dist/switch/switch.d.ts", "import": "./dist/switch/switch.js" },
+    "./radio-group": { "types": "./dist/radio-group/radio-group.d.ts", "import": "./dist/radio-group/radio-group.js" },
+    "./css/*": "./dist/css/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "css": "node scripts/build-css.mjs",
+    "build": "rm -rf dist && node scripts/build-css.mjs && tsc -p tsconfig.build.json && node scripts/build-css.mjs --dist",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "node scripts/build-css.mjs && tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "test": "pnpm build && node --test test/*.test.mjs && vitest run --project unit --passWithNoTests",
+    "test:browser": "node scripts/build-css.mjs && vitest run --project browser",
+    "check:treeshake": "node test/treeshake.mjs",
+    "check:pack": "node ../../scripts/pack-check.mjs packages/ui-tokens packages/ui-core packages/ui-elements"
+  },
+  "dependencies": {
+    "@jcsoftdev/ui-core": "workspace:^",
+    "@jcsoftdev/ui-tokens": "workspace:^"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^20",
+    "@vitest/browser-playwright": "4.1.11",
+    "esbuild": "^0.28.2",
+    "playwright": "1.64.0",
+    "typescript": "^5.5.4",
+    "vitest": "4.1.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

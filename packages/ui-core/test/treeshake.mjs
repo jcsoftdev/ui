@@ -21,7 +21,8 @@ export async function eagerModules(code, resolveDir = dist) {
     logLevel: "silent",
   });
   const outputs = result.metafile.outputs;
-  const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint);
+  // Dynamic-import chunks also carry `entryPoint`; the consumer is the stdin one.
+  const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint === "<stdin>");
   const eager = new Set();
   const visit = (name) => {
     if (eager.has(name)) return;

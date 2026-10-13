@@ -23,6 +23,7 @@ async function measure({ file, kind }) {
     const outdir = join(root, ".size-check");
     const result = await build({
       entryPoints: [path],
+      absWorkingDir: root,
       bundle: true,
       splitting: true,
       minify: true,
@@ -36,7 +37,8 @@ async function measure({ file, kind }) {
     });
     const files = new Map(result.outputFiles.map((out) => [out.path, out.contents]));
     const outputs = result.metafile.outputs;
-    const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint);
+    // Dynamic-import chunks also carry `entryPoint`; pick the chunk of the measured file itself.
+    const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint === file.replace(/^\.\//, ""));
     const eager = new Set();
     const visit = (name) => {
       if (eager.has(name)) return;

@@ -68,7 +68,7 @@ Route legend: inline = written by this worker in the worktree; no further delega
   - Acceptance: pure-math golden parity with the React kit (fields, vars, springs) by importing
     both sources in tests; attach loads only the features its resolved options need (Chromium
     test with module spies); treeshake check per tier; cleanup restores the element.
-- [ ] T3 ui-elements scaffold (define, CSS build, base classes, material hook) + button, input,
+- [x] T3 ui-elements scaffold (define, CSS build, base classes, material hook) + button, input,
   checkbox, switch, radio-group. Route: inline.
   - Acceptance: form association (FormData, reset, disabled, required validity), ARIA roles and
     states, keyboard (Space/Enter/arrows), custom prefix; Chromium tests.
@@ -111,3 +111,14 @@ trusted-publisher setup by the maintainer before they are added to `.github/publ
   + refraction 7811, default look 10851, Crystal 12197. Route: inline.
   Note: core filter ids are `ui-liquid-lens-N` in `#ui-liquid-defs` (React uses `ui-glass-*`) so
   both engines can share a page.
+- T3 (slice c): ui-elements scaffold + button, input, checkbox, switch, radio-group. Checks
+  observed: lint (4 specificity warnings, no errors), typecheck, SSR 6 (node), browser 13
+  (Chromium: AX tree roles/states via CDP, FormData/reset/disabled/required, Space/Enter/arrows,
+  custom prefix; material: solid button fetches nothing, liquid loads lens+specular only, crystal
+  layer in the shadow root, `lens="off"` keeps the frosted blur), check:treeshake (each element
+  loads only itself; no liquid module eagerly), check:pack (ui-tokens 3, ui-core 20, ui-elements 6
+  entries). Gzip (eager): define-all 6032, button 2327, input 1796, checkbox 2108, switch 2046,
+  radio-group 2757; lazy `material="liquid"` chunk 4399 (+ the core tiers it pulls).
+  Fix: treeshake/size scripts picked the first output with `entryPoint`, which can be a
+  dynamic-import chunk; they now match the entry file. Re-measured core: unchanged (+-5 B).
+  Route: inline.

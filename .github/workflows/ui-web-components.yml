@@ -48,6 +48,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @jcsoftdev/ui-tokens build
       - run: pnpm --filter @jcsoftdev/ui-core build
+      - run: pnpm --filter @jcsoftdev/ui-elements build
       - name: Resolve Playwright version
         id: playwright
         run: echo "version=$(node -p "require('./packages/ui-core/node_modules/playwright/package.json').version")" >> "$GITHUB_OUTPUT"
