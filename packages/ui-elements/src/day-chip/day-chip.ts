@@ -5,8 +5,9 @@ import {
   ElementBase,
   emit,
 } from "../internal/base.js";
-import calendarCss from "../internal/e12-calendar.css.js";
-import { type CalendarMarker, markerButton } from "../internal/e12-calendar.js";
+import type { CalendarMarker } from "../internal/e12-cal.js";
+import chipCss from "../internal/e12-chip.css.js";
+import { markerButton } from "../internal/e12-chip.js";
 import css from "./day-chip.css.js";
 
 /**
@@ -27,7 +28,7 @@ export class UiDayChip extends ElementBase {
   constructor() {
     super();
     this.#root = this.attachShadow({ mode: "open", delegatesFocus: true });
-    adoptStyles(this.#root, calendarCss);
+    adoptStyles(this.#root, chipCss);
     adoptStyles(this.#root, css);
     this.#root.addEventListener("click", (event) => {
       if ((event.target as Element).closest("button")) emit(this, "open", { id: this.marker.id });

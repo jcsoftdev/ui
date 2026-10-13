@@ -122,3 +122,8 @@
     display: flex;
   }
 }
+[data-ui="month-view"] [data-cal="more"]:focus-visible,
+[data-ui="month-view"] [data-cal="dot"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}

@@ -1,14 +1,13 @@
 import { formatWeekday, monthGrid, parseDate } from "@jcsoftdev/ui-core/date";
 import { type DefineOptions, defineElement } from "../internal/base.js";
-import {
-  type CalendarEvent,
-  type CalendarMarker,
-  type CalendarTone,
-  CalendarView,
-  cal,
-  eventButton,
-  markerButton,
-} from "../internal/e12-calendar.js";
+import type { CalendarEvent, CalendarMarker, CalendarTone } from "../internal/e12-cal.js";
+import { cal } from "../internal/e12-cal.js";
+import chipCss from "../internal/e12-chip.css.js";
+import { markerButton } from "../internal/e12-chip.js";
+import eventCss from "../internal/e12-event.css.js";
+import { eventButton } from "../internal/e12-event.js";
+import { CalendarView } from "../internal/e12-view.js";
+import { weekStartOf } from "../internal/e12-week-start.js";
 import css from "./month-view.css.js";
 
 const MAX_VISIBLE_ITEMS = 3;
@@ -42,6 +41,7 @@ export class UiMonthView extends CalendarView {
 
   protected readonly name = "month-view";
   protected readonly css = css;
+  protected readonly shared = [chipCss, eventCss];
   #formatMore?: (count: number) => string;
 
   /** Label of the overflow button; overrides `more-label`. */
@@ -62,7 +62,7 @@ export class UiMonthView extends CalendarView {
     if (!month) return [];
     const { locale, weekStartsOn, today, events, markers } = {
       locale: this.locale,
-      weekStartsOn: this.weekStartsOn,
+      weekStartsOn: weekStartOf(this, this.locale),
       today: this.today,
       events: this.events,
       markers: this.markers,

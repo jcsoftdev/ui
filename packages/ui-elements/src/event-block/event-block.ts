@@ -5,8 +5,9 @@ import {
   ElementBase,
   emit,
 } from "../internal/base.js";
-import calendarCss from "../internal/e12-calendar.css.js";
-import { type CalendarEvent, type CalendarTone, eventButton } from "../internal/e12-calendar.js";
+import type { CalendarEvent, CalendarTone } from "../internal/e12-cal.js";
+import eventCss from "../internal/e12-event.css.js";
+import { eventButton } from "../internal/e12-event.js";
 import css from "./event-block.css.js";
 
 const TONES: readonly CalendarTone[] = ["accent", "neutral", "success", "danger", "warning"];
@@ -41,7 +42,7 @@ export class UiEventBlock extends ElementBase {
   constructor() {
     super();
     this.#root = this.attachShadow({ mode: "open", delegatesFocus: true });
-    adoptStyles(this.#root, calendarCss);
+    adoptStyles(this.#root, eventCss);
     adoptStyles(this.#root, css);
     this.#root.addEventListener("click", (event) => {
       if ((event.target as Element).closest("button")) emit(this, "open", { id: this.event.id });

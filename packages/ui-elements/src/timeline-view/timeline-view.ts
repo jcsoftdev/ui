@@ -1,6 +1,11 @@
 import { formatMonthShort, formatWeekdayAndDay } from "@jcsoftdev/ui-core/date";
 import { type DefineOptions, defineElement } from "../internal/base.js";
-import { CalendarView, cal, eventButton, markerButton } from "../internal/e12-calendar.js";
+import { cal } from "../internal/e12-cal.js";
+import chipCss from "../internal/e12-chip.css.js";
+import { markerButton } from "../internal/e12-chip.js";
+import eventCss from "../internal/e12-event.css.js";
+import { eventButton } from "../internal/e12-event.js";
+import { CalendarView } from "../internal/e12-view.js";
 import css from "./timeline-view.css.js";
 
 /**
@@ -27,6 +32,7 @@ export class UiTimelineView extends CalendarView {
 
   protected readonly name = "timeline-view";
   protected readonly css = css;
+  protected readonly shared = [chipCss, eventCss];
   #hidden?: string[];
 
   /** Dates left out of the list unless they are today. */

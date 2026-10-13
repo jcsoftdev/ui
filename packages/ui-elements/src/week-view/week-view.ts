@@ -6,7 +6,13 @@ import {
 } from "@jcsoftdev/ui-core/date";
 import { layoutDayEvents } from "@jcsoftdev/ui-core/date/layout";
 import { type DefineOptions, defineElement } from "../internal/base.js";
-import { CalendarView, cal, eventButton, markerButton } from "../internal/e12-calendar.js";
+import { cal } from "../internal/e12-cal.js";
+import chipCss from "../internal/e12-chip.css.js";
+import { markerButton } from "../internal/e12-chip.js";
+import eventCss from "../internal/e12-event.css.js";
+import { eventButton } from "../internal/e12-event.js";
+import { CalendarView } from "../internal/e12-view.js";
+import { weekStartOf } from "../internal/e12-week-start.js";
 import css from "./week-view.css.js";
 
 const INITIAL_SCROLL_HOUR = 8;
@@ -42,6 +48,7 @@ export class UiWeekView extends CalendarView {
 
   protected readonly name = "week-view";
   protected readonly css = css;
+  protected readonly shared = [chipCss, eventCss];
 
   /** Keeps the scroll position across renders; the first one starts at 08:00. */
   protected override render(): void {
@@ -58,7 +65,7 @@ export class UiWeekView extends CalendarView {
     if (!week) return [];
     const locale = this.locale;
     const { today, events, markers } = this;
-    const days = weekDays(week, this.weekStartsOn);
+    const days = weekDays(week, weekStartOf(this, locale));
     const shaded = new Set(this.shadedDates);
     const currentTime = this.getAttribute("current-time");
     const [from, to] = (this.getAttribute("working-hours") ?? "").split(/[,-]/).map(Number);
