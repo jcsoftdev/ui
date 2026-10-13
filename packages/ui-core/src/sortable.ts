@@ -123,7 +123,11 @@ export interface SortableOptions<T> {
   lists: () => readonly SortableList<T>[];
   getId: Identify<T>;
   /** Called after a drop (pointer release or keyboard drop). Apply the move to your data. */
-  onMove: (move: SortableMove, lists: SortableList<T>[]) => void;
+  /**
+   * Return `false` when the owner refused the move: the drop announcement is skipped and
+   * "Move cancelled: X stays in Y." is announced instead.
+   */
+  onMove: (move: SortableMove, lists: SortableList<T>[]) => boolean | void;
   enforceLimit?: boolean;
   /** Pixels before a pointer press becomes a drag. Default 4. */
   threshold?: number;
@@ -134,6 +138,11 @@ export interface SortableOptions<T> {
   onDragEnd?: () => void;
   /** Keyboard: called with the working copy each time a held item moves, so the owner re-renders. */
   onDraft?: (lists: SortableList<T>[] | null) => void;
+  /** Right-to-left: ArrowLeft goes to the next list and ArrowRight to the previous one. */
+  rtl?: () => boolean;
+  /** Names used in announcements instead of ids. */
+  itemLabel?: (item: T) => string;
+  listLabel?: (list: SortableList<T>) => string;
   /** Restricts the pointer drag start (touch usually requires a handle). */
   canStartPointer?: (event: PointerEvent, item: HTMLElement) => boolean;
 }
@@ -161,6 +170,11 @@ const KEYS: readonly string[] = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDow
 export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>): Sortable<T> {
   const threshold = options.threshold ?? 4;
   const say = (message: string) => options.announce?.(message);
+  const nameOf = (id: string) => {
+    const at = locateItem(options.lists(), id, options.getId);
+    const item = at ? options.lists().find((l) => l.id === at.listId)?.items[at.index] : undefined;
+    return item !== undefined ? (options.itemLabel?.(item) ?? id) : id;
+  };
   let grabbed: string | undefined;
   let draft: SortableList<T>[] | null = null;
   let stopPointer: (() => void) | undefined;
@@ -170,10 +184,28 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
     const el = (target as Element | null)?.closest?.<HTMLElement>("[data-sortable-item]");
     return el && root.contains(el) ? el : null;
   };
-  const describe = (current: readonly SortableList<T>[], id: string, verb: string) => {
+  const messageFor = (current: readonly SortableList<T>[], id: string, verb: string) => {
     const at = locateItem(current, id, options.getId);
     const list = current.find((l) => l.id === at?.listId);
-    if (at && list) say(`${verb} ${id}: ${list.id}, ${at.index + 1} / ${list.items.length}.`);
+    const item = list?.items[at?.index ?? 0];
+    if (!at || !list || item === undefined) return undefined;
+    const name = options.itemLabel?.(item) ?? id;
+    return `${verb} ${name}: ${options.listLabel?.(list) ?? list.id}, ${at.index + 1} / ${list.items.length}.`;
+  };
+  const describe = (current: readonly SortableList<T>[], id: string, verb: string) => {
+    const message = messageFor(current, id, verb);
+    if (message) say(message);
+  };
+  /** Reports a drop to the owner, then announces it, or the refusal when the owner returns false. */
+  const commit = (move: SortableMove, next: SortableList<T>[], id: string) => {
+    const dropped = messageFor(next, id, "Dropped");
+    if (options.onMove(move, next) === false) {
+      const at = locateItem(options.lists(), id, options.getId);
+      const list = options.lists().find((l) => l.id === at?.listId);
+      say(
+        `Move cancelled: ${nameOf(id)} stays in ${list ? (options.listLabel?.(list) ?? list.id) : "its list"}.`,
+      );
+    } else if (dropped) say(dropped);
   };
   const refocus = (id: string) =>
     root.querySelector<HTMLElement>(`[data-sortable-item="${escapeId(id)}"]`)?.focus();
@@ -199,7 +231,7 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
     draft = null;
     options.onDraft?.(null);
     refocus(id);
-    say(`Cancelled: ${id} returns to its place.`);
+    say(`Cancelled: ${nameOf(id)} returns to its place.`);
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -212,11 +244,13 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
       if (grabbed === id) {
         const move = moveFromDraft(id);
         const final = draft;
-        describe(final ?? options.lists(), id, "Dropped");
         grabbed = undefined;
         draft = null;
-        if (move && final) options.onMove(move, final);
-        else options.onDraft?.(null);
+        if (move && final) commit(move, final, id);
+        else {
+          describe(options.lists(), id, "Dropped");
+          options.onDraft?.(null);
+        }
       } else if (grabbed === undefined) {
         grabbed = id;
         draft = [...options.lists()];
@@ -233,11 +267,26 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
     if (KEYS.includes(key)) {
       event.preventDefault();
       const base = lists();
-      const target = keyboardTarget(base, id, key as SortableKey, options.getId);
+      const flip = options.rtl?.() === true;
+      const arrow =
+        flip && key === "ArrowLeft"
+          ? "ArrowRight"
+          : flip && key === "ArrowRight"
+            ? "ArrowLeft"
+            : key;
+      const target = keyboardTarget(base, id, arrow as SortableKey, options.getId);
       if (!target) return;
-      const result = moveItem(base, id, target.listId, target.index, options.getId, {
-        enforceLimit: options.enforceLimit,
-      });
+      const moveOptions = { enforceLimit: options.enforceLimit };
+      let result = moveItem(base, id, target.listId, target.index, options.getId, moveOptions);
+      if (!result && (arrow === "ArrowLeft" || arrow === "ArrowRight")) {
+        // A full list is skipped: the item goes to the next list in that direction with room.
+        const step = arrow === "ArrowRight" ? 1 : -1;
+        for (let at = base.findIndex((l) => l.id === target.listId) + step; !result; at += step) {
+          const next = base[at];
+          if (!next) break;
+          result = moveItem(base, id, next.id, target.index, options.getId, moveOptions);
+        }
+      }
       if (!result) {
         say("That list reached its limit.");
         return;
@@ -280,7 +329,7 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
       if (!active) {
         if (Math.hypot(e.clientX - startX, e.clientY - startY) < threshold) return;
         active = true;
-        say(`Dragging ${id}.`);
+        say(`Dragging ${nameOf(id)}.`);
       }
       latest = locate(e.clientX, e.clientY);
       options.onDragOver?.(latest, id);
@@ -295,12 +344,11 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
           enforceLimit: options.enforceLimit,
         });
         if (result) {
-          describe(result.lists, id, "Dropped");
-          options.onMove(result.move, result.lists);
+          commit(result.move, result.lists, id);
           return;
         }
       }
-      say(`Cancelled: ${id} returns to its place.`);
+      say(`Cancelled: ${nameOf(id)} returns to its place.`);
     };
     const onUp = () => finish(true);
     const onCancel = () => finish(false);

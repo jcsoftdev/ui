@@ -94,6 +94,9 @@ export function treeStep(rows: readonly TreeRow[], currentId: string, key: TreeK
   }
 }
 
+/** Lower case without diacritics, so "e" finds "Éxito". */
+const fold = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
 /** Next row whose name starts with `query`, searching after `currentId` and wrapping. */
 export function treeTypeahead(
   rows: readonly TreeRow[],
@@ -101,11 +104,11 @@ export function treeTypeahead(
   query: string,
 ): string | null {
   if (!query) return null;
-  const needle = query.toLowerCase();
+  const needle = fold(query);
   const start = rows.findIndex((row) => row.node.id === currentId);
   for (let step = 1; step <= rows.length; step += 1) {
     const row = rows[(start + step) % rows.length];
-    if (row?.node.name.toLowerCase().startsWith(needle)) return row.node.id;
+    if (row && fold(row.node.name).startsWith(needle)) return row.node.id;
   }
   return null;
 }
@@ -142,6 +145,8 @@ export interface TreeOptions<T extends TreeNode = TreeNode> {
   rowElement?: (id: string) => HTMLElement | null;
   /** Typeahead reset delay in ms. Default 600. */
   typeaheadTimeout?: number;
+  /** Right-to-left: ArrowLeft opens and ArrowRight closes. Default `() => false`. */
+  rtl?: () => boolean;
 }
 
 export interface Tree {
@@ -228,7 +233,14 @@ export function createTree(root: HTMLElement, options: TreeOptions): Tree {
     if (!row) return;
     if (TREE_KEYS.includes(event.key)) {
       event.preventDefault();
-      const step = treeStep(list, id, event.key as TreeKey);
+      const flip = options.rtl?.() === true;
+      const key =
+        flip && event.key === "ArrowLeft"
+          ? "ArrowRight"
+          : flip && event.key === "ArrowRight"
+            ? "ArrowLeft"
+            : event.key;
+      const step = treeStep(list, id, key as TreeKey);
       if (!step) return;
       if (step.type === "focus") focus(step.id);
       else toggle(step.id, step.type === "expand");

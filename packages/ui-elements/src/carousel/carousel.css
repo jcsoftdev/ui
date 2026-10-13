@@ -1,0 +1,154 @@
+[data-ui="carousel"] {
+  /* Component variables are --ui-carousel-*; everything else must be a ui-tokens token. */
+  --ui-carousel-gap: 12px;
+  --ui-carousel-per-view: 1;
+  display: flex;
+  position: relative;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--ui-carousel-gap);
+  container: ui-carousel / inline-size;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+[data-ui="carousel"][hidden] {
+  display: none;
+}
+/* A container query cannot style its own container: the variable lives on the track. */
+@container ui-carousel (min-width: 32rem) {
+  [data-ui="carousel"] > [data-ui-part="track"] {
+    --ui-carousel-per-view: 2;
+  }
+}
+@container ui-carousel (min-width: 48rem) {
+  [data-ui="carousel"] > [data-ui-part="track"] {
+    --ui-carousel-per-view: 3;
+  }
+}
+[data-ui="carousel"] > [data-ui-part="track"] {
+  display: flex;
+  gap: var(--ui-carousel-gap);
+  overflow-x: auto;
+  border-radius: var(--radius-card);
+  outline: none;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+[data-ui="carousel"] > [data-ui-part="track"]::-webkit-scrollbar {
+  display: none;
+}
+[data-ui="carousel"] > [data-ui-part="track"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="carousel"] [data-ui-slide] {
+  flex: 0 0
+    calc(
+      (100% - (var(--ui-carousel-per-view) - 1) * var(--ui-carousel-gap)) /
+      var(--ui-carousel-per-view)
+    );
+  min-width: 0;
+  scroll-snap-align: start;
+}
+[data-ui="carousel"] > [data-ui-part="controls"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-carousel-gap);
+}
+[data-ui="carousel"] > [data-ui-part="controls"][hidden] {
+  display: none;
+}
+[data-ui="carousel"] > [data-ui-part="pause"] {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 8px;
+  inset-inline-end: 8px;
+}
+[data-ui="carousel"] > [data-ui-part="pause"][hidden] {
+  display: none;
+}
+[data-ui="carousel"] > [data-ui-part="status"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-ui="carousel"] [data-ui-part="dots"] {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+[data-ui="carousel"] > [data-ui-part="pause"],
+[data-ui="carousel"] [data-ui-part="controls"] > button {
+  display: inline-flex;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--radius-button);
+  background: var(--surface-control);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+[data-ui="carousel"] > [data-ui-part="pause"]:hover,
+[data-ui="carousel"] [data-ui-part="controls"] > button:hover {
+  color: var(--ink);
+}
+[data-ui="carousel"] [data-ui-part="previous"] svg,
+[data-ui="carousel"] [data-ui-part="next"] svg {
+  transition: transform var(--motion-duration) var(--motion-ease);
+}
+[data-ui="carousel"] [data-ui-part="previous"] svg {
+  transform: scaleX(-1);
+}
+[data-ui="carousel"] :is([data-ui-part="previous"], [data-ui-part="next"]):disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+[data-ui="carousel"]:dir(rtl) [data-ui-part="previous"] svg {
+  transform: none;
+}
+[data-ui="carousel"]:dir(rtl) [data-ui-part="next"] svg {
+  transform: scaleX(-1);
+}
+[data-ui="carousel"] [data-ui-part="dot"] {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-badge);
+  background: var(--line-strong);
+  cursor: pointer;
+  transition: width var(--motion-duration) var(--motion-ease);
+}
+[data-ui="carousel"] [data-ui-part="dot"]:hover {
+  background: var(--ink-3);
+}
+[data-ui="carousel"] [data-ui-part="dot"][aria-current="true"] {
+  width: 20px;
+  background: var(--accent);
+}
+[data-ui="carousel"] button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="carousel"] > [data-ui-part="track"] {
+    scroll-behavior: auto;
+  }
+  [data-ui="carousel"] [data-ui-part="dot"],
+  [data-ui="carousel"] svg {
+    transition: none;
+  }
+}
