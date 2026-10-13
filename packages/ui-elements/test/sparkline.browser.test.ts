@@ -1,9 +1,16 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineSparkline } from "../src/sparkline/sparkline.ts";
 import { ax, frame, mount, wait } from "./setup.ts";
 
 beforeAll(() => defineSparkline());
+/** The real mouse rests on a corner, so a sparkline mounted under the last test's pointer is not hovered. */
+beforeEach(async () => {
+  const park = mount(
+    '<i id="park" style="position:fixed;right:0;bottom:0;width:6px;height:6px"></i>',
+  );
+  await userEvent.hover(park.firstElementChild as Element);
+});
 afterEach(() => {
   document.body.innerHTML = "";
 });
