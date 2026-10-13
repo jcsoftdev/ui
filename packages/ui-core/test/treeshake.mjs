@@ -42,7 +42,19 @@ export async function eagerModules(code, resolveDir = dist) {
 // Behaviours are the top-level modules (src/<name>.ts), discovered so a new one needs no edit here.
 // The phase-1 set is fully independent; any behaviour may build on other behaviours, never on the
 // liquid engine.
-const independent = new Set(["focus", "roving", "popper", "dismiss", "typeahead", "state"]);
+const independent = new Set([
+  "focus",
+  "roving",
+  "popper",
+  "dismiss",
+  "typeahead",
+  "state",
+  "observe",
+  "clipboard",
+  "number",
+  "date",
+  "context",
+]);
 const behaviours = readdirSync(join(dist, "..", "src"))
   .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
   .map((file) => file.slice(0, -3));
