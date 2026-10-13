@@ -91,11 +91,17 @@ Contrast: defaults keep the current floors untouched. Lower `opacity`, a `tint` 
 Design: options -> `--liquid-*` custom properties (inherit, so a scope or the theme sets defaults; the lens engine and the CSS read the same variables). `Material` accepts `{ type: "liquid" | "liquid-clear", ...options }` next to the string values; `materialStyle()` returns the variables. Presets via `data-glass="liquid-clear|liquid-regular|liquid-thick"` (`[data-glass^="liquid"]` switch) in base.css. Zero runtime deps: in-house spring.
 
 ### Tasks
-- [ ] LC1 `LiquidGlassOptions`, defaults, presets, `liquidStyle`, `Material` object form (`materialClass` + `materialStyle`), CSS wiring in the liquid utilities (frost, saturation, brightness, tint, opacity, rim, shadow, radius), `data-glass` presets in base.css, wired into every component that takes `material`. Tests: mapping, defaults, golden frosted unchanged.
-- [ ] LC2 Optics: `profile` rim | full | dome in the displacement map, `bevelWidth`, `refraction`, specular angle/intensity, fresnel, grain, size-scaled thickness and shadow. Tests: no-crease/no-fold per profile.
-- [ ] LC3 Motion: in-house spring, press lift + swell + materialise by spring, drag with rubber band and velocity squash (mismatched X/Y springs, jelly settle), touch glow, pointer light. Tests: spring convergence, squash bounds, reduced motion.
-- [ ] LC4 Storybook playground with a control per option, README/docs page, CHANGELOG, screenshots.
-- [ ] LC5 Final checks: test, test:glass, test:stories, check:rsc, build:site.
+- [x] LC1 (2791dda) `LiquidGlassOptions`, defaults, presets, `liquidStyle`, `Material` object form (`materialClass` + `materialStyle`), CSS wiring in the liquid utilities (frost, saturation, brightness, tint, opacity, rim, shadow, radius), `data-glass` presets in base.css, wired into every component that takes `material`. Tests: mapping, defaults, golden frosted unchanged.
+- [x] LC2 (2791dda) Optics: `profile` rim | full | dome in the displacement map, `bevelWidth`, `refraction`, specular angle/intensity, fresnel, grain, size-scaled thickness and shadow. Tests: no-crease/no-fold per profile.
+- [x] LC3 (f6d3ca8) Motion: in-house spring, press lift + swell + materialise by spring, drag with rubber band and velocity squash (mismatched X/Y springs, jelly settle), touch glow, pointer light. Tests: spring convergence, squash bounds, reduced motion.
+- [x] LC4 (050ea3a) Storybook playground with a control per option, README/docs page, CHANGELOG, screenshots.
+- [x] LC5 (checks below) Final checks: test, test:glass, test:stories, check:rsc, build:site.
 
 ### Route declaration
 All tasks: inline by the single writer (the exploration read of 8 files was done before the first write; no parallel writers).
+
+### Result (2026-10-12)
+Commits: 94654f6 (plan), 2791dda (options, dome profile, grain, size-scaled shadow; LC1+LC2 landed together because the engine reads the variables), f6d3ca8 (springs and motion; also releases a removed element's filter without the throttle, which fixed the flaky "removed without cleanup" test), 050ea3a (story, docs, changelog).
+Checks: pnpm test 556 pass; test:glass 189 pass; test:stories 1411 pass; check:rsc ok (202 server modules, no hooks); build:site 435 pages; check:docs-examples, check:treeshake, check:dist-imports ok; tsc clean; biome 10 pre-existing warnings.
+Screenshots: scratchpad `liquid5/` (taken with Playwright from the package, the chrome-devtools MCP was not available in this session).
+Open: dome peaks at the corners (weaker at wall midpoints than full, by design for fold safety); motion only runs where the lens runs (Chromium); `--liquid-*-filter` tokens are now reference-only; contrast floor decision still pending.
