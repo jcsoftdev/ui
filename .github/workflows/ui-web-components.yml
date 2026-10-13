@@ -61,3 +61,5 @@ jobs:
         run: pnpm --filter @jcsoftdev/ui-core exec playwright install --with-deps chromium
       - name: Browser tests (Chromium)
         run: pnpm test:browser
+      - name: Vanilla elements example (Chromium e2e + bundle split)
+        run: pnpm --filter @jcsoftdev/example-vanilla-elements test:e2e
