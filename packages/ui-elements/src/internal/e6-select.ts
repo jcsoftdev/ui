@@ -118,6 +118,15 @@ export abstract class SelectBase extends FormElement {
     return this.#trigger;
   }
 
+  override get value(): string {
+    return super.value;
+  }
+  /** Like a native select, a value that matches no option leaves nothing selected. */
+  override set value(value: string) {
+    const flat = this.#flat();
+    super.value = flat.length === 0 || flat.some((option) => option.value === value) ? value : "";
+  }
+
   override get defaultValue(): string {
     const attribute = this.getAttribute("value");
     if (attribute !== null) return attribute;
@@ -130,7 +139,10 @@ export abstract class SelectBase extends FormElement {
 
   override connectedCallback(): void {
     this.#observer ??= new MutationObserver((records) => {
-      if (records.some((record) => record.target !== this)) this.#rebuild();
+      const relevant = records.some(
+        (record) => !(record.type === "attributes" && record.target === this),
+      );
+      if (relevant) this.#rebuild();
     });
     this.#observer.observe(this, {
       childList: true,
@@ -148,7 +160,12 @@ export abstract class SelectBase extends FormElement {
   disconnectedCallback(): void {
     this.#observer?.disconnect();
     this.#material.stop();
+    this.#cancelExit?.();
+    this.#cancelExit = undefined;
+    this.#open = false;
     this.#teardown();
+    this.#popup.dataset.state = "closed";
+    this.#trigger.setAttribute("aria-expanded", "false");
     this.#popupHide();
   }
 
@@ -266,6 +283,17 @@ export abstract class SelectBase extends FormElement {
     this.#parse();
     this.#renderList();
     this.attributeChangedCallback("value");
+    this.#fallBackToAnOption();
+  }
+
+  /** A value whose option is gone falls back like a native select: the default, else the first enabled option. */
+  #fallBackToAnOption(): void {
+    const flat = this.#flat();
+    const current = this.value;
+    if (flat.length === 0 || current === "" || flat.some((option) => option.value === current))
+      return;
+    const candidates = [this.defaultValue, flat.find((option) => !option.disabled)?.value];
+    this.value = candidates.find((value) => flat.some((option) => option.value === value)) ?? "";
   }
 
   #renderList(): void {
@@ -299,8 +327,11 @@ export abstract class SelectBase extends FormElement {
 
   protected override update(): void {
     this.#trigger.disabled = this.disabled;
+    if (this.disabled && this.#open) this.hide();
     syncControlAria(this, this.#trigger, this.internals.labels as NodeListOf<HTMLLabelElement>);
     super.update();
+    if (this.value === "" && this.#flat().some((option) => option.value === ""))
+      this.internals.setFormValue("");
   }
 
   protected render(): void {

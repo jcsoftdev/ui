@@ -64,6 +64,17 @@ describe("ui-dropdown-menu", () => {
     expect((await ax("menuitem", "More"))?.properties.hasPopup).toBeTruthy();
   });
 
+  it("labels the menu by an id-less trigger and drops aria-controls on close", async () => {
+    const host = mount(MENU());
+    const trigger = host.querySelector<HTMLElement>("#trigger")!;
+    trigger.removeAttribute("id");
+    await userEvent.click(trigger);
+    expect(trigger.id).not.toBe("");
+    expect(content(host).getAttribute("aria-labelledby")).toBe(trigger.id);
+    await userEvent.keyboard("{Escape}");
+    expect(trigger.hasAttribute("aria-controls")).toBe(false);
+  });
+
   it("opens with the keyboard, roves, types ahead, selects and returns focus", async () => {
     const host = mount(MENU());
     const trigger = host.querySelector<HTMLElement>("#trigger")!;

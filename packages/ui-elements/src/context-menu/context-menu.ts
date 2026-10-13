@@ -64,7 +64,8 @@ export class UiContextMenu extends MenuRootElement {
   showAt(x: number, y: number): void {
     const content = this.content;
     if (!content) return;
-    this.#returnFocus = document.activeElement as HTMLElement | null;
+    const focused = document.activeElement as HTMLElement | null;
+    if (!this.open || !content.contains(focused)) this.#returnFocus = focused;
     if (!this.#anchor) {
       this.#anchor = document.createElement("span");
       this.#anchor.setAttribute("aria-hidden", "true");

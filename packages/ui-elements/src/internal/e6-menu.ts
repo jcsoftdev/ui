@@ -185,7 +185,7 @@ export class MenuContentElement extends AnchoredOverlay {
     this.dataset.state = "open";
     const anchor = this.anchorElement;
     if (anchor) {
-      if (anchor.id) this.setAttribute("aria-labelledby", anchor.id);
+      this.setAttribute("aria-labelledby", ensureId(anchor, "menu-trigger"));
       anchor.setAttribute("aria-controls", ensureId(this, "menu"));
     }
     const root = this.menuRoot;
@@ -266,6 +266,7 @@ export class MenuContentElement extends AnchoredOverlay {
 
   protected override closed(): void {
     this.#openings++;
+    this.anchorElement?.removeAttribute("aria-controls");
     this.menu?.destroy();
     this.menu = undefined;
     this.setAttribute("data-ui-menu-content", "");

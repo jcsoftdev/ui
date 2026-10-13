@@ -74,6 +74,23 @@ describe("ui-context-menu", () => {
     expect(document.activeElement).toBe(inside);
   });
 
+  it("keeps the original return target when showAt runs while the menu is open", async () => {
+    const host = mount(AREA);
+    const menu = host.querySelector<UiContextMenu>("ui-context-menu")!;
+    const inside = host.querySelector<HTMLElement>("#inside")!;
+    inside.focus();
+    await userEvent.keyboard("{Shift>}{F10}{/Shift}");
+    await wait(100);
+    expect(host.querySelector("ui-context-menu-content")!.contains(document.activeElement)).toBe(
+      true,
+    );
+    menu.showAt(80, 80);
+    await wait(100);
+    await userEvent.keyboard("{Escape}");
+    expect(menu.open).toBe(false);
+    expect(document.activeElement).toBe(inside);
+  });
+
   it("dismisses on an outside press without stealing focus, and a second right-click moves it", async () => {
     const host = mount(AREA);
     const menu = host.querySelector<UiContextMenu>("ui-context-menu")!;

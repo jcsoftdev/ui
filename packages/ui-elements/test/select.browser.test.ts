@@ -150,6 +150,56 @@ describe("ui-select", () => {
     expect(dialog.open).toBe(false);
   });
 
+  it("follows direct <option> children added or removed after connect, falling back like a native select", async () => {
+    const host = mount(
+      `<form><ui-select name="plan" aria-label="Plan"><option value="free">Free</option><option value="pro">Pro</option></ui-select></form>`,
+    );
+    const select = host.querySelector<UiSelect>("ui-select")!;
+    const form = host.querySelector("form")!;
+    await wait(60);
+    select.value = "pro";
+    select.append(
+      Object.assign(document.createElement("option"), { value: "team", textContent: "Team" }),
+    );
+    await wait(30);
+    expect(option(select, "team")).toBeTruthy();
+    select.value = "team";
+    select.querySelector("option[value=team]")!.remove();
+    await wait(30);
+    expect(option(select, "team")).toBeNull();
+    expect(select.value).toBe("free");
+    expect(new FormData(form).get("plan")).toBe("free");
+    expect(select.shadowRoot!.querySelector("[part=value]")!.textContent).toBe("Free");
+  });
+
+  it("rejects a value that is not an option and submits an empty-valued option as name=", async () => {
+    const host = mount(
+      `<form><ui-select name="plan" aria-label="Plan"><option value="">None</option><option value="pro">Pro</option></ui-select></form>`,
+    );
+    const select = host.querySelector<UiSelect>("ui-select")!;
+    await wait(60);
+    select.value = "nope";
+    expect(select.value).toBe("");
+    select.value = "pro";
+    select.value = "";
+    expect([...new FormData(host.querySelector("form")!).entries()]).toEqual([["plan", ""]]);
+  });
+
+  it("closes when disabled and when disconnected while open", async () => {
+    const host = mount(SELECT());
+    const select = host.querySelector<UiSelect>("ui-select")!;
+    await wait(60);
+    select.show();
+    select.disabled = true;
+    await wait(30);
+    expect(select.open).toBe(false);
+    select.disabled = false;
+    select.show();
+    select.remove();
+    expect(select.open).toBe(false);
+    expect(trigger(select).getAttribute("aria-expanded")).toBe("false");
+  });
+
   it("works under a custom prefix", async () => {
     defineSelect({ prefix: "acme" });
     const host = mount(

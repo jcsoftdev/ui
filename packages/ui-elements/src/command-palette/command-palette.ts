@@ -129,7 +129,10 @@ export class UiCommandPalette extends ElementBase {
     this.#panel ??= this.#build();
     this.#observer ??= new MutationObserver((records) => {
       const own = this.#panel;
-      if (!this.#items && records.some((record) => !own?.contains(record.target)))
+      if (
+        !this.#items &&
+        records.some((record) => record.target !== this && !own?.contains(record.target))
+      )
         this.#renderItems();
     });
     this.#observer.observe(this, {
@@ -297,8 +300,13 @@ export class UiCommandPalette extends ElementBase {
       group.append(heading, ...items.map(row));
       nodes.push(group);
     }
+    const activeValue = this.#listbox.active?.dataset.value;
     this.#list.replaceChildren(...nodes);
     this.#listbox.refresh();
+    if (activeValue !== undefined)
+      this.#listbox.setActive(
+        this.#listbox.options().find((node) => node.dataset.value === activeValue),
+      );
     this.#updateResults();
   }
 
@@ -311,9 +319,10 @@ export class UiCommandPalette extends ElementBase {
   #updateResults(): void {
     const count = this.#listbox?.count ?? 0;
     const template = this.getAttribute("result-label") ?? "{count} results";
-    this.#count.textContent = this.formatResultCount
+    const text = this.formatResultCount
       ? this.formatResultCount(count)
       : template.replace("{count}", String(count));
+    if (this.#count.textContent !== text) this.#count.textContent = text;
     this.#empty.hidden = count > 0;
   }
 

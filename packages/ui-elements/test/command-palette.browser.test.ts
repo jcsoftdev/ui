@@ -71,6 +71,26 @@ describe("ui-command-palette", () => {
     expect(input(host).placeholder).toBe("Type a command");
   });
 
+  it("keeps aria-activedescendant on a live node when its own open attribute changes", async () => {
+    const { host, palette } = setup();
+    palette.items = undefined;
+    for (const item of items()) {
+      const row = document.createElement("ui-command-palette-item");
+      row.setAttribute("value", item.id);
+      row.textContent = item.label;
+      palette.append(row);
+    }
+    await wait(30);
+    await userEvent.click(host.querySelector("#opener")!);
+    await wait(60);
+    const active = () =>
+      document.getElementById(input(host).getAttribute("aria-activedescendant")!);
+    expect(active()?.isConnected).toBe(true);
+    palette.setAttribute("open", "");
+    await wait(30);
+    expect(active()?.isConnected).toBe(true);
+  });
+
   it("filters and ranks as you type, announces the count and shows the empty state", async () => {
     const { host } = setup();
     await userEvent.click(host.querySelector("#opener")!);
