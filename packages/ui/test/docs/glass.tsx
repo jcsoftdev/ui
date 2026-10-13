@@ -30,6 +30,16 @@ export function LiquidCards() {
 }
 // #endregion
 
+// #region crystal
+export function Crystal() {
+  return (
+    <Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
+      <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">Liquid Glass</span>
+    </Card>
+  );
+}
+// #endregion
+
 // #region lens
 export function Lens() {
   const ref = useGlassLens<HTMLDivElement>();

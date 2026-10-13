@@ -169,10 +169,14 @@ export function ConfiguredLiquid() {
 
 `profile: "crystal"` (and the `crystal` preset, `data-glass="liquid-crystal"`) is the look of a thick convex piece of acrylic: the backdrop is **minified** (the surface shows a wider area than it covers, squeezed in), bent hard towards the rim, split into colour fringes at the edge, with no frost, no veil and no tint, only a thin bright edge.
 
-```tsx
-<Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
-  <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">Liquid Glass</span>
-</Card>
+```tsx region=crystal
+export function Crystal() {
+  return (
+    <Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
+      <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">Liquid Glass</span>
+    </Card>
+  );
+}
 ```
 
 - `refraction` goes from 0 to 2 for this profile (the other profiles treat anything above 1 as 1). A minifying map `p -> p (1 + k s(t))` has a positive Jacobian for every `k`, so it cannot fold; the offset is capped at 260 px to bound the work.
