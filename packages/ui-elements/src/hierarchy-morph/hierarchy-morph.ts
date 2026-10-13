@@ -297,7 +297,7 @@ export class UiHierarchyMorph extends HierarchyChart {
       () => svg("text", { "data-label": "", "dominant-baseline": "central" }),
       (el, { shape, kind, text, opacity }) => {
         el.textContent = text;
-        const rect = kind === "rect" && shape.rectLabel;
+        const rect = kind === "rect" ? shape.rectLabel : null;
         el.setAttribute("x", `${rect ? rect.x : shape.sectorCenter.x}`);
         el.setAttribute("y", `${rect ? rect.y : shape.sectorCenter.y}`);
         el.setAttribute("text-anchor", rect ? "start" : "middle");

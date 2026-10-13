@@ -32,7 +32,10 @@ const tree = buildHierarchy({
 const format = (v: number) => `${v}`;
 
 describe("hierarchy helpers match the React kit", async () => {
-  const react = await import("../../ui/src/charts/core/hierarchy-chart.tsx");
+  const reactPath = new URL("../../ui/src/charts/core/hierarchy-chart.tsx", import.meta.url)
+    .pathname;
+  // biome-ignore lint/suspicious/noExplicitAny: the React module is loaded by path at run time
+  const react: any = await import(/* @vite-ignore */ reactPath);
   const nodes = descendants(tree);
 
   it("branchColor, levelStrength, nodePath, fitLabel and describeNode", () => {
@@ -86,11 +89,11 @@ describe("hierarchyNav", () => {
       name: "r",
       children: [{ name: "a", children: [{ name: "b", value: 1 }] }],
     });
-    const [a] = child.children;
-    const open = a;
+    const open = child.children[0];
+    if (!open) throw new Error("no node");
     let out = 0;
     const list = descendants(open).slice(1);
-    expect(hierarchyNav(list, open!, NAV_DOWN, 0, "up", () => out++)).toBeUndefined();
+    expect(hierarchyNav(list, open, NAV_DOWN, 0, "up", () => out++)).toBeUndefined();
     expect(out).toBe(1);
   });
 });
