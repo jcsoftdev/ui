@@ -317,3 +317,10 @@ body.landing {
   background: var(--surface-2);
   color: var(--ink);
 }
+
+.landing-h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+}

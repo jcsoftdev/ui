@@ -245,3 +245,5 @@ Shared, per theme where light and dark differ: `liquid-regular-blur`, `liquid-cl
 - [liquidglass.dev](https://liquidglass.dev) (gentpan/liquidglass, MIT): ideas for the rim-band bevel, the spring constants of the press, follow and settle motion and the velocity stretch; the code here is our own. The parameter set of the options mirrors what ybouane's liquid-glass playground exposes (names only, no code or constants).
 - Apple HIG [Materials](https://developer.apple.com/design/human-interface-guidelines/materials) is JavaScript-rendered and could not be read automatically.
 - kube.io, [Liquid Glass in the Browser](https://kube.io/blog/liquid-glass-css-svg/): Snell's law, squircle height profile, displacement map encoding, Chromium-only `backdrop-filter: url()`. Dispersion by per-channel displacement is a common technique that is not described there; the implementation here is our own.
+
+> Crystal caveat: in Chromium an ancestor with `overflow: hidden` plus `border-radius` clips the lens layer to a rectangle. Clip the ancestor with `clip-path: inset(0 round <radius>)` instead.

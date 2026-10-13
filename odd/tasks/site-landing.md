@@ -12,12 +12,12 @@ Owner request 2026-10-12: "leave a complete landing of all we offer" plus a stan
 Zero runtime deps in the library; English artifacts; Conventional Commits, no AI attribution; no push/PR/tag. TDD disabled (implement, then protect with tests). Runner: node --test, vitest projects stories/glass. Never auto-build outside the listed checks.
 
 ## Tasks
-- [ ] SL0 This document.
-- [ ] SL1 Crystal lens: minifying whole-surface profile, refraction range 0..2, rim dispersion, clear (no veil/frost) preset `crystal`, tests (no fold, preset), screenshot `landing/crystal.png`.
-- [ ] SL2 Photos: three CC0 photos (AVIF/WebP, 640/1280/1920), CREDITS.
-- [ ] SL3 Playground page `/playground`: every option, presets, photo/gradient scene, free drag + arrow keys, copy config, reset, non-Chromium note.
-- [ ] SL4 Landing: hero over photo, catalog grid, Liquid Glass, theming, platform parity, principles, charts, getting started.
-- [ ] SL5 Nav links, docs link, site tests/lint/typecheck, screenshots.
+- [x] SL0 This document.
+- [x] SL1 Crystal lens: minifying whole-surface profile, refraction range 0..2, rim dispersion, clear (no veil/frost) preset `crystal`, tests (no fold, preset), screenshot `landing/crystal.png`.
+- [x] SL2 Photos: three CC0 photos (AVIF/WebP, 640/1280/1920), CREDITS.
+- [x] SL3 Playground page `/playground`: every option, presets, photo/gradient scene, free drag + arrow keys, copy config, reset, non-Chromium note.
+- [x] SL4 Landing: hero over photo, catalog grid, Liquid Glass, theming, platform parity, principles, charts, getting started.
+- [x] SL5 Nav links, docs link, site tests/lint/typecheck, screenshots.
 
 ## Acceptance
 Accessible, responsive at 390px without horizontal scroll, light/dark, lazy-loaded heavy demos, at most 8 lenses alive. Checks: packages/ui `pnpm test`, `test:glass`, `test:stories`; root `pnpm build:site`; site lint/typecheck.
