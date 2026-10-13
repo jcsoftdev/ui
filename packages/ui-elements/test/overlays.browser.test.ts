@@ -13,7 +13,7 @@ beforeAll(() => {
 
 afterEach(() => {
   document.body.innerHTML = "";
-  document.documentElement.style.overflow = "";
+  document.body.style.overflow = "";
 });
 
 const DIALOG = `<button id="opener" commandfor="d" command="--open">Open</button>
@@ -39,11 +39,11 @@ describe("ui-dialog", () => {
     expect(dialog.panel?.getAttribute("aria-describedby")).toBe(
       host.querySelector("[data-dialog-description]")!.id,
     );
-    expect(document.documentElement.style.overflow).toBe("hidden");
+    expect(document.body.style.overflow).toBe("hidden");
     expect(dialog.panel?.contains(document.activeElement)).toBe(true);
     await userEvent.keyboard("{Escape}");
     expect(dialog.open).toBe(false);
-    expect(document.documentElement.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("");
     expect(document.activeElement?.id).toBe("opener");
   });
 
@@ -181,7 +181,7 @@ describe("overlay regressions", () => {
     await wait(0);
     expect(dialog.open).toBe(false);
     expect(closed).toHaveBeenCalledTimes(1);
-    expect(document.documentElement.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("");
   });
 
   it("stays open when an open dialog is moved in the DOM", async () => {

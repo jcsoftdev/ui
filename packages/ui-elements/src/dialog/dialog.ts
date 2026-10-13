@@ -1,3 +1,4 @@
+import { lockScroll } from "@jcsoftdev/ui-core/scroll-lock";
 import {
   adoptStyles,
   type DefineOptions,
@@ -5,7 +6,6 @@ import {
   ElementBase,
   emit,
   ensureId,
-  lockScroll,
   onCommand,
   rootOf,
 } from "../internal/base.js";
