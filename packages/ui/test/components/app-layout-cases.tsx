@@ -6,6 +6,8 @@ import { CopyField } from "../../src/forms/copy-field/copy-field.js";
 export { copyText } from "../../src/forms/copy-field/copy.js";
 import { BottomNav } from "../../src/shell/bottom-nav/bottom-nav.js";
 export { splitBottomNavItems } from "../../src/shell/bottom-nav/split.js";
+import { AppShell, createAppShellStore, useAppShell } from "../../src/shell/app-shell/app-shell.js";
+export { createAppShellStore };
 import { Form, FormError, FormStatus } from "../../src/forms/form/form.js";
 import { Grid } from "../../src/containers/grid/grid.js";
 
@@ -70,4 +72,20 @@ export const html = {
         }))}
       />,
     ),
+  appShellReader: () => {
+    function Reader() {
+      return <i>{String(useAppShell()?.compact)}</i>;
+    }
+    return renderToStaticMarkup(
+      <AppShell>
+        <Reader />
+      </AppShell>,
+    );
+  },
+  appShellOutside: () => {
+    function Reader() {
+      return <i>{String(useAppShell())}</i>;
+    }
+    return renderToStaticMarkup(<Reader />);
+  },
 };

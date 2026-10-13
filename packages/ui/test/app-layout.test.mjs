@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { html, copyText, splitBottomNavItems } = await loadCases("app-layout-cases.tsx");
+const { html, copyText, splitBottomNavItems, createAppShellStore } =
+  await loadCases("app-layout-cases.tsx");
 
 test("Grid fits columns from the minimum width unless a count is given", () => {
   assert.match(
@@ -114,4 +115,28 @@ test("BottomNav renders a landmark with the current page and a More button only 
 
 test("More is marked active when the current page is behind it", () => {
   assert.match(html.bottomNav(7, 6), /<button[^>]*data-active="true"/);
+});
+
+test("the AppShell store starts at the server snapshot and only changes after a measure", () => {
+  const store = createAppShellStore();
+  assert.equal(store.getServerSnapshot(), false);
+  assert.equal(store.getSnapshot(), store.getServerSnapshot());
+
+  let notified = 0;
+  store.subscribe(() => notified++);
+  const element = (width) => ({ getBoundingClientRect: () => ({ width }) });
+  store.observe(element(375));
+  assert.equal(store.getSnapshot(), true);
+  store.observe(element(1200));
+  assert.equal(store.getSnapshot(), false);
+  store.observe(element(1000));
+  assert.equal(notified, 2);
+});
+
+test("useAppShell reads the server snapshot during server render and is null outside a shell", () => {
+  assert.equal(
+    html.appShellReader(),
+    '<div class="@container/app flex min-w-0"><i>false</i></div>',
+  );
+  assert.equal(html.appShellOutside(), "<i>null</i>");
 });
