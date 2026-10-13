@@ -82,15 +82,80 @@ export function stackLayout(
 const href = (node: Element) =>
   node.getAttribute("href") ?? node.getAttributeNS("http://www.w3.org/1999/xlink", "href") ?? "";
 
-/** Interaction wiring that means nothing (and is noise) in a file: focus, roles and ARIA. */
+/** Flags the interaction code puts on marks: selection, hover and dimming are not part of the data. */
+const STATE_FLAGS = ["data-selected", "data-active", "data-dim"];
+const CSS_URL = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^)]*?))\s*\)/gi;
+
+/** A URL a standalone file can keep: a data URL or a fragment of the file itself. */
+const isLocal = (url: string) => /^(data:|#)/i.test(url);
+
+/** The computed `fill: url(#g)` comes back absolute (`url(http://page/#g)`): back to the fragment. */
+function fragment(url: string): string {
+  const base = document.baseURI.split("#")[0] as string;
+  return url.startsWith(`${base}#`) ? url.slice(base.length) : url;
+}
+
+/**
+ * Takes out what means nothing in a file, or cannot be honest in one. Interaction wiring (focus,
+ * roles, ARIA) is removed silently. What a standalone file could not load is removed and its URL
+ * reported in `dropped`: an external `<image>` or `<use>`, a CSS `url()` that is neither a data URL
+ * nor a fragment of the drawing (the value becomes `none`), and a `javascript:` link.
+ */
 function stripInteractive(root: Element, dropped: string[]): void {
+  const drop = (url: string) => {
+    if (url && !dropped.includes(url)) dropped.push(url);
+  };
   for (const node of [root, ...root.querySelectorAll("*")]) {
-    for (const { name } of [...node.attributes])
-      if (name === "tabindex" || name === "role" || name.startsWith("aria-"))
+    for (const { name, value } of [...node.attributes]) {
+      if (name === "tabindex" || name === "role" || name.startsWith("aria-")) {
         node.removeAttribute(name);
-    if (node.localName === "image" && !href(node).startsWith("data:")) {
-      dropped.push(href(node));
-      node.remove();
+      } else if ((name === "href" || name === "xlink:href") && /^\s*javascript:/i.test(value)) {
+        drop(value.trim());
+        node.removeAttribute(name);
+      } else if (value.includes("url(")) {
+        node.setAttribute(
+          name,
+          value.replace(CSS_URL, (_, a, b, c) => {
+            const url = fragment(`${a ?? b ?? c ?? ""}`.trim());
+            if (isLocal(url)) return url.startsWith("#") ? `url(${url})` : `url("${url}")`;
+            drop(url);
+            return "none";
+          }),
+        );
+      }
+    }
+    const target = href(node).trim();
+    if (node.localName === "image" || node.localName === "use") {
+      if (node.localName === "image" ? !isLocal(target) : target && !isLocal(target)) {
+        drop(target);
+        node.remove();
+      }
+    }
+  }
+}
+
+/**
+ * Runs `read` with the selection, hover and dim flags taken off `source`'s marks (and their
+ * transitions off, so the computed paint is the resting one), then puts everything back.
+ */
+function withoutState<T>(source: Element, read: () => T): T {
+  const flagged = [...source.querySelectorAll<SVGElement>(STATE_FLAGS.map((f) => `[${f}]`).join())];
+  const saved = flagged.map((node) => ({
+    node,
+    flags: STATE_FLAGS.filter((flag) => node.hasAttribute(flag)),
+    transition: node.style.getPropertyValue("transition"),
+  }));
+  for (const { node, flags } of saved) {
+    node.style.setProperty("transition", "none", "important");
+    for (const flag of flags) node.removeAttribute(flag);
+  }
+  try {
+    return read();
+  } finally {
+    for (const { node, flags, transition } of saved) {
+      for (const flag of flags) node.setAttribute(flag, "");
+      if (transition) node.style.setProperty("transition", transition);
+      else node.style.removeProperty("transition");
     }
   }
 }
@@ -157,7 +222,9 @@ export function serializeSvg(
   const dropped: string[] = [];
   for (const { source, x, y, w, h } of drawings) {
     const clone = source.cloneNode(true) as SVGSVGElement;
-    inlinePaint(source, clone);
+    withoutState(source, () => inlinePaint(source, clone));
+    for (const flag of STATE_FLAGS)
+      for (const node of clone.querySelectorAll(`[${flag}]`)) node.removeAttribute(flag);
     for (const skip of clone.querySelectorAll("[data-export-skip]")) skip.remove();
     stripInteractive(clone, dropped);
     clone.setAttribute("x", String(x));
