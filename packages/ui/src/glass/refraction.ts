@@ -143,6 +143,8 @@ const waiting = new Set<() => void>();
  * them; a change of side resyncs that surface.
  */
 const offscreen = new WeakSet<Element>();
+/** Surfaces the observer reported on at least once: until then a surface takes no slot. */
+const placed = new WeakSet<Element>();
 const resyncs = new WeakMap<Element, () => void>();
 let viewport: IntersectionObserver | undefined;
 function visibility(): IntersectionObserver | undefined {
@@ -150,7 +152,9 @@ function visibility(): IntersectionObserver | undefined {
   viewport ??= new IntersectionObserver(
     (entries) => {
       for (const { target, isIntersecting } of entries) {
-        if (offscreen.has(target) !== isIntersecting) continue;
+        const first = !placed.has(target);
+        placed.add(target);
+        if (!first && offscreen.has(target) !== isIntersecting) continue;
         if (isIntersecting) offscreen.delete(target);
         else offscreen.add(target);
         const resync = resyncs.get(target);
@@ -385,8 +389,11 @@ function createController(element: HTMLElement): Controller {
       watchSize();
       return;
     }
-    // Far outside the viewport: no slot until it comes near (the visibility observer resyncs).
-    if (offscreen.has(element)) return;
+    // Not painted, or far outside the viewport: no slot until that changes (the observers resync
+    // it). An automatic lens also waits for the first visibility report, so a surface that turns
+    // out to be offscreen never holds a slot for a frame; a lens applied by code starts at once.
+    if (getComputedStyle(element).visibility === "hidden") return;
+    if (offscreen.has(element) || (viewport && options.auto && !placed.has(element))) return;
     if (active >= MAX_ACTIVE) {
       waiting.add(sync);
       return;
@@ -409,7 +416,11 @@ function createController(element: HTMLElement): Controller {
     }
     const displacers: Array<{ node: Element; factor: number }> = [];
     let baseScale = options.scale ?? 0;
-    let level = options.animate === false || !intro ? 1 : 0;
+    // The materialise plays only where it can be seen, not in the margin around the viewport.
+    const box = element.getBoundingClientRect();
+    const inView =
+      box.bottom > 0 && box.right > 0 && box.top < innerHeight && box.left < innerWidth;
+    let level = options.animate === false || !intro || !inView ? 1 : 0;
     intro = false;
     const applyScale = () => {
       for (const { node: target, factor } of displacers)
@@ -774,7 +785,9 @@ function createController(element: HTMLElement): Controller {
       name === "--liquid-interactive" && options.ownInteractive
         ? element.style.getPropertyValue(name).trim()
         : computed.getPropertyValue(name).trim(),
-    ).join("|");
+    )
+      .concat(computed.visibility)
+      .join("|");
   };
   let configSeen = configKey();
   const refresh = () => {
@@ -846,6 +859,7 @@ function createController(element: HTMLElement): Controller {
     viewport?.unobserve(element);
     resyncs.delete(element);
     offscreen.delete(element);
+    placed.delete(element);
     const was = installed !== undefined;
     uninstall();
     if (was) wake();

@@ -101,7 +101,7 @@
       "id": "ui/liquid",
       "kind": "js",
       "file": "packages/ui/dist/liquid/index.js",
-      "maxGzip": 3550
+      "maxGzip": 3950
     },
     {
       "id": "ui/navigation",

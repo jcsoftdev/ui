@@ -143,9 +143,10 @@ export interface HoverCardContentProps
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
   /**
-   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
-   * forces an opaque surface. Liquid options go in `style` (`liquidStyle()` from
+   * Surface material. Omitted keeps the overlay surface (`surface-overlay`: glass in the `glass`
+   * preset, opaque elsewhere); `"solid"` forces the opaque `surface-solid` fill; `"glass"` and
+   * `"glass-clear"` are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its
+   * fallbacks). Liquid options go in `style` (`liquidStyle()` from
    * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;

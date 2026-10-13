@@ -26,9 +26,11 @@ nothing to change).
   only thing that loads the lens. Render it once near the root. It watches the document (classes,
   `data-glass`, `data-glass-lens`, `data-style`, `data-theme`, added and removed nodes, and the
   transparency, contrast and motion preferences) and gives the lens to every surface whose CSS
-  resolves to `--glass-lens: 1` (computed, so `md:liquid`, `dark:liquid`, container queries and an
-  inline `--glass-lens` count; a custom `@apply liquid` class needs `data-glass-lens="on"`),
-  fetching the engine the first time one does and retrying a failed fetch with a backoff. It does
+  resolves to `--glass-lens: 1` with a backdrop filter (computed, so `md:liquid`, `dark:liquid`,
+  `data-[state=open]:liquid`, `aria-*` and `group-*` variants, container queries and an inline
+  `--glass-lens` count; pseudo-class variants such as `hover:liquid` are not followed; a custom
+  `@apply liquid` class needs `data-glass-lens="on"`),
+  fetching the engine the first time one does and retrying a failed fetch with a backoff (six attempts at most). It does
   nothing on the server and nothing where the lens cannot paint (Safari, Firefox).
 - **A lens applied by code and the watcher share an element safely.** Each element's lens keeps one
   claim per owner: `applyGlassRefraction` / `useGlassRefraction` options win over the automatic
