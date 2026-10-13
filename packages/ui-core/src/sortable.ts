@@ -134,6 +134,11 @@ export interface SortableOptions<T> {
   onDragEnd?: () => void;
   /** Keyboard: called with the working copy each time a held item moves, so the owner re-renders. */
   onDraft?: (lists: SortableList<T>[] | null) => void;
+  /** Right-to-left: ArrowLeft goes to the next list and ArrowRight to the previous one. */
+  rtl?: () => boolean;
+  /** Names used in announcements instead of ids. */
+  itemLabel?: (item: T) => string;
+  listLabel?: (list: SortableList<T>) => string;
   /** Restricts the pointer drag start (touch usually requires a handle). */
   canStartPointer?: (event: PointerEvent, item: HTMLElement) => boolean;
 }
@@ -161,6 +166,11 @@ const KEYS: readonly string[] = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDow
 export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>): Sortable<T> {
   const threshold = options.threshold ?? 4;
   const say = (message: string) => options.announce?.(message);
+  const nameOf = (id: string) => {
+    const at = locateItem(options.lists(), id, options.getId);
+    const item = at ? options.lists().find((l) => l.id === at.listId)?.items[at.index] : undefined;
+    return item !== undefined ? (options.itemLabel?.(item) ?? id) : id;
+  };
   let grabbed: string | undefined;
   let draft: SortableList<T>[] | null = null;
   let stopPointer: (() => void) | undefined;
@@ -173,7 +183,13 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
   const describe = (current: readonly SortableList<T>[], id: string, verb: string) => {
     const at = locateItem(current, id, options.getId);
     const list = current.find((l) => l.id === at?.listId);
-    if (at && list) say(`${verb} ${id}: ${list.id}, ${at.index + 1} / ${list.items.length}.`);
+    const item = list?.items[at?.index ?? 0];
+    if (at && list && item !== undefined) {
+      const name = options.itemLabel?.(item) ?? id;
+      say(
+        `${verb} ${name}: ${options.listLabel?.(list) ?? list.id}, ${at.index + 1} / ${list.items.length}.`,
+      );
+    }
   };
   const refocus = (id: string) =>
     root.querySelector<HTMLElement>(`[data-sortable-item="${escapeId(id)}"]`)?.focus();
@@ -199,7 +215,7 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
     draft = null;
     options.onDraft?.(null);
     refocus(id);
-    say(`Cancelled: ${id} returns to its place.`);
+    say(`Cancelled: ${nameOf(id)} returns to its place.`);
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -233,7 +249,14 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
     if (KEYS.includes(key)) {
       event.preventDefault();
       const base = lists();
-      const target = keyboardTarget(base, id, key as SortableKey, options.getId);
+      const flip = options.rtl?.() === true;
+      const arrow =
+        flip && key === "ArrowLeft"
+          ? "ArrowRight"
+          : flip && key === "ArrowRight"
+            ? "ArrowLeft"
+            : key;
+      const target = keyboardTarget(base, id, arrow as SortableKey, options.getId);
       if (!target) return;
       const result = moveItem(base, id, target.listId, target.index, options.getId, {
         enforceLimit: options.enforceLimit,
@@ -280,7 +303,7 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
       if (!active) {
         if (Math.hypot(e.clientX - startX, e.clientY - startY) < threshold) return;
         active = true;
-        say(`Dragging ${id}.`);
+        say(`Dragging ${nameOf(id)}.`);
       }
       latest = locate(e.clientX, e.clientY);
       options.onDragOver?.(latest, id);
@@ -300,7 +323,7 @@ export function createSortable<T>(root: HTMLElement, options: SortableOptions<T>
           return;
         }
       }
-      say(`Cancelled: ${id} returns to its place.`);
+      say(`Cancelled: ${nameOf(id)} returns to its place.`);
     };
     const onUp = () => finish(true);
     const onCancel = () => finish(false);

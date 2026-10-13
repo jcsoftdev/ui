@@ -142,6 +142,8 @@ export interface TreeOptions<T extends TreeNode = TreeNode> {
   rowElement?: (id: string) => HTMLElement | null;
   /** Typeahead reset delay in ms. Default 600. */
   typeaheadTimeout?: number;
+  /** Right-to-left: ArrowLeft opens and ArrowRight closes. Default `() => false`. */
+  rtl?: () => boolean;
 }
 
 export interface Tree {
@@ -228,7 +230,14 @@ export function createTree(root: HTMLElement, options: TreeOptions): Tree {
     if (!row) return;
     if (TREE_KEYS.includes(event.key)) {
       event.preventDefault();
-      const step = treeStep(list, id, event.key as TreeKey);
+      const flip = options.rtl?.() === true;
+      const key =
+        flip && event.key === "ArrowLeft"
+          ? "ArrowRight"
+          : flip && event.key === "ArrowRight"
+            ? "ArrowLeft"
+            : event.key;
+      const step = treeStep(list, id, key as TreeKey);
       if (!step) return;
       if (step.type === "focus") focus(step.id);
       else toggle(step.id, step.type === "expand");
