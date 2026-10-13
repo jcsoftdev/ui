@@ -26,4 +26,5 @@ Accessible, responsive at 390px without horizontal scroll, light/dark, lazy-load
 See acceptance.
 
 ## Progress / commits
-(filled as tasks close)
+- SL0 b4214c9; SL1 4033082; SL2 f5430e7; SL3 5ef6870; SL4+SL5 5c9610b (landing, nav, glass.md caveat).
+- Route: inline + one writer context (single writer). Checks: ui test 561, test:glass 199, test:stories 1411, site test 23, lint, astro check 0 errors, build:site 436 pages.
