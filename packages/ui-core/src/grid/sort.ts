@@ -1,5 +1,7 @@
 import { type CellValue, type GridColumn, getCellValue } from "./model.js";
 
+const DEFAULT_LOCALE = "en";
+
 export type SortDirection = "asc" | "desc";
 
 export interface SortRule {
@@ -16,20 +18,35 @@ function toTime(value: CellValue): number | null {
   return null;
 }
 
-const collator =
-  typeof Intl === "undefined"
-    ? undefined
-    : new Intl.Collator("es", { numeric: true, sensitivity: "base" });
+const collators = new Map<string, Intl.Collator | undefined>();
 
-/** Ascending order; empty values always go last (callers keep them last in descending too). */
-export function compareValues(a: CellValue, b: CellValue): number {
+function collatorFor(locale: string): Intl.Collator | undefined {
+  if (typeof Intl === "undefined") return undefined;
+  if (!collators.has(locale)) {
+    const options = { numeric: true, sensitivity: "base" } as const;
+    let collator: Intl.Collator;
+    try {
+      collator = new Intl.Collator(locale, options);
+    } catch {
+      collator = new Intl.Collator(DEFAULT_LOCALE, options);
+    }
+    collators.set(locale, collator);
+  }
+  return collators.get(locale);
+}
+
+/**
+ * Ascending order; empty values always go last (callers keep them last in descending too). Text
+ * compares with a collator for `locale` (default `en`), digits as numbers.
+ */
+export function compareValues(a: CellValue, b: CellValue, locale = DEFAULT_LOCALE): number {
   const emptyA = a === null || a === undefined || a === "";
   const emptyB = b === null || b === undefined || b === "";
   if (emptyA || emptyB) return emptyA === emptyB ? 0 : emptyA ? 1 : -1;
   if (a instanceof Date || b instanceof Date) return (toTime(a) ?? 0) - (toTime(b) ?? 0);
   if (typeof a === "number" && typeof b === "number") return a - b;
   if (typeof a === "boolean" && typeof b === "boolean") return Number(a) - Number(b);
-  return collator?.compare(String(a), String(b)) ?? String(a).localeCompare(String(b));
+  return collatorFor(locale)?.compare(String(a), String(b)) ?? String(a).localeCompare(String(b));
 }
 
 /**
@@ -54,6 +71,7 @@ export function sortRows<T>(
   rows: readonly T[],
   columns: readonly GridColumn<T>[],
   sort: readonly SortRule[],
+  locale = DEFAULT_LOCALE,
 ): T[] {
   const rules = sort
     .map((rule) => ({ rule, column: columns.find((column) => column.id === rule.id) }))
@@ -74,7 +92,7 @@ export function sortRows<T>(
         if (emptyX !== emptyY) return emptyX ? 1 : -1;
         continue;
       }
-      const order = compareValues(x, y);
+      const order = compareValues(x, y, locale);
       if (order !== 0) return rules[i]?.rule.direction === "desc" ? -order : order;
     }
     return a.index - b.index;

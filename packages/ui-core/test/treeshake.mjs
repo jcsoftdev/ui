@@ -77,6 +77,7 @@ const gridDeps = {
   "grid/select": [],
   "grid/resize": ["grid/columns"],
   "grid/reorder": ["sortable"],
+  "grid/view": [],
 };
 const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {

@@ -24,9 +24,14 @@ export function headerFitWidth<T>(column: GridColumn<T>): number {
   return Math.ceil(column.header.length * 8.6 + 64);
 }
 
-export function clampWidth<T>(width: number, column: GridColumn<T>): number {
+/**
+ * Keeps `width` between the column's limits. A column without `maxWidth` stops at
+ * `MAX_COLUMN_WIDTH`, unless it is already wider (`current`, e.g. it grew to fill the grid): a
+ * resize never shrinks it just by touching it.
+ */
+export function clampWidth<T>(width: number, column: GridColumn<T>, current = 0): number {
   const min = column.minWidth ?? MIN_COLUMN_WIDTH;
-  const max = Math.max(min, column.maxWidth ?? MAX_COLUMN_WIDTH);
+  const max = Math.max(min, column.maxWidth ?? Math.max(MAX_COLUMN_WIDTH, current));
   return Math.round(Math.min(max, Math.max(min, width)));
 }
 
@@ -115,7 +120,7 @@ export function moveColumnTo(
   return next;
 }
 
-/** Reconciles a stored layout with the current columns: unknown ids drop, new ones append. */
+/** Reconciles a stored layout with the current columns: unknown ids drop, new ones keep their code position. */
 export function reconcileLayout<T>(
   columns: readonly GridColumn<T>[],
   stored: Partial<GridLayout> | null,
@@ -125,7 +130,15 @@ export function reconcileLayout<T>(
   const ids = columns.map((column) => column.id);
   const known = (id: unknown): id is string => typeof id === "string" && ids.includes(id);
   const order = [...new Set((stored.order ?? []).filter(known))];
-  for (const id of ids) if (!order.includes(id)) order.push(id);
+  ids.forEach((id, position) => {
+    if (order.includes(id)) return;
+    // A column added since the layout was stored goes after the column that precedes it in code.
+    const before = ids
+      .slice(0, position)
+      .reverse()
+      .find((x) => order.includes(x));
+    order.splice(before === undefined ? 0 : order.indexOf(before) + 1, 0, id);
+  });
   const widths: Record<string, number> = { ...fallback.widths };
   for (const column of columns) {
     const width = stored.widths?.[column.id];
@@ -145,12 +158,58 @@ export function reconcileLayout<T>(
   };
 }
 
+/** Version written by `serializeLayout`; a stored layout from a newer version is ignored. */
+export const LAYOUT_VERSION = 1;
+
+/**
+ * The JSON to persist: order, hidden and pinned columns, and only the widths the user changed, so
+ * a column whose default width changes later is not frozen at the old value.
+ */
+export function serializeLayout<T>(layout: GridLayout, columns: readonly GridColumn<T>[]): string {
+  const widths: Record<string, number> = {};
+  for (const column of columns) {
+    const width = layout.widths[column.id];
+    if (width !== undefined && width !== defaultWidth(column)) widths[column.id] = width;
+  }
+  return JSON.stringify({
+    v: LAYOUT_VERSION,
+    order: layout.order,
+    hidden: layout.hidden,
+    widths,
+    pinned: layout.pinned,
+  });
+}
+
+const strings = (value: unknown): string[] | undefined =>
+  Array.isArray(value) ? value.filter((x): x is string => typeof x === "string") : undefined;
+
+/** Parses stored JSON field by field; whatever is malformed is dropped, never thrown. */
 export function parseStoredLayout(raw: string | null): Partial<GridLayout> | null {
   if (!raw) return null;
   try {
     const value: unknown = JSON.parse(raw);
     if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
-    return value as Partial<GridLayout>;
+    const stored = value as Record<string, unknown>;
+    if (stored.v !== undefined && (typeof stored.v !== "number" || stored.v > LAYOUT_VERSION))
+      return null;
+    const layout: Partial<GridLayout> = {};
+    const order = strings(stored.order);
+    const hidden = strings(stored.hidden);
+    if (order) layout.order = order;
+    if (hidden) layout.hidden = hidden;
+    const widths = stored.widths;
+    if (typeof widths === "object" && widths !== null && !Array.isArray(widths)) {
+      layout.widths = {};
+      for (const [id, width] of Object.entries(widths))
+        if (typeof width === "number" && Number.isFinite(width) && width > 0)
+          layout.widths[id] = width;
+    }
+    const pinned = stored.pinned;
+    if (typeof pinned === "object" && pinned !== null && !Array.isArray(pinned)) {
+      const side = pinned as Record<string, unknown>;
+      layout.pinned = { left: strings(side.left) ?? [], right: strings(side.right) ?? [] };
+    }
+    return layout;
   } catch {
     return null;
   }

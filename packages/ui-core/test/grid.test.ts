@@ -6,6 +6,7 @@ import * as pin from "../src/grid/pin.ts";
 import * as resize from "../src/grid/resize.ts";
 import * as select from "../src/grid/select.ts";
 import * as sort from "../src/grid/sort.ts";
+import * as view from "../src/grid/view.ts";
 import * as virtual from "../src/grid/virtual.ts";
 import { dropIndex } from "../src/sortable.ts";
 import { computeVirtualWindow } from "../src/virtual-list.ts";
@@ -51,6 +52,8 @@ const cols: model.GridColumn<Row>[] = [
 ];
 // The React column needs an explicit accessor; the other shared fields are identical.
 const rcols = cols.map((c) => ({ ...c, accessor: c.accessor ?? c.id }));
+// The React kit is es-PE and says Si / No; parity holds when the locale and labels are those.
+const PE = { locale: "es-PE", labels: { yes: "Sí", no: "No" } };
 
 describe("data-grid core parity with the React kit", () => {
   it("reads and formats cells the same", () => {
@@ -60,7 +63,7 @@ describe("data-grid core parity with the React kit", () => {
         const r = rcols[i];
         const value = model.getCellValue(row, c);
         expect(value).toEqual(reactModel.getCellValue(row, r));
-        expect(model.formatCellValue(value, c)).toBe(reactModel.formatCellValue(value, r));
+        expect(model.formatCellValue(value, c, PE)).toBe(reactModel.formatCellValue(value, r));
         expect(model.columnAlign(c)).toBe(reactModel.columnAlign(r));
       }
   });
@@ -84,13 +87,13 @@ describe("data-grid core parity with the React kit", () => {
       ],
     ];
     for (const rule of rules)
-      expect(sort.sortRows(rows, cols, rule).map((r) => r.id)).toEqual(
+      expect(sort.sortRows(rows, cols, rule, "es-PE").map((r) => r.id)).toEqual(
         reactModel.sortRows(rows, rcols, rule).map((r: Row) => r.id),
       );
     const values = [1, "b", null, "a10", "a2", true, new Date(0), "", undefined, 0];
     for (const a of values)
       for (const b of values)
-        expect(Math.sign(sort.compareValues(a as never, b as never))).toBe(
+        expect(Math.sign(sort.compareValues(a as never, b as never, "es-PE"))).toBe(
           Math.sign(reactModel.compareValues(a as never, b as never)),
         );
   });
@@ -170,7 +173,10 @@ describe("data-grid core parity with the React kit", () => {
       reactModel.parseStoredLayout(stored),
       fallback,
     );
-    expect(mine).toEqual(theirs);
+    // Only the order differs on purpose: a column missing from the stored layout keeps its code
+    // position instead of going to the end.
+    expect({ ...mine, order: [] }).toEqual({ ...theirs, order: [] });
+    expect(mine.order).toEqual(["calc", "name", "qty", "price", "when", "ok"]);
     expect(columns.parseStoredLayout("[1]")).toBeNull();
   });
 
@@ -356,6 +362,111 @@ describe("pin, resize and sort helpers", () => {
       { id: "b", direction: "asc" },
       { id: "a", direction: "desc" },
     ]);
+  });
+});
+
+describe("grid locale and persisted layout", () => {
+  const price: model.GridColumn<Row> = { id: "price", header: "Price", type: "currency" };
+  const qty: model.GridColumn<Row> = { id: "qty", header: "Qty", type: "number" };
+
+  it("formats by locale and uses the NBSP grouping only for es-PE", () => {
+    expect(model.formatCellValue(1234567.5, qty, { locale: "es-PE" })).toBe(
+      "1\u00a0234\u00a0567.5",
+    );
+    expect(model.formatCellValue(1234567.5, qty, { locale: "en-US" })).toBe("1,234,567.5");
+    expect(model.formatCellValue(1234567.5, qty, { locale: "de-DE" })).toBe("1.234.567,5");
+    expect(model.formatCellValue(5, price, { locale: "en-US" })).toContain("5.00");
+    expect(model.formatCellValue(true, qty)).toBe("Yes");
+    expect(model.formatCellValue(false, qty, { labels: { no: "Nope" } })).toBe("Nope");
+    const date = new Date(2024, 1, 29);
+    expect(model.formatCellValue(date, qty, { locale: "en-US" })).toMatch(/Feb/);
+    expect(model.formatCellValue(date, qty, { locale: "es-PE" })).toMatch(/feb/i);
+    expect(model.formatCellValue(1, qty, { locale: "not a locale" })).toBe("1");
+  });
+
+  it("sorts text with the collator of the locale", () => {
+    const tied = ["ñu", "nz", "oz"];
+    expect(tied.sort((a, b) => sort.compareValues(a, b, "es"))).toEqual(["nz", "ñu", "oz"]);
+    expect(["ä", "z", "a"].sort((a, b) => sort.compareValues(a, b, "sv"))).toEqual(["a", "z", "ä"]);
+  });
+
+  it("lets a column without maxWidth keep a width it grew to", () => {
+    const text: model.GridColumn<Row> = { id: "name", header: "Name" };
+    expect(columns.clampWidth(900, text)).toBe(columns.MAX_COLUMN_WIDTH);
+    expect(columns.clampWidth(900, text, 1200)).toBe(900);
+    expect(columns.clampWidth(2000, text, 1200)).toBe(1200);
+    expect(resize.widthFromKey(1000, -1, "center", text)).toBe(984);
+    expect(resize.widthFromKey(1000, 1, "center", text)).toBe(1000);
+    expect(resize.widthFromPointer(1000, -50, { rtl: false, zone: "center" }, text)).toBe(950);
+  });
+
+  it("persists only widths the user changed, with a version, and validates fields", () => {
+    const layout = {
+      order: ["name", "qty"],
+      hidden: [],
+      widths: { name: columns.defaultWidth(cols[0] as model.GridColumn<Row>), qty: 222 },
+      pinned: { left: ["name"], right: [] },
+    };
+    const json = JSON.parse(columns.serializeLayout(layout, cols));
+    expect(json.v).toBe(columns.LAYOUT_VERSION);
+    expect(json.widths).toEqual({ qty: 222 });
+    expect(columns.parseStoredLayout(JSON.stringify({ v: 99, order: ["a"] }))).toBeNull();
+    expect(
+      columns.parseStoredLayout(
+        JSON.stringify({
+          order: ["a", 3, null],
+          hidden: "x",
+          widths: { a: "wide", b: -4, c: 120 },
+          pinned: { left: ["a", 1], right: 5 },
+        }),
+      ),
+    ).toEqual({ order: ["a"], widths: { c: 120 }, pinned: { left: ["a"], right: [] } });
+  });
+
+  it("inserts a column added later after the one before it in code", () => {
+    const fallback = {
+      order: cols.map((c) => c.id),
+      hidden: [],
+      widths: {},
+      pinned: { left: [], right: [] },
+    };
+    const next = columns.reconcileLayout(cols, { order: ["calc", "name", "ok"] }, fallback);
+    expect(next.order).toEqual(["calc", "name", "qty", "price", "when", "ok"]);
+    expect(columns.reconcileLayout(cols, { order: ["qty"] }, fallback).order[0]).toBe("name");
+  });
+});
+
+describe("grid view", () => {
+  it("makes repeated keys unique without dropping rows, the same way every time", () => {
+    const source = ["a", "b", "a", "a", "a#2", "c"];
+    const first = view.uniqueKeys(source.length, (i) => source[i] as string);
+    expect(first.keys).toEqual(["a", "b", "a#2", "a#3", "a#2#2", "c"]);
+    expect(new Set(first.keys).size).toBe(source.length);
+    expect(first.duplicates).toEqual(["a", "a", "a#2"]);
+    expect(view.uniqueKeys(source.length, (i) => source[i] as string).keys).toEqual(first.keys);
+  });
+
+  it("runs filter, then sort, then group, and maps keys and positions", () => {
+    const keys = ["k0", "k1", "k2", "k3", "k4"];
+    const identity = view.buildView({ keys });
+    expect([identity.count, identity.sourceAt(3), identity.keyAt(3), identity.kind(3)]).toEqual([
+      5,
+      3,
+      "k3",
+      "data",
+    ]);
+    const piped = view.buildView({
+      keys,
+      filter: (i) => i !== 2,
+      sort: (indices) => [...indices].reverse(),
+      group: (indices) => indices,
+    });
+    expect(piped.count).toBe(4);
+    expect([0, 1, 2, 3].map((v) => piped.sourceAt(v))).toEqual([4, 3, 1, 0]);
+    expect(piped.keyAt(0)).toBe("k4");
+    expect(piped.indexOfKey("k1")).toBe(2);
+    expect(piped.indexOfKey("k2")).toBe(-1);
+    expect(view.buildView({ keys: [] }).count).toBe(0);
   });
 });
 

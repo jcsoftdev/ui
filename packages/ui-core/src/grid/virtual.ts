@@ -75,6 +75,11 @@ export interface GridViewportOptions {
   centerOffsets: () => readonly number[];
   /** Width of the start-pinned zone: where the scrolling columns begin. */
   insetStart: () => number;
+  /**
+   * How much of the start edge the pinned zone covers while scrolling. Defaults to `insetStart`;
+   * `0` when the pinned zones do not stick (they were wider than the viewport).
+   */
+  stickyStart?: () => number;
   rtl: () => boolean;
   overscanRows?: number;
   overscanColumns?: number;
@@ -162,15 +167,16 @@ export function createGridViewport(
     },
     scrollToColumn(index, insetEnd) {
       const offsets = options.centerOffsets();
-      const left = (offsets[index] ?? 0) + options.insetStart();
-      const width = (offsets[index + 1] ?? left) - (offsets[index] ?? 0);
+      const start = offsets[index] ?? 0;
+      const left = start + options.insetStart();
+      const width = (offsets[index + 1] ?? start) - start;
       const sign = options.rtl() ? -1 : 1;
       const next = scrollInlineToReveal(
         left,
         width,
         scroller.clientWidth,
         Math.abs(scroller.scrollLeft),
-        options.insetStart(),
+        options.stickyStart ? options.stickyStart() : options.insetStart(),
         insetEnd,
       );
       scroller.scrollLeft = sign * next;

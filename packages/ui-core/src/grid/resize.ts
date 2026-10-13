@@ -17,7 +17,7 @@ export function widthFromPointer<T>(
   column: GridColumn<T>,
 ): number {
   const sign = (rtl ? -1 : 1) * (zone === "end" ? -1 : 1);
-  return clampWidth(startWidth + sign * dx, column);
+  return clampWidth(startWidth + sign * dx, column, startWidth);
 }
 
 /**
@@ -31,5 +31,5 @@ export function widthFromKey<T>(
   column: GridColumn<T>,
   step = RESIZE_STEP,
 ): number {
-  return clampWidth(width + (zone === "end" ? -direction : direction) * step, column);
+  return clampWidth(width + (zone === "end" ? -direction : direction) * step, column, width);
 }

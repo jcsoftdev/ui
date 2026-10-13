@@ -55,24 +55,59 @@ export function getCellValue<T>(row: T, column: GridColumn<T>): CellValue {
   return (row as Record<PropertyKey, unknown>)?.[accessor] as CellValue;
 }
 
-const dateFormat =
-  typeof Intl === "undefined"
-    ? undefined
-    : new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", year: "numeric" });
+/** Locale and wording used to turn a value into text. */
+export interface FormatOptions {
+  /** BCP 47 tag; defaults to `en`. Dates, numbers and currencies follow it. */
+  locale?: string;
+  /** Text for booleans; defaults to English. */
+  labels?: { yes?: string; no?: string };
+}
 
-/** Cell text: the column formatter, or the kit's defaults (es-PE numbers and dates, Si / No). */
-export function formatCellValue<T>(value: CellValue, column: GridColumn<T>): string {
+export const DEFAULT_LOCALE = "en";
+
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** A usable BCP 47 tag: an invalid or empty one falls back to the default locale. */
+function usableLocale(locale: string | undefined): string {
+  if (!locale) return DEFAULT_LOCALE;
+  try {
+    return Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
+function dateFormat(locale: string): Intl.DateTimeFormat {
+  let format = dateFormats.get(locale);
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" });
+    dateFormats.set(locale, format);
+  }
+  return format;
+}
+
+/**
+ * Cell text: the column formatter, or the defaults for `options.locale` (default `en`). Numbers and
+ * currencies keep the Peruvian no-break thousands space only when the locale is `es-PE`.
+ */
+export function formatCellValue<T>(
+  value: CellValue,
+  column: GridColumn<T>,
+  options: FormatOptions = {},
+): string {
   if (column.format) return column.format(value);
   if (value === null || value === undefined || value === "") return "";
+  const locale = usableLocale(options.locale);
   if (value instanceof Date)
-    return Number.isNaN(value.getTime()) ? "" : (dateFormat?.format(value) ?? "");
+    return Number.isNaN(value.getTime()) ? "" : dateFormat(locale).format(value);
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return "";
-    if (column.type === "currency") return formatCurrency(value);
-    if (column.type === "number") return formatNumber(value);
+    if (column.type === "currency") return formatCurrency(value, { locale });
+    if (column.type === "number") return formatNumber(value, { locale });
     return String(value);
   }
-  if (typeof value === "boolean") return value ? "Sí" : "No";
+  if (typeof value === "boolean")
+    return value ? (options.labels?.yes ?? "Yes") : (options.labels?.no ?? "No");
   return value;
 }
 

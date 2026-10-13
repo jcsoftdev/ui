@@ -46,11 +46,17 @@ export function attachColumnReorder(
     onMove: (move: SortableMove, lists) => {
       const ids = lists[0]?.items ?? [];
       const at = ids.indexOf(move.itemId);
-      const neighbour = at > 0 ? ids[at - 1] : ids[1];
-      if (!neighbour) return false;
       const zone = options.zoneOf(move.itemId);
-      if (zone === undefined || zone !== options.zoneOf(neighbour)) return false;
-      return options.onReorder(move.itemId, neighbour, at > 0 ? "after" : "before");
+      if (at < 0 || zone === undefined) return false;
+      // Land next to a neighbour of the same zone: the previous one, or, at a zone boundary or at
+      // the start of the list, the next one.
+      const prev = at > 0 ? ids[at - 1] : undefined;
+      const next = ids[at + 1];
+      if (prev !== undefined && options.zoneOf(prev) === zone)
+        return options.onReorder(move.itemId, prev, "after");
+      if (next !== undefined && options.zoneOf(next) === zone)
+        return options.onReorder(move.itemId, next, "before");
+      return false;
     },
   });
 }
