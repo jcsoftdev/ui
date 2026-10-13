@@ -100,22 +100,27 @@ describe("ui-carousel", () => {
 
   it("auto-rotates, pauses on focus, and stops with the pause button", async () => {
     const el = carousel('autoplay="150"');
+    const changes = vi.fn();
+    el.addEventListener("change", changes);
     const track = el.querySelector<HTMLElement>("[data-ui-part=track]")!;
     expect(track.getAttribute("aria-live")).toBe("off");
     const pause = el.querySelector<HTMLButtonElement>("[data-ui-part=pause]")!;
     expect(pause.getAttribute("aria-label")).toBe("Pause automatic slide show");
-    await settle(el, 1);
+    expect(el.hasAttribute("data-playing")).toBe(true);
+    await vi.waitFor(() => expect(changes).toHaveBeenCalled(), { timeout: 3000 });
     track.focus({ preventScroll: true });
     expect(el.hasAttribute("data-playing")).toBe(false);
     track.blur();
     expect(el.hasAttribute("data-playing")).toBe(true);
     pause.click();
+    expect(el.hasAttribute("data-playing")).toBe(false);
     expect(pause.getAttribute("aria-pressed")).toBe("true");
     expect(pause.getAttribute("aria-label")).toBe("Start automatic slide show");
-    await wait(400);
-    const at = el.index;
+    // let any scroll in flight land, then nothing may move
+    await wait(900);
+    const settled = changes.mock.calls.length;
     await wait(500);
-    expect(el.index).toBe(at);
+    expect(changes.mock.calls.length).toBe(settled);
   });
 
   it("registers under a custom prefix", () => {
