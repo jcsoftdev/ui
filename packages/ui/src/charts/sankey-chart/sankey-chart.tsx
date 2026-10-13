@@ -18,6 +18,7 @@ import { ChartDataTable } from "../core/data-table.js";
 import { DEFAULT_EXPORT_TEXTS, ExportMenu, type ExportTexts } from "../core/export-menu.js";
 import { resolveFormat, type ValueFormat, type ValueFormatter } from "../core/format.js";
 import { fitLabel } from "../core/hierarchy-chart.js";
+import { useLeaveGrace } from "../core/leave-grace.js";
 import { ChartLegend } from "../core/legend.js";
 import { EASE_OUT, revealClip, useEntryAnimation, useReducedMotion } from "../core/motion.js";
 import { seriesColor } from "../core/palette.js";
@@ -421,6 +422,11 @@ function SankeyPlot({
   const labelRoom = inside ? nodeWidth - 12 : step - nodeWidth - LABEL_GAP * 2;
 
   const [hover, setHover] = useState<{ focus: Focus; x: number; y: number } | null>(null);
+  const { leave: leaveSoon, hold } = useLeaveGrace(() => setHover(null));
+  const showHover = (next: { focus: Focus; x: number; y: number }) => {
+    hold();
+    setHover(next);
+  };
   const [active, setActive] = useState<Focus | null>(null);
   const [pinned, setPinned] = useState<Focus | null>(null);
   const reducedMotion = useReducedMotion();
@@ -647,9 +653,9 @@ function SankeyPlot({
               lit={lit?.links ?? null}
               diffById={diffById}
               onEnter={(link, event) =>
-                setHover({ focus: { kind: "link", id: link.id }, ...pointer(event) })
+                showHover({ focus: { kind: "link", id: link.id }, ...pointer(event) })
               }
-              onLeave={() => setHover(null)}
+              onLeave={leaveSoon}
               onClick={(link) => {
                 if (pathTracing) pin({ kind: "link", id: link.id });
                 onLinkClick?.(link);
@@ -666,9 +672,9 @@ function SankeyPlot({
             active={activeNode && !activeLink ? activeNode.id : null}
             inside={inside}
             onEnter={(node, event) =>
-              setHover({ focus: { kind: "node", id: node.id }, ...pointer(event) })
+              showHover({ focus: { kind: "node", id: node.id }, ...pointer(event) })
             }
-            onLeave={() => setHover(null)}
+            onLeave={leaveSoon}
             onClick={(node) => {
               if (pathTracing) pin({ kind: "node", id: node.id });
               onNodeClick?.(node);
@@ -943,6 +949,7 @@ const SankeyLinks = memo(function SankeyLinks({
           <path
             key={link.id}
             d={sankeyLinkPath(link)}
+            data-chart-hit=""
             strokeWidth={Math.max(1, link.width)}
             className="cursor-pointer motion-safe:transition-[stroke-opacity] motion-safe:duration-150"
             style={{
@@ -996,6 +1003,7 @@ function SankeyNodes({
         <rect
           key={node.id}
           data-sankey-node=""
+          data-chart-hit=""
           x={node.x0}
           y={node.y0}
           width={node.x1 - node.x0}

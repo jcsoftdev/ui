@@ -22,6 +22,7 @@ import { type ChartLabels, resolveLabels } from "../core/types.js";
 import { useIndexNavigation } from "../core/use-index-navigation.js";
 import { useSeriesState } from "../core/use-series-state.js";
 import { fitCenterText } from "./center-fit.js";
+import { fitSliceLabel } from "./slice-labels.js";
 
 export interface DonutDatum {
   /** Stable identity, used for keys and legend toggling. */
@@ -40,6 +41,9 @@ export interface DonutDatum {
 export type DonutFill = "solid" | "gradient" | "pattern";
 
 export type DonutOutsideLabels = boolean | "name" | "percent" | "both";
+
+/** Labels inside the ring: `true` and "percent" show the share, "value" the formatted value. */
+export type DonutSliceLabels = boolean | "percent" | "value";
 
 export interface DonutChartProps {
   /** Accessible name of the drawing. */
@@ -80,6 +84,8 @@ export interface DonutChartProps {
   centerValue?: string;
   /** Names / percentages on leader lines around the ring. `true` shows both. */
   outsideLabels?: DonutOutsideLabels;
+  /** Labels drawn inside the ring; slices too small to hold their label are skipped. */
+  sliceLabels?: DonutSliceLabels;
   legend?: boolean | "top" | "bottom";
   tooltip?: boolean;
   loading?: boolean;
@@ -135,6 +141,7 @@ export function DonutChart({
   centerLabel,
   centerValue,
   outsideLabels = false,
+  sliceLabels = false,
   legend,
   tooltip = true,
   loading = false,
@@ -263,6 +270,7 @@ export function DonutChart({
           centerLabel={centerLabel ?? labels.total}
           centerValue={centerValue}
           outside={labelMode(outsideLabels)}
+          sliceLabels={sliceLabels}
           tooltip={tooltip}
           animate={animate}
           labels={labels}
@@ -304,6 +312,7 @@ interface PlotProps {
   onUp?: () => void;
   centerValue?: string;
   outside: "name" | "percent" | "both" | null;
+  sliceLabels: DonutSliceLabels;
   tooltip: boolean;
   animate: boolean;
   labels: ChartLabels;
@@ -343,6 +352,7 @@ function DonutPlot({
   centerLabel,
   centerValue,
   outside: outsideProp,
+  sliceLabels,
   tooltip,
   animate,
   labels,
@@ -490,6 +500,31 @@ function DonutPlot({
     return out;
   }, [outside, visible, slices, items, cx, cy, radius, height]);
 
+  const insideLabels = useMemo(() => {
+    if (!sliceLabels) return [];
+    const fontSize = 11;
+    const out: Array<{ id: string; x: number; y: number; text: string }> = [];
+    for (const index of visible) {
+      const slice = slices[index];
+      const item = items[index];
+      if (!slice || !item) continue;
+      const text =
+        sliceLabels === "value"
+          ? item.format(item.datum.value)
+          : formatPercent(slice.fraction, { decimals: 0 });
+      const fit = fitSliceLabel({
+        inner,
+        radius,
+        start: slice.start,
+        end: slice.end,
+        chars: text.length,
+        fontSize,
+      });
+      if (fit) out.push({ id: item.datum.id, x: cx + fit.x, y: cy + fit.y, text });
+    }
+    return out;
+  }, [sliceLabels, visible, slices, items, inner, radius, cx, cy]);
+
   // Motion -------------------------------------------------------------------
   useEntryAnimation(
     svgRef,
@@ -615,6 +650,20 @@ function DonutPlot({
           );
         })}
 
+        {insideLabels.map((label) => (
+          <text
+            key={label.id}
+            x={label.x}
+            y={label.y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            pointerEvents="none"
+            className="fill-surface font-bold text-fs-110 tabular-nums"
+          >
+            {label.text}
+          </text>
+        ))}
+
         {outsideLabels.map((label) => {
           const dimmed = focusIndex != null && items[focusIndex]?.datum.id !== label.id;
           const avail = Math.max(24, (label.side > 0 ? width - label.x : label.x) - 6);
@@ -676,7 +725,7 @@ function DonutPlot({
               d={d}
               clickable={onSliceClick != null}
               onEnter={(event) => nav.hover(position, event)}
-              onLeave={nav.leave}
+              onLeave={nav.pointerLeave}
               onClick={onSliceClick ? () => onSliceClick(item.datum) : undefined}
             />
           );
@@ -781,8 +830,8 @@ const SliceMark = memo(function SliceMark({
 interface SliceHitAreaProps {
   d: string;
   clickable: boolean;
-  onEnter: (event: { clientX: number; clientY: number }) => void;
-  onLeave: () => void;
+  onEnter: (event: { clientX: number; clientY: number; pointerType?: string }) => void;
+  onLeave: (event: { pointerType?: string }) => void;
   onClick?: () => void;
 }
 
@@ -792,6 +841,7 @@ function SliceHitArea({ d, clickable, onEnter, onLeave, onClick }: SliceHitAreaP
     // biome-ignore lint/a11y/noStaticElementInteractions: pointer hover only; keyboard goes through the chart slider.
     <path
       data-slice-hit=""
+      data-chart-hit=""
       d={d}
       fill="transparent"
       onPointerEnter={onEnter}

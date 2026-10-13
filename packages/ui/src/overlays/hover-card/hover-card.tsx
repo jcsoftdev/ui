@@ -16,7 +16,7 @@ import {
 } from "react";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import { Slot } from "../../utils/slot.js";
 
 interface HoverCardContextValue {
@@ -143,8 +143,11 @@ export interface HoverCardContentProps
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
   /**
-   * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   * Surface material. Omitted keeps the overlay surface (`surface-overlay`: glass in the `glass`
+   * preset, opaque elsewhere); `"solid"` forces the opaque `surface-solid` fill; `"glass"` and
+   * `"glass-clear"` are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its
+   * fallbacks). Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
 }
@@ -158,7 +161,6 @@ export function HoverCardContent({
   onCloseAutoFocus,
   container,
   material,
-  style,
   ...props
 }: HoverCardContentProps) {
   const card = useHoverCard();
@@ -188,7 +190,6 @@ export function HoverCardContent({
           materialClass(material, "surface-solid"),
           className,
         )}
-        style={withMaterialStyle(material, style)}
         {...props}
       />
     </PopoverPrimitive.Portal>

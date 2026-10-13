@@ -355,9 +355,10 @@ function MorphPlot({
             <path
               key={shape.node.id}
               d={path}
+              data-chart-hit=""
               onPointerEnter={(event) => nav.hover(index, event)}
               onPointerMove={(event) => nav.hover(index, event)}
-              onPointerLeave={nav.leave}
+              onPointerLeave={nav.pointerLeave}
               style={{
                 fill: tint(base, strength),
                 opacity: faded * (dimmed ? 0.45 : 1),

@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
 import {
@@ -191,8 +190,7 @@ export function Content({
   const { anchor, arrow } = usePopperContext("PopperContent");
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [content, setContent] = useState<HTMLDivElement | null>(null);
-  const lens = useGlassLens<HTMLDivElement>(ref, { ownInteractive: true });
-  const composedRef = useComposedRefs<HTMLDivElement>(lens, setContent);
+  const composedRef = useComposedRefs<HTMLDivElement>(ref, setContent);
   const [placed, setPlaced] = useState<Placed>({
     side,
     align,

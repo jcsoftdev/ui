@@ -37,11 +37,11 @@ class GlassEffectGroupTest {
 
     @Test fun precedenceChildExplicitThenContainer() {
         val group = GlassEffectGroup()
-        group.style = LiquidGlassStyle(refraction = 2f)
-        group.material = SurfaceMaterial.LiquidClear
-        assertTrue(group.accepts(null, null))
-        assertTrue(group.accepts(LiquidGlassStyle(refraction = 2f), SurfaceMaterial.LiquidClear))
-        assertTrue(!group.accepts(LiquidGlassStyle(refraction = 1f), null))
-        assertTrue(!group.accepts(null, SurfaceMaterial.Liquid))
+        val own = LiquidGlass.Regular.copy(clear = true, lens = RefractionLens(refraction = 2f))
+        group.material = own
+        assertTrue(group.accepts(null))
+        assertTrue(group.accepts(own.copy()))
+        assertTrue(!group.accepts(own.copy(lens = RefractionLens(refraction = 1f))))
+        assertTrue(!group.accepts(LiquidGlass.Regular))
     }
 }

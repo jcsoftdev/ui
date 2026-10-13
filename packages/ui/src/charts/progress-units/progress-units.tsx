@@ -89,6 +89,7 @@ export function ProgressUnits({
 
   return (
     <ChartFrame
+      dock="never"
       height={size}
       labels={labels}
       loading={loading}

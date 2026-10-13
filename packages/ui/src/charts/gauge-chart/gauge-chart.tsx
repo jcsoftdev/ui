@@ -433,7 +433,7 @@ function GaugePlot({
                   opacity={needle ? 0.92 : focused === index ? 0.32 : 0}
                   dimmed={needle && focused != null && focused !== index}
                   onEnter={(event) => nav.hover(index, event)}
-                  onLeave={nav.leave}
+                  onLeave={nav.pointerLeave}
                 />
               );
             })}
@@ -617,6 +617,7 @@ const BandMark = memo(function BandMark({
   return (
     <path
       data-band=""
+      data-chart-hit=""
       d={d}
       fill="none"
       strokeWidth={width}

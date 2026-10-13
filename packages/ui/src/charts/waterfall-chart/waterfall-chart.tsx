@@ -13,7 +13,12 @@ import { PlotOverlay } from "../core/plot-overlay.js";
 import { bandScale } from "../core/scales/band.js";
 import { linearScale } from "../core/scales/linear.js";
 import { ChartTooltip } from "../core/tooltip.js";
-import { type ChartLabels, resolveLabels, type ValueAxisOptions } from "../core/types.js";
+import {
+  type ChartLabels,
+  resolveAxisBound,
+  resolveLabels,
+  type ValueAxisOptions,
+} from "../core/types.js";
 import {
   pickLabels,
   type WaterfallBar,
@@ -242,7 +247,7 @@ function WaterfallPlot({
 
   const model = useMemo(() => {
     const y = linearScale({
-      domain: [yAxis?.min ?? min, yAxis?.max ?? max],
+      domain: [resolveAxisBound(yAxis?.min, min), resolveAxisBound(yAxis?.max, max)],
       range: [innerHeight, 0],
       tickCount: yAxis?.tickCount ?? Math.max(3, Math.round(innerHeight / 56)),
     });
@@ -457,7 +462,7 @@ function HorizontalWaterfallPlot({
     );
     const innerWidth = Math.max(40, width - left - (dataLabels ? H_MARGIN.right : 12));
     const x = linearScale({
-      domain: [yAxis?.min ?? min, yAxis?.max ?? max],
+      domain: [resolveAxisBound(yAxis?.min, min), resolveAxisBound(yAxis?.max, max)],
       range: [0, innerWidth],
       tickCount: yAxis?.tickCount ?? Math.max(2, Math.round(innerWidth / 130)),
     });

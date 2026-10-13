@@ -445,7 +445,7 @@ function BeeswarmPlot({
         count={points.length}
         active={active}
         onActiveChange={setActive}
-        pick={(x, y) => nearestPoint(points, x, y, 14)}
+        pick={(x, y, radius) => nearestPoint(points, x, y, radius ?? 14)}
         label={labels.explore}
         valueText={valueText}
         margin={margin}

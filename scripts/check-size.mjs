@@ -2,7 +2,10 @@
 // gzips it and fails when it exceeds the budget in size-budgets.json. Run after `pnpm build`.
 // A JS entry is measured as a consumer's bundler loads it: the entry chunk plus the chunks it
 // imports statically. A dynamic `import()` (the Liquid Glass lens engine) becomes its own lazy
-// chunk and is not counted, since it is only fetched when a surface needs it.
+// chunk and is not counted, since it is only fetched when a surface needs it. An entry with `lazy`
+// is a tier: it also counts the lazy chunks that hold those modules (and what they import), which
+// is what a page fetches once a surface uses that feature. An entry with `code` bundles that source
+// (paths relative to the repository root) instead of a file, to measure a combination of imports.
 //   node scripts/check-size.mjs [--update]   --update prints suggested budgets (+8%, rounded up).
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -65,15 +68,17 @@ if (existsSync(glyphDist)) {
     });
 }
 
-async function measure({ file, kind }) {
-  const path = join(root, file);
+async function measure({ file, code: source, kind, lazy = [] }) {
+  const path = file && join(root, file);
   let code;
   if (kind === "css") {
     code = readFileSync(path);
   } else {
     const outdir = join(root, ".size-check");
     const result = await build({
-      entryPoints: [path],
+      ...(source
+        ? { stdin: { contents: source, resolveDir: root, loader: "js" } }
+        : { entryPoints: [path] }),
       absWorkingDir: root,
       bundle: true,
       splitting: true,
@@ -89,7 +94,7 @@ async function measure({ file, kind }) {
     const files = new Map(result.outputFiles.map((out) => [out.path, out.contents]));
     const outputs = result.metafile.outputs;
     // Dynamic-import chunks also carry `entryPoint`; pick the chunk of the measured file itself.
-    const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint === file.replace(/^\.\//, ""));
+    const entry = Object.keys(outputs).find((name) => (file ? outputs[name].entryPoint === file.replace(/^\.\//, "") : outputs[name].entryPoint));
     const eager = new Set();
     const visit = (name) => {
       if (eager.has(name)) return;
@@ -98,6 +103,15 @@ async function measure({ file, kind }) {
         if (dep.kind === "import-statement" && !dep.external) visit(dep.path);
     };
     visit(entry);
+    for (const module of lazy) {
+      const chunk = Object.keys(outputs).find((name) =>
+        Object.entries(outputs[name].inputs).some(
+          ([input, { bytesInOutput }]) => input.endsWith(module) && bytesInOutput > 0,
+        ),
+      );
+      if (!chunk) throw new Error(`no chunk holds ${module}`);
+      visit(chunk);
+    }
     code = Buffer.concat([...eager].map((name) => Buffer.from(files.get(join(root, name)))));
   }
   return gzipSync(code, { level: 9 }).length;
@@ -111,7 +125,7 @@ for (const entry of budgets) {
   try {
     size = await measure(entry);
   } catch (error) {
-    rows.push(`FAIL  ${entry.id}: cannot measure ${entry.file} (${error.message.split("\n")[0]})`);
+    rows.push(`FAIL  ${entry.id}: cannot measure ${entry.file ?? "code"} (${error.message.split("\n")[0]})`);
     failed = true;
     continue;
   }
