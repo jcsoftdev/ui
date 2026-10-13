@@ -46,3 +46,14 @@ test("Breadcrumbs follows the locale, an explicit label and the injected link re
   assert.match(custom, /data-router-link="\/"/);
   assert.doesNotMatch(custom, /<a /);
 });
+
+test("LiveStatusBar is a polite status with a text per connection state", () => {
+  const texts = { live: "Live", reconnecting: "Reconnecting…", offline: "Offline" };
+  for (const [status, text] of Object.entries(texts)) {
+    const markup = html.liveBar(status);
+    assert.match(markup, new RegExp(`role="status"[^>]*data-status="${status}"`), status);
+    assert.match(markup, new RegExp(`</span>${text}</span><b>3 waiting</b>`), status);
+  }
+  assert.match(html.liveBar("live", { live: "Connected" }), /Connected/);
+  assert.match(html.liveBarEs(), /Sin conexión/);
+});

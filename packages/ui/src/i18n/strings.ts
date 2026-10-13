@@ -12,6 +12,9 @@ export interface UiStrings {
   actions: string;
   notifications: string;
   breadcrumbs: string;
+  live: string;
+  reconnecting: string;
+  offline: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -31,6 +34,9 @@ export const uiStrings = {
     actions: "Actions",
     notifications: "Notifications",
     breadcrumbs: "Breadcrumbs",
+    live: "Live",
+    reconnecting: "Reconnecting…",
+    offline: "Offline",
   },
   es: {
     retry: "Reintentar",
@@ -46,5 +52,8 @@ export const uiStrings = {
     actions: "Acciones",
     notifications: "Notificaciones",
     breadcrumbs: "Ruta de navegación",
+    live: "En vivo",
+    reconnecting: "Reconectando…",
+    offline: "Sin conexión",
   },
 } as const satisfies Record<UiLocale, UiStrings>;
