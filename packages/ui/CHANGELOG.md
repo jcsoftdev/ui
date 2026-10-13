@@ -2,8 +2,122 @@
 
 ## 0.3.0 (unreleased)
 
+### Liquid Glass is opt-in (breaking for the 0.3.0 previews)
+
+Liquid Glass now costs nothing until an app asks for it. This replaces the material objects and
+the per-component lens of the earlier 0.3.0 previews, which were never published (0.2.x users have
+nothing to change).
+
+- **Non-liquid components carry no liquid code.** Card, Dialog, Drawer, Popover, DropdownMenu,
+  ContextMenu, HoverCard, Topbar, Sidebar, ActionBar and CommandPalette are back to plain class
+  names: no lens hook, no option mapping, no glass-card detection, no ref composition, and no
+  chunk they could fetch later. `check:treeshake` asserts that no chunk of the `atoms`, `ai`,
+  `containers`, `forms`, `navigation`, `overlays`, `palette`, `primitives`, `shell` and `utils`
+  entries, eager or lazy, holds a glass module, so a page without Liquid Glass cannot fetch one at
+  run time. Sizes match the build before Liquid Glass (#35) within 15 bytes gzip (`shell` 10057 B, `overlays` 27125 B,
+  `containers` 89025 B, `utils` 7678 B).
+- **New `@jcsoftdev/ui/liquid` entry** for the declarative API: `<LiquidGlass />`,
+  `startLiquidGlass()`, `liquidStyle()`, `liquidVars()`, `mergeLiquid()`, `LIQUID_DEFAULTS`,
+  `LIQUID_PRESETS`, `LIQUID_PRESET_CLEAR`, `LIQUID_PRESET_REGULAR`, `LIQUID_PRESET_THICK`,
+  `LIQUID_PRESET_CRYSTAL`, `supportsBackdropRefraction()` and the option types. It holds no static
+  import of the lens engine, so even a bundler that splits by file (esbuild) keeps the engine out
+  of the first load. `@jcsoftdev/ui/glass` keeps the imperative engine and the map builders.
+- **`<LiquidGlass />`** (or `startLiquidGlass()`, which returns its stop; calls are counted) is the
+  only thing that loads the lens. Render it once near the root. It watches the document (classes,
+  `data-glass`, `data-glass-lens`, `data-style`, `data-theme`, added and removed nodes, and the
+  transparency, contrast and motion preferences) and gives the lens to every surface whose CSS
+  resolves to `--glass-lens: 1` with a backdrop filter (computed, so `md:liquid`, `dark:liquid`,
+  `data-[state=open]:liquid`, `aria-*` and `group-*` variants, container queries and an inline
+  `--glass-lens` count; pseudo-class variants such as `hover:liquid` are not followed; a custom
+  `@apply liquid` class needs `data-glass-lens="on"`),
+  fetching the engine the first time one does and retrying a failed fetch with a backoff (six attempts at most). It does
+  nothing on the server and nothing where the lens cannot paint (Safari, Firefox).
+- **A lens applied by code and the watcher share an element safely.** Each element's lens keeps one
+  claim per owner: `applyGlassRefraction` / `useGlassRefraction` options win over the automatic
+  ones, the watcher never stops a manual lens, and after the manual cleanup the automatic lens takes
+  over again. A release left over from an ended claim is a no-op.
+- **Lens slots go to surfaces that can show one.** Hidden (`display: none`), zero-area and
+  far-offscreen surfaces take none of the 8 slots, and are lensed once they show.
+- **Options are `style={liquidStyle(options)}`**: synchronous custom properties, so the server
+  markup and the first client paint are already right, nothing changes at hydration, and no option
+  can go stale after it.
+- The engine is split along its features: the crystal layer (`lens-crystal`, with `crystal-map`)
+  and the dispersion passes (`lens-dispersion`) are lazy chunks fetched only for a surface that
+  uses them. The specular and crystal map builders moved out of `displacement-map` into
+  `specular-map` and `crystal-map` (same exports from `@jcsoftdev/ui/glass`). The specular layer
+  and the motion stay in the engine chunk: every lensed surface uses both on its first frame.
+- Topbar, Sidebar and CommandPalette accept `style` on their root.
+- `check:size` measures the liquid tiers (Topbar alone, plus `liquidStyle`, plus `<LiquidGlass />`,
+  plus the lazy engine, plus the crystal and dispersion chunks).
+
+### Migration
+
+From the 0.3.0 previews (`main` before this change):
+
+- `material={{ type: "liquid", ...options }}` becomes
+  `material="liquid" style={liquidStyle(options)}` (`"liquid-clear"` the same way). `material` only
+  takes `"solid" | "glass" | "glass-clear" | "liquid" | "liquid-clear"`.
+- `material={{ type: "liquid", preset: "thick", radius: 24 }}` becomes
+  `material="liquid" style={liquidStyle(mergeLiquid(LIQUID_PRESET_THICK, { radius: 24 }))}`.
+- The lens no longer turns on by itself: render `<LiquidGlass />` once (from
+  `@jcsoftdev/ui/liquid`) in an app that wants it. Without it, liquid surfaces keep the CSS look.
+- `useGlassLens(ref?)` is removed. Drop the ref: with `<LiquidGlass />` mounted, any element with
+  the `liquid` or `liquid-clear` class (or a glass surface under `data-glass="liquid"`) is lensed.
+  `applyGlassRefraction()` and `useGlassRefraction()` remain for manual control.
+- `materialStyle()`, `withMaterialStyle()`, `MaterialName`, `LiquidMaterial` and
+  `liquidOptionsOf()` are removed. `@jcsoftdev/ui/utils` exports `Material` (now a string union)
+  and `materialClass()` only.
+- Import `LiquidGlass` and `startLiquidGlass` from `@jcsoftdev/ui/liquid`; the options, presets
+  and `liquidStyle` are exported from both `@jcsoftdev/ui/liquid` and `@jcsoftdev/ui/glass`.
+- The automatic lens reads the pointer mode (`interactive`) only from the surface itself, on every
+  surface (before, only the overlays did).
+- A surface that leaves the page releases its lens when the DOM mutation is observed (a microtask later), not synchronously.
+
+From 0.2.x: nothing changes unless you adopt Liquid Glass.
+
+### Security
+
+- **RichTextEditor sanitizer: `javascript:` href bypass via Unicode whitespace.** The URL check ignored only ASCII and a few invisible characters, while the emitted `href` was `decodeEntities(href).trim()`, and `trim()` also strips U+00A0, U+1680, U+2000-200A, U+202F, U+205F and U+3000. A link such as `<a href="&nbsp;javascript:alert(1)">` passed the check and was emitted as `href="javascript:alert(1)"` (stored XSS for apps that render sanitized HTML as markup); the output was not idempotent. The href is now normalized once, that exact string is validated (all whitespace and format characters ignored, then a protocol allowlist through `new URL`), and the same string is emitted. Anyone using `sanitizeHtml` or `isSafeUrl` should upgrade; stored content is re-sanitized on the next pass.
+- **Markdown parser (low): bounded nesting and link scan.** Blockquote and list nesting is capped at 32 levels (deeper levels render as literal text), which removes a stack overflow on `>` x 20000 and a multi-second parse on deeply nested lists, and the link-target scan is bounded so `[](` repeated thousands of times is no longer quadratic.
+
+### App-level building blocks
+
+- **Tone palettes.** `tonePalettes` in a token file (optional) emits `--tone-<name>`, `--tone-<name>-soft` and `--tone-<name>-ink` for light and dark, plus `--color-tone-*` in `theme.css`. Names are kebab-case; `fill` and `soft` are required, `ink` falls back to `fill`. `buildTheme`, `buildTokensCss`, `buildThemeCss` and `ui-theme build` all honour it; files without the section build byte-identically.
+- **Open `tone`.** `Chip`, `StatusDot`, `Kpi` and `Avatar` accept any tone name besides the built-in ones (`ChipTone`, `StatusDotTone`, `KpiTone`, `AvatarTone` are the built-in union plus `string & {}`; `ChipBuiltinTone` and friends keep the closed unions). Unknown names resolve through `--tone-<name>` variables set inline, so no class needs generating.
+- **Kpi**: `tone`, `dot`, `icon`, `trend`. **KpiGroup**: `layout="auto-fit"` with `minItemWidth` (default 150) for separate cards in as many columns as fit.
+- **Avatar**: `tone`, and `status` + `statusLabel` for a small status dot at the bottom-right.
+- **EmptyState / ErrorState**: `variant="outlined"` (dashed border / danger border).
+- **PageHeader**: `compact` (centred, tighter, body-size lede) and `breadcrumbs` (trail on its own row above the title).
+- **Topbar**: `onSearch`, `searchLabel`, `searchPlaceholder`, `breadcrumbs` and `breadcrumbsLabel` are optional; missing parts render nothing (and Cmd/Ctrl+K is only bound with `onSearch`).
+- **CardHeader**: `icon`, `title` and `action` slots; children still render as before.
+- **Segmented**: `options` (`{ value, label, disabled? }[]`), `block` (full width, control-height items) and `allowDeselect` (default `false`: the pressed item stays selected; `true` lets a second press clear it).
+- **Button**: while `loading` without a `loadingLabel`, the children stay and the UI string `loading` is announced.
+- **CopyField**: label, monospace read-only value and a copy button with a 1.5 s copied state and a live region; strings `copy` and `copied` join the UI strings (`en`, `es`).
+- **Layout**: `Page`, `Stack` and `Grid` (`@jcsoftdev/ui/containers/page`, `/stack`, `/grid`). `Page` is the `page` container, so `Cols` and `SettingsLayout` inside it react to the page width. `Grid` is intrinsic by default (`minColumnWidth`) or fixed with `columns`; `Stack` takes `direction`, `gap` and `align`.
+- **Forms**: `Form`, `FormError` (`role="alert"`) and `FormStatus` (`role="status"`) in `@jcsoftdev/ui/forms/form`; the two messages render nothing for `null`, `undefined` or an empty `message`.
+- **`Breadcrumbs`** (`@jcsoftdev/ui/navigation/breadcrumbs`): a named `nav` with an ordered list, `aria-current="page"` on the last item and a `renderLink` hook. 
+- **`LiveStatusBar`** (`@jcsoftdev/ui/states/live-status-bar`): `live`, `reconnecting` and `offline` states as a polite `role="status"` with a dot and localized text.
+- **`BottomNav`** (`@jcsoftdev/ui/shell/bottom-nav`): phone navigation bar for `Sidebar` items; the items past the fifth slot go behind a "More" button that opens a drawer. It hides itself once the `AppShell` is 900 px wide.
+- New localized strings: `breadcrumbs`, `live`, `reconnecting`, `offline`, `more`.
+
+### Chart gaps
+
+- **Cartesian charts** (`BarChart`, `AreaChart`, `LineChart`, `ComboChart`): `tooltipRows({ index, category, rows })` returns `{ title?, rows?, footer? }` to replace parts of the tooltip (the default is unchanged when absent; the hidden data table is untouched); `categoryTickEvery` (a step or `(index, label) => boolean`) overrides the automatic thinning of the category labels; `markers` also takes an array of indices of `categories` to dot only those points.
+- **`ValueAxisOptions.min` / `max`** accept a function of the data bound, e.g. `max: (dataMax) => Math.ceil(dataMax / 400) * 400`. `resolveAxisBound` and `AxisBound` are exported from `core/types`; the horizontal bar, lollipop, dumbbell, range area and waterfall axes honour it too.
+- **`HeatmapChart`**: `cellDetail(row, column, value)` returns extra `TooltipRow`s under the cell value; `ChartTooltip` gained a `footer` slot.
+- **`DonutChart`**: `sliceLabels` (`true`, `"percent"` or `"value"`) draws the share or the formatted value inside the ring and skips slices too small to hold it; it combines with `outsideLabels`.
+
+### Behavior change
+
+- **`Segmented` keeps the selected item selected.** Pressing the selected `SegmentedItem` again used to clear the selection (value `""`); a single-select group now stays on it. `Segmented` takes `allowDeselect` (default `false`) to keep the old behavior.
+
 ### Fixes
 
+- **PolarAreaChart hover no longer flickers.** The hovered sector steps out by 6px and was also the pointer target, so a still pointer near its inner edge fell outside the moved sector: hover, tooltip and dimming toggled about 25 times a second. Pointer events now go to invisible sectors at rest, with no gap between neighbours and covering the stepped-out area, as in DonutChart since 0.2.1. The tooltip stays inside the chart vertically too.
+- **DonutChart, PieChart and PolarAreaChart keep a tapped slice.** On touch and pen, lifting the finger fires `pointerleave`, which dropped the slice right after the tap: tooltip, centre value and dimming flashed for a frame and vanished. A tap now pins the slice until the next tap on another slice or outside the chart; the mouse still drops the hover when it leaves. `useIndexNavigation` returns `pointerLeave` for this.
+- **`AppShell` no longer re-renders the page during hydration.** Its context value changed in the first layout effect after hydration, which made Next.js client-render still-dehydrated Suspense boundaries (a hidden `div#S:0` stayed in the page). The value is now a store that never changes identity and reads `false` on the server and on the first client render; only `useAppShell` consumers update, once the width is measured.
+- **`OfflineBanner` takes an `action`** (for example a retry button) after the queue counter.
+- **`Checkbox` takes a `label`**: it renders a `<label>` bound to the box, so it names the checkbox and a click on it toggles. New `wrapper` and `label` parts.
 - **Checkbox looks like a checkbox.** The box is square (`rounded-xs`, the 4px small-radius token, 3px in the compact theme) instead of a circle, and the checked and indeterminate fill is the accent (as in Switch and the selected RadioGroup row) instead of the success green. Round plus green read as a radio button in multi-select lists. Sizes, 44px touch hit area, focus ring, disabled state and the `box`/`indicator`/`icon` parts are unchanged; The indeterminate state draws a dash instead of a check mark, and a disabled checkbox is dimmed (`opacity-50`, `cursor-not-allowed`) like the other form controls. RadioGroup stays round.
 
 ### Theme builder
@@ -16,13 +130,12 @@
 
 ### Configurable Liquid Glass and liquid motion
 
-- **`LiquidGlassOptions`**: `material={{ type: "liquid" | "liquid-clear", ...options }}` on every
-  component with a `material` prop (the string values are unchanged). Options: `refraction`,
+- **`LiquidGlassOptions`**: `style={liquidStyle(options)}` on any liquid surface. Options: `refraction`,
   `bevelWidth`, `profile` (`"full"`, `"dome"`, `"rim"`), `dispersion`, `frost`, `saturation`,
   `brightness`, `tint`, `rim`, `specular`, `fresnel`, `grain`, `radius`, `opacity`, `shadow`,
   `interactive`, `motion`. Each maps to a `--liquid-*` custom property that the CSS and the lens
   read, so a scope or the theme can set them and a change applies live. Exported from
-  `@jcsoftdev/ui/glass` with `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle` and `liquidVars`.
+  `@jcsoftdev/ui/liquid` with `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle` and `liquidVars`.
 - **`data-glass` presets**: `liquid-clear`, `liquid-regular` and `liquid-thick` (in `base.css`).
   The global switch is now `[data-glass^="liquid"]`.
 - **Optics**: the `dome` profile (round contours), a size-scaled outer shadow, fresnel glow, film
@@ -44,8 +157,7 @@
   drag ignores presses on buttons, links and fields inside the surface, captures the pointer only
   after 6 px, and swallows just its own gesture's click (within ~350 ms); no style reads per frame
   and no config refresh from the motion's own writes; `--liquid-motion` and `--liquid-interactive`
-  are live; a moved surface follows its new ancestors; the overlays (dialog, popover, sidebar,
-  drawer) read `--liquid-interactive` only from their own inline style.
+  are live; a moved surface follows its new ancestors.
 
 ### Liquid variant of the glass (lensing)
 
@@ -58,10 +170,7 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   `glass-clear` render exactly as in 0.2 (a golden test pins their CSS).
 - **Global switch**: `data-glass="liquid"` on `<html>` or any scope makes `glass`, `glass-clear` and
   the glass-preset chrome surfaces render liquid. Content (`surface-card`) stays solid.
-- **Lens by default for liquid surfaces in Chromium**: Dialog, Drawer, popper content (Popover,
-  DropdownMenu, ContextMenu, HoverCard), Topbar, Sidebar, ActionBar and Card call the new
-  `useGlassLens` internally. It lazy-loads the engine only when the surface resolves to a liquid
-  material, so frosted and solid surfaces never load it. The displacement map is rasterised from a
+- **Lens for liquid surfaces in Chromium** once `<LiquidGlass />` is mounted (see above). The displacement map is rasterised from a
   rounded-rect signed distance field with a Snell's-law squircle profile, DPR aware; chromatic
   dispersion on surfaces up to 100,000 px squared; the blur and legibility veil move into the
   filter so the rim stays sharp while the middle stays frosted. Budgets: 8 lenses, 640,000 px
@@ -82,17 +191,15 @@ Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it
   tint is dropped while the lens is on, blur is 2 px / 0.6 px, the rim glint is brighter and wider,
   and dispersion is off by default (`--glass-lens-dispersion` or the option turns it on).
 - The full-surface lens is a crease-free superellipse dome (pull along the gradient of `r = (|u|^3 + |v|^3)^(1/3)`), not a per-axis or edge-distance field, so it no longer reads as a four-faced diamond; tests check direction continuity across the diagonals and a positive 2D Jacobian.
-- **Fixes**: `Card` stays a server component (only a glass card renders the client `CardLens`);
-  the lens follows class, `data-glass`, opt-out and preference changes at runtime; area and
-  dispersion budgets are enforced on every resize; surfaces waiting for one of the 8 slots get one
-  when it frees; `useGlassLens` composes the consumer ref (React 19 cleanup, changing identity).
-  New `check:rsc` script.
-- `@jcsoftdev/ui/glass`: new `useGlassLens`, `computeDisplacementField`, `lensProfile`;
+- **Fixes**: `Card` stays a server component; the lens follows class, `data-glass`, opt-out and
+  preference changes at runtime; area and dispersion budgets are enforced on every resize;
+  surfaces waiting for one of the 8 slots get one when it frees. New `check:rsc` script.
+- `@jcsoftdev/ui/glass`: new `computeDisplacementField`, `lensProfile`;
   `createDisplacementMap` now returns a PNG data URI (browser only); `applyGlassRefraction` gains
   `dispersion`, `veil` and `auto`, and moves the blur into the filter. The default `scale` is 20.
 - New shared tokens `--liquid-*` (blur, saturate, filters, tints, dim, rim, depth). 
-- Material components and the `cn` merge group accept the new values. Components with a `ref` prop
-  on Card and ActionBar now forward it to the root.
+- Material components and the `cn` merge group accept the new values. Card and ActionBar type
+  their `ref` prop (it reaches the root).
 
 ### Liquid Glass
 

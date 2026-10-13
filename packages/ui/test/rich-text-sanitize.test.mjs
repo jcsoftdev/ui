@@ -139,3 +139,73 @@ test("isSafeUrl and htmlToText", () => {
   assert.equal(htmlToText("<p>Hola&nbsp;<strong>x</strong></p>"), "Hola x".trim());
   assert.equal(htmlToText("<p><br></p>"), "");
 });
+
+const UNICODE_SPACE_PAYLOADS = [
+  "&nbsp;javascript:alert(1)",
+  "&#160;&#160;vbscript:msgbox(1)",
+  "&#xa0;data:text/html,<script>alert(1)</script>",
+  " javascript:alert(1)",
+  "　javascript:alert(1)",
+  " javascript:alert(1)",
+  " javascript:alert(1)",
+  " javascript:alert(1)",
+  " javascript:alert(1)",
+  " javascript:alert(1)",
+  "java script:alert(1)",
+  "⁠javascript:alert(1)",
+  "&#x3000;&#x2003;JaVaScRiPt:alert(1)",
+];
+
+test("unicode whitespace in front of a scheme cannot smuggle javascript: through trim()", () => {
+  for (const href of UNICODE_SPACE_PAYLOADS) {
+    const out = sanitizeHtml(`<a href="${href}">x</a>`);
+    assert.equal(out, "<a>x</a>", `${JSON.stringify(href)} -> ${out}`);
+    assert.equal(isSafeUrl(href), false, JSON.stringify(href));
+  }
+});
+
+test("sanitizeHtml is idempotent over the hostile corpus and the unicode payloads", () => {
+  const corpus = [
+    ...UNICODE_SPACE_PAYLOADS.map((href) => `<a href="${href}">x</a>`),
+    "<a href=javascript:alert(1)>x</a>",
+    '<a href="https://barberia.pe/citas?a=1&b=2">y</a>',
+    '<a href="&nbsp;https://a.pe/ok">trimmed</a>',
+    "<script>alert(1)</script><p onclick=x>a</p>",
+    "<scr<script>ipt>alert(1)</scr</script>ipt>",
+    "&lt;script&gt;alert(1)&lt;/script&gt;",
+    "<p>a<strong>b",
+  ];
+  for (const input of corpus) {
+    const once = sanitizeHtml(input);
+    assert.equal(sanitizeHtml(once), once, JSON.stringify(input));
+  }
+});
+
+test("a safe link padded with unicode whitespace keeps working, trimmed", () => {
+  assert.equal(
+    sanitizeHtml('<a href="&nbsp;https://a.pe/x　">y</a>'),
+    '<a href="https://a.pe/x" rel="noopener noreferrer nofollow" target="_blank">y</a>',
+  );
+});
+
+test("hostile nesting stays cheap and idempotent", () => {
+  const payloads = {
+    openThenBlocks: "<b>".repeat(40000) + "<p>".repeat(40000),
+    openThenStrayCloser: "<b>".repeat(70000) + "</p>".repeat(70000),
+    scripts: "<script></script>".repeat(20000),
+  };
+  for (const [name, input] of Object.entries(payloads)) {
+    const start = performance.now();
+    const out = sanitizeHtml(input);
+    const elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+    assert.equal(sanitizeHtml(out), out, name);
+  }
+});
+
+test("elements nested deeper than 128 are unwrapped and keep their text", () => {
+  const out = sanitizeHtml(`${"<b>".repeat(300)}text${"</b>".repeat(300)}`);
+  assert.equal(out.match(/<strong>/g)?.length, 128);
+  assert.ok(out.includes("text"));
+  assert.equal(sanitizeHtml(out), out);
+});

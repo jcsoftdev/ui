@@ -23,8 +23,40 @@ const themeOf = (tokens) => {
   return { base: themes[0], others: themes.slice(1) };
 };
 
+const TONE_NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+const TONE_ROLES = ["fill", "soft", "ink"];
+
+/** Tone palettes as color tokens: --tone-<name>, --tone-<name>-soft, --tone-<name>-ink. */
+export function tonesOf(tokens) {
+  const out = [];
+  for (const [name, roles] of Object.entries(tokens.tonePalettes ?? {})) {
+    if (!TONE_NAME.test(name)) {
+      throw new Error(
+        `tonePalettes: "${name}" must be kebab-case (lowercase letters, digits, hyphens)`,
+      );
+    }
+    for (const role of Object.keys(roles ?? {})) {
+      if (!TONE_ROLES.includes(role)) {
+        throw new Error(`tonePalettes.${name}: unknown role "${role}" (expected fill, soft, ink)`);
+      }
+    }
+    for (const role of ["fill", "soft"]) {
+      if (roles?.[role] === undefined)
+        throw new Error(`tonePalettes.${name}: "${role}" is required`);
+    }
+    const value = { fill: roles.fill, soft: roles.soft, ink: roles.ink ?? roles.fill };
+    out.push(
+      { name: `tone-${name}`, value: value.fill },
+      { name: `tone-${name}-soft`, value: value.soft },
+      { name: `tone-${name}-ink`, value: value.ink },
+    );
+  }
+  return out;
+}
+
 const allTokens = (tokens) => [
   ...(tokens.color?.tokens ?? []),
+  ...tonesOf(tokens),
   ...(tokens.shadow?.tokens ?? []),
   ...(tokens.radius?.tokens ?? []),
   ...(tokens.spacing?.tokens ?? []),
@@ -258,6 +290,9 @@ const stripPrefix = (name, prefix) =>
 export function buildThemeCss(tokens) {
   const lines = [];
   for (const t of tokens.color?.tokens ?? []) {
+    lines.push(`  --color-${t.name}: var(--${t.name});`);
+  }
+  for (const t of tonesOf(tokens)) {
     lines.push(`  --color-${t.name}: var(--${t.name});`);
   }
   for (const t of tokens.radius?.tokens ?? []) {

@@ -1,5 +1,5 @@
 /// <reference types="@vitest/browser-playwright" />
-import { act, type CSSProperties, type ReactNode } from "react";
+import { act, type ComponentProps, type CSSProperties, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { cdp, page, userEvent } from "vitest/browser";
@@ -13,7 +13,39 @@ import {
   DropdownMenuTrigger,
 } from "../overlays/dropdown-menu/dropdown-menu.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../overlays/popover/popover.js";
+import type { Material } from "../utils/material.js";
+import { startLiquidGlass } from "./liquid-glass.js";
+import {
+  LIQUID_PRESETS,
+  type LiquidGlassOptions,
+  type LiquidPresetName,
+  liquidStyle,
+  mergeLiquid,
+} from "./liquid-options.js";
 import { applyGlassRefraction } from "./refraction.js";
+
+/** A material with options, as the tests describe it: the string material plus `liquidStyle()`. */
+type Spec =
+  | Material
+  | undefined
+  | ({ type: "liquid" | "liquid-clear"; preset?: LiquidPresetName } & LiquidGlassOptions);
+const surfaceProps = (spec: Spec): { material?: Material; style?: CSSProperties } => {
+  if (typeof spec !== "object") return { material: spec };
+  const { type, preset, ...options } = spec;
+  return {
+    material: type,
+    style: liquidStyle(preset ? mergeLiquid(LIQUID_PRESETS[preset], options) : options),
+  };
+};
+
+/** The lens is opt-in (`<LiquidGlass />` in an app): the describes about the lens turn it on. */
+function withLiquidGlass() {
+  let stop: (() => void) | undefined;
+  beforeEach(() => {
+    stop = startLiquidGlass();
+  });
+  afterEach(() => stop?.());
+}
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -247,6 +279,7 @@ describe("portaled overlays opened from glass", () => {
 });
 
 describe("popper content nested in a liquid surface", () => {
+  withLiquidGlass();
   test("a popover and a menu opened from a liquid dialog stay opaque and are never lensed", async () => {
     await mount(
       <Dialog open>
@@ -686,7 +719,8 @@ describe("liquid glass is a variant next to the frosted material", () => {
   });
 });
 
-describe("components apply the lens by themselves, only for liquid surfaces", () => {
+describe("<LiquidGlass /> lenses liquid surfaces, and only those", () => {
+  withLiquidGlass();
   const filters = () => document.querySelectorAll("#ui-glass-refraction-defs filter").length;
   const settle = () => new Promise((r) => setTimeout(r, 120));
 
@@ -987,15 +1021,16 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
   });
 });
 
-describe("liquid options (material object, variables and presets)", () => {
+describe("liquid options (liquidStyle, variables and presets)", () => {
+  withLiquidGlass();
   const filters = () => document.querySelectorAll("#ui-glass-refraction-defs filter").length;
   const defs = () => document.querySelector("#ui-glass-refraction-defs") as Element;
   const scale = () => Number(defs().querySelector("feDisplacementMap")?.getAttribute("scale"));
   const settle = () => new Promise((r) => setTimeout(r, 400));
-  const card = (material: Parameters<typeof Card>[0]["material"], extra = "") => (
+  const card = (spec: Spec, extra = "") => (
     <Card
       data-testid="box"
-      material={material}
+      {...surfaceProps(spec)}
       className={`absolute top-2 left-2 h-24 w-48 ${extra}`}
     />
   );
@@ -1016,7 +1051,7 @@ describe("liquid options (material object, variables and presets)", () => {
     await mount(
       <Card
         data-testid="box"
-        material={{ type: "liquid", bevelWidth: 6 }}
+        {...surfaceProps({ type: "liquid", bevelWidth: 6 })}
         className="absolute top-2 left-2 h-[300px] w-[400px]"
       />,
     );
@@ -1118,21 +1153,29 @@ describe("liquid options (material object, variables and presets)", () => {
 });
 
 describe("liquid motion", () => {
+  withLiquidGlass();
   const filters = () => document.querySelectorAll("#ui-glass-refraction-defs filter").length;
   const scale = () =>
     Number(
       document.querySelector("#ui-glass-refraction-defs feDisplacementMap")?.getAttribute("scale"),
     );
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  const surface = (material: Parameters<typeof Card>[0]["material"], extra = {}) => (
-    <Card
-      data-testid="box"
-      data-glass-interactive=""
-      material={material}
-      className="absolute top-8 left-8 h-24 w-48"
-      {...extra}
-    />
-  );
+  const surface = (
+    spec: Spec,
+    { style, ...extra }: Omit<ComponentProps<typeof Card>, "material"> = {},
+  ) => {
+    const props = surfaceProps(spec);
+    return (
+      <Card
+        data-testid="box"
+        data-glass-interactive=""
+        material={props.material}
+        style={{ ...props.style, ...style }}
+        className="absolute top-8 left-8 h-24 w-48"
+        {...extra}
+      />
+    );
+  };
   const box = () => document.querySelector("[data-testid=box]") as HTMLElement;
   const fire = (type: string, x: number, y: number, target: Element = box()) =>
     target.dispatchEvent(
@@ -1324,6 +1367,8 @@ describe("liquid motion", () => {
       expect(el.style.translate).not.toBe("");
       await act(async () => root?.unmount());
       root = undefined;
+      // <LiquidGlass /> releases a removed surface on the next frame.
+      await vi.waitFor(() => expect(filters()).toBe(0));
     });
     // Pointer events and the click guard were really attached, and every one was removed again.
     expect(added.map(([type]) => type)).toEqual(

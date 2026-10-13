@@ -1,54 +1,82 @@
 package com.jcsoftdev.ui.glass
 
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import com.jcsoftdev.ui.theme.GlassMaterial
 import com.jcsoftdev.ui.theme.UiGlass
 import com.jcsoftdev.ui.theme.UiStyle
 import com.jcsoftdev.ui.theme.UiTheme
 
 /**
- * What a surface is made of, the Compose counterpart of the web `solid`, `glass` and `glass-clear` materials.
- * [Glass] is the adaptive, legible variant; [GlassClear] is more transparent and carries a stronger dim layer.
- * Glass blurs what is behind it where the platform allows and is otherwise a translucent tint; it is always opaque when
- * the theme asks for reduced transparency or high contrast, and nested glass falls back to a near-solid fill.
+ * What a surface is made of, the Compose counterpart of the web `solid`, `glass` and `glass-clear` materials and of the liquid
+ * material object. [Solid] is opaque, [Glass] the adaptive, legible frosted glass and [GlassClear] its more transparent variant;
+ * [LiquidGlass] is the Apple look, built from the features passed to it.
+ *
+ * Each material carries the code that draws it, so an app ships only the materials it names: without [LiquidGlass] (or one of
+ * its presets) none of the Liquid Glass code is in the APK, and a [LiquidGlass] without a lens ships none of the lens. Glass is
+ * always opaque when the theme asks for reduced transparency or high contrast, and nested glass falls back to a near-solid fill.
  */
-public enum class SurfaceMaterial {
-    /** Opaque fill. */
-    Solid,
+@Immutable
+public sealed class SurfaceMaterial {
+    /** False only for [Solid]. */
+    internal open val isGlass: Boolean get() = true
 
-    /** Frosted glass: a blurred, saturated backdrop under a tint. Regular, adaptive and legible. */
-    Glass,
+    /** True for a material that refracts its backdrop where the platform can run the lens shader. */
+    internal open val refracts: Boolean get() = false
 
-    /** Frosted glass, clear variant: more transparent, with a stronger dim layer. */
-    GlassClear,
+    /** The tint, dim, blur and edge tokens of this material in the light or dark theme. */
+    internal abstract fun tokens(dark: Boolean): GlassMaterial
 
     /**
-     * Liquid Glass: the Apple look. Low center blur, a lens that refracts the backdrop at the edges (with a little chromatic
-     * dispersion), a lit rim, inner thickness shading and an outer shadow. Where the platform cannot run the lens shader it is
-     * blur plus rim and shadow, and below that the tint plus rim.
+     * The glass surface of a resolved [SurfaceMode.Tint], [SurfaceMode.Blur] or [SurfaceMode.Lens]. [interactive] is true for
+     * [material] and [MaterialSurface], the only callers whose [interactionSource] can move the surface.
      */
-    Liquid,
+    @Composable
+    internal abstract fun glassSurface(
+        modifier: Modifier,
+        resolved: ResolvedMaterial,
+        shape: Shape,
+        glass: GlassState?,
+        observe: (() -> Float)?,
+        interactionSource: InteractionSource?,
+        interactive: Boolean,
+    ): Modifier
 
-    /** Liquid Glass, clear variant: more transparent, with a stronger dim layer. */
-    LiquidClear,
+    public companion object {
+        /** Opaque fill. */
+        public val Solid: SurfaceMaterial get() = SolidMaterial
+
+        /** Frosted glass: a blurred, saturated backdrop under a tint. Regular, adaptive and legible. */
+        public val Glass: SurfaceMaterial get() = FrostedRegular
+
+        /** Frosted glass, clear variant: more transparent, with a stronger dim layer. */
+        public val GlassClear: SurfaceMaterial get() = FrostedClear
+    }
 }
 
-/**
- * Which glass a chrome surface gets with `UiStyle.Glass` when it names no material: [Frosted] (the blurred
- * [SurfaceMaterial.Glass]) or [Liquid] (the lensed [SurfaceMaterial.Liquid]). Explicit materials are never changed by it.
- */
-public enum class GlassVariant {
-    /** Blur, tint, dim, edge highlight. */
-    Frosted,
+internal object SolidMaterial : SurfaceMaterial() {
+    override val isGlass: Boolean get() = false
 
-    /** Lens refraction, rim, thickness and shadow. */
-    Liquid,
+    override fun tokens(dark: Boolean): GlassMaterial = if (dark) UiGlass.RegularDark else UiGlass.RegularLight
+
+    // Never called: a solid material resolves to SurfaceMode.Solid, which surfaceMaterial draws itself.
+    @Composable
+    override fun glassSurface(
+        modifier: Modifier,
+        resolved: ResolvedMaterial,
+        shape: Shape,
+        glass: GlassState?,
+        observe: (() -> Float)?,
+        interactionSource: InteractionSource?,
+        interactive: Boolean,
+    ): Modifier = modifier
+
+    override fun toString(): String = "Solid"
 }
 
 /** Which layer of the interface a surface belongs to; decides what a null material means. */
@@ -73,7 +101,7 @@ internal enum class SurfaceMode {
     /** Tint over a blurred, saturated copy of the backdrop. */
     Blur,
 
-    /** [Blur] whose edges are refracted by the lens shader (Liquid Glass). */
+    /** [Blur] whose edges are refracted by the lens shader (Liquid Glass with a lens). */
     Lens,
 }
 
@@ -87,19 +115,15 @@ internal class ResolvedMaterial(
 ) {
     val isGlass: Boolean get() = mode == SurfaceMode.Tint || mode == SurfaceMode.Blur || mode == SurfaceMode.Lens
 
-    /** Draws the Liquid look (rim, thickness shading, shadow), with or without the lens. */
-    val liquid: Boolean get() = variant == SurfaceMaterial.Liquid || variant == SurfaceMaterial.LiquidClear
-
-    val clear: Boolean get() = variant == SurfaceMaterial.GlassClear || variant == SurfaceMaterial.LiquidClear
-
     /** Glass children of a glass (or already nested) surface fall back to the near-solid fill. */
     val providesNesting: Boolean get() = isGlass || mode == SurfaceMode.Nested
 }
 
 /**
- * Pure decision of how a surface renders. Order: a solid request stays solid; reduced transparency or high contrast
- * force opaque; glass inside glass becomes [SurfaceMode.Nested]; otherwise [SurfaceMode.Blur] when a backdrop can be
- * sampled and the platform blurs, else [SurfaceMode.Tint].
+ * Pure decision of how a surface renders. Order: a solid request stays solid; reduced transparency or high contrast force
+ * opaque; glass inside glass becomes [SurfaceMode.Nested]; otherwise, when a backdrop can be sampled and the platform blurs,
+ * [SurfaceMode.Lens] for a material with a lens where the lens shader runs and [SurfaceMode.Blur] for the rest, else
+ * [SurfaceMode.Tint]. A null request is [chromeGlass] for a chrome surface under [UiStyle.Glass], and solid otherwise.
  */
 internal fun resolveMaterial(
     requested: SurfaceMaterial?,
@@ -109,21 +133,19 @@ internal fun resolveMaterial(
     highContrast: Boolean,
     nested: Boolean,
     blurAvailable: Boolean,
-    glassVariant: GlassVariant = GlassVariant.Frosted,
+    chromeGlass: SurfaceMaterial = SurfaceMaterial.Glass,
     lensAvailable: Boolean = false,
 ): ResolvedMaterial {
-    val chromeGlass = if (glassVariant == GlassVariant.Liquid) SurfaceMaterial.Liquid else SurfaceMaterial.Glass
     val variant = requested ?: if (role == SurfaceRole.Chrome && style == UiStyle.Glass) chromeGlass else SurfaceMaterial.Solid
-    val liquid = variant == SurfaceMaterial.Liquid || variant == SurfaceMaterial.LiquidClear
     val mode =
         when {
-            variant == SurfaceMaterial.Solid -> SurfaceMode.Solid
+            !variant.isGlass -> SurfaceMode.Solid
             reduceTransparency || highContrast -> SurfaceMode.Solid
             nested -> SurfaceMode.Nested
-            blurAvailable -> if (liquid && lensAvailable) SurfaceMode.Lens else SurfaceMode.Blur
+            blurAvailable -> if (variant.refracts && lensAvailable) SurfaceMode.Lens else SurfaceMode.Blur
             else -> SurfaceMode.Tint
         }
-    val forced = variant != SurfaceMaterial.Solid && mode == SurfaceMode.Solid
+    val forced = variant.isGlass && mode == SurfaceMode.Solid
     return ResolvedMaterial(mode, variant, forcedOpaque = forced, highContrast = forced && highContrast)
 }
 
@@ -135,7 +157,9 @@ internal val LocalUiStyle = staticCompositionLocalOf { UiStyle.Default }
 internal val LocalReduceTransparency = staticCompositionLocalOf { false }
 internal val LocalHighContrast = staticCompositionLocalOf { false }
 internal val LocalBackdropBlur = staticCompositionLocalOf { true }
-internal val LocalGlassVariant = staticCompositionLocalOf { GlassVariant.Frosted }
+
+/** What chrome surfaces are made of under [UiStyle.Glass] when they name no material: `UiTheme(chromeGlass = ...)`. */
+internal val LocalChromeGlass = staticCompositionLocalOf { SurfaceMaterial.Glass }
 
 /** Tests turn the lens off to compare against the plain Liquid look; the platform check still applies. */
 internal val LocalLensSupport = staticCompositionLocalOf { true }
@@ -143,32 +167,11 @@ internal val LocalLensSupport = staticCompositionLocalOf { true }
 /** The shared backdrop surfaces sample: set by [com.jcsoftdev.ui.overlays.OverlayHost] for overlays; null in content. */
 public val LocalGlassState: androidx.compose.runtime.ProvidableCompositionLocal<GlassState?> = compositionLocalOf { null }
 
+/** The tokens [material] draws with in the light or dark theme. */
 internal fun glassTokens(
-    variant: SurfaceMaterial,
+    material: SurfaceMaterial,
     dark: Boolean,
-): GlassMaterial =
-    when (variant) {
-        SurfaceMaterial.GlassClear -> if (dark) UiGlass.ClearDark else UiGlass.ClearLight
-        SurfaceMaterial.Liquid -> if (dark) LiquidRegularDark else LiquidRegularLight
-        SurfaceMaterial.LiquidClear -> if (dark) LiquidClearDark else LiquidClearLight
-        else -> if (dark) UiGlass.RegularDark else UiGlass.RegularLight
-    }
-
-// Liquid keeps the shared tokens but lets more of the backdrop (and the lens) through: a lower center blur and a slightly lighter
-// tint. The dim layer is kept as is, and the tint scales are the lowest that keep ink and ink2 at 4.5:1 or better over a pure
-// black or white backdrop (see GlassContrastTest).
-private fun liquid(
-    base: GlassMaterial,
-    blur: Dp,
-    tintScale: Float,
-): GlassMaterial = GlassMaterial(base.tint.scaleAlpha(tintScale), base.border, base.edge, base.dim, blur, base.saturate)
-
-private fun Color.scaleAlpha(f: Float) = copy(alpha = alpha * f)
-
-private val LiquidRegularLight = liquid(UiGlass.RegularLight, 4.dp, 0.95f)
-private val LiquidRegularDark = liquid(UiGlass.RegularDark, 4.dp, 0.95f)
-private val LiquidClearLight = liquid(UiGlass.ClearLight, 2.dp, 0.8f)
-private val LiquidClearDark = liquid(UiGlass.ClearDark, 2.dp, 0.8f)
+): GlassMaterial = material.tokens(dark)
 
 /** Resolves [requested] for a [role] against the theme, accessibility flags, nesting and the backdrop in scope. */
 @Composable
@@ -185,6 +188,6 @@ internal fun rememberResolvedMaterial(
         highContrast = UiTheme.highContrast,
         nested = LocalGlassNested.current,
         blurAvailable = glass != null && LocalBackdropBlur.current && backdropBlurSupported(),
-        glassVariant = LocalGlassVariant.current,
+        chromeGlass = LocalChromeGlass.current,
         lensAvailable = lensSupported() && LocalLensSupport.current,
     )

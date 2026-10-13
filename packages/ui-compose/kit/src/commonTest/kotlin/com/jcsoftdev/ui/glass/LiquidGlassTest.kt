@@ -16,39 +16,54 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-class LiquidGlassStyleTest {
-    private val tokens = glassTokens(SurfaceMaterial.Liquid, dark = false)
+class LiquidGlassTest {
+    private val tokens = glassTokens(LiquidGlass(), dark = false)
 
-    @Test fun theDefaultStyleIsTheRegularPresetAndLeavesTheTokensAlone() {
-        assertEquals(LiquidGlassStyle.Regular, LiquidGlassStyle())
-        assertSame(tokens, LiquidGlassStyle.Regular.applyTo(tokens))
+    @Test fun theBaseMaterialHasNoFeaturesAndLeavesTheTokensAlone() {
+        val base = LiquidGlass()
+        assertNull(base.lens)
+        assertNull(base.interaction)
+        assertFalse(base.refracts, "no lens: it never resolves to the lens mode")
+        assertSame(tokens, base.applyTo(tokens))
+        assertEquals(tokens, LiquidGlass.Regular.tokens(dark = false), "a preset keeps the base tokens")
+    }
+
+    @Test fun regularIsTheShippedLookAsFeatures() {
+        val regular = LiquidGlass.Regular
+        assertEquals(RefractionLens(1f, LiquidProfile.Full, Dispersion(0.03f)), regular.lens)
+        assertEquals(LiquidInteraction.Press(LiquidMotion.Standard), regular.interaction)
+        assertTrue(regular.refracts)
+        assertSame(regular, LiquidGlass.Regular, "a preset is one value")
     }
 
     @Test fun thePresetsDifferFromRegularButKeepTheContrastGuarantee() {
-        for (preset in listOf(LiquidGlassStyle.Clear, LiquidGlassStyle.Thick)) {
-            assertNotEquals(LiquidGlassStyle.Regular, preset)
+        for (preset in listOf(LiquidGlass.Clear, LiquidGlass.Thick)) {
+            assertNotEquals(LiquidGlass.Regular, preset)
             assertTrue(preset.preservesContrast, "$preset")
             assertSame(tokens, preset.applyTo(tokens), "a preset never touches the tint or dim")
         }
-        assertTrue(LiquidGlassStyle.Thick.refraction > LiquidGlassStyle.Regular.refraction)
-        assertTrue(LiquidGlassStyle.Thick.bevelWidth > LiquidGlassStyle.Clear.bevelWidth)
+        assertTrue(LiquidGlass.Thick.lens!!.refraction > LiquidGlass.Regular.lens!!.refraction)
+        assertTrue(LiquidGlass.Thick.bevelWidth > LiquidGlass.Clear.bevelWidth)
     }
 
-    @Test fun lowOpacityStylesDropTheContrastGuaranteeAndScaleTheLayers() {
-        val faint = LiquidGlassStyle(opacity = 0.5f)
+    @Test fun lowOpacityMaterialsDropTheContrastGuaranteeAndScaleTheLayers() {
+        val faint = LiquidGlass(opacity = 0.5f)
         assertFalse(faint.preservesContrast)
         val out = faint.applyTo(tokens)
         assertEquals(tokens.tint.alpha * 0.5f, out.tint.alpha, 0.01f)
         assertEquals(tokens.dim.alpha * 0.5f, out.dim.alpha, 0.01f)
-        assertFalse(LiquidGlassStyle(tint = LiquidTint(amount = 0.8f)).preservesContrast)
-        assertFalse(LiquidGlassStyle(tint = LiquidTint(color = Color.Red)).preservesContrast)
-        assertFalse(LiquidGlassStyle(brightness = 0.1f).preservesContrast)
+        val drawn = faint.tokens(dark = false)
+        assertEquals(out.tint, drawn.tint, "the material draws the tokens with its own opacity")
+        assertEquals(out.dim, drawn.dim)
+        assertFalse(LiquidGlass(tint = LiquidTint(amount = 0.8f)).preservesContrast)
+        assertFalse(LiquidGlass(tint = LiquidTint(color = Color.Red)).preservesContrast)
+        assertFalse(LiquidGlass(brightness = 0.1f).preservesContrast)
     }
 
     @Test fun aStrongRimOrHighlightDropsTheContrastGuarantee() {
-        assertFalse(LiquidGlassStyle(rim = 2.5f).preservesContrast)
-        assertFalse(LiquidGlassStyle(specular = LiquidSpecular(intensity = 2f)).preservesContrast)
-        assertTrue(LiquidGlassStyle(rim = 1.5f, specular = LiquidSpecular(intensity = 1.5f)).preservesContrast)
+        assertFalse(LiquidGlass(rim = 2.5f).preservesContrast)
+        assertFalse(LiquidGlass(specular = LiquidSpecular(intensity = 2f)).preservesContrast)
+        assertTrue(LiquidGlass(rim = 1.5f, specular = LiquidSpecular(intensity = 1.5f)).preservesContrast)
     }
 
     @Test fun theRimNeverReachesDeeperThanItsShareOfTheHalfSize() {
@@ -58,7 +73,7 @@ class LiquidGlassStyleTest {
     }
 
     @Test fun frostSaturationAndTintColorReplaceTheTokenValues() {
-        val out = LiquidGlassStyle(frost = 9.dp, saturation = 2f, tint = LiquidTint(color = Color(0xFF00FF00.toInt()))).applyTo(tokens)
+        val out = LiquidGlass(frost = 9.dp, saturation = 2f, tint = LiquidTint(color = Color(0xFF00FF00.toInt()))).applyTo(tokens)
         assertEquals(9.dp, out.blur)
         assertEquals(2f, out.saturate)
         assertEquals(Color.Green.green, out.tint.green)
@@ -66,14 +81,23 @@ class LiquidGlassStyleTest {
         assertEquals(tokens.border, out.border)
     }
 
+    @Test fun theClearTokenSetIsMoreTransparent() {
+        val clear = glassTokens(LiquidGlass(clear = true), dark = false)
+        assertTrue(clear.tint.alpha < tokens.tint.alpha)
+        assertTrue(clear.blur < tokens.blur)
+    }
+
     @Test fun profilesMapToDistinctShaderCodesAndDomeAmounts() {
-        assertEquals(listOf(1f, 0f, 2f), listOf(LiquidProfile.Rim, LiquidProfile.Full, LiquidProfile.Dome).map { it.shaderCode() })
-        val full = LiquidGlassStyle(profile = LiquidProfile.Full).domeAmount()
-        assertEquals(0f, LiquidGlassStyle(profile = LiquidProfile.Rim).domeAmount())
-        assertTrue(LiquidGlassStyle(profile = LiquidProfile.Dome).domeAmount() > full)
+        assertEquals(
+            listOf(1f, 0f, 2f),
+            listOf(LiquidProfile.Rim, LiquidProfile.Full, LiquidProfile.Dome).map { RefractionLens(profile = it).profileCode },
+        )
+        val full = RefractionLens(profile = LiquidProfile.Full).dome()
+        assertEquals(0f, RefractionLens(profile = LiquidProfile.Rim).dome())
+        assertTrue(RefractionLens(profile = LiquidProfile.Dome).dome() > full)
         assertTrue(
-            LiquidGlassStyle(profile = LiquidProfile.Dome, refraction = 2f).domeAmount() >
-                LiquidGlassStyle(profile = LiquidProfile.Dome, refraction = 0.5f).domeAmount(),
+            RefractionLens(profile = LiquidProfile.Dome, refraction = 2f).dome() >
+                RefractionLens(profile = LiquidProfile.Dome, refraction = 0.5f).dome(),
         )
     }
 
@@ -132,9 +156,20 @@ class LiquidGlassStyleTest {
     }
 
     @Test fun springMotionIsOffForReducedMotionOrWithoutSprings() {
-        assertTrue(liquidMotionActive(LiquidGlassStyle.Regular, Motion(1f)))
-        assertFalse(liquidMotionActive(LiquidGlassStyle.Regular, Motion(0f)))
-        assertFalse(liquidMotionActive(LiquidGlassStyle(motion = null), Motion(1f)))
+        assertTrue(liquidMotionActive(LiquidInteraction.Press(), Motion(1f)))
+        assertFalse(liquidMotionActive(LiquidInteraction.Press(), Motion(0f)))
+        assertFalse(liquidMotionActive(LiquidInteraction.Press(motion = null), Motion(1f)))
+    }
+
+    @Test fun onlyAnInteractionThatCanMoveTheSurfaceNeedsDynamics() {
+        val on = Motion(1f)
+        assertTrue(needsDynamics(LiquidInteraction.Press(), null, on), "the materialize ramp")
+        assertFalse(needsDynamics(LiquidInteraction.Press(), null, Motion(0f)), "no ramp without motion, no source")
+        assertFalse(needsDynamics(LiquidInteraction.Press(LiquidMotion(materialize = null)), null, on))
+        assertTrue(needsDynamics(LiquidInteraction.Drag(motion = null), null, Motion(0f)), "a drag always observes")
+        assertTrue(LiquidInteraction.Drag().drags)
+        assertFalse(LiquidInteraction.Press().drags)
+        assertNull(LiquidInteraction.Press().newDragState(), "only a drag makes drag state")
     }
 
     @Test fun swellIsSixteenDpOverTheWidthWithinALimit() {
@@ -166,14 +201,12 @@ class LiquidGlassStyleTest {
     }
 
     @Test fun crystalIsAClearConvexLensWithoutAVeil() {
-        val c = LiquidGlassStyle.Crystal
-        assertEquals(LiquidProfile.Convex, c.profile)
-        assertEquals(1.67f, c.refraction)
-        assertEquals(0.05f, c.dispersion)
+        val c = LiquidGlass.Crystal
+        assertEquals(CrystalLens(1.67f, Dispersion(0.05f)), c.lens)
         assertEquals(40.dp, c.bevelWidth)
         assertEquals(0.dp, c.frost)
         assertEquals(1f, c.fresnel)
-        assertEquals(LiquidInteraction.Drag, c.interaction)
+        assertEquals(LiquidInteraction.Drag(), c.interaction)
         assertFalse(c.preservesContrast, "no veil: the contrast guarantee is gone")
         val veil = c.applyTo(tokens)
         assertEquals(0f, veil.tint.alpha)
@@ -181,12 +214,23 @@ class LiquidGlassStyleTest {
         assertEquals(0.dp, veil.blur)
     }
 
-    @Test fun theConvexProfileMinifiesAndReachesBeyondTheSurface() {
-        assertEquals(3f, LiquidProfile.Convex.shaderCode())
-        val convex = LiquidGlassStyle(profile = LiquidProfile.Convex)
-        assertTrue(convex.domeAmount() < 0f, "a negative dome samples a wider strip")
-        assertTrue(LiquidGlassStyle(profile = LiquidProfile.Convex, refraction = 2f).domeAmount() < convex.domeAmount())
-        assertEquals(0f, LiquidGlassStyle.Regular.convexReach(100f, 50f, 20f), "other profiles keep the surface bounds")
-        assertTrue(convex.convexReach(100f, 50f, 20f) > 20f)
+    @Test fun theCrystalLensMinifiesAndReachesBeyondTheSurface() {
+        val crystal = CrystalLens()
+        assertEquals(3f, crystal.profileCode)
+        assertEquals(CONVEX_BEND, crystal.bend)
+        assertTrue(crystal.dome() < 0f, "a negative dome samples a wider strip")
+        assertTrue(CrystalLens(refraction = 2f).dome() < CrystalLens(refraction = 1f).dome())
+        assertEquals(0f, RefractionLens().reach(100f, 50f, 20f), "a refraction lens keeps the surface bounds")
+        assertTrue(crystal.reach(100f, 50f, 20f) > 20f)
+    }
+
+    @Test fun dispersionOwnsTheDispersiveShaderAndThePlainOneLeavesItOut() {
+        val plain = PlainLensProgram.value.source
+        val dispersive = Dispersion().lensProgram.source
+        assertFalse("1.0 + dispersion" in plain, "the plain lens takes one sample per pixel")
+        assertTrue("1.0 + dispersion" in dispersive)
+        assertSame(Dispersion(0.05f).lensProgram, Dispersion().lensProgram, "one dispersive program, whatever the amount")
+        assertTrue("blendK" in Dispersion().mergeProgram.program.source)
+        assertFalse("blendK" in plain)
     }
 }

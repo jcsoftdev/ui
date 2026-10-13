@@ -35,7 +35,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-private val DragStyle = LiquidGlassStyle(interaction = LiquidInteraction.Drag)
+private val Drag = LiquidInteraction.Drag()
+private val Press = LiquidInteraction.Press()
 
 private class Probe {
     var dynamics: LiquidDynamics? = null
@@ -45,7 +46,7 @@ private class Probe {
 /** A bare 120x60 box that wears only the dynamics (no glass), so the state itself can be read. */
 private fun ComposeUiTest.surface(
     probe: Probe,
-    style: LiquidGlassStyle,
+    interaction: LiquidInteraction,
     motion: Float,
     source: MutableInteractionSource? = null,
     clickable: Boolean = false,
@@ -53,7 +54,7 @@ private fun ComposeUiTest.surface(
 ) {
     setContent {
         UiTheme(dark = false, motion = Motion(motion)) {
-            val d = rememberLiquidDynamics(style, source)
+            val d = rememberLiquidDynamics(interaction, source)
             probe.dynamics = d
             val box =
                 Modifier
@@ -89,7 +90,7 @@ class LiquidDynamicsTest {
         val probe = Probe()
         runComposeUiTest {
             mainClock.autoAdvance = false
-            surface(probe, LiquidGlassStyle(), motion = 0f)
+            surface(probe, Press, motion = 0f)
             assertEquals(1f, probe.d.materialize(), "no ramp: fully materialized on the first frame")
         }
     }
@@ -105,7 +106,7 @@ class LiquidDynamicsTest {
                     val holder = rememberSaveableStateHolder()
                     if (show) {
                         holder.SaveableStateProvider("item") {
-                            probe.dynamics = rememberLiquidDynamics(LiquidGlassStyle(), null)
+                            probe.dynamics = rememberLiquidDynamics(Press, null)
                             Box(Modifier.size(10.dp))
                         }
                     }
@@ -127,7 +128,7 @@ class LiquidDynamicsTest {
             val probe = Probe()
             val source = MutableInteractionSource()
             runComposeUiTest {
-                surface(probe, LiquidGlassStyle(), motion = motion, source = source)
+                surface(probe, Press, motion = motion, source = source)
                 runOnIdle { source.tryEmit(PressInteraction.Press(Offset(30f, 20f))) }
                 waitForIdle()
                 if (motion == 0f) {
@@ -146,7 +147,7 @@ class LiquidDynamicsTest {
     @Test fun reducedMotionNeverSquashesADraggedSurface() {
         val probe = Probe()
         runComposeUiTest {
-            surface(probe, DragStyle, motion = 0f)
+            surface(probe, Drag, motion = 0f)
             val node = onNodeWithTag("t")
             touch(node) { down(center) }
             touch(node) { moveBy(Offset(40f, 0f)) }
@@ -164,7 +165,7 @@ class LiquidDynamicsTest {
         val probe = Probe()
         runComposeUiTest {
             mainClock.autoAdvance = false
-            surface(probe, DragStyle, motion = 1f)
+            surface(probe, Drag, motion = 1f)
             val node = onNodeWithTag("t")
             touch(node) { down(center) }
             repeat(4) { touch(node) { moveBy(Offset(50f, 0f)) } }
@@ -183,7 +184,7 @@ class LiquidDynamicsTest {
         val source = MutableInteractionSource()
         runComposeUiTest {
             mainClock.autoAdvance = false
-            surface(probe, DragStyle, motion = 1f, source = source, clickable = true, scroll = true)
+            surface(probe, Drag, motion = 1f, source = source, clickable = true, scroll = true)
             val node = onNodeWithTag("t")
             val seen = ArrayList<Boolean>()
             var worst = 0f
@@ -212,7 +213,7 @@ class LiquidDynamicsTest {
         val probe = Probe()
         runComposeUiTest {
             mainClock.autoAdvance = false
-            surface(probe, DragStyle, motion = 1f)
+            surface(probe, Drag, motion = 1f)
             val node = onNodeWithTag("t")
             touch(node) { down(0, Offset(20f, 30f)) }
             touch(node) { down(1, Offset(80f, 30f)) }

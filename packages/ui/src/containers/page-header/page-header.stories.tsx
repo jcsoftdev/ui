@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../../atoms/button/button.js";
+import { Breadcrumbs } from "../../navigation/breadcrumbs/breadcrumbs.js";
 import {
   PageHeader,
   PageHeaderActions,
@@ -70,4 +71,31 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const WithBreadcrumbs: Story = {
+  args: {
+    breadcrumbs: (
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "#home" },
+          { label: "Agenda", href: "#agenda" },
+          { label: "Today" },
+        ]}
+      />
+    ),
+  },
+};
+
+export const Compact: Story = {
+  args: {
+    compact: true,
+    children: (
+      <div>
+        <PageHeaderEyebrow>Paso 2 de 3</PageHeaderEyebrow>
+        <PageHeaderTitle>Verifica tu correo</PageHeaderTitle>
+        <PageHeaderLede>Te enviamos un código de seis dígitos.</PageHeaderLede>
+      </div>
+    ),
+  },
 };

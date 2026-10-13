@@ -1,7 +1,9 @@
 // The liquid engine is a port: these pin its maths to the React kit's sources, value for value.
 import { describe, expect, it } from "vitest";
+import * as reactCrystal from "../../ui/src/glass/crystal-map.ts";
 import * as reactMaps from "../../ui/src/glass/displacement-map.ts";
 import * as reactOptions from "../../ui/src/glass/liquid-options.ts";
+import * as reactSpecular from "../../ui/src/glass/specular-map.ts";
 import * as reactSpring from "../../ui/src/glass/spring.ts";
 import { liquidFeaturesFor } from "../src/liquid/attach.ts";
 import { computeCrystalField, crystalAmplitude, crystalMargin } from "../src/liquid/crystal.ts";
@@ -104,10 +106,10 @@ describe("lens maps parity", () => {
       const width = 30 + Math.round(rand() * 160);
       const height = 30 + Math.round(rand() * 90);
       const spec = { width, height, radius: rand() * 30, dpr: 1 + (i % 2), angle: rand() * 360 };
-      expectSameField(computeSpecularField(spec), reactMaps.computeSpecularField(spec));
+      expectSameField(computeSpecularField(spec), reactSpecular.computeSpecularField(spec));
       const refraction = rand() * 2;
       const amplitude = crystalAmplitude(width, height, refraction);
-      expect(amplitude).toBe(reactMaps.crystalAmplitude(width, height, refraction));
+      expect(amplitude).toBe(reactCrystal.crystalAmplitude(width, height, refraction));
       const crystalOptions = {
         width,
         height,
@@ -118,7 +120,7 @@ describe("lens maps parity", () => {
       };
       expectSameField(
         computeCrystalField(crystalOptions),
-        reactMaps.computeCrystalField(crystalOptions),
+        reactCrystal.computeCrystalField(crystalOptions),
       );
     }
   });
