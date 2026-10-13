@@ -122,12 +122,13 @@ test("the liquid utilities read every option variable and keep the theme look wh
     "--liquid-tint-fill",
     "--liquid-veil-fill",
     "--liquid-rim-custom",
+    "--liquid-rim-auto",
     "--liquid-shadow-custom",
     "--liquid-shadow-auto",
   ])
     assert.ok(css.includes(name), name);
   // Every option falls back to the token it replaces, so an unset option changes nothing.
-  assert.match(css, /var\(--liquid-rim-custom, var\(--liquid-rim\)\)/);
+  assert.match(css, /var\(--liquid-rim-auto, var\(--liquid-rim-custom, var\(--liquid-rim\)\)\)/);
   assert.match(
     css,
     /var\(--liquid-shadow-custom, var\(--liquid-shadow-auto, var\(--liquid-shadow\)\)\)/,

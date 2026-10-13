@@ -14,3 +14,4 @@ export {
 } from "../../src/glass/support.js";
 export * from "../../src/glass/liquid-options.js";
 export { materialClass, materialStyle, withMaterialStyle } from "../../src/utils/material.js";
+export * from "../../src/glass/spring.js";

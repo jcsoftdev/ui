@@ -8,6 +8,7 @@ import {
   scaleFor,
   VEIL_FLOOR,
 } from "./displacement-map.js";
+import { startLiquidMotion } from "./liquid-motion.js";
 import { LIQUID_DEFAULTS, liquidShadow } from "./liquid-options.js";
 import { supportsBackdropRefraction } from "./support.js";
 
@@ -56,9 +57,10 @@ export interface GlassRefractionOptions {
    */
   specular?: boolean;
   /**
-   * Materialise the lens when it is first applied (the refraction grows from nothing over
-   * 280 ms) and lift it while an interactive surface is pressed. Default true; never runs under
-   * reduced motion, where the lens is not applied at all.
+   * Motion: the lens materialises when it is first applied (the refraction springs up from
+   * nothing), a press deepens it and swells the surface, and `--liquid-interactive: drag` lets the
+   * surface be pulled and squashed. Default true; `--liquid-motion: off` turns it off per surface.
+   * Never runs under reduced motion, where the lens is not applied at all.
    */
   animate?: boolean;
   /**
@@ -91,9 +93,6 @@ const MAX_AREA = 640_000;
 const DISPERSION_AREA = 100_000;
 /** Lenses alive at once; further surfaces keep the plain liquid look until one is released. */
 const MAX_ACTIVE = 8;
-
-/** Ease-out cubic. */
-const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
@@ -547,6 +546,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     const observer =
       typeof ResizeObserver === "function"
         ? new ResizeObserver(() => {
+            // A removed element is released at once, whatever the throttle below says.
+            if (!element.isConnected) return stop();
             // Rebuilding the map costs a few ms: while a surface is being resized, at most
             // about ten rebuilds a second, and the last size always lands.
             const wait = REBUILD_MS - (performance.now() - built);
@@ -560,30 +561,25 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         : undefined;
     observer?.observe(element);
 
-    // Materialise: the refraction grows from nothing; and lift it while a control is pressed.
-    let tween = 0;
-    const ease = (to: number, ms: number) => {
-      cancelAnimationFrame(tween);
-      const from = level;
-      const start = performance.now();
-      const step = (now: number) => {
-        const t = Math.min(1, (now - start) / ms);
-        level = from + (to - from) * easeOut(t);
-        applyScale();
-        if (t < 1) tween = requestAnimationFrame(step);
-      };
-      tween = requestAnimationFrame(step);
-    };
-    const press = element.matches('button, a, [role="button"], [data-glass-interactive]');
-    const down = () => ease(1.35, 120);
-    const up = () => ease(1, 220);
-    if (options.animate !== false) {
-      if (level < 1) ease(1, 280);
-      if (press) {
-        element.addEventListener("pointerdown", down);
-        for (const type of ["pointerup", "pointercancel", "pointerleave"])
-          element.addEventListener(type, up);
-      }
+    // Motion (see `./liquid-motion.js`): the lens materialises, a press deepens it, and the
+    // pointer modes move the surface. It drives `level`, the multiplier of the filter scale.
+    const motion =
+      options.animate === false
+        ? undefined
+        : startLiquidMotion(
+            element,
+            {
+              onLevel(next) {
+                level = next;
+                applyScale();
+              },
+            },
+            { materialize: level < 1 },
+          );
+    if (!motion) {
+      // No motion (switched off, or not wanted): the lens is at full strength at once.
+      level = 1;
+      applyScale();
     }
     element.style.setProperty("--liquid-shadow-auto", liquidShadow());
     element.style.backdropFilter = `${blur}url(#${id})`;
@@ -595,10 +591,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       cancel: () => {
         clearTimeout(timer);
         timer = undefined;
-        cancelAnimationFrame(tween);
-        element.removeEventListener("pointerdown", down);
-        for (const type of ["pointerup", "pointercancel", "pointerleave"])
-          element.removeEventListener(type, up);
+        motion?.dispose();
       },
     };
     active++;

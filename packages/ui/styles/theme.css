@@ -283,14 +283,14 @@
       background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
       -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
       backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
       --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -382,14 +382,14 @@
       background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
       -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
       backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
       --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -459,14 +459,14 @@
       background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
       -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
       backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-clear-dim);
       --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
       --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -532,14 +532,14 @@
       background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
       -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
       backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
       --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -615,14 +615,14 @@
       background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
       -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
       backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       text-shadow: var(--liquid-halo);
       --glass-lens: 1;
       --glass-lens-dim: var(--liquid-regular-dim);
       --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
       --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
       &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-        box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
       }
       @media (prefers-reduced-motion: no-preference) {
         &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -702,14 +702,14 @@
     background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
     -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
     backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
-    box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+    box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
     text-shadow: var(--liquid-halo);
     --glass-lens: 1;
     --glass-lens-dim: var(--liquid-regular-dim);
     --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
     --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
     &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
     }
     @media (prefers-reduced-motion: no-preference) {
       &:is(button, a, [role="button"], [data-glass-interactive]) {
@@ -771,14 +771,14 @@
     background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
     -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
     backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
-    box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+    box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
     text-shadow: var(--liquid-halo);
     --glass-lens: 1;
     --glass-lens-dim: var(--liquid-clear-dim);
     --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
     --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
     &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
-      box-shadow: var(--liquid-rim-custom, var(--liquid-rim)), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
     }
     @media (prefers-reduced-motion: no-preference) {
       &:is(button, a, [role="button"], [data-glass-interactive]) {
