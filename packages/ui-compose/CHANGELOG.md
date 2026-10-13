@@ -2,6 +2,49 @@
 
 ## 0.2.0 (Unreleased)
 
+### Opt-in Liquid features (breaking)
+
+Liquid Glass is now built from values the app passes, so an APK only contains the Liquid code it uses. R8 keeps a feature only when the app names it, because the kit reaches each feature's code through that value and nowhere else.
+
+- `SurfaceMaterial` is a sealed class: `Solid`, `Glass`, `GlassClear`, and `LiquidGlass`.
+- `LiquidGlass` takes optional features: `lens` (`RefractionLens(refraction, profile)` or `CrystalLens(refraction)`), `dispersion` (`Dispersion(amount)`) and `interaction` (`LiquidInteraction.Press(motion)` or `LiquidInteraction.Drag(motion)`). The look fields of the old `LiquidGlassStyle` stay where they were.
+- `LiquidGlass()` with no features is the base material: veil, rim, specular, shadow and no shader.
+- `LiquidGlass.Regular`, `Clear`, `Thick` and `Crystal` are presets, each built in its own holder on first read.
+
+Measured with a minified release consumer (dex bytes; Liquid classes left by R8):
+
+| Consumer | `perf/compose-liquid-lean` | This change |
+| --- | --- | --- |
+| No Liquid | 1,209,932; 19 classes, both shaders | 1,175,540; 0 classes, no shader |
+| `LiquidGlass()` (base material) | 1,261,692; 41 classes (the old `Liquid`) | 1,188,680; 10 classes, no shader |
+| `RefractionLens()` | n/a | 1,204,980; 19 classes, lens shader only |
+
+Behaviour changes:
+
+- A `LiquidGlass` without an `interaction` is static: passing an `interactionSource` alone no longer animates it.
+- `GlassEffectContainer` merges only when its material has a lens.
+- There is no subtree-wide style any more. Pass the material to each surface, or set the chrome material with `UiTheme(chromeGlass)`.
+
+### Migration
+
+| Before | After |
+| --- | --- |
+| `SurfaceMaterial.Liquid` | `LiquidGlass.Regular` |
+| `SurfaceMaterial.LiquidClear` | `LiquidGlass.Regular.copy(clear = true)` |
+| `LiquidGlassStyle(...)` / `LiquidGlassStyle.Regular` / `Clear` / `Thick` / `Crystal` | `LiquidGlass(...)` / `LiquidGlass.Regular` / `Clear` / `Thick` / `Crystal` |
+| `refraction = r, profile = P` | `lens = RefractionLens(r, P)` |
+| `profile = LiquidProfile.Convex` | `lens = CrystalLens(r)` |
+| `refraction = 0f` (lens off) | `lens = null` |
+| `dispersion = d` / `dispersion = 0f` | `dispersion = Dispersion(d)` / `dispersion = null` |
+| `interaction = LiquidInteraction.None` / `Press` / `Drag` with `motion = m` | `interaction = null` / `LiquidInteraction.Press(m)` / `LiquidInteraction.Drag(m)` |
+| `UiTheme(glassVariant = GlassVariant.Frosted)` | `UiTheme(chromeGlass = SurfaceMaterial.Glass)` (the default) |
+| `UiTheme(glassVariant = GlassVariant.Liquid, liquidGlassStyle = s)` | `UiTheme(chromeGlass = s)` |
+| `UiTheme.liquidGlassStyle`, `LocalLiquidGlassStyle` | `UiTheme.chromeGlass`; per surface, pass the material |
+| `Modifier.material(SurfaceMaterial.Liquid, shape, style = s)`, `MaterialSurface(..., style = s)` | `Modifier.material(s, shape)`, `MaterialSurface(s, ...)` |
+| `GlassEffectContainer(style = s)`, `glassEffect(shape, style = s, material = m)` | `GlassEffectContainer(material = s)`, `glassEffect(shape, material = s)` |
+
+An app that never used Liquid Glass changes nothing: `Solid`, `Glass`, `GlassClear` and the frosted default are unchanged.
+
 ### Liquid Glass
 
 Apple-style glass for the control and navigation layer, mirroring the web kit's 0.3.0 glass work. Content stays solid.

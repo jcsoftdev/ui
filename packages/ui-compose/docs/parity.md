@@ -98,7 +98,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `backdrop-filter` | both | `glass.GlassState`, `glassSource`, `rememberGlassState` | `GraphicsLayer` + `BlurEffect`; Android 31+, desktop, iOS. Tint fallback elsewhere. |
 | glass-on-glass nested tint | both | `glass.MaterialSurface` nesting marker | Near-solid `float` fill. |
 | reduced transparency, more contrast | both | `UiTheme(reduceTransparency, highContrast)` | OS defaults on iOS and Android high-contrast. |
-| refraction (SVG displacement) | both | `glass.SurfaceMaterial.Liquid`, `LiquidClear`, `GlassVariant` | Runtime shader lens (Android 13+, desktop, iOS); blur plus rim on API 31-32, tint plus rim below. Frosted stays available. |
+| refraction (SVG displacement) | both | `glass.LiquidGlass` (`lens = RefractionLens()` / `CrystalLens()`, `Dispersion`, `LiquidInteraction`), `UiTheme(chromeGlass)` | Opt-in per feature like the web tiers (base, lens, crystal, dispersion, interaction), each preset its own value; runtime shader lens (Android 13+, desktop, iOS); blur plus rim on API 31-32, tint plus rim below. Frosted stays available. |
 
 ## Overlays
 

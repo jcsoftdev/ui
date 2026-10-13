@@ -34,10 +34,9 @@ private fun Tagged(
     tag: String,
     material: SurfaceMaterial,
     source: MutableInteractionSource? = null,
-    style: LiquidGlassStyle = LocalLiquidGlassStyle.current,
     size: Dp = 80.dp,
 ) {
-    Box(Modifier.size(size).testTag(tag).material(material, TestShape, glass = null, interactionSource = source, style = style))
+    Box(Modifier.size(size).testTag(tag).material(material, TestShape, glass = null, interactionSource = source))
 }
 
 // The modifiers only a Liquid surface needs: the shadow stack, the swell/squash layer and the drag pointer observer.
@@ -72,16 +71,18 @@ class GlassLeanPathTest {
                     Column {
                         Tagged("solid", SurfaceMaterial.Solid, press)
                         Tagged("frosted", SurfaceMaterial.Glass, press)
-                        Tagged("liquid", SurfaceMaterial.Liquid)
-                        Tagged("pressable", SurfaceMaterial.Liquid, press)
+                        Tagged("liquid", LiquidGlass.Regular)
+                        Tagged("pressable", LiquidGlass.Regular, press)
+                        Tagged("static", LiquidGlass(), press)
                     }
                 }
             }
             waitForIdle()
             val solid = modifierNames("solid")
             val frosted = modifierNames("frosted")
-            assertFalse("GlassSurfaceElement" in solid, "a solid surface draws no glass: $solid")
-            assertTrue("GlassSurfaceElement" in frosted, "the frosted surface is glass: $frosted")
+            assertFalse(solid.any { it.endsWith("SurfaceElement") }, "a solid surface draws no glass: $solid")
+            assertTrue("FrostedSurfaceElement" in frosted, "the frosted surface is glass: $frosted")
+            assertFalse("LiquidSurfaceElement" in frosted, "a frosted surface draws none of the Liquid surface: $frosted")
             for (name in LiquidOnly) {
                 assertFalse(name in solid, "$name on a solid surface")
                 assertFalse(name in frosted, "$name on a frosted surface")
@@ -91,24 +92,27 @@ class GlassLeanPathTest {
             assertFalse("BlockGraphicsLayerElement" in liquid, "a Liquid surface without a press source gets no swell layer: $liquid")
             assertFalse("PointerObserverElement" in liquid, "a Press surface does not observe the pointer: $liquid")
             assertTrue("BlockGraphicsLayerElement" in modifierNames("pressable"), "a pressable Liquid surface swells")
+            val static = modifierNames("static")
+            assertTrue("LiquidSurfaceElement" in static, "the base material is Liquid: $static")
+            assertFalse("BlockGraphicsLayerElement" in static, "without an interaction a press source moves nothing: $static")
         }
     }
 
-    @Test fun aCustomLiquidStyleKeepsTheSurfaceElementAcrossRecompositions() {
+    @Test fun aCustomLiquidMaterialKeepsTheSurfaceElementAcrossRecompositions() {
         runComposeUiTest {
             var tick by mutableIntStateOf(0)
-            val custom = LiquidGlassStyle(opacity = 0.9f)
+            val custom = LiquidGlass.Regular.copy(opacity = 0.9f)
             setContent {
                 UiTheme(dark = false, motion = Motion(0f)) {
-                    Tagged("s", SurfaceMaterial.Liquid, style = custom, size = if (tick >= 0) 80.dp else 0.dp)
+                    Tagged("s", custom, size = if (tick >= 0) 80.dp else 0.dp)
                 }
             }
             waitForIdle()
-            val before = assertNotNull(element("s", "GlassSurfaceElement"))
+            val before = assertNotNull(element("s", "LiquidSurfaceElement"))
             tick++
             waitForIdle()
-            val after = assertNotNull(element("s", "GlassSurfaceElement"))
-            assertEquals(before, after, "the tokens of a custom style are remembered, so the node is not updated on recomposition")
+            val after = assertNotNull(element("s", "LiquidSurfaceElement"))
+            assertEquals(before, after, "the tokens of a custom material are remembered, so the node is not updated on recomposition")
         }
     }
 }

@@ -35,10 +35,9 @@ import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** The same red/blue scene as [LiquidRenderTest], with a [LiquidGlassStyle] given to the theme. */
+/** The same red/blue scene as [LiquidRenderTest], with the surface drawn in [style]. */
 private fun styled(
-    style: LiquidGlassStyle,
-    material: SurfaceMaterial = SurfaceMaterial.Liquid,
+    style: LiquidGlass,
     motion: Float = 0f,
     press: PressInteraction.Press? = null,
     drag: Boolean = false,
@@ -53,7 +52,7 @@ private fun styled(
         setContent {
             Box(Modifier.wrapContentSize(Alignment.TopStart)) {
                 Box(Modifier.size(240.dp, 120.dp).testTag("frame")) {
-                    UiTheme(dark = false, motion = Motion(motion), liquidGlassStyle = style) {
+                    UiTheme(dark = false, motion = Motion(motion)) {
                         val glass = rememberGlassState()
                         Box(Modifier.fillMaxSize().glassSource(glass)) {
                             if (gradient) {
@@ -74,7 +73,7 @@ private fun styled(
                         ) {
                             Box(
                                 Modifier.fillMaxSize().material(
-                                    material,
+                                    style,
                                     shape,
                                     glass = if (withGlass) glass else null,
                                     interactionSource = source,
@@ -122,40 +121,41 @@ private fun Bitmap.sameAs(other: Bitmap): Boolean {
 }
 
 class LiquidStyleRenderTest {
-    @Test fun theDefaultStyleRendersExactlyLikeTheRegularPreset() {
-        assertTrue(styled(LiquidGlassStyle()).sameAs(styled(LiquidGlassStyle.Regular)))
+    @Test fun theBaseMaterialWithTheDefaultFeaturesRendersExactlyLikeTheRegularPreset() {
+        val spelledOut = LiquidGlass(lens = RefractionLens(), dispersion = Dispersion(), interaction = LiquidInteraction.Press())
+        assertTrue(styled(spelledOut).sameAs(styled(LiquidGlass.Regular)))
     }
 
     @Test fun refractionZeroTurnsTheLensOff() {
-        val lensed = styled(LiquidGlassStyle(refraction = 1.5f)).rgb(114, 60)
-        val flat = styled(LiquidGlassStyle(refraction = 0f, profile = LiquidProfile.Rim)).rgb(114, 60)
+        val lensed = styled(LiquidGlass.Regular.copy(lens = RefractionLens(1.5f))).rgb(114, 60)
+        val flat = styled(LiquidGlass.Regular.copy(lens = RefractionLens(0f, LiquidProfile.Rim))).rgb(114, 60)
         assertTrue(lensed.third - flat.third > 10, "edge blue lensed=$lensed flat=$flat")
     }
 
     @Test fun profilesRenderDifferentSurfaces() {
-        val full = styled(LiquidGlassStyle(profile = LiquidProfile.Full))
-        val rim = styled(LiquidGlassStyle(profile = LiquidProfile.Rim))
-        val dome = styled(LiquidGlassStyle(profile = LiquidProfile.Dome))
+        val full = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Full)))
+        val rim = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Rim)))
+        val dome = styled(LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Dome)))
         assertTrue(!full.sameAs(rim) && !full.sameAs(dome) && !rim.sameAs(dome))
     }
 
     @Test fun brightnessLiftsTheSurfaceAndFresnelLightsTheRim() {
-        val base = styled(LiquidGlassStyle())
-        assertTrue(styled(LiquidGlassStyle(brightness = 0.2f)).rgb(170, 60).second > base.rgb(170, 60).second)
-        assertTrue(styled(LiquidGlassStyle(fresnel = 1f)).rgb(112, 60).second >= base.rgb(112, 60).second)
+        val base = styled(LiquidGlass.Regular)
+        assertTrue(styled(LiquidGlass.Regular.copy(brightness = 0.2f)).rgb(170, 60).second > base.rgb(170, 60).second)
+        assertTrue(styled(LiquidGlass.Regular.copy(fresnel = 1f)).rgb(112, 60).second >= base.rgb(112, 60).second)
     }
 
     @Test fun aLowOpacityStyleShowsMoreOfTheBackdropInTheMiddle() {
-        val normal = styled(LiquidGlassStyle()).rgb(200, 60)
-        val faint = styled(LiquidGlassStyle(opacity = 0.2f)).rgb(200, 60)
+        val normal = styled(LiquidGlass.Regular).rgb(200, 60)
+        val faint = styled(LiquidGlass.Regular.copy(opacity = 0.2f)).rgb(200, 60)
         // The veil is white over blue: a fainter veil leaves more blue and less red/green.
         assertTrue(faint.first < normal.first - 20, "normal=$normal faint=$faint")
     }
 
     @Test fun shadowOpacityZeroRemovesTheShadowAndOffsetPushesItDown() {
-        val none = styled(LiquidGlassStyle(shadow = LiquidShadow(opacity = 0f))).rgb(107, 60).first
+        val none = styled(LiquidGlass.Regular.copy(shadow = LiquidShadow(opacity = 0f))).rgb(107, 60).first
         assertTrue(none == 255, "no shadow: $none")
-        val down = styled(LiquidGlassStyle(shadow = LiquidShadow(spread = 16.dp, offsetY = 10.dp)))
+        val down = styled(LiquidGlass.Regular.copy(shadow = LiquidShadow(spread = 16.dp, offsetY = 10.dp)))
         // x=170 sits over the blue half; below the surface (y=90) the offset shadow is darker than above it (y=30).
         val below = down.rgb(170, 94).third
         val above = down.rgb(170, 26).third
@@ -163,8 +163,8 @@ class LiquidStyleRenderTest {
     }
 
     @Test fun frostBlursTheSeamHarder() {
-        val sharp = styled(LiquidGlassStyle(frost = 0.dp, refraction = 0f, profile = LiquidProfile.Rim))
-        val soft = styled(LiquidGlassStyle(frost = 12.dp, refraction = 0f, profile = LiquidProfile.Rim))
+        val sharp = styled(LiquidGlass.Regular.copy(frost = 0.dp, lens = RefractionLens(0f, LiquidProfile.Rim)))
+        val soft = styled(LiquidGlass.Regular.copy(frost = 12.dp, lens = RefractionLens(0f, LiquidProfile.Rim)))
         // The red/blue seam is at x=122: a hard blur makes the neighbours at 118 and 126 closer to each other.
         val sharpGap = abs(sharp.rgb(118, 60).first - sharp.rgb(126, 60).first)
         val softGap = abs(soft.rgb(118, 60).first - soft.rgb(126, 60).first)
@@ -172,16 +172,16 @@ class LiquidStyleRenderTest {
     }
 
     @Test fun reducedMotionKeepsThePressBrightnessButNeverSwellsTheSurface() {
-        val idle = styled(LiquidGlassStyle(), motion = 0f)
-        val pressed = styled(LiquidGlassStyle(), motion = 0f, press = PressInteraction.Press(Offset(10f, 10f)))
+        val idle = styled(LiquidGlass.Regular, motion = 0f)
+        val pressed = styled(LiquidGlass.Regular, motion = 0f, press = PressInteraction.Press(Offset(10f, 10f)))
         assertTrue(pressed.rgb(200, 60).first > idle.rgb(200, 60).first, "brightens")
         // No swell: the pixel just outside the surface (3px past the left edge at x=110) is untouched by the surface itself.
         assertTrue(abs(pressed.rgb(106, 60).first - idle.rgb(106, 60).first) <= 2, "no swell outside the edge")
     }
 
     @Test fun aPressedSurfaceSwellsWhenMotionIsOn() {
-        val idle = styled(LiquidGlassStyle(), motion = 1f)
-        val pressed = styled(LiquidGlassStyle(), motion = 1f, press = PressInteraction.Press(Offset(10f, 10f)))
+        val idle = styled(LiquidGlass.Regular, motion = 1f)
+        val pressed = styled(LiquidGlass.Regular, motion = 1f, press = PressInteraction.Press(Offset(10f, 10f)))
         // The default swell is 16dp over a 120dp width (13%): the edge moves out by 8px on each side. 6px past the edge was
         // plain backdrop (and a faint shadow) before; the swollen surface covers it with bright glass.
         val before = idle.rgb(104, 60)
@@ -193,17 +193,16 @@ class LiquidStyleRenderTest {
 
     @Test fun swellKeepsTheBackdropUnderTheGlassWhereItWas() {
         val flat =
-            LiquidGlassStyle(
-                refraction = 0f,
-                profile = LiquidProfile.Rim,
+            LiquidGlass.Regular.copy(
+                lens = RefractionLens(0f, LiquidProfile.Rim),
                 opacity = 0f,
-                dispersion = 0f,
+                dispersion = null,
                 frost = 0.dp,
                 saturation = 1f,
                 rim = 0f,
-                motion = LiquidMotion(glow = 0f),
+                interaction = LiquidInteraction.Press(LiquidMotion(glow = 0f)),
             )
-        val flatShape = LiquidGlassStyle(specular = LiquidSpecular(intensity = 0f), shadow = LiquidShadow(opacity = 0f))
+        val flatShape = LiquidGlass.Regular.copy(specular = LiquidSpecular(intensity = 0f), shadow = LiquidShadow(opacity = 0f))
         val style = flat.copy(specular = flatShape.specular, shadow = flatShape.shadow)
         val press = PressInteraction.Press(Offset(10f, 10f))
         val still = styled(style, motion = 0f, press = press, gradient = true)
@@ -218,7 +217,7 @@ class LiquidStyleRenderTest {
     }
 
     @Test fun aDragSquashesWhileTheFingerMovesAndSettlesBackAfterwards() {
-        val style = LiquidGlassStyle(interaction = LiquidInteraction.Drag)
+        val style = LiquidGlass.Regular.copy(interaction = LiquidInteraction.Drag())
         val rest = styled(style, motion = 1f)
         val moving = styled(style, motion = 1f, holdDrag = true)
         // The resting surface starts at x=110; stretched along the drag it is wider, so a pixel 8px outside it turns to glass.
@@ -247,16 +246,16 @@ class LiquidStyleRenderTest {
     }
 
     @Test fun aFreeFormShapeCastsAShadowToo() {
-        val withShadow = styled(LiquidGlassStyle(), shape = Blob())
-        val without = styled(LiquidGlassStyle(shadow = LiquidShadow(opacity = 0f)), shape = Blob())
+        val withShadow = styled(LiquidGlass.Regular, shape = Blob())
+        val without = styled(LiquidGlass.Regular.copy(shadow = LiquidShadow(opacity = 0f)), shape = Blob())
         // 6px below the bottom edge (y=90), under the surface, over the blue half.
         assertTrue(withShadow.rgb(170, 96).third < without.rgb(170, 96).third - 6, "shadow under a Generic outline")
     }
 
     @Test fun theShadowNeverDarkensTheInsideOfATranslucentTint() {
         // Without a backdrop the glass is a tint over whatever is below; a shadow stack drawn under it would darken the middle.
-        val shadowed = styled(LiquidGlassStyle(), withGlass = false).rgb(170, 60)
-        val unshadowed = styled(LiquidGlassStyle(shadow = LiquidShadow(opacity = 0f)), withGlass = false).rgb(170, 60)
+        val shadowed = styled(LiquidGlass.Regular, withGlass = false).rgb(170, 60)
+        val unshadowed = styled(LiquidGlass.Regular.copy(shadow = LiquidShadow(opacity = 0f)), withGlass = false).rgb(170, 60)
         assertTrue(abs(shadowed.first - unshadowed.first) <= 1 && abs(shadowed.third - unshadowed.third) <= 1, "$shadowed vs $unshadowed")
     }
 }

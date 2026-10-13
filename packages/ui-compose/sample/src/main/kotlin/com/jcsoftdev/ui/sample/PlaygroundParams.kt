@@ -4,13 +4,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.jcsoftdev.ui.glass.LiquidGlassStyle
+import com.jcsoftdev.ui.glass.CrystalLens
+import com.jcsoftdev.ui.glass.Dispersion
+import com.jcsoftdev.ui.glass.LiquidGlass
 import com.jcsoftdev.ui.glass.LiquidInteraction
+import com.jcsoftdev.ui.glass.LiquidLens
 import com.jcsoftdev.ui.glass.LiquidMotion
 import com.jcsoftdev.ui.glass.LiquidProfile
 import com.jcsoftdev.ui.glass.LiquidShadow
 import com.jcsoftdev.ui.glass.LiquidSpecular
 import com.jcsoftdev.ui.glass.LiquidTint
+import com.jcsoftdev.ui.glass.RefractionLens
 import kotlin.math.roundToInt
 
 /** The spring set the playground offers: off (null), [LiquidMotion.Standard] or [LiquidMotion.Playful]. */
@@ -24,14 +28,32 @@ enum class MotionChoice(
     Playful("Playful", LiquidMotion.Playful, "LiquidMotion.Playful"),
 }
 
+/** The lens the playground offers: none (the base material), a [RefractionLens] with one of its profiles, or a [CrystalLens]. */
+enum class LensChoice(
+    val label: String,
+) {
+    None("None"),
+    Rim("Rim"),
+    Full("Full"),
+    Dome("Dome"),
+    Crystal("Crystal"),
+}
+
+/** The interaction the playground offers: none (a static surface), [LiquidInteraction.Press] or [LiquidInteraction.Drag]. */
+enum class InteractionChoice {
+    None,
+    Press,
+    Drag,
+}
+
 /**
- * Every [LiquidGlassStyle] field as the plain numbers the sliders edit. Lengths are dp values; [frost] and [saturation] are
- * null while they follow the material token.
+ * Every [LiquidGlass] field as the plain numbers the sliders edit. Lengths are dp values; [frost] and [saturation] are null while
+ * they follow the material token. [dispersion] 0 means no [Dispersion].
  */
 data class PlaygroundParams(
+    val lens: LensChoice = LensChoice.Full,
     val refraction: Float = 1f,
     val bevel: Float = 22f,
-    val profile: LiquidProfile = LiquidProfile.Full,
     val dispersion: Float = 0.03f,
     val frost: Float? = null,
     val saturation: Float? = null,
@@ -47,16 +69,16 @@ data class PlaygroundParams(
     val shadowOpacity: Float = 1f,
     val shadowSpread: Float = 14f,
     val shadowOffsetY: Float = 3f,
-    val interaction: LiquidInteraction = LiquidInteraction.Press,
+    val interaction: InteractionChoice = InteractionChoice.Press,
     val motion: MotionChoice = MotionChoice.Standard,
     val blend: Float = 24f,
 ) {
-    fun toStyle(): LiquidGlassStyle =
-        LiquidGlassStyle(
-            refraction = refraction,
+    fun toMaterial(): LiquidGlass =
+        LiquidGlass(
+            lens = toLens(),
+            dispersion = if (dispersion > 0f) Dispersion(dispersion) else null,
+            interaction = toInteraction(),
             bevelWidth = bevel.dp,
-            profile = profile,
-            dispersion = dispersion,
             frost = frost?.dp ?: Dp.Unspecified,
             saturation = saturation,
             brightness = brightness,
@@ -67,19 +89,33 @@ data class PlaygroundParams(
             grain = grain,
             opacity = opacity,
             shadow = LiquidShadow(shadowOpacity, shadowSpread.dp, shadowOffsetY.dp),
-            interaction = interaction,
-            motion = motion.motion,
             blend = blend.dp,
         )
 
-    /** The `LiquidGlassStyle(...)` call that reproduces this look: only the fields that differ from the kit default. */
+    private fun toLens(): LiquidLens? =
+        when (lens) {
+            LensChoice.None -> null
+            LensChoice.Rim -> RefractionLens(refraction, LiquidProfile.Rim)
+            LensChoice.Full -> RefractionLens(refraction, LiquidProfile.Full)
+            LensChoice.Dome -> RefractionLens(refraction, LiquidProfile.Dome)
+            LensChoice.Crystal -> CrystalLens(refraction)
+        }
+
+    private fun toInteraction(): LiquidInteraction? =
+        when (interaction) {
+            InteractionChoice.None -> null
+            InteractionChoice.Press -> LiquidInteraction.Press(motion.motion)
+            InteractionChoice.Drag -> LiquidInteraction.Drag(motion.motion)
+        }
+
+    /** The `LiquidGlass.Regular.copy(...)` call that reproduces this look: only the fields that differ from the kit default. */
     fun toSnippet(): String {
         val d = Kit
         val args = mutableListOf<String>()
-        if (refraction != d.refraction) args += "refraction = ${f(refraction)}"
+        if (lens != d.lens || refraction != d.refraction) args += "lens = ${lensCode()}"
+        if (dispersion != d.dispersion) args += "dispersion = " + if (dispersion > 0f) "Dispersion(${f(dispersion)})" else "null"
+        if (interaction != d.interaction || motion != d.motion) args += "interaction = ${interactionCode()}"
         if (bevel != d.bevel) args += "bevelWidth = ${dp(bevel)}"
-        if (profile != d.profile) args += "profile = LiquidProfile.$profile"
-        if (dispersion != d.dispersion) args += "dispersion = ${f(dispersion)}"
         if (frost != null) args += "frost = ${dp(frost)}"
         if (saturation != null) args += "saturation = ${f(saturation)}"
         if (brightness != d.brightness) args += "brightness = ${f(brightness)}"
@@ -106,49 +142,87 @@ data class PlaygroundParams(
             if (shadowOffsetY != d.shadowOffsetY) parts += "offsetY = ${dp(shadowOffsetY)}"
             args += "shadow = LiquidShadow(${parts.joinToString()})"
         }
-        if (interaction != d.interaction) args += "interaction = LiquidInteraction.$interaction"
-        if (motion != d.motion) args += "motion = ${motion.code}"
         if (blend != d.blend) args += "blend = ${dp(blend)}"
-        if (args.isEmpty()) return "LiquidGlassStyle()"
-        return "LiquidGlassStyle(\n" + args.joinToString("") { "    $it,\n" } + ")"
+        if (args.isEmpty()) return "LiquidGlass.Regular"
+        return "LiquidGlass.Regular.copy(\n" + args.joinToString("") { "    $it,\n" } + ")"
+    }
+
+    private fun lensCode(): String =
+        when (lens) {
+            LensChoice.None -> "null"
+            LensChoice.Crystal -> if (refraction == CrystalLens().refraction) "CrystalLens()" else "CrystalLens(${f(refraction)})"
+            else -> {
+                val parts = mutableListOf<String>()
+                if (refraction != 1f) parts += "refraction = ${f(refraction)}"
+                if (lens != LensChoice.Full) parts += "profile = LiquidProfile.${lens.name}"
+                "RefractionLens(${parts.joinToString()})"
+            }
+        }
+
+    private fun interactionCode(): String {
+        val spring = if (motion == MotionChoice.Standard) "" else motion.code
+        return when (interaction) {
+            InteractionChoice.None -> "null"
+            InteractionChoice.Press -> "LiquidInteraction.Press($spring)"
+            InteractionChoice.Drag -> "LiquidInteraction.Drag($spring)"
+        }
     }
 
     companion object {
-        /** What `LiquidGlassStyle()` is, in playground units. */
+        /** What [LiquidGlass.Regular] is, in playground units. */
         val Kit: PlaygroundParams = PlaygroundParams()
 
         /** The playground starts on the Crystal lens with the drag squash, so the panel flexes while it is moved. */
-        val Initial: PlaygroundParams = from(LiquidGlassStyle.Crystal)
+        val Initial: PlaygroundParams = from(LiquidGlass.Crystal)
 
-        fun from(style: LiquidGlassStyle): PlaygroundParams =
-            PlaygroundParams(
-                refraction = style.refraction,
-                bevel = style.bevelWidth.value,
-                profile = style.profile,
-                dispersion = style.dispersion,
-                frost = style.frost.takeIf { it != Dp.Unspecified }?.value,
-                saturation = style.saturation,
-                brightness = style.brightness,
-                tintColor = style.tint.color,
-                tintAmount = style.tint.amount,
-                rim = style.rim,
-                specularIntensity = style.specular.intensity,
-                specularAngle = style.specular.angleDegrees,
-                fresnel = style.fresnel,
-                grain = style.grain,
-                opacity = style.opacity,
-                shadowOpacity = style.shadow.opacity,
-                shadowSpread = style.shadow.spread.value,
-                shadowOffsetY = style.shadow.offsetY.value,
-                interaction = style.interaction,
+        fun from(material: LiquidGlass): PlaygroundParams {
+            val lens = material.lens
+            val interaction = material.interaction
+            return PlaygroundParams(
+                lens =
+                    when (lens) {
+                        null -> LensChoice.None
+                        is CrystalLens -> LensChoice.Crystal
+                        is RefractionLens ->
+                            when (lens.profile) {
+                                LiquidProfile.Rim -> LensChoice.Rim
+                                LiquidProfile.Full -> LensChoice.Full
+                                LiquidProfile.Dome -> LensChoice.Dome
+                            }
+                    },
+                refraction = lens?.refraction ?: 1f,
+                bevel = material.bevelWidth.value,
+                dispersion = material.dispersion?.amount ?: 0f,
+                frost = material.frost.takeIf { it != Dp.Unspecified }?.value,
+                saturation = material.saturation,
+                brightness = material.brightness,
+                tintColor = material.tint.color,
+                tintAmount = material.tint.amount,
+                rim = material.rim,
+                specularIntensity = material.specular.intensity,
+                specularAngle = material.specular.angleDegrees,
+                fresnel = material.fresnel,
+                grain = material.grain,
+                opacity = material.opacity,
+                shadowOpacity = material.shadow.opacity,
+                shadowSpread = material.shadow.spread.value,
+                shadowOffsetY = material.shadow.offsetY.value,
+                interaction =
+                    when (interaction) {
+                        null -> InteractionChoice.None
+                        is LiquidInteraction.Drag -> InteractionChoice.Drag
+                        is LiquidInteraction.Press -> InteractionChoice.Press
+                    },
                 motion =
-                    when (style.motion) {
-                        null -> MotionChoice.Off
-                        LiquidMotion.Playful -> MotionChoice.Playful
+                    when {
+                        interaction == null -> MotionChoice.Standard
+                        interaction.motion == null -> MotionChoice.Off
+                        interaction.motion == LiquidMotion.Playful -> MotionChoice.Playful
                         else -> MotionChoice.Standard
                     },
-                blend = style.blend.value,
+                blend = material.blend.value,
             )
+        }
     }
 }
 

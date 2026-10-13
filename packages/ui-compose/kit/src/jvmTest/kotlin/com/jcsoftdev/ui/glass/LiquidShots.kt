@@ -78,9 +78,9 @@ class LiquidShots {
 
     private fun shot(
         name: String,
-        style: LiquidGlassStyle = LiquidGlassStyle(),
+        material: LiquidGlass = LiquidGlass.Regular,
         press: Boolean = false,
-        content: @Composable (GlassState, MutableInteractionSource) -> Unit,
+        content: @Composable (GlassState, MutableInteractionSource, LiquidGlass) -> Unit,
     ) {
         val out = dir ?: return
         runComposeUiTest {
@@ -89,10 +89,10 @@ class LiquidShots {
                 CompositionLocalProvider(LocalDensity provides Density(2f)) {
                     Box(Modifier.wrapContentSize(Alignment.TopStart)) {
                         Box(Modifier.size(360.dp, 200.dp).testTag("frame")) {
-                            UiTheme(dark = false, motion = Motion(if (press) 1f else 0f), liquidGlassStyle = style) {
+                            UiTheme(dark = false, motion = Motion(if (press) 1f else 0f)) {
                                 val glass = rememberGlassState()
                                 Box(Modifier.fillMaxSize().glassSource(glass)) { Backdrop() }
-                                content(glass, source)
+                                content(glass, source, material)
                             }
                         }
                     }
@@ -109,11 +109,12 @@ class LiquidShots {
     private fun Samples(
         glass: GlassState,
         source: MutableInteractionSource,
+        material: LiquidGlass,
     ) {
         Box(Modifier.offset(24.dp, 40.dp).wrapContentSize(Alignment.TopStart).size(150.dp, 110.dp)) {
             Box(
                 Modifier.fillMaxSize().material(
-                    SurfaceMaterial.Liquid,
+                    material,
                     RoundedCornerShape(28.dp),
                     glass = glass,
                     interactionSource = source,
@@ -121,49 +122,58 @@ class LiquidShots {
             )
         }
         Box(Modifier.offset(196.dp, 70.dp).wrapContentSize(Alignment.TopStart).size(140.dp, 52.dp)) {
-            Box(Modifier.fillMaxSize().material(SurfaceMaterial.Liquid, CircleShape, glass = glass, interactionSource = source))
+            Box(Modifier.fillMaxSize().material(material, CircleShape, glass = glass, interactionSource = source))
         }
     }
 
     @Test fun default() {
         assumeTrue(dir != null)
-        shot("default") { glass, source -> Samples(glass, source) }
+        shot("default") { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun profileRim() {
         assumeTrue(dir != null)
-        shot("profile-rim", LiquidGlassStyle(profile = LiquidProfile.Rim)) { glass, source -> Samples(glass, source) }
+        shot(
+            "profile-rim",
+            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Rim)),
+        ) { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun profileFull() {
         assumeTrue(dir != null)
-        shot("profile-full", LiquidGlassStyle(profile = LiquidProfile.Full)) { glass, source -> Samples(glass, source) }
+        shot(
+            "profile-full",
+            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Full)),
+        ) { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun profileDome() {
         assumeTrue(dir != null)
-        shot("profile-dome", LiquidGlassStyle(profile = LiquidProfile.Dome)) { glass, source -> Samples(glass, source) }
+        shot(
+            "profile-dome",
+            LiquidGlass.Regular.copy(lens = RefractionLens(profile = LiquidProfile.Dome)),
+        ) { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun thick() {
         assumeTrue(dir != null)
-        shot("preset-thick", LiquidGlassStyle.Thick) { glass, source -> Samples(glass, source) }
+        shot("preset-thick", LiquidGlass.Thick) { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun clear() {
         assumeTrue(dir != null)
-        shot("preset-clear", LiquidGlassStyle.Clear) { glass, source -> Samples(glass, source) }
+        shot("preset-clear", LiquidGlass.Clear) { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun pressed() {
         assumeTrue(dir != null)
-        shot("pressed", press = true) { glass, source -> Samples(glass, source) }
+        shot("pressed", press = true) { glass, source, material -> Samples(glass, source, material) }
     }
 
     @Test fun mergedPills() {
         assumeTrue(dir != null)
-        shot("merged-pills", LiquidGlassStyle(blend = 60.dp)) { glass, _ ->
-            GlassEffectContainer(Modifier.fillMaxSize(), style = LiquidGlassStyle(blend = 60.dp), glass = glass) {
+        shot("merged-pills") { glass, _, _ ->
+            GlassEffectContainer(Modifier.fillMaxSize(), material = LiquidGlass.Regular.copy(blend = 60.dp), glass = glass) {
                 Row(Modifier.offset(30.dp, 70.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     repeat(4) { Box(Modifier.size(64.dp, 56.dp).glassEffect(CircleShape)) }
                 }
@@ -173,8 +183,8 @@ class LiquidShots {
 
     @Test fun separatePills() {
         assumeTrue(dir != null)
-        shot("separate-pills") { glass, _ ->
-            GlassEffectContainer(Modifier.fillMaxSize(), style = LiquidGlassStyle(blend = 4.dp), glass = glass) {
+        shot("separate-pills") { glass, _, _ ->
+            GlassEffectContainer(Modifier.fillMaxSize(), material = LiquidGlass.Regular.copy(blend = 4.dp), glass = glass) {
                 Row(Modifier.offset(30.dp, 70.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     repeat(4) { Box(Modifier.size(64.dp, 56.dp).glassEffect(CircleShape)) }
                 }

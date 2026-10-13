@@ -19,6 +19,9 @@ import androidx.compose.ui.platform.LocalContext
 // RenderEffect (the blur) exists from Android 12.
 internal actual fun backdropBlurSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
+// RuntimeShader (AGSL) exists from Android 13.
+internal actual fun lensSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
 // Android has no "reduce transparency" setting. Window blur toggles (developer options, battery saver) concern
 // cross-window blur, not the in-app blur this kit draws, so they are deliberately not mapped to it.
 @Composable

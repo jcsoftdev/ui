@@ -7,20 +7,28 @@ import org.jetbrains.skia.ImageFilter
 import org.jetbrains.skia.RuntimeEffect
 import org.jetbrains.skia.RuntimeShaderBuilder
 
-internal actual fun lensSupported(): Boolean = true
+// One effect per program, compiled on first use, so a surface that never merges never compiles the merge shader.
+private fun LensProgram.effect(): RuntimeEffect = compiled as? RuntimeEffect ?: RuntimeEffect.makeForShader(source).also { compiled = it }
 
-private val Effect: RuntimeEffect by lazy { RuntimeEffect.makeForShader(LENS_SHADER) }
-private val MergeEffect: RuntimeEffect by lazy { RuntimeEffect.makeForShader(MERGE_SHADER) }
-
-// Each builder compiles its shader on first use, so a surface that never merges never compiles the merge shader. The blur that
-// feeds the shader is kept while its radius holds; only the shader filter (which snapshots the uniforms) is made per change.
+// Each builder is made for the program it was first asked for (and remade if the program changes). The blur that feeds the
+// shader is kept while its radius holds; only the shader filter (which snapshots the uniforms) is made per change.
 internal actual class LensEngine actual constructor() {
-    private val builder by lazy(LazyThreadSafetyMode.NONE) { RuntimeShaderBuilder(Effect) }
-    private val mergeBuilder by lazy(LazyThreadSafetyMode.NONE) { RuntimeShaderBuilder(MergeEffect) }
+    private var builder: RuntimeShaderBuilder? = null
+    private var builderProgram: LensProgram? = null
+    private var mergeBuilder: RuntimeShaderBuilder? = null
+    private var mergeProgram: LensProgram? = null
     private var blurRadius = -1f
     private var blurFilter: ImageFilter? = null
 
-    actual fun effect(params: LensParams): RenderEffect? {
+    actual fun effect(
+        program: LensProgram,
+        params: LensParams,
+    ): RenderEffect? {
+        val builder =
+            builder?.takeIf { builderProgram === program } ?: RuntimeShaderBuilder(program.effect()).also {
+                builder = it
+                builderProgram = program
+            }
         builder.uniform("size", params.width, params.height)
         builder.uniform("origin", params.pad, params.pad)
         builder.uniform("radii", params.tl, params.tr, params.br, params.bl)
@@ -30,13 +38,22 @@ internal actual class LensEngine actual constructor() {
         return builder.filter(blurFor(params.blur))
     }
 
-    actual fun merged(params: MergeParams): RenderEffect? {
-        mergeBuilder.uniform("boxes", params.shapes.boxes())
-        mergeBuilder.uniform("roundness", params.shapes.roundness())
-        mergeBuilder.uniform("count", params.count.toFloat())
-        mergeBuilder.uniform("blendK", params.blendDistance)
-        mergeBuilder.common(params.lens)
-        return mergeBuilder.filter(blurFor(params.lens.blur))
+    actual fun merged(
+        program: MergeProgram,
+        params: MergeParams,
+    ): RenderEffect? {
+        val source = program.program
+        val builder =
+            mergeBuilder?.takeIf { mergeProgram === source } ?: RuntimeShaderBuilder(source.effect()).also {
+                mergeBuilder = it
+                mergeProgram = source
+            }
+        builder.uniform("boxes", params.shapes.boxes())
+        builder.uniform("roundness", params.shapes.roundness())
+        builder.uniform("count", params.count.toFloat())
+        builder.uniform("blendK", params.blendDistance)
+        builder.common(params.lens)
+        return builder.filter(blurFor(params.lens.blur))
     }
 
     private fun blurFor(radius: Float): ImageFilter? {

@@ -15,7 +15,7 @@ class MaterialResolutionTest {
         highContrast: Boolean = false,
         nested: Boolean = false,
         blurAvailable: Boolean = true,
-        glassVariant: GlassVariant = GlassVariant.Frosted,
+        chromeGlass: SurfaceMaterial = SurfaceMaterial.Glass,
         lensAvailable: Boolean = false,
     ) = resolveMaterial(
         requested,
@@ -25,7 +25,7 @@ class MaterialResolutionTest {
         highContrast,
         nested,
         blurAvailable,
-        glassVariant,
+        chromeGlass,
         lensAvailable,
     )
 
@@ -91,23 +91,30 @@ class MaterialResolutionTest {
         assertFalse(r.forcedOpaque)
     }
 
-    @Test fun theLiquidVariantMakesChromeLiquidAndFrostedKeepsItFrosted() {
-        val liquid = resolve(style = UiStyle.Glass, glassVariant = GlassVariant.Liquid)
-        assertEquals(SurfaceMaterial.Liquid, liquid.variant)
-        assertEquals(SurfaceMaterial.Glass, resolve(style = UiStyle.Glass, glassVariant = GlassVariant.Frosted).variant)
+    @Test fun chromeGlassPicksWhatChromeIsMadeOf() {
+        val liquid = resolve(style = UiStyle.Glass, chromeGlass = LiquidGlass.Regular)
+        assertEquals(LiquidGlass.Regular, liquid.variant)
+        assertEquals(SurfaceMaterial.Glass, resolve(style = UiStyle.Glass).variant)
+        assertEquals(SurfaceMode.Solid, resolve(role = SurfaceRole.Content, style = UiStyle.Glass, chromeGlass = LiquidGlass.Regular).mode)
     }
 
-    @Test fun anExplicitMaterialBeatsTheThemeVariant() {
-        assertEquals(SurfaceMaterial.Glass, resolve(SurfaceMaterial.Glass, glassVariant = GlassVariant.Liquid).variant)
+    @Test fun anExplicitMaterialBeatsTheThemeChromeGlass() {
+        assertEquals(SurfaceMaterial.Glass, resolve(SurfaceMaterial.Glass, chromeGlass = LiquidGlass.Regular).variant)
     }
 
-    @Test fun liquidUsesTheLensOnlyWhereTheShaderRuns() {
-        assertEquals(SurfaceMode.Lens, resolve(SurfaceMaterial.Liquid, lensAvailable = true).mode)
+    @Test fun aLensUsesTheShaderOnlyWhereItRuns() {
+        val lensed = LiquidGlass(lens = RefractionLens())
+        assertEquals(SurfaceMode.Lens, resolve(lensed, lensAvailable = true).mode)
         // Android 12 / 12L: blur but no runtime shader.
-        assertEquals(SurfaceMode.Blur, resolve(SurfaceMaterial.Liquid, lensAvailable = false).mode)
+        assertEquals(SurfaceMode.Blur, resolve(lensed, lensAvailable = false).mode)
         // Below Android 12: no blur either.
-        assertEquals(SurfaceMode.Tint, resolve(SurfaceMaterial.Liquid, blurAvailable = false, lensAvailable = false).mode)
-        assertEquals(SurfaceMode.Tint, resolve(SurfaceMaterial.Liquid, blurAvailable = false, lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Tint, resolve(lensed, blurAvailable = false, lensAvailable = false).mode)
+        assertEquals(SurfaceMode.Tint, resolve(lensed, blurAvailable = false, lensAvailable = true).mode)
+    }
+
+    @Test fun liquidWithoutALensIsTheBaseMaterialEvenWhereTheShaderRuns() {
+        assertEquals(SurfaceMode.Blur, resolve(LiquidGlass(), lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Blur, resolve(LiquidGlass(dispersion = Dispersion()), lensAvailable = true).mode)
     }
 
     @Test fun frostedNeverUsesTheLens() {
@@ -116,13 +123,9 @@ class MaterialResolutionTest {
     }
 
     @Test fun accessibilityForcesLiquidOpaqueAndNestingFlattensIt() {
-        assertEquals(SurfaceMode.Solid, resolve(SurfaceMaterial.Liquid, reduceTransparency = true, lensAvailable = true).mode)
-        assertEquals(SurfaceMode.Solid, resolve(SurfaceMaterial.LiquidClear, highContrast = true, lensAvailable = true).mode)
-        assertEquals(SurfaceMode.Nested, resolve(SurfaceMaterial.Liquid, nested = true, lensAvailable = true).mode)
-    }
-
-    @Test fun liquidClearIsClearAndLiquid() {
-        val r = resolve(SurfaceMaterial.LiquidClear, lensAvailable = true)
-        assertTrue(r.liquid && r.clear)
+        assertEquals(SurfaceMode.Solid, resolve(LiquidGlass.Regular, reduceTransparency = true, lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Solid, resolve(LiquidGlass.Regular.copy(clear = true), highContrast = true, lensAvailable = true).mode)
+        assertEquals(SurfaceMode.Nested, resolve(LiquidGlass.Regular, nested = true, lensAvailable = true).mode)
+        assertTrue(resolve(LiquidGlass.Regular, reduceTransparency = true).forcedOpaque)
     }
 }
