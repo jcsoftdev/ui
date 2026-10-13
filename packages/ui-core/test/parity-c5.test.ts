@@ -6,9 +6,11 @@ import * as reactLayout from "../../ui/src/calendar/internal/layout.ts";
 import * as reactSpy from "../../ui/src/containers/scrolly/scrolly-logic.ts";
 import * as reactToc from "../../ui/src/navigation/floating-toc/model.ts";
 import { consumeContext, createContextKey, provideContext } from "../src/context.ts";
+import * as layout from "../src/date/layout.ts";
 import * as date from "../src/date.ts";
 import * as number from "../src/number.ts";
-import * as observe from "../src/observe.ts";
+import * as scrollSpy from "../src/observe/scroll-spy.ts";
+import * as stick from "../src/observe/stick-to-bottom.ts";
 
 const DAYS = ["2024-01-31", "2024-02-29", "2023-02-28", "2024-12-31", "2025-03-09", "2026-10-13"];
 
@@ -69,7 +71,7 @@ describe("date parity with the React calendar", () => {
         columns: number;
       }[],
     ) => items.map(({ event, ...rest }) => ({ id: event.id, ...rest }));
-    const ours = strip(date.layoutDayEvents(events));
+    const ours = strip(layout.layoutDayEvents(events));
     expect(ours).toEqual(strip(reactLayout.layoutDayEvents(events as never) as never));
     expect(ours.find((item) => item.id === "d")).toMatchObject({ column: 0, columns: 2, end: 750 });
   });
@@ -112,7 +114,7 @@ describe("observe parity with the React scroll logic", () => {
     const order = ["a", "b", "c"];
     for (const visible of [[], ["b"], ["c", "a"]])
       for (const previous of [null, "b", "zzz"])
-        expect(observe.pickActive(order, new Set(visible), previous)).toBe(
+        expect(scrollSpy.pickActive(order, new Set(visible), previous)).toBe(
           reactToc.pickActive(order, new Set(visible), previous),
         );
     const rects = [
@@ -121,12 +123,12 @@ describe("observe parity with the React scroll logic", () => {
       { top: 300, bottom: 400 },
     ];
     for (const line of [-10, 50, 110, 120, 299, 300, 500]) {
-      expect(observe.pickActiveStep(rects, line)).toBe(reactSpy.pickActiveStep(rects, line));
-      expect(observe.stepProgress(rects[1]!, line)).toBe(reactSpy.stepProgress(rects[1]!, line));
+      expect(scrollSpy.pickActiveStep(rects, line)).toBe(reactSpy.pickActiveStep(rects, line));
+      expect(scrollSpy.stepProgress(rects[1]!, line)).toBe(reactSpy.stepProgress(rects[1]!, line));
     }
     for (const offset of [-1, 0, 0.5, 0.333, 2]) {
-      expect(observe.lineRootMargin(offset)).toBe(reactSpy.lineRootMargin(offset));
-      expect(observe.triggerLine(10, 800, offset)).toBe(reactSpy.triggerLine(10, 800, offset));
+      expect(scrollSpy.lineRootMargin(offset)).toBe(reactSpy.lineRootMargin(offset));
+      expect(scrollSpy.triggerLine(10, 800, offset)).toBe(reactSpy.triggerLine(10, 800, offset));
     }
   });
 
@@ -138,14 +140,14 @@ describe("observe parity with the React scroll logic", () => {
       { scrollTop: 700, scrollHeight: 1000, clientHeight: 400 },
     ];
     for (const m of metrics) {
-      expect(observe.distanceFromBottom(m)).toBe(reactStick.distanceFromBottom(m));
+      expect(stick.distanceFromBottom(m)).toBe(reactStick.distanceFromBottom(m));
       for (const stuck of [true, false]) {
-        expect(observe.nextStuck(stuck, m, 650)).toBe(reactStick.nextStuck(stuck, m, 650));
-        expect(observe.showJumpToLatest(stuck, m)).toBe(reactStick.showJumpToLatest(stuck, m));
+        expect(stick.nextStuck(stuck, m, 650)).toBe(reactStick.nextStuck(stuck, m, 650));
+        expect(stick.showJumpToLatest(stuck, m)).toBe(reactStick.showJumpToLatest(stuck, m));
       }
     }
-    expect(observe.isNearBottom(metrics[1]!)).toBe(true);
-    expect(observe.isNearBottom(metrics[0]!)).toBe(false);
+    expect(stick.isNearBottom(metrics[1]!)).toBe(true);
+    expect(stick.isNearBottom(metrics[0]!)).toBe(false);
   });
 });
 

@@ -17,9 +17,16 @@ const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")
 // element never touches this list.
 // ui-core behaviours (top-level src/<name>.ts) without an entry here keep theirs in
 // src/<name>.size.json, for the same reason.
-for (const file of readdirSync(join(root, "packages/ui-core/src"))) {
-  if (!file.endsWith(".ts")) continue;
-  const name = file.slice(0, -3);
+// Grouped behaviours (src/<group>/<part>.ts, e.g. observe/resize) follow the same rule; liquid keeps
+// its own entries in size-budgets.json.
+const coreEntries = [];
+for (const item of readdirSync(join(root, "packages/ui-core/src"), { withFileTypes: true })) {
+  if (item.isFile() && item.name.endsWith(".ts")) coreEntries.push(item.name.slice(0, -3));
+  else if (item.isDirectory() && item.name !== "liquid")
+    for (const part of readdirSync(join(root, "packages/ui-core/src", item.name)))
+      if (part.endsWith(".ts")) coreEntries.push(`${item.name}/${part.slice(0, -3)}`);
+}
+for (const name of coreEntries) {
   const dist = `packages/ui-core/dist/${name}.js`;
   if (budgets.some((entry) => entry.file === dist)) continue;
   const sizeFile = `packages/ui-core/src/${name}.size.json`;

@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { createCopier } from "../src/clipboard.ts";
 import { consumeContext, createContextKey, provideContext } from "../src/context.ts";
-import { createScrollSpy, createStickToBottom, isOnline, observeOnline } from "../src/observe.ts";
+import { isOnline, observeOnline } from "../src/observe/online.ts";
+import { createScrollSpy } from "../src/observe/scroll-spy.ts";
+import { createStickToBottom } from "../src/observe/stick-to-bottom.ts";
 
 const frame = () => new Promise((resolve) => setTimeout(resolve, 60));
 
