@@ -201,3 +201,29 @@ test("markdown: nesting beyond the cap degrades to literal text", () => {
   assert.equal(depthOf(md.parseMarkdown(`${">".repeat(10)}x`)), 10);
   assert.equal(depthOf(md.parseMarkdown(`${">".repeat(500)}x`)), 33);
 });
+
+test("markdown: whitespace-heavy lines do not trigger quadratic regexes", () => {
+  const n = 80_000;
+  const sp = " ".repeat(n);
+  const cases = {
+    trailingSpaces: `a${sp}b\nc`,
+    heading: `# a${sp}b`,
+    tableRule: `a|b\n${sp}-x`,
+  };
+  for (const [name, src] of Object.entries(cases)) {
+    const start = performance.now();
+    md.parseMarkdown(src);
+    const elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  }
+});
+
+test("markdown: heading closing run and table rules keep their meaning", () => {
+  const h = (s) => md.parseMarkdown(s)[0];
+  assert.equal(flat(h("## Title ##").c), "Title");
+  assert.equal(flat(h("# a#").c), "a#");
+  assert.equal(h("#nospace").t, "p");
+  assert.equal(h("a|b\n:-|-:\n1|2").t, "table");
+  assert.equal(h("a|b\n|---|---|\n1|2").t, "table");
+  assert.equal(h("a|b\n--x|--\n1|2").t, "p");
+});

@@ -128,7 +128,9 @@ export function parseInline(src: string): Inline[] {
       }
     }
     if (ch === "\n") {
-      buf = buf.replace(/ +$/, "");
+      let end = buf.length;
+      while (end > 0 && buf[end - 1] === " ") end -= 1;
+      buf = buf.slice(0, end);
       flush();
       out.push({ t: "br" });
       i += 1;
@@ -142,10 +144,30 @@ export function parseInline(src: string): Inline[] {
 }
 
 const FENCE = /^\s{0,3}(`{3,}|~{3,})\s*([\w+#.-]*)/;
-const HEADING = /^\s{0,3}(#{1,6})\s+(.*?)(?:\s+#+)?\s*$/;
+const HEADING = /^\s{0,3}(#{1,6})\s(.*)$/;
+
+/** Heading level and text; the optional closing `#` run is stripped in code to keep matching linear. */
+function matchHeading(line: string): { level: 1 | 2 | 3 | 4 | 5 | 6; text: string } | null {
+  const m = HEADING.exec(line);
+  if (!m) return null;
+  let text = (m[2] as string).trim();
+  let end = text.length;
+  while (end > 0 && text[end - 1] === "#") end -= 1;
+  if (end > 0 && end < text.length && /\s/.test(text[end - 1] as string)) {
+    text = text.slice(0, end).trimEnd();
+  }
+  return { level: (m[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6, text };
+}
 const HR = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/;
 const ITEM = /^(\s*)([-*+]|\d{1,9}[.)])\s+(.*)$/;
-const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+const TABLE_CELL_RULE = /^:?-+:?$/;
+
+function isTableRule(line: string): boolean {
+  let row = line.trim();
+  if (row.startsWith("|")) row = row.slice(1);
+  if (row.endsWith("|")) row = row.slice(0, -1);
+  return row !== "" && row.split("|").every((cell) => TABLE_CELL_RULE.test(cell.trim()));
+}
 
 function splitRow(line: string): string[] {
   let row = line.trim();
@@ -163,7 +185,7 @@ function alignOf(cell: string): TableAlign {
 }
 
 function isTableStart(line: string, next: string | undefined): boolean {
-  return line.includes("|") && !!next?.includes("-") && TABLE_RULE.test(next);
+  return line.includes("|") && !!next?.includes("-") && isTableRule(next);
 }
 
 function startsBlock(line: string, next: string | undefined): boolean {
@@ -220,13 +242,9 @@ function parseBlocks(src: string, depth: number): Block[] {
       blocks.push({ t: "code", lang: fence[2] ?? "", v: body.join("\n") });
       continue;
     }
-    const heading = HEADING.exec(line);
+    const heading = matchHeading(line);
     if (heading) {
-      blocks.push({
-        t: "heading",
-        level: (heading[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6,
-        c: parseInline(heading[2] as string),
-      });
+      blocks.push({ t: "heading", level: heading.level, c: parseInline(heading.text) });
       i += 1;
       continue;
     }
