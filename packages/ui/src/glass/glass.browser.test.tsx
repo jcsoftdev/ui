@@ -1078,6 +1078,32 @@ describe("liquid options (material object, variables and presets)", () => {
     expect(defs().querySelector("feGaussianBlur")?.getAttribute("stdDeviation")).toBe("3");
   });
 
+  test("the crystal lens filters a layer larger than the surface, clipped to it, and puts the surface back", async () => {
+    await mount(card({ type: "liquid", preset: "crystal" }, "rounded-full"));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const box = document.querySelector("[data-testid=box]") as HTMLElement;
+    const layer = box.querySelector("[data-glass-lens-layer]") as HTMLElement;
+    expect(layer).toBeTruthy();
+    // The surface carries no backdrop filter of its own; the layer does, and it is bigger.
+    expect(styleOf(box).backdropFilter).toBe("none");
+    expect(styleOf(layer).backdropFilter).toContain("url(");
+    expect(layer.offsetWidth).toBeGreaterThan(box.offsetWidth + 40);
+    expect(layer.style.clipPath).toContain("inset(");
+    // Clear: no veil, no tint, no frost node.
+    expect(styleOf(box).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(
+      [...defs().querySelectorAll("feGaussianBlur")].map((n) => n.getAttribute("stdDeviation")),
+    ).toEqual(["0.7"]);
+    // Chromatic aberration: three displacement passes.
+    expect(defs().querySelectorAll("feDisplacementMap").length).toBe(3);
+    const original = box.getAttribute("style");
+    await act(async () => root?.render(card({ type: "liquid", preset: "regular" })));
+    await vi.waitFor(() => expect(box.querySelector("[data-glass-lens-layer]")).toBeNull());
+    expect(original).toContain("--liquid-profile");
+    expect(box.style.isolation).toBe("");
+    expect(box.style.overflow).toBe("");
+  });
+
   test("tint, grain and opacity render on the surface", async () => {
     await mount(
       card({ type: "liquid", tint: { color: "red", amount: 1 }, grain: 0.5, opacity: 0.5 }),

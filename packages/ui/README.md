@@ -24,7 +24,7 @@ Set these on `<html>` (or any element to restyle only its subtree); no rebuild i
 | `data-style="<preset>"` | Style preset (radii, borders, shadows, glass, ...). See https://ui.jcsoftdev.com/docs/theming/. |
 | `data-density="<level>"` | Control and spacing density: `compact`, `normal`, `comfortable`, `touch`. |
 | `data-radius="<level>"` | Global corner radius scale. |
-| `data-glass="liquid\|liquid-clear\|liquid-regular\|liquid-thick"` | Switch glass surfaces to Liquid Glass (lensing, specular rim) with a preset. Configure one surface with `material={{ type: "liquid", ... }}`; see https://ui.jcsoftdev.com/docs/glass/. |
+| `data-glass="liquid\|liquid-clear\|liquid-regular\|liquid-thick\|liquid-crystal"` | Switch glass surfaces to Liquid Glass (lensing, specular rim) with a preset. Configure one surface with `material={{ type: "liquid", ... }}`; see https://ui.jcsoftdev.com/docs/glass/. |
 
 ### Subpath exports
 

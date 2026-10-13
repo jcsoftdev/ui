@@ -77,7 +77,8 @@ test("values are clamped to ranges the lens can honour, and bad input is ignored
     bevelWidth: Number.NaN,
     motion: false,
   });
-  assert.equal(vars["--liquid-refraction"], "1");
+  // The variable takes up to 2 (the crystal lens); the other profiles treat anything above 1 as 1.
+  assert.equal(vars["--liquid-refraction"], "2");
   assert.equal(vars["--liquid-dispersion"], "0.2");
   assert.equal(vars["--liquid-opacity"], "0");
   assert.equal(vars["--liquid-grain"], "1");
@@ -141,4 +142,27 @@ test("the default shadow is built from the themed tokens, an explicit one from i
   const explicit = glass.liquidShadow({ offsetY: 16, spread: 12 });
   assert.match(explicit, /calc\(16px \* var\(--liquid-size, 1\)\) calc\(42px \*/);
   assert.doesNotMatch(explicit, /--liquid-shadow-(drop|blur)/);
+});
+
+test("the crystal preset is a clear thick lens: no frost, no veil, no tint, rim aberration, refraction past 1", () => {
+  const crystal = glass.LIQUID_PRESETS.crystal;
+  assert.equal(crystal.profile, "crystal");
+  assert.equal(crystal.refraction, 1.67);
+  assert.equal(crystal.dispersion, 0.05);
+  assert.equal(crystal.frost, 0);
+  assert.equal(crystal.opacity, 0);
+  assert.equal(crystal.tint.amount, 0);
+  assert.equal(crystal.specular.intensity, 0);
+  assert.equal(crystal.fresnel, 1);
+  const vars = glass.liquidVars(crystal);
+  assert.equal(vars["--liquid-refraction"], "1.67");
+  assert.equal(vars["--liquid-profile"], "crystal");
+  assert.equal(vars["--liquid-frost"], "0px");
+  assert.equal(vars["--liquid-opacity"], "0");
+  // Refraction reaches 2 and no further.
+  assert.equal(glass.liquidVars({ refraction: 5 })["--liquid-refraction"], "2");
+  // The defaults are untouched: the regular preset sets nothing.
+  assert.deepEqual(glass.liquidVars(glass.LIQUID_PRESETS.regular), {});
+  assert.equal(glass.LIQUID_DEFAULTS.refraction, 1);
+  assert.equal(glass.LIQUID_DEFAULTS.profile, "full");
 });

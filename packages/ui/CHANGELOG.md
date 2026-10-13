@@ -2,6 +2,10 @@
 
 ## 0.3.0 (unreleased)
 
+### Crystal lens
+
+- **`profile: "crystal"`** and the `crystal` preset (`data-glass="liquid-crystal"`): a thick, fully clear convex lens that minifies the backdrop, bends it hard towards the rim, splits colour at the edge and has no frost, veil or tint. `refraction` accepts 0 to 2 for it (defaults and the other profiles are unchanged; above 1 they behave as 1). The minifying map cannot fold; the filter runs on a layer that extends past the surface and is clipped to it. No contrast guarantee.
+
 ### Configurable Liquid Glass and liquid motion
 
 - **`LiquidGlassOptions`**: `material={{ type: "liquid" | "liquid-clear", ...options }}` on every

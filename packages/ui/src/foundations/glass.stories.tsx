@@ -473,6 +473,7 @@ const PROFILE_LABEL: Record<LiquidProfile, string> = {
   full: 'profile "full": a squarish pillow over the whole surface (default)',
   dome: 'profile "dome": a round drop, flatter in the middle',
   rim: 'profile "rim": only a bevel along the edge',
+  crystal: 'profile "crystal": a thick clear lens that minifies the backdrop',
 };
 
 export const Profiles: Story = {

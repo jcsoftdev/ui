@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 /** How the lens bends the backdrop. See {@link LiquidGlassOptions.profile}. */
-export type LiquidProfile = "rim" | "full" | "dome";
+export type LiquidProfile = "rim" | "full" | "dome" | "crystal";
 
 /** What the surface does under the pointer. See {@link LiquidGlassOptions.interactive}. */
 export type LiquidInteractive = "none" | "press" | "drag";
@@ -22,7 +22,8 @@ export type LiquidMotion = false | "snappy" | "smooth" | "soft" | "jelly";
 export interface LiquidGlassOptions {
   /**
    * Strength of the bend, 0 to 1, as a fraction of the strongest offset that cannot fold the
-   * backdrop back on itself. `0` is flat glass. Default 1.
+   * backdrop back on itself. `0` is flat glass. Default 1. With `profile: "crystal"` the range is
+   * 0 to 2: a minifying lens cannot fold, so it can be pushed further (1.67 is a thick lens).
    */
   refraction?: number;
   /**
@@ -34,7 +35,9 @@ export interface LiquidGlassOptions {
   /**
    * `"full"` (default): a superellipse dome over the whole surface. `"dome"`: a rounder,
    * elliptical drop that is flatter in the middle. `"rim"`: only a bevel along the edge, the
-   * middle shows the backdrop undisplaced.
+   * middle shows the backdrop undisplaced. `"crystal"`: a thick convex lens that minifies the
+   * backdrop (it shows a wider area than the surface covers), bending steeply towards the rim;
+   * meant to be clear (`frost: 0`, `opacity: 0`) and has no contrast guarantee.
    */
   profile?: LiquidProfile;
   /** Chromatic dispersion, 0 to 0.2: how far apart the colour channels are pulled. Default 0. Small surfaces only. */
@@ -97,7 +100,7 @@ export const LIQUID_DEFAULTS = {
 } as const satisfies LiquidGlassOptions;
 
 /** Names of the `data-glass` presets and of `material.preset`. */
-export type LiquidPresetName = "clear" | "regular" | "thick";
+export type LiquidPresetName = "clear" | "regular" | "thick" | "crystal";
 
 /**
  * The same presets that `data-glass="liquid-clear|liquid-regular|liquid-thick"` selects in
@@ -112,6 +115,24 @@ export const LIQUID_PRESETS: Record<LiquidPresetName, LiquidGlassOptions> = {
     specular: { intensity: 1.1 },
   },
   regular: {},
+  /**
+   * A thick, fully clear convex lens: the backdrop is minified and bent hard towards the rim, the
+   * colour channels split at the edge, no frost, no veil, a thin bright rim. Over busy content text
+   * is not legible: there is no contrast guarantee, put short bold labels with a text shadow on it.
+   */
+  crystal: {
+    profile: "crystal",
+    refraction: 1.67,
+    dispersion: 0.05,
+    frost: 0,
+    saturation: 1,
+    opacity: 0,
+    tint: { color: "transparent", amount: 0 },
+    rim: 0.6,
+    specular: { intensity: 0 },
+    fresnel: 1,
+    shadow: { opacity: 0.8 },
+  },
   thick: {
     bevelWidth: 32,
     frost: 3,
@@ -225,7 +246,7 @@ export function liquidVars(options: LiquidGlassOptions = {}): Vars {
   };
   const num = (value: unknown, min: number, max: number) =>
     finite(value) ? round(clamp(value, min, max)) : undefined;
-  set("refraction", num(options.refraction, 0, 1));
+  set("refraction", num(options.refraction, 0, 2));
   const bevel = num(options.bevelWidth, 0, 120);
   if (bevel !== undefined) set("bevel", `${bevel}px`);
   if (options.profile) set("profile", options.profile);

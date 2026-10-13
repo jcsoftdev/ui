@@ -138,24 +138,24 @@ export function ConfiguredLiquid() {
 }
 ```
 
-| Option | Variable | Meaning (default) |
-| --- | --- | --- |
-| `refraction` | `--liquid-refraction` | 0 to 1: the bend as a fraction of the strongest offset that cannot fold the backdrop (1) |
-| `bevelWidth` | `--liquid-bevel` | px: width of the refracting band (`rim`) or cap of the offset (`full`, `dome`); derived from size and radius, at most 24 px for the whole-surface profiles |
-| `profile` | `--liquid-profile` | `"full"` a squarish dome over the whole surface (default), `"dome"` a round drop that is flatter in the middle, `"rim"` only a bevel along the edge |
-| `dispersion` | `--liquid-dispersion` | 0 to 0.2: colour channels pulled apart (0); small surfaces only |
-| `frost` | `--liquid-frost` | px of backdrop blur (2 regular, 0.6 clear) |
-| `saturation`, `brightness` | `--liquid-saturation`, `--liquid-brightness` | backdrop filter (1.5, 1) |
-| `tint` | `--liquid-tint-color`, `--liquid-tint-amount` | `{ color, amount }`: a colour laid over the glass (none; amount 0.2) |
-| `rim` | `--liquid-rim-strength` | 0 to 2: edge highlight (1) |
-| `specular` | `--liquid-specular`, `--liquid-specular-angle` | `{ intensity, angle }`: the glint on the walls facing the light (1, -120 deg: upper left) |
-| `fresnel` | `--liquid-fresnel` | 0 to 1: extra glow towards the edge (0) |
-| `grain` | `--liquid-grain` | 0 to 1: film grain (0) |
-| `radius` | `--liquid-radius` | px corner radius (the component's own) |
-| `opacity` | `--liquid-opacity` | 0 to 1: the legibility veil (1) |
-| `shadow` | `--liquid-shadow-opacity`, `--liquid-shadow-spread`, `--liquid-shadow-offset` | `{ opacity, spread, offsetY }` of the outer shadow (1, 0, 10) |
-| `interactive` | `--liquid-interactive` | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive`. It inherits, except on the overlays (dialog, popover, sidebar, drawer), which read it only from their own inline style |
-| `motion` | `--liquid-motion` | `"snappy"` (default), `"smooth"`, `"soft"`, `"jelly"` or `false` (`off`) |
+| Option                     | Variable                                                                      | Meaning (default)                                                                                                                                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `refraction`               | `--liquid-refraction`                                                         | 0 to 1: the bend as a fraction of the strongest offset that cannot fold the backdrop (1)                                                                                                                                   |
+| `bevelWidth`               | `--liquid-bevel`                                                              | px: width of the refracting band (`rim`) or cap of the offset (`full`, `dome`); derived from size and radius, at most 24 px for the whole-surface profiles                                                                 |
+| `profile`                  | `--liquid-profile`                                                            | `"full"` a squarish dome over the whole surface (default), `"dome"` a round drop that is flatter in the middle, `"rim"` only a bevel along the edge                                                                        |
+| `dispersion`               | `--liquid-dispersion`                                                         | 0 to 0.2: colour channels pulled apart (0); small surfaces only                                                                                                                                                            |
+| `frost`                    | `--liquid-frost`                                                              | px of backdrop blur (2 regular, 0.6 clear)                                                                                                                                                                                 |
+| `saturation`, `brightness` | `--liquid-saturation`, `--liquid-brightness`                                  | backdrop filter (1.5, 1)                                                                                                                                                                                                   |
+| `tint`                     | `--liquid-tint-color`, `--liquid-tint-amount`                                 | `{ color, amount }`: a colour laid over the glass (none; amount 0.2)                                                                                                                                                       |
+| `rim`                      | `--liquid-rim-strength`                                                       | 0 to 2: edge highlight (1)                                                                                                                                                                                                 |
+| `specular`                 | `--liquid-specular`, `--liquid-specular-angle`                                | `{ intensity, angle }`: the glint on the walls facing the light (1, -120 deg: upper left)                                                                                                                                  |
+| `fresnel`                  | `--liquid-fresnel`                                                            | 0 to 1: extra glow towards the edge (0)                                                                                                                                                                                    |
+| `grain`                    | `--liquid-grain`                                                              | 0 to 1: film grain (0)                                                                                                                                                                                                     |
+| `radius`                   | `--liquid-radius`                                                             | px corner radius (the component's own)                                                                                                                                                                                     |
+| `opacity`                  | `--liquid-opacity`                                                            | 0 to 1: the legibility veil (1)                                                                                                                                                                                            |
+| `shadow`                   | `--liquid-shadow-opacity`, `--liquid-shadow-spread`, `--liquid-shadow-offset` | `{ opacity, spread, offsetY }` of the outer shadow (1, 0, 10)                                                                                                                                                              |
+| `interactive`              | `--liquid-interactive`                                                        | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive`. It inherits, except on the overlays (dialog, popover, sidebar, drawer), which read it only from their own inline style |
+| `motion`                   | `--liquid-motion`                                                             | `"snappy"` (default), `"smooth"`, `"soft"`, `"jelly"` or `false` (`off`)                                                                                                                                                   |
 
 `LiquidGlassOptions`, `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle()` and `liquidVars()` are exported from `@jcsoftdev/ui/glass`; `liquidStyle(options)` is the `style` object for your own surfaces (pair it with `useGlassLens`). The values are clamped to ranges the lens can honour.
 
@@ -164,6 +164,20 @@ export function ConfiguredLiquid() {
 **Contrast.** The guarantees listed under Tokens hold for the defaults. A lower `opacity`, a `tint`, `grain` or a thinner `frost` can leave text without them; check the copy you put on a configured surface.
 
 **Profiles and thickness.** Both whole-surface profiles pull each pixel towards the centre along the gradient of a radial coordinate (`full`: exponent 3, pull `A t^1.5`; `dome`: exponent 2, pull `A t^2`, with `t` the radial coordinate over its value at the corners), so neither has a crease along the diagonals, and both are tested not to fold. `refraction` and `bevelWidth` scale the filter, not the map, so changing them does not re-rasterise it. A bigger surface is thicker: its shadow grows with the size (`--liquid-size`, 0.7 to 1.5 times), and the lens offset grows with it up to the cap.
+
+### Crystal: a thick, clear lens
+
+`profile: "crystal"` (and the `crystal` preset, `data-glass="liquid-crystal"`) is the look of a thick convex piece of acrylic: the backdrop is **minified** (the surface shows a wider area than it covers, squeezed in), bent hard towards the rim, split into colour fringes at the edge, with no frost, no veil and no tint, only a thin bright edge.
+
+```tsx
+<Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
+  <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">Liquid Glass</span>
+</Card>
+```
+
+- `refraction` goes from 0 to 2 for this profile (the other profiles treat anything above 1 as 1). A minifying map `p -> p (1 + k s(t))` has a positive Jacobian for every `k`, so it cannot fold; the offset is capped at 260 px to bound the work.
+- Minification samples outside the surface, which a filter on the surface cannot see. The engine therefore puts the filter on a layer inside the surface that extends past it by the largest offset and is clipped back to the silhouette (`data-glass-lens-layer`), and moves the surface's background and inset rim under/over it. Give the surface child elements (a `span` around the label), not a lone text node, and keep `overflow` visible on it.
+- There is **no contrast guarantee**: use short, bold labels with a text shadow, and nothing small. The surface uses the same budgets (8 lenses, area) as the others; the filter region of one crystal is larger than its box.
 
 ### Motion
 
@@ -194,12 +208,12 @@ Other engines (Safari, Firefox) get the base liquid look without refraction: rim
 
 Chromium headless with software compositing, device pixel ratio 2, unthrottled frame loop while a photo scrolls under the surface (so every frame re-renders the backdrop). These are relative numbers, not GPU numbers:
 
-| Surface                          | Frame time |
-| -------------------------------- | ---------- |
-| No lens (frosted or liquid)      | 0.1 ms     |
-| Nav bar 1280x56, lens + specular (dispersion off, the default) | about 6 ms |
-| Dialog 520x320, lens + specular (dispersion off, the default) | about 16 ms |
-| Either with dispersion on | about 2x |
+| Surface                                                        | Frame time  |
+| -------------------------------------------------------------- | ----------- |
+| No lens (frosted or liquid)                                    | 0.1 ms      |
+| Nav bar 1280x56, lens + specular (dispersion off, the default) | about 6 ms  |
+| Dialog 520x320, lens + specular (dispersion off, the default)  | about 16 ms |
+| Either with dispersion on                                      | about 2x    |
 
 The cost only exists while the backdrop changes (scrolling under a nav, animations behind a surface); a modal dialog over a static page does not pay it per frame. Dispersion roughly doubles it on large surfaces, which is why it is off by default there. Building a map costs 1 to 7 ms at ratio 2 for typical sizes (a 520x320 surface: about 6 ms).
 

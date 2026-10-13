@@ -19,12 +19,12 @@ export interface DisplacementMapOptions {
   dpr?: number;
 }
 
-export type LensCoverage = "full" | "rim" | "dome";
+export type LensCoverage = "full" | "rim" | "dome" | "crystal";
 /** The shape of the lens; `coverage` is the older name of the same option. */
 export type LensProfile = LensCoverage;
 
 /** Whether a profile bends the whole surface (everything but the rim band). */
-export const isWhole = (coverage: LensCoverage) => coverage !== "rim";
+export const isWhole = (coverage: LensCoverage) => coverage !== "rim" && coverage !== "crystal";
 
 export interface DisplacementField {
   /** Width and height of `data` in pixels (CSS size times the capped ratio). */
@@ -55,7 +55,7 @@ export function bezelFor(
   coverage: LensCoverage = "full",
 ): number {
   const short = Math.min(width, height);
-  if (coverage !== "rim") return Math.max(1, short / 2);
+  if (coverage === "full" || coverage === "dome") return Math.max(1, short / 2);
   return clamp(radius * 1.2, 14, Math.max(8, short * 0.45), 56);
 }
 
@@ -104,7 +104,7 @@ export function lensAmplitude(
   coverage: LensCoverage = "full",
   cap: number = FULL_CAP,
 ): { x: number; y: number } {
-  if (coverage === "rim") {
+  if (coverage === "rim" || coverage === "crystal") {
     const a = MAX_OFFSET * bezel;
     return { x: a, y: a };
   }
@@ -335,6 +335,117 @@ export function computeSpecularField({
     }
   }
   return { width: pw, height: ph, data };
+}
+
+/**
+ * The crystal lens: a thick, clear, convex lens that minifies the backdrop. Every output pixel at
+ * `p` (measured from the centre of the surface) shows the backdrop at `p + (g(t) - 1) p` with `g(t)
+ * = 1 + (gMax - 1) s(t)`, `s(t) = 0.3 + 0.3 t^2 + 0.4 t^6` and `t` the superellipse radial coordinate (1 at
+ * the silhouette). The pull is mild in the middle and grows steeply towards the rim, like the
+ * side of a ball lens. A radial map `p -> p g(|p|)` with `g >= 1` and `g' >= 0` has the Jacobian
+ * determinant `g (g + t g')`, which is at least 1, so it cannot fold back on itself however large
+ * `gMax` is: this is what lets the crystal minify by a factor of three at the rim where the other
+ * profiles must stay under a slope of one.
+ *
+ * The samples lie outside the surface (a minifying lens sees a wider area than it covers), so the
+ * map is rasterised over the surface plus a margin on every side; the engine lays the filter on a
+ * layer that large and clips it back to the silhouette.
+ */
+export const CRYSTAL_EXPONENT = 2.5;
+/** Weights of the constant (even minification), quadratic (whole-surface) and sixth-power (rim) parts of the crystal lens. */
+export const CRYSTAL_WEIGHTS = { flat: 0.3, whole: 0.3, rim: 0.4 } as const;
+/** `gMax - 1` per unit of `refraction`: how much more the rim minifies than the middle. */
+export const CRYSTAL_GAIN = 1.3;
+/** Largest source offset of the crystal lens, in px (bounds the margin and the filter area). */
+export const CRYSTAL_MAX_OFFSET = 260;
+
+/** `s(t)` of the crystal lens. */
+export const crystalShape = (t: number) =>
+  CRYSTAL_WEIGHTS.flat + CRYSTAL_WEIGHTS.whole * t ** 2 + CRYSTAL_WEIGHTS.rim * t ** 6;
+
+/** Radial coordinate of a point of a surface: 1 on the superellipse touching the middle of each side, held there beyond it. */
+export function crystalRadius(px: number, py: number, hx: number, hy: number): number {
+  const u = Math.abs(px) / hx;
+  const v = Math.abs(py) / hy;
+  return Math.min((u ** CRYSTAL_EXPONENT + v ** CRYSTAL_EXPONENT) ** (1 / CRYSTAL_EXPONENT), 1);
+}
+
+/**
+ * Largest source offset of the crystal lens, in px, for a surface and a `refraction` of 0 to 2
+ * (1.67 is a thick lens, 2 the thickest the margin allows).
+ */
+export function crystalAmplitude(width: number, height: number, refraction: number): number {
+  const half = Math.max(width, height) / 2;
+  return Math.min(clamp(refraction, 0, 2) * CRYSTAL_GAIN * half, CRYSTAL_MAX_OFFSET);
+}
+
+export interface CrystalMapOptions {
+  width: number;
+  height: number;
+  /** Source offset at the silhouette, in px, from {@link crystalAmplitude}; sets the margin. */
+  amplitude: number;
+  /** Device pixel ratio the map is rasterised at. Default 1, capped at 2. */
+  dpr?: number;
+  /** Margin past the surface, in px. Default {@link crystalMargin} of `amplitude`. */
+  margin?: number;
+}
+
+/**
+ * Margin, in px, the crystal layer extends past the surface on every side: the largest offset,
+ * plus what chromatic dispersion adds to it.
+ */
+export const crystalMargin = (amplitude: number, dispersion = 0) =>
+  Math.ceil(amplitude * (1 + Math.max(dispersion, 0))) + 2;
+
+/**
+ * Displacement field of the crystal lens over the surface and its margin: red and green carry
+ * `s(t) p / half` (so `scale = 2 amplitude 255/254` restores the offset), blue is 255 (no soft
+ * band: a crystal is not frosted). The size of `data` is the surface plus twice the margin.
+ */
+export function computeCrystalField({
+  width,
+  height,
+  amplitude,
+  dpr = 1,
+  margin,
+}: CrystalMapOptions): DisplacementField {
+  const ratio = clamp(dpr, 1, 2);
+  const w = Math.max(1, width);
+  const h = Math.max(1, height);
+  const m = margin ?? crystalMargin(amplitude);
+  const pw = Math.max(1, Math.round((w + 2 * m) * ratio));
+  const ph = Math.max(1, Math.round((h + 2 * m) * ratio));
+  const data = new Uint8ClampedArray(pw * ph * 4);
+  const hx = w / 2;
+  const hy = h / 2;
+  const half = Math.max(hx, hy);
+  for (let j = 0; j < ph; j++) {
+    const py = (j + 0.5) / ratio - m - hy;
+    for (let i = 0; i < pw; i++) {
+      const px = (i + 0.5) / ratio - m - hx;
+      const s = crystalShape(crystalRadius(px, py, hx, hy));
+      const o = (j * pw + i) * 4;
+      data[o] = 128 + clamp((s * px) / half, -1, 1) * 127;
+      data[o + 1] = 128 + clamp((s * py) / half, -1, 1) * 127;
+      data[o + 2] = 255;
+      data[o + 3] = 255;
+    }
+  }
+  return { width: pw, height: ph, data };
+}
+
+/** Crystal map as a PNG `data:` URI for `feImage` (browser only, cached). */
+export function createCrystalMap(options: CrystalMapOptions): string {
+  const key = [
+    options.width,
+    options.height,
+    Math.round(options.amplitude),
+    options.dpr ?? 1,
+    options.margin ?? 0,
+  ]
+    .map((n) => Math.round(n * 100) / 100)
+    .join("x");
+  return cached(`c${key}`, () => computeCrystalField(options));
 }
 
 const cache = new Map<string, string>();

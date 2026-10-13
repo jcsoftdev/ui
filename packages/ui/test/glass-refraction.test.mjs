@@ -345,3 +345,89 @@ test("bevelWidth caps the offset of the whole-surface profiles in px and refract
     "the map is normalised: only the filter scale carries the cap",
   );
 });
+
+// Crystal: a minifying lens samples outside the surface, so it can bend far more than the other
+// profiles; what keeps it clean is that the map p -> p + offset(p) never folds.
+const CRYSTAL_SHAPES = [
+  [300, 96],
+  [320, 200],
+  [40, 40],
+  [1280, 56],
+  [96, 300],
+];
+
+test("the crystal lens never folds, at the largest refraction, for pills and rectangles", () => {
+  for (const [width, height] of CRYSTAL_SHAPES) {
+    const hx = width / 2;
+    const hy = height / 2;
+    const half = Math.max(hx, hy);
+    for (const refraction of [0.5, 1, 1.67, 2]) {
+      const amplitude = glass.crystalAmplitude(width, height, refraction);
+      assert.ok(amplitude <= glass.CRYSTAL_MAX_OFFSET);
+      const k = amplitude / half;
+      const map = (x, y) => {
+        const s = glass.crystalShape(glass.crystalRadius(x, y, hx, hy));
+        return [x + k * s * x, y + k * s * y];
+      };
+      // Jacobian determinant of the source map by central differences, over the surface and the margin.
+      const e = 0.01;
+      const m = glass.crystalMargin(amplitude);
+      for (let y = -hy - m; y <= hy + m; y += 2.3) {
+        for (let x = -hx - m; x <= hx + m; x += 2.3) {
+          const [xr, yr] = map(x + e, y);
+          const [xl, yl] = map(x - e, y);
+          const [xu, yu] = map(x, y + e);
+          const [xd, yd] = map(x, y - e);
+          const det = ((xr - xl) * (yu - yd) - (xu - xd) * (yr - yl)) / (4 * e * e);
+          assert.ok(
+            det > 0.99,
+            `fold at ${x},${y} of ${width}x${height} refraction ${refraction}: ${det}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test("the crystal map encodes the same offsets and stays foldless once quantised", () => {
+  for (const [width, height] of CRYSTAL_SHAPES) {
+    const amplitude = glass.crystalAmplitude(width, height, 2);
+    const margin = glass.crystalMargin(amplitude);
+    const field = glass.computeCrystalField({ width, height, amplitude });
+    assert.equal(field.width, Math.round(width + 2 * margin));
+    assert.equal(field.height, Math.round(height + 2 * margin));
+    const decode = (x, y) => {
+      const o = (y * field.width + x) * 4;
+      // feDisplacementMap: scale * (C - 0.5), scale = 2 A 255 / 254.
+      const f = (v) => amplitude * ((v - 127.5) / 127);
+      return [x + 0.5 + f(field.data[o]), y + 0.5 + f(field.data[o + 1])];
+    };
+    const step = 4;
+    for (let y = step; y < field.height - step; y += step) {
+      for (let x = step; x < field.width - step; x += step) {
+        const [ax, ay] = decode(x, y);
+        const [bx] = decode(x + step, y);
+        const [, by] = decode(x, y + step);
+        assert.ok(
+          bx > ax && by > ay,
+          `fold in the quantised map at ${x},${y} of ${width}x${height}`,
+        );
+      }
+    }
+    // The middle of the surface samples itself; the silhouette samples further out than itself.
+    const cx = Math.floor(field.width / 2);
+    const cy = Math.floor(field.height / 2);
+    const [mx, my] = decode(cx, cy);
+    assert.ok(Math.abs(mx - (cx + 0.5)) < 2 && Math.abs(my - (cy + 0.5)) < 2);
+    const [ex] = decode(margin + width - 1, cy);
+    assert.ok(ex > margin + width, "the right edge shows what lies past it");
+    assert.equal(field.data[2], 255, "no soft band: a crystal is not frosted");
+  }
+});
+
+test("the crystal amplitude follows refraction up to a fixed cap and is zero for no refraction", () => {
+  assert.equal(glass.crystalAmplitude(300, 96, 0), 0);
+  assert.ok(glass.crystalAmplitude(300, 96, 1) < glass.crystalAmplitude(300, 96, 2));
+  assert.equal(glass.crystalAmplitude(4000, 400, 2), glass.CRYSTAL_MAX_OFFSET);
+  assert.equal(glass.crystalAmplitude(300, 96, 9), glass.crystalAmplitude(300, 96, 2));
+});

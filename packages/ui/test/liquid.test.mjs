@@ -139,7 +139,7 @@ test("the liquid utilities read every option variable and keep the theme look wh
 
 test("base.css presets are the LIQUID_PRESETS, variable for variable", async () => {
   const base = readFileSync(join(here, "../styles/base.css"), "utf8");
-  for (const name of ["clear", "thick"]) {
+  for (const name of ["clear", "thick", "crystal"]) {
     const block = new RegExp(`\\[data-glass="liquid-${name}"\\] \\{([^}]*)\\}`).exec(base)?.[1];
     assert.ok(block, `base.css misses the ${name} preset`);
     const declared = Object.fromEntries(

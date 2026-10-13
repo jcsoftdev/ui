@@ -1,7 +1,10 @@
 import {
   bezelFor,
+  createCrystalMap,
   createDisplacementMap,
   createSpecularMap,
+  crystalAmplitude,
+  crystalMargin,
   FULL_CAP,
   isWhole,
   type LensCoverage,
@@ -150,7 +153,7 @@ interface LiquidRuntime {
   opacity: number;
 }
 
-const PROFILES = new Set(["rim", "full", "dome"]);
+const PROFILES = new Set(["rim", "full", "dome", "crystal"]);
 
 function readRuntime(element: HTMLElement): LiquidRuntime {
   const computed = getComputedStyle(element);
@@ -163,7 +166,7 @@ function readRuntime(element: HTMLElement): LiquidRuntime {
   const profile = read("--liquid-profile") || read("--glass-lens-coverage");
   const dispersion = number("--liquid-dispersion") ?? number("--glass-lens-dispersion");
   return {
-    refraction: clamp(number("--liquid-refraction") ?? LIQUID_DEFAULTS.refraction, 0, 1),
+    refraction: clamp(number("--liquid-refraction") ?? LIQUID_DEFAULTS.refraction, 0, 2),
     bevel: number("--liquid-bevel"),
     profile: PROFILES.has(profile) ? (profile as LensCoverage) : undefined,
     dispersion: dispersion === undefined ? undefined : clamp(dispersion, 0, 0.2),
@@ -203,6 +206,12 @@ const ENGINE_WRITES = new Set([
   "--glass-lens-tint",
   "--liquid-size",
   "--liquid-shadow-auto",
+  "position",
+  "isolation",
+  "overflow",
+  "box-shadow",
+  "background-image",
+  "background-color",
   "--liquid-glow",
   "--liquid-glow-x",
   "--liquid-glow-y",
@@ -261,6 +270,9 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     schedule(next);
   };
 
+  /** The crystal lens lives on a layer that extends past the surface; this puts the surface back. */
+  let undoCrystal = () => {};
+
   const uninstall = () => {
     if (!installed) return;
     active--;
@@ -274,6 +286,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     if (originalPrefixed) element.style.setProperty("-webkit-backdrop-filter", originalPrefixed);
     else element.style.removeProperty("-webkit-backdrop-filter");
     delete element.dataset.glassRefraction;
+    undoCrystal();
     element.style.removeProperty("--glass-veil");
     element.style.removeProperty("--glass-lens-tint");
     element.style.removeProperty("--liquid-size");
@@ -313,6 +326,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         target.setAttribute("scale", String(baseScale * factor * level));
     };
     const dispersion = dispersionFor(element.offsetWidth * element.offsetHeight);
+    const crystal = coverageFor() === "crystal";
     let specularImage: SVGElement | undefined;
     const id = `ui-glass-lens-${++counter}`;
     const filter = document.createElementNS(SVG_NS, "filter");
@@ -326,10 +340,14 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       return created;
     };
     const image = node("feImage", { result: "map", preserveAspectRatio: "none" });
+    // A minifying lens shows several backdrop pixels per output pixel; without a touch of
+    // pre-filtering they alias into sparkle (and into rainbow noise with dispersion).
+    if (crystal)
+      node("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "0.7", result: "pre" });
     const displace = (channel: string | undefined, factor: number) =>
       displacers.push({
         node: node("feDisplacementMap", {
-          in: "SourceGraphic",
+          in: crystal ? "pre" : "SourceGraphic",
           in2: "map",
           scale: "0",
           xChannelSelector: "R",
@@ -346,7 +364,9 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         g: "0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0",
         b: "0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0",
       } as const;
-      const factors = { r: 1 + dispersion, g: 1, b: 1 - dispersion } as const;
+      // The crystal's offsets are large, so the same fraction would paint a noisy rainbow.
+      const spread = crystal ? dispersion * 0.6 : dispersion;
+      const factors = { r: 1 + spread, g: 1, b: 1 - spread } as const;
       for (const c of ["r", "g", "b"] as const) {
         displace(c, factors[c]);
         node("feColorMatrix", { in: `d${c}`, type: "matrix", values: keep[c], result: c });
@@ -381,7 +401,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     const base = getComputedStyle(element).backdropFilter;
     const radius = /blur\(\s*([\d.]+)px\s*\)/.exec(base);
     const rest = !base || base === "none" ? "" : `${base.replace(/blur\([^)]*\)\s*/, "").trim()} `;
-    if (radius) {
+    const frosted = radius !== null && Number.parseFloat(radius[1] as string) > 0;
+    if (frosted) {
       node("feColorMatrix", {
         in: "map",
         type: "matrix",
@@ -411,7 +432,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     // the lens, a little lighter along the rim than under the text.
     const veilColor =
       options.veil === false ? "" : computed.getPropertyValue("--glass-lens-dim").trim();
-    const layers = [radius ? "mixed" : "lens"];
+    const layers = [frosted ? "mixed" : "lens"];
     const parts = /rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)(?:[\s,/]+([\d.]+%?))?/.exec(
       veilColor,
     );
@@ -435,26 +456,28 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       const lightVeil = (r + g + b) / 3 > 0.5;
       const sign = lightVeil ? -1 : 1;
       const base = lightVeil ? strength : 0;
-      node("feGaussianBlur", { in: "lens", stdDeviation: "7", result: "regional" });
-      node("feColorMatrix", {
-        in: "regional",
-        type: "matrix",
-        values: [
-          `0 0 0 0 ${r}`,
-          `0 0 0 0 ${g}`,
-          `0 0 0 0 ${b}`,
-          `${sign * 0.2126 * strength} ${sign * 0.7152 * strength} ${sign * 0.0722 * strength} 0 ${base}`,
-        ].join(" "),
-        result: "adaptive",
-      });
-      node("feColorMatrix", {
-        in: "map",
-        type: "matrix",
-        values: `0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${1 - VEIL_FLOOR} 0 ${VEIL_FLOOR}`,
-        result: "veil-weight",
-      });
-      node("feComposite", { in: "adaptive", in2: "veil-weight", operator: "in", result: "veil" });
-      layers.push("veil");
+      if (strength > 0) {
+        node("feGaussianBlur", { in: "lens", stdDeviation: "7", result: "regional" });
+        node("feColorMatrix", {
+          in: "regional",
+          type: "matrix",
+          values: [
+            `0 0 0 0 ${r}`,
+            `0 0 0 0 ${g}`,
+            `0 0 0 0 ${b}`,
+            `${sign * 0.2126 * strength} ${sign * 0.7152 * strength} ${sign * 0.0722 * strength} 0 ${base}`,
+          ].join(" "),
+          result: "adaptive",
+        });
+        node("feColorMatrix", {
+          in: "map",
+          type: "matrix",
+          values: `0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${1 - VEIL_FLOOR} 0 ${VEIL_FLOOR}`,
+          result: "veil-weight",
+        });
+        node("feComposite", { in: "adaptive", in2: "veil-weight", operator: "in", result: "veil" });
+        layers.push("veil");
+      }
       element.style.setProperty("--glass-veil", "transparent");
       element.style.setProperty("--glass-lens-tint", "transparent");
     }
@@ -504,7 +527,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       });
       layers.push("shade", "glint-tint", "glint-white");
     }
-    if (layers.length > 1 || radius) {
+    if (layers.length > 1 || frosted) {
       const merge = node("feMerge", {});
       for (const input of layers) {
         const mergeNode = document.createElementNS(SVG_NS, "feMergeNode");
@@ -515,6 +538,72 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     host().appendChild(filter);
 
     const blur = rest;
+
+    // The crystal lens samples the backdrop outside the surface (it minifies), which a filter on
+    // the surface itself cannot see. So the filter goes on a layer that extends past the surface
+    // by the largest offset, clipped back to the silhouette; the surface's own backdrop filter,
+    // background and inset shadows move to (or under) that layer's siblings, because the layer
+    // must be the lowest thing in the surface.
+    let layer: HTMLElement | undefined;
+    if (crystal) {
+      const saved = {
+        position: element.style.position,
+        isolation: element.style.isolation,
+        overflow: element.style.overflow,
+        boxShadow: element.style.boxShadow,
+        backgroundImage: element.style.backgroundImage,
+        backgroundColor: element.style.backgroundColor,
+        backdropFilter: original,
+      };
+      if (getComputedStyle(element).position === "static") element.style.position = "relative";
+      element.style.isolation = "isolate";
+      element.style.overflow = "visible";
+      element.style.backgroundImage = "none";
+      element.style.backgroundColor = "transparent";
+      element.style.setProperty("--glass-lens-tint", "transparent");
+      const border = element.matches(".liquid-clear")
+        ? "--glass-clear-border"
+        : "--glass-regular-border";
+      element.style.boxShadow = `0 0 0 1px var(${border}), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))`;
+      const make = (css: string) => {
+        const span = document.createElement("span");
+        span.setAttribute("aria-hidden", "true");
+        span.style.cssText = `position:absolute;z-index:-1;pointer-events:none;${css}`;
+        return span;
+      };
+      layer = make("border-radius:0;");
+      layer.dataset.glassLensLayer = "";
+      layer.style.backdropFilter = `${blur}url(#${id})`;
+      layer.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
+      const skin = make(
+        "inset:0;border-radius:inherit;" +
+          "background-image:var(--glass-noise),radial-gradient(circle at var(--liquid-glow-x,50%) var(--liquid-glow-y,50%),color-mix(in srgb,white calc(var(--liquid-glow,0)*15%),transparent),transparent 70%),linear-gradient(var(--liquid-tint-fill),var(--liquid-tint-fill)),linear-gradient(var(--liquid-veil-fill),var(--liquid-veil-fill));" +
+          "box-shadow:var(--liquid-rim-auto,var(--liquid-rim-custom,var(--liquid-rim))),var(--liquid-depth);",
+      );
+      skin.dataset.glassLensSkin = "";
+      element.prepend(skin);
+      element.prepend(layer);
+      const watch =
+        typeof MutationObserver === "function"
+          ? new MutationObserver(() => {
+              if (!layer?.isConnected || !skin.isConnected) schedule(sync);
+            })
+          : undefined;
+      watch?.observe(element, { childList: true });
+      undoCrystal = () => {
+        watch?.disconnect();
+        layer?.remove();
+        skin.remove();
+        for (const [name, value] of Object.entries(saved)) {
+          if (name === "backdropFilter") continue;
+          element.style.setProperty(
+            name.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`),
+            value,
+          );
+        }
+        undoCrystal = () => {};
+      };
+    }
 
     let key = "";
     let built = 0;
@@ -548,14 +637,56 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
           Math.round(Math.min(Math.max(Math.sqrt(width * height) / 240, 0.7), 1.5) * 100) / 100,
         ),
       );
-      const next = [width, height, radius, bezel, coverage, cap, settings.refraction, dpr].join(
-        "x",
-      );
+      if (crystal) {
+        const amplitude = crystalAmplitude(width, height, settings.refraction);
+        const margin = crystalMargin(amplitude, dispersion * 0.6);
+        const wide = width + 2 * margin;
+        const tall = height + 2 * margin;
+        const round = Math.min(radius, width / 2, height / 2);
+        const crystalKey = ["c", width, height, round, amplitude, margin, dpr].join("x");
+        if (crystalKey === key) return;
+        key = crystalKey;
+        built = performance.now();
+        baseScale = (2 * Math.max(amplitude, 1) * 255) / 254;
+        applyScale();
+        const border = getComputedStyle(element);
+        const left = -(margin + (Number.parseFloat(border.borderLeftWidth) || 0));
+        const top = -(margin + (Number.parseFloat(border.borderTopWidth) || 0));
+        if (layer) {
+          layer.style.left = `${left}px`;
+          layer.style.top = `${top}px`;
+          layer.style.width = `${wide}px`;
+          layer.style.height = `${tall}px`;
+          layer.style.clipPath = `inset(${margin}px round ${round}px)`;
+        }
+        for (const [target, name, value] of [
+          [filter, "x", "0"],
+          [filter, "y", "0"],
+          [filter, "width", String(wide)],
+          [filter, "height", String(tall)],
+          [image, "width", String(wide)],
+          [image, "height", String(tall)],
+        ] as const)
+          target.setAttribute(name, value);
+        image.setAttribute("href", createCrystalMap({ width, height, amplitude, dpr, margin }));
+        return;
+      }
+      const next = [
+        width,
+        height,
+        radius,
+        bezel,
+        coverage,
+        cap,
+        Math.min(settings.refraction, 1),
+        dpr,
+      ].join("x");
       if (next === key) return;
       key = next;
       built = performance.now();
       baseScale =
-        options.scale ?? scaleFor(width, height, bezel, coverage, cap) * settings.refraction;
+        options.scale ??
+        scaleFor(width, height, bezel, coverage, cap) * Math.min(settings.refraction, 1);
       applyScale();
       for (const [target, name, value] of [
         [filter, "x", "0"],
@@ -619,8 +750,8 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       applyScale();
     }
     element.style.setProperty("--liquid-shadow-auto", liquidShadow());
-    element.style.backdropFilter = `${blur}url(#${id})`;
-    element.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
+    element.style.backdropFilter = crystal ? "none" : `${blur}url(#${id})`;
+    element.style.setProperty("-webkit-backdrop-filter", crystal ? "none" : `${blur}url(#${id})`);
     element.dataset.glassRefraction = "on";
     installed = {
       filter,
