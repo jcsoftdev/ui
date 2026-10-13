@@ -4,6 +4,8 @@
 
 ### Fixes
 
+- **PolarAreaChart hover no longer flickers.** The hovered sector steps out by 6px and was also the pointer target, so a still pointer near its inner edge fell outside the moved sector: hover, tooltip and dimming toggled about 25 times a second. Pointer events now go to invisible sectors at rest, with no gap between neighbours and covering the stepped-out area, as in DonutChart since 0.2.1. The tooltip stays inside the chart vertically too.
+- **DonutChart, PieChart and PolarAreaChart keep a tapped slice.** On touch and pen, lifting the finger fires `pointerleave`, which dropped the slice right after the tap: tooltip, centre value and dimming flashed for a frame and vanished. A tap now pins the slice until the next tap on another slice or outside the chart; the mouse still drops the hover when it leaves. `useIndexNavigation` returns `pointerLeave` for this.
 - **Checkbox looks like a checkbox.** The box is square (`rounded-xs`, the 4px small-radius token, 3px in the compact theme) instead of a circle, and the checked and indeterminate fill is the accent (as in Switch and the selected RadioGroup row) instead of the success green. Round plus green read as a radio button in multi-select lists. Sizes, 44px touch hit area, focus ring, disabled state and the `box`/`indicator`/`icon` parts are unchanged; The indeterminate state draws a dash instead of a check mark, and a disabled checkbox is dimmed (`opacity-50`, `cursor-not-allowed`) like the other form controls. RadioGroup stays round.
 
 ### Theme builder
