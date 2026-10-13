@@ -1,7 +1,4 @@
 import { describe, expect, it } from "vitest";
-import * as reactFill from "../../ui/src/containers/data-grid/fill-series.ts";
-import * as reactEdit from "../../ui/src/containers/data-grid/grid-edit.ts";
-import * as reactHistory from "../../ui/src/containers/data-grid/history.ts";
 import {
   copyText,
   formatTSV,
@@ -15,6 +12,17 @@ import * as fill from "../src/grid/fill.ts";
 import * as history from "../src/grid/history.ts";
 import type { GridColumn } from "../src/grid/model.ts";
 import { extendFocus, rangeBounds, rangeStats } from "../src/grid/range.ts";
+
+// The React grid is the reference; it is loaded by path so this file does not type-check it.
+// biome-ignore lint/suspicious/noExplicitAny: the reference modules are untyped here.
+const load = (name: string): Promise<any> =>
+  import(
+    /* @vite-ignore */ new URL(`../../ui/src/containers/data-grid/${name}.ts`, import.meta.url).href
+  );
+const reactFill = await load("fill-series");
+const reactEdit = await load("grid-edit");
+const reactHistory = await load("history");
+const reactRange = await load("range");
 
 describe("parseTSV", () => {
   it("matches the React parser on spreadsheet text", () => {
@@ -268,8 +276,6 @@ describe("range", () => {
     });
   });
 });
-
-import * as reactRange from "../../ui/src/containers/data-grid/range.ts";
 
 describe("fill parity with React", () => {
   const D = (y: number, m: number, d: number) => new Date(y, m - 1, d);
