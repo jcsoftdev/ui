@@ -64,7 +64,9 @@ export class UiMessageActions extends ElementBase {
     const message = this.closest('[data-ui="chat-message"]') as
       | (HTMLElement & { content?: string })
       | null;
-    return message?.content ?? message?.textContent?.trim() ?? "";
+    return (
+      message?.content || message?.querySelector('[data-ui-part="body"]')?.textContent?.trim() || ""
+    );
   }
   set text(value: string) {
     this.setAttribute("text", value);

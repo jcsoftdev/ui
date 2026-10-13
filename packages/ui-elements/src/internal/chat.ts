@@ -54,3 +54,18 @@ export function numberAttr(host: Element, name: string): number | undefined {
   const value = Number(raw);
   return Number.isFinite(value) ? value : undefined;
 }
+
+/**
+ * Makes the children of `parent` match `wanted` without moving the subtree that holds focus
+ * (moving or re-inserting a focused node blurs it, which `replaceChildren` would do).
+ */
+export function reconcile(parent: Element, wanted: readonly Node[]): void {
+  const keep = new Set<Node>(wanted);
+  for (const child of [...parent.childNodes]) if (!keep.has(child)) child.remove();
+  const focused = document.activeElement;
+  let cursor: Node | null = parent.firstChild;
+  for (const node of wanted) {
+    if (node === cursor) cursor = cursor.nextSibling;
+    else if (!(focused && node.contains(focused))) parent.insertBefore(node, cursor);
+  }
+}

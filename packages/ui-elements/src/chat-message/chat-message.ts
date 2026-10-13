@@ -54,7 +54,8 @@ export class UiChatMessage extends ElementBase {
   readonly #footer = document.createElement("div");
   #custom = false;
   #built = false;
-  #renderToken = 0;
+  #frame = 0;
+  #errorKey = "";
 
   get author(): ChatRole {
     const author = this.getAttribute("author");
@@ -94,6 +95,10 @@ export class UiChatMessage extends ElementBase {
     defaultAttr(this, "role", "article");
     if (!this.#built) this.#build();
     this.#render();
+  }
+
+  disconnectedCallback(): void {
+    this.#cancelFrame();
   }
 
   attributeChangedCallback(): void {
@@ -145,11 +150,16 @@ export class UiChatMessage extends ElementBase {
     if (!system) this.#paintAvatar();
 
     const errorText = this.getAttribute("error-text") ?? "No se pudo enviar el mensaje.";
-    this.#error.hidden = status !== "error";
-    this.#error.replaceChildren();
-    if (status === "error") {
-      this.#error.insertAdjacentHTML("afterbegin", chatGlyph("alert"));
-      this.#error.append(errorText);
+    // Rewriting a live region re-announces it, so touch it only when it really changes.
+    const errorKey = status === "error" ? errorText : "";
+    if (errorKey !== this.#errorKey) {
+      this.#errorKey = errorKey;
+      this.#error.hidden = status !== "error";
+      this.#error.replaceChildren();
+      if (status === "error") {
+        this.#error.insertAdjacentHTML("afterbegin", chatGlyph("alert"));
+        this.#error.append(errorText);
+      }
     }
     const time =
       status === "sending"
@@ -178,8 +188,9 @@ export class UiChatMessage extends ElementBase {
   #paintBody(streaming: boolean): void {
     const content = this.content;
     const author = this.author;
-    const token = ++this.#renderToken;
+    const format = this.getAttribute("format");
     if (author !== "user" && author !== "system" && streaming && !content) {
+      this.#cancelFrame();
       const loader = document.createElement("span");
       loader.dataset.uiPart = "typing";
       loader.setAttribute("role", "status");
@@ -191,36 +202,78 @@ export class UiChatMessage extends ElementBase {
       this.#body.replaceChildren(loader);
       return;
     }
-    const text = () => {
-      const paragraph = document.createElement("p");
-      paragraph.dataset.uiPart = "text";
-      paragraph.textContent = content;
-      if (streaming) {
-        const caret = document.createElement("span");
-        caret.dataset.part = "caret";
-        caret.setAttribute("aria-hidden", "true");
-        paragraph.append(caret);
-      }
-      return paragraph;
-    };
-    this.#body.replaceChildren(text());
+    const rich = author === "assistant" && content && (format === "markdown" || format === "html");
+    if (!rich) {
+      this.#cancelFrame();
+      this.#body.replaceChildren(this.#textNode(content, streaming));
+      return;
+    }
+    // Rich output: once its module is loaded, one render per frame however fast chunks arrive,
+    // and no plain-text flash in between. Until then the text shows.
+    if (format === "markdown" ? markdown : sanitizer) {
+      this.#schedule();
+      return;
+    }
+    this.#body.replaceChildren(this.#textNode(content, streaming));
+    const load =
+      format === "markdown"
+        ? import("@jcsoftdev/ui-core/markdown").then((m) => {
+            markdown = m.renderMarkdown;
+          })
+        : import("@jcsoftdev/ui-core/sanitize-html").then((m) => {
+            sanitizer = m.setSafeHtml;
+          });
+    load.then(() => {
+      if (this.isConnected) this.#schedule();
+    });
+  }
+
+  #textNode(content: string, streaming: boolean): HTMLElement {
+    const paragraph = document.createElement("p");
+    paragraph.dataset.uiPart = "text";
+    paragraph.textContent = content;
+    if (streaming) {
+      const caret = document.createElement("span");
+      caret.dataset.part = "caret";
+      caret.setAttribute("aria-hidden", "true");
+      paragraph.append(caret);
+    }
+    return paragraph;
+  }
+
+  #schedule(): void {
+    if (this.#frame) return;
+    this.#frame = requestAnimationFrame(() => {
+      this.#frame = 0;
+      this.#paintRich();
+    });
+  }
+
+  #cancelFrame(): void {
+    if (this.#frame) cancelAnimationFrame(this.#frame);
+    this.#frame = 0;
+  }
+
+  /** Renders the current content (read at frame time, so skipped chunks cost nothing). */
+  #paintRich(): void {
+    const content = this.content;
     const format = this.getAttribute("format");
-    if (author !== "assistant" || !content) return;
-    if (format === "markdown")
-      import("@jcsoftdev/ui-core/markdown").then(({ renderMarkdown }) => {
-        if (token === this.#renderToken)
-          this.#body.replaceChildren(renderMarkdown(content, { streaming }));
-      });
-    else if (format === "html")
-      import("@jcsoftdev/ui-core/sanitize-html").then(({ setSafeHtml }) => {
-        if (token !== this.#renderToken) return;
-        const holder = document.createElement("div");
-        holder.dataset.uiPart = "html";
-        setSafeHtml(holder, content);
-        this.#body.replaceChildren(holder);
-      });
+    if (this.#custom || this.author !== "assistant" || !content) return;
+    if (format === "markdown" && markdown)
+      this.#body.replaceChildren(markdown(content, { streaming: this.status === "streaming" }));
+    else if (format === "html" && sanitizer) {
+      const holder = document.createElement("div");
+      holder.dataset.uiPart = "html";
+      sanitizer(holder, content);
+      this.#body.replaceChildren(holder);
+    }
   }
 }
+
+type MarkdownRenderer = typeof import("@jcsoftdev/ui-core/markdown").renderMarkdown;
+type HtmlSetter = typeof import("@jcsoftdev/ui-core/sanitize-html").setSafeHtml;
+let markdown: MarkdownRenderer | undefined;
+let sanitizer: HtmlSetter | undefined;
 
 /** Registers `<ui-chat-message>` (or `<prefix-chat-message>`) and returns the tag. */
 export function defineChatMessage(options?: DefineOptions): string {

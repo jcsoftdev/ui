@@ -68,3 +68,14 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+[data-ui="conversation"] [data-ui-part="rows"] {
+  position: relative;
+}
+[data-ui="conversation"] [data-ui-part="rows"] > [data-pinned] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+}

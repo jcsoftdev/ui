@@ -1,6 +1,6 @@
 import { createVirtualList, type VirtualList } from "@jcsoftdev/ui-core/virtual-list";
 import { type DefineOptions, defineElement, ElementBase, emit, uid } from "../internal/base.js";
-import { chatGlyph, srOnly } from "../internal/chat.js";
+import { chatGlyph, reconcile, srOnly } from "../internal/chat.js";
 import { type DateGroupId, groupByDate } from "../internal/chat-group.js";
 import { connectLight, defaultAttr } from "../internal/containers.js";
 import css from "./chat-list.css.js";
@@ -63,6 +63,9 @@ export class UiChatList extends ElementBase {
   #nodes = new Map<string, HTMLElement>();
   #painting = false;
   #dirty = false;
+  #pinned = false;
+  #viewport: HTMLElement | undefined;
+  #windowEl: HTMLElement | undefined;
   #click = (event: Event) => this.#onClick(event);
   #key = (event: KeyboardEvent) => this.#onKeyDown(event);
 
@@ -95,6 +98,8 @@ export class UiChatList extends ElementBase {
   disconnectedCallback(): void {
     this.#virtual?.destroy();
     this.#virtual = undefined;
+    this.#viewport = undefined;
+    this.#windowEl = undefined;
     this.removeEventListener("click", this.#click);
     this.removeEventListener("keydown", this.#key);
     this.#built = false;
@@ -105,7 +110,9 @@ export class UiChatList extends ElementBase {
   }
 
   #now(): Date | string | number {
-    return this.getAttribute("now") ?? Date.now();
+    const now = this.getAttribute("now");
+    if (now === null) return Date.now();
+    return /^-?\d+$/.test(now.trim()) ? Number(now) : now;
   }
 
   #onClick(event: Event): void {
@@ -140,17 +147,14 @@ export class UiChatList extends ElementBase {
     event.preventDefault();
     this.#virtual.scrollToIndex(target.index);
     this.#virtual.update();
-    this.querySelector<HTMLElement>(
-      `[data-action="select"][data-id="${CSS.escape(target.row.kind === "item" ? target.row.item.id : "")}"]`,
-    )?.focus();
+    this.#refocus("select", target.row.kind === "item" ? target.row.item.id : "");
   }
 
   #render(): void {
-    const focusedId =
-      (document.activeElement as HTMLElement | null)?.closest?.("[data-ui='chat-list']") === this
-        ? ((document.activeElement as HTMLElement).dataset.id ?? null)
-        : null;
-    const focusedAction = (document.activeElement as HTMLElement | null)?.dataset?.action ?? null;
+    const active = document.activeElement as HTMLElement | null;
+    const inside = active?.closest?.("[data-ui='chat-list']") === this;
+    const focusedId = inside ? (active?.dataset.id ?? null) : null;
+    const focusedAction = inside ? (active?.dataset.action ?? null) : null;
 
     this.setAttribute("aria-label", this.getAttribute("label") ?? "Conversaciones");
     const groups = groupByDate(this.#items, this.#now(), this.groupLabels);
@@ -177,69 +181,20 @@ export class UiChatList extends ElementBase {
     }
 
     this.#nodes.clear();
-    const virtualize = this.#items.length > VIRTUALIZE_ABOVE;
-    if (virtualize) {
-      this.#virtual?.destroy();
-      const viewport = document.createElement("div");
-      viewport.dataset.uiPart = "viewport";
-      const rows = document.createElement("div");
-      rows.dataset.uiPart = "window";
-      viewport.append(rows);
-      children.push(viewport);
-      this.replaceChildren(...children);
-      const build = () => {
-        const { start, end, padTop, padBottom } = this.#virtual?.window ?? {
-          start: 0,
-          end: 0,
-          padTop: 0,
-          padBottom: 0,
-        };
-        rows.style.paddingTop = `${padTop}px`;
-        rows.style.paddingBottom = `${padBottom}px`;
-        const nodes: HTMLElement[] = [];
-        for (let index = start; index < end; index++) {
-          const row = this.#rows[index];
-          if (!row) continue;
-          let node = this.#nodes.get(row.key);
-          if (!node) {
-            node = this.#rowNode(row, index);
-            this.#nodes.set(row.key, node);
-          }
-          node.dataset.index = String(index);
-          nodes.push(node);
-        }
-        rows.replaceChildren(...nodes);
-        return nodes;
-      };
-      // Rows are measured right after they are placed, so offsets are exact before the next frame.
-      // A measurement can change the window; it then asks for another (bounded) pass.
-      const paint = () => {
-        if (this.#painting) {
-          this.#dirty = true;
-          return;
-        }
-        this.#painting = true;
-        try {
-          for (let pass = 0; pass < 4; pass++) {
-            this.#dirty = false;
-            for (const node of build())
-              this.#virtual?.measure(Number(node.dataset.index), node.offsetHeight);
-            if (!this.#dirty) break;
-          }
-        } finally {
-          this.#painting = false;
-        }
-      };
-      this.#virtual = createVirtualList(viewport, {
-        count: () => this.#rows.length,
-        estimateHeight: ESTIMATE_HEIGHT,
-        overscan: 8,
-        onChange: paint,
-      });
-      paint();
+    if (this.#items.length > VIRTUALIZE_ABOVE) {
+      // Keep the viewport and the virtual list across renders: only the rows are rebuilt, so the
+      // scroll position survives a new item, a rename or a change of the active conversation.
+      const viewport = this.#viewport?.isConnected ? this.#viewport : this.#createViewport();
+      for (const child of [...this.children]) if (child !== viewport) child.remove();
+      if (viewport.parentNode === this) viewport.before(...children);
+      else this.replaceChildren(...children, viewport);
+      if (this.#virtual) this.#virtual.update();
+      this.#paint(true);
     } else {
       this.#virtual?.destroy();
       this.#virtual = undefined;
+      this.#viewport = undefined;
+      this.#windowEl = undefined;
       for (const group of groups) {
         const section = document.createElement("section");
         section.dataset.uiPart = "group";
@@ -259,12 +214,109 @@ export class UiChatList extends ElementBase {
       this.replaceChildren(...children);
     }
 
-    if (focusedId) {
-      const selector = focusedAction
-        ? `[data-action="${focusedAction}"][data-id="${CSS.escape(focusedId)}"]`
-        : null;
-      if (selector) this.querySelector<HTMLElement>(selector)?.focus();
+    if (focusedId && focusedAction) this.#refocus(focusedAction, focusedId);
+  }
+
+  #createViewport(): HTMLElement {
+    this.#virtual?.destroy();
+    const viewport = document.createElement("div");
+    viewport.dataset.uiPart = "viewport";
+    const rows = document.createElement("div");
+    rows.dataset.uiPart = "window";
+    viewport.append(rows);
+    this.#viewport = viewport;
+    this.#windowEl = rows;
+    this.#virtual = createVirtualList(viewport, {
+      count: () => this.#rows.length,
+      estimateHeight: ESTIMATE_HEIGHT,
+      overscan: 8,
+      onChange: () => this.#paint(false),
+    });
+    viewport.addEventListener("focusout", () => {
+      // A row kept mounted for focus can go once focus has left the list.
+      queueMicrotask(() => this.#pinned && this.#paint(false));
+    });
+    return viewport;
+  }
+
+  /** Builds the rows of the current window and measures them (bounded passes). */
+  #paint(remeasure: boolean): void {
+    if (this.#painting) {
+      this.#dirty = true;
+      return;
     }
+    this.#painting = true;
+    try {
+      for (let pass = 0; pass < 4; pass++) {
+        this.#dirty = false;
+        for (const node of this.#build())
+          if (remeasure || pass > 0 || node.dataset.measured !== "1") {
+            node.dataset.measured = "1";
+            this.#virtual?.measure(Number(node.dataset.index), node.offsetHeight);
+          }
+        if (!this.#dirty) break;
+      }
+    } finally {
+      this.#painting = false;
+    }
+  }
+
+  #build(): HTMLElement[] {
+    const rows = this.#windowEl;
+    if (!rows) return [];
+    const { start, end, padTop, padBottom } = this.#virtual?.window ?? {
+      start: 0,
+      end: 0,
+      padTop: 0,
+      padBottom: 0,
+    };
+    rows.style.paddingTop = `${padTop}px`;
+    rows.style.paddingBottom = `${padBottom}px`;
+    const nodes: HTMLElement[] = [];
+    const inWindow = new Set<string>();
+    for (let index = start; index < end; index++) {
+      const row = this.#rows[index];
+      if (!row) continue;
+      inWindow.add(row.key);
+      let node = this.#nodes.get(row.key);
+      if (!node) {
+        node = this.#rowNode(row, index);
+        this.#nodes.set(row.key, node);
+      }
+      node.dataset.index = String(index);
+      node.removeAttribute("data-pinned");
+      nodes.push(node);
+    }
+    // The row that holds focus stays mounted (out of sight) when it leaves the window, or the
+    // browser would drop focus while the user scrolls.
+    this.#pinned = false;
+    const focused = document.activeElement;
+    if (focused && rows.contains(focused)) {
+      for (const [key, node] of this.#nodes)
+        if (!inWindow.has(key) && node.contains(focused)) {
+          node.dataset.pinned = "";
+          nodes.push(node);
+          this.#pinned = true;
+        }
+    }
+    reconcile(rows, nodes);
+    return nodes;
+  }
+
+  /** Focuses `id` again after a render, scrolling a windowed row into view first if needed. */
+  #refocus(action: string, id: string): void {
+    const find = () =>
+      this.querySelector<HTMLElement>(`[data-action="${action}"][data-id="${CSS.escape(id)}"]`);
+    let target = find();
+    if (!target && this.#virtual) {
+      const index = this.#rows.findIndex((row) => row.kind === "item" && row.item.id === id);
+      if (index >= 0) {
+        this.#virtual.scrollToIndex(index);
+        this.#virtual.update();
+        target = find();
+      }
+    }
+    target?.focus({ preventScroll: true });
   }
 
   #titleNode(groupId: string, label: string): HTMLElement {
@@ -333,7 +385,7 @@ export class UiChatList extends ElementBase {
       remove.dataset.id = item.id;
       const label = (this.getAttribute("delete-label") ?? "Eliminar {title}").replace(
         "{title}",
-        item.title,
+        () => item.title,
       );
       remove.setAttribute("aria-label", label);
       remove.title = label;

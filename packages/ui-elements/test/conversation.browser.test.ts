@@ -220,4 +220,50 @@ describe("ui-conversation", () => {
     await wait(100);
     expect(scroller.scrollTop).toBeLessThan(before);
   });
+
+  it("announces the first message that arrives in an empty conversation", async () => {
+    const { el, live } = setup();
+    el.messages = [];
+    await wait(100);
+    el.messages = [
+      { id: "g", author: "assistant", name: "Ada", content: "Welcome", status: "done" },
+    ];
+    await wait(900);
+    expect(live.textContent).toBe("Ada: Welcome");
+  });
+
+  it("keeps position semantics on the article and survives prepending history and reconnecting", async () => {
+    const { host, el, scroller } = setup();
+    el.messages = make(300, 100);
+    await wait(300);
+    const article = el.querySelector("[data-ui-part=row] > *")!;
+    expect(article.getAttribute("aria-posinset")).toBeTruthy();
+    expect(el.querySelector("[data-ui-part=row]")!.hasAttribute("aria-posinset")).toBe(false);
+    el.messages = [...make(100), ...make(300, 100)];
+    await wait(300);
+    expect(el.querySelectorAll("[data-ui-part=row]").length).toBeLessThan(40);
+    expect(atBottom(scroller)).toBe(true);
+    const parent = el.parentElement!;
+    el.remove();
+    parent.append(el);
+    await wait(300);
+    expect(host.isConnected).toBe(true);
+    expect(el.querySelectorAll("[data-ui-part=row]").length).toBeGreaterThan(0);
+    expect(el.querySelectorAll("[data-ui-part=row]").length).toBeLessThan(40);
+  });
+
+  it("keeps a focused row mounted while it is outside the window", async () => {
+    const { el, scroller } = setup();
+    el.decorate = (_m, element) =>
+      element.append(Object.assign(document.createElement("button"), { textContent: "act" }));
+    el.messages = make(500);
+    await wait(400);
+    const buttons = el.querySelectorAll<HTMLButtonElement>("[data-ui-part=row] button");
+    const button = buttons[buttons.length - 1]!;
+    button.focus();
+    scroller.scrollTop = 0;
+    await wait(300);
+    expect(button.isConnected).toBe(true);
+    expect(document.activeElement).toBe(button);
+  });
 });

@@ -106,4 +106,36 @@ describe("ui-chat-message", () => {
     await wait(50);
     expect(pwned()).toBeUndefined();
   });
+
+  it("renders streaming markdown once per frame and does not rewrite an unchanged alert", async () => {
+    const host = mount(
+      `<ui-chat-message author="assistant" format="markdown" content="warm"></ui-chat-message>`,
+    );
+    const el = host.querySelector<UiChatMessage>("ui-chat-message")!;
+    await until(() => !!bubble(el).querySelector("[data-part=paragraph]"));
+    let renders = 0;
+    const observer = new MutationObserver((records) => {
+      renders += records.length;
+    });
+    observer.observe(bubble(el).querySelector("[data-ui-part=body]")!, { childList: true });
+    el.setAttribute("status", "streaming");
+    for (let i = 0; i < 20; i++) el.content = `chunk ${i} **b**`;
+    await wait(200);
+    observer.disconnect();
+    expect(renders).toBeLessThanOrEqual(2);
+    expect(bubble(el).textContent).toContain("chunk 19");
+
+    el.status = "error";
+    const alert = el.querySelector("[data-ui-part=error]")!;
+    let alertWrites = 0;
+    const watch = new MutationObserver((records) => {
+      alertWrites += records.length;
+    });
+    watch.observe(alert, { childList: true });
+    el.setAttribute("time", "10:31");
+    el.setAttribute("name", "Ada");
+    await wait(50);
+    watch.disconnect();
+    expect(alertWrites).toBe(0);
+  });
 });

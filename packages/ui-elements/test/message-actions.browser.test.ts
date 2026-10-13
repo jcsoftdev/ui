@@ -103,4 +103,16 @@ describe("ui-message-actions", () => {
     expect(el.feedback).toBe(null);
     expect(values).toEqual(["like", "dislike", null]);
   });
+
+  it("copies the body of a message that has its content in children", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(navigator.clipboard, "writeText").mockImplementation(writeText);
+    const host = mount(
+      `<div data-ui="chat-message"><div data-ui-part="body"> Rich <b>body</b> </div><ui-message-actions></ui-message-actions></div>`,
+    );
+    (host.firstElementChild as HTMLElement & { content?: string }).content = "";
+    host.querySelector<HTMLButtonElement>("[data-action=copy]")!.click();
+    await wait(30);
+    expect(writeText).toHaveBeenCalledWith("Rich body");
+  });
 });

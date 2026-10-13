@@ -172,4 +172,26 @@ describe("ui-prompt-input", () => {
       });
     });
   });
+
+  it("emits one composed input event per keystroke, not two", async () => {
+    const { host, area } = setup();
+    const onInput = vi.fn();
+    host.addEventListener("input", onInput);
+    area.focus();
+    await userEvent.keyboard("abc");
+    expect(onInput).toHaveBeenCalledTimes(3);
+  });
+
+  it("stops the default paste when files are pasted", () => {
+    const { area } = setup();
+    const data = new DataTransfer();
+    data.items.add(new File(["x"], "x.png", { type: "image/png" }));
+    const event = new ClipboardEvent("paste", {
+      clipboardData: data,
+      bubbles: true,
+      cancelable: true,
+    });
+    area.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });

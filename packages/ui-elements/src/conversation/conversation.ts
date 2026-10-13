@@ -4,7 +4,7 @@ import {
 } from "@jcsoftdev/ui-core/observe/stick-to-bottom";
 import { createVirtualList, type VirtualList } from "@jcsoftdev/ui-core/virtual-list";
 import { type DefineOptions, defineElement, ElementBase } from "../internal/base.js";
-import { chatGlyph, siblingTag, srOnly } from "../internal/chat.js";
+import { chatGlyph, reconcile, siblingTag, srOnly } from "../internal/chat.js";
 import { connectLight } from "../internal/containers.js";
 import css from "./conversation.css.js";
 
@@ -80,6 +80,9 @@ export class UiConversation extends ElementBase {
   #mutations: MutationObserver | undefined;
   #hostMutations: MutationObserver | undefined;
   #built = false;
+  #remeasure = false;
+  #rendering = false;
+  #redo = false;
   #authored: Node[] = [];
   readonly #announced = new WeakSet<Element>();
   readonly #announcedIds = new Set<string>();
@@ -107,6 +110,17 @@ export class UiConversation extends ElementBase {
       return;
     }
     this.#considerMessages(previous, next);
+    // The height cache is keyed by index: anything but an append (prepended history, a removal)
+    // shifts the indexes, so start a fresh cache and re-measure the rows that are mounted.
+    const appended =
+      previous !== undefined &&
+      next.length >= previous.length &&
+      previous.every((message, index) => next[index]?.id === message.id);
+    if (this.#virtual && !appended) {
+      this.#virtual.destroy();
+      this.#virtual = undefined;
+      this.#remeasure = true;
+    }
     this.#ensureVirtual();
     this.#virtual?.update();
     this.#renderRows();
@@ -206,6 +220,8 @@ export class UiConversation extends ElementBase {
       attributeFilter: ["status"],
     });
     for (const child of this.#content.children) this.#announced.add(child);
+    // Rows survive a disconnect, but the observer was released with the old connection.
+    for (const row of this.#rowElements.values()) this.#resizer?.observe(row);
     if (this.#messages !== undefined) {
       this.#ensureVirtual();
       this.#considerMessages(undefined, this.#messages);
@@ -233,9 +249,31 @@ export class UiConversation extends ElementBase {
   }
 
   #renderRows(): void {
+    if (this.#rendering) {
+      this.#redo = true;
+      return;
+    }
+    this.#rendering = true;
+    try {
+      for (let pass = 0; pass < 4; pass++) {
+        this.#redo = false;
+        const mounted = this.#placeRows();
+        if (this.#remeasure) {
+          this.#remeasure = false;
+          for (const row of mounted)
+            this.#virtual?.measure(Number(row.dataset.index), row.offsetHeight);
+        }
+        if (!this.#redo) break;
+      }
+    } finally {
+      this.#rendering = false;
+    }
+  }
+
+  #placeRows(): HTMLElement[] {
     const messages = this.#messages;
     const virtual = this.#virtual;
-    if (!messages || !virtual) return;
+    if (!messages || !virtual) return [];
     const { start, end, padTop, padBottom } = virtual.window;
     this.#rows.style.paddingTop = `${padTop}px`;
     this.#rows.style.paddingBottom = `${padBottom}px`;
@@ -257,20 +295,28 @@ export class UiConversation extends ElementBase {
         this.decorate?.(message, element);
       }
       row.dataset.index = String(index);
-      row.setAttribute("aria-setsize", String(messages.length));
-      row.setAttribute("aria-posinset", String(index + 1));
-      this.#paintMessage(row.firstElementChild as HTMLElement, message);
+      row.removeAttribute("data-pinned");
+      const element = row.firstElementChild as HTMLElement;
+      element.setAttribute("aria-setsize", String(messages.length));
+      element.setAttribute("aria-posinset", String(index + 1));
+      this.#paintMessage(element, message);
       ordered.push(row);
     }
+    // A row that holds focus stays mounted (out of sight) while it is outside the window.
+    const focused = document.activeElement;
     for (const [id, row] of this.#rowElements)
       if (!keep.has(id)) {
-        this.#resizer?.unobserve(row);
-        row.remove();
-        this.#rowElements.delete(id);
+        if (focused && row.contains(focused)) {
+          row.dataset.pinned = "";
+          ordered.push(row);
+        } else {
+          this.#resizer?.unobserve(row);
+          row.remove();
+          this.#rowElements.delete(id);
+        }
       }
-    const current = [...this.#rows.children];
-    if (current.length !== ordered.length || current.some((row, i) => row !== ordered[i]))
-      this.#rows.replaceChildren(...ordered);
+    reconcile(this.#rows, ordered);
+    return ordered;
   }
 
   #paintMessage(element: HTMLElement, message: ConversationMessage): void {
@@ -297,8 +343,12 @@ export class UiConversation extends ElementBase {
     next: ConversationMessage[],
   ): void {
     const known = new Set(previous?.map((message) => message.id));
+    // Nothing before, many at once into an empty list, or no id in common: that is history. A
+    // single message into an empty list is the first piece of news.
     const replaced =
-      !previous || previous.length === 0 || !next.some((message) => known.has(message.id));
+      !previous ||
+      (previous.length === 0 && next.length > 1) ||
+      (previous.length > 0 && !next.some((message) => known.has(message.id)));
     for (const message of next) {
       if (this.#announcedIds.has(message.id)) continue;
       if (message.status === "streaming" || message.status === "sending") continue;
@@ -344,7 +394,7 @@ export class UiConversation extends ElementBase {
     if (lines.length === 0) return;
     const burst = this.getAttribute("new-messages-label") ?? "{n} mensajes nuevos";
     this.#live.textContent =
-      lines.length === 1 ? (lines[0] as string) : burst.replace("{n}", String(lines.length));
+      lines.length === 1 ? (lines[0] as string) : burst.replace("{n}", () => String(lines.length));
     clearTimeout(this.#clearTimer);
     this.#clearTimer = setTimeout(() => {
       this.#live.textContent = "";

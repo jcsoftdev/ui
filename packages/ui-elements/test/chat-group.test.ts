@@ -38,4 +38,15 @@ describe("chat-group parity with the React kit", () => {
   it("overrides group labels", () => {
     expect(groupByDate(items.slice(0, 1), NOW, { today: "Today" })[0]?.label).toBe("Today");
   });
+
+  it("groups a large list in linear time", () => {
+    const many = Array.from({ length: 60_000 }, (_, i) => ({
+      id: i,
+      updatedAt: at(0, 1 + (i % 10)),
+    }));
+    const start = performance.now();
+    const groups = groupByDate(many, NOW);
+    expect(performance.now() - start).toBeLessThan(1500);
+    expect(groups[0]?.items.length).toBe(60_000);
+  });
 });

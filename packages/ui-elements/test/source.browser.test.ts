@@ -78,4 +78,9 @@ describe("ui-source", () => {
     expect(chips(el).card.querySelectorAll("img").length).toBe(0);
     expect(chips(el).card.textContent).toContain(evil);
   });
+
+  it("names a mailto source by its address", async () => {
+    mount(`<ui-source url="mailto:team@example.com"></ui-source>`);
+    expect(await ax("link", "team@example.com")).toBeTruthy();
+  });
 });

@@ -1,6 +1,10 @@
 // Safe Markdown subset: a parser that produces a plain AST, and a renderer that builds DOM nodes
 // with createElement and textContent. No input ever reaches innerHTML; raw tags stay literal text.
 
+import { safeHref } from "./safe-href.js";
+
+export { safeHref };
+
 export type Inline =
   | { t: "text"; v: string }
   | { t: "code"; v: string }
@@ -24,20 +28,6 @@ export type Block =
   | { t: "quote"; c: Block[] }
   | { t: "hr" }
   | { t: "table"; align: TableAlign[]; head: Inline[][]; rows: Inline[][][] };
-
-const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
-
-/** Returns the normalized URL when its protocol is http, https or mailto; otherwise null. */
-export function safeHref(raw: string): string | null {
-  const value = raw.trim();
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return SAFE_PROTOCOLS.has(url.protocol) ? url.href : null;
-  } catch {
-    return null;
-  }
-}
 
 const ESCAPABLE = /[\\`*_[\]()#+\-.!|>~]/;
 

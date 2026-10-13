@@ -108,4 +108,65 @@ describe("ui-chat-list", () => {
     expect((document.activeElement as HTMLElement).dataset.id).toBe("c999");
     expect(el.querySelectorAll('[data-action="select"]').length).toBeLessThan(60);
   });
+
+  describe("windowed list across renders", () => {
+    const many: ChatListItem[] = Array.from({ length: 600 }, (_, i) => ({
+      id: `c${i}`,
+      title: `Chat ${i}`,
+      updatedAt: new Date(2026, 2, 15, 8, 0, 1000 - i).toISOString(),
+    }));
+    const tall = () => {
+      const host = mount(
+        `<div style="height:300px"><ui-chat-list now="${NOW}"></ui-chat-list></div>`,
+      );
+      const el = host.querySelector<UiChatList>("ui-chat-list")!;
+      el.items = many;
+      return el;
+    };
+
+    it("keeps the viewport, its scroll position and focus when the list re-renders", async () => {
+      const el = tall();
+      await wait(150);
+      const viewport = el.querySelector<HTMLElement>("[data-ui-part=viewport]")!;
+      viewport.scrollTop = 6000;
+      await wait(150);
+      const row = el.querySelector<HTMLButtonElement>('[data-action="select"]')!;
+      row.focus({ preventScroll: true });
+      const top = viewport.scrollTop;
+      expect(top).toBeGreaterThan(5000);
+      const id = row.dataset.id;
+      el.setAttribute("active-id", id!);
+      el.items = [
+        { id: "fresh", title: "Fresh", updatedAt: new Date(2026, 2, 14).toISOString() },
+        ...many,
+      ];
+      await wait(100);
+      expect(el.querySelector("[data-ui-part=viewport]")).toBe(viewport);
+      expect(Math.abs(viewport.scrollTop - top)).toBeLessThan(50);
+      expect((document.activeElement as HTMLElement).dataset.id).toBe(id);
+    });
+
+    it("keeps the focused row mounted while it is scrolled out of the window", async () => {
+      const el = tall();
+      await wait(150);
+      const row = el.querySelector<HTMLButtonElement>('[data-action="select"]')!;
+      row.focus();
+      el.querySelector<HTMLElement>("[data-ui-part=viewport]")!.scrollTop = 9000;
+      await wait(200);
+      expect(row.isConnected).toBe(true);
+      expect(document.activeElement).toBe(row);
+    });
+  });
+
+  it("reads a numeric now and keeps $ patterns in titles literal", () => {
+    const host = mount(
+      `<ui-chat-list now="${new Date(2026, 2, 15, 12).getTime()}" deletable></ui-chat-list>`,
+    );
+    const el = host.querySelector<UiChatList>("ui-chat-list")!;
+    el.items = [{ id: "a", title: "Cost $& $1 $$", updatedAt: new Date(2026, 2, 15, 9) }];
+    expect(el.querySelector("h3")!.textContent).toBe("Hoy");
+    expect(el.querySelector("[data-action=delete]")!.getAttribute("aria-label")).toBe(
+      "Eliminar Cost $& $1 $$",
+    );
+  });
 });

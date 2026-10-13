@@ -114,7 +114,7 @@ export class UiAttachment extends ElementBase {
 
     const detail =
       status === "uploading"
-        ? `${this.getAttribute("uploading-label") ?? "Subiendo"}${progress != null ? ` ${Math.round(progress)}%` : "…"}`
+        ? `${this.getAttribute("uploading-label") ?? "Subiendo"}${progress != null ? ` ${Math.round(Math.min(100, Math.max(0, progress)))}%` : "…"}`
         : status === "error"
           ? (this.getAttribute("error-label") ?? "Error al subir")
           : (this.getAttribute("size") ?? "");
@@ -129,7 +129,7 @@ export class UiAttachment extends ElementBase {
         "aria-label",
         this.getAttribute("progress-label") ?? `Progreso de ${name}`,
       );
-      this.#bar.setAttribute("aria-valuenow", String(Math.round(progress)));
+      this.#bar.setAttribute("aria-valuenow", String(Math.round(clamped)));
       this.#fill.style.width = `${clamped}%`;
     }
 

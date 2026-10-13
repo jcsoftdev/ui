@@ -36,6 +36,9 @@ const COMPOSITION_END_GRACE_MS = 50;
  * clears the field unless the event is cancelled. The stop button fires `stop`. Pasting files
  * fires `attach` ({ files }) so the page can add `<ui-attachment>` children.
  *
+ * `required` is checked when the form validates (submit, `reportValidity()`): the field is empty
+ * again right after a send, so call `checkValidity()` only before sending.
+ *
  * Form: submits its draft under `name`, restores the `value` attribute on `form.reset()`, follows a
  * disabled fieldset and `required`. Accessible name: `aria-label`, `label` or an associated
  * `<label>`, else "Mensaje".
@@ -79,8 +82,8 @@ export class UiPromptInput extends FormElement {
     this.#hint = root.querySelector("[part=hint]") as HTMLElement;
 
     this.#area.addEventListener("input", () => {
+      // The native `input` event is already composed and leaves the shadow root on its own.
       this.value = this.#area.value;
-      this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
     });
     this.#area.addEventListener("change", () => emit(this, "change"));
     this.#area.addEventListener("compositionstart", () => {
@@ -99,7 +102,11 @@ export class UiPromptInput extends FormElement {
     });
     this.#area.addEventListener("paste", (event) => {
       const files = [...(event.clipboardData?.files ?? [])];
-      if (files.length) emit(this, "attach", { files });
+      if (files.length) {
+        // Pasted files often carry their file name as text; do not type it into the field.
+        event.preventDefault();
+        emit(this, "attach", { files });
+      }
     });
     this.#send.addEventListener("click", () => this.#submit());
     this.#stop.addEventListener("click", () => emit(this, "stop"));

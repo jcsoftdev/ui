@@ -62,4 +62,9 @@ describe("ui-attachment", () => {
   it("registers under a custom prefix", () => {
     expect(defineAttachment({ prefix: "acme" })).toBe("acme-attachment");
   });
+
+  it("clamps the progress it exposes", async () => {
+    mount(`<ui-attachment name="a.png" status="uploading" progress="250"></ui-attachment>`);
+    expect((await ax("progressbar", "Progreso de a.png"))?.value).toBe(100);
+  });
 });

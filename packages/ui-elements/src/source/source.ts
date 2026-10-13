@@ -9,7 +9,8 @@ import css from "./source.css.js";
 
 function hostOf(url: string): string {
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    const parsed = new URL(url);
+    return parsed.hostname.replace(/^www\./, "") || parsed.pathname || url;
   } catch {
     return url;
   }
@@ -17,7 +18,7 @@ function hostOf(url: string): string {
 
 /**
  * `<ui-source>`: a citation chip with a hover/focus preview of the source (host, title, excerpt).
- * Only http(s) and mailto URLs are linked (ui-core's `safeHref`, loaded lazily); anything else, and
+ * Only http(s) and mailto URLs are linked (ui-core's tiny `safe-href` module, loaded lazily); anything else, and
  * the moment before that module arrives, renders a non-clickable chip button. A link opens in a
  * new tab with `rel="noopener noreferrer nofollow"`. The preview is described to assistive
  * technology through `aria-describedby`, shows on hover and keyboard focus, and Escape dismisses it
@@ -89,7 +90,7 @@ export class UiSource extends ElementBase {
     this.#href = null;
     this.#swap();
     if (!url) return;
-    import("@jcsoftdev/ui-core/markdown").then(({ safeHref }) => {
+    import("@jcsoftdev/ui-core/safe-href").then(({ safeHref }) => {
       if (this.#resolving !== url) return;
       this.#href = safeHref(url);
       this.#swap();
