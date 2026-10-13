@@ -5,11 +5,14 @@ import { defineChartDataTable } from "../src/chart-data-table/chart-data-table.t
 import { defineChartFrame } from "../src/chart-frame/chart-frame.ts";
 import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
+import { join, svg } from "../src/internal/chart-base.ts";
+import { snapshotCsv } from "../src/internal/chart-export.ts";
 import { bindChart } from "../src/internal/chart-protocol.ts";
 import {
   defineTestBars,
   defineTestDots,
   defineTestLine,
+  defineTestShapes,
   lastDraw,
   log,
   resetLog,
@@ -21,6 +24,7 @@ beforeAll(() => {
   defineTestBars();
   defineTestLine();
   defineTestDots();
+  defineTestShapes();
   defineChartFrame();
   defineChartLegend();
   defineChartTooltip();
@@ -56,7 +60,8 @@ type Chart = HTMLElement & {
   readonly chartSnapshot: { series: unknown[]; categories: string[] } | null;
   readonly drawing: HTMLElement;
   data: typeof SALES;
-  requestDraw(kind?: "data" | "size"): void;
+  requestDraw(kind?: "data" | "size" | "transient"): void;
+  isHidden(id: string): boolean;
 };
 
 const chart = async (attrs = "", inner = "", width = 420, tag = "ui-test-bars") => {
@@ -955,5 +960,335 @@ describe("chart frame", () => {
     await settle();
     expect(seen.slice(-2)).toEqual([360, 150]);
     expect(await ax("image", "Custom")).toBeTruthy();
+  });
+});
+
+describe("review fixes: redraw, gestures and scrolling", () => {
+  it("re-hits a redraw with the element under the pointer, so target-based charts keep their tooltip", async () => {
+    const c = await chart("", "<ui-chart-tooltip></ui-chart-tooltip>", 300, "ui-test-shapes");
+    await awake(c);
+    const rect = svgOf(c).querySelector('[data-i="1"]') as SVGElement;
+    const box = rect.getBoundingClientRect();
+    rect.dispatchEvent(
+      new PointerEvent("pointermove", {
+        bubbles: true,
+        clientX: box.left + 50,
+        clientY: box.top + 50,
+        pointerType: "mouse",
+        pointerId: 1,
+      }),
+    );
+    expect(c.hover?.index).toBe(1);
+    const events: unknown[] = [];
+    c.addEventListener("chart-hover", (e) => events.push((e as CustomEvent).detail?.index ?? null));
+    c.requestDraw();
+    await settle();
+    expect(c.hover?.index).toBe(1);
+    expect(c.querySelector("ui-chart-tooltip")?.hasAttribute("data-open")).toBe(true);
+    expect(events).toEqual([]);
+  });
+
+  it("leaves a gesture the chart claimed with preventDefault alone: a brush or drag never selects", async () => {
+    const c = await chart("drag");
+    await awake(c);
+    const drilled: unknown[] = [];
+    c.addEventListener("chart-drill", (e) => drilled.push((e as CustomEvent).detail));
+    await userEvent.click(svgOf(c), { position: { x: 100, y: 60 } });
+    expect(c.selected).toBeNull();
+    const box = svgOf(c).getBoundingClientRect();
+    const touch = (type: string, x: number, y: number) =>
+      svgOf(c).dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          clientX: box.left + x,
+          clientY: box.top + y,
+          pointerType: "touch",
+          pointerId: 2,
+          isPrimary: true,
+        }),
+      );
+    touch("pointerdown", 90, 60);
+    touch("pointerup", 90, 60);
+    expect(c.selected).toBeNull();
+    svgOf(c).dispatchEvent(
+      new MouseEvent("dblclick", {
+        bubbles: true,
+        cancelable: true,
+        clientX: box.left + 250,
+        clientY: box.top + 60,
+      }),
+    );
+    expect(drilled).toEqual([]);
+    // The same gestures select on a chart that does not claim them.
+    const plain = await chart();
+    await awake(plain);
+    await userEvent.click(svgOf(plain), { position: { x: 100, y: 60 } });
+    expect(plain.selected).toBe(1);
+  });
+
+  it("a floating tooltip follows the chart on scroll and hides while the chart is out of view", async () => {
+    const host = mount(
+      `<div style="height:300px;width:560px;overflow:auto"><div style="height:60px"></div>
+        <ui-test-bars label="Sales" height="200" locale="en-US"><ui-chart-tooltip></ui-chart-tooltip></ui-test-bars>
+        <div style="height:900px"></div></div>`,
+    );
+    await settle();
+    const scroller = host.firstElementChild as HTMLElement;
+    const c = host.querySelector("ui-test-bars") as Chart;
+    const tip = c.querySelector("ui-chart-tooltip") as HTMLElement;
+    await awake(c);
+    pointer(c, "pointermove", 130, 60);
+    await wait(120); // the follow chunk loads on the first floating show
+    expect(tip.hasAttribute("data-open")).toBe(true);
+    const top = tip.getBoundingClientRect().top;
+    scroller.scrollTop = 40;
+    await frame();
+    await frame();
+    expect(tip.getBoundingClientRect().top).toBeCloseTo(top - 40, 0);
+    expect(tip.hasAttribute("data-offscreen")).toBe(false);
+    scroller.scrollTop = 700;
+    await wait(120);
+    expect(tip.hasAttribute("data-offscreen")).toBe(true);
+    expect(getComputedStyle(tip).visibility).toBe("hidden");
+    scroller.scrollTop = 0;
+    await wait(120);
+    expect(tip.hasAttribute("data-offscreen")).toBe(false);
+    expect(tip.getBoundingClientRect().top).toBeCloseTo(top, 0);
+  });
+
+  it("prefers the top or bottom side when the chart asks for it", async () => {
+    const c = await chart("hside='top'", "<ui-chart-tooltip></ui-chart-tooltip>", 560);
+    await awake(c);
+    const tip = c.querySelector("ui-chart-tooltip") as HTMLElement;
+    pointer(c, "pointermove", 326, 60); // Thu: a short bar, room above
+    await frame();
+    expect(tip.dataset.side).toBe("top");
+    c.setAttribute("hside", "bottom");
+    await settle();
+    pointer(c, "pointermove", 420, 60); // Fri: the tallest bar, room below
+    await frame();
+    expect(tip.dataset.side).toBe("bottom");
+  });
+});
+
+describe("review fixes: legend, keyboard, docked space and transient draws", () => {
+  it("lists legend items apart from the table columns, keyed by the legend ids", async () => {
+    const c = await chart("legend", "<ui-chart-legend></ui-chart-legend>");
+    const buttons = [...c.querySelectorAll<HTMLButtonElement>("ui-chart-legend button")];
+    expect(buttons.map((b) => b.textContent)).toEqual(["Alpha", "Beta"]);
+    buttons[0]?.click();
+    await settle();
+    expect(c.isHidden("a")).toBe(true);
+    expect(buttons[0]?.getAttribute("aria-pressed")).toBe("false");
+    expect(buttons[1]?.disabled).toBe(true); // the last visible legend item stays
+    const snapshot = c.chartSnapshot as unknown as Parameters<typeof snapshotCsv>[0];
+    expect(snapshot.series).toHaveLength(1);
+    expect(snapshotCsv(snapshot).split("\r\n")[0]).toBe("Day,Sales");
+  });
+
+  it("draws a gradient bar for a continuous scale instead of items", async () => {
+    const c = await chart("scale", "<ui-chart-legend></ui-chart-legend>");
+    await wait(150); // the scale drawing is a lazy chunk
+    const legend = c.querySelector("ui-chart-legend") as HTMLElement;
+    const scale = legend.querySelector("[data-ui-part=scale]") as HTMLElement;
+    expect(scale.textContent).toBe("0%100%");
+    expect(scale.getAttribute("aria-label")).toBe("Heat: 0% to 100%");
+    expect((scale.querySelector("[data-ui-part=bar]") as HTMLElement).style.background).toContain(
+      "linear-gradient",
+    );
+    const list = legend.querySelector("ul") as HTMLElement;
+    expect(getComputedStyle(list).display).toBe("none");
+  });
+
+  it("moves in two dimensions when the chart gives nav, and falls back to a line without it", async () => {
+    const c = await chart('nav="grid" rows="9"');
+    const m = marks(c);
+    await userEvent.tab();
+    await wait(80);
+    expect(document.activeElement).toBe(m[0]);
+    await userEvent.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(m[3]);
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(m[4]);
+    await userEvent.keyboard("{End}");
+    expect(document.activeElement).toBe(m[5]);
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(m[5]);
+    await userEvent.keyboard("{Home}");
+    expect(document.activeElement).toBe(m[3]);
+    await userEvent.keyboard("{ArrowUp}{ArrowLeft}");
+    expect(document.activeElement).toBe(m[0]);
+  });
+
+  it("walks a hierarchy with parent and child intents", async () => {
+    const c = await chart('nav="tree" rows="7"');
+    const m = marks(c);
+    const drilled: unknown[] = [];
+    c.addEventListener("chart-drill", (e) => drilled.push((e as CustomEvent).detail));
+    await userEvent.tab();
+    await wait(80);
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+    expect(document.activeElement).toBe(m[3]);
+    await userEvent.keyboard("{Backspace}");
+    expect(document.activeElement).toBe(m[1]);
+    await userEvent.keyboard("{Backspace}");
+    expect(document.activeElement).toBe(m[0]);
+    await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
+    expect(drilled).toEqual([{ index: 0, category: 0 }]);
+    expect(document.activeElement).toBe(m[1]);
+  });
+
+  it("reserves the docked panel for the most rows the chart shows: nothing below it moves", async () => {
+    const host = mount(
+      `<div style="width:390px"><ui-test-bars label="Sales" height="200" locale="en-US" hrows="5">
+        <ui-chart-tooltip></ui-chart-tooltip></ui-test-bars><div id="below" style="height:20px">below</div></div>`,
+    );
+    await settle();
+    const c = host.querySelector("ui-test-bars") as Chart;
+    const tip = c.querySelector("ui-chart-tooltip") as HTMLElement;
+    const below = host.querySelector("#below") as HTMLElement;
+    await awake(c);
+    expect(tip.hasAttribute("data-docked")).toBe(true);
+    const top = below.getBoundingClientRect().top;
+    const height = tip.getBoundingClientRect().height;
+    tap(c, 30, 60); // mark 0: five rows
+    await frame();
+    expect(tip.querySelectorAll("[data-ui-part=row]")).toHaveLength(5);
+    expect(below.getBoundingClientRect().top).toBe(top);
+    expect(tip.getBoundingClientRect().height).toBe(height);
+    expect(tip.scrollHeight).toBeLessThanOrEqual(tip.clientHeight + 1); // nothing is cut off
+    tap(c, 100, 60); // mark 1: one row
+    await frame();
+    expect(tip.querySelectorAll("[data-ui-part=row]")).toHaveLength(1);
+    expect(below.getBoundingClientRect().top).toBe(top);
+    expect(tip.getBoundingClientRect().height).toBe(height);
+  });
+
+  it("redraws transiently with no snapshot, no revision and no chart-data, and exposes motion and hover", async () => {
+    const c = await chart();
+    expect(c.chartSnapshot).not.toBeNull();
+    const snapshots = log.snapshots;
+    const events: unknown[] = [];
+    c.addEventListener("chart-data", (e) => events.push((e as CustomEvent).detail));
+    const draws = log.phases.length;
+    for (let i = 0; i < 30; i++) {
+      c.requestDraw("transient");
+      await frame();
+    }
+    await wait(300);
+    expect(log.phases.length).toBe(draws + 30);
+    expect(log.transient.slice(-30).every(Boolean)).toBe(true);
+    expect(log.phases.slice(-30).every((phase) => phase === "update")).toBe(true);
+    expect(events).toEqual([]);
+    expect(c.chartSnapshot).not.toBeNull();
+    expect(log.snapshots).toBe(snapshots);
+    c.requestDraw();
+    await settle();
+    expect(events).toHaveLength(1);
+    expect(log.transient.at(-1)).toBe(false);
+    expect(log.motion.at(-1)).toBe(true);
+    // The hovered mark reaches the next draw, so a crosshair survives a redraw from scratch.
+    expect(log.hover.at(-1)).toBeNull();
+    await awake(c);
+    pointer(c, "pointermove", 130, 60);
+    c.requestDraw("transient");
+    await settle();
+    expect(log.hover.at(-1)).toBe(1);
+    document.body.innerHTML = "";
+    const real = window.matchMedia.bind(window);
+    vi.spyOn(window, "matchMedia").mockImplementation((q) =>
+      q.includes("reduce") ? ({ matches: true, media: q } as MediaQueryList) : real(q),
+    );
+    await chart();
+    expect(log.motion.at(-1)).toBe(false);
+  });
+});
+
+describe("review fixes: smaller contracts", () => {
+  it("does not re-emit chart-data null or bump anything while the state stays the same", async () => {
+    const c = await chart();
+    const events: unknown[] = [];
+    c.addEventListener("chart-data", (e) => events.push((e as CustomEvent).detail));
+    c.setAttribute("loading", "");
+    await settle();
+    expect(events).toEqual([null]);
+    (c.parentElement as HTMLElement).style.width = "300px";
+    await settle();
+    c.setAttribute("skeleton", "line");
+    await settle();
+    expect(events).toEqual([null]);
+    expect(c.querySelector("[data-state=loading]")?.getAttribute("data-skeleton")).toBe("line");
+  });
+
+  it("replays a click that arrived before the interaction chunk loaded", async () => {
+    const c = await chart();
+    const box = svgOf(c).getBoundingClientRect();
+    drawingOf(c).dispatchEvent(
+      new PointerEvent("click", {
+        bubbles: true,
+        detail: 1,
+        pointerType: "mouse",
+        clientX: box.left + 100,
+        clientY: box.top + 60,
+      }),
+    );
+    await wait(100);
+    expect(c.selected).toBe(1);
+  });
+
+  it("a reconnect leaves one option on the virtual proxy, not two", async () => {
+    const c = await chart('rows="50" virtual');
+    await userEvent.tab();
+    await wait(80);
+    expect(c.querySelectorAll("[role=option]")).toHaveLength(1);
+    const parent = c.parentElement as HTMLElement;
+    c.remove();
+    expect(c.querySelectorAll("[role=option]")).toHaveLength(0);
+    parent.append(c);
+    await settle();
+    await userEvent.tab();
+    await wait(80);
+    expect(c.querySelectorAll("[role=option]")).toHaveLength(1);
+  });
+
+  it("join() maps a repeated key to the first element, leaks nothing and warns once", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const parent = svg("g");
+    const items = [{ k: 1 }, { k: 1 }, { k: 2 }];
+    const make = (list: Array<{ k: number }>) =>
+      join(
+        parent,
+        list,
+        (d) => d.k,
+        () => svg("circle"),
+        () => {},
+      );
+    const out = make(items);
+    expect(parent.children).toHaveLength(2);
+    expect(out).toHaveLength(3);
+    expect(out[0]).toBe(out[1]);
+    make(items);
+    expect(warn).toHaveBeenCalledTimes(1);
+    make([{ k: 2 }]);
+    expect(parent.children).toHaveLength(1);
+  });
+
+  it("falls back to 500 rows for an empty or invalid limit, and 0 still means every row", async () => {
+    const c = await chart(
+      'rows="600"',
+      '<ui-chart-data-table visible limit=""></ui-chart-data-table>',
+    );
+    const table = c.querySelector("ui-chart-data-table") as HTMLElement;
+    const rows = () => table.querySelector("table")?.tBodies[0]?.rows.length;
+    expect(rows()).toBe(501);
+    for (const bad of ["abc", "-3"]) {
+      table.setAttribute("limit", bad);
+      await settle();
+      expect(rows()).toBe(501);
+    }
+    table.setAttribute("limit", "0");
+    await settle();
+    expect(rows()).toBe(600);
   });
 });

@@ -25,6 +25,9 @@ export const log = {
   phases: [] as string[],
   hadPrevious: [] as boolean[],
   animate: [] as boolean[],
+  transient: [] as boolean[],
+  motion: [] as boolean[],
+  hover: [] as Array<number | null>,
   snapshots: 0,
   setups: 0,
   teardowns: 0,
@@ -35,6 +38,9 @@ export const resetLog = () => {
   log.phases = [];
   log.hadPrevious = [];
   log.animate = [];
+  log.transient = [];
+  log.motion = [];
+  log.hover = [];
   log.snapshots = 0;
   log.setups = 0;
   log.teardowns = 0;
@@ -43,9 +49,26 @@ export const resetLog = () => {
 };
 export const lastDraw = () => ({ animate: log.animate.at(-1) });
 
-/** `rows="N"` makes N rows; `virtual` exposes them as virtual marks; `canvas` draws on a canvas layer. */
+/**
+ * `rows="N"` makes N rows; `virtual` exposes them as virtual marks; `canvas` draws on a canvas layer;
+ * `drag` claims pointer gestures (`preventDefault`) like a brush; `nav="grid|tree"` adds 2D / tree
+ * keyboard navigation; `legend` and `scale` publish a legend apart from the table columns;
+ * `hrows="N"` makes even marks show N tooltip rows and publishes N as the maximum; `hside` is the
+ * side the tooltip prefers.
+ */
 class TestBars extends ChartElement {
-  static override observedAttributes = [...CHART_ATTRIBUTES, "rows", "virtual", "canvas"];
+  static override observedAttributes = [
+    ...CHART_ATTRIBUTES,
+    "rows",
+    "virtual",
+    "canvas",
+    "drag",
+    "nav",
+    "legend",
+    "scale",
+    "hrows",
+    "hside",
+  ];
   data = SALES;
   /** Marks `[data-i]` are tagged so hit() can use the element under the pointer. */
   protected override isEmpty() {
@@ -55,9 +78,44 @@ class TestBars extends ChartElement {
   protected override setup(_svg: SVGSVGElement, signal: AbortSignal) {
     log.setups++;
     log.signals.push(signal);
+    if (this.hasAttribute("drag"))
+      for (const type of ["pointerdown", "pointerup", "click", "dblclick"])
+        _svg.addEventListener(type, (event) => event.preventDefault(), { signal });
   }
   protected override teardown() {
     log.teardowns++;
+  }
+
+  /** A 3-column grid (`grid`) or a binary heap (`tree`: parent `(i-1)/2`, children `2i+1`, `2i+2`). */
+  #nav(n: number): NonNullable<DrawResult["nav"]> {
+    const tree = this.getAttribute("nav") === "tree";
+    return (i, intent) => {
+      if (tree) {
+        const child = 2 * i + 1;
+        if (intent === "parent" || intent === "up") return i > 0 ? Math.floor((i - 1) / 2) : i;
+        if (intent === "child" || intent === "down") return child < n ? child : i;
+        if (intent === "left") return Math.max(0, i - 1);
+        if (intent === "right") return Math.min(n - 1, i + 1);
+        return intent === "home" ? 0 : n - 1;
+      }
+      const row = i - (i % 3);
+      switch (intent) {
+        case "left":
+          return i % 3 ? i - 1 : i;
+        case "right":
+          return i % 3 < 2 && i + 1 < n ? i + 1 : i;
+        case "up":
+          return i >= 3 ? i - 3 : i;
+        case "down":
+          return i + 3 < n ? i + 3 : i;
+        case "home":
+          return row;
+        case "end":
+          return Math.min(n - 1, row + 2);
+        default:
+          return i;
+      }
+    };
   }
 
   get rows() {
@@ -77,10 +135,16 @@ class TestBars extends ChartElement {
     phase,
     previous,
     canvas,
+    transient,
+    motion,
+    hover,
   }: DrawContext) {
     log.phases.push(phase);
     log.hadPrevious.push(!!previous);
     log.animate.push(animate);
+    log.transient.push(transient);
+    log.motion.push(motion);
+    log.hover.push(hover);
     const rows = this.rows;
     const top = Math.max(...rows.map((d) => d.value));
     const band = bandScale({ count: rows.length, range: [0, width], paddingInner: 0.2 });
@@ -100,20 +164,50 @@ class TestBars extends ChartElement {
           categoryHeader: "Day",
           categories: rows.map((d) => d.name),
           series: [series],
+          ...(this.hasAttribute("legend")
+            ? {
+                legend: [
+                  { id: "a", name: "Alpha", color: color(1) },
+                  { id: "b", name: "Beta", color: color(2) },
+                ],
+              }
+            : {}),
+          ...(this.hasAttribute("scale")
+            ? {
+                scale: {
+                  min: 0,
+                  max: 100,
+                  colors: ["#ffffff", "#0000ff"],
+                  format: (v: number) => `${v}%`,
+                  label: "Heat",
+                },
+              }
+            : {}),
         };
       },
+      ...(this.getAttribute("nav") ? { nav: this.#nav(rows.length) } : {}),
+      ...(this.hasAttribute("hrows") ? { maxHoverRows: Number(this.getAttribute("hrows")) } : {}),
       hit: (x, y, target, radius) => {
         log.hits.push({ x, y, radius, target: target?.localName });
         return x < 0 || y < 0 || x > width || y > height ? -1 : band.indexAt(x);
       },
       hover: (i) => {
         const d = rows[i];
+        const many = Number(this.getAttribute("hrows") ?? 1);
         return d
           ? {
               title: d.name,
-              rows: [{ id: "sales", name: "Sales", value: format(d.value), color: color(0) }],
+              rows: Array.from({ length: i % 2 === 0 ? many : 1 }, (_, n) => ({
+                id: `sales${n}`,
+                name: n ? `Series ${n}` : "Sales",
+                value: format(d.value),
+                color: color(0),
+              })),
               x: band.center(i),
               y: height - (d.value / top) * (height - 10),
+              ...(this.hasAttribute("hside")
+                ? { side: this.getAttribute("hside") as "top" | "bottom" }
+                : {}),
             }
           : null;
       },
@@ -159,6 +253,35 @@ class TestBars extends ChartElement {
       return { el, label: `${d.name}: ${format(d.value)}` };
     });
     return { ...base, marks };
+  }
+}
+
+/** Three big shapes whose `hit` ignores the coordinates and answers from the element under the pointer. */
+class TestShapes extends ChartElement {
+  static override observedAttributes = [...CHART_ATTRIBUTES];
+  protected override draw({ svg: root, height, color }: DrawContext): DrawResult {
+    const marks = [0, 1, 2].map((i) => {
+      const el = svg("rect", {
+        x: i * 100,
+        y: 0,
+        width: 100,
+        height,
+        "data-i": i,
+        style: `fill:${color(i)}`,
+      });
+      root.append(el);
+      return { el, label: `Shape ${i}` };
+    });
+    return {
+      marks,
+      hit: (_x, _y, target) => Number(target?.closest("[data-i]")?.getAttribute("data-i") ?? -1),
+      hover: (i) => ({
+        title: `Shape ${i}`,
+        rows: [{ id: "s", name: "Area", value: `${i}`, color: color(i) }],
+        x: i * 100 + 50,
+        y: 40,
+      }),
+    };
   }
 }
 
@@ -245,6 +368,7 @@ const dots = (retain: boolean) =>
   };
 
 export const defineTestBars = () => defineElement("test-bars", TestBars);
+export const defineTestShapes = () => defineElement("test-shapes", TestShapes);
 export const defineTestLine = () => defineElement("test-line", TestLine);
 export const defineTestDots = () => {
   defineElement("test-dots", dots(true));

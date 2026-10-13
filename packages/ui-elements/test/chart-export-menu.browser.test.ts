@@ -209,4 +209,57 @@ describe("ui-chart-export-menu", () => {
     expect(events[0]?.dropped).toEqual(["https://example.com/a.png"]);
     expect(warn).toHaveBeenCalled();
   });
+
+  it("exports without the selection styling, and drops what a standalone file cannot load", async () => {
+    const style = document.createElement("style");
+    style.textContent =
+      "ui-test-bars svg [data-selected]{stroke:rgb(255,0,0);stroke-width:5px}ui-test-bars svg [data-dim]{opacity:.38}";
+    document.head.append(style);
+    try {
+      const host = mount(
+        `<div style="width:400px"><ui-test-bars label="Weekly sales" height="160" locale="en-US"></ui-test-bars></div>`,
+      );
+      await frame();
+      await wait(60);
+      const chart = host.querySelector("ui-test-bars") as HTMLElement & {
+        exportSvgs(): SVGSVGElement[];
+      };
+      const drawing = chart.exportSvgs()[0] as SVGSVGElement;
+      const ns = "http://www.w3.org/2000/svg";
+      const rect = drawing.querySelector("rect") as SVGRectElement;
+      for (const flag of ["data-selected", "data-active", "data-dim"]) rect.setAttribute(flag, "");
+      const add = (tag: string, attrs: Record<string, string>, parent: Element = drawing) => {
+        const node = document.createElementNS(ns, tag);
+        for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, value);
+        parent.append(node);
+        return node;
+      };
+      add("use", { href: "https://e.com/s.svg#a" });
+      const link = add("a", { href: "javascript:alert(1)" });
+      add("rect", { width: "4", height: "4" }, link);
+      add("rect", { width: "4", height: "4", style: "fill:url(https://e.com/p.svg#x)" });
+      add("rect", { width: "4", height: "4", fill: "url(#local)" });
+      add("image", { href: "" });
+      const tools = await import("../src/internal/chart-export.ts");
+      const out = tools.serializeSvg(drawing);
+      expect(out.markup).not.toMatch(/data-selected|data-active|data-dim/);
+      expect(out.markup).not.toContain("rgb(255, 0, 0)");
+      expect(out.markup).not.toContain("opacity: 0.38");
+      expect(out.markup).not.toContain("javascript:");
+      expect(out.markup).not.toContain("e.com");
+      expect(out.markup).not.toContain("<use");
+      expect(out.markup).not.toContain("<image");
+      expect(out.markup).toContain("url(#local)");
+      expect(out.dropped).toEqual([
+        "https://e.com/s.svg#a",
+        "javascript:alert(1)",
+        "https://e.com/p.svg#x",
+      ]);
+      // The live chart keeps its state, and its flags come back.
+      expect(rect.hasAttribute("data-selected")).toBe(true);
+      expect(rect.hasAttribute("data-dim")).toBe(true);
+    } finally {
+      style.remove();
+    }
+  });
 });
