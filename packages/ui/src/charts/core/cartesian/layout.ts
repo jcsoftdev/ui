@@ -13,7 +13,12 @@ import { type ContinuousScale, extent, linearScale } from "../scales/linear.js";
 import { logScale } from "../scales/log.js";
 import { shortMonth, timeScale } from "../scales/time.js";
 import { type StackLayer, type StackMode, stackLayers } from "../stack.js";
-import type { ChartAnnotation, ValueAxisOptions, XValue } from "../types.js";
+import {
+  type ChartAnnotation,
+  resolveAxisBound,
+  type ValueAxisOptions,
+  type XValue,
+} from "../types.js";
 import { type CartesianAxisSpec, resolveAxes, stackAxes } from "./axis-stack.js";
 import type { MarkKind } from "./types.js";
 
@@ -169,6 +174,19 @@ export interface LayoutInput {
   categoryGroups?: boolean;
   /** Degrees to tilt the category labels (vertical charts). */
   labelRotation?: number;
+  /** Shows every n-th category label, or the ones the predicate accepts; replaces the automatic thinning. */
+  categoryTickEvery?: number | ((index: number, label: string) => boolean);
+}
+
+/** Keeps the category ticks picked by `every`: each n-th one (from the first), or those the predicate accepts. */
+export function pickCategoryTicks(
+  ticks: readonly AxisTick[],
+  every: number | ((index: number, label: string) => boolean),
+): AxisTick[] {
+  const step = typeof every === "number" ? Math.max(1, Math.floor(every)) : 0;
+  return ticks.filter((tick, index) =>
+    typeof every === "function" ? every(index, tick.label) : index % step === 0,
+  );
 }
 
 const clamp = (value: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, value));
@@ -211,7 +229,7 @@ function buildLayers(series: readonly ResolvedSeries[], stack: StackMode): Map<s
   return out;
 }
 
-function axisDomain(
+export function axisDomain(
   series: readonly ResolvedSeries[],
   layers: ReadonlyMap<string, StackLayer>,
   options: ValueAxisOptions,
@@ -234,9 +252,7 @@ function axisDomain(
     lo = Math.min(lo, 0);
     hi = Math.max(hi, 0);
   }
-  if (options.min != null) lo = options.min;
-  if (options.max != null) hi = options.max;
-  return [lo, hi];
+  return [resolveAxisBound(options.min, lo), resolveAxisBound(options.max, hi)];
 }
 
 function makeValueScale(
@@ -473,11 +489,14 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
       position: positions[index] as number,
       label,
     }));
-    categoryTicks = horizontal
-      ? ticks
-      : rotation
-        ? ticks.filter((_, index) => index % Math.max(1, Math.ceil(14 / band.step)) === 0)
-        : thinTicks(ticks, 12);
+    categoryTicks =
+      input.categoryTickEvery != null
+        ? pickCategoryTicks(ticks, input.categoryTickEvery)
+        : horizontal
+          ? ticks
+          : rotation
+            ? ticks.filter((_, index) => index % Math.max(1, Math.ceil(14 / band.step)) === 0)
+            : thinTicks(ticks, 12);
     indexAt = band.indexAt;
     mode = band.type;
   }

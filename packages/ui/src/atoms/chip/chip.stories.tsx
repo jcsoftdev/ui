@@ -84,3 +84,23 @@ export const AllTonesSquare: Story = {
     </div>
   ),
 };
+
+/** `tone` also takes the name of a tone declared in `tonePalettes`; the variables are set inline here. */
+export const CustomTone: Story = {
+  args: { tone: "mint", children: "Yape" },
+  decorators: [
+    (Story) => (
+      <div
+        style={
+          {
+            "--tone-mint": "oklch(0.62 0.14 165)",
+            "--tone-mint-soft": "oklch(0.95 0.04 165)",
+            "--tone-mint-ink": "oklch(0.42 0.1 165)",
+          } as React.CSSProperties
+        }
+      >
+        <Story />
+      </div>
+    ),
+  ],
+};

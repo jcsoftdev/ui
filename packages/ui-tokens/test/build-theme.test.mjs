@@ -132,3 +132,46 @@ test("ui-theme build --no-kotlin writes only CSS and succeeds with oklch() color
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+const withTones = (tonePalettes) => ({ ...tokens, tonePalettes });
+
+test("tonePalettes emit --tone-<name>, -soft and -ink for light and dark", () => {
+  const built = buildTheme(
+    withTones({
+      yape: {
+        fill: { light: "#722ea5", dark: "#b98ae0" },
+        soft: { light: "#f1e6fa", dark: "#2a1a3a" },
+        ink: { light: "#5a2384", dark: "#d9bdf2" },
+      },
+      "pay-2": { fill: "#123456", soft: "#abcdef" },
+    }),
+    { kotlin: false },
+  );
+  const css = built["tokens.css"];
+  const root = css.slice(0, css.indexOf("}"));
+  assert.match(root, /--tone-yape: #722ea5;/);
+  assert.match(root, /--tone-yape-soft: #f1e6fa;/);
+  assert.match(root, /--tone-yape-ink: #5a2384;/);
+  assert.match(root, /--tone-pay-2: #123456;/);
+  assert.match(root, /--tone-pay-2-ink: #123456;/);
+  const dark = css.slice(css.indexOf(':root[data-theme="dark"]'));
+  const darkBlock = dark.slice(0, dark.indexOf("}"));
+  assert.match(darkBlock, /--tone-yape: #b98ae0;/);
+  assert.match(darkBlock, /--tone-yape-soft: #2a1a3a;/);
+  assert.doesNotMatch(darkBlock, /--tone-pay-2/);
+  assert.match(built["theme.css"], /--color-tone-yape-soft: var\(--tone-yape-soft\);/);
+});
+
+test("tonePalettes reject names that are not kebab-case and incomplete palettes", () => {
+  assert.throws(() => buildTheme(withTones({ Yape: { fill: "#000", soft: "#fff" } })), /kebab/);
+  assert.throws(() => buildTheme(withTones({ "a b": { fill: "#000", soft: "#fff" } })), /kebab/);
+  assert.throws(() => buildTheme(withTones({ yape: { fill: "#000" } })), /"soft" is required/);
+  assert.throws(
+    () => buildTheme(withTones({ yape: { fill: "#000", soft: "#fff", line: "#111" } })),
+    /unknown role/,
+  );
+});
+
+test("a theme without tonePalettes builds exactly as before", () => {
+  assert.doesNotMatch(buildTheme(tokens)["tokens.css"], /--tone-/);
+});

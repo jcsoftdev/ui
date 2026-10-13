@@ -55,6 +55,7 @@ const meta = {
     monochrome: { control: "boolean" },
     fill: { control: "inline-radio", options: ["solid", "gradient", "pattern"] },
     outsideLabels: { control: "select", options: [false, true, "name", "percent", "both"] },
+    sliceLabels: { control: "select", options: [false, true, "percent", "value"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 200, max: 520, step: 10 } },
     data: { control: false },
@@ -77,6 +78,14 @@ export const Default: Story = {};
 
 export const OutsideLabels: Story = {
   args: { outsideLabels: "both", height: 360, cornerRadius: 8 },
+};
+
+export const SliceLabels: Story = {
+  args: { sliceLabels: "percent", height: 340, gap: 2, innerRadius: 0.5 },
+};
+
+export const SliceValues: Story = {
+  args: { sliceLabels: "value", variant: "pie", height: 340 },
 };
 
 export const OutsidePercentOnly: Story = {

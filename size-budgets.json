@@ -53,7 +53,7 @@
       "id": "ui/ai",
       "kind": "js",
       "file": "packages/ui/dist/ai/index.js",
-      "maxGzip": 32500
+      "maxGzip": 34800
     },
     {
       "id": "ui/atoms",
@@ -95,13 +95,13 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 600
+      "maxGzip": 680
     },
     {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 11900
+      "maxGzip": 12900
     },
     {
       "id": "ui/overlays",
