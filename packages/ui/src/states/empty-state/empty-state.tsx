@@ -8,14 +8,24 @@ export interface EmptyStateProps {
   description?: ReactNode;
   /** Primary call to action. */
   action?: ReactNode;
+  /** `outlined` draws a dashed border around the state. */
+  variant?: "plain" | "outlined";
   className?: string;
 }
 
-export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+  variant = "plain",
+  className,
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
         "@container/empty flex min-w-0 flex-col items-center gap-2 px-4 py-8 text-center @min-[360px]/empty:px-6 @min-[360px]/empty:py-12",
+        variant === "outlined" && "rounded-card border border-line-control border-dashed",
         className,
       )}
     >

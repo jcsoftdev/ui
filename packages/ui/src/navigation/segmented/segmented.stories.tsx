@@ -77,3 +77,21 @@ export const Narrow: Story = {
     ),
   ],
 };
+
+export const FromOptions: Story = {
+  render: (args) => (
+    <Segmented
+      {...args}
+      options={[
+        { value: "dia", label: "Día" },
+        { value: "semana", label: "Semana" },
+        { value: "mes", label: "Mes" },
+      ]}
+    />
+  ),
+};
+
+export const BlockWithoutDeselect: Story = {
+  args: { block: true, allowDeselect: false },
+  render: FromOptions.render,
+};

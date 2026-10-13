@@ -71,3 +71,16 @@ export const Narrow: Story = {
     ),
   ],
 };
+
+export const Compact: Story = {
+  args: {
+    compact: true,
+    children: (
+      <div>
+        <PageHeaderEyebrow>Paso 2 de 3</PageHeaderEyebrow>
+        <PageHeaderTitle>Verifica tu correo</PageHeaderTitle>
+        <PageHeaderLede>Te enviamos un código de seis dígitos.</PageHeaderLede>
+      </div>
+    ),
+  },
+};

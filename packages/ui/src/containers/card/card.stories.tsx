@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../../atoms/button/button.js";
+import { Wallet } from "../../icons/index.js";
 import { Card, CardBody, CardFooter, CardHeader } from "./card.js";
 
 const meta = {
@@ -69,6 +70,27 @@ export const WithActions: Story = {
             Iniciar servicio
           </Button>
         </CardFooter>
+      </>
+    ),
+  },
+};
+
+export const HeaderSlots: Story = {
+  args: {
+    children: (
+      <>
+        <CardHeader
+          icon={<Wallet />}
+          title="Caja de hoy"
+          action={
+            <Button size="sm" variant="secondary">
+              Ver detalle
+            </Button>
+          }
+        />
+        <CardBody>
+          <p className="m-0 text-[13px]">S/ 4 280 cobrados en 38 pedidos.</p>
+        </CardBody>
       </>
     ),
   },

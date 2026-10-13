@@ -121,3 +121,14 @@ export const Narrow: Story = {
     ),
   ],
 };
+
+export const WithoutSearchOrBreadcrumbs: Story = {
+  args: {
+    breadcrumbs: undefined,
+    breadcrumbsLabel: undefined,
+    onSearch: undefined,
+    searchLabel: undefined,
+    searchPlaceholder: undefined,
+    end: <Bell className="size-5" aria-hidden="true" />,
+  },
+};
