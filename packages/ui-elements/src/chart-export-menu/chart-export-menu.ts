@@ -145,8 +145,7 @@ export class UiChartExportMenu extends ElementBase {
   readonly #onToggle = (event: Event) => {
     const open = (event as ToggleEvent).newState === "open";
     this.#trigger.setAttribute("aria-expanded", `${open}`);
-    if (open) this.#place();
-    else {
+    if (!open) {
       this.#stopPosition?.();
       // Light dismiss (Escape, outside press) hides the popover natively; if focus was left inside
       // it or dropped, it returns to the button. A press on another control keeps its focus.
@@ -169,8 +168,12 @@ export class UiChartExportMenu extends ElementBase {
   #setOpen(open: boolean, intent: "first" | "last" | "none", restoreFocus = true): void {
     if (open === this.open) return;
     if (hasPopover()) {
-      if (open) this.#menu.showPopover();
-      else this.#menu.hidePopover();
+      if (open) {
+        this.#menu.showPopover();
+        // Placed before anything can run: an unplaced popup sits at the page corner, and a pointer
+        // there would see the menu move away from under it (and steal the keyboard focus).
+        this.#place();
+      } else this.#menu.hidePopover();
     } else {
       this.#menu.hidden = !open;
       this.#trigger.setAttribute("aria-expanded", `${open}`);

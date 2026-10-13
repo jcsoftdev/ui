@@ -38,11 +38,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// Low on the page: a stationary pointer at (0, 0) must not end up over the popup, where the menu
-// would (correctly) move focus to the hovered area and make keyboard assertions racy.
 const setup = async (attrs = "") => {
   const host = mount(
-    `<div style="width:400px;margin-top:300px"><ui-test-bars label="Weekly sales" height="160" locale="en-US">
+    `<div style="width:400px"><ui-test-bars label="Weekly sales" height="160" locale="en-US">
        <ui-chart-export-menu ${attrs}></ui-chart-export-menu></ui-test-bars></div>`,
   );
   await frame();
@@ -60,23 +58,12 @@ describe("ui-chart-export-menu", () => {
     const { trigger, item } = await setup();
     expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
-    const trace: string[] = [];
-    const focus = HTMLElement.prototype.focus;
-    HTMLElement.prototype.focus = function (this: HTMLElement, ...args) {
-      trace.push(
-        `${this.tagName}[${this.dataset.format ?? this.dataset.uiPart ?? ""}] ${new Error().stack?.split("\n").slice(2, 5).join(" | ")}`,
-      );
-      return focus.apply(this, args);
-    };
     trigger.focus();
     await userEvent.keyboard("{Enter}");
+    // Placed against the button in the same task it opened, never at the page corner first.
+    const popup = (document.querySelector("[role=menu]") as HTMLElement).getBoundingClientRect();
+    expect(popup.top).toBeGreaterThanOrEqual(trigger.getBoundingClientRect().bottom);
     await wait(30);
-    HTMLElement.prototype.focus = focus;
-    if (document.activeElement !== item("svg"))
-      console.log(
-        "FOCUS TRACE\n" + trace.join("\n"),
-        document.activeElement?.outerHTML.slice(0, 100),
-      );
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
     expect(document.activeElement).toBe(item("svg"));
     await userEvent.keyboard("{ArrowDown}");
