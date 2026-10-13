@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { defineStepper } from "../src/stepper/stepper.ts";
-import { ax, mount } from "./setup.ts";
+import { defineElement } from "../src/internal/base.ts";
+import { defineStepper, UiStep } from "../src/stepper/stepper.ts";
+import { ax, mount, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineStepper();
@@ -44,6 +45,24 @@ describe("ui-stepper", () => {
     host.firstElementChild!.setAttribute("style", "width:600px");
     await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
     expect(label("cart").getBoundingClientRect().width).toBeGreaterThan(20);
+  });
+
+  it("numbers steps that upgrade before the stepper, and renumbers after a removal or a late label", async () => {
+    defineElement("step", UiStep, { prefix: "zz" });
+    const host =
+      mount(`<zz-stepper current="b"><zz-step value="a">A</zz-step><zz-step value="b">B</zz-step>
+      <zz-step value="c">C</zz-step></zz-stepper>`);
+    defineStepper({ prefix: "zz" });
+    const markers = () =>
+      [...host.querySelectorAll("[data-ui-part=marker]")].map((m) => m.textContent);
+    expect(markers()).toEqual(["1", "2", "3"]);
+    expect(host.querySelector("[aria-current='step']")?.textContent).toContain("B");
+    host.querySelector("zz-step[value=a]")!.remove();
+    await wait(20);
+    expect(markers()).toEqual(["1", "2"]);
+    host.querySelector("zz-step[value=b]")!.append(" late");
+    await wait(20);
+    expect(host.querySelector("zz-step[value=b] [data-ui-part=label]")?.textContent).toBe("B late");
   });
 
   it("registers under a custom prefix", () => {

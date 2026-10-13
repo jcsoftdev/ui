@@ -17,16 +17,22 @@ export class UiStep extends ElementBase {
   #owner: Element | null = null;
   readonly marker = document.createElement("span");
   readonly content = document.createElement("span");
+  readonly #label = document.createElement("span");
+  #late: MutationObserver | undefined;
 
   connectedCallback(): void {
     if (!this.content.isConnected) {
-      const label = document.createElement("span");
-      label.dataset.uiPart = "label";
-      label.append(...this.childNodes);
+      this.#label.dataset.uiPart = "label";
+      this.#label.append(...this.childNodes);
       this.marker.dataset.uiPart = "marker";
       this.content.dataset.uiPart = "content";
-      this.content.append(this.marker, label);
+      this.content.append(this.marker, this.#label);
       this.append(this.content);
+      this.#late = new MutationObserver(() => {
+        for (const node of [...this.childNodes])
+          if (node !== this.content) this.#label.append(node);
+      });
+      this.#late.observe(this, { childList: true });
     }
     this.setAttribute("role", "listitem");
     this.#notify();
@@ -42,7 +48,7 @@ export class UiStep extends ElementBase {
   }
 
   #notify(): void {
-    this.#owner = this.closest("[data-ui='stepper']") ?? this.#owner;
+    this.#owner = this.closest(this.localName.replace(/-step$/, "-stepper")) ?? this.#owner;
     this.#owner?.dispatchEvent(new Event("ui-stepper-change"));
   }
 }
@@ -57,6 +63,7 @@ export class UiStep extends ElementBase {
  */
 export class UiStepper extends ElementBase {
   static observedAttributes = ["current"];
+  #steps: MutationObserver | undefined;
 
   constructor() {
     super();
@@ -75,6 +82,12 @@ export class UiStepper extends ElementBase {
     connectLight(this, "stepper", css);
     this.setAttribute("role", "list");
     this.#render();
+    this.#steps = new MutationObserver(() => this.#render());
+    this.#steps.observe(this, { childList: true });
+  }
+
+  disconnectedCallback(): void {
+    this.#steps?.disconnect();
   }
 
   attributeChangedCallback(): void {
@@ -97,6 +110,7 @@ export class UiStepper extends ElementBase {
 
 /** Registers `<ui-stepper>` and `<ui-step>` (or the prefixed tags); returns the stepper tag. */
 export function defineStepper(options?: DefineOptions): string {
+  const tag = defineElement("stepper", UiStepper, options);
   defineElement("step", UiStep, options);
-  return defineElement("stepper", UiStepper, options);
+  return tag;
 }

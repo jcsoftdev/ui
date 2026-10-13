@@ -34,8 +34,8 @@ function part<T extends HTMLElement>(tag: string, name: string): T {
  * `<ui-sidebar-item href="/x" active badge="3">Label</ui-sidebar-item>`: one link of the sidebar.
  * Put an icon in a child with `slot="icon"` and a custom badge in a child with `slot="badge"`.
  * An item that contains other `<ui-sidebar-item>` is a branch: its row is a disclosure button
- * (`aria-expanded`) that opens and closes the nested items (nested items must exist when it
- * connects); it has no `href`.
+ * (`aria-expanded`) that opens and closes the nested items (a leaf upgrades to a branch when nested
+ * items arrive after it connects); it has no `href`.
  *
  * Attributes: `href`, `active` (the current page: `aria-current="page"` and the accent look),
  * `badge` (short text), `badge-tone` (`default` | `danger`), `badge-label` (screen-reader-only
@@ -50,6 +50,7 @@ export class UiSidebarItem extends ElementBase implements NavNode {
   #link: HTMLAnchorElement | HTMLButtonElement | null = null;
   #panel: HTMLElement | null = null;
   #disclosure: Disclosure | undefined;
+  #mutations: MutationObserver | undefined;
 
   get navLink(): HTMLElement | null {
     return this.#link;
@@ -93,10 +94,16 @@ export class UiSidebarItem extends ElementBase implements NavNode {
     if (link instanceof HTMLButtonElement) link.type = "button";
     this.#badge.append(this.#badgeText, ...badges, this.#badgeLabel);
     link.append(...icons, label, this.#badge);
-    if (branch) link.append(chevron());
     this.#link = link;
     this.append(link);
-    if (!branch) return;
+    if (branch) this.#attachBranch(nested);
+    this.#mutations = new MutationObserver(() => this.#adopt());
+    this.#mutations.observe(this, { childList: true });
+  }
+
+  #attachBranch(nested: HTMLElement[]): void {
+    const link = this.#link as HTMLButtonElement;
+    link.append(chevron());
     const panel = part<HTMLDivElement>("div", "children");
     panel.append(...nested);
     this.#panel = panel;
@@ -110,6 +117,26 @@ export class UiSidebarItem extends ElementBase implements NavNode {
         emit(this, "toggle", { open });
       },
     });
+  }
+
+  /** Nested items that arrive after connecting: a leaf becomes a branch, a branch takes them in. */
+  #adopt(): void {
+    const nested = [...this.children].filter(
+      (child): child is HTMLElement => child !== this.#panel && isPart(child, "sidebar-item"),
+    );
+    if (nested.length === 0 || !this.#link) return;
+    if (this.#panel) {
+      this.#panel.append(...nested);
+      return;
+    }
+    const leaf = this.#link;
+    const link = part<HTMLButtonElement>("button", "link");
+    link.type = "button";
+    link.append(...leaf.childNodes);
+    leaf.replaceWith(link);
+    this.#link = link;
+    this.#sync();
+    this.#attachBranch(nested);
   }
 
   #sync(): void {
@@ -250,6 +277,10 @@ export class UiSidebar extends ElementBase {
   readonly #scrim = document.createElement("div");
   #compact = false;
   #drawer = false;
+  #wasOpen = false;
+  #opener: HTMLElement | null = null;
+  #generation = 0;
+  #release: (() => void) | undefined;
   #stopCompact: (() => void) | undefined;
 
   constructor() {
@@ -271,17 +302,21 @@ export class UiSidebar extends ElementBase {
   connectedCallback(): void {
     connectLight(this, "sidebar", css);
     this.#stopCompact = watchCompact(this, (compact) => {
+      const wide = this.#compact && !compact;
       this.#compact = compact;
       this.setAttribute("data-compact", String(compact));
       this.#sync();
+      if (wide && this.open) emit(this, "close");
     });
-    window.addEventListener("keydown", this.#onEscape);
     this.#material.sync();
   }
 
   disconnectedCallback(): void {
     this.#stopCompact?.();
-    window.removeEventListener("keydown", this.#onEscape);
+    this.#leaveDrawer();
+    this.#drawer = false;
+    this.#wasOpen = false;
+    this.inert = false;
     this.#scrim.remove();
     this.#material.stop();
   }
@@ -291,18 +326,73 @@ export class UiSidebar extends ElementBase {
     else if (this.isConnected) this.#sync();
   }
 
-  readonly #onEscape = (event: KeyboardEvent): void => {
-    if (event.key === "Escape" && this.#drawer) emit(this, "close");
-  };
-
   #sync(): void {
-    const drawer = this.#compact && this.open;
-    this.inert = this.#compact && !this.open;
-    toggleAttr(this, "data-open", this.open);
-    if (drawer && !this.#scrim.isConnected) this.after(this.#scrim);
-    if (!drawer) this.#scrim.remove();
-    if (drawer && !this.#drawer) this.querySelector<HTMLElement>("a[href]")?.focus();
+    const open = this.open;
+    const drawer = this.#compact && open;
+    const opened = open && !this.#wasOpen;
+    this.#wasOpen = open;
+    toggleAttr(this, "data-open", open);
+    if (drawer && !this.#drawer) {
+      this.#opener = document.activeElement as HTMLElement | null;
+      this.#enterDrawer();
+    }
+    if (!drawer && this.#drawer) this.#leaveDrawer();
     this.#drawer = drawer;
+    this.inert = this.#compact && !open;
+    if (drawer) {
+      if (!this.#scrim.isConnected) this.after(this.#scrim);
+      if (opened) this.#firstLink()?.focus({ preventScroll: true });
+    } else this.#scrim.remove();
+  }
+
+  #firstLink(): HTMLElement | null {
+    return (
+      [...this.querySelectorAll<HTMLElement>("a[href]")].find(
+        (link) => link.getClientRects().length > 0,
+      ) ?? null
+    );
+  }
+
+  /** Escape, a focus trap and a scroll lock while the drawer is open; loaded only then. */
+  #enterDrawer(): void {
+    const generation = ++this.#generation;
+    Promise.all([
+      import("@jcsoftdev/ui-core/dismiss"),
+      import("@jcsoftdev/ui-core/focus"),
+      import("@jcsoftdev/ui-core/scroll-lock"),
+    ]).then(([dismiss, focus, scroll]) => {
+      if (generation !== this.#generation || !this.isConnected) return;
+      const unlock = scroll.lockScroll();
+      const undismiss = dismiss.createDismissLayer(this, {
+        onDismiss: () => emit(this, "close"),
+        onInteractOutside: (event) => event.preventDefault(),
+      });
+      const unfocus = focus.createFocusScope(this, {
+        onMountAutoFocus: (event) => event.preventDefault(),
+        onUnmountAutoFocus: (event) => event.preventDefault(),
+      });
+      this.#release = () => {
+        unfocus();
+        undismiss();
+        unlock();
+      };
+    });
+  }
+
+  /** Releases the drawer layers and gives focus back to the opener, before `inert` can drop it. */
+  #leaveDrawer(): void {
+    this.#generation++;
+    this.#release?.();
+    this.#release = undefined;
+    const opener = this.#opener;
+    this.#opener = null;
+    if (
+      opener?.isConnected &&
+      (this.contains(document.activeElement) ||
+        !document.activeElement ||
+        document.activeElement === document.body)
+    )
+      opener.focus({ preventScroll: true });
   }
 
   #top(): HTMLElement[] {

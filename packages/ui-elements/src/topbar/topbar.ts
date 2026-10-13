@@ -35,6 +35,8 @@ const part = <T extends HTMLElement>(tag: string, name: string): T => {
  * button when the shell is narrower than 900 px, and names it; omitted: no button), `search-label`
  * (name of the search button), `search-placeholder` (its text), and the `material` attributes:
  * `material="liquid" | "liquid-clear"` opts into Liquid Glass (loaded lazily, only then).
+ * Cmd/Ctrl+K is ignored while typing in a field, with Shift or Alt, or when another handler (another
+ * topbar) already handled it.
  * Events: `open-menu` (the menu button; React `onOpenMenu`) and `search` (the search button and
  * Cmd/Ctrl+K; React `onSearch`). The menu button is exposed as the `menuButton` property to
  * restore focus after the drawer closes.
@@ -107,7 +109,14 @@ export class UiTopbar extends ElementBase {
   }
 
   readonly #onKeyDown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.shiftKey || event.altKey) return;
     if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;
+    const target = event.composedPath()[0];
+    if (
+      target instanceof Element &&
+      target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")
+    )
+      return;
     event.preventDefault();
     emit(this, "search");
   };

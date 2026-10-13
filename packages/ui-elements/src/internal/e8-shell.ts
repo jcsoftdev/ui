@@ -20,7 +20,8 @@ export function watchCompact(host: HTMLElement, onChange: (compact: boolean) => 
     read();
     return () => shell.removeEventListener("compact-change", read);
   }
-  const parent = host.parentElement;
+  const root = host.getRootNode();
+  const parent = host.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
   if (!parent) return () => {};
   const measure = () => onChange(parent.getBoundingClientRect().width < SHELL_BREAKPOINT);
   measure();

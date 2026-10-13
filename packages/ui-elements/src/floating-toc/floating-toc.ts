@@ -86,6 +86,9 @@ export class UiFloatingToc extends ElementBase {
   #active: string | null = null;
   #mutations: MutationObserver | undefined;
   #arranging = false;
+  #ready = false;
+  #seeding = false;
+  #retried = false;
 
   constructor() {
     super();
@@ -136,6 +139,7 @@ export class UiFloatingToc extends ElementBase {
     this.#mutations.observe(this, { childList: true });
     this.#arrange();
     this.#renderHeading();
+    this.#ready = true;
   }
 
   disconnectedCallback(): void {
@@ -144,11 +148,16 @@ export class UiFloatingToc extends ElementBase {
     this.#spy?.destroy();
     this.#spy = undefined;
     this.#ids = "";
+    this.#ready = false;
   }
 
   attributeChangedCallback(name: string): void {
-    if (name === "heading") this.#renderHeading();
-    else if (this.isConnected) this.refresh();
+    if (name === "heading") {
+      if (this.#ready) this.#renderHeading();
+    } else if (this.#ready) {
+      this.#retried = false;
+      this.refresh();
+    }
   }
 
   /** Re-reads the headings and restarts the observation. */
@@ -188,28 +197,57 @@ export class UiFloatingToc extends ElementBase {
     if (this.#arranging) return;
     const ids = this.#itemElements().map((element) => element.getAttribute("target") ?? "");
     const key = ids.join("|");
-    if (key === this.#ids) return;
+    if (key === this.#ids) {
+      this.#setActive(this.#active);
+      return;
+    }
     this.#ids = key;
     this.#spy?.destroy();
-    const known = this.#active !== null && ids.includes(this.#active);
+    const root = this.#scrollRoot;
+    if (this.getAttribute("scroll-root") && !root) this.#retryRoot();
+    const keep = this.#active !== null && ids.includes(this.#active) ? this.#active : null;
     this.#spy = createScrollSpy({
       ids: ids.filter(Boolean),
-      root: this.#scrollRoot,
+      root,
       offsetTop: Number(this.getAttribute("offset-top")) || 0,
       onChange: (id) => {
+        if (this.#seeding) return;
         this.#setActive(id);
         emit(this, "change", { id });
       },
     });
-    this.#setActive(known ? this.#active : this.#spy.active);
+    // Start from the section already shown, so the first observation corrects it if it is stale.
+    if (keep) this.#seed(keep);
+    else this.#setActive(this.#spy.active);
+  }
+
+  #seed(id: string): void {
+    this.#seeding = true;
+    this.#spy?.set(id);
+    this.#seeding = false;
+    this.#setActive(id);
+  }
+
+  /** The scroll container may not be in the page yet: look once more on the next frame. */
+  #retryRoot(): void {
+    if (this.#retried) return;
+    this.#retried = true;
+    requestAnimationFrame(() => {
+      if (!this.#ready) return;
+      if (this.#scrollRoot) this.refresh();
+      else
+        console.warn(
+          `${this.localName}: scroll-root "${this.getAttribute("scroll-root")}" not found`,
+        );
+    });
   }
 
   #setActive(id: string | null): void {
     this.#active = id;
     for (const element of this.#itemElements()) {
       if (element.getAttribute("target") === id)
-        element.link.setAttribute("aria-current", "location");
-      else element.link.removeAttribute("aria-current");
+        element.link?.setAttribute("aria-current", "location");
+      else element.link?.removeAttribute("aria-current");
     }
   }
 
@@ -219,7 +257,11 @@ export class UiFloatingToc extends ElementBase {
     );
     if (!element) return;
     element.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
-    this.#spy?.set(id);
+    if (!element.hasAttribute("tabindex")) element.tabIndex = -1;
+    element.focus({ preventScroll: true });
+    if (id === this.#active) return;
+    this.#seed(id);
+    emit(this, "change", { id });
   }
 }
 

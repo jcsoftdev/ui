@@ -64,6 +64,24 @@ describe("ui-topbar", () => {
     expect(await until(() => getComputedStyle(button).display !== "none")).toBe(true);
   });
 
+  it("ignores Cmd/Ctrl+K while typing, with Shift, or when already handled; two bars fire once", async () => {
+    const host = mount(`${BAR("1000px")}<input id="field" />`);
+    const search = vi.fn();
+    host.querySelector("ui-topbar")!.addEventListener("search", search);
+    host.querySelector<HTMLInputElement>("#field")!.focus();
+    await userEvent.keyboard("{Control>}k{/Control}");
+    expect(search).not.toHaveBeenCalled();
+    document.body.focus();
+    (document.activeElement as HTMLElement | null)?.blur();
+    await userEvent.keyboard("{Control>}{Shift>}k{/Shift}{/Control}");
+    expect(search).not.toHaveBeenCalled();
+    host.insertAdjacentHTML("beforeend", BAR("1000px"));
+    const second = vi.fn();
+    host.querySelectorAll("ui-topbar")[1]!.addEventListener("search", second);
+    await userEvent.keyboard("{Control>}k{/Control}");
+    expect(search.mock.calls.length + second.mock.calls.length).toBe(1);
+  });
+
   it("hides the parent crumbs in a narrow bar", () => {
     const host = mount(BAR("500px"));
     const [first, , last] = host.querySelectorAll<HTMLElement>("[slot=crumb]");

@@ -30,7 +30,7 @@ export class UiSegmentedItem extends ElementBase {
   }
 
   #notify(): void {
-    this.#owner = this.closest("[data-ui='segmented']") ?? this.#owner;
+    this.#owner = this.closest(this.localName.replace(/-item$/, "")) ?? this.#owner;
     this.#owner?.dispatchEvent(new Event("ui-segmented-change"));
   }
 }
@@ -39,7 +39,7 @@ export class UiSegmentedItem extends ElementBase {
  * `<ui-segmented>`: an exclusive selector for 2-4 options, in light DOM. Like the React kit it is
  * a `radiogroup` of `radio` items, and a click (or Space/Enter) on the selected item clears the
  * selection. One tab stop (on the selected item, else the first); arrows (Home/End) move focus
- * without selecting. Name it with `aria-label` or `aria-labelledby`.
+ * without selecting (as in the React kit, unlike native radios). Name it with `aria-label` or `aria-labelledby`.
  *
  * Attributes: `value` (empty or missing: nothing selected; React `value`/`defaultValue`),
  * `disabled` (every item), `roving="off"` (every item in the tab order instead of roving; React
@@ -52,6 +52,7 @@ export class UiSegmented extends ElementBase {
   static observedAttributes = ["value", "disabled", "roving", "orientation", "loop"];
   #value = "";
   #roving: RovingFocus | undefined;
+  #children: MutationObserver | undefined;
 
   constructor() {
     super();
@@ -83,9 +84,12 @@ export class UiSegmented extends ElementBase {
     this.#value = this.getAttribute("value") ?? this.#value;
     this.#mountRoving();
     this.#render();
+    this.#children = new MutationObserver(() => this.#render());
+    this.#children.observe(this, { childList: true });
   }
 
   disconnectedCallback(): void {
+    this.#children?.disconnect();
     this.#roving?.destroy();
     this.#roving = undefined;
   }
@@ -153,12 +157,14 @@ export class UiSegmented extends ElementBase {
       else item.removeAttribute("aria-disabled");
       if (!roving) item.tabIndex = disabled ? -1 : 0;
     }
-    this.#roving?.setActive(selected);
+    if (selected) this.#roving?.setActive(selected);
+    else this.#roving?.update();
   }
 }
 
 /** Registers `<ui-segmented>` and `<ui-segmented-item>` (or the prefixed tags); returns the group tag. */
 export function defineSegmented(options?: DefineOptions): string {
+  const tag = defineElement("segmented", UiSegmented, options);
   defineElement("segmented-item", UiSegmentedItem, options);
-  return defineElement("segmented", UiSegmented, options);
+  return tag;
 }

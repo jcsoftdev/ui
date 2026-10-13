@@ -75,6 +75,66 @@ describe("ui-sidebar", () => {
     expect(document.querySelector("[data-ui=sidebar-scrim]")).toBeNull();
   });
 
+  it("returns focus to the opener, traps Tab, locks scroll and ignores a handled Escape", async () => {
+    const host = mount(`<button id="opener">menu</button>${SHELL("700px")}`);
+    const sidebar = host.querySelector<UiSidebar>("ui-sidebar")!;
+    const opener = host.querySelector<HTMLElement>("#opener")!;
+    const close = vi.fn();
+    sidebar.addEventListener("close", close);
+    await until(() => sidebar.inert);
+    opener.focus();
+    let claiming = false;
+    const claim = (event: KeyboardEvent) => {
+      if (claiming && event.key === "Escape") event.preventDefault();
+    };
+    document.addEventListener("keydown", claim, true);
+    sidebar.open = true;
+    expect(await until(() => document.body.hasAttribute("data-scroll-locked"))).toBe(true);
+    expect(sidebar.contains(document.activeElement)).toBe(true);
+    for (let i = 0; i < 8; i++) await userEvent.keyboard("{Tab}");
+    expect(sidebar.contains(document.activeElement)).toBe(true);
+    claiming = true;
+    await userEvent.keyboard("{Escape}");
+    claiming = false;
+    document.removeEventListener("keydown", claim, true);
+    expect(close).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Escape}");
+    expect(close).toHaveBeenCalledTimes(1);
+    sidebar.open = false;
+    expect(document.activeElement).toBe(opener);
+    expect(await until(() => !document.body.hasAttribute("data-scroll-locked"))).toBe(true);
+  });
+
+  it("does not steal focus when the shell narrows with `open` set, and asks to close when it widens", async () => {
+    const host = mount(`<button id="other">x</button>${SHELL("1200px", "open")}`);
+    const sidebar = host.querySelector<UiSidebar>("ui-sidebar")!;
+    const shell = host.querySelector<HTMLElement>("ui-app-shell")!;
+    const close = vi.fn();
+    sidebar.addEventListener("close", close);
+    host.querySelector<HTMLElement>("#other")!.focus();
+    await wait(60);
+    shell.style.width = "700px";
+    await wait(120);
+    expect(document.activeElement?.id).toBe("other");
+    shell.style.width = "1200px";
+    expect(await until(() => close.mock.calls.length === 1)).toBe(true);
+  });
+
+  it("turns a leaf into a branch when nested items arrive later, and clears inert on removal", async () => {
+    const host = mount(SHELL("700px"));
+    const sidebar = host.querySelector<UiSidebar>("ui-sidebar")!;
+    const home = host.querySelector<HTMLElement>("ui-sidebar-item[active]")!;
+    home.insertAdjacentHTML("beforeend", `<ui-sidebar-item href="#sub">Sub</ui-sidebar-item>`);
+    await wait(30);
+    const row = home.querySelector<HTMLElement>(":scope > [data-ui-part=link]")!;
+    expect(row.tagName).toBe("BUTTON");
+    expect(row.getAttribute("aria-expanded")).toBe("false");
+    expect(home.querySelector("[data-ui-part=children] ui-sidebar-item")).not.toBeNull();
+    await until(() => sidebar.inert);
+    sidebar.remove();
+    expect(sidebar.inert).toBe(false);
+  });
+
   it("branches and collapsible groups are disclosures", async () => {
     const host = mount(SHELL("1200px"));
     const reports = host.querySelector<HTMLButtonElement>("button[data-ui-part=link]")!;

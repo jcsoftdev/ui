@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
-import { defineSegmented, type UiSegmented } from "../src/segmented/segmented.ts";
+import { defineElement } from "../src/internal/base.ts";
+import { defineSegmented, type UiSegmented, UiSegmentedItem } from "../src/segmented/segmented.ts";
 import { ax, mount } from "./setup.ts";
 
 beforeAll(() => {
@@ -62,6 +63,31 @@ describe("ui-segmented", () => {
     const host = mount(SEG('roving="off"'));
     const [day, week, month] = host.querySelectorAll<HTMLElement>("ui-segmented-item");
     expect([day!.tabIndex, week!.tabIndex, month!.tabIndex]).toEqual([0, -1, 0]);
+  });
+
+  it("wires items that upgrade before the group, and keeps a tab stop when one is removed", async () => {
+    defineElement("segmented-item", UiSegmentedItem, { prefix: "zz" });
+    const host =
+      mount(`<zz-segmented aria-label="V" value="b"><zz-segmented-item value="a">A</zz-segmented-item>
+      <zz-segmented-item value="b">B</zz-segmented-item></zz-segmented>`);
+    defineSegmented({ prefix: "zz" });
+    const [a, b] = host.querySelectorAll<HTMLElement>("zz-segmented-item");
+    expect([a!.getAttribute("aria-checked"), b!.getAttribute("aria-checked")]).toEqual([
+      "false",
+      "true",
+    ]);
+    expect([a!.tabIndex, b!.tabIndex]).toEqual([-1, 0]);
+    b!.remove();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(a!.tabIndex).toBe(0);
+  });
+
+  it("keeps the user's tab stop when nothing is selected", async () => {
+    const host = mount(SEG());
+    const month = host.querySelector<HTMLElement>("[value=month]")!;
+    month.focus();
+    host.querySelector<UiSegmented>("ui-segmented")!.value = "";
+    expect(month.tabIndex).toBe(0);
   });
 
   it("registers under a custom prefix", () => {

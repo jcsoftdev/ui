@@ -69,6 +69,54 @@ describe("ui-floating-toc", () => {
     expect(host.querySelector("ui-toc-item[level='3']")?.textContent).toContain("B");
   });
 
+  it("upgrades while already connected, with scroll-root and offset-top set", async () => {
+    const errors: string[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event.message);
+    window.addEventListener("error", onError);
+    const host = mount(`<zz-floating-toc scroll-root="#scroller" offset-top="4">
+        <zz-toc-item target="intro">Intro</zz-toc-item><zz-toc-item target="api">API</zz-toc-item></zz-floating-toc>
+      <div id="scroller" style="height:100px;overflow:auto"><h2 id="intro">Intro</h2><h2 id="api" style="margin-top:300px">API</h2></div>`);
+    defineFloatingToc({ prefix: "zz" });
+    await wait(50);
+    window.removeEventListener("error", onError);
+    expect(errors).toEqual([]);
+    expect(host.querySelector("a[href='#intro']")?.getAttribute("aria-current")).toBe("location");
+  });
+
+  it("keeps the shown section honest after refresh() and emits once on a click", async () => {
+    const host = mount(PAGE);
+    const toc = host.querySelector<UiFloatingToc>("ui-floating-toc")!;
+    const change = vi.fn();
+    toc.addEventListener("change", change);
+    host.querySelector<HTMLAnchorElement>("a[href='#usage']")!.click();
+    expect(change).toHaveBeenCalledTimes(1);
+    expect(change).toHaveBeenCalledWith(expect.objectContaining({ detail: { id: "usage" } }));
+    expect(document.activeElement?.id).toBe("usage");
+    const scroller = host.querySelector<HTMLElement>("#scroller")!;
+    scroller.style.scrollBehavior = "auto";
+    scroller.scrollTop = 0;
+    await wait(100);
+    toc.refresh();
+    expect(await until(() => toc.active === "intro")).toBe(true);
+    expect(host.querySelector("a[href='#intro']")?.getAttribute("aria-current")).toBe("location");
+  });
+
+  it("finds a scroll-root that appears on the next frame", async () => {
+    const host = mount(
+      `<ui-floating-toc scroll-root="#late"><ui-toc-item target="a">A</ui-toc-item></ui-floating-toc>`,
+    );
+    const toc = host.querySelector<UiFloatingToc>("ui-floating-toc")!;
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    host.insertAdjacentHTML(
+      "beforeend",
+      `<div id="late" style="height:50px;overflow:auto"><h2 id="a">A</h2></div>`,
+    );
+    await wait(60);
+    expect(warn).not.toHaveBeenCalled();
+    expect(toc.active).toBe("a");
+    warn.mockRestore();
+  });
+
   it("registers under a custom prefix", () => {
     expect(defineFloatingToc({ prefix: "acme" })).toBe("acme-floating-toc");
   });
