@@ -437,12 +437,13 @@ describe("grid locale and persisted layout", () => {
 });
 
 describe("grid view", () => {
-  it("makes repeated keys unique without dropping rows, the same way every time", () => {
+  it("makes repeated keys unique without dropping rows, keeping every real key", () => {
     const source = ["a", "b", "a", "a", "a#2", "c"];
     const first = view.uniqueKeys(source.length, (i) => source[i] as string);
-    expect(first.keys).toEqual(["a", "b", "a#2", "a#3", "a#2#2", "c"]);
+    // The real row "a#2" keeps its key; the repeats of "a" skip it.
+    expect(first.keys).toEqual(["a", "b", "a#3", "a#4", "a#2", "c"]);
     expect(new Set(first.keys).size).toBe(source.length);
-    expect(first.duplicates).toEqual(["a", "a", "a#2"]);
+    expect(first.duplicates).toEqual(["a", "a"]);
     expect(view.uniqueKeys(source.length, (i) => source[i] as string).keys).toEqual(first.keys);
   });
 
@@ -467,6 +468,39 @@ describe("grid view", () => {
     expect(piped.indexOfKey("k1")).toBe(2);
     expect(piped.indexOfKey("k2")).toBe(-1);
     expect(view.buildView({ keys: [] }).count).toBe(0);
+  });
+
+  it("models group rows as entries that are never selectable data", () => {
+    const keys = ["k0", "k1", "k2", "k3"];
+    const grouped = view.buildView({
+      keys,
+      group: (rows) => [
+        { kind: "group", key: "g:a", source: -1, depth: 0 },
+        rows[0] as view.ViewRow,
+        rows[1] as view.ViewRow,
+        { kind: "group", key: "g:b", source: -1, depth: 0 },
+        rows[2] as view.ViewRow,
+        rows[3] as view.ViewRow,
+      ],
+    });
+    expect(grouped.count).toBe(6);
+    expect(grouped.dataCount).toBe(4);
+    expect([0, 1, 3].map((v) => grouped.kind(v))).toEqual(["group", "data", "group"]);
+    expect([0, 1, 3].map((v) => grouped.sourceAt(v))).toEqual([-1, 0, -1]);
+    expect(grouped.row(3)).toMatchObject({ key: "g:b", depth: 0 });
+    expect(grouped.indexOfKey("k2")).toBe(4);
+    expect([
+      grouped.dataIndexOf("k0"),
+      grouped.dataIndexOf("k2"),
+      grouped.dataIndexOf("g:a"),
+    ]).toEqual([0, 2, -1]);
+    expect([0, 1, 2, 3].map((i) => grouped.dataKeyAt(i))).toEqual(keys);
+  });
+
+  it("keeps the current width for a width that is not a number", () => {
+    const text: model.GridColumn<Row> = { id: "name", header: "Name" };
+    expect(columns.clampWidth(Number.NaN, text, 200)).toBe(200);
+    expect(columns.clampWidth(Number.POSITIVE_INFINITY, text)).toBe(columns.MIN_COLUMN_WIDTH);
   });
 });
 

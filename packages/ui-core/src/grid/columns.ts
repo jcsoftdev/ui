@@ -32,6 +32,8 @@ export function headerFitWidth<T>(column: GridColumn<T>): number {
 export function clampWidth<T>(width: number, column: GridColumn<T>, current = 0): number {
   const min = column.minWidth ?? MIN_COLUMN_WIDTH;
   const max = Math.max(min, column.maxWidth ?? Math.max(MAX_COLUMN_WIDTH, current));
+  // A NaN or infinite width (a bad pointer or API value) keeps the current size, or the minimum.
+  if (!Number.isFinite(width)) return Math.round(Math.min(max, Math.max(min, current)));
   return Math.round(Math.min(max, Math.max(min, width)));
 }
 

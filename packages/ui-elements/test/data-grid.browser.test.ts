@@ -1111,4 +1111,169 @@ describe("ui-data-grid", () => {
       warn.mockRestore();
     });
   });
+
+  describe("final pass", () => {
+    const people50 = (g: UiDataGrid) => {
+      g.columns = peopleColumns();
+      g.rows = people(50);
+      g.rowKey = "id";
+    };
+    const tabbed = (el: Element) => [...el.querySelectorAll<HTMLElement>("[tabindex='0']")];
+
+    it("keeps exactly one tab stop after the focused row is removed", async () => {
+      const el = await grid("", people50);
+      el.focusCell("p49", "name");
+      await frame();
+      el.rows = el.rows.slice(0, 49);
+      await frame();
+      await frame();
+      expect(tabbed(el)).toEqual([cell(el, "p48", "name")]);
+    });
+
+    it("leaves the entered state when Tab moves focus out of the grid", async () => {
+      const el = await grid("", (g) => {
+        g.columns = [
+          {
+            id: "name",
+            header: "Name",
+            cell: () => {
+              const wrap = document.createElement("span");
+              wrap.innerHTML = '<button type="button">A</button><button type="button">B</button>';
+              return wrap;
+            },
+          },
+        ];
+        g.rows = people(3);
+        g.rowKey = "id";
+      });
+      cell(el, "p1", "name").focus();
+      await userEvent.keyboard("{Enter}");
+      expect(active().textContent).toBe("A");
+      await userEvent.keyboard("{Tab}{Tab}");
+      expect(el.contains(document.activeElement)).toBe(false);
+      expect(tabStops(el)).toBe(1);
+      expect([...el.querySelectorAll<HTMLElement>("button")].every((b) => b.tabIndex === -1)).toBe(
+        true,
+      );
+    });
+
+    it("keeps the tab stop on the focused cell when columns move or the checkbox column appears", async () => {
+      const el = await grid("", people50);
+      el.focusCell("p3", "city");
+      el.setAttribute("selection", "multi");
+      await frame();
+      await frame();
+      expect(tabbed(el)).toEqual([cell(el, "p3", "city")]);
+      expect(active()).toBe(cell(el, "p3", "city"));
+      el.pinColumn("city", "left");
+      await frame();
+      await frame();
+      expect(tabbed(el)).toEqual([cell(el, "p3", "city")]);
+      el.hiddenColumns = ["name"];
+      await frame();
+      await frame();
+      expect(tabbed(el)).toEqual([cell(el, "p3", "city")]);
+    });
+
+    it("ignores a width that is not a number", async () => {
+      const el = await grid("", people50);
+      const before = header(el, "name").getBoundingClientRect().width;
+      el.resizeColumn("name", Number.NaN);
+      el.resizeColumn("name", Number.POSITIVE_INFINITY);
+      await frame();
+      expect(header(el, "name").getBoundingClientRect().width).toBe(before);
+    });
+
+    it("re-renders when the ancestor lang changes, without a refresh call", async () => {
+      const el = await grid("", (g) => {
+        g.columns = [{ id: "n", header: "N", type: "number", width: 140 }];
+        g.rows = [{ n: 1234567.5 }];
+      });
+      el.parentElement?.setAttribute("lang", "en-US");
+      await wait(30);
+      expect(text(cell(el, "0", "n"))).toBe("1,234,567.5");
+      el.parentElement?.setAttribute("lang", "de-DE");
+      await wait(30);
+      await frame();
+      expect(text(cell(el, "0", "n"))).toBe("1.234.567,5");
+    });
+
+    it("persists pinned, hiddenColumns and layout setters, and resets on a key without a layout", async () => {
+      localStorage.removeItem("dg-a");
+      localStorage.removeItem("dg-b");
+      const el = await grid('storage-key="dg-a"', people50);
+      const saved = () => JSON.parse(localStorage.getItem("dg-a") as string);
+      el.pinned = { left: ["name"] };
+      expect(saved().pinned.left).toEqual(["name"]);
+      el.hiddenColumns = ["city"];
+      expect(saved().hidden).toEqual(["city"]);
+      el.layout = { order: ["city", "age", "name"] };
+      expect(saved().order).toEqual(["city", "age", "name"]);
+      el.setAttribute("storage-key", "dg-b");
+      await frame();
+      await frame();
+      expect(el.layout.order).toEqual(["name", "age", "city"]);
+      expect(el.layout.pinned).toEqual({ left: [], right: [] });
+      expect(el.layout.hidden).toEqual([]);
+      localStorage.removeItem("dg-a");
+      localStorage.removeItem("dg-b");
+    });
+
+    it("does not rebuild the view when only the labels change", async () => {
+      const reads = vi.fn();
+      const el = await grid("", (g) => {
+        g.columns = [
+          {
+            id: "name",
+            header: "Name",
+            accessor: (row: Person) => {
+              reads();
+              return row.name;
+            },
+          },
+        ];
+        g.rows = people(300);
+        g.rowKey = "id";
+        g.sort = [{ id: "name", direction: "asc" }];
+      });
+      expect(reads.mock.calls.length).toBeGreaterThan(300);
+      reads.mockClear();
+      el.labels = { empty: "Nothing" };
+      await frame();
+      await frame();
+      expect(reads.mock.calls.length).toBeLessThan(60);
+    });
+
+    it("refuses to change a frozen row before dispatching beforecellchange", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const el = await grid("", (g) => {
+        g.columns = peopleColumns();
+        g.rows = people(3).map((p) => Object.freeze(p));
+        g.rowKey = "id";
+      });
+      const before = vi.fn();
+      el.addEventListener("beforecellchange", before);
+      expect(el.changeCell("p1", "name", "X")).toBe(false);
+      expect(before).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("re-sorts when the edited column is sorted, and exposes the view rows", async () => {
+      const el = await grid("", (g) => {
+        g.columns = peopleColumns();
+        g.rows = people(5);
+        g.rowKey = "id";
+        g.sort = [{ id: "name", direction: "asc" }];
+      });
+      expect(el.viewRows.map((r) => r.key)).toEqual(["p0", "p1", "p2", "p3", "p4"]);
+      expect(el.viewRows[0]).toMatchObject({ kind: "data", source: 0, depth: 0 });
+      expect(el.changeCell("p0", "name", "zzz")).toBe(true);
+      await frame();
+      await frame();
+      expect(el.viewRows.map((r) => r.key)).toEqual(["p1", "p2", "p3", "p4", "p0"]);
+      expect(text(bodyRows(el)[4]?.querySelector("[data-col=name]") ?? null)).toBe("zzz");
+      expect((el.viewRows[4]?.row as Person | undefined)?.name).toBe("zzz");
+    });
+  });
 });
