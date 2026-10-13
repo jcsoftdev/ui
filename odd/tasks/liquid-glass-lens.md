@@ -105,3 +105,16 @@ Commits: 94654f6 (plan), 2791dda (options, dome profile, grain, size-scaled shad
 Checks: pnpm test 556 pass; test:glass 189 pass; test:stories 1411 pass; check:rsc ok (202 server modules, no hooks); build:site 435 pages; check:docs-examples, check:treeshake, check:dist-imports ok; tsc clean; biome 10 pre-existing warnings.
 Screenshots: scratchpad `liquid5/` (taken with Playwright from the package, the chrome-devtools MCP was not available in this session).
 Open: dome peaks at the corners (weaker at wall midpoints than full, by design for fold safety); motion only runs where the lens runs (Chromium); `--liquid-*-filter` tokens are now reference-only; contrast floor decision still pending.
+
+## Correction pass (independent review of f8a485b, sixth work unit)
+Route: inline by the single writer (all edits in one coherent area). TDD: disabled (implement, then protect); runner: node --test, vitest projects glass and stories.
+- [x] R1 (HIGH) drag no longer captures the pointer on pointerdown: capture after the 6 px slop; a press on a button/link/field/contenteditable inside the surface is not a gesture of the surface; one capture-phase click guard, gesture-scoped flag cleared on the next pointerdown or after 350 ms.
+- [x] R2 (MEDIUM) replaces the setTimeout(0) removal (same change as R1).
+- [x] R3 (MEDIUM) motion composes onto individual translate/scale (author computed values read per burst, inline values restored at rest, scale no longer pinned); author transform untouched.
+- [x] R4 (MEDIUM) no getComputedStyle/offsetWidth per frame (read once per burst); configObserver ignores engine-written style declarations; ancestors re-scanned when the chain moves (childList on ancestors, only acted on when the added/removed node contains the surface).
+- [x] R5 (LOW) --liquid-motion and --liquid-interactive watched; ownInteractive (Dialog, Popover/popper, Sidebar, Drawer) reads interactive only from the element's inline style or data-glass-interactive.
+- [x] R6 (LOW) auto shadow from new themed tokens liquid-shadow-drop/blur/contact; base.css presets regenerated.
+- [x] R7 (LOW) listener tests spy on add/removeEventListener; motion-off test asserts no listeners and unchanged state.
+Commit: a4815ea. Regression tests fail on f8a485b (12 of the liquid motion tests, run against the old sources).
+Checks: pnpm test 557 pass; test:glass 198 pass; test:stories 1411 pass; build + check:rsc ok (202 server modules); tsc clean; biome 10 pre-existing warnings; build:site 435 pages.
+Not done: use-glass-lens still observes ancestors only at mount (no reparent rescan there; the engine's own observer does it once lensed); on a reparent to a different chain with identical sizes nothing re-reads until a mutation on the new chain; author changes to translate/scale during a burst are picked up at the next burst.
