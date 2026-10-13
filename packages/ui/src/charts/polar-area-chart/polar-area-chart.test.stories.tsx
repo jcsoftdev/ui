@@ -20,7 +20,7 @@ const weekday = [
 ];
 
 const chart = (
-  <div style={{ width: 560, padding: 16 }}>
+  <div style={{ width: 420, padding: 16 }}>
     <PolarAreaChart
       title="Citas por día"
       data={weekday}

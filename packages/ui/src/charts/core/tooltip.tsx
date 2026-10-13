@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../utils/cn.js";
 import { type ChartDockMode, useChartDock } from "./chart-dock.js";
@@ -95,7 +95,10 @@ export function ChartTooltip({
 
   const docked = dock === "never" ? false : dock === "always" ? true : frame.docked;
   if (docked && frame.slot) {
-    return createPortal(<DockedDetails title={title} body={body} rows={rows} />, frame.slot);
+    return createPortal(
+      <DockedDetails title={title} body={body} rows={rows} announce={frame.announce} />,
+      frame.slot,
+    );
   }
 
   const left = leftOnSide(chosen, x, size.width, containerWidth);
@@ -167,9 +170,20 @@ function TooltipBody({ title, body, rows, rowClassName }: BodyProps) {
 }
 
 /** Details inside the frame's docked panel: in flow, full width, rows at least 44px tall. */
-function DockedDetails({ title, body, rows }: BodyProps) {
+function DockedDetails({
+  title,
+  body,
+  rows,
+  announce,
+}: BodyProps & { announce: (text: string) => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    announce(ref.current?.textContent ?? "");
+  });
+  useEffect(() => () => announce(""), [announce]);
   return (
     <div
+      ref={ref}
       data-chart-tooltip=""
       data-docked=""
       className="rounded-popover surface-overlay px-3 py-2 text-fs-130"

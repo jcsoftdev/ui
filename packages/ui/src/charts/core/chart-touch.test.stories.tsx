@@ -266,9 +266,8 @@ const dockedChart = (width: number, dock?: "auto" | "always" | "never") => (
 );
 
 export const DocksOnAPhone: Story = {
-  name: "Dock: at 390px the details are a panel in flow and nothing shifts",
-  parameters: { viewport: { defaultViewport: "mobile1" } },
-  render: () => dockedChart(390),
+  name: "Dock: docked details are a panel in flow and nothing shifts",
+  render: () => dockedChart(390, "always"),
   play: async ({ canvasElement }) => {
     const root = canvasElement as HTMLElement;
     const below = root.querySelector("#below") as HTMLElement;
@@ -279,7 +278,8 @@ export const DocksOnAPhone: Story = {
       return found as HTMLElement;
     });
     const before = below.getBoundingClientRect().top;
-    await expect(slot.getAttribute("aria-live")).toBe("polite");
+    await expect(slot.getAttribute("aria-hidden")).toBe("true");
+    await expect(root.querySelector("[role='status'][aria-live='polite']")).not.toBeNull();
     await expect(getComputedStyle(slot).position).toBe("static");
 
     const box = slider.getBoundingClientRect();
@@ -315,12 +315,14 @@ export const FloatsOnDesktop: Story = {
     const box = slider.getBoundingClientRect();
     await moveTo({ x: box.left + box.width * 0.3, y: box.top + box.height * 0.5 });
     await waitFor(() => expect(card(root)).not.toBeNull());
-    await expect(root.querySelector("[data-chart-dock]")).toBeNull();
-    await expect(resolveDocked("auto", 720, false)).toBe(false);
-    await expect(resolveDocked("auto", 720, true)).toBe(true);
-    await expect(resolveDocked("auto", 480, false)).toBe(true);
-    await expect(resolveDocked("always", 1200, false)).toBe(true);
-    await expect(resolveDocked("never", 320, true)).toBe(false);
+    // The panel is in the DOM for SSR but display:none, so it reserves nothing.
+    const slot = root.querySelector("[data-chart-dock]") as HTMLElement;
+    await expect(getComputedStyle(slot).display).toBe("none");
+    await expect(slot.getBoundingClientRect().height).toBe(0);
+    await expect(resolveDocked("auto", false)).toBe(false);
+    await expect(resolveDocked("auto", true)).toBe(true);
+    await expect(resolveDocked("always", false)).toBe(true);
+    await expect(resolveDocked("never", true)).toBe(false);
     await expect(within(root).queryByText("Contenido debajo del gráfico")).not.toBeNull();
   },
 };

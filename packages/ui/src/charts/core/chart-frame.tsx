@@ -1,12 +1,13 @@
 "use client";
 
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../utils/cn.js";
 import {
   type ChartDockMode,
   ChartDockProvider,
+  DOCK_SLOT_VISIBILITY,
   resolveDocked,
-  useCoarsePointer,
+  useDockDevice,
 } from "./chart-dock.js";
 import { ChartEmpty, ChartSkeleton } from "./chart-states.js";
 import { useTouchSelection } from "./touch-select.js";
@@ -77,9 +78,12 @@ export function ChartFrame({
   children,
 }: ChartFrameProps) {
   const [ref, size] = useChartSize<HTMLDivElement>();
-  const [rootRef, rootSize] = useChartSize<HTMLDivElement>();
+  const rootRef = useRef<HTMLDivElement>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
-  const coarse = useCoarsePointer();
+  const device = useDockDevice();
+  const [spoken, setSpoken] = useState("");
+  const how = useRef<"mouse" | "touch" | "keyboard">("mouse");
+  const said = useRef({ text: "", timer: undefined as ReturnType<typeof setTimeout> | undefined });
   const fill = height === "fill";
   const drawingHeight = resolveDrawingHeight({
     height,
@@ -88,13 +92,53 @@ export function ChartFrame({
     measured: size.height,
   });
   const ready = !loading && !empty;
-  const docked = resolveDocked(dock, rootSize.width, coarse);
+  const docked = resolveDocked(dock, device);
   const readDetails = useCallback(
     () => rootRef.current?.querySelector("[data-chart-tooltip]")?.textContent ?? null,
-    [rootRef],
+    [],
   );
   useTouchSelection(ref, readDetails, ready);
-  const dockValue = useMemo(() => ({ slot, docked }), [slot, docked]);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const byPointer = (event: PointerEvent) => {
+      how.current = event.pointerType === "mouse" ? "mouse" : "touch";
+    };
+    const byKey = () => {
+      how.current = "keyboard";
+    };
+    root.addEventListener("pointerover", byPointer, true);
+    root.addEventListener("pointermove", byPointer, true);
+    root.addEventListener("pointerdown", byPointer, true);
+    root.addEventListener("keydown", byKey, true);
+    const state = said.current;
+    return () => {
+      root.removeEventListener("pointerover", byPointer, true);
+      root.removeEventListener("pointermove", byPointer, true);
+      root.removeEventListener("pointerdown", byPointer, true);
+      root.removeEventListener("keydown", byKey, true);
+      clearTimeout(state.timer);
+    };
+  }, []);
+  /**
+   * Speaks docked details, only when the text changes, 150ms after the last change, and never for
+   * mouse hover: keyboard users already hear the slider's value text, and a hover would stream.
+   */
+  const announce = useCallback((text: string) => {
+    const state = said.current;
+    clearTimeout(state.timer);
+    if (text === "") {
+      state.text = "";
+      setSpoken("");
+      return;
+    }
+    if (how.current === "mouse" || text === state.text) return;
+    state.timer = setTimeout(() => {
+      state.text = text;
+      setSpoken(text);
+    }, 150);
+  }, []);
+  const dockValue = useMemo(() => ({ slot, docked, announce }), [slot, docked, announce]);
   const legendNode =
     ready && legend ? (
       legendAside ? (
@@ -138,15 +182,21 @@ export function ChartFrame({
               children(size.width, drawingHeight)
             )}
           </div>
-          {docked ? (
-            <div
-              ref={setSlot}
-              data-chart-dock=""
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-              className="h-40 shrink-0 overflow-y-auto overscroll-contain"
-            />
+          {dock !== "never" ? (
+            <>
+              <div
+                ref={setSlot}
+                data-chart-dock=""
+                aria-hidden="true"
+                className={cn(
+                  "h-40 shrink-0 overflow-y-auto overscroll-contain",
+                  DOCK_SLOT_VISIBILITY[dock],
+                )}
+              />
+              <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+                {spoken}
+              </div>
+            </>
           ) : null}
           {ready ? footer : null}
           {legendPosition === "bottom" ? legendNode : null}
