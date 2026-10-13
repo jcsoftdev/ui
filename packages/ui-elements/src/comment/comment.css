@@ -1,0 +1,20 @@
+[data-ui="comment"] {
+  display: block;
+  margin: 0 16px 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  background-color: var(--warning-soft);
+  color: var(--ink);
+  font-size: 12.5px;
+  overflow-wrap: break-word;
+}
+[data-ui="comment"] > [data-ui-part="author"] {
+  color: var(--warning);
+  font-weight: 600;
+}
+[data-ui="comment"][tone="reply"] {
+  background-color: var(--surface-2);
+}
+[data-ui="comment"][tone="reply"] > [data-ui-part="author"] {
+  color: var(--ink);
+}

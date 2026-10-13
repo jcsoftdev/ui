@@ -1,0 +1,170 @@
+[data-ui="tool-call"] {
+  display: block;
+  box-sizing: border-box;
+  min-width: 0;
+  container: tool-call / inline-size;
+  padding: 8px;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+[data-ui="tool-call"] > [data-ui-part="trigger"] {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-density-sm);
+  inline-size: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+[data-ui="tool-call"] > [data-ui-part="trigger"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="tool-call"] [data-ui-part="header"] {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--gap-density-sm);
+  min-width: 0;
+}
+[data-ui="tool-call"] [data-ui-part="name"] {
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="tool-call"] [data-ui-part="status"] {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+[data-ui="tool-call"][data-status="running"] [data-ui-part="status"] {
+  color: var(--accent-ink);
+}
+[data-ui="tool-call"][data-status="done"] [data-ui-part="status"] {
+  color: var(--success);
+}
+[data-ui="tool-call"][data-status="error"] [data-ui-part="status"] {
+  color: var(--danger);
+}
+[data-ui="tool-call"] [data-ui-part="status-icon"] {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+[data-ui="tool-call"][data-status="running"] [data-ui-part="status-icon"] {
+  background: none;
+  inline-size: 12px;
+  block-size: 12px;
+  border: 1.75px solid currentColor;
+  border-inline-end-color: transparent;
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui="tool-call"][data-status="running"] [data-ui-part="status-icon"] {
+    animation: ui-tool-spin 0.8s linear infinite;
+  }
+}
+@keyframes ui-tool-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+[data-ui="tool-call"] [data-ui-part="duration"] {
+  color: var(--ink-3);
+}
+/* The status word stays in the AX tree below 20rem, only its pixels go. */
+@container tool-call (max-width: 20rem) {
+  [data-ui="tool-call"] [data-ui-part="status-text"],
+  [data-ui="tool-call"] [data-ui-part="duration"] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+[data-ui="tool-call"] [data-ui-part="chevron"] {
+  inline-size: 16px;
+  block-size: 16px;
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+[data-ui="tool-call"] > [data-ui-part="trigger"][aria-expanded="true"] > [data-ui-part="chevron"] {
+  transform: rotate(180deg);
+}
+[data-ui="tool-call"] > [data-ui-part="panel"] {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+[data-ui="tool-call"] > [data-ui-part="panel"][data-state="open"] {
+  grid-template-rows: 1fr;
+}
+[data-ui="tool-call"] [data-ui-part="inner"] {
+  min-height: 0;
+  overflow: hidden;
+}
+[data-ui="tool-call"] [data-ui-part="body"] {
+  display: grid;
+  gap: var(--gap-density-sm);
+  padding-block-start: var(--gap-density-sm);
+}
+[data-ui="tool-call"] [data-ui-part="section"] {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+[data-ui="tool-call"] [data-ui-part="section-title"] {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+[data-ui="tool-call"] [data-ui-part="error"] {
+  margin: 0;
+  padding: 4px 8px;
+  border-radius: var(--radius-badge);
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  font-size: 12.5px;
+}
+[data-ui="tool-call"] pre[data-ui-part="code"] {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  border-radius: var(--radius-card);
+  background-color: var(--surface-sunken);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+[data-ui="tool-call"] pre[data-ui-part="code"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui="tool-call"] [data-ui-part="chevron"] {
+    transition: transform var(--motion-duration) var(--motion-ease);
+  }
+  [data-ui="tool-call"] > [data-ui-part="panel"] {
+    transition: grid-template-rows var(--motion-duration) var(--motion-ease);
+  }
+}

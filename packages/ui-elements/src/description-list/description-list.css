@@ -1,0 +1,32 @@
+[data-ui="description-list"] {
+  display: block;
+  min-width: 0;
+  container: dl / inline-size;
+}
+[data-ui="description-list"] > dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+[data-ui="description-list"] dt {
+  color: var(--ink-3);
+}
+[data-ui="description-list"] dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: break-word;
+  text-align: right;
+  font-weight: 600;
+}
+@container dl (max-width: 24rem) {
+  [data-ui="description-list"] > dl {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 2px;
+  }
+  [data-ui="description-list"] dd {
+    margin-bottom: 8px;
+    text-align: left;
+  }
+}

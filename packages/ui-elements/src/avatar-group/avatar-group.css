@@ -1,0 +1,12 @@
+[data-ui="avatar-group"] {
+  display: flex;
+}
+[data-ui="avatar-group"][hidden] {
+  display: none;
+}
+[data-ui="avatar-group"] > * {
+  box-shadow: 0 0 0 2px var(--surface);
+}
+[data-ui="avatar-group"] > * + * {
+  margin-inline-start: -6px;
+}

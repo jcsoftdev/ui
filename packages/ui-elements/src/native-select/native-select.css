@@ -1,0 +1,60 @@
+:host {
+  --ui-native-select-height: var(--input-height);
+  --ui-native-select-pad-end: 32px;
+  --ui-native-select-radius: var(--radius-input);
+  --ui-native-select-bg: var(--surface-control);
+  --ui-native-select-fg: var(--ink);
+  --ui-native-select-border: var(--border-color-control);
+  --ui-native-select-border-width: var(--border-width-control);
+  position: relative;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+:host([hidden]) {
+  display: none;
+}
+:host([size="sm"]) {
+  --ui-native-select-height: var(--control-height-sm);
+  --ui-native-select-pad-end: 28px;
+}
+[part="select"] {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--ui-native-select-height);
+  margin: 0;
+  padding: 0 var(--ui-native-select-pad-end) 0 12px;
+  appearance: none;
+  border: var(--ui-native-select-border-width) solid var(--ui-native-select-border);
+  border-radius: var(--ui-native-select-radius);
+  background-color: var(--ui-native-select-bg);
+  color: var(--ui-native-select-fg);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  transition: border-color var(--motion-duration) var(--motion-ease);
+}
+[part="select"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 0;
+  border-color: var(--accent-ink);
+}
+[part="select"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+[part="select"][aria-invalid="true"] {
+  border-color: var(--danger);
+}
+[part="icon"] {
+  position: absolute;
+  inset-inline-end: 10px;
+  inset-block-start: 50%;
+  inline-size: 14px;
+  block-size: 14px;
+  translate: 0 -50%;
+  color: var(--ink-3);
+  pointer-events: none;
+}

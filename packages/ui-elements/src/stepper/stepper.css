@@ -1,0 +1,72 @@
+[data-ui="stepper"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  container: stepper / inline-size;
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+[data-ui="stepper"] > [role="listitem"] {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+[data-ui="stepper"] [data-ui-part="content"] {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+[data-ui="stepper"] [data-current] [data-ui-part="content"] {
+  color: var(--ink);
+}
+[data-ui="stepper"] [data-ui-part="marker"] {
+  display: grid;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+[data-ui="stepper"] [data-current] [data-ui-part="marker"] {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+}
+[data-ui="stepper"] [data-ui-part="label"] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="stepper"] > [role="listitem"]:not(:last-child)::after {
+  content: "" / "";
+  width: 18px;
+  height: 1px;
+  background-color: var(--line-strong);
+}
+@container stepper (max-width: 420px) {
+  [data-ui="stepper"] > [role="listitem"]:not([data-current]) [data-ui-part="label"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    border: 0;
+  }
+  [data-ui="stepper"] [data-current] [data-ui-part="label"] {
+    max-width: 40cqw;
+  }
+  [data-ui="stepper"] > [role="listitem"]:not(:last-child)::after {
+    width: 10px;
+  }
+}
