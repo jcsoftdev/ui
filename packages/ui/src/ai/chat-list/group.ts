@@ -35,7 +35,9 @@ export function groupByDate<T extends Dated>(
   const buckets = new Map<DateGroupId, T[]>();
   for (const item of items) {
     const id = groupOf(item.updatedAt, now);
-    buckets.set(id, [...(buckets.get(id) ?? []), item]);
+    const bucket = buckets.get(id);
+    if (bucket) bucket.push(item);
+    else buckets.set(id, [item]);
   }
   return ORDER.flatMap((id) => {
     const list = buckets.get(id);
