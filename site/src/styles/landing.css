@@ -312,3 +312,8 @@ body.landing {
     display: none;
   }
 }
+
+.landing-link[aria-current="page"] {
+  background: var(--surface-2);
+  color: var(--ink);
+}

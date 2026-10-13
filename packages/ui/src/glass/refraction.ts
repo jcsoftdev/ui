@@ -187,6 +187,7 @@ const WATCHED_VARS = [
   "--liquid-specular",
   "--liquid-specular-angle",
   "--liquid-opacity",
+  "--liquid-radius",
   "--liquid-frost",
   "--liquid-saturation",
   "--liquid-brightness",
@@ -564,7 +565,9 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       const border = element.matches(".liquid-clear")
         ? "--glass-clear-border"
         : "--glass-regular-border";
-      element.style.boxShadow = `0 0 0 1px var(${border}), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)))`;
+      // Nothing the surface paints may sit under the layer: the lens would minify its own ring and
+      // drop shadow into view. They all move to the skin, which paints above the layer.
+      element.style.boxShadow = "none";
       const make = (css: string) => {
         const span = document.createElement("span");
         span.setAttribute("aria-hidden", "true");
@@ -578,7 +581,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       const skin = make(
         "inset:0;border-radius:inherit;" +
           "background-image:var(--glass-noise),radial-gradient(circle at var(--liquid-glow-x,50%) var(--liquid-glow-y,50%),color-mix(in srgb,white calc(var(--liquid-glow,0)*15%),transparent),transparent 70%),linear-gradient(var(--liquid-tint-fill),var(--liquid-tint-fill)),linear-gradient(var(--liquid-veil-fill),var(--liquid-veil-fill));" +
-          "box-shadow:var(--liquid-rim-auto,var(--liquid-rim-custom,var(--liquid-rim))),var(--liquid-depth);",
+          `box-shadow:var(--liquid-rim-auto,var(--liquid-rim-custom,var(--liquid-rim))),var(--liquid-depth),0 0 0 1px var(${border}),var(--liquid-shadow-custom,var(--liquid-shadow-auto,var(--liquid-shadow)));`,
       );
       skin.dataset.glassLensSkin = "";
       element.prepend(skin);
