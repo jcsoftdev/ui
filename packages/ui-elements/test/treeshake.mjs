@@ -51,6 +51,8 @@ for (const { name, dist, define, budget } of elements) {
   const { inputs, lazy } = await graph(dist);
   const liquid = inputs.filter((file) => /liquid/.test(file));
   assert.deepEqual(liquid, [], `${name}: no liquid module loads eagerly`);
+  const data = inputs.filter((file) => /-data\.js$/.test(file));
+  assert.deepEqual(data, [], `${name}: no dataset module loads eagerly (import() it)`);
   for (const other of names.filter((n) => n !== name && !name.startsWith(`${n}-`)))
     assert.ok(
       !inputs.some((file) => file.startsWith(`dist/${other}/`)),
