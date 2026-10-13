@@ -1,0 +1,94 @@
+[data-ui="chart-tooltip"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  box-sizing: border-box;
+  min-width: 120px;
+  max-width: min(260px, calc(100% - 8px));
+  padding: 10px 12px;
+  border-radius: var(--radius-popover);
+  background: var(--surface);
+  box-shadow: var(--shadow-overlay);
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    opacity 100ms ease-out,
+    visibility 0s linear 100ms;
+}
+[data-ui="chart-tooltip"][data-open] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 100ms ease-out;
+}
+[data-ui="chart-tooltip"][data-ready] {
+  transition:
+    opacity 100ms ease-out,
+    transform 100ms ease-out;
+}
+[data-ui="chart-tooltip"] [data-ui-part="title"] {
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-weight: 700;
+}
+[data-ui="chart-tooltip"] [data-ui-part="body"] {
+  color: var(--ink-2);
+}
+[data-ui="chart-tooltip"] [data-ui-part="rows"] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+[data-ui="chart-tooltip"] [data-ui-part="row"] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+[data-ui="chart-tooltip"] [data-ui-part="row"][data-emphasis] {
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+}
+[data-ui="chart-tooltip"] [data-ui-part="row"] > span:not([data-ui-part]) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="chart-tooltip"] [data-ui-part="row"] > b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="chart-tooltip"] [data-ui-part="row"] > small {
+  color: var(--ink-3);
+  font-size: inherit;
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="chart-tooltip"] [data-ui-part="row"] > i {
+  width: 10px;
+}
+[data-ui="chart-tooltip"] [data-ui-part="swatch"] {
+  flex: none;
+}
+[data-ui="chart-tooltip"] span[data-ui-part="swatch"] {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+}
+[data-ui="chart-tooltip"] span[data-ui-part="swatch"][data-shape="dot"] {
+  border-radius: var(--radius-pill);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="chart-tooltip"],
+  [data-ui="chart-tooltip"][data-open],
+  [data-ui="chart-tooltip"][data-ready] {
+    transition: none;
+  }
+}

@@ -1,0 +1,34 @@
+[data-ui="sparkline"] {
+  max-width: 100%;
+}
+[data-ui="sparkline"] > [data-ui-part="drawing"] [data-bar][data-dim] {
+  opacity: 0.38;
+}
+[data-ui="sparkline"] [data-bar] {
+  transition: opacity 150ms;
+}
+[data-ui="sparkline"] [data-ui-part="value"] {
+  position: absolute;
+  bottom: 100%;
+  z-index: 1;
+  margin-bottom: 6px;
+  padding: 3px 8px;
+  border-radius: var(--radius-popover);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+[data-ui="sparkline"] [data-ui-part="value"][hidden] {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="sparkline"] [data-bar] {
+    transition: none;
+  }
+}
