@@ -1,4 +1,4 @@
-/** Copies text to the clipboard, with a hidden-textarea fallback for insecure or denied contexts. */
+/** Copies text to the clipboard, with a hidden-textarea fallback for insecure or denied contexts. Rejects when both paths are refused. */
 export async function copyText(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
@@ -10,11 +10,13 @@ export async function copyText(text: string): Promise<void> {
     area.style.opacity = "0";
     document.body.append(area);
     area.select();
+    let ok = false;
     try {
-      document.execCommand("copy");
+      ok = document.execCommand("copy");
     } finally {
       area.remove();
     }
+    if (!ok) throw new Error("Copy to the clipboard was refused");
   }
 }
 
