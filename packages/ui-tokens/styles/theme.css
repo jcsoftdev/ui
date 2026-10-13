@@ -277,29 +277,61 @@
   background-image: var(--surface-glass-layer);
   -webkit-backdrop-filter: var(--surface-filter);
   backdrop-filter: var(--surface-filter);
-  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :where([data-glass^="liquid"][data-style="glass"], [data-glass^="liquid"] [data-style="glass"], [data-style="glass"] [data-glass^="liquid"]) & {
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
+      background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+      -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      text-shadow: var(--liquid-halo);
+      --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
+      --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+      --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        &:is(button, a, [role="button"], [data-glass-interactive]) {
+          transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+          scale: 1.02;
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+          scale: .97;
+        }
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
     background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   &[data-glass-nested] {
     background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--surface-overlay-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @media (prefers-contrast: more) {
     background-color: var(--surface-overlay-fallback);
@@ -309,6 +341,7 @@
       outline: 1px solid var(--line-strong);
     }
     background-image: none;
+    --glass-lens: 0;
   }
   @media (forced-colors: active) {
     background-color: var(--surface-overlay-fallback);
@@ -318,6 +351,7 @@
       outline: 1px solid CanvasText;
     }
     background-image: none;
+    --glass-lens: 0;
   }
 }
 
@@ -342,23 +376,54 @@
     -webkit-backdrop-filter: var(--glass-regular-filter);
     backdrop-filter: var(--glass-regular-filter);
   }
-  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :where([data-glass^="liquid"]) & {
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
+      background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+      -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      text-shadow: var(--liquid-halo);
+      --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
+      --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+      --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        &:is(button, a, [role="button"], [data-glass-interactive]) {
+          transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+          scale: 1.02;
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+          scale: .97;
+        }
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
     background-color: var(--glass-nested-tint);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    --glass-lens: 0;
   }
   &[data-glass-nested] {
     background-color: var(--glass-nested-tint);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    --glass-lens: 0;
   }
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--glass-regular-fallback);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    --glass-lens: 0;
   }
   @media (prefers-contrast: more) {
     background-color: var(--glass-regular-fallback);
@@ -366,6 +431,7 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-overlay);
+    --glass-lens: 0;
   }
   @media (forced-colors: active) {
     background-color: Canvas;
@@ -374,6 +440,7 @@
     backdrop-filter: none;
     box-shadow: none;
     outline: 1px solid CanvasText;
+    --glass-lens: 0;
   }
 }
 
@@ -386,23 +453,54 @@
     -webkit-backdrop-filter: var(--glass-clear-filter);
     backdrop-filter: var(--glass-clear-filter);
   }
-  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :where([data-glass^="liquid"]) & {
+      background-color: var(--glass-lens-tint, var(--liquid-clear-tint));
+      background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+      -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
+      backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      text-shadow: var(--liquid-halo);
+      --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-clear-dim);
+      --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+      --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        &:is(button, a, [role="button"], [data-glass-interactive]) {
+          transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+          scale: 1.02;
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+          scale: .97;
+        }
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
     background-color: var(--glass-nested-tint);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    --glass-lens: 0;
   }
   &[data-glass-nested] {
     background-color: var(--glass-nested-tint);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    --glass-lens: 0;
   }
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--glass-clear-fallback);
     background-image: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    --glass-lens: 0;
   }
   @media (prefers-contrast: more) {
     background-color: var(--glass-clear-fallback);
@@ -410,6 +508,7 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-overlay);
+    --glass-lens: 0;
   }
   @media (forced-colors: active) {
     background-color: Canvas;
@@ -418,6 +517,7 @@
     backdrop-filter: none;
     box-shadow: none;
     outline: 1px solid CanvasText;
+    --glass-lens: 0;
   }
 }
 
@@ -426,29 +526,61 @@
   background-image: var(--surface-glass-layer);
   -webkit-backdrop-filter: var(--surface-filter);
   backdrop-filter: var(--surface-filter);
-  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :where([data-glass^="liquid"][data-style="glass"], [data-glass^="liquid"] [data-style="glass"], [data-style="glass"] [data-glass^="liquid"]) & {
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
+      background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+      -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      text-shadow: var(--liquid-halo);
+      --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
+      --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+      --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        &:is(button, a, [role="button"], [data-glass-interactive]) {
+          transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+          scale: 1.02;
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+          scale: .97;
+        }
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
     background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   &[data-glass-nested] {
     background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--surface-nav-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @media (prefers-contrast: more) {
     background-color: var(--surface-nav-fallback);
@@ -458,6 +590,7 @@
       outline: 1px solid var(--line-strong);
     }
     background-image: none;
+    --glass-lens: 0;
   }
   @media (forced-colors: active) {
     background-color: var(--surface-nav-fallback);
@@ -467,6 +600,7 @@
       outline: 1px solid CanvasText;
     }
     background-image: none;
+    --glass-lens: 0;
   }
 }
 
@@ -475,29 +609,61 @@
   background-image: var(--surface-glass-layer);
   -webkit-backdrop-filter: var(--surface-filter);
   backdrop-filter: var(--surface-filter);
-  :where(.glass, .glass-clear, .surface-overlay, .surface-nav, .surface-side) & {
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :where([data-glass^="liquid"][data-style="glass"], [data-glass^="liquid"] [data-style="glass"], [data-style="glass"] [data-glass^="liquid"]) & {
+      background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
+      background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+      -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      text-shadow: var(--liquid-halo);
+      --glass-lens: 1;
+      --glass-lens-dim: var(--liquid-regular-dim);
+      --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+      --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        &:is(button, a, [role="button"], [data-glass-interactive]) {
+          transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+          scale: 1.02;
+        }
+        &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+          scale: .97;
+        }
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
     background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   &[data-glass-nested] {
     background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
     background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @media (prefers-reduced-transparency: reduce) {
     background-color: var(--surface-side-fallback);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background-image: none;
+    --glass-lens: 0;
   }
   @media (prefers-contrast: more) {
     background-color: var(--surface-side-fallback);
@@ -507,6 +673,7 @@
       outline: 1px solid var(--line-strong);
     }
     background-image: none;
+    --glass-lens: 0;
   }
   @media (forced-colors: active) {
     background-color: var(--surface-side-fallback);
@@ -516,6 +683,7 @@
       outline: 1px solid CanvasText;
     }
     background-image: none;
+    --glass-lens: 0;
   }
 }
 
@@ -524,4 +692,142 @@
   background-image: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+@utility liquid {
+  background-color: var(--glass-regular-fallback);
+  box-shadow: 0 0 0 1px var(--glass-regular-border), var(--glass-regular-shadow);
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--glass-lens-tint, var(--liquid-regular-tint));
+    background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+    -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+    backdrop-filter: blur(var(--liquid-frost, var(--liquid-regular-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, );
+    box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+    text-shadow: var(--liquid-halo);
+    --glass-lens: 1;
+    --glass-lens-dim: var(--liquid-regular-dim);
+    --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+    --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+    &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-regular-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      &:is(button, a, [role="button"], [data-glass-interactive]) {
+        transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+      }
+      &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+        scale: 1.02;
+      }
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        scale: .97;
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --glass-lens: 0;
+  }
+  &[data-glass-nested] {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --glass-lens: 0;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-regular-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --glass-lens: 0;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--glass-regular-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-overlay);
+    --glass-lens: 0;
+  }
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    outline: 1px solid CanvasText;
+    --glass-lens: 0;
+  }
+}
+
+@utility liquid-clear {
+  background-color: var(--glass-clear-fallback);
+  box-shadow: 0 0 0 1px var(--glass-clear-border), var(--glass-clear-shadow);
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--glass-lens-tint, var(--liquid-clear-tint));
+    background-image: var(--glass-noise), radial-gradient(circle at var(--liquid-glow-x, 50%) var(--liquid-glow-y, 50%), rgb(255 255 255 / calc(var(--liquid-glow, 0) * .15)), transparent 70%), linear-gradient(var(--liquid-tint-fill), var(--liquid-tint-fill)), linear-gradient(var(--liquid-veil-fill), var(--liquid-veil-fill));
+    -webkit-backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
+    backdrop-filter: blur(var(--liquid-frost, var(--liquid-clear-blur))) saturate(var(--liquid-saturation, var(--liquid-saturate))) var(--liquid-brightness-fn, brightness(var(--glass-clear-brightness)));
+    box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+    text-shadow: var(--liquid-halo);
+    --glass-lens: 1;
+    --glass-lens-dim: var(--liquid-clear-dim);
+    --liquid-tint-fill: color-mix(in srgb, var(--liquid-tint-color, transparent) calc(var(--liquid-tint-amount, 0) * 100%), transparent);
+    --liquid-veil-fill: color-mix(in srgb, var(--glass-veil, var(--glass-lens-dim)) calc(var(--liquid-opacity, 1) * 100%), transparent);
+    &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+      box-shadow: var(--liquid-rim-auto, var(--liquid-rim-custom, var(--liquid-rim))), var(--liquid-depth-active), 0 0 0 1px var(--glass-clear-border), var(--liquid-shadow-custom, var(--liquid-shadow-auto, var(--liquid-shadow)));
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      &:is(button, a, [role="button"], [data-glass-interactive]) {
+        transition: scale var(--motion-duration, 180ms) var(--motion-ease, ease);
+      }
+      &:is(button, a, [role="button"], [data-glass-interactive]):hover {
+        scale: 1.02;
+      }
+      &:is(button, a, [role="button"], [data-glass-interactive]):active:not(:disabled) {
+        scale: .97;
+      }
+    }
+  }
+  :where(.glass, .glass-clear, .liquid, .liquid-clear, .surface-overlay, .surface-nav, .surface-side) & {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --glass-lens: 0;
+  }
+  &[data-glass-nested] {
+    background-color: var(--glass-nested-tint);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --glass-lens: 0;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--glass-clear-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    --glass-lens: 0;
+  }
+  @media (prefers-contrast: more) {
+    background-color: var(--glass-clear-fallback);
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 0 0 1px var(--line-strong), var(--shadow-overlay);
+    --glass-lens: 0;
+  }
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    outline: 1px solid CanvasText;
+    --glass-lens: 0;
+  }
 }
