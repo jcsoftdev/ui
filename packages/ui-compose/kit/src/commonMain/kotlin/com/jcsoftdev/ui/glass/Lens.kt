@@ -130,9 +130,26 @@ uniform float band;
 uniform float thickness;
 uniform float4 glow;
 
+// How far, in pixels, a sample keeps from the edge of the backdrop that exists: the blur fades its last columns toward the base.
+const float EDGE_SLACK = 3.0;
+
+// Shrinks one axis of the offset so a sample moved by `want` from `at` stays between lo and hi (1 when there is room).
+float reachFit(float at, float want, float lo, float hi) {
+    float travel = abs(want);
+    if (travel < 0.0001) { return 1.0; }
+    float room = want > 0.0 ? hi - at : at - lo;
+    return clamp(room / travel, 0.0, 1.0);
+}
+
 half4 shade(float2 coord, float2 off, float d, float2 n) {
-    float2 lo = bounds.xy;
-    float2 hi = bounds.zw;
+    float2 lo = bounds.xy + float2(EDGE_SLACK);
+    float2 hi = bounds.zw - float2(EDGE_SLACK);
+    // Every channel stays inside the existing backdrop: the offset (dispersion pushes red furthest) shrinks smoothly toward the
+    // edge instead of being clamped there, which would smear one column of the backdrop into a flat band with a seam.
+    float widest = 1.0 + abs(dispersion);
+    off = float2(
+        off.x * reachFit(coord.x, off.x * widest, lo.x, hi.x),
+        off.y * reachFit(coord.y, off.y * widest, lo.y, hi.y));
     half4 mid = content.eval(clamp(coord + off, lo, hi));
     half r = content.eval(clamp(coord + off * (1.0 + dispersion), lo, hi)).r;
     half bl = content.eval(clamp(coord + off * (1.0 - dispersion), lo, hi)).b;

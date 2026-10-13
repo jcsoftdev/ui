@@ -259,4 +259,72 @@ class LensShaderTest {
             assertTrue(sx[40][1] < 300f - 30f, "exponent $exponent: left edge samples ${sx[40][1]}")
         }
     }
+
+    /** The convex lens over a backdrop that encodes its own position (red and blue = x, green = y), the surface being 160 x 80 at (20, 20). */
+    private fun reach(
+        left: Float,
+        top: Float,
+        right: Float,
+        bottom: Float,
+        dispersion: Float,
+        strength: Float = 30f,
+    ): Bitmap {
+        val encoded =
+            RuntimeShaderBuilder(
+                RuntimeEffect.makeForShader("half4 main(float2 c) { return half4(c.x / 200.0, c.y / 120.0, c.x / 200.0, 1.0); }"),
+            ).makeShader()
+        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
+        builder.child("content", encoded)
+        builder.uniform("size", 160f, 80f)
+        builder.uniform("origin", 20f, 20f)
+        builder.uniform("radii", 40f, 40f, 40f, 40f)
+        builder.uniform("exponent", 2f)
+        builder.uniform("strength", strength)
+        builder.uniform("dispersion", dispersion)
+        builder.uniform("sat", 1f)
+        builder.uniform("profile", 3f)
+        builder.uniform("band", 0.3f)
+        builder.uniform("dome", -0.05f)
+        builder.uniform("thickness", 0f)
+        builder.uniform("glow", 0f, 0f, 1f, 0f)
+        builder.uniform("bounds", left, top, right, bottom)
+        val surface = Surface.makeRasterN32Premul(width, height)
+        surface.canvas.drawRect(Rect.makeWH(width.toFloat(), height.toFloat()), Paint().apply { shader = builder.makeShader() })
+        return Bitmap.makeFromImage(surface.makeImageSnapshot())
+    }
+
+    @Test fun noChannelSamplesOutsideTheBackdropThatExists() {
+        // The room is just the surface (a pill dragged against the edge of its stage), so the outward rim bend has nowhere to go:
+        // every channel stays inside it with the 3 px slack (less a pixel of 8-bit quantization).
+        for (dispersion in listOf(0f, 0.06f, 0.2f)) {
+            val out = reach(20f, 20f, 180f, 100f, dispersion)
+            for (y in 20 until 100) {
+                for (x in 20 until 180) {
+                    val sampledX = listOf(out.red(x, y), out.blue(x, y)).map { it * width / 255f }
+                    val sampledY = out.green(x, y) * height / 255f
+                    assertTrue(sampledX.all { it in 22f..178f }, "dispersion $dispersion at ($x,$y): x samples $sampledX")
+                    assertTrue(sampledY in 22f..98f, "dispersion $dispersion at ($x,$y): y sample $sampledY")
+                }
+            }
+        }
+    }
+
+    @Test fun aSymmetricPillGetsMirroredOffsetsWhateverTheRoom() {
+        // Same room on every side: the offset of a pixel is the negative of the offset of its mirror image.
+        val out = reach(20f, 20f, 180f, 100f, dispersion = 0f)
+        for (y in 20 until 60 step 3) {
+            for (x in 20 until 100 step 3) {
+                val (dx, dy) = out.shift(x, y)
+                val (mx, my) = out.shift(199 - x, 119 - y)
+                assertTrue(abs(dx + mx) < 1.5f, "x offsets at ($x,$y): $dx vs $mx")
+                assertTrue(abs(dy + my) < 1.5f, "y offsets at ($x,$y): $dy vs $my")
+            }
+        }
+    }
+
+    @Test fun aPillWithFullRoomIsUnchanged() {
+        val tight = reach(0f, 0f, 200f, 120f, dispersion = 0.06f, strength = 8f)
+        val roomy = reach(-50f, -50f, 250f, 170f, dispersion = 0.06f, strength = 8f)
+        for (y in 20 until 100) for (x in 20 until 180) assertTrue(tight.getColor(x, y) == roomy.getColor(x, y), "pixel ($x,$y) changed")
+    }
 }
