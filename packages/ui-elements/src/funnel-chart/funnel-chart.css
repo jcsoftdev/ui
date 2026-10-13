@@ -1,0 +1,24 @@
+[data-ui="funnel-chart"] [data-stage] {
+  cursor: default;
+  transition: opacity 150ms;
+}
+[data-ui="funnel-chart"] [data-stage][data-dim] {
+  opacity: 0.4;
+}
+[data-ui="funnel-chart"] [data-label],
+[data-ui="funnel-chart"] [data-fade] {
+  pointer-events: none;
+  transition: opacity 150ms;
+}
+[data-ui="funnel-chart"] [data-label][data-dim] {
+  opacity: 0.4;
+}
+[data-ui="funnel-chart"] text {
+  user-select: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="funnel-chart"] [data-stage],
+  [data-ui="funnel-chart"] [data-label] {
+    transition: none;
+  }
+}
