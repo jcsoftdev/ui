@@ -184,8 +184,8 @@ describe("formulas with fill and paste", () => {
 
   it("fills a formula several rows with shifted references", async () => {
     const rows = lines();
-    rows[1].c = 0;
-    rows[2].c = 0;
+    (rows[1] as Line).c = 0;
+    (rows[2] as Line).c = 0;
     const el = await grid("formulas range-selection fill-handle", rows);
     await focus(el, "r0", "c");
     await shiftArrow("ArrowDown", 2);
