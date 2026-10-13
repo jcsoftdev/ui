@@ -7,7 +7,7 @@ import { X } from "../../icons/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -74,6 +74,7 @@ export function DialogContent({
   onInteractOutside,
   onCloseAutoFocus,
   ref,
+  style,
   ...props
 }: DialogContentProps) {
   const lens = useGlassLens(ref);
@@ -107,6 +108,7 @@ export function DialogContent({
           onCloseAutoFocus?.(event);
           restoreFocusOnClose(event, previousFocusRef);
         }}
+        style={withMaterialStyle(material, style)}
         {...props}
       >
         {children}

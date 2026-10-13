@@ -5,7 +5,7 @@ import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { X } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
 
 export type ActionBarPart = "root" | "count" | "actions" | "clear";
 
@@ -51,6 +51,7 @@ export function ActionBar({
   classNames,
   onKeyDown,
   ref,
+  style,
   ...props
 }: ActionBarProps) {
   const lens = useGlassLens(ref);
@@ -77,6 +78,7 @@ export function ActionBar({
         classNames?.root,
         className,
       )}
+      style={withMaterialStyle(material, style)}
       {...props}
     >
       <span

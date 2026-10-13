@@ -2,10 +2,13 @@ import {
   bezelFor,
   createDisplacementMap,
   createSpecularMap,
+  FULL_CAP,
+  isWhole,
   type LensCoverage,
   scaleFor,
   VEIL_FLOOR,
 } from "./displacement-map.js";
+import { LIQUID_DEFAULTS, liquidShadow } from "./liquid-options.js";
 import { supportsBackdropRefraction } from "./support.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -26,8 +29,10 @@ export interface GlassRefractionOptions {
   bezel?: number;
   /**
    * `"full"` (default): the lens bends the backdrop over the whole surface, strongest at the rim
-   * and gentle but never zero towards the centre, with at most 24 px of offset. `"rim"`: only the
-   * bevel, the middle shows the backdrop undisplaced. CSS: `--glass-lens-coverage: rim`.
+   * and gentle but never zero towards the centre, with at most 24 px of offset. `"dome"`: the
+   * same with round contours. `"rim"`: only the bevel, the middle shows the backdrop undisplaced.
+   * CSS: `--liquid-profile` (older name: `--glass-lens-coverage`). The other `--liquid-*`
+   * variables (see `LiquidGlassOptions`) are read live: change them and the lens follows.
    */
   coverage?: LensCoverage;
   /**
@@ -128,6 +133,58 @@ function host(): SVGSVGElement {
   return svg;
 }
 
+/** The lens settings the engine reads from `--liquid-*` custom properties. */
+interface LiquidRuntime {
+  refraction: number;
+  bevel: number | undefined;
+  profile: LensCoverage | undefined;
+  dispersion: number | undefined;
+  specular: number;
+  angle: number;
+  opacity: number;
+}
+
+const PROFILES = new Set(["rim", "full", "dome"]);
+
+function readRuntime(element: HTMLElement): LiquidRuntime {
+  const computed = getComputedStyle(element);
+  const read = (name: string) => computed.getPropertyValue(name).trim();
+  const number = (name: string) => {
+    const value = Number.parseFloat(read(name));
+    return Number.isFinite(value) ? value : undefined;
+  };
+  const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+  const profile = read("--liquid-profile") || read("--glass-lens-coverage");
+  const dispersion = number("--liquid-dispersion") ?? number("--glass-lens-dispersion");
+  return {
+    refraction: clamp(number("--liquid-refraction") ?? LIQUID_DEFAULTS.refraction, 0, 1),
+    bevel: number("--liquid-bevel"),
+    profile: PROFILES.has(profile) ? (profile as LensCoverage) : undefined,
+    dispersion: dispersion === undefined ? undefined : clamp(dispersion, 0, 0.2),
+    specular: clamp(number("--liquid-specular") ?? LIQUID_DEFAULTS.specular.intensity, 0, 2),
+    angle: number("--liquid-specular-angle") ?? LIQUID_DEFAULTS.specular.angle,
+    opacity: clamp(number("--liquid-opacity") ?? LIQUID_DEFAULTS.opacity, 0, 1),
+  };
+}
+
+/** Variables whose change must rebuild the filter (the rest is read when the map is rebuilt). */
+const WATCHED_VARS = [
+  "--liquid-refraction",
+  "--liquid-bevel",
+  "--liquid-profile",
+  "--glass-lens-coverage",
+  "--liquid-dispersion",
+  "--glass-lens-dispersion",
+  "--liquid-specular",
+  "--liquid-specular-angle",
+  "--liquid-opacity",
+  "--liquid-frost",
+  "--liquid-saturation",
+  "--liquid-brightness",
+];
+/** What can change those variables on an element or an ancestor. */
+const CONFIG_ATTRIBUTES = ["style", "class", "data-glass", "data-glass-lens"];
+
 interface Controller {
   configure(options: GlassRefractionOptions): void;
   stop(): void;
@@ -183,21 +240,17 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     delete element.dataset.glassRefraction;
     element.style.removeProperty("--glass-veil");
     element.style.removeProperty("--glass-lens-tint");
+    element.style.removeProperty("--liquid-size");
+    element.style.removeProperty("--liquid-shadow-auto");
   };
 
-  /** `full` (default) bends the whole surface; `rim` only the bevel. `--glass-lens-coverage` in CSS sets it too. */
+  /** `full` (default) bends the whole surface, `dome` is the round variant, `rim` only the bevel. */
   const coverageFor = (): LensCoverage =>
-    options.coverage ??
-    (getComputedStyle(element).getPropertyValue("--glass-lens-coverage").trim() === "rim"
-      ? "rim"
-      : "full");
+    options.coverage ?? readRuntime(element).profile ?? "full";
 
-  /** Dispersion is off unless asked for: `dispersion` option, or `--glass-lens-dispersion` in CSS. */
+  /** Dispersion is off unless asked for: `dispersion` option, or `--liquid-dispersion` in CSS. */
   const dispersionFor = (area: number) => {
-    const asked =
-      options.dispersion ??
-      (Number.parseFloat(getComputedStyle(element).getPropertyValue("--glass-lens-dispersion")) ||
-        0);
+    const asked = options.dispersion ?? readRuntime(element).dispersion ?? 0;
     return area <= DISPERSION_AREA ? asked : 0;
   };
 
@@ -287,6 +340,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     // lens is blurred in here (not by the CSS blur, which would soften the rim too) and mixed
     // back with the sharp lens by that weight.
     const computed = getComputedStyle(element);
+    const runtime = readRuntime(element);
     element.style.backdropFilter = original;
     const base = getComputedStyle(element).backdropFilter;
     const radius = /blur\(\s*([\d.]+)px\s*\)/.exec(base);
@@ -336,6 +390,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       // The CSS value is tuned for the uniform veil of the fallback; the adaptive one needs less.
       const strength =
         0.85 *
+        runtime.opacity *
         (alphaPart
           ? alphaPart.endsWith("%")
             ? Number.parseFloat(alphaPart) / 100
@@ -370,7 +425,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     // Directional rim light from a second map: a dark contour and a faint inner shadow, a glint
     // that is the lensed backdrop itself pushed to a high saturation and brightness (so it takes
     // the colour of what is behind the glass), and a touch of white on top of it.
-    const specular = options.specular !== false;
+    const specular = options.specular !== false && runtime.specular > 0;
     if (specular) {
       specularImage = node("feImage", { result: "spec", preserveAspectRatio: "none" });
       node("feColorMatrix", {
@@ -382,7 +437,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       node("feColorMatrix", {
         in: "spec",
         type: "matrix",
-        values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.9 0 0 0 0",
+        values: `0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${0.9 * runtime.specular} 0 0 0 0`,
         result: "glint-mask",
       });
       node("feColorMatrix", { in: "lens", type: "saturate", values: "2.5", result: "glint-sat" });
@@ -441,14 +496,30 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         return sync();
       const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0;
       const coverage = coverageFor();
-      const bezel = options.bezel ?? bezelFor(radius, width, height, coverage);
+      const settings = readRuntime(element);
+      const whole = isWhole(coverage);
+      const bezel =
+        options.bezel ??
+        (whole ? undefined : settings.bevel) ??
+        bezelFor(radius, width, height, coverage);
+      const cap = whole ? (settings.bevel ?? FULL_CAP) : FULL_CAP;
       const soft = bezelFor(radius, width, height, "rim");
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const next = [width, height, radius, bezel, coverage, dpr].join("x");
+      // A bigger piece of glass is thicker: its shadow is deeper (see `liquidShadow`).
+      element.style.setProperty(
+        "--liquid-size",
+        String(
+          Math.round(Math.min(Math.max(Math.sqrt(width * height) / 240, 0.7), 1.5) * 100) / 100,
+        ),
+      );
+      const next = [width, height, radius, bezel, coverage, cap, settings.refraction, dpr].join(
+        "x",
+      );
       if (next === key) return;
       key = next;
       built = performance.now();
-      baseScale = options.scale ?? scaleFor(width, height, bezel, coverage);
+      baseScale =
+        options.scale ?? scaleFor(width, height, bezel, coverage, cap) * settings.refraction;
       applyScale();
       for (const [target, name, value] of [
         [filter, "x", "0"],
@@ -461,12 +532,15 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
         target.setAttribute(name, value);
       image.setAttribute(
         "href",
-        createDisplacementMap({ width, height, radius, bezel, coverage, soft, dpr }),
+        createDisplacementMap({ width, height, radius, bezel, coverage, soft, cap, dpr }),
       );
       if (specularImage) {
         specularImage.setAttribute("width", String(width));
         specularImage.setAttribute("height", String(height));
-        specularImage.setAttribute("href", createSpecularMap({ width, height, radius, dpr }));
+        specularImage.setAttribute(
+          "href",
+          createSpecularMap({ width, height, radius, dpr, angle: runtime.angle }),
+        );
       }
     };
     update();
@@ -511,6 +585,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
           element.addEventListener(type, up);
       }
     }
+    element.style.setProperty("--liquid-shadow-auto", liquidShadow());
     element.style.backdropFilter = `${blur}url(#${id})`;
     element.style.setProperty("-webkit-backdrop-filter", `${blur}url(#${id})`);
     element.dataset.glassRefraction = "on";
@@ -549,10 +624,32 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
     attributeFilter: REBUILD_ATTRIBUTES,
   });
 
+  // Live configuration: when an element or an ancestor changes the variables the lens reads (a
+  // `style` prop, a preset on `data-glass`), the filter is rebuilt once the values really differ.
+  const configKey = () => {
+    const computed = getComputedStyle(element);
+    return WATCHED_VARS.map((name) => computed.getPropertyValue(name).trim()).join("|");
+  };
+  let configSeen = configKey();
+  const refresh = () => {
+    if (stopped) return;
+    const next = configKey();
+    if (next === configSeen) return;
+    configSeen = next;
+    sync();
+  };
+  const configObserver =
+    typeof MutationObserver === "function"
+      ? new MutationObserver(() => schedule(refresh))
+      : undefined;
+  for (let node: Element | null = element; node; node = node.parentElement)
+    configObserver?.observe(node, { attributes: true, attributeFilter: CONFIG_ATTRIBUTES });
+
   function stop() {
     if (stopped) return;
     stopped = true;
     for (const list of lists) list.removeEventListener("change", sync);
+    configObserver?.disconnect();
     mutations?.disconnect();
     waiting.delete(sync);
     sizeWatch?.disconnect();

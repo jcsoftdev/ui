@@ -7,16 +7,24 @@ export interface DisplacementMapOptions {
   bezel: number;
   /**
    * `"full"` (default) bends the backdrop over the whole surface, strongest at the rim and
-   * gentle but never zero towards the centre; `"rim"` only across the bevel.
+   * gentle but never zero towards the centre (a squarish pillow); `"dome"` does the same with
+   * round contours, a drop that is flatter in the middle; `"rim"` only across the bevel.
    */
   coverage?: LensCoverage;
   /** Width of the rim, in px, over which the veil and the blur ease off (blue channel). Default: `bezel`. */
   soft?: number;
+  /** Largest offset of the whole-surface profiles, in px. Default {@link FULL_CAP}. */
+  cap?: number;
   /** Device pixel ratio the map is rasterised at. Default 1, capped at 2. */
   dpr?: number;
 }
 
-export type LensCoverage = "full" | "rim";
+export type LensCoverage = "full" | "rim" | "dome";
+/** The shape of the lens; `coverage` is the older name of the same option. */
+export type LensProfile = LensCoverage;
+
+/** Whether a profile bends the whole surface (everything but the rim band). */
+export const isWhole = (coverage: LensCoverage) => coverage !== "rim";
 
 export interface DisplacementField {
   /** Width and height of `data` in pixels (CSS size times the capped ratio). */
@@ -47,7 +55,7 @@ export function bezelFor(
   coverage: LensCoverage = "full",
 ): number {
   const short = Math.min(width, height);
-  if (coverage === "full") return Math.max(1, short / 2);
+  if (coverage !== "rim") return Math.max(1, short / 2);
   return clamp(radius * 1.2, 14, Math.max(8, short * 0.45), 56);
 }
 
@@ -78,8 +86,15 @@ export const FULL_FRACTION = 0.55;
 export const FULL_EXPONENT = 3;
 /** Largest offset of the full lens, in px. */
 export const FULL_CAP = 24;
-/** Value of the radial coordinate at the corners of the box. */
-const CORNER = 2 ** (1 / FULL_EXPONENT);
+/**
+ * Shape of the two whole-surface profiles: the exponent `N` of the radial coordinate
+ * `(|u|^N + |v|^N)^(1/N)` (3: squarish, 2: round) and the power `p` of the pull `A t^p`, with
+ * `t` the radial coordinate over its value at the corners.
+ */
+export const WHOLE_SHAPES = {
+  full: { exponent: FULL_EXPONENT, power: 1.5 },
+  dome: { exponent: 2, power: 2 },
+} as const;
 
 /** Offset amplitude of the lens along each axis, in px. */
 export function lensAmplitude(
@@ -87,12 +102,13 @@ export function lensAmplitude(
   height: number,
   bezel: number,
   coverage: LensCoverage = "full",
+  cap: number = FULL_CAP,
 ): { x: number; y: number } {
   if (coverage === "rim") {
     const a = MAX_OFFSET * bezel;
     return { x: a, y: a };
   }
-  const a = Math.min((Math.min(width, height) / 2) * FULL_FRACTION, FULL_CAP);
+  const a = Math.min((Math.min(width, height) / 2) * FULL_FRACTION, Math.max(cap, 1));
   return { x: a, y: a };
 }
 
@@ -102,8 +118,9 @@ export function scaleFor(
   height: number,
   bezel: number,
   coverage: LensCoverage = "full",
+  cap: number = FULL_CAP,
 ): number {
-  const { x, y } = lensAmplitude(width, height, bezel, coverage);
+  const { x, y } = lensAmplitude(width, height, bezel, coverage, cap);
   return (2 * Math.max(x, y, 1) * 255) / 254;
 }
 
@@ -122,7 +139,7 @@ let quadratic: Float32Array | undefined;
  * slope never exceeds 1.5, which is what keeps {@link MAX_OFFSET} fold-free.
  */
 export function lensProfile(coverage: LensCoverage = "rim"): Float32Array {
-  if (coverage === "full") {
+  if (coverage !== "rim") {
     if (quadratic) return quadratic;
     quadratic = new Float32Array(PROFILE_SAMPLES).map((_, i) => (i / (PROFILE_SAMPLES - 1)) ** 2);
     return quadratic;
@@ -150,12 +167,15 @@ export function computeDisplacementField({
   bezel,
   coverage = "rim",
   soft,
+  cap,
   dpr = 1,
 }: DisplacementMapOptions): DisplacementField {
   const ratio = clamp(dpr, 1, 2);
   const w = Math.max(1, width);
   const h = Math.max(1, height);
-  const full = coverage === "full";
+  const full = isWhole(coverage);
+  const shape = WHOLE_SHAPES[coverage === "dome" ? "dome" : "full"];
+  const corner = 2 ** (1 / shape.exponent);
   const rim = clamp(full ? (soft ?? bezelFor(radius, w, h, "rim")) : bezel, 1, Math.min(w, h) / 2);
   const r = clamp(radius, 0, Math.min(w, h) / 2);
   const pw = Math.max(1, Math.round(w * ratio));
@@ -169,24 +189,24 @@ export function computeDisplacementField({
   const last = table.length - 1;
   const hx = w / 2;
   const hy = h / 2;
-  const amp = lensAmplitude(w, h, bezel, coverage);
+  const amp = lensAmplitude(w, h, bezel, coverage, cap);
   const norm = Math.max(amp.x, amp.y, 1);
   for (let j = 0; j < ph; j++) {
     const py = (j + 0.5) / ratio - hy;
     const inner = Math.abs(py) < hy - rim;
     const av = Math.abs(py) / hy;
-    const gv = full ? Math.sign(py) * av ** (FULL_EXPONENT - 1) : 0;
-    const vn = av ** FULL_EXPONENT;
+    const gv = full ? Math.sign(py) * av ** (shape.exponent - 1) : 0;
+    const vn = av ** shape.exponent;
     for (let i = 0; i < pw; i++) {
       if (!full && inner && i === band) i = Math.max(band, pw - band);
       const px = (i + 0.5) / ratio - hx;
       const o = (j * pw + i) * 4;
       if (full) {
         const au = Math.abs(px) / hx;
-        const gx = Math.sign(px) * au ** (FULL_EXPONENT - 1);
+        const gx = Math.sign(px) * au ** (shape.exponent - 1);
         const g = Math.hypot(gx, gv);
-        const t = Math.min(Math.cbrt(au ** FULL_EXPONENT + vn) / CORNER, 1);
-        const pull = g > 0 ? t ** 1.5 / g : 0;
+        const t = Math.min((au ** shape.exponent + vn) ** (1 / shape.exponent) / corner, 1);
+        const pull = g > 0 ? t ** shape.power / g : 0;
         data[o] = 128 - gx * pull * 127 * (amp.x / norm);
         data[o + 1] = 128 - gv * pull * 127 * (amp.y / norm);
         data[o + 3] = 255;
@@ -332,6 +352,11 @@ export function createDisplacementMap(options: DisplacementMapOptions): string {
     options.radius,
     options.bezel,
     options.soft ?? 0,
+    // The offset is encoded relative to the largest one, so it only shows in the map below 1 px.
+    Math.min(
+      lensAmplitude(options.width, options.height, options.bezel, options.coverage, options.cap).x,
+      1,
+    ),
     options.dpr ?? 1,
   ]
     .map((n) => Math.round(n * 100) / 100)

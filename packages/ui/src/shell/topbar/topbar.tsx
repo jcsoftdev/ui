@@ -5,7 +5,7 @@ import { useGlassLens } from "../../glass/use-glass-lens.js";
 import { Menu, Search } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, materialStyle } from "../../utils/material.js";
 
 function isApplePlatform(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -96,6 +96,7 @@ export function Topbar({
         classNames?.root,
         className,
       )}
+      style={materialStyle(material)}
     >
       <div
         className={cn(

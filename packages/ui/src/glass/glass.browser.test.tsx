@@ -986,3 +986,107 @@ describe("components apply the lens by themselves, only for liquid surfaces", ()
     expect(passes.sort()).toEqual([1, 3]);
   });
 });
+
+describe("liquid options (material object, variables and presets)", () => {
+  const filters = () => document.querySelectorAll("#ui-glass-refraction-defs filter").length;
+  const defs = () => document.querySelector("#ui-glass-refraction-defs") as Element;
+  const scale = () => Number(defs().querySelector("feDisplacementMap")?.getAttribute("scale"));
+  const settle = () => new Promise((r) => setTimeout(r, 400));
+  const card = (material: Parameters<typeof Card>[0]["material"], extra = "") => (
+    <Card
+      data-testid="box"
+      material={material}
+      className={`absolute top-2 left-2 h-24 w-48 ${extra}`}
+    />
+  );
+
+  test("refraction scales the displacement and follows a live change without stacking filters", async () => {
+    await mount(card("liquid"));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await settle();
+    const full = scale();
+    await act(async () => root?.render(card({ type: "liquid", refraction: 0.5 })));
+    await vi.waitFor(() => expect(scale()).toBeCloseTo(full / 2, 0));
+    expect(filters()).toBe(1);
+    await act(async () => root?.render(card({ type: "liquid", refraction: 0 })));
+    await vi.waitFor(() => expect(scale()).toBe(0));
+  });
+
+  test("bevelWidth caps the offset of a whole-surface lens", async () => {
+    await mount(
+      <Card
+        data-testid="box"
+        material={{ type: "liquid", bevelWidth: 6 }}
+        className="absolute top-2 left-2 h-[300px] w-[400px]"
+      />,
+    );
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    await settle();
+    expect(scale()).toBeLessThanOrEqual(2 * 6 * 1.01);
+    expect(scale()).toBeGreaterThan(8);
+  });
+
+  test("the profile changes the map; frost and saturation reach the filter and the backdrop", async () => {
+    await mount(card({ type: "liquid", profile: "rim", frost: 6, saturation: 2 }));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const maps = () => defs().querySelector("feImage")?.getAttribute("href");
+    const rim = maps();
+    expect(defs().querySelector("feGaussianBlur")?.getAttribute("stdDeviation")).toBe("6");
+    const box = document.querySelector("[data-testid=box]") as HTMLElement;
+    expect(styleOf(box).getPropertyValue("--liquid-profile")).toBe("rim");
+    await act(async () => root?.render(card({ type: "liquid", profile: "dome", frost: 6 })));
+    await vi.waitFor(() => expect(maps()).not.toBe(rim));
+    expect(filters()).toBe(1);
+  });
+
+  test("specular intensity 0 drops the rim light layers; opacity 0 drops the adaptive veil", async () => {
+    await mount(card({ type: "liquid", specular: { intensity: 0 } }));
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    expect(defs().querySelectorAll("feImage").length).toBe(1);
+    await act(async () => root?.render(card({ type: "liquid", specular: { angle: 30 } })));
+    await vi.waitFor(() => expect(defs().querySelectorAll("feImage").length).toBe(2));
+  });
+
+  test("the surface is thicker the bigger it is: the shadow depth variable grows with the size", async () => {
+    await mount(
+      <>
+        <Card data-testid="small" material="liquid" className="absolute top-2 left-2 h-12 w-24" />
+        <Card
+          data-testid="large"
+          material="liquid"
+          className="absolute top-16 left-2 h-[320px] w-[380px]"
+        />
+      </>,
+    );
+    await vi.waitFor(() => expect(filters()).toBe(2));
+    const size = (id: string) =>
+      Number(
+        (document.querySelector(`[data-testid=${id}]`) as HTMLElement).style.getPropertyValue(
+          "--liquid-size",
+        ),
+      );
+    expect(size("large")).toBeGreaterThan(size("small"));
+    expect(size("small")).toBeGreaterThanOrEqual(0.7);
+    expect(size("large")).toBeLessThanOrEqual(1.5);
+  });
+
+  test("data-glass presets switch the look and set the options", async () => {
+    await mount(card(undefined, "glass"), { "data-glass": "liquid-thick" });
+    await vi.waitFor(() => expect(filters()).toBe(1));
+    const box = document.querySelector("[data-testid=box]") as HTMLElement;
+    expect(styleOf(box).getPropertyValue("--liquid-bevel").trim()).toBe("32px");
+    expect(defs().querySelector("feGaussianBlur")?.getAttribute("stdDeviation")).toBe("3");
+  });
+
+  test("tint, grain and opacity render on the surface", async () => {
+    await mount(
+      card({ type: "liquid", tint: { color: "red", amount: 1 }, grain: 0.5, opacity: 0.5 }),
+    );
+    const box = document.querySelector("[data-testid=box]") as HTMLElement;
+    const image = styleOf(box).backgroundImage;
+    expect(image).toContain("data:image/svg+xml");
+    // Fully opaque red tint, and the veil at half strength (the theme veil is 0.6).
+    expect(image).toContain("color(srgb 1 0 0)");
+    expect(image).toContain("color(srgb 1 1 1 / 0.3)");
+  });
+});

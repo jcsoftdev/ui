@@ -4,7 +4,7 @@ import { type ReactNode, useCallback, useEffect, useRef } from "react";
 import { useGlassLens } from "../../glass/use-glass-lens.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, materialStyle } from "../../utils/material.js";
 import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
 export interface SidebarLinkProps {
@@ -146,6 +146,7 @@ export function Sidebar({
           classNames?.root,
           className,
         )}
+        style={materialStyle(material)}
       >
         {header}
         {groups.map((group) => (

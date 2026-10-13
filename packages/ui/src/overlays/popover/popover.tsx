@@ -2,7 +2,7 @@
 
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass } from "../../utils/material.js";
+import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
 
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
@@ -27,6 +27,7 @@ export function PopoverContent({
   collisionPadding = 8,
   container,
   material,
+  style,
   ...props
 }: PopoverContentProps) {
   return (
@@ -39,6 +40,7 @@ export function PopoverContent({
           materialClass(material, "surface-solid"),
           className,
         )}
+        style={withMaterialStyle(material, style)}
         {...props}
       />
     </PopoverPrimitive.Portal>

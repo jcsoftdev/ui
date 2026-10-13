@@ -10,6 +10,7 @@ const theme = readFileSync(join(here, "../styles/theme.css"), "utf8");
 const tokens = readFileSync(join(here, "../styles/tokens.css"), "utf8");
 const golden = readFileSync(join(here, "golden/frosted-utilities.css"), "utf8");
 const { material } = await loadCases("material-cases.tsx");
+const glass = await loadCases("glass-cases.ts");
 
 const utility = (name) => {
   const start = theme.indexOf(`@utility ${name} {`);
@@ -70,7 +71,13 @@ test("liquid and liquid-clear are plain utilities with the lens flag and fallbac
     assert.ok(
       css.indexOf(`background-color: var(--glass-${variant}-fallback)`) < css.indexOf("@supports"),
     );
-    assert.match(css, new RegExp(`backdrop-filter: var\\(--liquid-${variant}-filter\\)`));
+    // The filter is composed from the variant's tokens and the per-surface options.
+    assert.match(
+      css,
+      new RegExp(
+        `backdrop-filter: blur\\(var\\(--liquid-frost, var\\(--liquid-${variant}-blur\\)\\)\\) saturate\\(var\\(--liquid-saturation, var\\(--liquid-saturate\\)\\)\\) var\\(--liquid-brightness-fn, `,
+      ),
+    );
     assert.match(css, /--glass-lens: 1/);
     assert.match(css, /--glass-lens-dim: var\(--liquid-\w+-dim\)/);
     assert.match(css, /@media \(prefers-reduced-transparency: reduce\)/);
@@ -80,11 +87,11 @@ test("liquid and liquid-clear are plain utilities with the lens flag and fallbac
   }
 });
 
-test("the global switch is gated on data-glass=liquid and never touches the content layer", () => {
-  assert.match(utility("glass"), /:where\(\[data-glass="liquid"\]\) & \{/);
-  assert.match(utility("glass-clear"), /:where\(\[data-glass="liquid"\]\) & \{/);
+test("the global switch is gated on data-glass=liquid (or a liquid preset) and never touches the content layer", () => {
+  assert.match(utility("glass"), /:where\(\[data-glass\^="liquid"\]\) & \{/);
+  assert.match(utility("glass-clear"), /:where\(\[data-glass\^="liquid"\]\) & \{/);
   for (const name of ["surface-overlay", "surface-nav", "surface-side"])
-    assert.match(utility(name), /\[data-glass="liquid"\]\[data-style="glass"\]/);
+    assert.match(utility(name), /\[data-glass\^="liquid"\]\[data-style="glass"\]/);
   assert.doesNotMatch(utility("surface-card"), /liquid/);
 });
 
@@ -94,7 +101,7 @@ test("press flex only exists for interactive liquid surfaces and respects reduce
   assert.match(css, /button, a, \[role="button"\], \[data-glass-interactive\]/);
   assert.doesNotMatch(css, /transition:[^;]*backdrop/);
   assert.doesNotMatch(
-    utility("glass").replace(/\[data-glass="liquid"\][\s\S]*?\n {2}:where\(\.glass/, ""),
+    utility("glass").replace(/\[data-glass\^="liquid"\][\s\S]*?\n {2}:where\(\.glass/, ""),
     /scale:/,
   );
 });
@@ -106,4 +113,38 @@ test("materialClass maps liquid values and cn treats them as one surface group",
   assert.equal(material.cn("glass", "liquid-clear", "p-2"), "liquid-clear p-2");
   assert.equal(material.cn("liquid", "surface-solid"), "surface-solid");
   assert.ok(material.card("liquid").split(" ").includes("liquid"));
+});
+
+test("the liquid utilities read every option variable and keep the theme look when none is set", () => {
+  const css = utility("liquid");
+  for (const name of [
+    "--liquid-glow",
+    "--liquid-tint-fill",
+    "--liquid-veil-fill",
+    "--liquid-rim-custom",
+    "--liquid-shadow-custom",
+    "--liquid-shadow-auto",
+  ])
+    assert.ok(css.includes(name), name);
+  // Every option falls back to the token it replaces, so an unset option changes nothing.
+  assert.match(css, /var\(--liquid-rim-custom, var\(--liquid-rim\)\)/);
+  assert.match(
+    css,
+    /var\(--liquid-shadow-custom, var\(--liquid-shadow-auto, var\(--liquid-shadow\)\)\)/,
+  );
+  assert.match(css, /calc\(var\(--liquid-opacity, 1\) \* 100%\)/);
+  assert.match(css, /calc\(var\(--liquid-tint-amount, 0\) \* 100%\)/);
+});
+
+test("base.css presets are the LIQUID_PRESETS, variable for variable", async () => {
+  const base = readFileSync(join(here, "../styles/base.css"), "utf8");
+  for (const name of ["clear", "thick"]) {
+    const block = new RegExp(`\\[data-glass="liquid-${name}"\\] \\{([^}]*)\\}`).exec(base)?.[1];
+    assert.ok(block, `base.css misses the ${name} preset`);
+    const declared = Object.fromEntries(
+      [...block.matchAll(/(--[\w-]+): ([^;]+);/g)].map(([, key, value]) => [key, value]),
+    );
+    assert.deepEqual(declared, glass.liquidVars(glass.LIQUID_PRESETS[name]), name);
+  }
+  assert.deepEqual(glass.liquidVars(glass.LIQUID_PRESETS.regular), {});
 });

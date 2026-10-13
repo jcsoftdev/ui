@@ -53,7 +53,7 @@ test("the default lens cannot fold: source position minus output position stays 
     [320, 320, 24],
     [40, 20, 9],
   ];
-  for (const coverage of ["full", "rim"]) {
+  for (const coverage of ["full", "dome", "rim"]) {
     for (const [width, height, radius] of shapes) {
       for (const dpr of [1, 2]) {
         const bezel = glass.bezelFor(radius, width, height, coverage);
@@ -80,11 +80,11 @@ test("the default lens cannot fold: source position minus output position stays 
   }
 });
 
-const fullField = (width, height, dpr = 1) => {
+const fullField = (width, height, dpr = 1, coverage = "full") => {
   const radius = 24;
-  const bezel = glass.bezelFor(radius, width, height, "full");
-  const f = glass.computeDisplacementField({ width, height, radius, bezel, coverage: "full", dpr });
-  const scale = glass.scaleFor(width, height, bezel, "full");
+  const bezel = glass.bezelFor(radius, width, height, coverage);
+  const f = glass.computeDisplacementField({ width, height, radius, bezel, coverage, dpr });
+  const scale = glass.scaleFor(width, height, bezel, coverage);
   /** Source offset in css px at css position (x, y), from the nearest map pixel. */
   const at = (x, y) => {
     const i = Math.min(f.width - 1, Math.max(0, Math.round(x * dpr)));
@@ -95,7 +95,7 @@ const fullField = (width, height, dpr = 1) => {
   return { at, scale };
 };
 
-test("full coverage has no facets: the direction of the pull is continuous across the diagonals", () => {
+test("whole-surface profiles have no facets: the direction of the pull is continuous across the diagonals", () => {
   // A height field from the distance to the nearest edge (or one per axis) flips the direction of
   // the pull along the diagonals of the shape, and the glass reads as a four-faced pyramid.
   for (const [width, height] of [
@@ -105,19 +105,24 @@ test("full coverage has no facets: the direction of the pull is continuous acros
     [180, 56],
     [320, 520],
   ]) {
-    const { at } = fullField(width, height);
-    for (const sx of [-1, 1]) {
-      for (const sy of [-1, 1]) {
-        for (const q of [0.35, 0.5, 0.65, 0.8]) {
-          // The point of the diagonal u = v at radius q, and a point one pixel either side of it.
-          const x = width / 2 + (sx * q * width) / 2;
-          const y = height / 2 + (sy * q * height) / 2;
-          const a = at(x - 1.5, y);
-          const b = at(x + 1.5, y);
-          const norm = Math.hypot(...a) * Math.hypot(...b);
-          if (norm < 1e-6) continue;
-          const cos = (a[0] * b[0] + a[1] * b[1]) / norm;
-          assert.ok(cos > 0.97, `${width}x${height} facet at ${sx},${sy},${q}: cos ${cos}`);
+    for (const coverage of ["full", "dome"]) {
+      const { at } = fullField(width, height, 1, coverage);
+      for (const sx of [-1, 1]) {
+        for (const sy of [-1, 1]) {
+          for (const q of [0.35, 0.5, 0.65, 0.8]) {
+            // The point of the diagonal u = v at radius q, and a point one pixel either side of it.
+            const x = width / 2 + (sx * q * width) / 2;
+            const y = height / 2 + (sy * q * height) / 2;
+            const a = at(x - 1.5, y);
+            const b = at(x + 1.5, y);
+            const norm = Math.hypot(...a) * Math.hypot(...b);
+            if (norm < 1e-6) continue;
+            const cos = (a[0] * b[0] + a[1] * b[1]) / norm;
+            assert.ok(
+              cos > 0.97,
+              `${coverage} ${width}x${height} facet at ${sx},${sy},${q}: cos ${cos}`,
+            );
+          }
         }
       }
     }
@@ -144,14 +149,18 @@ test("the facet detector flags a hip-roof field (pull along the normal of the ne
   assert.ok(a[0] * b[0] + a[1] * b[1] < 0.97);
 });
 
-test("full coverage never folds in 2D: the Jacobian of the sampling map stays positive", () => {
-  for (const [width, height] of [
-    [520, 320],
-    [1280, 56],
-    [200, 200],
-    [180, 56],
+test("whole-surface profiles never fold in 2D: the Jacobian of the sampling map stays positive", () => {
+  for (const [width, height, coverage] of [
+    [520, 320, "full"],
+    [1280, 56, "full"],
+    [200, 200, "full"],
+    [180, 56, "full"],
+    [520, 320, "dome"],
+    [1280, 56, "dome"],
+    [200, 200, "dome"],
+    [180, 56, "dome"],
   ]) {
-    const { at } = fullField(width, height, 2);
+    const { at } = fullField(width, height, 2, coverage);
     for (let x = 4; x < width - 4; x += Math.ceil(width / 90)) {
       for (let y = 4; y < height - 4; y += Math.ceil(height / 40)) {
         const [ox1, oy1] = at(x + 1, y);
@@ -162,7 +171,7 @@ test("full coverage never folds in 2D: the Jacobian of the sampling map stays po
         const b = (px1 - px0) / 2;
         const c = (oy1 - oy0) / 2;
         const d = 1 + (py1 - py0) / 2;
-        assert.ok(a * d - b * c > 0.05, `${width}x${height} folds at ${x},${y}`);
+        assert.ok(a * d - b * c > 0.05, `${coverage} ${width}x${height} folds at ${x},${y}`);
       }
     }
   }
@@ -283,4 +292,56 @@ test("a small pill keeps a clear middle: the bevel never exceeds 30% of the shor
   const f = glass.computeDisplacementField({ width: 180, height: 56, radius: 28, bezel: 16.8 });
   const centre = (28 * f.width + 90) * 4;
   assert.deepEqual([...f.data.slice(centre, centre + 3)], [128, 128, 255]);
+});
+
+test("the dome is a different lens from the full one: round contours, flatter middle, softer wall", () => {
+  const options = (coverage) => ({
+    width: 400,
+    height: 200,
+    radius: 28,
+    bezel: glass.bezelFor(28, 400, 200, coverage),
+    coverage,
+  });
+  const full = glass.computeDisplacementField(options("full"));
+  const dome = glass.computeDisplacementField(options("dome"));
+  const red = (f, x, y) => f.data[(y * f.width + x) * 4] - 128;
+  assert.equal(red(dome, 200, 100), 0, "no seam at the centre");
+  assert.ok(red(dome, 0, 100) > red(dome, 100, 100) && red(dome, 100, 100) > red(dome, 180, 100));
+  // Flatter in the middle and softer at the walls than the full lens (it peaks at the corners).
+  assert.ok(red(dome, 150, 100) < red(full, 150, 100));
+  assert.ok(red(dome, 0, 100) < red(full, 0, 100) && red(dome, 0, 100) > red(full, 0, 100) / 2);
+  assert.notDeepEqual([...dome.data.slice(0, 4000)], [...full.data.slice(0, 4000)]);
+});
+
+test("bevelWidth caps the offset of the whole-surface profiles in px and refraction scales the filter, not the map", () => {
+  const big = glass.lensAmplitude(2000, 1000, 500, "full", 12);
+  assert.equal(big.x, 12);
+  assert.equal(glass.lensAmplitude(2000, 1000, 500, "dome").x, 24);
+  assert.equal(
+    glass.scaleFor(2000, 1000, 500, "full", 12) < glass.scaleFor(2000, 1000, 500, "full"),
+    true,
+  );
+  // A small surface stays fold-free whatever the cap.
+  assert.equal(glass.lensAmplitude(40, 20, 10, "full", 90).x, 5.5);
+  const a = glass.computeDisplacementField({
+    width: 300,
+    height: 120,
+    radius: 24,
+    bezel: 60,
+    coverage: "full",
+    cap: 6,
+  });
+  const b = glass.computeDisplacementField({
+    width: 300,
+    height: 120,
+    radius: 24,
+    bezel: 60,
+    coverage: "full",
+    cap: 24,
+  });
+  assert.deepEqual(
+    [...a.data],
+    [...b.data],
+    "the map is normalised: only the filter scale carries the cap",
+  );
 });
