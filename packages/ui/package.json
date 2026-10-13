@@ -1,6 +1,6 @@
 {
   "name": "@jcsoftdev/ui",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Token-driven React component library: React 19, Tailwind v4.",
   "author": "jcsoftdev",
   "license": "MIT",
