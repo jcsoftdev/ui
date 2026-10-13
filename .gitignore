@@ -16,4 +16,5 @@ packages/ui/styles/
 packages/ui/tokens/
 packages/ui/bin/
 packages/ui/scripts/build-theme.mjs
+packages/ui/scripts/build-theme.d.mts
 examples/*/screenshots/

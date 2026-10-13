@@ -23,7 +23,7 @@ Four packages, one version number (lockstep), zero runtime dependencies each:
 
 Rules:
 
-1. **Back-compat.** `@jcsoftdev/ui` still ships `styles/*`, `tokens/*` and `bin/ui-theme.mjs` at the same paths
+1. **Back-compat.** `@jcsoftdev/ui` still ships `styles/*`, `tokens/*`, `bin/ui-theme.mjs` and the `@jcsoftdev/ui/theme-builder` subpath (re-exported from ui-tokens, shipped in the tarball) at the same paths
    with byte-identical CSS. `ui-tokens` is a *dev* dependency (`workspace:^`); a build step
    (`scripts/sync-tokens.mjs`) copies the assets in and bundles the CLI, so installing `@jcsoftdev/ui` pulls no
    extra package and "zero runtime dependencies" holds.

@@ -1,5 +1,5 @@
 // Copies the token assets owned by @jcsoftdev/ui-tokens into this package so the published
-// files stay byte-compatible with 0.2.x (styles/*, tokens/*, bin/ui-theme.mjs). The copies are
+// files stay byte-compatible with 0.2.x (styles/*, tokens/*, bin/ui-theme.mjs, the `./theme-builder` module). The copies are
 // build output and git-ignored; ui-tokens is a devDependency, so consumers install nothing extra.
 
 import { execFileSync } from "node:child_process";
@@ -23,7 +23,9 @@ for (const dir of ["styles", "tokens"]) {
 }
 
 mkdirSync(join(root, "scripts"), { recursive: true });
-cpSync(join(source, "scripts/build-theme.mjs"), join(root, "scripts/build-theme.mjs"));
+for (const name of ["build-theme.mjs", "build-theme.d.mts"]) {
+  cpSync(join(source, "scripts", name), join(root, "scripts", name));
+}
 
 mkdirSync(join(root, "bin"), { recursive: true });
 const bin = join(root, "bin/ui-theme.mjs");
@@ -37,4 +39,6 @@ buildSync({
   legalComments: "none",
 });
 chmodSync(bin, 0o755);
-console.log("synced @jcsoftdev/ui-tokens -> styles/, tokens/, bin/, scripts/build-theme.mjs");
+console.log(
+  "synced @jcsoftdev/ui-tokens -> styles/, tokens/, bin/, scripts/build-theme.{mjs,d.mts}",
+);
