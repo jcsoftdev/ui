@@ -1,0 +1,54 @@
+body {
+  margin: 0;
+  background: var(--page-backdrop, var(--bg));
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+.app {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 96px;
+}
+.panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+.glass {
+  background: linear-gradient(135deg, #f0abfc, #93c5fd 50%, #6ee7b7);
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+}
+.muted {
+  margin: 0;
+  color: var(--ink-2);
+}
+h1,
+h2 {
+  margin: 0;
+}
+.plain {
+  height: var(--control-height);
+  padding: 0 12px;
+  border: var(--border-width-control) solid var(--line-control);
+  border-radius: var(--radius-button);
+  background: var(--surface-control);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}

@@ -1,0 +1,30 @@
+:host {
+  /* Component variables are --ui-pressable-*; everything else must be a ui-tokens token. */
+  position: relative;
+  display: inline-flex;
+  max-inline-size: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+:host([hidden]) {
+  display: none;
+}
+:host([disabled]) {
+  pointer-events: none;
+  opacity: 0.6;
+}
+[part="ripple"] {
+  position: absolute;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  :host(:not([scale="false"]):not([disabled])) {
+    transition: scale var(--motion-duration) var(--motion-ease);
+  }
+  :host(:not([scale="false"]):not([disabled]):active) {
+    scale: var(--press-scale);
+  }
+}

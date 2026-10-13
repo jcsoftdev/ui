@@ -1,0 +1,28 @@
+:host {
+  --ui-select-height: var(--control-height-sm);
+  display: inline-block;
+  inline-size: auto;
+  max-inline-size: 100%;
+  border-radius: var(--radius-chip);
+}
+:host(:hover) {
+  background-color: var(--surface-sunken);
+}
+[part="trigger"] {
+  inline-size: auto;
+  max-inline-size: 100%;
+  gap: 4px;
+  padding: 0 6px 0 8px;
+  border: 0;
+  border-radius: var(--radius-chip);
+  background-color: transparent;
+  font-size: 14px;
+  font-weight: 600;
+}
+[part="trigger"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+}
+[part="icon"] {
+  inline-size: 12px;
+  block-size: 12px;
+}
