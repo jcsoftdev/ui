@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { html, copyText } = await loadCases("app-layout-cases.tsx");
+const { html, copyText, splitBottomNavItems } = await loadCases("app-layout-cases.tsx");
 
 test("Grid fits columns from the minimum width unless a count is given", () => {
   assert.match(
@@ -79,4 +79,39 @@ test("CopyField shows the value, names its button after the label and has a live
   assert.match(markup, /<button[^>]*aria-label="Copy: Webhook URL"[^>]*>.*Copy.*<\/button>/);
   assert.match(markup, /<span role="status" class="sr-only"><\/span>/);
   assert.match(html.copyFieldEs(), /aria-label="Copiar: Enlace"/);
+});
+
+test("the bottom bar keeps everything when it fits and gives one slot to More otherwise", () => {
+  const items = ["a", "b", "c", "d", "e", "f", "g"];
+  assert.deepEqual(splitBottomNavItems(items.slice(0, 5)), {
+    visible: ["a", "b", "c", "d", "e"],
+    overflow: [],
+  });
+  assert.deepEqual(splitBottomNavItems(items), {
+    visible: ["a", "b", "c", "d"],
+    overflow: ["e", "f", "g"],
+  });
+  assert.deepEqual(splitBottomNavItems(items, 3), {
+    visible: ["a", "b"],
+    overflow: ["c", "d", "e", "f", "g"],
+  });
+});
+
+test("BottomNav renders a landmark with the current page and a More button only on overflow", () => {
+  const fits = html.bottomNav(5, 1);
+  assert.match(fits, /<nav aria-label="Sections"/);
+  assert.match(fits, /<a [^>]*aria-current="page"[^>]*>.*Item 1/);
+  assert.doesNotMatch(fits, /aria-haspopup="dialog"/);
+
+  const overflowing = html.bottomNav(7, 1);
+  assert.equal(overflowing.match(/<a /g)?.length, 4);
+  assert.match(
+    overflowing,
+    /<button[^>]*data-active="false"[^>]*aria-haspopup="dialog"[^>]*aria-expanded="false"/,
+  );
+  assert.doesNotMatch(overflowing, /Item 4/);
+});
+
+test("More is marked active when the current page is behind it", () => {
+  assert.match(html.bottomNav(7, 6), /<button[^>]*data-active="true"/);
 });

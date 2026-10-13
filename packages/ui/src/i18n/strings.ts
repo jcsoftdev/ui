@@ -17,6 +17,7 @@ export interface UiStrings {
   offline: string;
   copy: string;
   copied: string;
+  more: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -41,6 +42,7 @@ export const uiStrings = {
     offline: "Offline",
     copy: "Copy",
     copied: "Copied",
+    more: "More",
   },
   es: {
     retry: "Reintentar",
@@ -61,5 +63,6 @@ export const uiStrings = {
     offline: "Sin conexión",
     copy: "Copiar",
     copied: "Copiado",
+    more: "Más",
   },
 } as const satisfies Record<UiLocale, UiStrings>;
