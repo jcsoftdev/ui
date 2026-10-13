@@ -1,0 +1,32 @@
+[data-ui="settings-row"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 13px 16px;
+  border-top: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="settings-row"]:first-child {
+  border-top: 0;
+}
+[data-ui="settings-row"] > :not([data-ui-part="body"]) {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+[data-ui="settings-row"] > [data-ui-part="body"] {
+  flex: 1 1 14rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+[data-ui="settings-row"] > [data-ui-part="body"] > [data-ui-part="title"] {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+[data-ui="settings-row"] > [data-ui-part="body"] > [data-ui-part="description"] {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+}
