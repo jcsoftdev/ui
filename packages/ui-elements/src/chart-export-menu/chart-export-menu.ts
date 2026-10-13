@@ -42,7 +42,7 @@ const ALL: readonly ExportFormat[] = ["svg", "png", "csv", "xlsx"];
  * writer only when XLSX is chosen.
  * Attributes: `for` (chart id), `formats` (space separated subset, default all four), `filename`
  * (default: the chart title). Property: `texts` (visible strings, English defaults). Fires
- * `export` (`detail: { format }`) after a download starts and `exporterror` (`detail: { format,
+ * `export` (`detail: { format, dropped }`, `dropped` lists external `<image>` hrefs an SVG/PNG could not include) after a download starts and `exporterror` (`detail: { format,
  * error }`) if one fails.
  */
 export class UiChartExportMenu extends ElementBase {
@@ -200,6 +200,7 @@ export class UiChartExportMenu extends ElementBase {
   async #export(format: ExportFormat): Promise<void> {
     const chart = this.#chart;
     if (!chart) return;
+    let dropped: string[] = [];
     try {
       const tools = await import("../internal/chart-export.js");
       const snapshot = chart.chartSnapshot;
@@ -210,13 +211,18 @@ export class UiChartExportMenu extends ElementBase {
       if (format === "svg" || format === "png") {
         const svgs = chart.exportSvgs();
         if (svgs.length === 0) return;
-        if (format === "svg") tools.downloadSvg(svgs, { fileName });
-        else await tools.downloadPng(svgs, { fileName });
+        const options = { fileName, from: chart };
+        dropped =
+          format === "svg"
+            ? tools.downloadSvg(svgs, options)
+            : await tools.downloadPng(svgs, { ...options, layer: chart.canvasLayer });
+        if (dropped.length)
+          console.warn(`ui-chart-export-menu: left out external images: ${dropped.join(", ")}`);
       } else if (snapshot) {
         if (format === "csv") tools.downloadCsv(snapshot, fileName);
         else await tools.downloadXlsx(snapshot, fileName);
       } else return;
-      emit(this, "export", { format });
+      emit(this, "export", { format, dropped });
     } catch (error) {
       emit(this, "exporterror", { format, error });
     }
