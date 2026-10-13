@@ -1,6 +1,6 @@
 import { type DefineOptions, defineElement, ElementBase, emit, uid } from "../internal/base.js";
 import { connectLight } from "../internal/containers.js";
-import { part } from "../internal/e10.js";
+import { part, upgradeProperties } from "../internal/e10.js";
 import css from "./confirm-action.css.js";
 
 /** What a confirm handler may return: nothing, or a result that keeps the step open with a message. */
@@ -37,17 +37,25 @@ export class UiConfirmAction extends ElementBase {
     "trigger-variant",
   ];
 
-  /** The action to run on confirm. */
-  onConfirm: ConfirmHandler | undefined;
-
+  #onConfirm: ConfirmHandler | undefined;
   #confirming = false;
   #busy = false;
   #failure: string | null = null;
-  #wasConfirming = false;
-  #focus: "cancel" | "confirm" = "cancel";
+  /** The button (`data-ui-part`) to focus after the next render, set by a transition only. */
+  #want: "trigger" | "danger" | "secondary" | null = null;
+
+  /** The action to run on confirm. */
+  get onConfirm(): ConfirmHandler | undefined {
+    return this.#onConfirm;
+  }
+
+  set onConfirm(value: ConfirmHandler | undefined) {
+    this.#onConfirm = value;
+  }
 
   connectedCallback(): void {
     connectLight(this, "confirm-action", css);
+    upgradeProperties(this, ["onConfirm"]);
     this.#render();
   }
 
@@ -64,7 +72,8 @@ export class UiConfirmAction extends ElementBase {
   open(): void {
     if (this.#confirming) return;
     this.#confirming = true;
-    this.#focus = "cancel";
+    this.#failure = null;
+    this.#want = "secondary";
     emit(this, "open");
     this.#render();
   }
@@ -73,19 +82,21 @@ export class UiConfirmAction extends ElementBase {
   cancel(): void {
     if (!this.#confirming || this.#busy) return;
     this.#confirming = false;
+    this.#failure = null;
+    this.#want = "trigger";
     emit(this, "cancel");
     this.#render();
   }
 
   async #confirm(): Promise<void> {
     if (this.#busy) return;
-    this.#focus = "confirm";
+    this.#want = "danger";
     this.#busy = true;
     this.#failure = null;
     this.#render();
     let failure: string | null = null;
     try {
-      const result = await this.onConfirm?.();
+      const result = await this.#onConfirm?.();
       if (result && !result.ok) failure = result.error;
     } catch {
       failure =
@@ -94,9 +105,11 @@ export class UiConfirmAction extends ElementBase {
     this.#busy = false;
     if (failure === null) {
       this.#confirming = false;
+      this.#want = "trigger";
       emit(this, "confirm");
     } else {
       this.#failure = failure;
+      this.#want = "danger";
       emit(this, "failed", { message: failure });
     }
     this.#render();
@@ -119,8 +132,15 @@ export class UiConfirmAction extends ElementBase {
 
   #render(): void {
     const label = this.getAttribute("label") ?? "";
-    const restoreFocus = this.#wasConfirming && !this.#confirming;
-    this.#wasConfirming = this.#confirming;
+    const active = (this.getRootNode() as Document | ShadowRoot).activeElement;
+    const mine = !active || active === document.body || this.contains(active);
+    const kept =
+      active instanceof HTMLElement && this.contains(active) ? active.dataset.uiPart : undefined;
+    const want = this.#want ?? kept;
+    this.#want = null;
+    const focus = (buttons: Record<string, HTMLElement | undefined>) => {
+      if (mine && want) buttons[want]?.focus();
+    };
     if (!this.#confirming) {
       const trigger = this.#button(label, "trigger", () => this.open());
       trigger.dataset.variant = this.getAttribute("trigger-variant") ?? "secondary";
@@ -128,7 +148,7 @@ export class UiConfirmAction extends ElementBase {
         ...(this.#failure === null ? [] : [this.#banner(this.#failure)]),
         trigger,
       );
-      if (restoreFocus) trigger.focus();
+      focus({ trigger });
       return;
     }
     const fieldset = part("fieldset", "step");
@@ -161,7 +181,7 @@ export class UiConfirmAction extends ElementBase {
       actions,
     );
     this.replaceChildren(fieldset);
-    (this.#focus === "confirm" ? confirm : cancel).focus();
+    focus({ danger: confirm, secondary: cancel });
   }
 }
 

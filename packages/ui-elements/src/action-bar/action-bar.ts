@@ -51,7 +51,9 @@ export class UiActionBar extends ElementBase {
     this.#clear.innerHTML = X;
     this.#clear.addEventListener("click", () => emit(this, "clear"));
     this.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || !this.hasAttribute("clearable")) return;
+      if (event.key !== "Escape" || event.defaultPrevented || !this.hasAttribute("clearable"))
+        return;
+      event.preventDefault();
       event.stopPropagation();
       emit(this, "clear");
     });
@@ -76,6 +78,7 @@ export class UiActionBar extends ElementBase {
     this.prepend(this.#count);
     this.#count.after(this.#actions);
     this.#sync();
+    this.#syncRoving();
     this.#material.sync();
   }
 
@@ -102,11 +105,12 @@ export class UiActionBar extends ElementBase {
       count === 1
         ? (this.getAttribute("noun-singular") ?? "seleccionado")
         : (this.getAttribute("noun-plural") ?? "seleccionados");
-    this.#count.textContent = `${count} ${noun}`;
+    const text = `${count} ${noun}`;
+    if (this.#count.textContent !== text) this.#count.textContent = text;
     this.#clear.setAttribute("aria-label", this.getAttribute("clear-label") ?? "Limpiar selección");
-    if (this.hasAttribute("clearable")) this.append(this.#clear);
-    else this.#clear.remove();
-    this.#syncRoving();
+    if (this.hasAttribute("clearable")) {
+      if (this.lastElementChild !== this.#clear) this.append(this.#clear);
+    } else this.#clear.remove();
   }
 
   #syncRoving(): void {

@@ -1,6 +1,6 @@
 import { type DefineOptions, defineElement, ElementBase } from "../internal/base.js";
 import { connectLight } from "../internal/containers.js";
-import { part } from "../internal/e10.js";
+import { part, upgradeProperties } from "../internal/e10.js";
 import css from "./responsive-list.css.js";
 
 /** What a cell or an actions renderer may return. */
@@ -90,6 +90,7 @@ export class UiResponsiveList<T = unknown> extends ElementBase {
 
   connectedCallback(): void {
     connectLight(this, "responsive-list", css);
+    upgradeProperties(this, ["columns", "items", "rowKey", "renderActions", "rowClass"]);
     this.render();
   }
 
@@ -108,6 +109,7 @@ export class UiResponsiveList<T = unknown> extends ElementBase {
 
   /** Renders the table and the cards from the current properties. */
   render(): void {
+    const restore = this.#focusMemo();
     const caption = this.getAttribute("caption") ?? "";
     const columns = this.#columns;
     const primary = columns.find((column) => column.primary) ?? columns[0];
@@ -180,6 +182,31 @@ export class UiResponsiveList<T = unknown> extends ElementBase {
     table.append(captionElement, head, body);
     wrapper.append(table);
     this.replaceChildren(wrapper, cards);
+    restore();
+  }
+
+  /** Remembers the focused control (view, row key, position in the row) and returns a function that focuses its twin after a render. */
+  #focusMemo(): () => void {
+    const active = (this.getRootNode() as Document | ShadowRoot).activeElement;
+    if (!active || !this.contains(active)) return () => {};
+    const row = active.closest<HTMLElement>("[data-row-key]");
+    const view = active.closest("[data-ui-part=cards]") ? "cards" : "table-wrapper";
+    if (!row) return () => {};
+    const focusables = (scope: Element) =>
+      Array.from(
+        scope.querySelectorAll<HTMLElement>("button, a[href], input, select, textarea, [tabindex]"),
+      );
+    const index = focusables(row).indexOf(active as HTMLElement);
+    const key = row.dataset.rowKey;
+    return () => {
+      for (const candidate of this.querySelectorAll<HTMLElement>(
+        `[data-ui-part=${view}] [data-row-key], [data-ui-part=${view}][data-row-key]`,
+      ))
+        if (candidate.dataset.rowKey === key) {
+          focusables(candidate)[Math.max(index, 0)]?.focus();
+          return;
+        }
+    };
   }
 
   #header(text: string, alignEnd: boolean): HTMLElement {

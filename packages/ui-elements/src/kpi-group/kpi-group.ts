@@ -3,10 +3,19 @@ import { type DefineOptions, defineElement, ElementBase, isPart } from "../inter
 import { connectLight } from "../internal/containers.js";
 import { glyph } from "../internal/e1-icons.js";
 import { formatTrend, trendDirection, trendTone } from "../internal/e1-trend.js";
-import { gather, part } from "../internal/e10.js";
+import { gather, part, upgradeProperties } from "../internal/e10.js";
 import css from "./kpi-group.css.js";
 
 const DURATION = 900;
+
+/** Formats with the author's config; an invalid locale or option falls back to the defaults. */
+function safeFormat(value: number, format?: NumberFormatConfig): string {
+  try {
+    return formatNumber(value, format);
+  } catch {
+    return formatNumber(value);
+  }
+}
 const TONE_WORDS = { positive: "favorable", negative: "desfavorable", neutral: "sin cambio" };
 const DIRECTION_WORDS = { up: "sube", down: "baja", flat: "estable" };
 
@@ -92,6 +101,8 @@ export class UiKpiItem extends ElementBase {
 
   connectedCallback(): void {
     connectLight(this, "kpi-item", css);
+    this.setAttribute("role", "none");
+    upgradeProperties(this, ["format"]);
     this.#body.append(this.#value);
     this.#stop = gather(
       this,
@@ -145,7 +156,7 @@ export class UiKpiItem extends ElementBase {
 
   #showNumber(to: number): void {
     const format = this.format;
-    const finalText = formatNumber(to, format);
+    const finalText = safeFormat(to, format);
     const group = this.closest('[data-ui="kpi-group"]') as UiKpiGroup | null;
     const animate = group ? group.animated : true;
     const from = this.#shown ?? 0;
@@ -159,13 +170,13 @@ export class UiKpiItem extends ElementBase {
       return;
     }
     this.#text.setAttribute("aria-hidden", "true");
-    this.#text.textContent = formatNumber(from, format);
+    this.#text.textContent = safeFormat(from, format);
     this.#cancel = animateNumber({
       from,
       to,
       duration: DURATION,
       onFrame: (value) => {
-        this.#text.textContent = formatNumber(value, format);
+        this.#text.textContent = safeFormat(value, format);
       },
     });
   }

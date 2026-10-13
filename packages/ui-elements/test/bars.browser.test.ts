@@ -1,11 +1,13 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineActionBar, type UiActionBar } from "../src/action-bar/action-bar.ts";
+import { defineButton } from "../src/button/button.ts";
 import { defineConfirmAction, type UiConfirmAction } from "../src/confirm-action/confirm-action.ts";
 import { defineToolbar } from "../src/toolbar/toolbar.ts";
-import { ax, mount } from "./setup.ts";
+import { ax, frame, mount } from "./setup.ts";
 
 beforeAll(() => {
+  defineButton();
   defineToolbar();
   defineActionBar();
   defineConfirmAction();
@@ -47,6 +49,38 @@ describe("ui-toolbar", () => {
     host.querySelector("ui-toolbar")!.removeAttribute("roving");
     expect(host.querySelector("ui-toolbar")!.hasAttribute("role")).toBe(false);
     expect(c.hasAttribute("tabindex")).toBe(false);
+  });
+});
+
+describe("ui-toolbar roving review fixes", () => {
+  it("stopping roving puts back each item's own tabindex (ui-button)", async () => {
+    const host = mount(
+      `<ui-toolbar><ui-button id="a">A</ui-button><ui-button id="b">B</ui-button></ui-toolbar>`,
+    );
+    const toolbar = host.firstElementChild!;
+    const [a, b] = [host.querySelector<HTMLElement>("#a")!, host.querySelector<HTMLElement>("#b")!];
+    const before = [a.getAttribute("tabindex"), b.getAttribute("tabindex")];
+    toolbar.setAttribute("roving", "");
+    await vi.waitFor(() => expect(b.tabIndex).toBe(-1));
+    toolbar.removeAttribute("roving");
+    expect([a.getAttribute("tabindex"), b.getAttribute("tabindex")]).toEqual(before);
+    expect(b.tabIndex).toBe(0);
+  });
+
+  it("leaves nested composites alone", async () => {
+    const host = mount(
+      `<ui-toolbar roving aria-label="T"><button id="a">A</button><div role="group"><button id="n">N</button></div><button id="c">C</button></ui-toolbar>`,
+    );
+    const [a, n, c] = ["a", "n", "c"].map((id) => host.querySelector<HTMLElement>(`#${id}`)!) as [
+      HTMLElement,
+      HTMLElement,
+      HTMLElement,
+    ];
+    await vi.waitFor(() => expect(c.tabIndex).toBe(-1));
+    expect(n.hasAttribute("tabindex")).toBe(false);
+    a.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    expect(document.activeElement).toBe(c);
   });
 });
 
@@ -123,6 +157,40 @@ describe("ui-action-bar", () => {
     expect(document.activeElement).toBe(b);
   });
 
+  it("keeps the roving position across count changes, and prepended actions go first", async () => {
+    const host = mount(
+      `<div style="position:relative;height:100px"><ui-action-bar selected-count="1" roving><button id="a">A</button><button id="b">B</button></ui-action-bar></div>`,
+    );
+    const bar = host.querySelector("ui-action-bar") as UiActionBar;
+    const b = host.querySelector<HTMLElement>("#b")!;
+    await vi.waitFor(() => expect(b.tabIndex).toBe(-1));
+    b.focus();
+    await vi.waitFor(() => expect(b.tabIndex).toBe(0));
+    bar.setAttribute("selected-count", "2");
+    bar.setAttribute("label", "Other");
+    await frame();
+    expect(document.activeElement).toBe(b);
+    expect(b.tabIndex).toBe(0);
+    const first = document.createElement("button");
+    first.id = "first";
+    bar.prepend(first);
+    await vi.waitFor(() =>
+      expect(bar.querySelector("[data-ui-part=actions]")!.firstElementChild).toBe(first),
+    );
+  });
+
+  it("Escape that was already handled does not clear, and handled Escape is prevented", async () => {
+    const host = mount(html('selected-count="2" clearable'));
+    const bar = host.querySelector("ui-action-bar")!;
+    const clear = vi.fn();
+    bar.addEventListener("clear", clear);
+    const button = host.querySelector<HTMLElement>("#x")!;
+    button.addEventListener("keydown", (event) => event.preventDefault());
+    button.focus();
+    await userEvent.keyboard("{Escape}");
+    expect(clear).not.toHaveBeenCalled();
+  });
+
   it("works under a custom prefix", () => {
     defineActionBar({ prefix: "acme" });
     const host = mount(`<acme-action-bar selected-count="1"><button>x</button></acme-action-bar>`);
@@ -181,6 +249,33 @@ describe("ui-confirm-action", () => {
     await vi.waitFor(() => expect(confirmed).toHaveBeenCalledTimes(1));
     expect(el.querySelector("fieldset")).toBeNull();
     expect(document.activeElement).toBe(buttons(el)[0]);
+  });
+
+  it("does not steal focus when opened from outside, and a failure clears on reopen", async () => {
+    const el = make();
+    const other = document.createElement("input");
+    document.body.append(other);
+    other.focus();
+    el.open();
+    expect(document.activeElement).toBe(other);
+    el.onConfirm = async () => ({ ok: false, error: "No" });
+    buttons(el)[0]!.click();
+    await vi.waitFor(() => expect(el.querySelector("[role=alert]")).toBeTruthy());
+    el.cancel();
+    el.open();
+    expect(el.querySelector("[role=alert]")).toBeNull();
+  });
+
+  it("takes onConfirm set before the element was upgraded", async () => {
+    const early = document.createElement("late-confirm-action") as UiConfirmAction;
+    early.setAttribute("label", "Go");
+    const run = vi.fn(async () => {});
+    early.onConfirm = run;
+    document.body.append(early);
+    defineConfirmAction({ prefix: "late" });
+    early.open();
+    early.querySelector<HTMLButtonElement>('[data-variant="danger"]')!.click();
+    await vi.waitFor(() => expect(run).toHaveBeenCalledTimes(1));
   });
 
   it("a returned failure or a throw keeps the step open with an alert", async () => {

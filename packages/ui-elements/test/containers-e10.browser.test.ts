@@ -58,6 +58,21 @@ describe("ui-item-card-group", () => {
     expect(select).toHaveBeenCalledTimes(2);
   });
 
+  it("prepended rows keep their order, removals and a removed selected-id update the highlight", async () => {
+    const el = group();
+    const row = document.createElement("ui-item-card");
+    row.id = "z";
+    row.setAttribute("heading", "Zed");
+    el.prepend(row);
+    await vi.waitFor(() => expect(el.querySelector("[role=list]")!.firstElementChild).toBe(row));
+    el.removeAttribute("selected-id");
+    expect(el.querySelector("[aria-current]")).toBeNull();
+    el.setAttribute("selected-id", "z");
+    expect(row.hasAttribute("selected")).toBe(true);
+    el.querySelector("#a")!.remove();
+    expect(el.querySelectorAll("[role=listitem]")).toHaveLength(3);
+  });
+
   it("rows added later join the list", async () => {
     const el = group();
     const row = document.createElement("ui-item-card");
@@ -114,6 +129,14 @@ describe("ui-kpi-group", () => {
     expect(churn!.dataset.direction).toBe("down");
   });
 
+  it("survives an invalid locale in the format and keeps the item out of the dl content model", () => {
+    const el = mount(
+      `<ui-kpi-group animate="false"><ui-kpi-item label="a" value="5" format='{"locale":"not_a_locale!"}'></ui-kpi-item></ui-kpi-group>`,
+    ).firstElementChild!;
+    expect(el.querySelector("[data-ui-part=value]")!.textContent).toBe("5");
+    expect(el.querySelector("ui-kpi-item")!.getAttribute("role")).toBe("none");
+  });
+
   it("columns follow the container: 1, 2 or 4 across", () => {
     const columns = (width: number) => {
       document.body.innerHTML = "";
@@ -136,7 +159,8 @@ describe("ui-timeline", () => {
 
   it("is a list of items with a time element and extras under the text", async () => {
     const el = timeline();
-    expect(el.querySelector("[role=list]")!.children).toHaveLength(3);
+    expect(el.getAttribute("role")).toBe("list");
+    expect(el.children).toHaveLength(3);
     const first = el.querySelector("ui-timeline-item")!;
     expect(first.getAttribute("role")).toBe("listitem");
     const time = first.querySelector("time")!;
@@ -155,6 +179,31 @@ describe("ui-timeline", () => {
     expect(headings()).toEqual(["Today", "Yesterday"]);
     el.querySelectorAll("ui-timeline-item")[1]!.setAttribute("group", "Earlier");
     expect(headings()).toEqual(["Today", "Earlier", "Yesterday"]);
+  });
+
+  it("keeps heading and order when an item is prepended, inserted or removed", async () => {
+    const el = timeline();
+    const headings = () =>
+      Array.from(el.querySelectorAll("[data-ui-part=group]")).map((h) => h.textContent);
+    const first = el.firstElementChild as HTMLElement;
+    first.remove();
+    await vi.waitFor(() =>
+      expect(el.firstElementChild!.querySelector("[data-ui-part=group]")?.textContent).toBe(
+        "Today",
+      ),
+    );
+    expect(headings()).toEqual(["Today", "Yesterday"]);
+    const added = document.createElement("ui-timeline-item");
+    added.setAttribute("heading", "New");
+    added.setAttribute("group", "Now");
+    el.prepend(added);
+    await vi.waitFor(() => expect(headings()).toEqual(["Now", "Today", "Yesterday"]));
+    expect(el.firstElementChild).toBe(added);
+    const middle = document.createElement("ui-timeline-item");
+    middle.setAttribute("heading", "Mid");
+    middle.setAttribute("group", "Today");
+    el.insertBefore(middle, el.children[2]!);
+    await vi.waitFor(() => expect(el.children[2]).toBe(middle));
   });
 
   it("draws a connector between items but not after the last, and tints the marker by tone", () => {
@@ -240,6 +289,27 @@ describe("ui-responsive-list", () => {
     expect(card.querySelector("dd")!.textContent).toBe("S/ 120");
     expect(card.querySelector("button")!.textContent).toBe("Open o1");
     expect(list.querySelector('li[data-row-key="o2"]')!.className).toBe("late");
+  });
+
+  it("keeps focus on the same row control across a re-render, and takes properties set before upgrade", async () => {
+    const list = make(900);
+    await vi.waitFor(() => expect(list.querySelector("table")).toBeTruthy());
+    const button = list.querySelector<HTMLElement>('tr[data-row-key="o2"] button')!;
+    button.focus();
+    list.items = [...orders];
+    await vi.waitFor(() =>
+      expect(list.querySelector('tr[data-row-key="o2"] button')).not.toBe(button),
+    );
+    expect(document.activeElement).toBe(list.querySelector('tr[data-row-key="o2"] button'));
+
+    const early = document.createElement("late-responsive-list") as UiResponsiveList<Order>;
+    early.setAttribute("caption", "Orders");
+    early.columns = [{ key: "c", header: "Customer", cell: (o) => o.customer }];
+    early.rowKey = (o) => o.id;
+    early.items = orders;
+    document.body.append(early);
+    defineResponsiveList({ prefix: "late" });
+    await vi.waitFor(() => expect(early.querySelectorAll("tbody tr")).toHaveLength(2));
   });
 
   it("a primary column becomes the card title and items re-render", async () => {

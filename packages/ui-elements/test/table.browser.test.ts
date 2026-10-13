@@ -78,7 +78,7 @@ describe("ui-table", () => {
     for (const c of [cell(el, "name", "th"), cell(el, "name")]) {
       expect(c.dataset.pinned).toBe("left");
       expect(getComputedStyle(c).position).toBe("sticky");
-      expect(c.style.left).toBe("0px");
+      expect(c.style.insetInlineStart).toBe("0px");
     }
     const unpin = cell(el, "name", "th").querySelector("button")!;
     expect(unpin.getAttribute("aria-label")).toBe("Desfijar");
@@ -95,7 +95,7 @@ describe("ui-table", () => {
     await userEvent.click(unpin);
     expect(changes.at(-1)).toEqual({ left: [], right: [] });
     expect(cell(el, "name").hasAttribute("data-pinned")).toBe(false);
-    expect(cell(el, "name").style.left).toBe("");
+    expect(cell(el, "name").style.insetInlineStart).toBe("");
   });
 
   it("stacks several left pins and pins right columns from the right edge", async () => {
@@ -105,8 +105,8 @@ describe("ui-table", () => {
     el.pin("city", "left");
     el.pin("spend", "right");
     const nameWidth = cell(el, "name", "th").getBoundingClientRect().width;
-    expect(Number.parseFloat(cell(el, "city").style.left)).toBeCloseTo(nameWidth, 2);
-    expect(cell(el, "spend").style.right).toBe("0px");
+    expect(Number.parseFloat(cell(el, "city").style.insetInlineStart)).toBeCloseTo(nameWidth, 2);
+    expect(cell(el, "spend").style.insetInlineEnd).toBe("0px");
     expect(cell(el, "spend").dataset.pinned).toBe("right");
     expect(el.pinnedColumns).toEqual({ left: ["name", "city"], right: ["spend"] });
   });
@@ -121,7 +121,7 @@ describe("ui-table", () => {
     expect(cell(el, "name").hasAttribute("data-pinned")).toBe(false);
     el.setAttribute("pinned-left", "name city");
     await vi.waitFor(() => expect(cell(el, "name").dataset.pinned).toBe("left"));
-    expect(cell(el, "city").style.left).not.toBe("0px");
+    expect(cell(el, "city").style.insetInlineStart).not.toBe("0px");
   });
 
   it("remembers pins in localStorage under pin-storage-key and ignores unknown ids", async () => {
@@ -148,9 +148,39 @@ describe("ui-table", () => {
     el.querySelector<HTMLElement>("th[data-column-id=name]")!.style.minWidth = "200px";
     await settled();
     await vi.waitFor(() =>
-      expect(cell(el, "city").style.left).toBe(
+      expect(cell(el, "city").style.insetInlineStart).toBe(
         `${cell(el, "name", "th").getBoundingClientRect().width}px`,
       ),
     );
+  });
+});
+
+describe("ui-table review fixes", () => {
+  it("a link row still works when its first cell is pinned", async () => {
+    const el = table('pinned-left="name"');
+    await vi.waitFor(() => expect(cell(el, "name").dataset.pinned).toBe("left"));
+    const link = el.querySelector<HTMLAnchorElement>("a[data-row-link]")!;
+    const clicked = vi.fn((event: Event) => event.preventDefault());
+    link.addEventListener("click", clicked);
+    await userEvent.click(el.querySelector("td[data-column-id=city]")!);
+    expect(clicked).toHaveBeenCalledTimes(1);
+  });
+
+  it("pins with logical offsets and flags the end edge from the scroll position", async () => {
+    const el = table('pinned-right="spend"');
+    await vi.waitFor(() => expect(cell(el, "spend").dataset.pinned).toBe("right"));
+    expect(cell(el, "spend").style.insetInlineEnd).toBe("0px");
+    expect(cell(el, "spend").hasAttribute("data-pin-shadow")).toBe(true);
+    el.scrollLeft = el.scrollWidth;
+    await vi.waitFor(() => expect(cell(el, "spend").hasAttribute("data-pin-shadow")).toBe(false));
+  });
+
+  it("applies pinnedColumns set before the element was upgraded", async () => {
+    const early = document.createElement("late-table") as UiTable;
+    early.innerHTML = html().replace(/<\/?ui-table[^>]*>/g, "");
+    early.pinnedColumns = { left: ["city"], right: [] };
+    document.body.append(early);
+    defineTable({ prefix: "late" });
+    await vi.waitFor(() => expect(cell(early, "city").dataset.pinned).toBe("left"));
   });
 });

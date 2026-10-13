@@ -1,12 +1,9 @@
 [data-ui="timeline"] {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   font-family: var(--font-sans);
   color: var(--ink);
-}
-[data-ui="timeline"] > [data-ui-part="list"] {
-  display: flex;
-  flex-direction: column;
 }
 [data-ui="timeline-item"] {
   display: flex;

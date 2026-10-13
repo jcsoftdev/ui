@@ -29,6 +29,7 @@ export class UiItemCardGroup extends ElementBase {
   readonly #description = part("p", "description");
   readonly #list = part("div", "list");
   #stop: (() => void) | undefined;
+  #managed = false;
 
   constructor() {
     super();
@@ -46,6 +47,7 @@ export class UiItemCardGroup extends ElementBase {
       (child) => (isPart(child, "item-card") ? this.#list : null),
       (child) => child === this.#header || child === this.#list || !isPart(child, "item-card"),
       () => this.#render(),
+      [this.#list],
     );
     this.#render();
   }
@@ -74,7 +76,9 @@ export class UiItemCardGroup extends ElementBase {
     for (const item of this.#list.children) {
       if (!(item instanceof UiItemCard)) continue;
       if (selectedId !== null) item.selected = item.id === selectedId;
+      else if (this.#managed) item.selected = false;
     }
+    this.#managed = selectedId !== null;
   }
 }
 

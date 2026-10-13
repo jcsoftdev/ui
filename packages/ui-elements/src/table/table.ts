@@ -9,7 +9,7 @@ import {
 import { observeResize } from "@jcsoftdev/ui-core/observe/resize";
 import { type DefineOptions, defineElement, ElementBase, emit } from "../internal/base.js";
 import { connectLight } from "../internal/containers.js";
-import { icon, part } from "../internal/e10.js";
+import { icon, part, upgradeProperties } from "../internal/e10.js";
 import css from "./table.css.js";
 
 const LEFT = icon('<path d="M3 19V5"/><path d="m13 6-6 6 6 6"/><path d="M7 12h14"/>', 14);
@@ -36,7 +36,7 @@ const same = (a: PinnedColumns, b: PinnedColumns) =>
  * `<tr>` highlights a row. A link row is a `<tr>` whose first cell holds `<a data-row-link href>`:
  * the link's click area stretches over the whole row.
  *
- * Pinning: pinned columns stay sticky at the left or right edge while the rest scrolls, with an
+ * Pinning: pinned columns stay sticky at the start (`left`) or end (`right`) edge, logical so right-to-left works, while the rest scrolls, with an
  * edge shadow once the table is scrolled. The buttons are `aria-pressed` toggles named by the
  * `label-*` attributes. Attributes `pinned-left` / `pinned-right` (space or comma separated column
  * ids) control the pins (the `pinnedColumns` property does too): the table then only reports the
@@ -62,6 +62,8 @@ export class UiTable extends ElementBase {
   #observed: Element[] = [];
   #mutation: MutationObserver | undefined;
   #frame = 0;
+  #edgeFrame = 0;
+  #positions: ReturnType<typeof computePinOffsets> = {};
 
   /** Controlled pins; setting it makes the table controlled, `undefined` hands control back. */
   get pinnedColumns(): { left: string[]; right: string[] } {
@@ -75,6 +77,7 @@ export class UiTable extends ElementBase {
 
   connectedCallback(): void {
     connectLight(this, "table", css);
+    upgradeProperties(this, ["pinnedColumns"]);
     const key = this.getAttribute("pin-storage-key");
     if (key && !this.#isControlled()) {
       const stored = parseStoredPins(read(key));
@@ -95,6 +98,7 @@ export class UiTable extends ElementBase {
     this.#cleanups = [];
     this.#observed = [];
     cancelAnimationFrame(this.#frame);
+    cancelAnimationFrame(this.#edgeFrame);
   }
 
   attributeChangedCallback(): void {
@@ -133,9 +137,37 @@ export class UiTable extends ElementBase {
     return this.#internal;
   }
 
-  readonly #onScroll = (): void => this.#measure();
+  readonly #onScroll = (): void => {
+    if (this.#edgeFrame) return;
+    this.#edgeFrame = requestAnimationFrame(() => {
+      this.#edgeFrame = 0;
+      if (this.isConnected) this.#edges();
+    });
+  };
+
+  /** Scroll position to the two edge flags; `scrollLeft` is negative in right-to-left. */
+  #edges(): void {
+    const offset = Math.abs(this.scrollLeft);
+    this.#scrolled = {
+      start: offset > 0,
+      end: offset + this.clientWidth < this.scrollWidth - 1,
+    };
+    for (const cell of this.querySelectorAll<HTMLElement>("[data-pinned]")) {
+      const position = this.#positions[cell.dataset.columnId ?? ""];
+      const shadow =
+        !!position?.edge && (position.side === "left" ? this.#scrolled.start : this.#scrolled.end);
+      cell.toggleAttribute("data-pin-shadow", shadow);
+    }
+  }
 
   readonly #onClick = (event: Event): void => {
+    const target = event.target as Element | null;
+    const link = target?.closest("tr")?.querySelector<HTMLElement>("a[data-row-link]");
+    if (
+      link?.closest("[data-pinned]") &&
+      !target?.closest("a, button, input, select, textarea, label")
+    )
+      link.click();
     const button = (event.target as Element | null)?.closest<HTMLElement>("button[data-pin]");
     const id = button?.closest<HTMLElement>("[data-column-id]")?.dataset.columnId;
     if (!button || !id) return;
@@ -144,6 +176,7 @@ export class UiTable extends ElementBase {
   };
 
   #schedule(): void {
+    if (!this.isConnected) return;
     cancelAnimationFrame(this.#frame);
     this.#frame = requestAnimationFrame(() => this.#measure());
   }
@@ -163,6 +196,7 @@ export class UiTable extends ElementBase {
   }
 
   #measure(): void {
+    if (!this.isConnected) return;
     const headers = Array.from(this.querySelectorAll<HTMLElement>("thead [data-column-id]"));
     this.#observe(headers);
     const widths: Record<string, number> = {};
@@ -173,28 +207,26 @@ export class UiTable extends ElementBase {
       this.#known.push(id);
       widths[id] = header.getBoundingClientRect().width;
     }
-    this.#scrolled = {
-      start: this.scrollLeft > 0,
-      end: this.scrollLeft + this.clientWidth < this.scrollWidth - 1,
-    };
-    const positions = computePinOffsets(widths, sanitizePinned(this.#source(), this.#known));
+    this.#positions = computePinOffsets(widths, sanitizePinned(this.#source(), this.#known));
+    const positions = this.#positions;
     for (const cell of this.querySelectorAll<HTMLElement>("[data-column-id]")) {
       const position = positions[cell.dataset.columnId ?? ""];
       if (!position) {
         cell.removeAttribute("data-pinned");
         cell.removeAttribute("data-pin-shadow");
-        cell.style.removeProperty("left");
-        cell.style.removeProperty("right");
+        cell.style.removeProperty("inset-inline-start");
+        cell.style.removeProperty("inset-inline-end");
         continue;
       }
-      const other = position.side === "left" ? "right" : "left";
+      const [own, other] =
+        position.side === "left"
+          ? (["inset-inline-start", "inset-inline-end"] as const)
+          : (["inset-inline-end", "inset-inline-start"] as const);
       cell.dataset.pinned = position.side;
       cell.style.removeProperty(other);
-      cell.style.setProperty(position.side, `${position.offset}px`);
-      const shadow =
-        position.edge && (position.side === "left" ? this.#scrolled.start : this.#scrolled.end);
-      cell.toggleAttribute("data-pin-shadow", shadow);
+      cell.style.setProperty(own, `${position.offset}px`);
     }
+    this.#edges();
     for (const header of this.querySelectorAll<HTMLElement>("th[pinnable][data-column-id]"))
       this.#buttons(header, positions[header.dataset.columnId ?? ""]?.side);
   }

@@ -1,4 +1,4 @@
-import { type DefineOptions, defineElement, ElementBase, isPart } from "../internal/base.js";
+import { type DefineOptions, defineElement, ElementBase } from "../internal/base.js";
 import { connectLight } from "../internal/containers.js";
 import { gather, part } from "../internal/e10.js";
 import css from "./timeline.css.js";
@@ -12,34 +12,24 @@ import css from "./timeline.css.js";
  * item's).
  */
 export class UiTimeline extends ElementBase {
-  readonly #list = part("div", "list");
-  #stop: (() => void) | undefined;
-
-  constructor() {
-    super();
-    this.#list.setAttribute("role", "list");
-  }
+  #observer: MutationObserver | undefined;
 
   connectedCallback(): void {
     connectLight(this, "timeline", css);
-    this.prepend(this.#list);
-    this.#stop = gather(
-      this,
-      (child) => (isPart(child, "timeline-item") ? this.#list : null),
-      (child) => child === this.#list || !isPart(child, "timeline-item"),
-      () => this.refresh(),
-    );
+    this.setAttribute("role", "list");
+    this.#observer = new MutationObserver(() => this.refresh());
+    this.#observer.observe(this, { childList: true });
     this.refresh();
   }
 
   disconnectedCallback(): void {
-    this.#stop?.();
+    this.#observer?.disconnect();
   }
 
-  /** Recomputes the group headings; items call it when their `group` changes. */
+  /** Recomputes the group headings (also when items are added or removed); items call it when their `group` changes. */
   refresh(): void {
     let previous: string | null = null;
-    for (const item of this.#list.children) {
+    for (const item of this.children) {
       if (!(item instanceof UiTimelineItem)) continue;
       const group = item.getAttribute("group");
       item.showGroup(group && group !== previous ? group : null);
