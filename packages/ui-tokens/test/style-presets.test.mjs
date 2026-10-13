@@ -105,6 +105,7 @@ test("the touch density gives every control a 44px hit area and inputs 48px", ()
   assert.equal(touch.get("density"), "1.125");
   assert.equal(touch.get("control-height"), "44px");
   assert.equal(touch.get("control-height-sm"), "44px");
+  assert.equal(touch.get("touch-target"), "44px");
   assert.equal(touch.get("control-height-lg"), "52px");
   assert.equal(touch.get("input-height"), "48px");
   assert.equal(touch.get("pad-control-x"), "calc(16px * var(--density))");
