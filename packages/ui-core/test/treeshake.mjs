@@ -43,12 +43,28 @@ export async function eagerModules(code, resolveDir = dist) {
 // The phase-1 set is fully independent; any behaviour may build on other behaviours, never on the
 // liquid engine.
 const independent = new Set(["focus", "roving", "popper", "dismiss", "typeahead", "state"]);
-const behaviours = readdirSync(join(dist, "..", "src"))
-  .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
-  .map((file) => file.slice(0, -3));
+// Chart entries may build on each other only as listed; everything else stays separate.
+const chartDeps = {
+  "chart/color-scale": ["chart/palette"],
+  "chart/category-axis": ["chart/axis", "chart/scale"],
+};
+const behaviours = [
+  ...readdirSync(join(dist, "..", "src"))
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
+    .map((file) => file.slice(0, -3)),
+  ...readdirSync(join(dist, "..", "src", "chart"))
+    .filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"))
+    .map((file) => `chart/${file.slice(0, -3)}`),
+];
 for (const name of behaviours) {
   const modules = await eagerModules(`export * from "./${name}.js";`);
   if (independent.has(name)) assert.deepEqual(modules, [name], `${name} pulls in only itself`);
+  if (name.startsWith("chart/"))
+    assert.deepEqual(
+      modules.filter((module) => module !== name && !module.startsWith("internal/")),
+      chartDeps[name] ?? [],
+      `${name}: eager modules besides itself and internal/*`,
+    );
   assert.ok(modules.includes(name), `${name} is built`);
   assert.deepEqual(
     modules.filter((module) => module.startsWith("liquid/")),

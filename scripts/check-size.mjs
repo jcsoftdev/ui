@@ -17,8 +17,14 @@ const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")
 // element never touches this list.
 // ui-core behaviours (top-level src/<name>.ts) without an entry here keep theirs in
 // src/<name>.size.json, for the same reason.
-for (const file of readdirSync(join(root, "packages/ui-core/src"))) {
-  if (!file.endsWith(".ts")) continue;
+// Chart maths lives one level down (src/chart/<name>.ts) and is published as chart/<name>.
+const coreFiles = [
+  ...readdirSync(join(root, "packages/ui-core/src")).filter((file) => file.endsWith(".ts")),
+  ...readdirSync(join(root, "packages/ui-core/src/chart"))
+    .filter((file) => file.endsWith(".ts"))
+    .map((file) => `chart/${file}`),
+];
+for (const file of coreFiles) {
   const name = file.slice(0, -3);
   const dist = `packages/ui-core/dist/${name}.js`;
   if (budgets.some((entry) => entry.file === dist)) continue;
