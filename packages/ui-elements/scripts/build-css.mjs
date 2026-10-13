@@ -9,6 +9,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { minify } from "./minify-css.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const src = join(root, "src");
@@ -20,16 +21,6 @@ const themeCss = readFileSync(join(tokensDir, "theme.css"), "utf8");
 const tokens = new Set([...tokensCss.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
 /** Variables the liquid engine and the option mapping write at run time. */
 const RUNTIME = /^--(ui-|liquid-|glass-)/;
-
-const minify = (css) =>
-  css
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\s+/g, " ")
-    .replace(/\s*([{};])\s*/g, "$1")
-    .replace(/,\s+/g, ",")
-    .replace(/([\w-]):\s+/g, "$1:")
-    .replace(/;}/g, "}")
-    .trim();
 
 function check(css, file, allowRuntime) {
   const bad = [...css.matchAll(/var\(\s*(--[\w-]+)/g)]
