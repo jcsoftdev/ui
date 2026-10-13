@@ -8,6 +8,21 @@ importers:
 
   .: {}
 
+  examples/vanilla-elements:
+    devDependencies:
+      '@jcsoftdev/ui-elements':
+        specifier: workspace:^
+        version: link:../../packages/ui-elements
+      '@jcsoftdev/ui-tokens':
+        specifier: workspace:^
+        version: link:../../packages/ui-tokens
+      playwright:
+        specifier: 1.64.0
+        version: 1.64.0
+      vite:
+        specifier: 7.3.6
+        version: 7.3.6(@types/node@24.19.1)(jiti@2.7.0)(lightningcss@1.33.0)(yaml@2.9.1)
+
   examples/vanilla-theme:
     devDependencies:
       '@jcsoftdev/ui-tokens':
@@ -100,6 +115,40 @@ importers:
       '@vitest/browser-playwright':
         specifier: 4.1.11
         version: 4.1.11(playwright@1.64.0)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@4.1.11)
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
+      playwright:
+        specifier: 1.64.0
+        version: 1.64.0
+      typescript:
+        specifier: ^5.5.4
+        version: 5.9.3
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@types/node@20.19.43)(@vitest/browser-playwright@4.1.11)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/ui-elements:
+    dependencies:
+      '@jcsoftdev/ui-core':
+        specifier: workspace:^
+        version: link:../ui-core
+      '@jcsoftdev/ui-tokens':
+        specifier: workspace:^
+        version: link:../ui-tokens
+    devDependencies:
+      '@biomejs/biome':
+        specifier: ^2.2.0
+        version: 2.5.15
+      '@types/node':
+        specifier: ^20
+        version: 20.19.43
+      '@vitest/browser-playwright':
+        specifier: 4.1.11
+        version: 4.1.11(playwright@1.64.0)(vite@8.3.4(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))(vitest@4.1.11)
+      axe-core:
+        specifier: 4.14.0
+        version: 4.14.0
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2

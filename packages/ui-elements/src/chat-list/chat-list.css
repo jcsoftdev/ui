@@ -1,0 +1,186 @@
+[data-ui="chat-list"] {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--gap-density);
+  container-type: inline-size;
+  font-family: var(--font-sans);
+}
+[data-ui="chat-list"]:has(> [data-ui-part="viewport"]) {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+[data-ui="chat-list"] > [data-ui-part="viewport"] {
+  min-height: 0;
+  overflow-y: auto;
+}
+[data-ui="chat-list"] [data-ui-part="new"] {
+  display: inline-flex;
+  width: 100%;
+  height: var(--control-height-sm);
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 var(--pad-control-x);
+  border: 0;
+  border-radius: var(--radius-button);
+  background-color: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+[data-ui="chat-list"] [data-ui-part="new"] > svg {
+  width: 14px;
+  height: 14px;
+}
+[data-ui="chat-list"] [data-ui-part="empty"] {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+[data-ui="chat-list"] [data-ui-part="group"] {
+  display: grid;
+  gap: 2px;
+}
+[data-ui="chat-list"] [data-ui-part="group-title"] {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+[data-ui="chat-list"] [data-ui-part="group-row"] {
+  padding-top: 4px;
+}
+[data-ui="chat-list"] [data-ui-part="list"] {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 2px;
+  list-style: none;
+}
+[data-ui="chat-list"] [data-ui-part="item"] {
+  position: relative;
+}
+[data-ui="chat-list"] [data-ui-part="row"] {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+[data-ui="chat-list"][deletable] [data-ui-part="row"] {
+  padding-right: 36px;
+}
+[data-ui="chat-list"] [data-ui-part="row"]:hover {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+[data-ui="chat-list"] [data-ui-part="row"][aria-current="true"] {
+  background-color: var(--accent-soft);
+  color: var(--ink);
+}
+[data-ui="chat-list"] [data-ui-part="row"]:focus-visible,
+[data-ui="chat-list"] [data-ui-part="delete"]:focus-visible,
+[data-ui="chat-list"] [data-ui-part="new"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="chat-list"] [data-ui-part="line"] {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+[data-ui="chat-list"] [data-ui-part="unread"] {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: var(--radius-badge);
+  background-color: var(--accent);
+}
+[data-ui="chat-list"] [data-ui-part="title"] {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="chat-list"] [data-ui-part="row"][aria-current="true"] [data-ui-part="title"] {
+  font-weight: 600;
+}
+[data-ui="chat-list"] [data-ui-part="preview"] {
+  display: none;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@container (min-width: 20rem) {
+  [data-ui="chat-list"] [data-ui-part="preview"] {
+    display: block;
+  }
+}
+[data-ui="chat-list"] [data-ui-part="delete"] {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  translate: 0 -50%;
+  place-items: center;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--ink-3);
+  opacity: 0;
+  cursor: pointer;
+}
+[data-ui="chat-list"] [data-ui-part="item"]:hover > [data-ui-part="delete"],
+[data-ui="chat-list"] [data-ui-part="item"]:focus-within > [data-ui-part="delete"],
+[data-ui="chat-list"] [data-ui-part="delete"]:focus-visible {
+  opacity: 1;
+}
+[data-ui="chat-list"] [data-ui-part="delete"]:hover {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+[data-ui="chat-list"] [data-ui-part="delete"] > svg {
+  width: 14px;
+  height: 14px;
+}
+[data-ui="chat-list"] [data-ui-part="sr"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+[data-ui="chat-list"] [data-ui-part="window"] {
+  position: relative;
+}
+[data-ui="chat-list"] [data-ui-part="window"] > [data-pinned] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+}

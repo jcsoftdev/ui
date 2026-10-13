@@ -1,0 +1,57 @@
+[data-ui="cols"] {
+  display: grid;
+  align-items: start;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+}
+[data-ui="cols"][variant="rail"] {
+  grid-template-columns: minmax(0, 1fr) 372px;
+}
+[data-ui="cols"][variant="half"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+[data-ui="cols"][variant="calc"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+}
+@container page (min-width: 1500px) {
+  [data-ui="cols"] {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+  [data-ui="cols"][variant="rail"] {
+    grid-template-columns: minmax(0, 1fr) 420px;
+  }
+  [data-ui="cols"][variant="half"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  [data-ui="cols"][variant="calc"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  }
+}
+@container page (max-width: 940px) {
+  [data-ui="cols"],
+  [data-ui="cols"][variant="half"],
+  [data-ui="cols"][variant="calc"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container page (max-width: 1080px) {
+  [data-ui="cols"][variant="rail"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+[data-ui="cols-stack"] {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 16px;
+}
+@container page (min-width: 1500px) {
+  [data-ui="cols-stack"][wide-split] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  [data-ui="cols-stack"][wide-split] > :first-child {
+    grid-row: span 2;
+  }
+}

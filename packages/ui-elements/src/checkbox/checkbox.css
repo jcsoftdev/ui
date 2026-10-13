@@ -1,0 +1,63 @@
+:host {
+  --ui-checkbox-size: 18px;
+  --ui-checkbox-radius: var(--radius-xs);
+  --ui-checkbox-border: var(--line-control);
+  --ui-checkbox-bg: var(--surface-control);
+  --ui-checkbox-checked-bg: var(--accent);
+  --ui-checkbox-checked-fg: var(--on-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+:host([hidden]) {
+  display: none;
+}
+:host([disabled]) {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+:host(:focus-visible) {
+  outline: none;
+}
+:host(:focus-visible) [part="box"] {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[part="box"] {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  inline-size: var(--ui-checkbox-size);
+  block-size: var(--ui-checkbox-size);
+  border: 1.5px solid var(--ui-checkbox-border);
+  border-radius: var(--ui-checkbox-radius);
+  background-color: var(--ui-checkbox-bg);
+  color: var(--ui-checkbox-checked-fg);
+  transition:
+    background-color var(--motion-duration) var(--motion-ease),
+    border-color var(--motion-duration) var(--motion-ease);
+}
+[part="box"] svg {
+  inline-size: 12px;
+  block-size: 12px;
+  opacity: 0;
+}
+:host([data-state="checked"]) [part="box"],
+:host([data-state="indeterminate"]) [part="box"] {
+  border-color: var(--ui-checkbox-checked-bg);
+  background-color: var(--ui-checkbox-checked-bg);
+}
+:host([data-state="checked"]) [part="check"],
+:host([data-state="indeterminate"]) [part="dash"] {
+  opacity: 1;
+}
+[part="dash"] {
+  position: absolute;
+}

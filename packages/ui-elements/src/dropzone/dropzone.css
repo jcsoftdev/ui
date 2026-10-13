@@ -1,0 +1,94 @@
+:host {
+  --ui-dropzone-radius: var(--radius-tile);
+  --ui-dropzone-border: var(--border-color-control);
+  --ui-dropzone-bg: var(--surface-2);
+  display: block;
+  min-inline-size: 0;
+  container-type: inline-size;
+  font-family: var(--font-sans);
+  color: var(--ink-2);
+}
+:host([hidden]) {
+  display: none;
+}
+[part="root"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1.5px dashed var(--ui-dropzone-border);
+  border-radius: var(--ui-dropzone-radius);
+  background-color: var(--ui-dropzone-bg);
+  text-align: center;
+  transition:
+    border-color var(--motion-duration) var(--motion-ease),
+    background-color var(--motion-duration) var(--motion-ease);
+}
+:host([dragging]) [part="root"] {
+  --ui-dropzone-border: var(--accent-ink);
+  --ui-dropzone-bg: var(--accent-soft);
+}
+:host([disabled]) [part="root"] {
+  opacity: 0.5;
+}
+[part="icon"] svg {
+  display: block;
+  inline-size: 18px;
+  block-size: 18px;
+}
+[part="title"],
+[part="hint"] {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+[part="title"] {
+  font-size: 13px;
+  font-weight: 700;
+}
+[part="hint"] {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+[part="hint"][hidden] {
+  display: none;
+}
+[part="browse"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  block-size: var(--control-height-sm);
+  margin: 4px 0 0;
+  padding: 0 12px;
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--radius-input);
+  background-color: var(--surface-control);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+[part="browse"]:hover:not(:disabled) {
+  background-color: var(--surface-2);
+}
+[part="browse"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[part="browse"]:disabled {
+  cursor: not-allowed;
+}
+@container (min-width: 360px) {
+  [part="root"] {
+    padding: 22px;
+  }
+  [part="icon"] svg {
+    inline-size: 22px;
+    block-size: 22px;
+  }
+}

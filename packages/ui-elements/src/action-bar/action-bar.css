@@ -1,0 +1,85 @@
+[data-ui="action-bar"] {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 16px;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-density);
+  box-sizing: border-box;
+  inline-size: fit-content;
+  max-inline-size: calc(100% - 1rem);
+  margin-inline: auto;
+  padding: var(--gap-density-sm) var(--pad-control-x);
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-popover);
+  background-color: var(--surface-overlay);
+  background-image: var(--surface-glass-layer);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  box-shadow: var(--shadow-overlay);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  container: action-bar / inline-size;
+}
+[data-ui="action-bar"][position="fixed"] {
+  position: fixed;
+}
+[data-ui="action-bar"][position="static"] {
+  position: relative;
+  inset-inline: auto;
+  bottom: auto;
+}
+[data-ui="action-bar"][hidden] {
+  display: none;
+}
+[data-ui="action-bar"] > [data-ui-part="count"] {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+[data-ui="action-bar"] > [data-ui-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-density-sm);
+  min-width: 0;
+}
+[data-ui="action-bar"] > [data-ui-part="clear"] {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: var(--control-height-sm);
+  block-size: var(--control-height-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: scale var(--motion-duration) var(--motion-ease);
+}
+[data-ui="action-bar"] > [data-ui-part="clear"]:hover {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+[data-ui="action-bar"] > [data-ui-part="clear"]:active {
+  scale: var(--press-scale);
+}
+[data-ui="action-bar"] > [data-ui-part="clear"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="action-bar"] [data-ui-part="icon"] {
+  inline-size: 16px;
+  block-size: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="action-bar"] > [data-ui-part="clear"] {
+    transition: none;
+  }
+}

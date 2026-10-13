@@ -1,0 +1,19 @@
+:host {
+  /* Component variables are --ui-big-date-*; everything else must be a ui-tokens token. */
+  display: block;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  font-size: 30px;
+  font-weight: 720;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+:host([size="compact"]) {
+  font-size: 22px;
+}
+:host([hidden]) {
+  display: none;
+}
+:host([data-dated]) slot {
+  display: none;
+}
