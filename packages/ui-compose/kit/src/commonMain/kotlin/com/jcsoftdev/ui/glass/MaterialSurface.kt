@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.GlassMaterial
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.math.abs
@@ -120,7 +121,8 @@ private fun Modifier.liquidSurface(
     style: LiquidGlassStyle,
 ): Modifier {
     val live = resolved.liquid && resolved.isGlass
-    val dynamics = if (live) rememberLiquidDynamics(style, interactionSource) else null
+    val moves = live && needsDynamics(style, interactionSource, UiTheme.motion)
+    val dynamics = if (moves) rememberLiquidDynamics(style, interactionSource) else null
     val reacts = dynamics != null && dynamics.motionOn && style.interaction != LiquidInteraction.None
     val swell = style.motion?.swell
     val flexed =
@@ -135,6 +137,17 @@ private fun Modifier.liquidSurface(
         }
     return flexed.surfaceMaterial(resolved, shape, solid, UiTheme.colors.hair, glass, dynamics = dynamics, style = style)
 }
+
+// Press and spring motion cost springs, animatables and effects; a Liquid surface pays for them only when something can move it:
+// a press source, a drag, or the materialize ramp. Without any of them the lift stays 0 and the lens at full strength.
+private fun needsDynamics(
+    style: LiquidGlassStyle,
+    source: InteractionSource?,
+    motion: Motion,
+): Boolean =
+    source != null ||
+        style.interaction == LiquidInteraction.Drag ||
+        (liquidMotionActive(style, motion) && style.motion?.materialize != null)
 
 /** Provides the "inside glass" marker to [content] when [resolved] is a glass or nested surface. */
 @Composable

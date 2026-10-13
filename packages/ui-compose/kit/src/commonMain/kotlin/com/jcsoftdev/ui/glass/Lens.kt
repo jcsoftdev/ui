@@ -151,9 +151,12 @@ half4 shade(float2 coord, float2 off, float d, float2 n) {
         off.x * reachFit(coord.x, off.x * widest, lo.x, hi.x),
         off.y * reachFit(coord.y, off.y * widest, lo.y, hi.y));
     half4 mid = content.eval(clamp(coord + off, lo, hi));
-    half r = content.eval(clamp(coord + off * (1.0 + dispersion), lo, hi)).r;
-    half bl = content.eval(clamp(coord + off * (1.0 - dispersion), lo, hi)).b;
-    float3 c = float3(r, mid.g, bl);
+    float3 c = float3(mid.rgb);
+    // Dispersion samples red and blue apart; without it the three channels share one sample (two fetches per pixel saved).
+    if (dispersion != 0.0) {
+        c.r = float(content.eval(clamp(coord + off * (1.0 + dispersion), lo, hi)).r);
+        c.b = float(content.eval(clamp(coord + off * (1.0 - dispersion), lo, hi)).b);
+    }
     float luma = dot(c, float3(0.2126, 0.7152, 0.0722));
     c = mix(float3(luma), c, sat);
 
@@ -171,21 +174,30 @@ half4 shade(float2 coord, float2 off, float d, float2 n) {
     float wall = (1.0 - vt) * thickness;
     c += 0.06 * wall * max(lf, 0.0);
     c *= 1.0 - 0.07 * wall * max(-lf, 0.0);
-    float edge = 1.0 - smoothstep(0.0, max(glintWidth, 0.001), -d);
-    float glint = edge * (pow(max(lf, 0.0), 2.0) + 0.55 * pow(max(-lf, 0.0), 2.0)) * glintStrength * 0.7;
-    c += glint * (0.35 + 0.65 * c);
+    // Each optional term below is skipped when its uniform is off; at zero it adds nothing, so the result is the same.
+    if (glintStrength != 0.0) {
+        float edge = 1.0 - smoothstep(0.0, max(glintWidth, 0.001), -d);
+        float glint = edge * (pow(max(lf, 0.0), 2.0) + 0.55 * pow(max(-lf, 0.0), 2.0)) * glintStrength * 0.7;
+        c += glint * (0.35 + 0.65 * c);
+    }
 
     // Fresnel: the rim catches light whatever the direction, strongest right at the wall.
-    float fr = pow(1.0 - rt, 3.0);
-    c = mix(c, float3(1.0), clamp(fresnel * fr * 0.5, 0.0, 1.0));
+    if (fresnel != 0.0) {
+        float fr = pow(1.0 - rt, 3.0);
+        c = mix(c, float3(1.0), clamp(fresnel * fr * 0.5, 0.0, 1.0));
+    }
 
     // Touch glow: a soft radial add at the finger.
-    float gd = length(coord - glow.xy) / max(glow.z, 1.0);
-    c += glow.w * (1.0 - smoothstep(0.0, 1.0, gd));
+    if (glow.w != 0.0) {
+        float gd = length(coord - glow.xy) / max(glow.z, 1.0);
+        c += glow.w * (1.0 - smoothstep(0.0, 1.0, gd));
+    }
 
     // Film grain from a hash of the pixel position.
-    float h = fract(sin(dot(coord, float2(12.9898, 78.233))) * 43758.5453);
-    c += (h - 0.5) * grain;
+    if (grain != 0.0) {
+        float h = fract(sin(dot(coord, float2(12.9898, 78.233))) * 43758.5453);
+        c += (h - 0.5) * grain;
+    }
     return half4(half3(clamp(c, 0.0, 1.0)), 1.0);
 }
 """
