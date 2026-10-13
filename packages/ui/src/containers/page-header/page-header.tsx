@@ -1,19 +1,25 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
-export type PageHeaderProps = ComponentPropsWithoutRef<"header">;
+export interface PageHeaderProps extends ComponentPropsWithoutRef<"header"> {
+  /** Trail shown on its own row above the title, usually a `Breadcrumbs`. */
+  breadcrumbs?: ReactNode;
+}
 
 /**
  * Page header. No required parts: compose an eyebrow / title / lede block in
  * a plain `<div>` and, when the view has buttons, `PageHeaderActions` as the
  * second child. Actions wrap under the title when the container is too narrow.
  */
-export function PageHeader({ className, ...props }: PageHeaderProps) {
+export function PageHeader({ breadcrumbs, className, children, ...props }: PageHeaderProps) {
   return (
     <header
       className={cn("flex flex-wrap items-end justify-between gap-x-6 gap-y-3.5", className)}
       {...props}
-    />
+    >
+      {breadcrumbs ? <div className="basis-full">{breadcrumbs}</div> : null}
+      {children}
+    </header>
   );
 }
 

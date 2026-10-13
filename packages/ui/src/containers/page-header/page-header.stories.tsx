@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../../atoms/button/button.js";
+import { Breadcrumbs } from "../../navigation/breadcrumbs/breadcrumbs.js";
 import {
   PageHeader,
   PageHeaderActions,
@@ -70,4 +71,18 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const WithBreadcrumbs: Story = {
+  args: {
+    breadcrumbs: (
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "#home" },
+          { label: "Agenda", href: "#agenda" },
+          { label: "Today" },
+        ]}
+      />
+    ),
+  },
 };

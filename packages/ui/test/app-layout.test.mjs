@@ -29,3 +29,20 @@ test("Form keeps its attributes and merges className", () => {
   assert.match(markup, /<form[^>]*action="\/save"/);
   assert.match(markup, /class="[^"]*flex-col[^"]*extra"/);
 });
+
+test("Breadcrumbs is a named nav whose last item is the current page and not a link", () => {
+  const markup = html.breadcrumbs();
+  assert.match(markup, /<nav aria-label="Breadcrumbs"/);
+  assert.match(markup, /<ol[^>]*>/);
+  assert.equal(markup.match(/<a /g)?.length, 2);
+  assert.match(markup, /<span aria-current="page"[^>]*>Today<\/span>/);
+  assert.doesNotMatch(markup, /aria-current="page"[^>]*>Home/);
+});
+
+test("Breadcrumbs follows the locale, an explicit label and the injected link renderer", () => {
+  assert.match(html.breadcrumbsEs(), /aria-label="Ruta de navegación"/);
+  const custom = html.breadcrumbsCustom();
+  assert.match(custom, /aria-label="Trail"/);
+  assert.match(custom, /data-router-link="\/"/);
+  assert.doesNotMatch(custom, /<a /);
+});
