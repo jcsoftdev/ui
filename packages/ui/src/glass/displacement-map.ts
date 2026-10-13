@@ -379,6 +379,9 @@ export function crystalAmplitude(width: number, height: number, refraction: numb
   return Math.min(clamp(refraction, 0, 2) * CRYSTAL_GAIN * half, CRYSTAL_MAX_OFFSET);
 }
 
+/** Distance, in px, the crystal lens keeps from the edge of its backdrop (see {@link computeCrystalField}). */
+const EDGE_SLACK = 3;
+
 export interface CrystalMapOptions {
   width: number;
   height: number;
@@ -388,6 +391,15 @@ export interface CrystalMapOptions {
   dpr?: number;
   /** Margin past the surface, in px. Default {@link crystalMargin} of `amplitude`. */
   margin?: number;
+  /**
+   * Margin past each side of the surface, in px (default: `margin` on all four). A surface inside
+   * a clipping ancestor (an `overflow` or `clip-path` stage) only has the backdrop within it: a
+   * layer that reaches past the clip is cut by the browser and its filter is shifted, so the map
+   * covers only the backdrop that exists, and the offsets are clamped so no sample lands beyond it.
+   */
+  room?: Partial<Record<"left" | "right" | "top" | "bottom", number>>;
+  /** Largest factor the offset is multiplied by (chromatic dispersion pulls red this much further). Default 1. */
+  reach?: number;
 }
 
 /**
@@ -408,25 +420,41 @@ export function computeCrystalField({
   amplitude,
   dpr = 1,
   margin,
+  room,
+  reach = 1,
 }: CrystalMapOptions): DisplacementField {
   const ratio = clamp(dpr, 1, 2);
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const m = margin ?? crystalMargin(amplitude);
-  const pw = Math.max(1, Math.round((w + 2 * m) * ratio));
-  const ph = Math.max(1, Math.round((h + 2 * m) * ratio));
+  const free = (side: "left" | "right" | "top" | "bottom") => Math.max(room?.[side] ?? m, 0);
+  const [left, right, top, bottom] = [free("left"), free("right"), free("top"), free("bottom")];
+  const pw = Math.max(1, Math.round((w + left + right) * ratio));
+  const ph = Math.max(1, Math.round((h + top + bottom) * ratio));
   const data = new Uint8ClampedArray(pw * ph * 4);
   const hx = w / 2;
   const hy = h / 2;
   const half = Math.max(hx, hy);
+  // A few px short of the edge: the pre-blur fades the last columns of the backdrop to transparent,
+  // and a channel pulled further than the others (dispersion) would read that and drop out.
+  // Without `room` the map keeps the plain lens: its margin is the whole reach, nothing to clamp.
+  const slack = room ? EDGE_SLACK : 0;
+  const bounded = room !== undefined;
+  const [minX, maxX] = [-hx - left + slack, hx + right - slack];
+  const [minY, maxY] = [-hy - top + slack, hy + bottom - slack];
+  const unit = Math.max(amplitude, 1e-6);
+  const f = Math.max(reach, 1);
+  // Offset (as a fraction of `amplitude`, what the channel encodes) that keeps the source in the room.
+  const within = (p: number, offset: number, lo: number, hi: number) =>
+    clamp((bounded ? clamp(offset, (lo - p) / f, (hi - p) / f) : offset) / unit, -1, 1);
   for (let j = 0; j < ph; j++) {
-    const py = (j + 0.5) / ratio - m - hy;
+    const py = (j + 0.5) / ratio - top - hy;
     for (let i = 0; i < pw; i++) {
-      const px = (i + 0.5) / ratio - m - hx;
+      const px = (i + 0.5) / ratio - left - hx;
       const s = crystalShape(crystalRadius(px, py, hx, hy));
       const o = (j * pw + i) * 4;
-      data[o] = 128 + clamp((s * px) / half, -1, 1) * 127;
-      data[o + 1] = 128 + clamp((s * py) / half, -1, 1) * 127;
+      data[o] = 128 + within(px, (s * px * amplitude) / half, minX, maxX) * 127;
+      data[o + 1] = 128 + within(py, (s * py * amplitude) / half, minY, maxY) * 127;
       data[o + 2] = 255;
       data[o + 3] = 255;
     }
@@ -442,6 +470,11 @@ export function createCrystalMap(options: CrystalMapOptions): string {
     Math.round(options.amplitude),
     options.dpr ?? 1,
     options.margin ?? 0,
+    options.reach ?? 1,
+    options.room?.left ?? -1,
+    options.room?.right ?? -1,
+    options.room?.top ?? -1,
+    options.room?.bottom ?? -1,
   ]
     .map((n) => Math.round(n * 100) / 100)
     .join("x");

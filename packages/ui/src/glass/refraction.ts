@@ -107,6 +107,39 @@ const MAX_ACTIVE = 8;
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
 
+/** Ancestors that cut the backdrop: whatever lies past their edge is not there for a backdrop filter. */
+function clippingAncestors(element: Element): Element[] {
+  const found: Element[] = [];
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    const style = getComputedStyle(node);
+    const clips =
+      style.clipPath !== "none" ||
+      [style.overflowX, style.overflowY].some((value) => value !== "visible") ||
+      /paint|strict|content/.test(style.contain);
+    if (clips) found.push(node);
+  }
+  return found;
+}
+
+/**
+ * How much backdrop lies past each side of `element`, in px, up to `margin` and rounded down to
+ * `step` (so a surface dragged along an edge does not rebuild its map on every pixel).
+ */
+function backdropRoom(element: Element, clips: Element[], margin: number, step = 12) {
+  const box = element.getBoundingClientRect();
+  const room = { left: margin, right: margin, top: margin, bottom: margin };
+  for (const clip of clips) {
+    const edge = clip.getBoundingClientRect();
+    room.left = Math.min(room.left, box.left - edge.left);
+    room.right = Math.min(room.right, edge.right - box.right);
+    room.top = Math.min(room.top, box.top - edge.top);
+    room.bottom = Math.min(room.bottom, edge.bottom - box.bottom);
+  }
+  for (const side of ["left", "right", "top", "bottom"] as const)
+    room[side] = Math.min(margin, Math.max(0, Math.floor(room[side] / step) * step));
+  return room;
+}
+
 let counter = 0;
 let active = 0;
 /** Surfaces that are eligible but found no free slot; the next one is woken when a slot frees. */
@@ -595,6 +628,7 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       watch?.observe(element, { childList: true });
       undoCrystal = () => {
         watch?.disconnect();
+        roomWatch?.disconnect();
         layer?.remove();
         skin.remove();
         for (const [name, value] of Object.entries(saved)) {
@@ -608,6 +642,22 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       };
     }
 
+    // A surface that is moved towards the edge of a clipping ancestor (dragged, scrolled) loses
+    // backdrop on that side: the layer's overlap with the nearest clip tells when to look again.
+    let roomWatch: IntersectionObserver | undefined;
+    let roomRoot: Element | undefined;
+    const trackRoom = (clips: Element[]) => {
+      const root = clips[0];
+      if (root === roomRoot || !layer || typeof IntersectionObserver !== "function") return;
+      roomWatch?.disconnect();
+      roomRoot = root;
+      if (!root) return;
+      roomWatch = new IntersectionObserver(() => schedule(update), {
+        root,
+        threshold: Array.from({ length: 51 }, (_, i) => i / 50),
+      });
+      roomWatch.observe(layer);
+    };
     let key = "";
     let built = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -643,24 +693,40 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
       if (crystal) {
         const amplitude = crystalAmplitude(width, height, settings.refraction);
         const margin = crystalMargin(amplitude, dispersion * 0.6);
-        const wide = width + 2 * margin;
-        const tall = height + 2 * margin;
         const round = Math.min(radius, width / 2, height / 2);
-        const crystalKey = ["c", width, height, round, amplitude, margin, dpr].join("x");
+        const clips = clippingAncestors(element);
+        const room = backdropRoom(element, clips, margin);
+        const reach = 1 + dispersion * 0.6;
+        const wide = width + room.left + room.right;
+        const tall = height + room.top + room.bottom;
+        trackRoom(clips);
+        const crystalKey = [
+          "c",
+          width,
+          height,
+          round,
+          amplitude,
+          margin,
+          dpr,
+          room.left,
+          room.right,
+          room.top,
+          room.bottom,
+        ].join("x");
         if (crystalKey === key) return;
         key = crystalKey;
         built = performance.now();
         baseScale = (2 * Math.max(amplitude, 1) * 255) / 254;
         applyScale();
         const border = getComputedStyle(element);
-        const left = -(margin + (Number.parseFloat(border.borderLeftWidth) || 0));
-        const top = -(margin + (Number.parseFloat(border.borderTopWidth) || 0));
+        const left = -(room.left + (Number.parseFloat(border.borderLeftWidth) || 0));
+        const top = -(room.top + (Number.parseFloat(border.borderTopWidth) || 0));
         if (layer) {
           layer.style.left = `${left}px`;
           layer.style.top = `${top}px`;
           layer.style.width = `${wide}px`;
           layer.style.height = `${tall}px`;
-          layer.style.clipPath = `inset(${margin}px round ${round}px)`;
+          layer.style.clipPath = `inset(${room.top}px ${room.right}px ${room.bottom}px ${room.left}px round ${round}px)`;
         }
         for (const [target, name, value] of [
           [filter, "x", "0"],
@@ -671,7 +737,10 @@ function createController(element: HTMLElement, initial: GlassRefractionOptions)
           [image, "height", String(tall)],
         ] as const)
           target.setAttribute(name, value);
-        image.setAttribute("href", createCrystalMap({ width, height, amplitude, dpr, margin }));
+        image.setAttribute(
+          "href",
+          createCrystalMap({ width, height, amplitude, dpr, margin, room, reach }),
+        );
         return;
       }
       const next = [

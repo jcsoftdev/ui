@@ -18,6 +18,8 @@ Zero runtime deps in the library; English artifacts; Conventional Commits, no AI
 - [x] SL3 Playground page `/playground`: every option, presets, photo/gradient scene, free drag + arrow keys, copy config, reset, non-Chromium note.
 - [x] SL4 Landing: hero over photo, catalog grid, Liquid Glass, theming, platform parity, principles, charts, getting started.
 - [x] SL5 Nav links, docs link, site tests/lint/typecheck, screenshots.
+- [x] SL6 Fix crystal lens edge band: one side of the pill washed out inside a narrower clipping stage. Root cause: the filter layer (surface plus up to 260 px margin) reached past the stage clip and the viewport, and the lens offsets sampled the layer edge, where the pre-blur fades to transparent; the channel pulled furthest by dispersion (red) fell out there, leaving a teal/white band on the right (and a large hole at 390 px). Fix: the layer and map now cover only the backdrop that exists (clipping ancestors), offsets are clamped inside it with a 3 px slack, rebuilt when the surface moves towards a clip edge. Mirror-symmetry and no-overshoot map tests.
+- [x] SL7 Drop on-page photo credits (kept in `site/public/photos/CREDITS.md`, not linked).
 
 ## Acceptance
 Accessible, responsive at 390px without horizontal scroll, light/dark, lazy-loaded heavy demos, at most 8 lenses alive. Checks: packages/ui `pnpm test`, `test:glass`, `test:stories`; root `pnpm build:site`; site lint/typecheck.
@@ -27,4 +29,5 @@ See acceptance.
 
 ## Progress / commits
 - SL0 b4214c9; SL1 4033082; SL2 f5430e7; SL3 5ef6870; SL4+SL5 5c9610b (landing, nav, glass.md caveat).
+- SL6 (this commit, fix(ui): keep the crystal lens inside the backdrop it can see); SL7 f80125a. Checks: ui test 563, test:glass 199, test:stories 1411, site test 23, lint, astro check 0 errors.
 - Route: inline + one writer context (single writer). Checks: ui test 561, test:glass 199, test:stories 1411, site test 23, lint, astro check 0 errors, build:site 436 pages.

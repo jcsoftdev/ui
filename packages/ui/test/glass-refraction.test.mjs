@@ -425,6 +425,60 @@ test("the crystal map encodes the same offsets and stays foldless once quantised
   }
 });
 
+// Source position, in px from the map's top-left, that the map sends pixel (x, y) to.
+function crystalSource(field, amplitude, x, y) {
+  const o = (y * field.width + x) * 4;
+  const f = (v) => amplitude * ((v - 127.5) / 127);
+  return [x + 0.5 + f(field.data[o]), y + 0.5 + f(field.data[o + 1])];
+}
+
+test("the crystal map is mirror symmetric for a symmetric surface", () => {
+  for (const [width, height] of CRYSTAL_SHAPES) {
+    const amplitude = glass.crystalAmplitude(width, height, 1.5);
+    const field = glass.computeCrystalField({ width, height, amplitude });
+    const tolerance = (2 * amplitude) / 127 + 1e-6;
+    for (let y = 0; y < field.height; y += 7) {
+      for (let x = 0; x < field.width; x += 7) {
+        const [sx, sy] = crystalSource(field, amplitude, x, y);
+        const [mx, my] = crystalSource(field, amplitude, field.width - 1 - x, field.height - 1 - y);
+        // The offset at the mirrored pixel is the opposite offset.
+        assert.ok(
+          Math.abs(sx - x + (mx - (field.width - 1 - x)) - 1) <= tolerance &&
+            Math.abs(sy - y + (my - (field.height - 1 - y)) - 1) <= tolerance,
+          `asymmetric offset at ${x},${y} of ${width}x${height}`,
+        );
+      }
+    }
+  }
+});
+
+test("a crystal map with limited room never samples past the backdrop that exists", () => {
+  const [width, height] = [300, 96];
+  const amplitude = glass.crystalAmplitude(width, height, 1.67);
+  const reach = 1.03;
+  for (const room of [
+    { left: 120, right: 120, top: 40, bottom: 40 },
+    { left: 0, right: 200, top: 0, bottom: 10 },
+    { left: 200, right: 0, top: 90, bottom: 0 },
+  ]) {
+    const field = glass.computeCrystalField({ width, height, amplitude, room, reach });
+    assert.equal(field.width, width + room.left + room.right);
+    assert.equal(field.height, height + room.top + room.bottom);
+    for (let y = 0; y < field.height; y++) {
+      for (let x = 0; x < field.width; x++) {
+        const [sx, sy] = crystalSource(field, amplitude, x, y);
+        const [rx, ry] = [x + 0.5 + (sx - x - 0.5) * reach, y + 0.5 + (sy - y - 0.5) * reach];
+        // The farthest channel (red under dispersion) stays inside the map, with a hair for the 8-bit quantisation.
+        assert.ok(rx >= -1 && rx <= field.width + 1, `x ${rx} out of ${field.width} at ${x},${y}`);
+        assert.ok(
+          ry >= -1 && ry <= field.height + 1,
+          `y ${ry} out of ${field.height} at ${x},${y}`,
+        );
+      }
+    }
+  }
+});
+
 test("the crystal amplitude follows refraction up to a fixed cap and is zero for no refraction", () => {
   assert.equal(glass.crystalAmplitude(300, 96, 0), 0);
   assert.ok(glass.crystalAmplitude(300, 96, 1) < glass.crystalAmplitude(300, 96, 2));
