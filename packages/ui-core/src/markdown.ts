@@ -41,10 +41,16 @@ export function safeHref(raw: string): string | null {
 
 const ESCAPABLE = /[\\`*_[\]()#+\-.!|>~]/;
 
+/** Deepest nesting of quotes and lists; deeper content is kept as plain text. */
+export const MAX_MARKDOWN_DEPTH = 32;
+/** Longest link label or destination scanned, so hostile `[](` runs stay linear. */
+const MAX_LINK_SCAN = 2048;
+
 /** Index of the `)` that closes a link destination, honoring balanced inner parentheses. */
 function closingParen(src: string, from: number): number {
   let depth = 0;
-  for (let i = from; i < src.length; i += 1) {
+  const stop = Math.min(src.length, from + MAX_LINK_SCAN);
+  for (let i = from; i < stop; i += 1) {
     if (src[i] === "(") depth += 1;
     else if (src[i] === ")") {
       if (depth === 0) return i;
@@ -62,6 +68,7 @@ export function parseInline(src: string): Inline[] {
     buf = "";
   };
   let i = 0;
+  let midIndex = -2;
   while (i < src.length) {
     const ch = src[i] as string;
     const next = src[i + 1];
@@ -105,8 +112,11 @@ export function parseInline(src: string): Inline[] {
       }
     }
     if (ch === "[") {
-      const mid = src.indexOf("](", i + 1);
-      const end = mid > i ? closingParen(src, mid + 2) : -1;
+      // The next "](" is cached: rescanning it for every "[" made "[[[[..." quadratic.
+      if (midIndex === -2 || (midIndex !== -1 && midIndex < i + 1))
+        midIndex = src.indexOf("](", i + 1);
+      const mid = midIndex;
+      const end = mid > i && mid - i <= MAX_LINK_SCAN ? closingParen(src, mid + 2) : -1;
       if (end > mid) {
         flush();
         out.push({
@@ -168,8 +178,16 @@ function startsBlock(line: string, next: string | undefined): boolean {
   );
 }
 
+function plain(text: string): Block[] {
+  return text.trim() ? [{ t: "p", c: [{ t: "text", v: text }] }] : [];
+}
+
 /** Parses Markdown into blocks. An unclosed code fence runs to the end (streaming friendly). */
 export function parseMarkdown(src: string): Block[] {
+  return parseBlocks(src, 0);
+}
+
+function parseBlocks(src: string, depth: number): Block[] {
   const lines = src.replace(/\r\n?/g, "\n").split("\n");
   const at = (n: number) => lines[n] as string;
   const blocks: Block[] = [];
@@ -216,7 +234,11 @@ export function parseMarkdown(src: string): Block[] {
         body.push(at(i).replace(/^\s{0,3}>\s?/, ""));
         i += 1;
       }
-      blocks.push({ t: "quote", c: parseMarkdown(body.join("\n")) });
+      const inner = body.join("\n");
+      blocks.push({
+        t: "quote",
+        c: depth >= MAX_MARKDOWN_DEPTH ? plain(inner) : parseBlocks(inner, depth + 1),
+      });
       continue;
     }
     if (isTableStart(line, lines[i + 1])) {
@@ -258,7 +280,10 @@ export function parseMarkdown(src: string): Block[] {
         }
         items.push({
           c: parseInline(current[3] as string),
-          children: parseMarkdown(sub.join("\n")),
+          children:
+            depth >= MAX_MARKDOWN_DEPTH
+              ? plain(sub.join("\n"))
+              : parseBlocks(sub.join("\n"), depth + 1),
         });
       }
       blocks.push({ t: "list", ordered, start, items });
@@ -280,7 +305,11 @@ export interface MarkdownRenderOptions {
   document?: Document;
   /** Appends a caret after the last character, for streaming answers. */
   streaming?: boolean;
-  /** Replaces the default `<pre><code>` of a fenced block, for example with syntax highlighting. */
+  /**
+   * Replaces the default `<pre><code>` of a fenced block, for example with syntax highlighting.
+   * It receives the RAW code, not escaped text: build the node with `textContent` or another safe
+   * API, and escape it yourself if you ever serialize it to HTML.
+   */
   renderCode?: (code: string, language: string, document: Document) => Node;
 }
 
