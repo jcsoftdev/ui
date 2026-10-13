@@ -12,33 +12,32 @@ imports them, so it never pays for them.
 
 ## The pieces
 
-| File | Role | Imported by |
+| File | Role | Loaded |
 | --- | --- | --- |
-| `internal/chart-base.ts` (+ `.css`) | `ChartElement`, `svg()`, the draw contract | every chart element |
+| `internal/chart-base.ts` (+ `.css`) | `ChartElement`, the draw contract, hover/selection fields, sizing | eager, by every chart |
 | `internal/chart-protocol.ts` | types, event names, `bindChart()`; no DOM code of its own | the base and every part |
-| `internal/chart-dom.ts` | `svg()` builder, `swatch()` | the base, legend, tooltip |
-| `internal/chart-table.ts` | `renderTable()` | data table, and lazily by the base |
+| `internal/chart-dom.ts` | `svg()`, `join()`, `swatch()`, `SR_ONLY` | the base and the parts |
+| `internal/chart-hit.ts` | `nearestX()`, `nearestPoint()`: snapping helpers for `hit` | only by charts that import it |
+| `internal/chart-interact.ts` (+ `.css`) | pointer, touch, keyboard, hover/selection state, live region, series toggles | lazy, on first `focusin` or `pointerenter` |
+| `internal/chart-state.ts` (+ `.css`) | the loading and empty screens | lazy, on first use |
+| `internal/chart-table.ts` | `renderTable()` and the screen-reader table | lazy, after the first draw |
+| `ui-core/chart/format` | `resolveFormat()` for `context.format` | lazy `import()` with the first draw (free if the chart imports it for its axes) |
 | `internal/chart-export.ts` | SVG/PNG/CSV/XLSX writers | only by `ui-chart-export-menu`, via `import()` |
 
 | Tag | What it is | Eager gzip |
 | --- | --- | --- |
-| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 5.0 KB |
-| `ui-sparkline` | the smallest real chart on the base | 8.0 KB |
-| `ui-chart-legend` | toggle buttons per series, hover dims the rest | 2.3 KB |
-| `ui-chart-tooltip` | hover card, `computePlacement`, `pointer-events: none` | 3.3 KB |
-| `ui-chart-data-table` | the snapshot as a real `<table>` | 1.4 KB |
-| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.4 KB |
+| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.4 KB |
+| `ui-sparkline` | the smallest real chart on the base | 6.2 KB |
+| `ui-chart-legend` | toggle buttons per series, hover dims the rest | 2.4 KB |
+| `ui-chart-tooltip` | floating card or docked panel | 3.9 KB |
+| `ui-chart-data-table` | the snapshot as a real `<table>` | 1.8 KB |
+| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.7 KB |
 | `ui-chart-breadcrumb` | drill-down path, `nav` with `aria-current` | 1.5 KB |
 
-The base itself is about 5 KB gzip: the shell (sizing, states, a11y, hover, keyboard), its CSS, and
-ui-core `chart/format`, `chart/palette` and `roving`. A chart adds only its own geometry and the
-ui-core modules it uses (`chart/scale`, `chart/path`, `chart/axis`...). Expect a chart to land
-between 7 and 12 KB. Anything optional is a part or a lazy `import()`:
-
-- the screen-reader table is built by a lazy chunk (`chart-table`, 0.3 KB) after the first draw;
-- the export writers load on the first export, the XLSX writer only when XLSX is chosen;
-- never import a part from a chart, and never import another chart's entry (the tree-shake check
-  fails the build). Share code through `internal/`.
+A chart adds only its own geometry and the ui-core modules it uses (`chart/scale`, `chart/path`,
+`chart/axis`...). Anything optional is a part or a lazy `import()`. Never import a part from a
+chart, and never import another chart's entry (the tree-shake check fails the build). Share code
+through `internal/`.
 
 ## A chart in one screen
 
@@ -55,18 +54,18 @@ export class UiBar extends ChartElement {
 
   protected override isEmpty() { return this.#data.length === 0; }
 
-  protected override draw({ svg: root, width, height, format, color }: DrawContext): DrawResult {
+  protected override draw({ svg: root, width, height, format, color, animate }: DrawContext): DrawResult {
     const band = bandScale({ count: this.#data.length, range: [0, width] });
     const marks = this.#data.map((d, i) => {
-      // ... append the visible bars to `root` ...
+      // ... append the visible bars to `root`, animating only when `animate` is true ...
       const el = svg("rect", { x: band.start(i), y: 0, width: band.step, height, fill: "transparent" });
       root.append(el); // a full-band hit area, also the keyboard target
       return { el, label: `${d.name}: ${format(d.value)}` };
     });
     return {
-      summary: "...",                      // one sentence for screen readers
-      marks,                               // one focusable mark per category
-      hit: (x) => band.indexAt(x),         // pixel to mark index; must have no gaps
+      summary: "...",                         // one sentence for screen readers
+      marks,                                  // one focusable mark per category
+      hit: (x) => band.indexAt(x),            // pixel to mark index; this is all the pointer needs
       hover: (i) => ({ title: this.#data[i].name, rows: [/* TooltipRow */], x: band.center(i), y: 0 }),
       snapshot: () => ({ title: "...", categoryHeader: "...", categories: [...], series: [...] }),
     };
@@ -75,66 +74,217 @@ export class UiBar extends ChartElement {
 export const defineBar = (options?: DefineOptions) => defineElement("bar", UiBar, options);
 ```
 
-`draw()` receives an empty `<svg>` already sized to the drawing area and returns what the opt-in
-parts and the keyboard need. All fields of the result are optional.
+**A chart implements two functions for input, `hit` and `hover`, and nothing else.** Pointer,
+touch, keyboard, selection, the tooltip and the docked panel all run on those two. Do not add
+`pointerenter`, `click` or `touchstart` listeners to marks.
+
+## The draw contract
+
+`draw(context)` returns a `DrawResult`; every field is optional.
+
+### Phases and `previous`
+
+`context.phase` says why the draw runs:
+
+- `"enter"`: the first draw, and the first after a loading or empty state. The SVG is empty. Play the
+  entry animation (`context.animate` is true only here, with motion allowed and no `animate="off"`).
+- `"update"`: new data (`requestDraw()`, a data attribute, a legend toggle). No entry animation. A
+  chart that wants to morph reads `context.previous`, the `DrawResult` of the last draw, to reuse
+  its scales.
+- `"resize"`: only the size changed. Redraw to the new size; do not animate and do not touch data.
+
+Hover and focus survive every phase (see below), so a draw never has to restore them.
+
+### Retained rendering and `join()`
+
+By default the SVG is cleared before every draw and you rebuild it. That is simple and fine up to a
+few hundred marks. For more, opt in with
+`static override retain = true` or `context.retain()`: from then on the SVG is **not** cleared after
+`enter`, and you reconcile with the keyed `join`:
+
+```ts
+import { join, svg } from "../internal/chart-base.js";
+
+join(
+  group,                                   // an element only this join writes to
+  rows,                                    // the items, in drawing order
+  (row) => row.id,                         // key: the same key keeps the same element
+  () => svg("circle", { r: 2 }),           // enter: build once
+  (el, row, i) => el.setAttribute("cx", `${x(i)}`), // update: runs for new and kept elements
+  (el) => el.remove(),                     // exit (optional; this is the default)
+);
+```
+
+`join` also keeps the elements in item order and returns them. Use it for the marks and put them in
+`marks` as usual; a mark that is kept keeps its focus and its `data-active` flag. Measured with 10k
+circles on a data redraw (median of 5 frames, layout and paint included): see the E16 pull request.
+
+### Thousands of marks: the canvas layer
+
+Above roughly 5k marks, SVG nodes cost more than they are worth. Draw them on a canvas instead:
+
+```ts
+const g = context.canvas();          // a 2D context the size of the drawing, under the SVG
+g.fillStyle = context.color(0);
+for (const p of points) g.fillRect(p.x, p.y, 2, 2);
+```
+
+`canvas()` creates the `<canvas>` on first use, sets the bitmap to the device pixel ratio, scales the
+context, clears it, and removes the layer in any draw that does not call it. The SVG stays on top for
+axes and hit areas. A canvas is invisible to assistive tech, so name the marks with **virtual
+marks**:
+
+```ts
+marks: {
+  count: points.length,
+  label: (i) => `${points[i].name}: ${format(points[i].value)}`,
+  element: (i) => highlightCircle(i),  // optional: an SVG element to flag with data-active
+}
+```
+
+Virtual marks get one focus target, a hidden `role="listbox"` proxy, whose `aria-activedescendant`
+points at a single `role="option"` rendered for the current mark (`aria-posinset`, `aria-setsize`).
+Arrow keys, Home and End move it with no per-mark element, and hover, the tooltip and `select()`
+work as for real marks. PNG export paints the canvas layer under the SVG.
+
+### Snapshot
+
+`snapshot` should be a function. The base calls it the first time something reads
+`chart.chartSnapshot` after a data change, caches it for that revision and never computes it for a
+resize. Reading it twice runs your function once. The screen-reader table asks for it a quarter of a
+second after the data last changed, so a stream of updates builds it once. The `chart-data` event
+carries `{ revision }` (or `null` for the loading and empty states).
 
 ## What the base gives you
 
 - **Sizing.** A `ResizeObserver` on the drawing box. `height` is a number (default 240), or `fill` to
-  take the parent's definite height (minimum 120). `aspect-ratio` wins over a pixel height. The
-  SVG is absolutely positioned inside the box, so drawing can never grow the box (no resize loop).
-  A resize redraws with `context.animate === false`.
+  take the parent's definite height (minimum 120). `aspect-ratio` wins over a pixel height. The SVG
+  is absolutely positioned, so drawing can never grow the box (no resize loop).
 - **States.** `loading` (with `skeleton="bars|line|ring"`) and `empty` (or `isEmpty()`) replace the
-  drawing; `draw()` is not called. Text comes from `labels`.
+  drawing; `draw()` is not called and `chart-data` fires with `null`. The code and stylesheet are a
+  lazy chunk. The SVG object is kept, so `setup()` does not run again afterwards. If a mark had
+  focus, focus moves to the drawing frame, not to the page.
 - **Theming.** Colors are CSS variables. Use `context.color(i)` (the `palette` property or
-  attribute, else the `--chart-cat-*` tokens) and write them through `style` or `fill`, as
-  `var()` references. CSS lives in your element's own `.css`, from tokens only.
-- **Locale and time zone** (as in ui-core C6a). Attributes `locale` and `time-zone`; `locale`
-  falls back to the closest `[lang]`, then the browser. `context.format` is `resolveFormat` bound
-  to them (`value-format` and `currency` pick the preset). Use `this.formatDate(date)` for dates, or
-  pass `context.locale` / `context.timeZone` to ui-core's `category-axis-time` and `scale-time`.
-  Never write a locale into a chart; the ui-core default (`es-PE`) must never be reached.
-- **Reduced motion.** `context.animate` is true only for a data change, with motion allowed and no
-  `animate="off"`. Gate every `element.animate()` on it. Transitions in CSS need a
+  attribute, else the `--chart-cat-*` tokens) and write them through `style` or `fill`.
+- **Locale, time zone and currency.** Attributes `locale` and `time-zone`; `locale` falls back to the
+  closest `[lang]`, then the browser. `context.format` is ui-core's `resolveFormat` bound to them
+  (`value-format` and `currency` pick the preset). **The `currency` preset has no default currency:
+  set the `currency` attribute (ISO 4217, e.g. `USD`). Without it values show as plain numbers and a
+  warning is logged once outside production.** For dates use ui-core's `formatDate`,
+  `shortMonth`... with `{ locale: context.locale, timeZone: context.timeZone }`, or pass them to
+  `category-axis-time` and `scale-time`. Never write a locale into a chart; the ui-core default
+  (`es-PE`) must never be reached.
+- **Reduced motion.** Gate every `element.animate()` on `context.animate`. CSS transitions need a
   `prefers-reduced-motion: reduce` override.
-- **Accessible name and description.** The SVG is `role="group"` (or `img` when there are no marks)
-  named by `label`, described by `description` or `summary`. Mark every purely visual element
-  `aria-hidden="true"`; marks get `role="img"` and their `label`.
-- **Screen-reader table.** From `snapshot`, built lazily, unless a `ui-chart-data-table` is present
-  (it takes over) or `table="off"`.
-- **Pointer.** One `pointermove` listener on the drawing calls `hit(x, y)`. There are no per-mark
-  `pointerenter`/`pointerleave` listeners, so gaps between marks cannot cause enter/leave loops.
-  `hit` must cover the whole drawing (nearest category), never return `-1` between marks. The
-  `chart-hover` event fires once per index change, not per pixel. Touch keeps the hover until the
-  next press elsewhere.
+- **Accessible name and description.** The SVG is `role="group"` (or `img` without marks) named by
+  `label` (or `DrawResult.label`, or `labels.chart`, "Chart"), with `aria-roledescription` from
+  `labels.roledescription` ("chart"), described by `description` or `summary`. Mark purely visual
+  elements `aria-hidden="true"`; marks get `role="img"` and their `label`. Both strings are in
+  `chart.labels`, so a Spanish page sets `{ chart: "Gráfico", roledescription: "gráfico" }`.
+- **Screen-reader table.** From `snapshot`, lazily, unless a `ui-chart-data-table` is present or
+  `table="off"`. At most 500 rows, then a row "N more rows; use export to get them all"
+  (`labels.more`). It is rebuilt only when the snapshot changed.
+- **`setup(svg, signal)` / `teardown()`.** `setup` runs once per connection, when the SVG exists the
+  first time; add listeners with `{ signal }` and they are gone on disconnect. Redraws, states and
+  resizes never call it again, so listeners cannot pile up.
+- **`touch-action`.** `static touchAction = "pan-y"` (the default: the page still scrolls
+  vertically). Set it to `"none"` for a chart that pans or zooms by touch, or give the element a
+  `touch-action` attribute.
+
+## Pointer, touch and keyboard
+
+All input lives in a lazy chunk, fetched on the first `focusin` or `pointerenter`. The events that
+arrive while it loads are queued and replayed, so the first Tab or tap works.
+
+- **Hit testing.** One listener on the drawing calls `hit(x, y, target, radius)`. `x` and `y` are
+  in drawing units, already corrected for CSS zoom or transforms (`svg.width / box.width`), `target`
+  is the element under the pointer, and `radius` is how far a pointer may miss: 12px for a mouse and
+  the `--touch-target` token (44px in touch density; 44px if the token is 0) for a finger or pen.
+  Return a mark index, or -1. Bars use the band (`band.indexAt(x)`); line and scatter charts snap
+  with `nearestX(points, x)` (nearest column) or `nearestPoint(points, x, y, radius)` (nearest point
+  within the radius) from `internal/chart-hit.ts`, so a 2px line is easy to hit.
+- **Hover** (mouse, and a pen in range). `chart-hover` fires once per change of mark or content,
+  never per pixel. A redraw keeps the hovered mark: the base re-runs `hit`/`hover` at the last
+  pointer position and emits only if the mark or its content changed. No leave/enter pair.
+- **Touch and pen taps pin a mark.** A tap selects the mark under the finger and its details stay
+  shown. Tapping the same mark again, tapping outside the chart or pressing Escape clears it; tapping
+  another mark moves the pin. A swipe never selects: the drawing is `touch-action: pan-y`, and a
+  press that moves more than 10px or is cancelled by the browser is not a tap. Touch never
+  hovers.
+- **Selection.** `chart.select(index | null)` (the first call loads the chunk, so it settles a moment
+  later), `chart.selected`, the `chart-select` event (`{ index, category } | null`) and
+  `[data-selected]` on the mark. A mouse click, Enter and Space toggle it; the pinned mark keeps
+  `[data-active]` and its details while pinned. A **polite live region** announces the pinned mark
+  once per change (`Wed, Sales 1,500`). Selection is by mark index and is dropped if that mark no
+  longer exists.
+- **Drill-down.** `chart.drill(index)`, double click and Shift+Enter fire `chart-drill`
+  (`{ index, category }`). The chart (or the app) decides what drilling means.
+- **Mark index and category index.** `hit`, `hover`, `marks` and the events use the **mark index**
+  (what you `hit`). When marks are not categories (a stacked or grouped bar has several marks per
+  category), return `category` in `hover` and the events and `HoverInfo` carry both.
 - **Keyboard.** `marks` become a roving tab stop: one Tab stop, arrows/Home/End move without
-  wrapping, focus shows the tooltip (`:focus-visible` only), Escape dismisses it. Focus survives a
-  redraw by index. Highlight the active mark with `[data-active]`; dim by `data-series`.
+  wrapping, focus shows the details (`:focus-visible` only), Escape clears the hover and then the
+  selection. Focus and the hovered mark survive a redraw; the base re-focuses the same index silently
+  (nothing is re-announced) and keeps focus in the chart when the focused mark disappears.
+  Highlight the active mark with `[data-active]` and the pinned one with `[data-selected]`; dim by
+  `data-series`.
 
 ## The protocol with the parts
 
 A part finds its chart with `for="id"` or the closest ancestor chart, through `bindChart()` (parts
-and charts can be defined in any order). The chart publishes:
+and charts can be defined in any order). `bindChart` keeps listening for `chart-ready`, so when the
+chart is replaced (a new element with the same id, a part moved under another chart) the part
+detaches from the old one and attaches to the new one. Limit: the lookup stays in the part's own
+root, so a part inside a shadow root cannot reach a chart outside it, and the reverse. The chart
+publishes:
 
-- `chart.chartSnapshot` (legend, data table, export), emitted as `chart-data` after a redraw for new
-  data, not after a resize;
-- `chart-hover` with a `HoverInfo | null`: `{ index, x, y, title, rows, body?, side?, source }`,
-  with `x`/`y` relative to `chart.drawing`;
-- `chart-series` when `toggleSeries(id)` or `highlight(id)` changes. Your `draw()` must skip
-  `this.isHidden(series.id)` series and set `data-series="<id>"` on a series' marks to be dimmed.
+- `chart.chartSnapshot` (legend, data table, export), `chart-data` after a redraw for new data, not
+  after a resize;
+- `chart-hover` with a `HoverInfo | null`: `{ index, category, x, y, title, rows, body?, side?,
+  source, pinned }`, with `x`/`y` relative to `chart.drawing`. `source` is `pointer`, `keyboard` or
+  `touch`; `pinned` is true when it is the selected mark rather than a transient hover;
+- `chart-select`, `chart-drill`, and `chart-series` when `toggleSeries(id)` or `highlight(id)`
+  changes. Your `draw()` must skip `this.isHidden(series.id)` series and set `data-series="<id>"` on
+  a series' marks to be dimmed.
 
 A new part follows the same rules: import `chart-protocol` only, never the base.
 
+### The tooltip: floating or docked
+
+`ui-chart-tooltip` binds to the chart it sits in or the one `for` names, and **does not move itself
+into the chart**: it can live anywhere. Two layouts, chosen by the chart's width and the pointer:
+
+- **Floating** (a wide chart, fine pointer): a manual popover in the top layer, placed in viewport
+  coordinates from the drawing's box, so no `overflow` ancestor can clip it. It never takes the
+  pointer and stays inside the drawing.
+- **Docked** (the chart is at most 480px wide, or the primary pointer is coarse, or `dock="always"`):
+  a full-width panel in the flow under the drawing, at least 14px text, rows sized to the touch
+  target, its height reserved so showing it moves nothing, and a pinned mark keeps it open. A finger
+  never covers it because it is outside the drawing.
+
+### Export
+
+The export menu serializes a clone of the SVG: interactive wiring (`tabindex`, `role`, `aria-*`) is
+stripped, the paint is baked in, and the background comes from the chart's own container (the first
+opaque ancestor background, else white). External `<image>` elements cannot be included in a
+standalone file: they are left out, listed in the `export` event's `detail.dropped` and warned in the
+console. CSV quotes any field containing `,` `;` `"` CR LF or tab, and neutralizes text that starts
+like a formula (`=`, `+`, `-`, `@`) with a leading `'`, except plain numeric strings such as `-5`.
+
 ## Tests
 
-Add a few browser tests in the style of `test/chart-base.browser.test.ts`, which drives a tiny
-fixture chart (`test/chart-fixture.ts`):
+Add a few browser tests in the style of `test/chart-base.browser.test.ts`, which drives tiny fixture
+charts (`test/chart-fixture.ts`):
 
 - the AX tree: `ax("group", label)`, `ax("image", mark label)` (Chromium names SVG `role="img"`
   `image`);
-- the keyboard: one tab stop, arrows, Home/End, Escape;
-- the tooltip does not flicker: dispatch a `pointermove` sweep, assert one `chart-hover` per
-  category in order, one open/close toggle, the card inside the drawing and not under the pointer;
+- the keyboard: one tab stop, arrows, Home/End, Escape; the interaction chunk loads on the first
+  focus, so allow a beat (`await wait(80)`) after the first Tab;
+- touch: dispatch `pointerdown`/`pointerup` with `pointerType: "touch"` for a tap, with a `pointermove`
+  past 10px for a swipe;
+- the tooltip does not flicker: dispatch a `pointermove` sweep, assert one `chart-hover` per mark in
+  order, one open/close toggle, the card inside the drawing and not under the pointer. Park the real
+  mouse in a corner in `beforeEach`, or the browser hovers your chart with the last test's position;
 - locale: `locale="de-DE"` changes the text; nothing is `es-PE`.
 
 Golden values for any geometry belong in ui-core, next to the math.

@@ -51,7 +51,20 @@ describe("ui-sparkline", () => {
     const s = await spark('label="x" data="10,20,30,40" value-format="integer"');
     const drawing = s.querySelector("[data-ui-part=drawing]") as HTMLElement;
     const box = drawing.getBoundingClientRect();
+    // The pill is built (and its code fetched) on the first hover, not before.
+    expect(s.querySelector("[data-ui-part=value]")).toBeNull();
+    // The first pointer arrival loads the interaction chunk, then catches up with where it is.
+    drawing.dispatchEvent(
+      new PointerEvent("pointerenter", {
+        clientX: box.left + 2,
+        clientY: box.top + 10,
+        pointerType: "mouse",
+      }),
+    );
+    await wait(80);
     const pill = s.querySelector("[data-ui-part=value]") as HTMLElement;
+    expect(pill.hidden).toBe(false);
+    drawing.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
     expect(pill.hidden).toBe(true);
     drawing.dispatchEvent(
       new PointerEvent("pointermove", {
@@ -68,14 +81,62 @@ describe("ui-sparkline", () => {
   });
 
   it("explore adds arrow-key access to every point as one tab stop", async () => {
-    const s = await spark('label="Trend" explore data="5,6,7"');
-    const marks = [...s.querySelectorAll<SVGElement>("svg [role=img]")];
-    expect(marks.map((m) => m.getAttribute("aria-label"))).toEqual(["1: 5", "2: 6", "3: 7"]);
+    const s = await spark('label="Trend" explore data="5,,7"');
+    const proxy = s.querySelector("[data-ui-part=proxy]") as HTMLElement;
+    expect(proxy.getAttribute("role")).toBe("listbox");
     await userEvent.tab();
-    expect(document.activeElement).toBe(marks[0]);
+    await wait(80);
+    expect(document.activeElement).toBe(proxy);
+    const option = () => s.querySelector("[role=option]") as HTMLElement;
+    expect(option().textContent).toBe("1: 5");
+    expect((s.querySelector("[data-ui-part=value]") as HTMLElement).textContent).toBe("5");
     await userEvent.keyboard("{ArrowRight}");
-    expect(document.activeElement).toBe(marks[1]);
-    expect((s.querySelector("[data-ui-part=value]") as HTMLElement).textContent).toBe("6");
+    expect(option().textContent).toBe("2: -"); // a gap is still a stop, and says so
+    await userEvent.keyboard("{ArrowRight}");
+    expect(option().textContent).toBe("3: 7");
+    await wait(20);
+    expect((s.querySelector("[data-ui-part=value]") as HTMLElement).textContent).toBe("7");
+  });
+
+  it("keeps an inline width the author set, and gives each instance its own gradient id", async () => {
+    const host = mount(
+      `<div style="width:300px"><ui-sparkline locale="en-US" type="area" label="a" data="1,2,3" style="width:120px"></ui-sparkline>
+       <ui-sparkline locale="en-US" type="area" label="b" data="3,2,1" width="90"></ui-sparkline>
+       <ui-sparkline locale="en-US" type="area" label="c" data="2,2,5"></ui-sparkline></div>`,
+    );
+    await settle();
+    const [a, b, c] = [...host.querySelectorAll<HTMLElement>("ui-sparkline")];
+    expect(a?.style.width).toBe("120px");
+    expect(b?.style.width).toBe("90px");
+    b?.removeAttribute("width");
+    a?.removeAttribute("width");
+    await settle();
+    expect(b?.style.width).toBe("");
+    expect(a?.style.width).toBe("120px"); // not ours to clear
+    const ids = [a, b, c].map((s) => s?.querySelector("linearGradient")?.id);
+    expect(new Set(ids).size).toBe(3);
+    expect(a?.querySelector("path[style*=url]")?.getAttribute("style")).toContain(`#${ids[0]}`);
+  });
+
+  it("a tap pins the nearest point's value", async () => {
+    const s = await spark('label="x" data="10,20,30,40" value-format="integer"');
+    const drawing = s.querySelector("[data-ui-part=drawing]") as HTMLElement;
+    const box = drawing.getBoundingClientRect();
+    const fire = (type: string) =>
+      drawing.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          clientX: box.left + 150,
+          clientY: box.top + 12,
+          pointerType: "touch",
+          pointerId: 4,
+        }),
+      );
+    fire("pointerenter");
+    fire("pointerdown");
+    fire("pointerup");
+    await wait(80);
+    expect((s.querySelector("[data-ui-part=value]") as HTMLElement).textContent).toBe("40");
   });
 
   it("shows the empty state when there is nothing to plot", async () => {

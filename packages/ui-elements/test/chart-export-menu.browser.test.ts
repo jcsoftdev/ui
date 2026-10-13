@@ -144,4 +144,69 @@ describe("ui-chart-export-menu", () => {
     });
     expect(csv).toBe('Name,A\r\n\'=HYPERLINK(1),1\r\n"say ""hi"", ok",2\r\n');
   });
+
+  it("quotes any field with a separator, quote, line break or tab, and keeps plain numbers plain", async () => {
+    const { snapshotCsv } = await import("../src/internal/chart-export.ts");
+    const csv = snapshotCsv({
+      title: "t",
+      categoryHeader: "Name",
+      categories: ["a;b", "-5", "+1.5e3", "-x", "tab\there", "line\nbreak", "@cmd", "\r"],
+      series: [{ id: "a", name: "A", color: "red", values: [1, 2, 3, 4, 5, 6, 7, 8], text: [] }],
+    });
+    const rows = csv.split("\r\n");
+    expect(rows[1]).toBe('"a;b",1');
+    expect(rows[2]).toBe("-5,2"); // a numeric string is not a formula: no apostrophe
+    expect(rows[3]).toBe("+1.5e3,3");
+    expect(rows[4]).toBe("'-x,4"); // text that starts like a formula is neutralized
+    expect(rows[5]).toBe('"tab\there",5');
+    expect(csv).toContain('"line\nbreak",6');
+    expect(csv).toContain("'@cmd,7");
+  });
+
+  it("strips focus and ARIA wiring, takes the background from the chart's container, reports dropped images", async () => {
+    const host = mount(
+      `<div style="width:400px;background:rgb(10, 20, 30)"><ui-test-bars label="Weekly sales" height="160" locale="en-US"></ui-test-bars></div>`,
+    );
+    await frame();
+    await wait(60);
+    const chart = host.querySelector("ui-test-bars") as HTMLElement & {
+      exportSvgs(): SVGSVGElement[];
+    };
+    const drawing = chart.exportSvgs()[0] as SVGSVGElement;
+    drawing.append(
+      Object.assign(document.createElementNS("http://www.w3.org/2000/svg", "image"), {}),
+    );
+    const img = drawing.lastElementChild as SVGElement;
+    img.setAttribute("href", "https://example.com/logo.png");
+    const tools = await import("../src/internal/chart-export.ts");
+    const background = tools.backgroundOf(chart);
+    expect(background).toBe("rgb(10, 20, 30)");
+    const out = tools.serializeSvg(drawing, { background });
+    expect(out.dropped).toEqual(["https://example.com/logo.png"]);
+    expect(out.markup).not.toContain("<image");
+    expect(out.markup).not.toMatch(/tabindex|role=|aria-/);
+    expect(out.markup).toContain('fill="rgb(10, 20, 30)"');
+    // The live chart is untouched.
+    expect(drawing.getAttribute("role")).toBe("group");
+    expect(drawing.querySelector("[tabindex]")).not.toBeNull();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    document.body.innerHTML = "";
+    defineChartExportMenu();
+    const h2 = mount(
+      `<div style="width:400px"><ui-test-bars label="Weekly sales" height="160" locale="en-US"><ui-chart-export-menu></ui-chart-export-menu></ui-test-bars></div>`,
+    );
+    await frame();
+    await wait(60);
+    const c2 = h2.querySelector("ui-test-bars") as HTMLElement & { exportSvgs(): SVGSVGElement[] };
+    const extra = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    extra.setAttribute("href", "https://example.com/a.png");
+    c2.exportSvgs()[0]?.append(extra);
+    const events: Array<{ dropped: string[] }> = [];
+    const menu = h2.querySelector("ui-chart-export-menu") as HTMLElement;
+    menu.addEventListener("export", (e) => events.push((e as CustomEvent).detail));
+    (menu.querySelector("[data-format=svg]") as HTMLButtonElement).click();
+    expect(await until(() => events.length === 1)).toBe(true);
+    expect(events[0]?.dropped).toEqual(["https://example.com/a.png"]);
+    expect(warn).toHaveBeenCalled();
+  });
 });
