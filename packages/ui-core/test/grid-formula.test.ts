@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
-import * as react from "../../ui/src/containers/data-grid/formula.ts";
-import * as sheetReact from "../../ui/src/containers/data-grid/formula-sheet.ts";
 import * as f from "../src/grid/formula.ts";
 import type { CellValue } from "../src/grid/model.ts";
+
+// The React grid is the reference; it is loaded by path so this file does not type-check it.
+// biome-ignore lint/suspicious/noExplicitAny: the reference modules are untyped here.
+const load = (name: string): Promise<any> =>
+  import(
+    /* @vite-ignore */ new URL(`../../ui/src/containers/data-grid/${name}.ts`, import.meta.url).href
+  );
+const react = await load("formula");
+const sheetReact = await load("formula-sheet");
 
 const make = (data: CellValue[][]) => {
   const read = (r: number, c: number): CellValue => data[r]?.[c] ?? null;
@@ -14,7 +21,8 @@ const value = (sheet: f.FormulaSheet, a: string): f.FormulaValue => {
   if (!ref) throw new Error(a);
   return f.sheetValue(sheet, ref.r, ref.c);
 };
-const shown = (v: unknown) => (f.isFormulaError(v) ? v.code : react.isFormulaError(v) ? v.code : v);
+// biome-ignore lint/suspicious/noExplicitAny: error values come from two implementations.
+const shown = (v: any) => (v && typeof v === "object" && "code" in v ? v.code : v);
 
 describe("addresses", () => {
   it("converts column labels both ways", () => {
