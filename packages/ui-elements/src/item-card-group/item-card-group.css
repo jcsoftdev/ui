@@ -1,0 +1,148 @@
+[data-ui="item-card-group"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-density-sm);
+  min-width: 0;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+[data-ui="item-card-group"] > [data-ui-part="header"] {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-inline: 4px;
+}
+[data-ui="item-card-group"] > [data-ui-part="header"][hidden] {
+  display: none;
+}
+[data-ui="item-card-group"] > [data-ui-part="header"] > [data-ui-part="title"] {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+[data-ui="item-card-group"] > [data-ui-part="header"] > [data-ui-part="description"] {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+[data-ui="item-card-group"] > [data-ui-part="list"] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-card);
+  box-shadow: var(--shadow-card);
+}
+[data-ui="item-card"] {
+  display: block;
+  min-width: 0;
+}
+[data-ui="item-card"] + [data-ui="item-card"] {
+  border-top: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="item-card"] > [data-ui-part="row"] {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: var(--gap-density);
+  inline-size: 100%;
+  min-width: 0;
+  min-block-size: var(--control-height);
+  margin: 0;
+  padding: var(--gap-density-sm) var(--pad-control-x);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+[data-ui="item-card"][selected] > [data-ui-part="row"] {
+  background-color: var(--accent-soft);
+  box-shadow: var(--shadow-selected);
+}
+[data-ui="item-card"] > button[data-ui-part="row"] {
+  cursor: pointer;
+  transition: scale var(--motion-duration) var(--motion-ease);
+}
+[data-ui="item-card"] > button[data-ui-part="row"]:hover:not(:disabled) {
+  background-color: var(--surface-2);
+}
+[data-ui="item-card"][selected] > button[data-ui-part="row"]:hover:not(:disabled) {
+  background-color: var(--accent-soft);
+}
+[data-ui="item-card"] > button[data-ui-part="row"]:active:not(:disabled) {
+  scale: var(--press-scale);
+}
+[data-ui="item-card"] > button[data-ui-part="row"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+[data-ui="item-card"] > button[data-ui-part="row"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+[data-ui="item-card"] > [data-ui-part="row"][data-disabled]:not(button) {
+  opacity: 0.5;
+}
+[data-ui="item-card"] [data-ui-part="leading"] {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  color: var(--ink-2);
+}
+[data-ui="item-card"] [data-ui-part="leading"] svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+[data-ui="item-card"] [data-ui-part="text"] {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  text-align: start;
+}
+[data-ui="item-card"] [data-ui-part="item-title"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+[data-ui="item-card"] [data-ui-part="item-description"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+[data-ui="item-card"] [data-ui-part="trailing"] {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--gap-density-sm);
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+[data-ui="item-card"] [data-ui-part="chevron"] {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ink-3);
+}
+[data-ui="item-card"] [data-ui-part="icon"] {
+  inline-size: 16px;
+  block-size: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="item-card"] > button[data-ui-part="row"] {
+    transition: none;
+  }
+}
