@@ -29,6 +29,16 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 - New [Liquid Glass guide](https://ui.jcsoftdev.com/docs/glass), stories and real-browser tests
   (`pnpm test:glass`) including measured text contrast over a worst-case backdrop.
 
+### Fixes
+
+- **DonutChart / PieChart no longer flicker on hover.** The hovered slice steps out by `explode`
+  and was also the pointer target, so a still pointer near its edge ended up outside the moved
+  slice, the hover dropped, the slice slid back under the pointer and the loop repeated (tooltip,
+  dimming and centre total blinking). Pointer events now go to fixed, invisible hit arcs that leave
+  no gap between slices and also cover the stepped-out ring.
+- `ChartTooltip` takes an optional `containerHeight` and keeps the card inside it vertically
+  (DonutChart passes it), so a slice near the top no longer pushes the card past the chart edge.
+
 ### Migration notes
 
 - **Cards no longer blur.** `surface-card` is now an opaque fill with no `backdrop-filter`, in every
