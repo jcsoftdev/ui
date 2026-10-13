@@ -72,7 +72,7 @@ Route legend: inline = written by this worker in the worktree; no further delega
   checkbox, switch, radio-group. Route: inline.
   - Acceptance: form association (FormData, reset, disabled, required validity), ARIA roles and
     states, keyboard (Space/Enter/arrows), custom prefix; Chromium tests.
-- [ ] T4 dialog, popover, tooltip, tabs, toast. Route: inline.
+- [x] T4 dialog, popover, tooltip, tabs, toast. Route: inline.
   - Acceptance: native `<dialog>.showModal`/Popover API with JS fallback; Escape/outside dismiss;
     focus in/out; tabs roving + activation modes + ARIA wiring; toast live region, timers, pause.
 - [ ] T5 plumbing: size budgets (+5%, rounded to 50) for every entry and tier, treeshake checks,
@@ -99,6 +99,18 @@ trusted-publisher setup by the maintainer before they are added to `.github/publ
 2. ui-core tests import `packages/ui/src/glass/*` and `primitives/popper/geometry.ts` read-only to
    pin parity. If `perf/lazy-liquid-material` moves those files, the parity imports need updating.
 
+3. Toasts under an open modal `ui-dialog` are inert (native `showModal()` makes everything outside
+   the dialog inert; the React kit exempts its toaster through `data-ui-layer-branch`). Moving the
+   toaster into the top layer above the modal needs more work (popover-in-top-layer hit testing
+   failed in a probe). Conservative: documented; a page that toasts from a modal can place a
+   `<ui-toaster>` inside the dialog.
+4. `ui-tooltip` has no React counterpart; it uses the kit's toast colours (`--toast-bg/ink`) and a
+   700 ms hover delay with a 300 ms skip window (the common Radix defaults).
+5. Element entries are discovered from the source tree (`src/<name>/<name>.ts`), exported through
+   the `./*` pattern (`./dist/*/*.js`), budgeted by `src/<name>/size.json` and aggregated by a
+   generated `src/index.ts`, so parallel batches never edit shared lists. The "define all" root
+   entry is no longer size-gated (it is the sum of all elements).
+
 ## Progress / evidence
 - T1 (slice a): ui-core behaviours. Checks observed: lint, typecheck, unit 11 + SSR 7 (node),
   browser 6 (Chromium), check:treeshake (6 entries independent), check:pack (6 entries import in
@@ -122,3 +134,13 @@ trusted-publisher setup by the maintainer before they are added to `.github/publ
   Fix: treeshake/size scripts picked the first output with `entryPoint`, which can be a
   dynamic-import chunk; they now match the entry file. Re-measured core: unchanged (+-5 B).
   Route: inline.
+- T4 (slice d): dialog, popover, tooltip, tabs, toast, plus entry discovery (`scripts/entries.mjs`,
+  `scripts/gen-index.mjs`, per-element `size.json`, `./*` exports, pack-check expanding multi-`*`
+  targets). Checks observed: lint, typecheck, SSR 11, browser 23 (dialog: invoker open, AX name,
+  describedby, scroll lock, Escape, focus return, close parts, cancel veto, blocking, backdrop vs
+  inside press; popover: popovertarget open below trigger, focus in, `expanded`, Escape and outside
+  dismiss, focus return; tooltip: describedby, focus-visible show, top side, Escape, hover delay,
+  skip window, cleanup; tabs: ARIA wiring, roving, automatic/manual, disabled; toast: region,
+  status/alert, auto dismiss, visible 2, hover pause, action, Alt+T), check:treeshake (10 entries,
+  each loads only itself and no liquid), check:pack (11 entries). Gzip (eager): dialog 3123,
+  popover 4506, tooltip 5023, tabs 2605, toast 3070. Route: inline.

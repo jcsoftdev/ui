@@ -1,16 +1,13 @@
 // Each element entry loads only itself eagerly: no other element, and no liquid code (the material
 // is behind import() and only fetched for `material="liquid"`). Run after `pnpm build`.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { elementEntries } from "../scripts/entries.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const elements = Object.keys(pkg.exports).filter(
-  (key) => key !== "." && !key.includes("*") && !key.endsWith(".json"),
-);
+const elements = elementEntries();
 
 async function graph(file) {
   const result = await build({
@@ -46,15 +43,17 @@ async function graph(file) {
   return { inputs: [...inputs], lazy };
 }
 
-const names = elements.map((key) => key.slice(2));
-for (const key of elements) {
-  const name = key.slice(2);
-  const { inputs, lazy } = await graph(pkg.exports[key].import);
+const names = elements.map((element) => element.name);
+for (const { name, dist, define, budget } of elements) {
+  const module = await import(join(root, dist));
+  assert.equal(typeof module[define], "function", `${name}: exports ${define}()`);
+  assert.ok(budget !== undefined, `${name}: has src/${name}/size.json`);
+  const { inputs, lazy } = await graph(dist);
   const liquid = inputs.filter((file) => /liquid/.test(file));
   assert.deepEqual(liquid, [], `${name}: no liquid module loads eagerly`);
   for (const other of names.filter((n) => n !== name && !name.startsWith(`${n}-`)))
     assert.ok(
-      !inputs.some((file) => file.includes(`/dist/${other}/`)),
+      !inputs.some((file) => file.startsWith(`dist/${other}/`)),
       `${name}: does not pull ${other}`,
     );
   console.log(`${name.padEnd(12)} ${inputs.length} modules eager, ${lazy} lazy import(s)`);

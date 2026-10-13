@@ -22,6 +22,11 @@ defineCheckbox({ prefix: "acme" }); // <acme-checkbox>
 | `./checkbox` | `ui-checkbox` (`checked`, `indeterminate`, `required`) | shadow |
 | `./switch` | `ui-switch` | shadow |
 | `./radio-group` | `ui-radio-group` + `ui-radio`, arrow keys with selection-follows-focus | light + shadow |
+| `./dialog` | `ui-dialog` on native `<dialog>.showModal()`; `data-dialog-title`/`-description`/`-close` parts | light |
+| `./popover` | `ui-popover` on the Popover API (`popovertarget` invokers), placed by ui-core's popper | light |
+| `./tooltip` | `ui-tooltip for="id"`: hover delay, focus, Escape, `aria-describedby` | light |
+| `./tabs` | `ui-tabs` + `ui-tab-list`, `ui-tab`, `ui-tab-panel`; automatic or manual activation | light |
+| `./toast` | `ui-toaster` live region + `toast()`, `toast.success`, `toast.error`, `toast.dismiss` | light |
 
 The form controls are form-associated: they submit with their `name`, take part in `reset`,
 `disabled` fieldsets and constraint validation (`required`), and expose their role and state to
@@ -30,7 +35,7 @@ assistive technology through `ElementInternals`.
 ## Liquid Glass
 
 `material="liquid"` (and `lens`, `liquid-preset`, `liquid-refraction`, `liquid-frost`,
-`liquid-profile`, `liquid-dispersion`, `liquid-specular`, `liquid-motion`) on `ui-button` turns it into the
+`liquid-profile`, `liquid-dispersion`, `liquid-specular`, `liquid-motion`) on `ui-button`, `ui-dialog`, `ui-popover` and `ui-tooltip` turns it into the
 same Liquid Glass as the React kit. Nothing liquid ships with an element: the material code is
 fetched with `import()` the first time a surface asks for it, and the engine then loads only the
 features the resolved configuration needs (see `@jcsoftdev/ui-core`). `lens="off"` keeps the frosted
