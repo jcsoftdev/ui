@@ -82,7 +82,7 @@
     }
   },
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/geo-data/*.json dist/geo-data/",
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
