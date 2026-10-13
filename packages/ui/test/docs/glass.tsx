@@ -40,3 +40,24 @@ export function Lens() {
   );
 }
 // #endregion
+
+// #region liquid-options
+export function ConfiguredLiquid() {
+  return (
+    <Card
+      material={{
+        type: "liquid",
+        profile: "dome",
+        frost: 4,
+        refraction: 0.8,
+        specular: { intensity: 1.2, angle: -60 },
+        shadow: { opacity: 0.8, offsetY: 14 },
+        interactive: "drag",
+        motion: "jelly",
+      }}
+    >
+      A drop of glass
+    </Card>
+  );
+}
+// #endregion

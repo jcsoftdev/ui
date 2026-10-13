@@ -113,6 +113,69 @@ export function LiquidCards() {
 
 `material` accepts `"solid" | "glass" | "glass-clear" | "liquid" | "liquid-clear"`. The names `glass` and `glass-clear` keep meaning frosted, so nothing changes for existing apps.
 
+### Configuring the liquid
+
+`material` also takes an object, `{ type: "liquid" | "liquid-clear", ...options }`, on every component that has a `material` prop (Card, Dialog, Drawer, Popover, DropdownMenu, ContextMenu, HoverCard, Topbar, Sidebar, ActionBar, CommandPalette). The string values keep working. Every option is optional and maps to one `--liquid-*` custom property, so the same configuration can come from a prop, from a scope, or from the theme; the lens engine and the CSS read the same variables, and they inherit. Change them at run time and the lens follows.
+
+```tsx region=liquid-options
+export function ConfiguredLiquid() {
+  return (
+    <Card
+      material={{
+        type: "liquid",
+        profile: "dome",
+        frost: 4,
+        refraction: 0.8,
+        specular: { intensity: 1.2, angle: -60 },
+        shadow: { opacity: 0.8, offsetY: 14 },
+        interactive: "drag",
+        motion: "jelly",
+      }}
+    >
+      A drop of glass
+    </Card>
+  );
+}
+```
+
+| Option | Variable | Meaning (default) |
+| --- | --- | --- |
+| `refraction` | `--liquid-refraction` | 0 to 1: the bend as a fraction of the strongest offset that cannot fold the backdrop (1) |
+| `bevelWidth` | `--liquid-bevel` | px: width of the refracting band (`rim`) or cap of the offset (`full`, `dome`); derived from size and radius, at most 24 px for the whole-surface profiles |
+| `profile` | `--liquid-profile` | `"full"` a squarish dome over the whole surface (default), `"dome"` a round drop that is flatter in the middle, `"rim"` only a bevel along the edge |
+| `dispersion` | `--liquid-dispersion` | 0 to 0.2: colour channels pulled apart (0); small surfaces only |
+| `frost` | `--liquid-frost` | px of backdrop blur (2 regular, 0.6 clear) |
+| `saturation`, `brightness` | `--liquid-saturation`, `--liquid-brightness` | backdrop filter (1.5, 1) |
+| `tint` | `--liquid-tint-color`, `--liquid-tint-amount` | `{ color, amount }`: a colour laid over the glass (none; amount 0.2) |
+| `rim` | `--liquid-rim-strength` | 0 to 2: edge highlight (1) |
+| `specular` | `--liquid-specular`, `--liquid-specular-angle` | `{ intensity, angle }`: the glint on the walls facing the light (1, -120 deg: upper left) |
+| `fresnel` | `--liquid-fresnel` | 0 to 1: extra glow towards the edge (0) |
+| `grain` | `--liquid-grain` | 0 to 1: film grain (0) |
+| `radius` | `--liquid-radius` | px corner radius (the component's own) |
+| `opacity` | `--liquid-opacity` | 0 to 1: the legibility veil (1) |
+| `shadow` | `--liquid-shadow-opacity`, `--liquid-shadow-spread`, `--liquid-shadow-offset` | `{ opacity, spread, offsetY }` of the outer shadow (1, 0, 10) |
+| `interactive` | `--liquid-interactive` | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive` |
+| `motion` | `--liquid-motion` | `"snappy"` (default), `"smooth"`, `"soft"`, `"jelly"` or `false` (`off`) |
+
+`LiquidGlassOptions`, `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle()` and `liquidVars()` are exported from `@jcsoftdev/ui/glass`; `liquidStyle(options)` is the `style` object for your own surfaces (pair it with `useGlassLens`). The values are clamped to ranges the lens can honour.
+
+**Presets.** `data-glass="liquid-clear"`, `"liquid-regular"` and `"liquid-thick"` switch the glass surfaces of a scope to the liquid look (like `data-glass="liquid"`) and set a bundle of the options above (`base.css` carries them; `LIQUID_PRESETS` is the same data). **Theme defaults** are plain CSS: `:root { --liquid-frost: 3px; --liquid-profile: dome; }` changes every liquid surface that does not set its own.
+
+**Contrast.** The guarantees listed under Tokens hold for the defaults. A lower `opacity`, a `tint`, `grain` or a thinner `frost` can leave text without them; check the copy you put on a configured surface.
+
+**Profiles and thickness.** Both whole-surface profiles pull each pixel towards the centre along the gradient of a radial coordinate (`full`: exponent 3, pull `A t^1.5`; `dome`: exponent 2, pull `A t^2`, with `t` the radial coordinate over its value at the corners), so neither has a crease along the diagonals, and both are tested not to fold. `refraction` and `bevelWidth` scale the filter, not the map, so changing them does not re-rasterise it. A bigger surface is thicker: its shadow grows with the size (`--liquid-size`, 0.7 to 1.5 times), and the lens offset grows with it up to the cap.
+
+### Motion
+
+The lens engine drives its own springs (a damped spring written for the kit, no dependency) and a single `requestAnimationFrame` loop that sleeps when everything is at rest:
+
+- **Materialise**: when a lens first appears its strength springs from 0 to its target instead of fading.
+- **Press** (`interactive: "press"`, the default for buttons and links): the lens deepens by 35%, the surface swells by about 16 px over its width, a touch glow (a radial highlight at 15% opacity) follows the pointer and the rim light turns towards it.
+- **Drag** (`interactive: "drag"`): the surface follows the pointer through a rubber band (at most 48 px), stretches along its speed and squashes across it by at most 20% with two deliberately mismatched springs, and settles back like jelly when released. A drag swallows the click that ends it. The surface owns its `transform` and `scale` while it moves.
+- **`motion`** picks the spring (`snappy`, `smooth`, `soft`, `jelly`); `motion: false` (or `--liquid-motion: off`) turns all of it off and shows the lens at full strength at once.
+
+Everything is off under `prefers-reduced-motion` (the lens is removed with it, as before) and wherever there is no lens (Safari, Firefox): the press flex of the CSS stays.
+
 ### Switching the whole app
 
 Put `data-glass="liquid"` on `<html>` (or on any scope): `glass`, `glass-clear` and, in the `glass` preset, the chrome surfaces (`surface-overlay`, `surface-nav`, `surface-side`: Dialog, Drawer, menus, Topbar, Sidebar) render liquid. The content layer (`surface-card`) stays solid. Remove the attribute to go back to frosted. Limits: the switch is one-way down the tree (a nested `data-glass="frosted"` does not undo an outer `liquid`; use `material` on the component instead), and surfaces already mounted do not load the lens until they remount.
@@ -121,7 +184,7 @@ Put `data-glass="liquid"` on `<html>` (or on any scope): `glass`, `glass-clear` 
 
 Chromium only: it is the one engine that paints `backdrop-filter: url(#filter)`. Components with a glass `material` (Dialog, Drawer, Popover, DropdownMenu, ContextMenu, HoverCard, Topbar, Sidebar, ActionBar, Card) call `useGlassLens` internally. It looks at the `--glass-lens` flag that the liquid utilities set and, only then, imports the engine as a separate chunk; frosted and solid surfaces never load it, so tree-shaking and bundle size are untouched for them. It does nothing on import, is SSR-safe, and releases its filter on unmount.
 
-The map is rasterised from the signed distance function of the rounded rectangle (size, radius and pixel ratio aware). Across a rim, the displacement follows a convex squircle height profile through Snell's law (n = 1.5): zero in the middle, strongest at the edge, pulling the content from just inside the shape. Full coverage is a dome over a superellipse radial coordinate (`r = (|u|^3 + |v|^3)^(1/3)`, `u` and `v` the position over the half size): each pixel is pulled towards the centre along the gradient of `r`, by `A (r / r_corner)^1.5`. The gradient is continuous everywhere, so there is no crease along the diagonals (a field built from the distance to the nearest edge, or from each axis alone, makes the glass read as a four-faced pyramid) and no seam at the centre; `A` is at most 0.55 of the smaller half size and 24 px. The offset at the silhouette (up to about 17 px) makes a backdrop shape that crosses the edge jump there, as in real glass. The first lenses (a Snell-law profile, strength equal to the bevel width) folded back on themselves where the offset fell faster than 1 px per px, which broke straight stripes into a repeating sawtooth along the walls; both profiles now keep the slope under 1, and a test checks it. The veil is adaptive: the lens is blurred wide, its luminance read, and a veil of the ink-contrasting colour is laid only where the backdrop is close to the ink, so over friendly backdrops the body stays clear. The directional specular layers are added on top. Dispersion is off by default (it paints a colour fringe on hard edges); turn it on with `--glass-lens-dispersion: .05` or the option, on surfaces up to 100,000 px squared, where it is naturally strongest at the rim because it scales with the local offset. When a lens is first applied the refraction grows from nothing over 280 ms (the materialise), and on a pressed control it lifts to 1.35 times for the duration of the press; neither runs under reduced motion, where there is no lens.
+The map is rasterised from the signed distance function of the rounded rectangle (size, radius and pixel ratio aware). Across a rim, the displacement follows a convex squircle height profile through Snell's law (n = 1.5): zero in the middle, strongest at the edge, pulling the content from just inside the shape. Full coverage is a dome over a superellipse radial coordinate (`r = (|u|^3 + |v|^3)^(1/3)`, `u` and `v` the position over the half size): each pixel is pulled towards the centre along the gradient of `r`, by `A (r / r_corner)^1.5`. The gradient is continuous everywhere, so there is no crease along the diagonals (a field built from the distance to the nearest edge, or from each axis alone, makes the glass read as a four-faced pyramid) and no seam at the centre; `A` is at most 0.55 of the smaller half size and 24 px. The offset at the silhouette (up to about 17 px) makes a backdrop shape that crosses the edge jump there, as in real glass. The first lenses (a Snell-law profile, strength equal to the bevel width) folded back on themselves where the offset fell faster than 1 px per px, which broke straight stripes into a repeating sawtooth along the walls; both profiles now keep the slope under 1, and a test checks it. The veil is adaptive: the lens is blurred wide, its luminance read, and a veil of the ink-contrasting colour is laid only where the backdrop is close to the ink, so over friendly backdrops the body stays clear. The directional specular layers are added on top. Dispersion is off by default (it paints a colour fringe on hard edges); turn it on with `--glass-lens-dispersion: .05` or the option, on surfaces up to 100,000 px squared, where it is naturally strongest at the rim because it scales with the local offset. When a lens is first applied the refraction springs up from nothing (the materialise), and on a pressed control it lifts to 1.35 times for the duration of the press (see Motion); neither runs under reduced motion, where there is no lens.
 
 Budgets: at most 8 lenses alive at once, no lens on a surface over 640,000 px squared (they keep the plain liquid look), dispersion only up to 100,000 px squared, the map is rebuilt at most about ten times a second while a surface resizes (one coalesced pass per frame for all surfaces), and the last 16 maps (displacement and specular) are cached. Opt out with `data-glass-lens="off"` on the element or any ancestor, or `--glass-lens: 0` in CSS. It follows `prefers-reduced-transparency`, `prefers-contrast: more`, `forced-colors` and `prefers-reduced-motion` live.
 
@@ -159,11 +222,12 @@ Safari parses `backdrop-filter: url(...)` and then paints nothing, and Firefox i
 
 ## Tokens (liquid)
 
-Shared, per theme where light and dark differ: `liquid-regular-blur`, `liquid-clear-blur`, `liquid-saturate`, `liquid-regular-filter`, `liquid-clear-filter`, `liquid-regular-tint`, `liquid-regular-dim`, `liquid-clear-tint`, `liquid-clear-dim`, `liquid-rim`, `liquid-depth`, `liquid-depth-active`, `liquid-halo`, `liquid-shadow`. Border, edge-less shadow and fallback reuse `glass-*`. Liquid glass trades veil for transparency, so its measured floors are lower than the frosted 4.8:1 and documented. Without the lens (the fallback, a uniform veil): regular keeps `text-ink` at 4.5:1 and `text-ink-2` at 3.5:1, clear keeps `text-ink` at 4.5:1 and `text-ink-2` at 2:1 over white, black, split and striped backdrops. With the lens (adaptive veil), over a smooth photo-like backdrop `text-ink` keeps 4.5:1 and `text-ink-2` 2:1 on every pixel; over hard fine stripes the worst pixel keeps 2:1 for `text-ink` and the text halo carries the glyphs. Use regular glass, or frosted, for small secondary copy. The halo is not counted in these numbers. The price is the same as for frosted: over a dark backdrop, light liquid glass is pale.
+Shared, per theme where light and dark differ: `liquid-regular-blur`, `liquid-clear-blur`, `liquid-saturate`, `liquid-regular-filter`, `liquid-clear-filter`, `liquid-regular-tint`, `liquid-regular-dim`, `liquid-clear-tint`, `liquid-clear-dim`, `liquid-rim`, `liquid-depth`, `liquid-depth-active`, `liquid-halo`, `liquid-shadow`, and the ones a configured surface scales: `liquid-rim-lit`, `liquid-rim-back`, `liquid-rim-ring`, `liquid-shadow-ink`, `liquid-shadow-alpha`. The two `*-filter` tokens are a reference: the utilities compose the same filter from the blur and saturate tokens and the per-surface options. Border, edge-less shadow and fallback reuse `glass-*`. Liquid glass trades veil for transparency, so its measured floors are lower than the frosted 4.8:1 and documented. Without the lens (the fallback, a uniform veil): regular keeps `text-ink` at 4.5:1 and `text-ink-2` at 3.5:1, clear keeps `text-ink` at 4.5:1 and `text-ink-2` at 2:1 over white, black, split and striped backdrops. With the lens (adaptive veil), over a smooth photo-like backdrop `text-ink` keeps 4.5:1 and `text-ink-2` 2:1 on every pixel; over hard fine stripes the worst pixel keeps 2:1 for `text-ink` and the text halo carries the glyphs. Use regular glass, or frosted, for small secondary copy. The halo is not counted in these numbers. The price is the same as for frosted: over a dark backdrop, light liquid glass is pale.
 
 ## Sources
 
 - WWDC25 [Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/): lensing ("bends, shapes, and concentrates light"), specular highlights that respond to geometry, tint adapting to what is behind, Regular vs Clear, glass that "illuminates from within" on press, thicker glass with deeper shadows and stronger lensing.
 - Apple Newsroom, [new software design](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/): "reflects and refracts its surroundings", specular highlights.
+- [liquidglass.dev](https://liquidglass.dev) (gentpan/liquidglass, MIT): ideas for the rim-band bevel, the spring constants of the press, follow and settle motion and the velocity stretch; the code here is our own. The parameter set of the options mirrors what ybouane's liquid-glass playground exposes (names only, no code or constants).
 - Apple HIG [Materials](https://developer.apple.com/design/human-interface-guidelines/materials) is JavaScript-rendered and could not be read automatically.
 - kube.io, [Liquid Glass in the Browser](https://kube.io/blog/liquid-glass-css-svg/): Snell's law, squircle height profile, displacement map encoding, Chromium-only `backdrop-filter: url()`. Dispersion by per-channel displacement is a common technique that is not described there; the implementation here is our own.

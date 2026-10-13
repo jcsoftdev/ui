@@ -35,7 +35,7 @@ const primitives = check(
 );
 const glass = check("docs/glass.tsx", "../../../site/src/content/docs/docs/glass.md", {
   min: 3,
-  required: ["opt-in", "liquid", "lens"],
+  required: ["opt-in", "liquid", "liquid-options", "lens"],
 });
 console.log(
   `docs-examples: ${primitives} primitives and ${glass} glass blocks match the type-checked source`,

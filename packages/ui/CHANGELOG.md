@@ -2,6 +2,31 @@
 
 ## 0.3.0 (unreleased)
 
+### Configurable Liquid Glass and liquid motion
+
+- **`LiquidGlassOptions`**: `material={{ type: "liquid" | "liquid-clear", ...options }}` on every
+  component with a `material` prop (the string values are unchanged). Options: `refraction`,
+  `bevelWidth`, `profile` (`"full"`, `"dome"`, `"rim"`), `dispersion`, `frost`, `saturation`,
+  `brightness`, `tint`, `rim`, `specular`, `fresnel`, `grain`, `radius`, `opacity`, `shadow`,
+  `interactive`, `motion`. Each maps to a `--liquid-*` custom property that the CSS and the lens
+  read, so a scope or the theme can set them and a change applies live. Exported from
+  `@jcsoftdev/ui/glass` with `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle` and `liquidVars`.
+- **`data-glass` presets**: `liquid-clear`, `liquid-regular` and `liquid-thick` (in `base.css`).
+  The global switch is now `[data-glass^="liquid"]`.
+- **Optics**: the `dome` profile (round contours), a size-scaled outer shadow, fresnel glow, film
+  grain, and a specular glint that follows `specular.angle`. Defaults are unchanged.
+- **Motion**: an in-house spring and one rAF loop: the lens materialises by spring, a press deepens
+  it, swells the surface and lights a touch glow that follows the pointer (the rim light turns
+  towards it), and `interactive: "drag"` pulls the surface through a rubber band with a velocity
+  squash (mismatched X/Y springs) and a jelly settle. Off under `prefers-reduced-motion` and with
+  `motion: false`.
+- New tokens: `liquid-rim-lit`, `liquid-rim-back`, `liquid-rim-ring`, `liquid-shadow-ink`,
+  `liquid-shadow-alpha`. The liquid utilities compose their backdrop filter from the blur and
+  saturate tokens and the per-surface options; overriding `--liquid-regular-filter` alone no longer
+  changes anything.
+- A lower `opacity`, a `tint` or `grain` void the contrast guarantee of the defaults.
+- Fix: a removed element released its lens only after the rebuild throttle; it is now immediate.
+
 ### Liquid variant of the glass (lensing)
 
 Frosted glass is unchanged; Apple-style Liquid Glass is a second look next to it.
