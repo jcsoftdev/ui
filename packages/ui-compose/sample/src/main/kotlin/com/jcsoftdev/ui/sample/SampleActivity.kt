@@ -21,6 +21,13 @@ class SampleActivity : ComponentActivity() {
                     "custom" -> CustomThemeGallery()
                     "headless" -> HeadlessGallery()
                     "states" -> StatesGallery()
+                    "playground" ->
+                        GlassPlayground(
+                            dark = intent.getBooleanExtra("dark", false),
+                            initialTab = intent.getStringExtra("tab") ?: "style",
+                            initialBackdrop =
+                                Backdrop.entries.firstOrNull { it.name.equals(intent.getStringExtra("backdrop"), true) } ?: Backdrop.Rio,
+                        )
                     "glass" ->
                         GlassGallery(
                             dark = intent.getBooleanExtra("dark", false),

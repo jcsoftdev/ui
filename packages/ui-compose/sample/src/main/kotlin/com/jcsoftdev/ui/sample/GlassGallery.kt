@@ -3,7 +3,6 @@ package com.jcsoftdev.ui.sample
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,12 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,8 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Button
 import com.jcsoftdev.ui.atoms.ButtonVariant
@@ -41,14 +36,9 @@ import com.jcsoftdev.ui.atoms.IconButton
 import com.jcsoftdev.ui.atoms.Switch
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.containers.Card
-import com.jcsoftdev.ui.glass.GlassEffectContainer
 import com.jcsoftdev.ui.glass.GlassVariant
-import com.jcsoftdev.ui.glass.LiquidGlassStyle
-import com.jcsoftdev.ui.glass.LiquidInteraction
-import com.jcsoftdev.ui.glass.LiquidProfile
 import com.jcsoftdev.ui.glass.MaterialSurface
 import com.jcsoftdev.ui.glass.SurfaceMaterial
-import com.jcsoftdev.ui.glass.glassEffect
 import com.jcsoftdev.ui.glass.glassSource
 import com.jcsoftdev.ui.glass.rememberGlassState
 import com.jcsoftdev.ui.icons.Bell
@@ -64,7 +54,6 @@ import com.jcsoftdev.ui.overlays.Toaster
 import com.jcsoftdev.ui.primitives.ToastHostState
 import com.jcsoftdev.ui.theme.UiStyle
 import com.jcsoftdev.ui.theme.UiTheme
-import androidx.compose.foundation.interaction.MutableInteractionSource as Source
 
 private val Hues =
     listOf(
@@ -106,7 +95,6 @@ fun GlassGallery(
             ) {
                 item { SideBySide() }
                 item { LightBackdrop() }
-                item { StyleLab() }
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button("Open glass sheet", { sheet = true }, block = true, variant = ButtonVariant.Primary)
@@ -246,82 +234,6 @@ private fun LightBackdrop() {
                 glass = glass,
             ) {
                 Text("Liquid pill", Modifier.align(Alignment.Center))
-            }
-        }
-    }
-}
-
-/** Style presets side by side, a draggable pill (drag it: it squashes and settles like jelly) and merging circles. */
-@Composable
-private fun StyleLab() {
-    val glass = rememberGlassState()
-    var drag by remember { mutableStateOf(Offset.Zero) }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))) {
-        Box(Modifier.fillMaxWidth().height(300.dp)) {
-            Canvas(Modifier.fillMaxSize().glassSource(glass)) {
-                drawRect(Brush.verticalGradient(listOf(Color(0xFFFFE29F), Color(0xFFFF719A))))
-                var x = 0f
-                while (x < size.width) {
-                    drawRect(
-                        Color.Black.copy(alpha = 0.8f),
-                        Offset(x, 0f),
-                        androidx.compose.ui.geometry
-                            .Size(18f, size.height),
-                    )
-                    x += 54f
-                }
-                var gy = 0f
-                while (gy < size.height) {
-                    drawLine(Color.White.copy(alpha = 0.8f), Offset(0f, gy), Offset(size.width, gy), 3f)
-                    gy += 36f
-                }
-            }
-            Row(Modifier.align(Alignment.TopCenter).padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                for (
-                (label, style) in
-                listOf(
-                    "Rim" to LiquidGlassStyle(profile = LiquidProfile.Rim),
-                    "Full" to LiquidGlassStyle(profile = LiquidProfile.Full),
-                    "Dome" to LiquidGlassStyle(profile = LiquidProfile.Dome),
-                    "Thick" to LiquidGlassStyle.Thick,
-                )
-                ) {
-                    val source = remember { Source() }
-                    MaterialSurface(
-                        SurfaceMaterial.Liquid,
-                        RoundedCornerShape(20.dp),
-                        Modifier.size(70.dp, 70.dp).clickable(source, null) {},
-                        glass = glass,
-                        interactionSource = source,
-                        style = style,
-                    ) { Text(label, Modifier.align(Alignment.Center)) }
-                }
-            }
-            val dragStyle = LiquidGlassStyle(interaction = LiquidInteraction.Drag)
-            MaterialSurface(
-                SurfaceMaterial.Liquid,
-                CircleShape,
-                Modifier
-                    .align(Alignment.Center)
-                    .offset { IntOffset(drag.x.toInt(), drag.y.toInt()) }
-                    .size(150.dp, 56.dp)
-                    .pointerInput(Unit) {
-                        detectDragGestures { change, amount ->
-                            change.consume()
-                            drag += amount
-                        }
-                    },
-                glass = glass,
-                style = dragStyle,
-            ) { Text("Drag me", Modifier.align(Alignment.Center)) }
-            GlassEffectContainer(
-                Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
-                style = LiquidGlassStyle(blend = 56.dp),
-                glass = glass,
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    repeat(4) { Box(Modifier.size(56.dp).glassEffect(CircleShape)) }
-                }
             }
         }
     }
