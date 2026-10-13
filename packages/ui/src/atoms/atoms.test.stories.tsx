@@ -73,6 +73,23 @@ export const CheckboxBoxFillsWhenChecked: Story = {
   },
 };
 
+export const CheckboxIsSquareAndAccentFilled: Story = {
+  render: () => <Checkbox aria-label="Cita completada" defaultChecked />,
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole("checkbox", { name: "Cita completada" });
+    const visual = box.querySelector("span");
+    if (!visual) throw new Error("checkbox has no box span");
+    const style = getComputedStyle(visual);
+    await expect(Number.parseFloat(style.borderTopLeftRadius)).toBeLessThan(visual.clientWidth / 2);
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = "var(--accent)";
+    canvasElement.append(probe);
+    const accent = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    await expect(style.backgroundColor).toBe(accent);
+  },
+};
+
 /** Radix selects on arrow focus from a frame callback, so the key must stay down for a frame. */
 async function pressArrow(key: "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight") {
   await userEvent.keyboard(`{${key}>}`);
