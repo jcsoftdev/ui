@@ -1,16 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 (2026-10-13)
 
-### Fixes
+### Theme generator fixes
 
 - **`ui-theme build --no-kotlin` no longer builds Kotlin.** It used to generate `Theme.kt` and discard it, so `var(...)` and `oklch(...)` colors still threw "Unsupported color for Kotlin". Without the flag, the error now names the token and suggests `--no-kotlin`.
 
-### Added
+### Theme generator additions
 
 - **`@jcsoftdev/ui/theme-builder`** exports `buildTheme`, `buildTokensCss`, `buildThemeCss`, `buildFontsCss` and `buildThemeKt`, typed. `buildTheme` takes `kotlin: false` to skip `Theme.kt`.
-
-## 0.3.0 (unreleased)
 
 ### Liquid Glass
 
