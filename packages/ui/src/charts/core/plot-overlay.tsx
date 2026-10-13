@@ -91,11 +91,17 @@ export function PlotOverlay({
       aria-valuenow={(active ?? 0) + 1}
       aria-valuetext={valueText}
       onKeyDown={onKeyDown}
-      onFocus={() => onActiveChange(active ?? 0)}
+      onFocus={(event) => {
+        if (event.currentTarget.matches(":focus-visible")) onActiveChange(active ?? 0);
+      }}
       onBlur={() => onActiveChange(null)}
       onPointerMove={(event) => onActiveChange(indexAt(local(event)))}
-      onPointerDown={(event) => onActiveChange(indexAt(local(event)))}
-      onPointerLeave={() => onActiveChange(null)}
+      onPointerDown={(event) => {
+        if (event.pointerType !== "touch") onActiveChange(indexAt(local(event)));
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "touch") onActiveChange(null);
+      }}
       className={cn(
         "absolute rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-4",
         className,

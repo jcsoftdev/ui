@@ -158,6 +158,23 @@ Every chart must keep these, so all families behave the same:
 - Entry animation through `useEntryAnimation` (line reveal by a clip rect, bars grow from their baseline with a short
   stagger, labels fade). Nothing animates with `prefers-reduced-motion` or `animate={false}`.
 - `loading` shows `ChartSkeleton`; no finite data shows `ChartEmpty`.
+- Touch: `ChartFrame` owns it, so a chart gets it by rendering inside the frame (`useTouchSelection`). Touch
+  `pointerover`/`pointerout` never reach the marks, so a lifted finger is not "leaving". A tap (up within 10px of the
+  press) replays a hover on the mark under the finger, or the nearest mark within 44px: marks flagged
+  `data-chart-hit` or `data-category` are snap targets. Tapping the pinned mark again (its details read the same),
+  tapping outside, tapping empty space or Escape unpins; a swipe never selects. Slider overlays must select from
+  keyboard focus only (`:focus-visible`), not from the focus a tap gives them.
+- Details: `ChartTooltip` floats beside the pointer, and docks into the frame's panel under the plot based on the
+  device, not the container: when the primary pointer is coarse (`pointer: coarse`) or the viewport is 480px wide or
+  less (`dock="auto" | "always" | "never"`, also on `ChartFrame`; `useDockDevice` and `resolveDocked` are exported). A
+  narrow card on a desktop with a mouse keeps the floating card. The panel reserves 160px (so nothing below it jumps)
+  only while docking applies: the reservation is CSS (`display:none` unless a coarse pointer or a narrow viewport
+  matches), so it also holds on the server render. Its rows are at least 44px tall. The panel is hidden from assistive
+  tech; a separate polite live region announces the pinned or keyboard-selected category (debounced 150ms, skipped
+  for mouse hover). A floating card only changes sides past a dead zone (65% / 55% of the width) and never animates
+  the swap.
+- Leaving a mark: clear through `useLeaveGrace` (60ms) so the gutter between two marks never shows an empty frame, and
+  keep a category over the gaps between its units.
 
 ## Hierarchy and matrix charts
 

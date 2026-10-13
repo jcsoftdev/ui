@@ -1160,7 +1160,7 @@ function XYPointPlot({
         count={readOrder.length}
         active={active}
         onActiveChange={setActive}
-        pick={(x, y) => pointIndex.nearest(x, y, 16)}
+        pick={(x, y, radius) => pointIndex.nearest(x, y, radius ?? 16)}
         label={labels.explore}
         valueText={valueText}
         margin={margin}

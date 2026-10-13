@@ -23,6 +23,7 @@ import {
   resolveHierarchyLabels,
 } from "../core/hierarchy-chart.js";
 import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
+import { boxAt } from "../core/nearest.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type DrillState, useDrill } from "../core/use-drill.js";
 
@@ -207,13 +208,7 @@ function TreemapPlot({
     { disabled: !animate, replayKey: focus.id },
   );
 
-  const hit = (x: number, y: number): TreemapCell | null => {
-    for (let i = cells.length - 1; i >= 0; i--) {
-      const cell = cells[i] as TreemapCell;
-      if (x >= cell.x0 && x <= cell.x1 && y >= cell.y0 && y <= cell.y1) return cell;
-    }
-    return null;
-  };
+  const hit = (x: number, y: number): TreemapCell | null => boxAt(cells, x, y, (cell) => cell);
 
   const local = (event: PointerEvent<HTMLDivElement>) => {
     const box = event.currentTarget.getBoundingClientRect();

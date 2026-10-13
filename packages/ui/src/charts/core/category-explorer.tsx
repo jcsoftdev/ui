@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, type PointerEvent, useState } from "react";
+import { type FocusEvent, type KeyboardEvent, type PointerEvent, useState } from "react";
 import { cn } from "../../utils/cn.js";
 
 export interface CategoryExplorerOptions {
@@ -22,7 +22,7 @@ export interface CategoryExplorer {
     onPointerLeave: () => void;
   };
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
-  onFocus: () => void;
+  onFocus: (event?: FocusEvent<HTMLElement>) => void;
   onBlur: () => void;
 }
 
@@ -52,13 +52,16 @@ export function useCategoryExplorer({
     const target = event.target as Element | null;
     const hit = target?.closest?.("[data-category]");
     const index = hit ? Number(hit.getAttribute("data-category")) : Number.NaN;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const at = { x: event.clientX - rect.left, y: event.clientY - rect.top };
     if (!Number.isInteger(index) || !available.includes(index)) {
-      clear();
+      // The gaps between units of one category are not "leaving": keep the category and let the
+      // tooltip follow, until another category is reached or the pointer leaves the plot.
+      if (active != null) setPointer(at);
       return;
     }
-    const rect = event.currentTarget.getBoundingClientRect();
     setActive(index);
-    setPointer({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+    setPointer(at);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -86,7 +89,10 @@ export function useCategoryExplorer({
     position: shown == null ? null : (pointer ?? anchor(shown)),
     pointerProps: { onPointerMove, onPointerLeave: clear },
     onKeyDown,
-    onFocus: () => setActive((current) => current ?? available[0] ?? null),
+    onFocus: (event) => {
+      if (event && !event.currentTarget.matches(":focus-visible")) return;
+      setActive((current) => current ?? available[0] ?? null);
+    },
     onBlur: clear,
   };
 }

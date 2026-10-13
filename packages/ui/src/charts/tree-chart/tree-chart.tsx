@@ -223,6 +223,7 @@ export function TreeChart({
   );
   return (
     <ChartFrame
+      dock="never"
       height={height}
       aspectRatio={aspectRatio}
       labels={labels}
