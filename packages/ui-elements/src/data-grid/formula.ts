@@ -1,3 +1,4 @@
+import { validateSync } from "@jcsoftdev/ui-core/grid/clipboard";
 import {
   buildSheet,
   dirtyCells,
@@ -9,7 +10,7 @@ import {
   type ParseCache,
   updateCells,
 } from "@jcsoftdev/ui-core/grid/formula";
-import type { CellValue } from "@jcsoftdev/ui-core/grid/model";
+import type { CellValue, GridColumn } from "@jcsoftdev/ui-core/grid/model";
 import type { UiDataGrid } from "./data-grid.js";
 import css from "./formula.css.js";
 import { adoptCss, type Row } from "./shared.js";
@@ -64,9 +65,14 @@ export function sheetOf(grid: UiDataGrid): State | null {
       const column = columns[c];
       if (row == null || !column) return null;
       const key = cols[c];
-      return (
-        typeof key === "function" ? key(row) : (row as Record<string, CellValue>)[key as string]
-      ) as CellValue;
+      try {
+        return (
+          typeof key === "function" ? key(row) : (row as Record<string, CellValue>)[key as string]
+        ) as CellValue;
+      } catch {
+        // An accessor that throws is an empty cell here, not a broken sheet.
+        return null;
+      }
     },
     cache: state.cache,
   });
@@ -78,6 +84,34 @@ const hasErrors = (sheet: FormulaSheet): boolean => {
   for (const value of sheet.values.values()) if (isFormulaError(value)) return true;
   return false;
 };
+
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * A formula result as its column takes it: numbers for number columns, booleans for boolean
+ * ones, dates for date ones, then the column's own `validate`. What does not fit shows `#VALUE!`.
+ */
+function fits(column: GridColumn<Row>, row: Row, value: CellValue): CellValue {
+  if (value === null || isErrorText(value)) return value;
+  let next: CellValue = value;
+  switch (column.type) {
+    case "number":
+      if (typeof value !== "number") return "#VALUE!";
+      break;
+    case "boolean":
+      if (typeof value !== "boolean") return "#VALUE!";
+      break;
+    case "date": {
+      const date =
+        typeof value === "string" && ISO_DAY.test(value) ? new Date(`${value}T00:00:00`) : null;
+      if (!date || Number.isNaN(date.getTime())) return "#VALUE!";
+      next = date;
+      break;
+    }
+    default:
+  }
+  return validateSync(column, next, row).message ? "#VALUE!" : next;
+}
 
 /** Installs formulas on a grid; called once per grid by the grid. */
 export function install(grid: UiDataGrid): void {
@@ -106,11 +140,13 @@ export function install(grid: UiDataGrid): void {
       ready && row !== null && typeof row === "object" ? ready.rowIndex.get(row) : undefined;
     const c = ready && columnId !== undefined ? ready.colIndex.get(columnId) : undefined;
     if (!ready?.sheet || r === undefined || c === undefined) return value;
-    return displayValue(ready.sheet, r, c) ?? value;
+    const result = displayValue(ready.sheet, r, c);
+    const column = grid.columns[c];
+    return result === undefined ? value : column ? fits(column, row as Row, result) : result;
   };
 
   grid.addEventListener("cellschange", (event) => {
-    if (!state.sheet || grid.getAttribute("edit-mode") === "emit") return;
+    if (event.target !== grid || !state.sheet || grid.getAttribute("edit-mode") === "emit") return;
     const { changes } = (event as CustomEvent).detail as {
       changes: { row: object; columnId: string }[];
     };
@@ -121,12 +157,21 @@ export function install(grid: UiDataGrid): void {
       if (r !== undefined && c !== undefined) changed.push([r, c]);
     }
     if (changed.length === 0) return;
-    const sheet = updateCells(state.sheet, changed, state.cache);
+    let sheet: FormulaSheet;
+    try {
+      sheet = updateCells(state.sheet, changed, state.cache);
+    } catch {
+      // Something no formula can explain: start from the data again.
+      state.sheet = null;
+      grid.refresh();
+      return;
+    }
     state.sheet = sheet;
     state.errors = hasErrors(sheet);
-    const dirty = new Set<number>();
-    for (const [r, c] of changed)
-      for (const key of dirtyCells(sheet, r * sheet.cols + c)) dirty.add(key);
+    const dirty = dirtyCells(
+      sheet,
+      changed.map(([r, c]) => r * sheet.cols + c),
+    );
     const sorted = new Set(grid.sort.map((rule) => rule.id));
     if ([...dirty].some((key) => sorted.has(grid.columns[key % sheet.cols]?.id as string))) {
       // A sorted column changed through a formula: the order may have moved.
@@ -140,24 +185,32 @@ export function install(grid: UiDataGrid): void {
     grid.refreshRows(keys);
   });
 
-  // Marks the cells that show a formula error, so they read as one and say what it is.
-  const marked = new Set<HTMLElement>();
+  // Marks the cells that show an error their own formula produced, so they read as one and say
+  // what it is. Only cells that are formulas are marked, and a `title` the consumer set stays.
+  const marked = new Map<HTMLElement, string>();
   const previous = grid._after;
   grid._after = () => {
     previous?.();
-    for (const cell of marked) {
+    for (const [cell, title] of marked) {
       if (cell.isConnected && isErrorText(cell.textContent as string)) continue;
       cell.removeAttribute("data-formula-error");
-      cell.removeAttribute("title");
+      if (cell.title === title) cell.removeAttribute("title");
       marked.delete(cell);
     }
-    if (!state.errors) return;
-    for (const cell of grid.querySelectorAll<HTMLElement>("[role=gridcell]")) {
+    const { sheet } = state;
+    if (!state.errors || !sheet) return;
+    const { view } = grid._i();
+    for (const cell of grid.querySelectorAll<HTMLElement>("[role=gridcell][data-col]")) {
       const text = cell.textContent as string;
       if (marked.has(cell) || !isErrorText(text)) continue;
+      const v = view.indexOfKey(cell.closest<HTMLElement>("[role=row]")?.dataset.key ?? "");
+      const c = state.colIndex.get(cell.dataset.col as string);
+      if (v < 0 || c === undefined || !sheet.formulas.has(view.sourceAt(v) * sheet.cols + c))
+        continue;
       cell.dataset.formulaError = "";
-      cell.title = `${grid.labels.formulaError ?? "Formula error"}: ${text}`;
-      marked.add(cell);
+      const title = `${grid.labels.formulaError ?? "Formula error"}: ${text}`;
+      if (cell.title === "") cell.title = title;
+      marked.set(cell, title);
     }
   };
 

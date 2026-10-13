@@ -43,6 +43,11 @@ import {
 // The result is ONE batch (`changeCells`, source `fill`), so it undoes as one step. Only
 // synchronous `validate` results are enforced, as in a paste.
 
+//
+// Formula addresses count columns in `columns` order, not the order on screen: a pinned column keeps
+// its place in the data, so filling across pinned and unpinned columns shifts references by the
+// data distance, not by the number of columns crossed.
+
 const installed = new WeakSet<UiDataGrid>();
 
 /** Position of a column in `columns`, the order formula addresses count in. */

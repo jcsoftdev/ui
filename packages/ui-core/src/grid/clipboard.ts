@@ -122,6 +122,9 @@ export interface PasteTarget {
   r: number;
   c: number;
   text: string;
+  /** Line and field of the pasted table this text came from (0, 0 for a single value filling). */
+  i: number;
+  j: number;
 }
 
 export interface PastePlan {
@@ -147,7 +150,7 @@ export function planPaste(
     const text = table[0]?.[0] ?? "";
     for (let r = selection.r0; r <= Math.min(selection.r1, limits.maxR); r += 1)
       for (let c = selection.c0; c <= Math.min(selection.c1, limits.maxC); c += 1)
-        targets.push({ r, c, text });
+        targets.push({ r, c, text, i: 0, j: 0 });
     return { targets, clipped: 0 };
   }
   let clipped = 0;
@@ -155,7 +158,7 @@ export function planPaste(
     line.forEach((text, dc) => {
       const r = origin.r + dr;
       const c = origin.c + dc;
-      if (r <= limits.maxR && c <= limits.maxC) targets.push({ r, c, text });
+      if (r <= limits.maxR && c <= limits.maxC) targets.push({ r, c, text, i: dr, j: dc });
       else clipped += 1;
     });
   });

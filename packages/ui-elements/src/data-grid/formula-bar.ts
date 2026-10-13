@@ -1,13 +1,20 @@
-import { type PasteMessages, parsePasted, validateSync } from "@jcsoftdev/ui-core/grid/clipboard";
+import {
+  copyText,
+  type PasteMessages,
+  parsePasted,
+  validateSync,
+} from "@jcsoftdev/ui-core/grid/clipboard";
 import { cellAddress } from "@jcsoftdev/ui-core/grid/formula";
 import { getCellValue } from "@jcsoftdev/ui-core/grid/model";
+import { emit } from "../internal/base.js";
 import type { UiDataGrid } from "./data-grid.js";
 import { sheetOf } from "./formula.js";
 import { type Col, isEditable, isFormula, type Row } from "./shared.js";
 
 // The formula bar: the address of the focused cell, `fx` and a field with the cell's stored text
 // (the formula, for a formula cell). Enter stores it like the cell editor would, Escape puts the
-// stored text back and returns to the cell. Loaded by `formulas` when `formula-bar` is set; it
+// stored text back and returns to the cell, and leaving the field commits it like the cell editor
+// does. A write fires the cancelable `beforecelledit` first. Loaded by `formulas` when `formula-bar` is set; it
 // sits above the grid, outside `role=grid`, and the grid moves down by `--ui-data-grid-bar`.
 
 const installed = new WeakSet<UiDataGrid>();
@@ -23,6 +30,7 @@ export function install(grid: UiDataGrid): void {
   bar.setAttribute("aria-label", labels.formulaBar ?? "Formula bar");
   const address = document.createElement("span");
   address.dataset.uiPart = "formula-address";
+  address.id = `ui-fx-${Math.random().toString(36).slice(2, 8)}`;
   address.title = labels.formulaCell ?? "Cell";
   const fx = document.createElement("span");
   fx.dataset.uiPart = "formula-fx";
@@ -33,7 +41,9 @@ export function install(grid: UiDataGrid): void {
   input.type = "text";
   input.autocomplete = "off";
   input.spellcheck = false;
-  input.setAttribute("aria-label", labels.formulaBar ?? "Formula bar");
+  // The group is the bar; the field is the cell content, described by the cell's address.
+  input.setAttribute("aria-label", labels.formulaInput ?? "Cell content");
+  input.setAttribute("aria-describedby", address.id);
   const error = document.createElement("span");
   error.dataset.uiPart = "formula-error";
   error.setAttribute("role", "alert");
@@ -56,7 +66,11 @@ export function install(grid: UiDataGrid): void {
     }
     address.textContent = cellAddress(r, c);
     const stored = getCellValue(cell.row, cell.column);
-    input.value = stored == null ? "" : String(stored);
+    input.value = isFormula(stored)
+      ? stored
+      : stored == null
+        ? ""
+        : copyText(cell.column, stored, grid.locale);
     input.disabled = false;
     input.placeholder = "";
     input.readOnly = !isEditable(grid, cell.column, cell.row);
@@ -86,9 +100,10 @@ export function install(grid: UiDataGrid): void {
     input.setAttribute("aria-invalid", "true");
   };
 
-  const commit = () => {
+  const commit = (refocus = true) => {
     if (!cell || input.readOnly) return;
     const { row, column, rowKey, columnId } = cell;
+    if (!emit(grid, "beforecelledit", { rowKey, columnId, row, trigger: "api" }, true)) return;
     let value: ReturnType<typeof getCellValue>;
     if (isFormula(input.value)) value = input.value.trim();
     else {
@@ -108,9 +123,18 @@ export function install(grid: UiDataGrid): void {
     if (!grid.changeCell(rowKey, columnId, value))
       return fail(labels.unwritable ?? "This value could not be saved");
     show();
-    focusCell();
+    if (refocus) focusCell();
   };
 
+  input.addEventListener("focusout", () => {
+    // Leaving the field stores what was typed, like the cell editor; a refused value goes back.
+    if (!cell || input.readOnly || input.disabled) return;
+    const stored = getCellValue(cell.row, cell.column);
+    const text = isFormula(stored) ? stored : copyText(cell.column, stored, grid.locale);
+    if (input.value === text) return;
+    commit(false);
+    if (error.textContent) show();
+  });
   input.addEventListener("keydown", (event) => {
     event.stopPropagation();
     if (event.key === "Enter") {
@@ -123,12 +147,14 @@ export function install(grid: UiDataGrid): void {
     }
   });
   grid.addEventListener("cellfocus", (event) => {
+    if (event.target !== grid) return;
     const detail = (event as CustomEvent).detail as { rowKey: string; columnId: string; row: Row };
     const column = grid.columns.find((c) => c.id === detail.columnId);
     cell = column ? { ...detail, column } : null;
     show();
   });
-  grid.addEventListener("cellschange", () => {
+  grid.addEventListener("cellschange", (event) => {
+    if (event.target !== grid) return;
     // The focused cell (or the formula it reads) may have been written by something else.
     if (document.activeElement !== input) show();
   });

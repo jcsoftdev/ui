@@ -105,6 +105,7 @@ export interface GridLabels {
   /** Formula bar: its name, the address chip's name and the placeholder with no cell focused. */
   formulaBar?: string;
   formulaCell?: string;
+  formulaInput?: string;
   formulaEmpty?: string;
   /** Prefix of the tooltip on a cell that shows a formula error. */
   formulaError?: string;

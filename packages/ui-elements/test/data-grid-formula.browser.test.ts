@@ -388,4 +388,165 @@ describe("row creation", () => {
   });
 });
 
+describe("review fixes", () => {
+  const ids = (el: UiDataGrid) => el.rows.map((r) => r.id);
+  const refRows = (): Line[] => [
+    { id: "r0", a: 1, b: 0, c: 0 },
+    { id: "r1", a: 2, b: 0, c: 0 },
+    { id: "r2", a: 3, b: 0, c: "=A2+A3" },
+    { id: "r3", a: 4, b: 0, c: "=SUM(A1:A4)" },
+  ];
+
+  it("rewrites formulas when rows are inserted, and undoes a removal exactly", async () => {
+    const el = await grid("editable-rows formulas history", refRows());
+    await vi.waitFor(() => expect(text(el, "r2", "c")).toBe("5"));
+    const log = events(el, "rowschange");
+    el.addRows([{ row: { id: "n", a: 100, b: 0, c: 0 }, index: 1 }]);
+    await vi.waitFor(() => expect(text(el, "r2", "c")).toBe("5"));
+    expect(el.rows[3].c).toBe("=A3+A4");
+    expect(el.rows[4].c).toBe("=SUM(A1:A5)");
+    expect(log[0]?.detail.rewrites).toHaveLength(2);
+    el.removeRows(["n"]);
+    await vi.waitFor(() => expect(el.rows[2].c).toBe("=A2+A3"));
+    // remove the row a formula reads: it becomes #REF!, and the range shrinks
+    el.removeRows(["r1"]);
+    await vi.waitFor(() => expect(el.rows[1].c).toBe("=#REF!+A2"));
+    expect(el.rows[2].c).toBe("=SUM(A1:A3)");
+    await vi.waitFor(() => expect(text(el, "r2", "c")).toBe("#REF!"));
+    el.undo();
+    await vi.waitFor(() => expect(ids(el)).toEqual(["r0", "r1", "r2", "r3"]));
+    expect(el.rows[2].c).toBe("=A2+A3");
+    expect(el.rows[3].c).toBe("=SUM(A1:A4)");
+    await vi.waitFor(() => expect(text(el, "r2", "c")).toBe("5"));
+  });
+
+  it("only reports the rewrites in emit mode and prunes the selection", async () => {
+    const el = await grid("editable-rows formulas edit-mode=emit", refRows());
+    el.selectedKeys = ["r1"];
+    const log = events(el, "rowschange");
+    el.removeRows(["r1"]);
+    expect(el.selectedKeys).toEqual([]);
+    expect(ids(el)).toEqual(["r0", "r1", "r2", "r3"]);
+    expect(log[0]?.detail.rewrites.map((x: { value: string }) => x.value)).toEqual([
+      "=#REF!+A2",
+      "=SUM(A1:A3)",
+    ]);
+  });
+
+  it("does not advance the history when an undo of a row step is refused", async () => {
+    const el = await grid("editable-rows history", refRows());
+    el.removeRows(["r1"]);
+    expect(el.canUndo).toBe(true);
+    const refuse = (event: Event) => {
+      if ((event as CustomEvent).detail.source === "undo") event.preventDefault();
+    };
+    el.addEventListener("beforerowschange", refuse);
+    expect(el.undo()).toBe(false);
+    expect(el.canUndo).toBe(true);
+    expect(el.canRedo).toBe(false);
+    el.removeEventListener("beforerowschange", refuse);
+    expect(el.undo()).toBe(true);
+    await vi.waitFor(() => expect(ids(el)).toEqual(["r0", "r1", "r2", "r3"]));
+  });
+
+  it("copies formulas beside the results and pastes them shifted", async () => {
+    const el = await grid("formulas range-selection clipboard");
+    await focus(el, "r0", "c");
+    const clipboardData = new DataTransfer();
+    cell(el, "r0", "c").dispatchEvent(
+      new ClipboardEvent("copy", { clipboardData, bubbles: true, cancelable: true }),
+    );
+    expect(clipboardData.getData("text/plain")).toBe("3");
+    expect(clipboardData.getData("text/html")).toContain("data-f");
+    await focus(el, "r3", "c");
+    cell(el, "r3", "c").dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }),
+    );
+    await vi.waitFor(() => expect(el.rows[3].c).toBe("=A4+B4"));
+    await vi.waitFor(() => expect(text(el, "r3", "c")).toBe("11"));
+  });
+
+  it("ignores the formulas of a table that does not match the text", async () => {
+    const el = await grid("formulas range-selection clipboard");
+    await focus(el, "r3", "c");
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", "7");
+    clipboardData.setData(
+      "text/html",
+      '<table data-ui-grid><tr><td data-f="=A1" data-r="0" data-c="0">8</td></tr></table>',
+    );
+    cell(el, "r3", "c").dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }),
+    );
+    await vi.waitFor(() => expect(el.rows[3].c).toBe(7));
+  });
+
+  it("shows #VALUE! when a result does not fit a number column", async () => {
+    const el = await grid("formulas", [
+      { id: "r0", a: 1, b: 2, c: '="x"&A1' },
+      { id: "r1", a: 1, b: 2, c: "=A1+B1" },
+    ]);
+    await vi.waitFor(() => expect(text(el, "r1", "c")).toBe("3"));
+    expect(text(el, "r0", "c")).toBe("#VALUE!");
+  });
+
+  it("marks only formula cells as errors and keeps a consumer title", async () => {
+    const el = await grid("formulas", [
+      { id: "r0", a: "#DIV/0!" as never, b: 2, c: "=1/0" },
+      { id: "r1", a: 1, b: 2, c: 0 },
+    ]);
+    await vi.waitFor(() => expect(text(el, "r0", "c")).toBe("#DIV/0!"));
+    expect(cell(el, "r0", "c").hasAttribute("data-formula-error")).toBe(true);
+    expect(cell(el, "r0", "a").hasAttribute("data-formula-error")).toBe(false);
+  });
+
+  it("pastes 200k lines without overflowing the stack", async () => {
+    const el = await grid("range-selection clipboard");
+    await focus(el, "r0", "a");
+    const log = events(el, "cellspaste");
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", "1\t2\n".repeat(200_000));
+    cell(el, "r0", "a").dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }),
+    );
+    await vi.waitFor(() => expect(log).toHaveLength(1));
+    expect(log[0]?.detail.clipped).toBeGreaterThan(0);
+  });
+
+  it("shows a date in the formula bar the way the editor reads it", async () => {
+    const el = await grid("formulas formula-bar");
+    el.columns = [...columns(), { id: "d", header: "D", type: "date", width: 110, editable: true }];
+    el.rows = [{ id: "r0", a: 1, b: 2, c: 3, d: new Date(2024, 2, 5) }];
+    await frame();
+    await wait(80);
+    await focus(el, "r0", "d");
+    const input = el.querySelector<HTMLInputElement>(
+      '[data-ui-part="formula-input"]',
+    ) as HTMLInputElement;
+    await vi.waitFor(() => expect(input.value).not.toBe(""));
+    expect(input.value).not.toContain("GMT");
+    expect(input.value).toMatch(/2024|24/);
+  });
+
+  it("commits the formula bar on blur and describes the field by the address", async () => {
+    const el = await grid("formulas formula-bar");
+    await vi.waitFor(() =>
+      expect(el.querySelector('[data-ui-part="formula-input"]')).not.toBeNull(),
+    );
+    await focus(el, "r3", "c");
+    const input = el.querySelector<HTMLInputElement>(
+      '[data-ui-part="formula-input"]',
+    ) as HTMLInputElement;
+    const address = el.querySelector('[data-ui-part="formula-address"]') as HTMLElement;
+    expect(input.getAttribute("aria-describedby")).toBe(address.id);
+    expect(input.getAttribute("aria-label")).not.toBe(
+      el.querySelector('[data-ui-part="formula-bar"]')?.getAttribute("aria-label"),
+    );
+    input.focus();
+    input.value = "=A4*2";
+    input.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    await vi.waitFor(() => expect(el.rows[3].c).toBe("=A4*2"));
+  });
+});
+
 void mod;
