@@ -2,6 +2,11 @@
 
 ## 0.3.0 (unreleased)
 
+### Security
+
+- **RichTextEditor sanitizer: `javascript:` href bypass via Unicode whitespace.** The URL check ignored only ASCII and a few invisible characters, while the emitted `href` was `decodeEntities(href).trim()`, and `trim()` also strips U+00A0, U+1680, U+2000-200A, U+202F, U+205F and U+3000. A link such as `<a href="&nbsp;javascript:alert(1)">` passed the check and was emitted as `href="javascript:alert(1)"` (stored XSS for apps that render sanitized HTML as markup); the output was not idempotent. The href is now normalized once, that exact string is validated (all whitespace and format characters ignored, then a protocol allowlist through `new URL`), and the same string is emitted. Anyone using `sanitizeHtml` or `isSafeUrl` should upgrade; stored content is re-sanitized on the next pass.
+- **Markdown parser (low): bounded nesting and link scan.** Blockquote and list nesting is capped at 32 levels (deeper levels render as literal text), which removes a stack overflow on `>` x 20000 and a multi-second parse on deeply nested lists, and the link-target scan is bounded so `[](` repeated thousands of times is no longer quadratic.
+
 ### App-level building blocks
 
 - **Tone palettes.** `tonePalettes` in a token file (optional) emits `--tone-<name>`, `--tone-<name>-soft` and `--tone-<name>-ink` for light and dark, plus `--color-tone-*` in `theme.css`. Names are kebab-case; `fill` and `soft` are required, `ink` falls back to `fill`. `buildTheme`, `buildTokensCss`, `buildThemeCss` and `ui-theme build` all honour it; files without the section build byte-identically.
