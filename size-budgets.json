@@ -53,13 +53,13 @@
       "id": "ui/ai",
       "kind": "js",
       "file": "packages/ui/dist/ai/index.js",
-      "maxGzip": 31600
+      "maxGzip": 34800
     },
     {
       "id": "ui/atoms",
       "kind": "js",
       "file": "packages/ui/dist/atoms/index.js",
-      "maxGzip": 19100
+      "maxGzip": 19150
     },
     {
       "id": "ui/brand",
@@ -95,7 +95,7 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 550
+      "maxGzip": 680
     },
     {
       "id": "ui/liquid",
@@ -107,7 +107,7 @@
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 11600
+      "maxGzip": 12900
     },
     {
       "id": "ui/overlays",

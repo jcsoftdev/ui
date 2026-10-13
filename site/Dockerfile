@@ -8,6 +8,8 @@ FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY site/package.json site/
 COPY packages/ui/package.json packages/ui/
+COPY packages/ui/scripts packages/ui/scripts
+COPY packages/ui-tokens packages/ui-tokens
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM deps AS build

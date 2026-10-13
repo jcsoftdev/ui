@@ -16,6 +16,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const CheckboxLabelTogglesAndNames: Story = {
+  render: () => <Checkbox label="Send me the receipt" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByRole("checkbox", { name: "Send me the receipt" });
+    await expect(box).toHaveAttribute("aria-checked", "false");
+    await userEvent.click(canvas.getByText("Send me the receipt"));
+    await expect(box).toHaveAttribute("aria-checked", "true");
+  },
+};
+
 export const CheckboxToggles: Story = {
   render: () => <Checkbox aria-label="Cita completada" />,
   play: async ({ canvasElement }) => {
@@ -70,6 +81,45 @@ export const CheckboxBoxFillsWhenChecked: Story = {
     const off = fillOf(box);
     await userEvent.click(box);
     await waitFor(() => expect(fillOf(box)).not.toBe(off));
+  },
+};
+
+export const CheckboxIsSquareAndAccentFilled: Story = {
+  render: () => <Checkbox aria-label="Cita completada" defaultChecked />,
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole("checkbox", { name: "Cita completada" });
+    const visual = box.querySelector("span");
+    if (!visual) throw new Error("checkbox has no box span");
+    const style = getComputedStyle(visual);
+    await expect(Number.parseFloat(style.borderTopLeftRadius)).toBeLessThan(visual.clientWidth / 2);
+    const probe = document.createElement("div");
+    probe.style.backgroundColor = "var(--accent)";
+    canvasElement.append(probe);
+    const accent = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    await expect(style.backgroundColor).toBe(accent);
+  },
+};
+
+export const CheckboxIndeterminateDashAndDisabledDim: Story = {
+  render: () => (
+    <>
+      <Checkbox aria-label="Parcial" defaultChecked="indeterminate" />
+      <Checkbox aria-label="Bloqueado" disabled />
+      <Checkbox aria-label="Activo" />
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const partial = canvas.getByRole("checkbox", { name: "Parcial" });
+    await expect(partial).toHaveAttribute("aria-checked", "mixed");
+    await expect(partial.querySelector("svg path")?.getAttribute("d")).toBe("M5 12h14");
+    const locked = getComputedStyle(canvas.getByRole("checkbox", { name: "Bloqueado" }));
+    await expect(Number.parseFloat(locked.opacity)).toBeLessThan(1);
+    await expect(locked.cursor).toBe("not-allowed");
+    await expect(getComputedStyle(canvas.getByRole("checkbox", { name: "Activo" })).opacity).toBe(
+      "1",
+    );
   },
 };
 

@@ -23,8 +23,40 @@ const themeOf = (tokens) => {
   return { base: themes[0], others: themes.slice(1) };
 };
 
+const TONE_NAME = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+const TONE_ROLES = ["fill", "soft", "ink"];
+
+/** Tone palettes as color tokens: --tone-<name>, --tone-<name>-soft, --tone-<name>-ink. */
+export function tonesOf(tokens) {
+  const out = [];
+  for (const [name, roles] of Object.entries(tokens.tonePalettes ?? {})) {
+    if (!TONE_NAME.test(name)) {
+      throw new Error(
+        `tonePalettes: "${name}" must be kebab-case (lowercase letters, digits, hyphens)`,
+      );
+    }
+    for (const role of Object.keys(roles ?? {})) {
+      if (!TONE_ROLES.includes(role)) {
+        throw new Error(`tonePalettes.${name}: unknown role "${role}" (expected fill, soft, ink)`);
+      }
+    }
+    for (const role of ["fill", "soft"]) {
+      if (roles?.[role] === undefined)
+        throw new Error(`tonePalettes.${name}: "${role}" is required`);
+    }
+    const value = { fill: roles.fill, soft: roles.soft, ink: roles.ink ?? roles.fill };
+    out.push(
+      { name: `tone-${name}`, value: value.fill },
+      { name: `tone-${name}-soft`, value: value.soft },
+      { name: `tone-${name}-ink`, value: value.ink },
+    );
+  }
+  return out;
+}
+
 const allTokens = (tokens) => [
   ...(tokens.color?.tokens ?? []),
+  ...tonesOf(tokens),
   ...(tokens.shadow?.tokens ?? []),
   ...(tokens.radius?.tokens ?? []),
   ...(tokens.spacing?.tokens ?? []),
@@ -260,6 +292,9 @@ export function buildThemeCss(tokens) {
   for (const t of tokens.color?.tokens ?? []) {
     lines.push(`  --color-${t.name}: var(--${t.name});`);
   }
+  for (const t of tonesOf(tokens)) {
+    lines.push(`  --color-${t.name}: var(--${t.name});`);
+  }
   for (const t of tokens.radius?.tokens ?? []) {
     lines.push(`  --radius-${stripPrefix(t.name, "radius")}: var(--${t.name});`);
   }
@@ -341,6 +376,17 @@ export function toKotlinColor(css) {
   throw new Error(`Unsupported color for Kotlin: ${css}`);
 }
 
+const kotlinColorOf = (token, theme, base) => {
+  const value = valueFor(token, theme, base);
+  try {
+    return toKotlinColor(value);
+  } catch {
+    throw new Error(
+      `Token "${token.name}" (${theme}) has a color Kotlin cannot represent: ${value}. Use hex or rgb(a) values, or pass --no-kotlin.`,
+    );
+  }
+};
+
 const px = (value) => `${Number.parseFloat(value)}.dp`;
 
 // ---------------------------------------------------------------- Glass
@@ -393,7 +439,7 @@ function glassKotlin(tokens, { library }) {
   out.push(`${vis}object UiGlass {`);
   for (const theme of [base, ...others]) {
     for (const v of variants) {
-      const c = (t) => toKotlinColor(valueFor(t, theme, base));
+      const c = (t) => kotlinColorOf(t, theme, base);
       const type = library ? ": GlassMaterial" : "";
       out.push(
         `    ${vis}val ${pascal(v.id)}${pascal(theme)}${type} = GlassMaterial(`,
@@ -437,7 +483,7 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme", { library =
   for (const theme of themes) {
     out.push(`    val ${pascal(theme)} = ThemeColors(`);
     for (const t of colors) {
-      out.push(`        ${camel(t.name)} = ${toKotlinColor(valueFor(t, theme, base))},`);
+      out.push(`        ${camel(t.name)} = ${kotlinColorOf(t, theme, base)},`);
     }
     out.push("    )");
   }
@@ -456,7 +502,7 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme", { library =
         const byName = new Map(tokens.color.tokens.map((t) => [t.name, t]));
         const args = Object.entries(PALETTE_ROLES).map(([role]) => {
           const tok = byName.get(roles[role]);
-          return tok ? toKotlinColor(valueFor(tok, theme, base)) : "Color.Unspecified";
+          return tok ? kotlinColorOf(tok, theme, base) : "Color.Unspecified";
         });
         out.push(`        "${id}" to AccentPalette(${args.join(", ")}),`);
       }
@@ -539,7 +585,7 @@ function buildLibraryThemeKt(tokens, pkg) {
   for (const theme of themes) {
     out.push(`    public val ${pascal(theme)}: ThemeColors = ThemeColors(`);
     for (const t of colors) {
-      out.push(`        ${camel(t.name)} = ${toKotlinColor(valueFor(t, theme, base))},`);
+      out.push(`        ${camel(t.name)} = ${kotlinColorOf(t, theme, base)},`);
     }
     out.push("    )");
   }
@@ -561,7 +607,7 @@ function buildLibraryThemeKt(tokens, pkg) {
       for (const [id, roles] of palettes) {
         const args = Object.keys(PALETTE_ROLES).map((role) => {
           const tok = byName.get(roles[role]);
-          return tok ? toKotlinColor(valueFor(tok, theme, base)) : "Color.Unspecified";
+          return tok ? kotlinColorOf(tok, theme, base) : "Color.Unspecified";
         });
         out.push(`    private val ${camel(`${theme}-${id}`)} = AccentPalette(${args.join(", ")})`);
       }
@@ -623,12 +669,13 @@ function buildLibraryThemeKt(tokens, pkg) {
   return out.join("\n");
 }
 
-export function buildTheme(tokens, { kotlinPackage, kotlinLibrary = false } = {}) {
-  return {
+export function buildTheme(tokens, { kotlinPackage, kotlinLibrary = false, kotlin = true } = {}) {
+  const css = {
     "tokens.css": buildTokensCss(tokens),
     "theme.css": buildThemeCss(tokens),
     "tailwind.css": buildThemeCss(tokens),
     "fonts.css": buildFontsCss(tokens),
-    "Theme.kt": buildThemeKt(tokens, kotlinPackage, { library: kotlinLibrary }),
   };
+  if (!kotlin) return css;
+  return { ...css, "Theme.kt": buildThemeKt(tokens, kotlinPackage, { library: kotlinLibrary }) };
 }

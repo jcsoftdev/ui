@@ -7,6 +7,7 @@ import {
   isValidElement,
   type ReactNode,
 } from "react";
+import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 import { Slot } from "../../utils/slot.js";
 
@@ -64,7 +65,10 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
-  /** Replaces the children while `loading` and is announced to screen readers. */
+  /**
+   * Replaces the children while `loading` and is announced to screen readers. Without it the
+   * children stay and the UI string `loading` is announced while `loading`.
+   */
   loadingLabel?: string;
   /** Stretch to the full width of the container. */
   block?: boolean;
@@ -84,6 +88,7 @@ export function Button({
   children,
   ...props
 }: ButtonProps) {
+  const strings = useUiStrings();
   const Comp = asChild ? Slot : "button";
   // Text runs get their own truncating span so a long label ends in "…" inside a narrow
   // container instead of overflowing; icons keep their size. Slot needs its single child as is.
@@ -104,12 +109,12 @@ export function Button({
       {content}
     </Comp>
   );
-  if (loadingLabel === undefined) return button;
+  if (loadingLabel === undefined && !loading) return button;
   return (
     <>
       {button}
       <span role="status" className="sr-only">
-        {loading ? loadingLabel : null}
+        {loading ? (loadingLabel ?? strings.loading) : null}
       </span>
     </>
   );

@@ -43,6 +43,30 @@ for (const entry of [
   console.log(`  loaded ${entry}`);
 }
 
+// The published `./theme-builder` entry, shipped inside this package (no ui-tokens at runtime).
+const builder = await import("@jcsoftdev/ui/theme-builder");
+for (const name of [
+  "buildTheme",
+  "buildTokensCss",
+  "buildThemeCss",
+  "buildFontsCss",
+  "buildThemeKt",
+]) {
+  assert.equal(typeof builder[name], "function", `theme-builder exports ${name}`);
+}
+const defaults = JSON.parse(readFileSync(resolve(dist, "../tokens/default.json"), "utf8"));
+const oklchTokens = {
+  ...defaults,
+  color: {
+    ...defaults.color,
+    tokens: [{ name: "brand", value: "oklch(0.7 0.1 200)" }, ...defaults.color.tokens.slice(1)],
+  },
+};
+const built = builder.buildTheme(oklchTokens, { kotlin: false });
+assert.match(built["tokens.css"], /oklch\(0\.7 0\.1 200\)/);
+assert.ok(!("Theme.kt" in built), "kotlin: false skips Theme.kt");
+console.log("  theme-builder: buildTheme({ kotlin: false }) ok");
+
 // The published `./primitives` entry, resolved the way a consumer (and this package) sees it.
 const barrel = await import("@jcsoftdev/ui/primitives");
 assert.deepEqual(

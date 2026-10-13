@@ -61,11 +61,8 @@ import com.jcsoftdev.ui.atoms.ButtonVariant
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.glass.GlassEffectContainer
 import com.jcsoftdev.ui.glass.GlassState
-import com.jcsoftdev.ui.glass.LiquidGlassStyle
-import com.jcsoftdev.ui.glass.LiquidInteraction
-import com.jcsoftdev.ui.glass.LiquidProfile
+import com.jcsoftdev.ui.glass.LiquidGlass
 import com.jcsoftdev.ui.glass.MaterialSurface
-import com.jcsoftdev.ui.glass.SurfaceMaterial
 import com.jcsoftdev.ui.glass.glassEffect
 import com.jcsoftdev.ui.glass.glassSource
 import com.jcsoftdev.ui.glass.rememberGlassState
@@ -90,7 +87,7 @@ enum class Backdrop(
 private val WideBreakpoint = 720.dp
 
 /**
- * A playground for [LiquidGlassStyle]: a glass panel you can drag anywhere over a photo, a control for every field of the
+ * A playground for [LiquidGlass]: a glass panel you can drag anywhere over a photo, a control for every field of the
  * style, presets, a "copy code" snippet and a second tab with [GlassEffectContainer] pills that merge when dragged together.
  * The controls sit in a bottom panel on a phone and in a side panel on a wide window.
  */
@@ -250,7 +247,7 @@ private fun PanelStage(
         val at = pos
         if (at != null) {
             MaterialSurface(
-                SurfaceMaterial.Liquid,
+                params.toMaterial(),
                 RoundedCornerShape(40.dp),
                 Modifier
                     .offset { IntOffset(at.x.toInt(), at.y.toInt()) }
@@ -263,7 +260,6 @@ private fun PanelStage(
                         }
                     },
                 glass = glass,
-                style = params.toStyle(),
             ) {
                 Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                     val soft = Shadow(Color.Black.copy(alpha = 0.5f), Offset(0f, 2f), 10f)
@@ -334,7 +330,7 @@ private fun MergeStage(
     Stage(backdrop, Modifier.fillMaxSize().onSizeChanged { area = it }) { glass ->
         val current = positions
         if (current != null) {
-            GlassEffectContainer(Modifier.fillMaxSize(), style = params.toStyle(), glass = glass) {
+            GlassEffectContainer(Modifier.fillMaxSize(), material = params.toMaterial(), glass = glass) {
                 Pills.forEachIndexed { i, pill ->
                     fun move(by: Offset) {
                         positions = positions?.mapIndexed { j, p -> if (j == i) (p + by).clampTo(area, sizes[i]) else p }
@@ -395,10 +391,10 @@ private fun ControlPanel(
                 ChoiceRow("Backdrop", Backdrop.entries.map { it.label to it }, backdrop, onBackdrop)
                 Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     for ((name, preset) in listOf(
-                        "Crystal" to LiquidGlassStyle.Crystal,
-                        "Clear" to LiquidGlassStyle.Clear,
-                        "Regular" to LiquidGlassStyle.Regular,
-                        "Thick" to LiquidGlassStyle.Thick,
+                        "Crystal" to LiquidGlass.Crystal,
+                        "Clear" to LiquidGlass.Clear,
+                        "Regular" to LiquidGlass.Regular,
+                        "Thick" to LiquidGlass.Thick,
                     )) {
                         val target = PlaygroundParams.from(preset).copy(interaction = params.interaction)
                         Button(
@@ -424,7 +420,7 @@ private fun ControlPanel(
                     )
                 }
                 Text(
-                    if (params.toStyle().preservesContrast) {
+                    if (params.toMaterial().preservesContrast) {
                         "Text contrast guarantee: kept."
                     } else {
                         "Text contrast guarantee: dropped by this style."
@@ -458,7 +454,7 @@ private fun Controls(
     ControlSection("Lens")
     LabSlider("Refraction", p.refraction, { set(p.copy(refraction = it)) }, 0f..3f, 0.05f, fmt(p.refraction))
     LabSlider("Bevel width", p.bevel, { set(p.copy(bevel = it)) }, 0f..60f, 1f, "${fmt(p.bevel, 0)} dp")
-    ChoiceRow("Profile", LiquidProfile.entries.map { it.name to it }, p.profile) { set(p.copy(profile = it)) }
+    ChoiceRow("Lens", LensChoice.entries.map { it.label to it }, p.lens) { set(p.copy(lens = it)) }
     LabSlider("Dispersion", p.dispersion, { set(p.copy(dispersion = it)) }, 0f..0.15f, 0.005f, fmt(p.dispersion, 3))
 
     ControlSection("Material")
@@ -503,7 +499,7 @@ private fun Controls(
     LabSlider("Shadow offset Y", p.shadowOffsetY, { set(p.copy(shadowOffsetY = it)) }, 0f..32f, 1f, "${fmt(p.shadowOffsetY, 0)} dp")
 
     ControlSection("Motion and merge")
-    ChoiceRow("Interaction", LiquidInteraction.entries.map { it.name to it }, p.interaction) { set(p.copy(interaction = it)) }
+    ChoiceRow("Interaction", InteractionChoice.entries.map { it.name to it }, p.interaction) { set(p.copy(interaction = it)) }
     ChoiceRow("Motion", MotionChoice.entries.map { it.label to it }, p.motion) { set(p.copy(motion = it)) }
     LabSlider("Blend (Merge tab)", p.blend, { set(p.copy(blend = it)) }, 0f..80f, 1f, "${fmt(p.blend, 0)} dp")
 }

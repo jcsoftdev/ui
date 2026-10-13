@@ -67,6 +67,24 @@ npx ui-theme build my-tokens.json --out src/theme
 
 It writes `tokens.css`, `theme.css`, `fonts.css` and a Compose `Theme.kt` so a Kotlin app can share the tokens. Import your generated files instead of the shipped ones.
 
+### Tone palettes
+
+Add named tones beyond the built-in ones with an optional `tonePalettes` section. Names are kebab-case; `fill` and `soft` are required, `ink` falls back to `fill`. Each role takes a plain value or a `{ "light", "dark" }` pair.
+
+```json
+{
+  "tonePalettes": {
+    "mint": {
+      "fill": { "light": "#0f9d76", "dark": "#4fd1a8" },
+      "soft": { "light": "#e0f7eb", "dark": "#10352a" },
+      "ink": { "light": "#047554", "dark": "#8ee5c6" }
+    }
+  }
+}
+```
+
+The build emits `--tone-mint`, `--tone-mint-soft` and `--tone-mint-ink` (plus `--color-tone-mint*` in `theme.css`). Pass the name as `tone="mint"` to `Chip`, `StatusDot`, `Kpi` and `Avatar`.
+
 ## Runtime switching with persistence
 
 ```ts

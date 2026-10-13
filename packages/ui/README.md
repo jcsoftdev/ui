@@ -66,7 +66,7 @@ import { Button } from "@jcsoftdev/ui/atoms/button";
 | `tokens.css` | CSS variables. Light by default, dark through `prefers-color-scheme` and the `[data-theme="dark"]` / `[data-theme="light"]` override, brand palettes through `[data-accent="<id>"]`. |
 | `theme.css` | Tailwind v4 `@theme inline` mapping variables to utilities (`bg-surface`, `text-ink`, `rounded-card`, `shadow-flat`, `text-page-title`, `h-control-height`, ...). |
 | `fonts.css` | Optional `@import` for the Google Fonts declared in the tokens. Skip it when the app loads fonts itself (for example `next/font`, then override `--font-sans`). |
-| `Theme.kt` | Compose Multiplatform colors (per theme), palettes, shapes, sizes and text styles, so a Kotlin app shares the same tokens. |
+| `Theme.kt` | Compose Multiplatform colors (per theme), palettes, shapes, sizes and text styles, so a Kotlin app shares the same tokens. Needs hex or `rgb(a)` colors: pass `--no-kotlin` to skip it when tokens use `var(...)` or `oklch(...)`. |
 
 Without a tokens argument the bundled default (`tokens/default.json`) is used; its output is already shipped as
 `@jcsoftdev/ui/styles/{tokens,theme,fonts}.css`.

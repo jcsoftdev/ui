@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -79,4 +89,89 @@ test("the size-only font scale is emitted as UiFontSizes in both Kotlin flavours
   const plain = buildTheme(scaled)["Theme.kt"];
   assert.match(plain, /object UiFontSizes \{/);
   assert.match(plain, /val fs160 = 16\.sp/);
+});
+
+const withColor = (value) => ({
+  ...tokens,
+  color: {
+    ...tokens.color,
+    tokens: [{ name: "brand", value }, ...tokens.color.tokens.slice(1)],
+  },
+});
+const cssFiles = ["fonts.css", "tailwind.css", "theme.css", "tokens.css"];
+
+test("kotlin: false builds only the CSS, even with var() and oklch() colors", () => {
+  const files = buildTheme(withColor("oklch(0.7 0.1 200)"), { kotlin: false });
+  assert.deepEqual(Object.keys(files).sort(), cssFiles);
+  assert.match(files["tokens.css"], /oklch\(0\.7 0\.1 200\)/);
+  assert.deepEqual(
+    Object.keys(buildTheme(withColor("var(--brand-500)"), { kotlin: false })).sort(),
+    cssFiles,
+  );
+});
+
+test("kotlin colors that are not hex or rgb(a) name the token and suggest --no-kotlin", () => {
+  assert.throws(() => buildTheme(withColor("oklch(0.7 0.1 200)")), /"brand".*oklch.*--no-kotlin/);
+  assert.throws(() => buildTheme(withColor("var(--brand-500)")), /"brand".*var\(--brand-500\)/);
+  assert.ok("Theme.kt" in buildTheme(withColor("#336699")));
+});
+
+test("ui-theme build --no-kotlin writes only CSS and succeeds with oklch() colors", () => {
+  const dir = mkdtempSync(join(tmpdir(), "ui-theme-"));
+  try {
+    const input = join(dir, "tokens.json");
+    writeFileSync(input, JSON.stringify(withColor("oklch(0.7 0.1 200)")));
+    const bin = join(here, "../bin/ui-theme.mjs");
+    const out = join(dir, "out");
+    execFileSync("node", [bin, "build", input, "--out", out, "--no-kotlin"]);
+    assert.deepEqual(readdirSync(out).sort(), cssFiles);
+    assert.throws(() =>
+      execFileSync("node", [bin, "build", input, "--out", out], { stdio: "pipe" }),
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+const withTones = (tonePalettes) => ({ ...tokens, tonePalettes });
+
+test("tonePalettes emit --tone-<name>, -soft and -ink for light and dark", () => {
+  const built = buildTheme(
+    withTones({
+      yape: {
+        fill: { light: "#722ea5", dark: "#b98ae0" },
+        soft: { light: "#f1e6fa", dark: "#2a1a3a" },
+        ink: { light: "#5a2384", dark: "#d9bdf2" },
+      },
+      "pay-2": { fill: "#123456", soft: "#abcdef" },
+    }),
+    { kotlin: false },
+  );
+  const css = built["tokens.css"];
+  const root = css.slice(0, css.indexOf("}"));
+  assert.match(root, /--tone-yape: #722ea5;/);
+  assert.match(root, /--tone-yape-soft: #f1e6fa;/);
+  assert.match(root, /--tone-yape-ink: #5a2384;/);
+  assert.match(root, /--tone-pay-2: #123456;/);
+  assert.match(root, /--tone-pay-2-ink: #123456;/);
+  const dark = css.slice(css.indexOf(':root[data-theme="dark"]'));
+  const darkBlock = dark.slice(0, dark.indexOf("}"));
+  assert.match(darkBlock, /--tone-yape: #b98ae0;/);
+  assert.match(darkBlock, /--tone-yape-soft: #2a1a3a;/);
+  assert.doesNotMatch(darkBlock, /--tone-pay-2/);
+  assert.match(built["theme.css"], /--color-tone-yape-soft: var\(--tone-yape-soft\);/);
+});
+
+test("tonePalettes reject names that are not kebab-case and incomplete palettes", () => {
+  assert.throws(() => buildTheme(withTones({ Yape: { fill: "#000", soft: "#fff" } })), /kebab/);
+  assert.throws(() => buildTheme(withTones({ "a b": { fill: "#000", soft: "#fff" } })), /kebab/);
+  assert.throws(() => buildTheme(withTones({ yape: { fill: "#000" } })), /"soft" is required/);
+  assert.throws(
+    () => buildTheme(withTones({ yape: { fill: "#000", soft: "#fff", line: "#111" } })),
+    /unknown role/,
+  );
+});
+
+test("a theme without tonePalettes builds exactly as before", () => {
+  assert.doesNotMatch(buildTheme(tokens)["tokens.css"], /--tone-/);
 });

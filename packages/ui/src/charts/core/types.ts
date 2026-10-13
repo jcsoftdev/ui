@@ -85,11 +85,20 @@ export type ChartAnnotation =
   /** Free text anchored at a data coordinate. */
   | (AnnotationBase & { type: "text"; x: XValue; y: number; yAxis?: string });
 
+/** An axis bound given as a number or as a function of the value the data would give. */
+export type AxisBound = number | ((dataValue: number) => number);
+
+/** The bound to use: `bound` itself, `bound(dataValue)` for a function, or `dataValue` when unset. */
+export function resolveAxisBound(bound: AxisBound | undefined, dataValue: number): number {
+  if (bound == null) return dataValue;
+  return typeof bound === "function" ? bound(dataValue) : bound;
+}
+
 export interface ValueAxisOptions {
-  /** Fixed lower bound; by default the data decides (bars and areas start at 0). */
-  min?: number;
-  /** Fixed upper bound. */
-  max?: number;
+  /** Fixed lower bound, or a function of the data minimum; by default the data decides (bars and areas start at 0). */
+  min?: AxisBound;
+  /** Fixed upper bound, or a function of the data maximum, e.g. `(max) => Math.ceil(max / 400) * 400`. */
+  max?: AxisBound;
   /** Approximate number of ticks; derived from the height by default. */
   tickCount?: number;
   /** Tick format; defaults to a short form of the chart `valueFormat`. */

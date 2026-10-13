@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { userEvent, within } from "storybook/test";
 import type { ChartPattern } from "../core/patterns.js";
 import { BarChart } from "./bar-chart.js";
 import { BarRaceChart } from "./bar-race-chart.js";
@@ -444,6 +445,13 @@ export const Race: Story = {
     />
   ),
   parameters: { controls: { include: ["height"] } },
+  // The race autoplays and its labels fade in; axe sampling mid-frame reads a near-transparent label
+  // as a contrast failure. Pause it and let the entry animations finish so the audit sees a still frame.
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Pausar" }));
+    const running = canvasElement.ownerDocument.getAnimations();
+    await Promise.allSettled(running.map((animation) => animation.finished));
+  },
 };
 
 export const Loading: Story = { args: { loading: true } };

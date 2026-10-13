@@ -38,6 +38,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { parameters: { a11y: { test: "todo" } } };
 
+export const WithoutSearch: Story = {
+  args: { onSearch: undefined },
+};
+
 export const SingleCrumb: Story = {
   parameters: { a11y: { test: "todo" } },
   args: { breadcrumbs: ["Inicio"] },
@@ -120,4 +124,15 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const WithoutSearchOrBreadcrumbs: Story = {
+  args: {
+    breadcrumbs: undefined,
+    breadcrumbsLabel: undefined,
+    onSearch: undefined,
+    searchLabel: undefined,
+    searchPlaceholder: undefined,
+    end: <Bell className="size-5" aria-hidden="true" />,
+  },
 };

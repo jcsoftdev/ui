@@ -75,6 +75,48 @@ From the 0.3.0 previews (`main` before this change):
 
 From 0.2.x: nothing changes unless you adopt Liquid Glass.
 
+### App-level building blocks
+
+- **Tone palettes.** `tonePalettes` in a token file (optional) emits `--tone-<name>`, `--tone-<name>-soft` and `--tone-<name>-ink` for light and dark, plus `--color-tone-*` in `theme.css`. Names are kebab-case; `fill` and `soft` are required, `ink` falls back to `fill`. `buildTheme`, `buildTokensCss`, `buildThemeCss` and `ui-theme build` all honour it; files without the section build byte-identically.
+- **Open `tone`.** `Chip`, `StatusDot`, `Kpi` and `Avatar` accept any tone name besides the built-in ones (`ChipTone`, `StatusDotTone`, `KpiTone`, `AvatarTone` are the built-in union plus `string & {}`; `ChipBuiltinTone` and friends keep the closed unions). Unknown names resolve through `--tone-<name>` variables set inline, so no class needs generating.
+- **Kpi**: `tone`, `dot`, `icon`, `trend`. **KpiGroup**: `layout="auto-fit"` with `minItemWidth` (default 150) for separate cards in as many columns as fit.
+- **Avatar**: `tone`, and `status` + `statusLabel` for a small status dot at the bottom-right.
+- **EmptyState / ErrorState**: `variant="outlined"` (dashed border / danger border).
+- **PageHeader**: `compact` (centred, tighter, body-size lede) and `breadcrumbs` (trail on its own row above the title).
+- **Topbar**: `onSearch`, `searchLabel`, `searchPlaceholder`, `breadcrumbs` and `breadcrumbsLabel` are optional; missing parts render nothing (and Cmd/Ctrl+K is only bound with `onSearch`).
+- **CardHeader**: `icon`, `title` and `action` slots; children still render as before.
+- **Segmented**: `options` (`{ value, label, disabled? }[]`), `block` (full width, control-height items) and `allowDeselect` (default `false`: the pressed item stays selected; `true` lets a second press clear it).
+- **Button**: while `loading` without a `loadingLabel`, the children stay and the UI string `loading` is announced.
+- **CopyField**: label, monospace read-only value and a copy button with a 1.5 s copied state and a live region; strings `copy` and `copied` join the UI strings (`en`, `es`).
+- **Layout**: `Page`, `Stack` and `Grid` (`@jcsoftdev/ui/containers/page`, `/stack`, `/grid`). `Page` is the `page` container, so `Cols` and `SettingsLayout` inside it react to the page width. `Grid` is intrinsic by default (`minColumnWidth`) or fixed with `columns`; `Stack` takes `direction`, `gap` and `align`.
+- **Forms**: `Form`, `FormError` (`role="alert"`) and `FormStatus` (`role="status"`) in `@jcsoftdev/ui/forms/form`; the two messages render nothing for `null`, `undefined` or an empty `message`.
+- **`Breadcrumbs`** (`@jcsoftdev/ui/navigation/breadcrumbs`): a named `nav` with an ordered list, `aria-current="page"` on the last item and a `renderLink` hook. 
+- **`LiveStatusBar`** (`@jcsoftdev/ui/states/live-status-bar`): `live`, `reconnecting` and `offline` states as a polite `role="status"` with a dot and localized text.
+- **`BottomNav`** (`@jcsoftdev/ui/shell/bottom-nav`): phone navigation bar for `Sidebar` items; the items past the fifth slot go behind a "More" button that opens a drawer. It hides itself once the `AppShell` is 900 px wide.
+- New localized strings: `breadcrumbs`, `live`, `reconnecting`, `offline`, `more`.
+
+### Chart gaps
+
+- **Cartesian charts** (`BarChart`, `AreaChart`, `LineChart`, `ComboChart`): `tooltipRows({ index, category, rows })` returns `{ title?, rows?, footer? }` to replace parts of the tooltip (the default is unchanged when absent; the hidden data table is untouched); `categoryTickEvery` (a step or `(index, label) => boolean`) overrides the automatic thinning of the category labels; `markers` also takes an array of indices of `categories` to dot only those points.
+- **`ValueAxisOptions.min` / `max`** accept a function of the data bound, e.g. `max: (dataMax) => Math.ceil(dataMax / 400) * 400`. `resolveAxisBound` and `AxisBound` are exported from `core/types`; the horizontal bar, lollipop, dumbbell, range area and waterfall axes honour it too.
+- **`HeatmapChart`**: `cellDetail(row, column, value)` returns extra `TooltipRow`s under the cell value; `ChartTooltip` gained a `footer` slot.
+- **`DonutChart`**: `sliceLabels` (`true`, `"percent"` or `"value"`) draws the share or the formatted value inside the ring and skips slices too small to hold it; it combines with `outsideLabels`.
+
+### Behavior change
+
+- **`Segmented` keeps the selected item selected.** Pressing the selected `SegmentedItem` again used to clear the selection (value `""`); a single-select group now stays on it. `Segmented` takes `allowDeselect` (default `false`) to keep the old behavior.
+
+### Fixes
+
+- **`AppShell` no longer re-renders the page during hydration.** Its context value changed in the first layout effect after hydration, which made Next.js client-render still-dehydrated Suspense boundaries (a hidden `div#S:0` stayed in the page). The value is now a store that never changes identity and reads `false` on the server and on the first client render; only `useAppShell` consumers update, once the width is measured.
+- **`OfflineBanner` takes an `action`** (for example a retry button) after the queue counter.
+- **`Checkbox` takes a `label`**: it renders a `<label>` bound to the box, so it names the checkbox and a click on it toggles. New `wrapper` and `label` parts.
+- **Checkbox looks like a checkbox.** The box is square (`rounded-xs`, the 4px small-radius token, 3px in the compact theme) instead of a circle, and the checked and indeterminate fill is the accent (as in Switch and the selected RadioGroup row) instead of the success green. Round plus green read as a radio button in multi-select lists. Sizes, 44px touch hit area, focus ring, disabled state and the `box`/`indicator`/`icon` parts are unchanged; The indeterminate state draws a dash instead of a check mark, and a disabled checkbox is dimmed (`opacity-50`, `cursor-not-allowed`) like the other form controls. RadioGroup stays round.
+
+### Theme builder
+
+- **`@jcsoftdev/ui/theme-builder` stays available.** The subpath published in 0.2.2 (`buildTheme`, `buildTokensCss`, `buildThemeCss`, `buildFontsCss`, `buildThemeKt`; `buildTheme(tokens, { kotlin: false })`) is re-exported from `@jcsoftdev/ui-tokens` and shipped inside this package, so 0.2.2 consumers upgrade unchanged and nothing extra is installed.
+
 ### Crystal lens
 
 - **`profile: "crystal"`** and the `crystal` preset (`data-glass="liquid-crystal"`): a thick, fully clear convex lens that minifies the backdrop, bends it hard towards the rim, splits colour at the edge and has no frost, veil or tint. `refraction` accepts 0 to 2 for it (defaults and the other profiles are unchanged; above 1 they behave as 1). The minifying map cannot fold; the filter runs on a layer that extends past the surface and is clipped to it. No contrast guarantee.
@@ -193,6 +235,7 @@ Apple-style glass for the control and navigation layer, with content kept solid.
 
 ### Fixes
 
+- **`ui-theme build --no-kotlin` no longer builds Kotlin.** It used to generate `Theme.kt` and discard it, so `var(...)` and `oklch(...)` colors still threw "Unsupported color for Kotlin". Without the flag, the error now names the token and suggests `--no-kotlin`. The builders in `@jcsoftdev/ui-tokens/build` take `kotlin: false` and have typed `buildTokensCss`, `buildThemeCss`, `buildFontsCss` and `buildThemeKt`.
 - **DonutChart / PieChart no longer flicker on hover.** The hovered slice steps out by `explode`
   and was also the pointer target, so a still pointer near its edge ended up outside the moved
   slice, the hover dropped, the slice slid back under the pointer and the loop repeated (tooltip,

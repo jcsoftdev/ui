@@ -166,6 +166,18 @@ test("chat list grouping by date", () => {
   assert.equal(groups[0].label, "Hoy");
 });
 
+test("groupByDate stays linear on a large list", () => {
+  const now = new Date(2026, 2, 15, 12);
+  const items = Array.from({ length: 60_000 }, (_, i) => ({
+    id: i,
+    updatedAt: new Date(2026, 2, 15, 1 + (i % 10)),
+  }));
+  const start = performance.now();
+  const groups = group.groupByDate(items, now);
+  assert.ok(performance.now() - start < 1500, "grouping 60k items must not be quadratic");
+  assert.equal(groups[0].items.length, 60_000);
+});
+
 test("prompt input submit key", () => {
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: false, isComposing: false }), true);
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: true, isComposing: false }), false);

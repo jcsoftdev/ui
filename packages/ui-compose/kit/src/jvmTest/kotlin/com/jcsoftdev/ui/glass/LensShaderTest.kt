@@ -11,7 +11,7 @@ import kotlin.math.hypot
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** Runs [LENS_SHADER] on its own over a coordinate-encoding backdrop (red = x, green = y), with no tint or blur in the way. */
+/** Runs the dispersive lens program on its own over a coordinate-encoding backdrop (red = x, green = y), with no tint or blur in the way. */
 class LensShaderTest {
     private val width = 200
     private val height = 120
@@ -36,7 +36,7 @@ class LensShaderTest {
         fresnel: Float = 0f,
         glow: Float = 0f,
     ): Bitmap {
-        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
+        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(Dispersion().lensProgram.source))
         builder.child("content", content)
         builder.uniform("size", 160f, 80f)
         builder.uniform("origin", 20f, 20f)
@@ -215,7 +215,7 @@ class LensShaderTest {
                     "half4 main(float2 c) { return half4(floor($axis / 4.0) / 255.0, ($axis - floor($axis / 4.0) * 4.0) / 4.0, 0.0, 1.0); }",
                 ),
             ).makeShader()
-        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
+        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(Dispersion().lensProgram.source))
         builder.child("content", encoded)
         builder.uniform("size", 160f, 80f)
         builder.uniform("origin", 300f, 260f)
@@ -273,7 +273,7 @@ class LensShaderTest {
             RuntimeShaderBuilder(
                 RuntimeEffect.makeForShader("half4 main(float2 c) { return half4(c.x / 200.0, c.y / 120.0, c.x / 200.0, 1.0); }"),
             ).makeShader()
-        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(LENS_SHADER))
+        val builder = RuntimeShaderBuilder(RuntimeEffect.makeForShader(Dispersion().lensProgram.source))
         builder.child("content", encoded)
         builder.uniform("size", 160f, 80f)
         builder.uniform("origin", 20f, 20f)

@@ -34,7 +34,6 @@ for (const banned of [
   "checkbox",
   "confirm-action",
   "responsive-list",
-  "i18n",
   "toaster",
   "status-icons",
 ]) {

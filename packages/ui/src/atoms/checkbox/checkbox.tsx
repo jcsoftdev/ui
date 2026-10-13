@@ -1,7 +1,7 @@
 "use client";
 
-import { type ComponentProps, useRef } from "react";
-import { Check } from "../../icons/index.js";
+import { type ComponentProps, type ReactNode, useId, useRef } from "react";
+import { Check, Minus } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
@@ -10,7 +10,7 @@ import { useControllableState } from "../../utils/use-controllable-state.js";
 
 export type CheckedState = boolean | "indeterminate";
 
-export type CheckboxPart = "root" | "box" | "indicator" | "icon";
+export type CheckboxPart = "root" | "box" | "indicator" | "icon" | "wrapper" | "label";
 
 export interface CheckboxProps
   extends Omit<
@@ -27,6 +27,11 @@ export interface CheckboxProps
   value?: string;
   /** Id of the `<form>` the checkbox belongs to when it is rendered outside it. */
   form?: string;
+  /**
+   * Text shown next to the box. It renders a `<label>` tied to the checkbox, so it names it for
+   * assistive tech and a click on it toggles. Without it the checkbox is bare and needs `aria-label`.
+   */
+  label?: ReactNode;
 }
 
 function getState(checked: CheckedState) {
@@ -44,6 +49,8 @@ export function Checkbox({
   name,
   value = "on",
   form,
+  label,
+  id,
   onClick,
   onKeyDown,
   ref,
@@ -60,8 +67,10 @@ export function Checkbox({
   const composedRef = useComposedRefs(ref, bubble.setControl);
   const state = getState(checked);
   const disabledAttr = disabled ? "" : undefined;
+  const generatedId = useId();
+  const controlId = label === undefined ? id : (id ?? generatedId);
 
-  return (
+  const control = (
     <>
       {/* biome-ignore lint/a11y/useSemanticElements: custom control; the hidden input carries the native form value */}
       <button
@@ -73,10 +82,11 @@ export function Checkbox({
         data-disabled={disabledAttr}
         disabled={disabled}
         value={value}
+        id={controlId}
         {...props}
         ref={composedRef}
         className={cn(
-          "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
+          "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11 disabled:cursor-not-allowed disabled:opacity-50",
           classNames?.root,
           className,
         )}
@@ -91,7 +101,7 @@ export function Checkbox({
       >
         <span
           className={cn(
-            "grid size-4.5 place-items-center rounded-pill border-[1.5px] border-line-strong group-data-[state=checked]:border-success group-data-[state=checked]:bg-success group-data-[state=indeterminate]:border-success group-data-[state=indeterminate]:bg-success",
+            "grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent",
             classNames?.box,
           )}
         >
@@ -102,10 +112,17 @@ export function Checkbox({
               style={{ pointerEvents: "none" }}
               className={classNames?.indicator}
             >
-              <Check
-                aria-hidden="true"
-                className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
-              />
+              {checked === "indeterminate" ? (
+                <Minus
+                  aria-hidden="true"
+                  className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
+                />
+              ) : (
+                <Check
+                  aria-hidden="true"
+                  className={cn("size-2.75 stroke-[3] text-on-accent", classNames?.icon)}
+                />
+              )}
             </span>
           )}
         </span>
@@ -123,5 +140,22 @@ export function Checkbox({
         />
       ) : null}
     </>
+  );
+
+  if (label === undefined) return control;
+  return (
+    <span className={cn("inline-flex items-center", classNames?.wrapper)}>
+      {control}
+      <label
+        htmlFor={controlId}
+        data-disabled={disabledAttr}
+        className={cn(
+          "cursor-pointer select-none text-control text-ink data-disabled:cursor-not-allowed data-disabled:opacity-50",
+          classNames?.label,
+        )}
+      >
+        {label}
+      </label>
+    </span>
   );
 }

@@ -2,7 +2,17 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Skeleton } from "../../src/states/skeleton/skeleton.js";
 import { Button } from "../../src/atoms/button/button.js";
 import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
+import { Avatar } from "../../src/atoms/avatar/avatar.js";
 import { Chip } from "../../src/atoms/chip/chip.js";
+import { StatusDot } from "../../src/atoms/status-dot/status-dot.js";
+import { Kpi } from "../../src/containers/kpi/kpi.js";
+import { KpiGroup } from "../../src/containers/kpi-group/kpi-group.js";
+import { CopyField } from "../../src/forms/copy-field/copy-field.js";
+import { Topbar } from "../../src/shell/topbar/topbar.js";
+import { EmptyState } from "../../src/states/empty-state/empty-state.js";
+import { CardHeader } from "../../src/containers/card/card.js";
+import { PageHeader } from "../../src/containers/page-header/page-header.js";
+import { Segmented } from "../../src/navigation/segmented/segmented.js";
 import { ConfirmAction } from "../../src/containers/confirm-action/confirm-action.js";
 import { ResponsiveList } from "../../src/containers/responsive-list/responsive-list.js";
 import { Banner } from "../../src/containers/banner/banner.js";
@@ -42,6 +52,8 @@ export const html = {
       </UiStringsProvider>,
     ),
   checkbox: () => renderToStaticMarkup(<Checkbox />),
+  checkboxIndeterminate: () => renderToStaticMarkup(<Checkbox defaultChecked="indeterminate" />),
+  checkboxChecked: () => renderToStaticMarkup(<Checkbox defaultChecked />),
   switch: () => renderToStaticMarkup(<Switch />),
   radio: () => renderToStaticMarkup(<RadioGroup options={[{ value: "a", label: "A" }]} />),
   chipStatic: () => renderToStaticMarkup(<Chip>Paid</Chip>),
@@ -101,6 +113,53 @@ export const html = {
       <Chip tone="success" statusIcon icon={<i data-custom />}>
         Paid
       </Chip>,
+    ),
+  chipTone: (tone: string) => renderToStaticMarkup(<Chip tone={tone}>Yape</Chip>),
+  statusDotTone: (tone: string) =>
+    renderToStaticMarkup(<StatusDot tone={tone} label="Yape" showLabel />),
+  kpiTone: (tone?: string) =>
+    renderToStaticMarkup(<Kpi label="Cobrado" value="10" tone={tone} dot icon={<i data-icon />} trend={<b data-trend />} />),
+  kpiPlain: () => renderToStaticMarkup(<Kpi label="Cobrado" value="10" />),
+  kpiDanger: () => renderToStaticMarkup(<Kpi label="Bajo" value="1" variant="danger" />),
+  avatarTone: (tone?: string) => renderToStaticMarkup(<Avatar name="Ana Ruiz" tone={tone} />),
+  avatarStatus: () =>
+    renderToStaticMarkup(<Avatar name="Ana Ruiz" status="success" statusLabel="Online" />),
+  kpiGroupAutoFit: () =>
+    renderToStaticMarkup(
+      <KpiGroup layout="auto-fit" minItemWidth={160} animate={false} items={[{ id: "a", label: "A", value: "1" }]} />,
+    ),
+  copyField: (locale?: "es") => {
+    const field = <CopyField label="Webhook" value="https://x.test/hook" />;
+    return renderToStaticMarkup(locale ? <UiStringsProvider locale={locale}>{field}</UiStringsProvider> : field);
+  },
+  topbarBare: () => renderToStaticMarkup(<Topbar end={<i data-end />} />),
+  topbarFull: () =>
+    renderToStaticMarkup(
+      <Topbar breadcrumbs={["A", "B"]} breadcrumbsLabel="Ruta" onSearch={() => {}} searchPlaceholder="Buscar" />,
+    ),
+  emptyOutlined: () => renderToStaticMarkup(<EmptyState title="Vacío" variant="outlined" />),
+  errorOutlined: () => renderToStaticMarkup(<ErrorState message="Falló" variant="outlined" />),
+  pageHeaderCompact: () => renderToStaticMarkup(<PageHeader compact />),
+  cardHeaderSlots: () =>
+    renderToStaticMarkup(<CardHeader icon={<i data-icon />} title="Caja" action={<b data-action />} />),
+  segmentedOptions: (block?: boolean) =>
+    renderToStaticMarkup(
+      <Segmented
+        aria-label="Vista"
+        block={block}
+        defaultValue="dia"
+        options={[
+          { value: "dia", label: "Día" },
+          { value: "mes", label: "Mes" },
+        ]}
+      />,
+    ),
+  buttonLoadingDefault: () => renderToStaticMarkup(<Button loading>Save</Button>),
+  buttonLoadingDefaultEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <Button loading>Guardar</Button>
+      </UiStringsProvider>,
     ),
   buttonLoading: () =>
     renderToStaticMarkup(

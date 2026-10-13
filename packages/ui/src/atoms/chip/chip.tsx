@@ -1,8 +1,9 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
+import { customToneStyle, isCustomTone } from "../../utils/tone.js";
 import { type StatusTone, statusIcon } from "../internal/status-icons.js";
 
-export type ChipTone =
+export type ChipBuiltinTone =
   | "neutral"
   | "danger"
   | "warning"
@@ -12,8 +13,11 @@ export type ChipTone =
   | "solid"
   | "outline";
 
+/** A built-in tone, or the name of a tone declared in `tonePalettes`. */
+export type ChipTone = ChipBuiltinTone | (string & {});
+
 /** Class map behind each `tone`; exported so apps can extend or reuse it. */
-export const chipToneClasses: Readonly<Record<ChipTone, string>> = {
+export const chipToneClasses: Readonly<Record<ChipBuiltinTone, string>> = {
   neutral: "bg-surface-2 text-ink-2",
   danger: "bg-danger-soft text-danger",
   warning: "bg-warning-soft text-warning",
@@ -34,7 +38,8 @@ export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
   statusIcon?: boolean;
 }
 
-const statusTones = new Set<ChipTone>(["info", "success", "warning", "danger"]);
+const statusTones = new Set<string>(["info", "success", "warning", "danger"]);
+const builtinTones = new Set<string>(Object.keys(chipToneClasses));
 
 export function Chip({
   tone = "neutral",
@@ -42,9 +47,11 @@ export function Chip({
   icon,
   statusIcon: withStatusIcon,
   className,
+  style,
   children,
   ...props
 }: ChipProps) {
+  const custom = isCustomTone(tone, builtinTones);
   const leading =
     icon ??
     (withStatusIcon && statusTones.has(tone) ? statusIcon(tone as StatusTone, "size-3") : null);
@@ -54,10 +61,13 @@ export function Chip({
       className={cn(
         "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-fs-120 leading-none [&_svg]:size-3",
         square ? "rounded-chip" : "rounded-badge",
-        chipToneClasses[tone],
+        custom
+          ? "bg-(--tone-c-soft) text-(--tone-c-ink)"
+          : (chipToneClasses[tone as ChipBuiltinTone] ?? chipToneClasses.neutral),
         interactive && "in-data-[density=touch]:min-h-11",
         className,
       )}
+      style={customToneStyle(tone, builtinTones, style)}
       {...props}
     >
       {leading}

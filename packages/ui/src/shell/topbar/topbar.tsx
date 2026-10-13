@@ -24,19 +24,20 @@ export type TopbarPart =
   | "shortcut";
 
 export interface TopbarProps {
-  /** Breadcrumb trail in order; the last entry is the current view. */
-  breadcrumbs: string[];
+  /** Breadcrumb trail in order; the last entry is the current view. Nothing renders when absent or empty. */
+  breadcrumbs?: string[];
   /** Accessible name of the breadcrumb landmark. */
-  breadcrumbsLabel: string;
+  breadcrumbsLabel?: string;
   /** Menu button (shown when the `AppShell` container is under 900 px, matching the Sidebar drawer) that opens the sidebar drawer. Needs an `@container/app` ancestor, which `AppShell` provides. Omitted when not set. */
   onOpenMenu?: () => void;
   menuLabel?: string;
   /** Ref to the menu button so the opener can restore focus when the drawer closes. */
   menuButtonRef?: Ref<HTMLButtonElement>;
-  /** Called by the search trigger and by Cmd/Ctrl+K. */
-  onSearch: () => void;
-  searchLabel: string;
-  searchPlaceholder: string;
+  /** Called by the search trigger and by Cmd/Ctrl+K. The trigger and the shortcut are absent without it. */
+  onSearch?: () => void;
+  /** Accessible name of the search trigger; defaults to the placeholder. */
+  searchLabel?: string;
+  searchPlaceholder?: string;
   /** Slot between the search trigger and the end block (status, notifications, primary action). */
   actions?: ReactNode;
   /** Slot at the far end (e.g. the account menu). */
@@ -78,17 +79,19 @@ export function Topbar({
   }, []);
 
   useEffect(() => {
+    if (!onSearch) return;
     function onKeyDown(event: KeyboardEvent) {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "k") return;
       event.preventDefault();
-      onSearch();
+      onSearch?.();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onSearch]);
 
-  const current = breadcrumbs.at(-1);
-  const previous = breadcrumbs.slice(0, -1);
+  const trail = breadcrumbs ?? [];
+  const current = trail.at(-1);
+  const previous = trail.slice(0, -1);
 
   return (
     <header
@@ -121,57 +124,63 @@ export function Topbar({
           </button>
         ) : null}
 
-        <nav
-          aria-label={breadcrumbsLabel}
-          className={cn(
-            "flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta",
-            classNames?.breadcrumbs,
-          )}
-        >
-          {previous.map((crumb) => (
-            <span
-              key={crumb}
-              className={cn(
-                "flex items-center gap-2 @max-[560px]/topbar:hidden",
-                classNames?.crumb,
-              )}
-            >
-              <span>{crumb}</span>
-              <span aria-hidden="true" className={cn("text-line-control", classNames?.separator)}>
-                /
-              </span>
-            </span>
-          ))}
-          <strong
-            aria-current="page"
-            className={cn("min-w-0 truncate font-semibold text-ink", classNames?.current)}
-          >
-            {current}
-          </strong>
-        </nav>
-
-        <button
-          type="button"
-          aria-label={searchLabel}
-          onClick={onSearch}
-          className={cn(
-            "ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
-            classNames?.search,
-          )}
-        >
-          <Search className="size-4 shrink-0" aria-hidden="true" />
-          <span className={cn("truncate @max-[700px]/topbar:hidden", classNames?.searchText)}>
-            {searchPlaceholder}
-          </span>
-          <span
+        {trail.length > 0 ? (
+          <nav
+            aria-label={breadcrumbsLabel}
             className={cn(
-              "ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden",
-              classNames?.shortcut,
+              "flex min-w-0 shrink items-center gap-2 whitespace-nowrap text-ink-3 text-meta",
+              classNames?.breadcrumbs,
             )}
           >
-            {shortcut}
-          </span>
-        </button>
+            {previous.map((crumb) => (
+              <span
+                key={crumb}
+                className={cn(
+                  "flex items-center gap-2 @max-[560px]/topbar:hidden",
+                  classNames?.crumb,
+                )}
+              >
+                <span>{crumb}</span>
+                <span aria-hidden="true" className={cn("text-line-control", classNames?.separator)}>
+                  /
+                </span>
+              </span>
+            ))}
+            <strong
+              aria-current="page"
+              className={cn("min-w-0 truncate font-semibold text-ink", classNames?.current)}
+            >
+              {current}
+            </strong>
+          </nav>
+        ) : null}
+
+        {onSearch ? (
+          <button
+            type="button"
+            aria-label={searchLabel ?? searchPlaceholder}
+            onClick={onSearch}
+            className={cn(
+              "ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
+              classNames?.search,
+            )}
+          >
+            <Search className="size-4 shrink-0" aria-hidden="true" />
+            <span className={cn("truncate @max-[700px]/topbar:hidden", classNames?.searchText)}>
+              {searchPlaceholder}
+            </span>
+            <span
+              className={cn(
+                "ml-auto rounded-xs border-divider bg-surface-2 px-1.25 py-0.5 font-mono text-count text-ink-2 @max-[700px]/topbar:hidden",
+                classNames?.shortcut,
+              )}
+            >
+              {shortcut}
+            </span>
+          </button>
+        ) : (
+          <span aria-hidden="true" className="ml-auto" />
+        )}
 
         {actions}
         {end}

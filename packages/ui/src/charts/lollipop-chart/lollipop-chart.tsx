@@ -11,7 +11,12 @@ import { PlotOverlay } from "../core/plot-overlay.js";
 import { bandScale } from "../core/scales/band.js";
 import { linearScale } from "../core/scales/linear.js";
 import { ChartTooltip } from "../core/tooltip.js";
-import { type ChartLabels, resolveLabels, type ValueAxisOptions } from "../core/types.js";
+import {
+  type ChartLabels,
+  resolveAxisBound,
+  resolveLabels,
+  type ValueAxisOptions,
+} from "../core/types.js";
 
 export interface LollipopItem {
   id?: string;
@@ -192,8 +197,8 @@ function LollipopPlot({
   const model = useMemo(() => {
     const values = rows.map((row) => row.value);
     const domain: [number, number] = [
-      yAxis?.min ?? Math.min(0, ...values),
-      yAxis?.max ?? Math.max(0, ...values),
+      resolveAxisBound(yAxis?.min, Math.min(0, ...values)),
+      resolveAxisBound(yAxis?.max, Math.max(0, ...values)),
     ];
     const format = resolveAxisFormat(yAxis?.format ?? valueFormat);
     const top = PAD.top + (vertical && dataLabels ? 8 : 0);
