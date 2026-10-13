@@ -91,7 +91,7 @@ export function ChartFrame({
   const docked = resolveDocked(dock, rootSize.width, coarse);
   const readDetails = useCallback(
     () => rootRef.current?.querySelector("[data-chart-tooltip]")?.textContent ?? null,
-    [],
+    [rootRef],
   );
   useTouchSelection(ref, readDetails, ready);
   const dockValue = useMemo(() => ({ slot, docked }), [slot, docked]);
