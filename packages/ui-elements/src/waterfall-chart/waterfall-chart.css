@@ -1,0 +1,11 @@
+[data-ui="waterfall-chart"] [data-bar] {
+  transition: fill-opacity 150ms;
+}
+[data-ui="waterfall-chart"] [data-row]:has([data-active]) [data-bar] {
+  fill-opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="waterfall-chart"] [data-bar] {
+    transition: none;
+  }
+}
