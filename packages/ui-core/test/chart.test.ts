@@ -12,13 +12,15 @@ import * as reactScales from "../../ui/src/charts/core/scales/index.ts";
 import * as reactStack from "../../ui/src/charts/core/stack.ts";
 import * as reactTimeRange from "../../ui/src/charts/core/time-range.ts";
 import * as axis from "../src/chart/axis.ts";
-import * as categoryAxis from "../src/chart/category-axis.ts";
+import * as baseAxis from "../src/chart/category-axis.ts";
+import * as categoryAxis from "../src/chart/category-axis-time.ts";
 import * as colorScale from "../src/chart/color-scale.ts";
 import * as downsample from "../src/chart/downsample.ts";
 import * as format from "../src/chart/format.ts";
 import * as palette from "../src/chart/palette.ts";
 import * as path from "../src/chart/path.ts";
 import * as scale from "../src/chart/scale.ts";
+import * as scaleTime from "../src/chart/scale-time.ts";
 import * as stack from "../src/chart/stack.ts";
 import * as timeRange from "../src/chart/time-range.ts";
 
@@ -103,13 +105,13 @@ describe("scale parity", () => {
           Date.UTC(2015, 0, 1) + Math.floor(rand() * 3650) * day + Math.floor(rand() * day);
         const end = start + days * day;
         const count = 2 + Math.floor(rand() * 10);
-        expect(scale.timeTicks(start, end, count)).toEqual(
+        expect(scaleTime.timeTicks(start, end, count)).toEqual(
           reactScales.timeTicks(start, end, count),
         );
-        expect(scale.timeTicks(end, start, count)).toEqual(
+        expect(scaleTime.timeTicks(end, start, count)).toEqual(
           reactScales.timeTicks(end, start, count),
         );
-        const ours = scale.timeScale({ domain: [new Date(start), end], range: [0, 640] });
+        const ours = scaleTime.timeScale({ domain: [new Date(start), end], range: [0, 640] });
         const theirs = reactScales.timeScale({ domain: [new Date(start), end], range: [0, 640] });
         expect(ours.domain).toEqual(theirs.domain);
         expect(ours.map(start + days * day * 0.4)).toBe(theirs.map(start + days * day * 0.4));
@@ -118,7 +120,7 @@ describe("scale parity", () => {
         expect(ours.ticks(4)).toEqual(theirs.ticks(4));
       }
     }
-    expect(scale.timeScale({ domain: [5, 5], range: [0, 1] }).domain).toEqual(
+    expect(scaleTime.timeScale({ domain: [5, 5], range: [0, 1] }).domain).toEqual(
       reactScales.timeScale({ domain: [5, 5], range: [0, 1] }).domain,
     );
   });
@@ -126,9 +128,9 @@ describe("scale parity", () => {
   it("time: date labels", () => {
     for (let i = 0; i < 50; i++) {
       const d = new Date(Date.UTC(2020, 0, 1) + Math.floor(rand() * 2000) * 86_400_000);
-      expect(scale.shortMonth(d)).toBe(reactScales.shortMonth(d));
-      expect(scale.shortWeekday(d)).toBe(reactScales.shortWeekday(d));
-      expect(scale.formatDate(d)).toBe(reactScales.formatDate(d));
+      expect(scaleTime.shortMonth(d)).toBe(reactScales.shortMonth(d));
+      expect(scaleTime.shortWeekday(d)).toBe(reactScales.shortWeekday(d));
+      expect(scaleTime.formatDate(d)).toBe(reactScales.formatDate(d));
     }
   });
 
@@ -232,6 +234,31 @@ describe("axis parity", () => {
     expect(categoryAxis.defaultCategoryLabel(d)).toBe(reactCategory.defaultCategoryLabel(d));
     expect(categoryAxis.fullCategoryLabel(d)).toBe(reactCategory.fullCategoryLabel(d));
     expect(categoryAxis.allDates([d, d])).toBe(true);
+  });
+});
+
+describe("category axis without the calendar", () => {
+  it("matches React for string categories in point and band modes", () => {
+    for (const width of [180, 640]) {
+      for (const n of [0, 1, 5, 40]) {
+        const data = times(n, (k) => `Category ${k}`);
+        for (const opts of [
+          { mode: "point" as const },
+          { mode: "band" as const, paddingInner: 0.4, padding: 0.2 },
+        ]) {
+          const { indexAt: oi, ...o } = baseAxis.buildCategoryAxis(data, width, opts);
+          const { indexAt: ti, ...r } = reactCategory.buildCategoryAxis(data, width, opts);
+          expect(o).toEqual(r);
+          for (const p of [-5, width / 3, width + 5]) expect(oi(p)).toBe(ti(p));
+        }
+      }
+    }
+  });
+
+  it("treats time mode as point, since dates need chart/category-axis-time", () => {
+    const data = times(6, (k) => `d${k}`);
+    expect(baseAxis.buildCategoryAxis(data, 300, { mode: "time" }).mode).toBe("point");
+    expect(baseAxis.allDates([new Date()])).toBe(true);
   });
 });
 
@@ -548,12 +575,12 @@ describe("locale and time zone options", () => {
     const a = at(2026, 0, 3, 5);
     for (const days of [3, 40, 400, 3000]) {
       const b = a + days * 86_400_000;
-      expect(scale.timeTicks(a, b, 6, {})).toEqual(reactScales.timeTicks(a, b, 6));
-      expect(scale.timeTicks(a, b, 6, { locale: undefined, timeZone: undefined })).toEqual(
+      expect(scaleTime.timeTicks(a, b, 6, {})).toEqual(reactScales.timeTicks(a, b, 6));
+      expect(scaleTime.timeTicks(a, b, 6, { locale: undefined, timeZone: undefined })).toEqual(
         reactScales.timeTicks(a, b, 6),
       );
       expect(
-        scale.timeScale({ domain: [a, b], range: [0, 500], locale: undefined }).timeTicks(),
+        scaleTime.timeScale({ domain: [a, b], range: [0, 500], locale: undefined }).timeTicks(),
       ).toEqual(reactScales.timeScale({ domain: [a, b], range: [0, 500] }).timeTicks());
     }
     expect(format.resolveFormat("currency", {})(1234.5)).toBe(
@@ -569,7 +596,7 @@ describe("locale and time zone options", () => {
 
   it("golden: en-US labels in UTC", () => {
     const ticks = (a: number, b: number, count: number) =>
-      scale.timeTicks(a, b, count, utc).map((t) => `${t.value}|${t.unit}|${t.label}`);
+      scaleTime.timeTicks(a, b, count, utc).map((t) => `${t.value}|${t.unit}|${t.label}`);
     expect(ticks(at(2026, 0, 3, 5), at(2026, 3, 1, 5), 6)).toEqual([
       `${at(2026, 1, 1)}|month|feb 2026`,
       `${at(2026, 2, 1)}|month|mar`,
@@ -587,26 +614,26 @@ describe("locale and time zone options", () => {
       `${at(2028, 0, 1)}|year|2028`,
       `${at(2029, 0, 1)}|year|2029`,
     ]);
-    expect(scale.formatDate(at(2026, 9, 6, 23), utc)).toBe("tue 6 oct 2026");
-    expect(scale.formatDate(at(2026, 9, 6, 23), { locale: "en-US", timeZone: "Asia/Tokyo" })).toBe(
-      "wed 7 oct 2026",
-    );
+    expect(scaleTime.formatDate(at(2026, 9, 6, 23), utc)).toBe("tue 6 oct 2026");
+    expect(
+      scaleTime.formatDate(at(2026, 9, 6, 23), { locale: "en-US", timeZone: "Asia/Tokyo" }),
+    ).toBe("wed 7 oct 2026");
     expect(categoryAxis.defaultCategoryLabel(new Date(at(2026, 9, 6, 23)), utc)).toBe("6 oct");
-    expect(scale.shortMonth(new Date(at(2026, 4, 1)), { locale: "fr-FR", timeZone: "UTC" })).toBe(
-      "mai",
-    );
+    expect(
+      scaleTime.shortMonth(new Date(at(2026, 4, 1)), { locale: "fr-FR", timeZone: "UTC" }),
+    ).toBe("mai");
   });
 
   it("ticks sit on local midnights of the requested zone, across DST", () => {
     const timeZone = "America/New_York";
     const hour = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hourCycle: "h23" });
-    const ticks = scale.timeTicks(at(2026, 2, 1), at(2026, 3, 20), 40, {
+    const ticks = scaleTime.timeTicks(at(2026, 2, 1), at(2026, 3, 20), 40, {
       locale: "en-US",
       timeZone,
     });
     expect(ticks.length).toBeGreaterThan(20);
     for (const tick of ticks) expect(Number(hour.format(tick.value))).toBe(0);
-    const sundays = scale.timeTicks(at(2026, 1, 1), at(2026, 5, 1), 12, {
+    const sundays = scaleTime.timeTicks(at(2026, 1, 1), at(2026, 5, 1), 12, {
       locale: "en-US",
       timeZone,
     });

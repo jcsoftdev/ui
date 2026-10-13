@@ -47,6 +47,12 @@ const independent = new Set(["focus", "roving", "popper", "dismiss", "typeahead"
 const chartDeps = {
   "chart/color-scale": ["chart/palette"],
   "chart/category-axis": ["chart/axis", "chart/scale"],
+  "chart/category-axis-time": [
+    "chart/axis",
+    "chart/category-axis",
+    "chart/scale",
+    "chart/scale-time",
+  ],
 };
 const behaviours = [
   ...readdirSync(join(dist, "..", "src"))
