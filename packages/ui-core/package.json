@@ -75,6 +75,26 @@
       "types": "./dist/liquid/presets/*.d.ts",
       "import": "./dist/liquid/presets/*.js"
     },
+    "./date/layout": {
+      "types": "./dist/date/layout.d.ts",
+      "import": "./dist/date/layout.js"
+    },
+    "./observe/scroll-spy": {
+      "types": "./dist/observe/scroll-spy.d.ts",
+      "import": "./dist/observe/scroll-spy.js"
+    },
+    "./observe/resize": {
+      "types": "./dist/observe/resize.d.ts",
+      "import": "./dist/observe/resize.js"
+    },
+    "./observe/stick-to-bottom": {
+      "types": "./dist/observe/stick-to-bottom.d.ts",
+      "import": "./dist/observe/stick-to-bottom.js"
+    },
+    "./observe/online": {
+      "types": "./dist/observe/online.d.ts",
+      "import": "./dist/observe/online.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",
