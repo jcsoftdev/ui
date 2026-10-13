@@ -1,0 +1,27 @@
+[data-ui="treemap-chart"] [data-node] {
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+[data-ui="treemap-chart"] [data-node][data-active] {
+  stroke-width: 1.5;
+}
+[data-ui="treemap-chart"] [data-label] {
+  font-size: 12px;
+  font-weight: 600;
+}
+[data-ui="treemap-chart"] [data-label][data-group] {
+  font-weight: 700;
+}
+[data-ui="treemap-chart"] [data-value] {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.78;
+}
+[data-ui="treemap-chart"] [data-label][data-group] [data-value] {
+  fill: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 1;
+}
