@@ -76,6 +76,7 @@ export function useTouchSelection(
   useEffect(() => {
     const root = ref.current;
     if (!root || !enabled) return;
+    const host: HTMLElement = root;
     let pin: Pin | null = null;
     let press: (Point & { id: number; moved: boolean }) | null = null;
     let settle = 0;
@@ -125,7 +126,14 @@ export function useTouchSelection(
       document.removeEventListener("pointerdown", onOutside, true);
       const gone = pin;
       pin = null;
-      if (gone?.target.isConnected) emit(gone.target, "pointerout", gone, null);
+      if (!gone) return;
+      // A re-render may have replaced the pinned node: leave from whatever is under it now.
+      const target = gone.target.isConnected
+        ? gone.target
+        : inside(document.elementFromPoint(gone.x, gone.y))
+          ? document.elementFromPoint(gone.x, gone.y)
+          : host.firstElementChild;
+      if (target) emit(target, "pointerout", gone, null);
     }
 
     const hold = () => {
@@ -139,12 +147,11 @@ export function useTouchSelection(
      * A swipe began or the browser took the gesture: undo what touch moves selected. It runs after
      * the chart's own handlers have seen the event, so it has the last word.
      */
-    let undoing = false;
+    let undoing: ReturnType<typeof setTimeout> | undefined;
     const abandon = (target: EventTarget | null) => {
-      if (undoing) return;
-      undoing = true;
-      setTimeout(() => {
-        undoing = false;
+      if (undoing !== undefined) return;
+      undoing = setTimeout(() => {
+        undoing = undefined;
         if (pin) hold();
         else if (target instanceof Element && target.isConnected)
           emit(target, "pointerout", { x: 0, y: 0 }, null);
@@ -185,6 +192,7 @@ export function useTouchSelection(
         event.stopPropagation();
     };
     const onDown = (event: PointerEvent) => {
+      if (replayed.has(event)) return;
       if (event.pointerType !== "touch") return;
       if (press && press.id !== event.pointerId) press.moved = true;
       else
@@ -196,23 +204,26 @@ export function useTouchSelection(
         };
     };
     const onMove = (event: PointerEvent) => {
+      if (replayed.has(event)) return;
       if (event.pointerType !== "touch" || !press || press.id !== event.pointerId) return;
       if (!press.moved && Math.hypot(event.clientX - press.x, event.clientY - press.y) <= TAP_SLOP)
         return;
       press.moved = true;
-      abandon(event.target);
     };
     const onCancel = (event: PointerEvent) => {
+      if (replayed.has(event)) return;
       if (event.pointerType !== "touch") return;
-      if (press && !press.moved) abandon(event.target);
+      if (press) abandon(event.target);
       press = null;
     };
     const onUp = (event: PointerEvent) => {
+      if (replayed.has(event)) return;
       if (event.pointerType !== "touch") return;
       const current = press;
       press = null;
-      if (current && !current.moved && current.id === event.pointerId)
-        tap({ x: event.clientX, y: event.clientY });
+      if (!current || current.id !== event.pointerId) return;
+      if (current.moved) abandon(event.target);
+      else tap({ x: event.clientX, y: event.clientY });
     };
 
     const listen = (type: string, handler: (event: PointerEvent) => void) =>
@@ -231,6 +242,7 @@ export function useTouchSelection(
       root.removeEventListener("pointercancel", onCancel as EventListener, true);
       root.removeEventListener("pointerup", onUp as EventListener, true);
       cancelAnimationFrame(settle);
+      clearTimeout(undoing);
       document.removeEventListener("keydown", onKey, true);
       document.removeEventListener("pointerdown", onOutside, true);
     };

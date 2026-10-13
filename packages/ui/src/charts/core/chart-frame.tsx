@@ -88,7 +88,7 @@ export function ChartFrame({
     measured: size.height,
   });
   const ready = !loading && !empty;
-  const docked = ready && resolveDocked(dock, rootSize.width, coarse);
+  const docked = resolveDocked(dock, rootSize.width, coarse);
   const readDetails = useCallback(
     () => rootRef.current?.querySelector("[data-chart-tooltip]")?.textContent ?? null,
     [],

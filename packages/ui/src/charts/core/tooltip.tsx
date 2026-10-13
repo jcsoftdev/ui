@@ -41,10 +41,10 @@ export interface ChartTooltipProps {
   /** Forces the side of the anchor the card opens on (when it fits); by default it follows the anchor. */
   side?: "left" | "right";
   /**
-   * `auto` (default) docks the details in the frame's panel under the plot when the container is
-   * 480px wide or less, or the primary pointer is coarse; `always` and `never` force it. Docked
-   * details sit in normal flow, never as a floating card, and need an enclosing `ChartFrame`
-   * (without one the card floats).
+   * `auto` (default) docks the details in the frame's panel under the plot when the frame is 480px
+   * wide or less, or the primary pointer is coarse. `never` always floats. `always` docks whenever
+   * the enclosing `ChartFrame` has a panel, which it only has when it docks itself: set `dock` on
+   * the `ChartFrame` too (without a panel the card floats).
    */
   dock?: ChartDockMode;
   className?: string;
