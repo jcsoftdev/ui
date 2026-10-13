@@ -131,3 +131,48 @@ assert.equal(dynamic.size, 5, "attachLiquid: lens + 4 features are separate lazy
 console.log(
   `liquid: ${Object.keys(tiers).length} tier entries pull only their own modules; ${dynamic.size} lazy chunks`,
 );
+
+// Geo (C7): every entry is usable alone. Topology data is JSON behind import(), never eager.
+const geoExpected = {
+  "geo-projection": ["geo-projection"],
+  "geo-simplify": ["geo-simplify"],
+  "geo-cluster": ["geo-cluster"],
+  "geo-view": ["geo-view"],
+  "geo-routes": ["geo-routes"],
+  "geo-match": ["geo-match"],
+  "geo-globe": ["geo-globe"],
+  "geo-hex": ["geo-hex"],
+  "geo-topology": ["geo-topology"],
+  "geo-path": ["geo-path", "geo-topology"],
+  "geo-maps": ["geo-maps"],
+};
+for (const [entry, expected] of Object.entries(geoExpected)) {
+  const modules = await eagerModules(`export * from "./${entry}.js";`);
+  assert.deepEqual(modules, expected, `${entry} eager modules`);
+}
+const geoLazy = await build({
+  entryPoints: [join(dist, "geo-maps.js")],
+  bundle: true,
+  splitting: true,
+  format: "esm",
+  write: false,
+  metafile: true,
+  outdir: join(dist, ".treeshake"),
+  logLevel: "silent",
+});
+const geoOutputs = Object.entries(geoLazy.metafile.outputs);
+const geoEntry = geoOutputs.find(([, output]) => output.entryPoint?.endsWith("geo-maps.js"));
+assert.ok(geoEntry, "geo-maps entry chunk");
+assert.deepEqual(
+  Object.keys(geoEntry[1].inputs).filter((input) => input.includes("geo-data")),
+  [],
+  "geo-maps: no topology in the entry chunk",
+);
+const geoChunks = geoOutputs.filter(
+  ([name, output]) =>
+    name !== geoEntry[0] && Object.keys(output.inputs).some((i) => i.includes("geo-data")),
+);
+assert.equal(geoChunks.length, 2, "world and peru are separate lazy chunks");
+console.log(
+  `geo: ${Object.keys(geoExpected).length} entries independent; ${geoChunks.length} lazy topology chunks`,
+);
