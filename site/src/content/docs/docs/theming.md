@@ -67,6 +67,28 @@ npx ui-theme build my-tokens.json --out src/theme
 
 It writes `tokens.css`, `theme.css`, `fonts.css` and a Compose `Theme.kt` so a Kotlin app can share the tokens. Import your generated files instead of the shipped ones.
 
+| Flag                     | Effect                                                                                               |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `--out <dir>`            | Output directory (required).                                                                         |
+| `--no-kotlin`            | Skip `Theme.kt`. Required when a color is `var(...)` or `oklch(...)`, which Kotlin cannot represent. |
+| `--kotlin-package <pkg>` | Package of the generated `Theme.kt`.                                                                 |
+
+Without `--no-kotlin`, a color Kotlin cannot represent fails the build and the error names the token.
+
+### From code
+
+The builders are public, so a build script does not need to import package internals:
+
+```js
+import { buildTheme, buildTokensCss, buildThemeCss } from "@jcsoftdev/ui/theme-builder";
+
+const tokens = JSON.parse(readFileSync("my-tokens.json", "utf8"));
+const css = buildTokensCss(tokens);
+const files = buildTheme(tokens, { kotlin: false });
+```
+
+`buildTheme` returns `{ "tokens.css", "theme.css", "fonts.css", "Theme.kt" }`; `kotlin: false` leaves `Theme.kt` out. `kotlinPackage` sets its package otherwise.
+
 ## Runtime switching with persistence
 
 ```ts

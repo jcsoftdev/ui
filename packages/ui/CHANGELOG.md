@@ -6,6 +6,10 @@
 
 - **`ui-theme build --no-kotlin` no longer builds Kotlin.** It used to generate `Theme.kt` and discard it, so `var(...)` and `oklch(...)` colors still threw "Unsupported color for Kotlin". Without the flag, the error now names the token and suggests `--no-kotlin`.
 
+### Added
+
+- **`@jcsoftdev/ui/theme-builder`** exports `buildTheme`, `buildTokensCss`, `buildThemeCss`, `buildFontsCss` and `buildThemeKt`, typed. `buildTheme` takes `kotlin: false` to skip `Theme.kt`.
+
 ## 0.2.1 (2026-10-13)
 
 ### Fixes

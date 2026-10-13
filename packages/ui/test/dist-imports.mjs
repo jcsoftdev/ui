@@ -72,3 +72,15 @@ for (const deep of ["hide-others", "scroll-lock", "focusable", "menu/typeahead"]
   );
 }
 console.log("  @jcsoftdev/ui/primitives: public set only, internals not importable");
+
+const themeBuilder = await import("@jcsoftdev/ui/theme-builder");
+for (const name of [
+  "buildTheme",
+  "buildTokensCss",
+  "buildThemeCss",
+  "buildFontsCss",
+  "buildThemeKt",
+]) {
+  assert.equal(typeof themeBuilder[name], "function", `theme-builder.${name}`);
+}
+console.log("  @jcsoftdev/ui/theme-builder: builders exported");

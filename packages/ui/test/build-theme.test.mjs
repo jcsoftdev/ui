@@ -86,3 +86,10 @@ test("ui-theme build --no-kotlin writes only CSS and succeeds with oklch() color
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("@jcsoftdev/ui/theme-builder exposes the CSS builders", async () => {
+  const api = await import("@jcsoftdev/ui/theme-builder");
+  assert.equal(api.buildTokensCss(tokens), buildTheme(tokens)["tokens.css"]);
+  assert.equal(api.buildThemeCss(tokens), buildTheme(tokens)["theme.css"]);
+  assert.equal(typeof api.buildTheme, "function");
+});

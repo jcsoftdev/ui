@@ -45,6 +45,7 @@
     "bin",
     "icons",
     "scripts/build-theme.mjs",
+    "scripts/build-theme.d.ts",
     "README.md",
     "CHANGELOG.md",
     "THIRD_PARTY_NOTICES.md",
@@ -54,6 +55,10 @@
     "./styles/*": "./styles/*",
     "./tokens/*": "./tokens/*",
     "./package.json": "./package.json",
+    "./theme-builder": {
+      "types": "./scripts/build-theme.d.ts",
+      "import": "./scripts/build-theme.mjs"
+    },
     "./rich-text": {
       "types": "./dist/rich-text/index.d.ts",
       "source": "./src/rich-text/index.ts",
