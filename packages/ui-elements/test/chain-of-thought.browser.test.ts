@@ -93,4 +93,24 @@ describe("ui-chain-of-thought", () => {
     element.setAttribute("steps", "not json");
     expect(element.querySelectorAll("li").length).toBe(0);
   });
+
+  it("skips invalid steps one by one and renders only string or number text", () => {
+    const { element } = make();
+    element.steps = [
+      { label: "kept" },
+      null,
+      { label: { toString: () => "evil" } },
+      { label: 7, detail: { x: 1 } },
+      "bare",
+      { label: "with detail", detail: 3 },
+    ] as unknown as ThoughtStep[];
+    const items = [...element.querySelectorAll("li")];
+    expect(items.map((li) => li.querySelector("[data-ui-part=label]")?.textContent)).toEqual([
+      "Completed: kept",
+      "Completed: 7",
+      "Completed: with detail",
+    ]);
+    expect(items[1]?.querySelector("[data-ui-part=detail]")).toBeNull();
+    expect(items[2]?.querySelector("[data-ui-part=detail]")?.textContent).toBe("3");
+  });
 });

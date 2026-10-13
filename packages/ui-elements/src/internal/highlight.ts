@@ -80,7 +80,17 @@ const SPECS: Record<Exclude<Language, "json">, Spec> = {
 
 const IDENT_START = /[A-Za-z_$]/;
 const IDENT = /[\w$]/;
-const NUMBER = /^(?:0[xX][\da-fA-F_]+|\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?)/;
+// Sticky patterns run at `lastIndex` with no `slice`, and every scan is bounded, so a hostile
+// input (a long run of "${") stays linear.
+const NUMBER = /(?:0[xX][\da-fA-F_]+|\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?)/y;
+const BASH_VARIABLE = /\$(?:\w+|[?!#@*$])/y;
+const MAX_BRACE = 256;
+const KEY_COLON = /\s{0,40}:/y;
+
+function match(pattern: RegExp, code: string, at: number): string | null {
+  pattern.lastIndex = at;
+  return pattern.exec(code)?.[0] ?? null;
+}
 
 function push(tokens: Token[], type: TokenType, text: string) {
   if (!text) return;
@@ -109,6 +119,7 @@ export function tokenize(code: string, language: string | undefined): Token[] {
   const quotes = json ? '"' : spec.quotes;
   const tokens: Token[] = [];
   let i = 0;
+  let closer = -1;
   while (i < code.length) {
     const ch = code[i] as string;
     const lineMark = spec.line.find((mark) => code.startsWith(mark, i));
@@ -128,26 +139,35 @@ export function tokenize(code: string, language: string | undefined): Token[] {
     }
     if (quotes.includes(ch)) {
       const stop = readString(code, i, ch);
-      const isKey = json && /^\s*:/.test(code.slice(stop, stop + 40));
+      const isKey = json && match(KEY_COLON, code, stop) !== null;
       push(tokens, isKey ? "property" : "string", code.slice(i, stop));
       i = stop;
       continue;
     }
     if (lang === "bash" && ch === "$") {
-      const match = /^\$(?:\{[^}]*\}|\w+|[?!#@*$])/.exec(code.slice(i));
-      if (match) {
-        push(tokens, "variable", match[0]);
-        i += match[0].length;
+      let variable: string | null = null;
+      if (code[i + 1] === "{") {
+        // The next "}" is cached, so a long run of "${" with no closer costs one scan, not one each.
+        if (closer < i) closer = code.indexOf("}", i);
+        if (closer === -1) closer = code.length + 1;
+        if (closer - i <= MAX_BRACE) {
+          const body = code.slice(i, closer + 1);
+          if (!body.includes("\n")) variable = body;
+        }
+      } else variable = match(BASH_VARIABLE, code, i);
+      if (variable) {
+        push(tokens, "variable", variable);
+        i += variable.length;
         continue;
       }
     }
     const signed = json && ch === "-" && /\d/.test(code[i + 1] ?? "");
     if (/\d/.test(ch) || signed) {
       const sign = signed ? "-" : "";
-      const match = NUMBER.exec(code.slice(i + sign.length));
-      if (match) {
-        push(tokens, "number", sign + match[0]);
-        i += sign.length + match[0].length;
+      const number = match(NUMBER, code, i + sign.length);
+      if (number) {
+        push(tokens, "number", sign + number);
+        i += sign.length + number.length;
         continue;
       }
     }

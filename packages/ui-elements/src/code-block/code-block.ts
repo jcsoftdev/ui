@@ -53,8 +53,9 @@ function buildLines(tokens: Token[]): DocumentFragment {
  * Attributes: `language` (`ts`, `js`, `json`, `bash`, `go`, `sql` and aliases), `filename`
  * (shown instead of the language label), `wrap` (wrap long lines), `line-numbers` (CSS counters,
  * not part of the copied text), `highlight` (opt-in: loads the tokenizer as a separate lazy chunk
- * only when present and the language is supported), `copy-label`, `copied-label`.
- * Events: `copied` (bubbling, `detail.code`) after the copy button succeeds.
+ * only when present and the language is supported), `copy-label`, `copied-label`, `failed-label`.
+ * Events: `copied` (bubbling, `detail.code`) after the copy button succeeds, `copy-error` when
+ * the clipboard refuses (the button and live region then say "Copy failed").
  */
 export class UiCodeBlock extends ElementBase {
   static observedAttributes = [
@@ -74,6 +75,7 @@ export class UiCodeBlock extends ElementBase {
   readonly #observer: MutationObserver | null;
   #source = "";
   #run = 0;
+  #failTimer = 0;
 
   constructor() {
     super();
@@ -88,7 +90,10 @@ export class UiCodeBlock extends ElementBase {
     this.#copier = createCopier((copied) => this.#paintCopy(copied));
     this.#button.addEventListener("click", () => {
       const code = this.#source;
-      void this.#copier.copy(code).then(() => emit(this, "copied", { code }));
+      this.#copier.copy(code).then(
+        () => emit(this, "copied", { code }),
+        () => this.#fail(),
+      );
     });
     this.#observer =
       typeof MutationObserver === "undefined"
@@ -113,6 +118,7 @@ export class UiCodeBlock extends ElementBase {
   disconnectedCallback(): void {
     this.#observer?.disconnect();
     this.#copier.destroy();
+    clearTimeout(this.#failTimer);
   }
 
   attributeChangedCallback(): void {
@@ -125,7 +131,20 @@ export class UiCodeBlock extends ElementBase {
     return (this.textContent ?? "").replace(/^\r?\n/, "").replace(/\r?\n[ \t]*$/, "");
   }
 
+  #fail(): void {
+    const label = this.getAttribute("failed-label") ?? "Copy failed";
+    this.#button.setAttribute("aria-label", label);
+    this.#button.title = label;
+    this.#button.innerHTML = COPY_ICON;
+    this.#status.textContent = label;
+    this.#status.dataset.failed = "";
+    clearTimeout(this.#failTimer);
+    this.#failTimer = window.setTimeout(() => this.#paintCopy(false), 1600);
+    emit(this, "copy-error");
+  }
+
   #paintCopy(copied: boolean): void {
+    delete this.#status.dataset.failed;
     const copy = this.getAttribute("copy-label") ?? "Copy code";
     const done = this.getAttribute("copied-label") ?? "Copied";
     this.#button.setAttribute("aria-label", copied ? "Code copied" : copy);

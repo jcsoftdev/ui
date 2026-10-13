@@ -17,7 +17,10 @@ import css from "./markdown.css.js";
  * Supported: headings, paragraphs, lists, emphasis, inline code, fenced code, quotes, rules,
  * tables and links.
  *
- * Source: the `value` property or attribute, else the element's initial text content.
+ * Source: the `value` property or attribute, else a `<template>` child (its text, inert until read:
+ * escape `<` as `&lt;`), else the element's initial text content. Plain light-DOM text is parsed by
+ * the HTML parser BEFORE this element upgrades, so markup in it (an `<img onerror>`) would already
+ * have run; never place untrusted text there. Use `value` or a `<template>` for untrusted input.
  * Attributes: `value`, `streaming` (blinking caret after the last character, `aria-busy`),
  * `highlight` (asks `<prefix-code-block>` for syntax highlighting). Fenced code uses
  * `<prefix-code-block>` when the page defined it, else a plain `<pre><code>`.
@@ -44,7 +47,10 @@ export class UiMarkdown extends ElementBase {
   connectedCallback(): void {
     this.dataset.ui = "markdown";
     adoptStyles(rootOf(this), css);
-    if (this.#value === null && !this.hasAttribute("value")) this.#value = this.textContent ?? "";
+    if (this.#value === null && !this.hasAttribute("value")) {
+      const template = this.querySelector(":scope > template") as HTMLTemplateElement | null;
+      this.#value = template ? (template.content.textContent ?? "") : (this.textContent ?? "");
+    }
     this.#render();
   }
 

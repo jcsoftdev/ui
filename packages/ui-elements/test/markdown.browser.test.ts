@@ -140,3 +140,12 @@ describe("ui-markdown", () => {
     });
   });
 });
+
+describe("ui-markdown template source", () => {
+  it("reads an inert <template> child instead of the live children", () => {
+    const md = mount("<ui-markdown><template># From &lt;template&gt;</template></ui-markdown>")
+      .firstElementChild as HTMLElement;
+    expect(md.querySelector("h1")?.textContent).toBe("From <template>");
+    expect(md.querySelector("template")).toBeNull();
+  });
+});

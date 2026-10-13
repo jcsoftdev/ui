@@ -75,4 +75,20 @@ describe("ui-tool-call", () => {
     expect(block?.getAttribute("language")).toBe("json");
     expect(block?.getAttribute("code")).toBe(JSON.stringify({ a: 1 }, null, 2));
   });
+
+  it("treats inherited property names as an unknown status", () => {
+    const element = make('name="x" status="constructor"');
+    expect(element.dataset.status).toBe("pending");
+    expect(element.textContent).toContain("Waiting");
+  });
+
+  it("labels sections as groups, not region landmarks", async () => {
+    const element = make('name="x" status="done" open');
+    element.args = { a: 1 };
+    element.result = { b: 2 };
+    expect(element.querySelectorAll("[role=group]").length).toBe(2);
+    expect(element.querySelectorAll("section[role=group]").length).toBe(2);
+    expect(await ax("region", "Arguments")).toBeUndefined();
+    expect(await ax("group", "Arguments")).toBeTruthy();
+  });
 });

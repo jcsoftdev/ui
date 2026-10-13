@@ -128,3 +128,6 @@ pre {
 [data-token="property"] {
   color: var(--pal-cielo-ink);
 }
+[part="status"][data-failed] {
+  color: var(--danger);
+}

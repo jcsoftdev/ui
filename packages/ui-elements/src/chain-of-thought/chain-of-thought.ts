@@ -25,6 +25,13 @@ const STATUS_TEXT: Record<ThoughtStatus, string> = {
   pending: "Pending: ",
 };
 
+const isText = (value: unknown): value is string | number =>
+  typeof value === "string" || typeof value === "number";
+
+/** A step is an object with a string or number label; anything else is skipped on its own. */
+const isStep = (value: unknown): value is ThoughtStep =>
+  typeof value === "object" && value !== null && isText((value as ThoughtStep).label);
+
 const isStatus = (value: unknown): value is ThoughtStatus =>
   value === "pending" || value === "active" || value === "done";
 
@@ -97,7 +104,7 @@ export class UiChainOfThought extends ElementBase {
   }
 
   #renderHeader(): void {
-    const active = this.steps.some((step) => step?.status === "active");
+    const active = this.steps.filter(isStep).some((step) => step.status === "active");
     const heading = this.getAttribute("heading") ?? "Reasoning";
     this.#title.textContent = active ? `${heading}…` : heading;
     this.#title.toggleAttribute("data-active", active);
@@ -110,10 +117,9 @@ export class UiChainOfThought extends ElementBase {
 
   #renderSteps(): void {
     if (!this.#shell) return;
-    const steps = this.steps;
+    const steps = this.steps.filter(isStep);
     this.#list.replaceChildren(
-      ...steps.map((raw, index) => {
-        const step = raw ?? ({} as ThoughtStep);
+      ...steps.map((step, index) => {
         const status: ThoughtStatus = isStatus(step.status) ? step.status : "done";
         const item = document.createElement("li");
         item.dataset.status = status;
@@ -128,9 +134,9 @@ export class UiChainOfThought extends ElementBase {
         const hidden = document.createElement("span");
         hidden.dataset.uiPart = "status";
         hidden.textContent = STATUS_TEXT[status];
-        label.append(hidden, document.createTextNode(String(step.label ?? "")));
+        label.append(hidden, document.createTextNode(String(step.label)));
         text.append(label);
-        if (step.detail) {
+        if (isText(step.detail) && step.detail !== "") {
           const detail = document.createElement("div");
           detail.dataset.uiPart = "detail";
           detail.textContent = String(step.detail);

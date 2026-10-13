@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCopier } from "../src/clipboard.ts";
 import { consumeContext, createContextKey, provideContext } from "../src/context.ts";
 import { isOnline, observeOnline } from "../src/observe/online.ts";
@@ -68,12 +68,26 @@ describe("online", () => {
 
 describe("clipboard", () => {
   it("flags copied for resetMs", async () => {
+    vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
     const states: boolean[] = [];
     const copier = createCopier((v) => states.push(v), 30);
     await copier.copy("hello");
     expect(copier.copied).toBe(true);
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(states).toEqual([true, false]);
+    vi.restoreAllMocks();
+    copier.destroy();
+  });
+
+  it("rejects, and never flags copied, when both copy paths are refused", async () => {
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("denied"));
+    vi.spyOn(document, "execCommand").mockReturnValue(false);
+    const states: boolean[] = [];
+    const copier = createCopier((v) => states.push(v));
+    await expect(copier.copy("x")).rejects.toThrow();
+    expect(states).toEqual([]);
+    expect(document.querySelector("textarea")).toBeNull();
+    vi.restoreAllMocks();
     copier.destroy();
   });
 });

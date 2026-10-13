@@ -71,6 +71,24 @@ describe("ui-code-block", () => {
     expect(block.shadowRoot?.querySelector("[aria-live=polite]")?.textContent).toBe("Copied");
   });
 
+  it("reports a refused copy as a failure, with no unhandled rejection", async () => {
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("denied"));
+    vi.spyOn(document, "execCommand").mockReturnValue(false);
+    const unhandled = vi.fn();
+    window.addEventListener("unhandledrejection", unhandled);
+    const block = make('code="x"');
+    const events: string[] = [];
+    block.addEventListener("copied", () => events.push("copied"));
+    block.addEventListener("copy-error", () => events.push("copy-error"));
+    await userEvent.click(block.shadowRoot?.querySelector("button") as HTMLButtonElement);
+    await vi.waitFor(() => expect(events).toEqual(["copy-error"]));
+    expect(await ax("button", "Copy failed")).toBeTruthy();
+    expect(block.shadowRoot?.querySelector("[aria-live=polite]")?.textContent).toBe("Copy failed");
+    await new Promise((r) => setTimeout(r, 50));
+    window.removeEventListener("unhandledrejection", unhandled);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
   it("keeps the scrollable code reachable by keyboard", () => {
     const block = make('code="x"');
     expect(block.shadowRoot?.querySelector("pre")?.tabIndex).toBe(0);

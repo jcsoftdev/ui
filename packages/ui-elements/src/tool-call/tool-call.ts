@@ -31,8 +31,8 @@ const pretty = (value: unknown): string => {
  * `<ui-tool-call>`: a collapsible tool invocation with a status, JSON arguments and a JSON result.
  * It is the WAI-ARIA disclosure pattern (ui-core `disclosure`): a header button with
  * `aria-expanded` and `aria-controls`, and a `role="region"` panel named by that button and
- * `inert` while closed. The arguments and the result are `<section aria-label>` landmarks-free
- * groups; an error is a `role="alert"` paragraph.
+ * `inert` while closed. The arguments and the result are `role="group"` sections (not
+ * region landmarks, so a long chat stays navigable); an error is a `role="alert"` paragraph.
  *
  * Attributes: `name` (tool identifier), `status` (`pending` default, `running`, `done`, `error`),
  * `duration` (pre-formatted), `error` (shown when `status="error"`), `open` (the state),
@@ -103,12 +103,15 @@ export class UiToolCall extends ElementBase {
     if (!this.#shell) return;
     if (name === "open") this.#shell.sync();
     else if (name === "args" || name === "result" || name === "error") this.#renderBody();
-    else this.#renderHeader();
+    else if (name === "status") {
+      this.#renderHeader();
+      this.#renderBody();
+    } else this.#renderHeader();
   }
 
   get #state(): ToolCallStatus {
     const status = this.getAttribute("status");
-    return status && status in STATUS_LABELS ? (status as ToolCallStatus) : "pending";
+    return status && Object.hasOwn(STATUS_LABELS, status) ? (status as ToolCallStatus) : "pending";
   }
 
   #renderHeader(): void {
@@ -127,6 +130,7 @@ export class UiToolCall extends ElementBase {
   #section(label: string, value: unknown): HTMLElement {
     const section = document.createElement("section");
     section.dataset.uiPart = "section";
+    section.setAttribute("role", "group");
     section.setAttribute("aria-label", label);
     const title = document.createElement("h4");
     title.dataset.uiPart = "section-title";
