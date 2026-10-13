@@ -167,6 +167,90 @@ describe("createRichText", () => {
     expect((window as unknown as { __p?: number }).__p).toBeUndefined();
   });
 
+  it("sanitizes dropped HTML: nothing is fetched, clobbered or injected into the form", () => {
+    const form = document.body.appendChild(document.createElement("form"));
+    const field = form.appendChild(document.createElement("input"));
+    field.name = "title";
+    const el = form.appendChild(document.createElement("div"));
+    el.contentEditable = "true";
+    el.style.minHeight = "40px";
+    const rich = createRichText(el, { html: "<p>x</p>" });
+    el.focus();
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData(
+      "text/html",
+      '<img src="/beacon?drop"><span id="clob"></span><input name="role" value="admin"><p>kept</p>',
+    );
+    const rect = el.getBoundingClientRect();
+    el.dispatchEvent(
+      new DragEvent("drop", {
+        dataTransfer,
+        bubbles: true,
+        cancelable: true,
+        clientX: rect.left + 2,
+        clientY: rect.top + 2,
+      }),
+    );
+    expect(el.querySelector("img, input, [id]")).toBeNull();
+    expect(rich.getHtml()).toContain("kept");
+    expect([...new FormData(form).keys()]).toEqual(["title"]);
+    expect((window as unknown as { clob?: unknown }).clob).toBeUndefined();
+    form.remove();
+  });
+
+  it("sanitizes what beforeinput would insert for drop, paste and replacement", () => {
+    const { el, rich } = editable("<p>a</p>");
+    el.focus();
+    for (const inputType of ["insertFromDrop", "insertFromPaste", "insertReplacementText"]) {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData("text/html", `<img src=x onerror="window.__b=1"><b>${inputType}</b>`);
+      const event = new InputEvent("beforeinput", {
+        inputType,
+        dataTransfer,
+        bubbles: true,
+        cancelable: true,
+      });
+      el.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    }
+    expect(el.querySelector("img")).toBeNull();
+    expect(rich.getHtml()).toContain("insertFromDrop");
+  });
+
+  it("ignores a paste or drop that carries only a file", () => {
+    const { el, rich } = editable();
+    el.focus();
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new File(["x"], "a.png", { type: "image/png" }));
+    el.dispatchEvent(
+      new ClipboardEvent("paste", { clipboardData: dataTransfer, bubbles: true, cancelable: true }),
+    );
+    el.dispatchEvent(new DragEvent("drop", { dataTransfer, bubbles: true, cancelable: true }));
+    expect(rich.getHtml()).toBe("");
+    expect(el.innerHTML).not.toContain("<p>");
+  });
+
+  it("builds the link on a collapsed selection with DOM APIs", () => {
+    const { el, rich } = editable("<p>x</p>");
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    getSelection()?.removeAllRanges();
+    getSelection()?.addRange(range);
+    rich.saveSelection();
+    expect(rich.applyLink('https://a.pe/?a=1&b="2"&c=<d>')).toBe(true);
+    const link = el.querySelector("a");
+    expect(link?.getAttribute("href")).toBe('https://a.pe/?a=1&b="2"&c=<d>');
+    expect(link?.textContent).toBe('https://a.pe/?a=1&b="2"&c=<d>');
+  });
+
+  it("keeps named entities through a round trip", () => {
+    const { rich } = editable();
+    rich.setHtml("<p>caf&eacute; &copy; &amp;eacute; &Eacute;</p>");
+    expect(rich.getHtml()).toBe("<p>café © &amp;eacute; É</p>");
+  });
+
   it("links selected text, refuses unsafe URLs and unlinks", () => {
     const { el, rich } = editable("<p>site</p>");
     selectAll(el);
