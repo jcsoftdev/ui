@@ -303,7 +303,7 @@ export class UiHierarchyMorph extends HierarchyChart {
         el.setAttribute("text-anchor", rect ? "start" : "middle");
         el.style.fill = inkOn(strength(shape));
         el.style.opacity = `${opacity}`;
-        el.style.fontWeight = rect && rect.group ? "700" : "600";
+        el.style.fontWeight = rect?.group ? "700" : "600";
       },
     );
 
