@@ -214,9 +214,27 @@ export const TabsRtlArrows: Story = {
   },
 };
 
-export const SegmentedDeselectAndDisabled: Story = {
+export const SegmentedKeepsSelection: Story = {
   render: () => (
     <Segmented aria-label="Vista" defaultValue="dia">
+      <SegmentedItem value="dia">Día</SegmentedItem>
+      <SegmentedItem value="mes">Mes</SegmentedItem>
+    </Segmented>
+  ),
+  play: async ({ canvasElement }) => {
+    const [dia, mes] = within(canvasElement).getAllByRole("radio");
+    await userEvent.click(dia as HTMLElement);
+    await expect(dia).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(mes as HTMLElement);
+    await userEvent.click(mes as HTMLElement);
+    await expect(mes).toHaveAttribute("aria-checked", "true");
+    await expect(dia).toHaveAttribute("aria-checked", "false");
+  },
+};
+
+export const SegmentedDeselectAndDisabled: Story = {
+  render: () => (
+    <Segmented aria-label="Vista" defaultValue="dia" deselectable>
       <SegmentedItem value="dia">Día</SegmentedItem>
       <SegmentedItem value="semana" disabled>
         Semana

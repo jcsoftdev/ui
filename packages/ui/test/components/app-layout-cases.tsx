@@ -11,6 +11,7 @@ export { createAppShellStore };
 import { Topbar } from "../../src/shell/topbar/topbar.js";
 import { OfflineBanner } from "../../src/states/offline-banner/offline-banner.js";
 import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
+export { nextSegmentedValue } from "../../src/navigation/segmented/model.js";
 import { Form, FormError, FormStatus } from "../../src/forms/form/form.js";
 import { Grid } from "../../src/containers/grid/grid.js";
 

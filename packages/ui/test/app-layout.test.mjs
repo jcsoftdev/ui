@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { html, copyText, splitBottomNavItems, createAppShellStore } =
+const { html, copyText, splitBottomNavItems, createAppShellStore, nextSegmentedValue } =
   await loadCases("app-layout-cases.tsx");
 
 test("Grid fits columns from the minimum width unless a count is given", () => {
@@ -178,4 +178,12 @@ test("Checkbox without label renders no label and no generated id", () => {
   const bare = html.checkboxBare();
   assert.doesNotMatch(bare, /<label/);
   assert.doesNotMatch(bare, /<button[^>]*\sid=/);
+});
+
+test("Segmented keeps the selected item on a second press unless deselectable", () => {
+  assert.equal(nextSegmentedValue("day", "day", false), "day");
+  assert.equal(nextSegmentedValue("day", "week", false), "week");
+  assert.equal(nextSegmentedValue("", "day", false), "day");
+  assert.equal(nextSegmentedValue("day", "day", true), "");
+  assert.equal(nextSegmentedValue("day", "week", true), "week");
 });

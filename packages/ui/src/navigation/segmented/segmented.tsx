@@ -9,6 +9,7 @@ import {
   useRovingFocus,
 } from "../../utils/roving-focus.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { nextSegmentedValue } from "./model.js";
 
 type GetItemProps = ReturnType<typeof useRovingFocus>["getItemProps"];
 
@@ -16,6 +17,7 @@ interface SegmentedContextValue {
   value: string;
   setValue: (value: string) => void;
   disabled: boolean;
+  deselectable: boolean;
   getItemProps: GetItemProps | null;
 }
 
@@ -29,6 +31,8 @@ export interface SegmentedProps
   onValueChange?: ((value: string) => void) | undefined;
   /** Disables every item. */
   disabled?: boolean | undefined;
+  /** Lets a second press on the selected item clear the selection. By default the selected item stays selected. */
+  deselectable?: boolean | undefined;
   /** Set to `false` to put every item in the tab order instead of roving. Defaults to `true`. */
   rovingFocus?: boolean | undefined;
   orientation?: RovingOrientation | undefined;
@@ -36,13 +40,17 @@ export interface SegmentedProps
   loop?: boolean | undefined;
 }
 
-/** Exclusive selector for 2-4 options. Like Radix `type="single"`, it uses the `radiogroup` role. */
+/**
+ * Exclusive selector for 2-4 options. Like Radix `type="single"`, it uses the `radiogroup` role.
+ * Pressing the selected item keeps it selected; pass `deselectable` to let it clear instead.
+ */
 export function Segmented({
   className,
   value: valueProp,
   defaultValue,
   onValueChange,
   disabled = false,
+  deselectable = false,
   rovingFocus = true,
   orientation,
   dir = "ltr",
@@ -62,7 +70,13 @@ export function Segmented({
 
   return (
     <SegmentedContext.Provider
-      value={{ value, setValue, disabled, getItemProps: rovingFocus ? roving.getItemProps : null }}
+      value={{
+        value,
+        setValue,
+        disabled,
+        deselectable,
+        getItemProps: rovingFocus ? roving.getItemProps : null,
+      }}
     >
       <div
         role="radiogroup"
@@ -113,7 +127,8 @@ export function SegmentedItem({
       {...props}
       {...item}
       onClick={composeHandlers(onClick, () => {
-        if (!disabled) context.setValue(pressed ? "" : value);
+        if (!disabled)
+          context.setValue(nextSegmentedValue(context.value, value, context.deselectable));
       })}
       className={cn(
         "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-button px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",
