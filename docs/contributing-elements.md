@@ -138,3 +138,23 @@ attributeChangedCallback(name) { if (MATERIAL_ATTRIBUTES.includes(name)) this.#m
 
 Use one Conventional Commit per work unit, with its tests: `feat(ui-elements): add ui-<name>`. A new
 core behaviour is `feat(ui-core): add <behaviour>`. Add no AI attribution.
+
+## 8. Adopting the strings registry (opt-in)
+
+`@jcsoftdev/ui-elements/strings` is a tag-less module (`setStrings`, `loadStrings`, `provideStrings`,
+`resolveString`, `watchStrings`). An element opts in by importing `../internal/strings.js` (never the
+`strings` entry, which would break the "no other entry" rule); one that does not import it pays
+nothing. To adopt it:
+
+1. Keep the English defaults in the element as a `DEFAULTS` object. They are the `fallback`, so the
+   element renders without the registry having any pack.
+2. Resolve each visible or announced string with
+   `resolveString(this, "<element>.<key>", DEFAULTS[key], "<attribute>")`. Order: the element's
+   attribute, the nearest `provideStrings` ancestor, the registry for the nearest `lang` (`es-PE`,
+   then `es`), then the fallback.
+3. Re-render labels from `watchStrings(() => this.update())` in `connectedCallback`, and call the
+   returned cleanup in `disconnectedCallback`.
+4. Add the Spanish values (the React kit's wording) to `src/strings/es.ts` under the same keys. It is
+   a lazy chunk, only fetched by `loadStrings("es")`.
+
+`<ui-rich-text-editor>` and `<ui-logo-forge>` are the reference adopters.
