@@ -86,15 +86,7 @@ public data class LiquidMotion(
         public val Standard: LiquidMotion = LiquidMotion()
 
         /** Softer springs: a longer, more visible wobble after a drag. */
-        public val Playful: LiquidMotion =
-            LiquidMotion(
-                press = LiquidSpring(0.6f, 420f),
-                follow = LiquidSpring(0.7f, 200f),
-                squashX = LiquidSpring(0.45f, 200f),
-                squashY = LiquidSpring(0.55f, 200f),
-                swell = 22.dp,
-                glow = 0.2f,
-            )
+        public val Playful: LiquidMotion get() = PlayfulMotion
     }
 }
 
@@ -199,28 +191,10 @@ public data class LiquidGlassStyle(
         public val Regular: LiquidGlassStyle = LiquidGlassStyle()
 
         /** Crisper and more transparent: a sharper bevel, more dispersion and a stronger highlight. */
-        public val Clear: LiquidGlassStyle =
-            LiquidGlassStyle(
-                refraction = 1.2f,
-                bevelWidth = 18.dp,
-                dispersion = 0.045f,
-                specular = LiquidSpecular(intensity = 1.25f),
-                shadow = LiquidShadow(opacity = 0.8f),
-            )
+        public val Clear: LiquidGlassStyle get() = ClearPreset
 
         /** Chunky glass: a deep bevel, strong refraction, fresnel glow, a touch of grain and a long shadow. */
-        public val Thick: LiquidGlassStyle =
-            LiquidGlassStyle(
-                refraction = 1.5f,
-                bevelWidth = 32.dp,
-                dispersion = 0.05f,
-                rim = 1.3f,
-                specular = LiquidSpecular(intensity = 1.3f),
-                fresnel = 0.3f,
-                grain = 0.03f,
-                shadow = LiquidShadow(spread = 20.dp, offsetY = 8.dp),
-                motion = LiquidMotion.Playful,
-            )
+        public val Thick: LiquidGlassStyle get() = ThickPreset
 
         /**
          * A thick, fully clear acrylic lens: no frost, no tint or dim veil, a [LiquidProfile.Convex] profile that squeezes a wide
@@ -230,21 +204,7 @@ public data class LiquidGlassStyle(
          * It has no veil (opacity 0), so it **does not keep the text contrast guarantee** ([preservesContrast] is false): put
          * only large, bold or shadowed labels on it, and never body text over a busy photo.
          */
-        public val Crystal: LiquidGlassStyle =
-            LiquidGlassStyle(
-                refraction = 1.67f,
-                bevelWidth = 40.dp,
-                profile = LiquidProfile.Convex,
-                dispersion = 0.05f,
-                frost = 0.dp,
-                saturation = 1f,
-                opacity = 0f,
-                rim = 0.5f,
-                specular = LiquidSpecular(intensity = 0.6f),
-                fresnel = 1f,
-                shadow = LiquidShadow(opacity = 0.6f, spread = 18.dp, offsetY = 6.dp),
-                interaction = LiquidInteraction.Drag,
-            )
+        public val Crystal: LiquidGlassStyle get() = CrystalPreset
     }
 }
 
@@ -269,9 +229,11 @@ internal fun rimDepthFor(
 /** The style surfaces use: set it with `UiTheme(liquidGlassStyle = ...)` or provide it for a subtree. */
 public val LocalLiquidGlassStyle: ProvidableCompositionLocal<LiquidGlassStyle> = staticCompositionLocalOf { LiquidGlassStyle.Regular }
 
+private val DefaultTint = LiquidTint()
+
 /** The material tokens with this style's frost, saturation, tint and opacity applied. Identity for the default style. */
 internal fun LiquidGlassStyle.applyTo(tokens: GlassMaterial): GlassMaterial {
-    if (opacity == 1f && tint == LiquidTint() && frost == Dp.Unspecified && saturation == null) return tokens
+    if (opacity == 1f && tint == DefaultTint && frost == Dp.Unspecified && saturation == null) return tokens
     val base = if (tint.color == Color.Unspecified) tokens.tint else tint.color.copy(alpha = tokens.tint.alpha)
     return GlassMaterial(
         tint = base.copy(alpha = (base.alpha * opacity * tint.amount).coerceIn(0f, 1f)),

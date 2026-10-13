@@ -198,11 +198,12 @@ public fun GlassEffectContainer(
     group.style = style
     group.material = material
     group.glass = glass
-    val tokens = style.applyTo(glassTokens(resolved.variant, LocalUiDark.current))
-    val base = UiTheme.colors.bg
     val surface =
         if (merged) {
-            modifier then MergedGlassElement(group, style, tokens, base, glass)
+            val dark = LocalUiDark.current
+            // Remembered so a custom style does not make new tokens, and update the merged node, on every recomposition.
+            val tokens = remember(resolved.variant, dark, style) { style.applyTo(glassTokens(resolved.variant, dark)) }
+            modifier then MergedGlassElement(group, style, tokens, UiTheme.colors.bg, glass)
         } else {
             modifier
         }

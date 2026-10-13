@@ -17,16 +17,34 @@ private val SharedShader: Any? by lazy { if (lensSupported()) RuntimeShader(LENS
 private val SharedMergeShader: Any? by lazy { if (lensSupported()) RuntimeShader(MERGE_SHADER) else null }
 
 internal actual class LensEngine actual constructor() {
-    actual fun effect(params: LensParams): RenderEffect? = if (lensSupported()) agslEffect(SharedShader as RuntimeShader, params) else null
+    // The platform blur that feeds the shader, kept while its radius holds (typed Any so the class loads below API 31).
+    private var blurRadius = -1f
+    private var blurEffect: Any? = null
+
+    actual fun effect(params: LensParams): RenderEffect? =
+        if (lensSupported()) agslEffect(SharedShader as RuntimeShader, params, blurFor(params.blur)) else null
 
     actual fun merged(params: MergeParams): RenderEffect? =
-        if (lensSupported()) agslMerged(SharedMergeShader as RuntimeShader, params) else null
+        if (lensSupported()) agslMerged(SharedMergeShader as RuntimeShader, params, blurFor(params.lens.blur)) else null
+
+    private fun blurFor(radius: Float): Any? {
+        if (radius <= 0f || !lensSupported()) return null
+        if (radius != blurRadius || blurEffect == null) {
+            blurRadius = radius
+            blurEffect = platformBlur(radius)
+        }
+        return blurEffect
+    }
 }
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun platformBlur(radius: Float): Any = PlatformRenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP)
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private fun agslEffect(
     shader: RuntimeShader,
     params: LensParams,
+    blur: Any?,
 ): RenderEffect {
     shader.setFloatUniform("size", params.width, params.height)
     shader.setFloatUniform("origin", params.pad, params.pad)
@@ -34,20 +52,21 @@ private fun agslEffect(
     shader.setFloatUniform("exponent", params.exponent)
     shader.setFloatUniform("dome", params.dome)
     shader.common(params)
-    return shader.chain(params)
+    return shader.chain(blur)
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private fun agslMerged(
     shader: RuntimeShader,
     params: MergeParams,
+    blur: Any?,
 ): RenderEffect {
     shader.setFloatUniform("boxes", params.shapes.boxes())
     shader.setFloatUniform("roundness", params.shapes.roundness())
     shader.setFloatUniform("count", params.count.toFloat())
     shader.setFloatUniform("blendK", params.blendDistance)
     shader.common(params.lens)
-    return shader.chain(params.lens)
+    return shader.chain(blur)
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -73,16 +92,8 @@ private fun RuntimeShader.common(params: LensParams) {
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-private fun RuntimeShader.chain(params: LensParams): RenderEffect {
+private fun RuntimeShader.chain(blur: Any?): RenderEffect {
     val lens = PlatformRenderEffect.createRuntimeShaderEffect(this, "content")
-    val effect =
-        if (params.blur > 0f) {
-            PlatformRenderEffect.createChainEffect(
-                lens,
-                PlatformRenderEffect.createBlurEffect(params.blur, params.blur, Shader.TileMode.CLAMP),
-            )
-        } else {
-            lens
-        }
+    val effect = if (blur is PlatformRenderEffect) PlatformRenderEffect.createChainEffect(lens, blur) else lens
     return effect.asComposeRenderEffect()
 }
