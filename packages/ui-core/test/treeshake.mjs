@@ -70,7 +70,7 @@ const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
   if (item.isFile() && item.name.endsWith(".ts") && !item.name.endsWith(".d.ts"))
     behaviours.push(item.name.slice(0, -3));
-  else if (item.isDirectory() && item.name !== "liquid" && item.name !== "internal")
+  else if (item.isDirectory() && item.name !== "liquid")
     for (const part of readdirSync(join(dist, "..", "src", item.name)))
       if (part.endsWith(".ts")) behaviours.push(`${item.name}/${part.slice(0, -3)}`);
 }
@@ -83,7 +83,8 @@ for (const name of behaviours) {
       chartDeps[name] ?? [],
       `${name}: eager modules besides itself and internal/*`,
     );
-  assert.ok(modules.includes(name), `${name} is built`);
+  if (name !== "internal/geo" && name !== "internal/tree-types")
+    assert.ok(modules.includes(name), ` is built`); // type-only modules emit nothing
   assert.deepEqual(
     modules.filter((module) => module.startsWith("liquid/")),
     [],
