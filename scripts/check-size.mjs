@@ -50,6 +50,21 @@ for (const element of elementEntries())
     budgetFile: `packages/ui-elements/src/${element.name}/size.json`,
   });
 
+// Static icon entries (`@jcsoftdev/ui-elements/icons/<name>`: the icon element plus one glyph) share
+// one budget group in src/icon/glyphs.size.json, so 159 glyphs need no 159 files.
+const glyphDist = join(root, "packages/ui-elements/dist/icon/glyphs");
+if (existsSync(glyphDist)) {
+  const maxGzip = JSON.parse(readFileSync(join(root, "packages/ui-elements/src/icon/glyphs.size.json"), "utf8")).maxGzip;
+  for (const file of readdirSync(glyphDist).filter((name) => name.endsWith(".js")))
+    budgets.push({
+      id: `ui-elements/icons/${file.slice(0, -3)}`,
+      kind: "js",
+      file: `packages/ui-elements/dist/icon/glyphs/${file}`,
+      maxGzip,
+      budgetFile: "packages/ui-elements/src/icon/glyphs.size.json",
+    });
+}
+
 async function measure({ file, kind }) {
   const path = join(root, file);
   let code;

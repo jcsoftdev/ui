@@ -131,6 +131,15 @@ describe("file validation", () => {
     ]);
     expect(validateFiles(files).accepted).toHaveLength(4);
   });
+
+  it("matches MIME types case-insensitively, ignores parameters and accepts */*", () => {
+    const text = file("a.txt", "text/plain;charset=utf-8", 1);
+    expect(validateFiles([text], ["TEXT/PLAIN"]).accepted).toHaveLength(1);
+    expect(validateFiles([text], ["text/plain; charset=utf-8"]).accepted).toHaveLength(1);
+    expect(validateFiles([file("a.png", "IMAGE/PNG", 1)], ["image/*"]).accepted).toHaveLength(1);
+    expect(validateFiles([file("x", "application/x-y", 1)], ["*/*"]).accepted).toHaveLength(1);
+    expect(validateFiles([text], ["image/*"]).rejected).toHaveLength(1);
+  });
 });
 
 describe("otp", () => {

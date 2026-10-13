@@ -1,6 +1,10 @@
 // Safe Markdown subset: a parser that produces a plain AST, and a renderer that builds DOM nodes
 // with createElement and textContent. No input ever reaches innerHTML; raw tags stay literal text.
 
+import { safeHref } from "./safe-href.js";
+
+export { safeHref };
+
 export type Inline =
   | { t: "text"; v: string }
   | { t: "code"; v: string }
@@ -25,26 +29,15 @@ export type Block =
   | { t: "hr" }
   | { t: "table"; align: TableAlign[]; head: Inline[][]; rows: Inline[][][] };
 
-const SAFE_PROTOCOLS = new Set(["http:", "https:", "mailto:"]);
-
-/** Returns the normalized URL when its protocol is http, https or mailto; otherwise null. */
-export function safeHref(raw: string): string | null {
-  const value = raw.trim();
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return SAFE_PROTOCOLS.has(url.protocol) ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
 const ESCAPABLE = /[\\`*_[\]()#+\-.!|>~]/;
 
 /** Deepest nesting of quotes and lists; deeper content is kept as plain text. */
 export const MAX_MARKDOWN_DEPTH = 32;
 /** Longest link label or destination scanned, so hostile `[](` runs stay linear. */
 const MAX_LINK_SCAN = 512;
+/** Table columns beyond this are dropped, so cells stay bounded by rows x MAX_TABLE_COLUMNS. */
+const MAX_TABLE_COLUMNS = 64;
+const NO_INLINES: Inline[] = [];
 
 /** Index of the `)` that closes a link destination, honoring balanced inner parentheses. */
 function closingParen(src: string, from: number): number {
@@ -145,7 +138,8 @@ export function parseInline(src: string): Inline[] {
 }
 
 const FENCE = /^\s{0,3}(`{3,}|~{3,})\s*([\w+#.-]*)/;
-const HEADING_OPEN = /^\s{0,3}(#{1,6})(?=\s)/;
+// Only space and tab separate the marker: U+2028 and friends never count, matching the React kit.
+const HEADING_OPEN = /^[ \t]{0,3}(#{1,6})(?=[ \t])/;
 
 /** ATX heading of a line, or null. Plain string code: a lazy regex here is quadratic on long lines. */
 function parseHeading(line: string): { level: 1 | 2 | 3 | 4 | 5 | 6; text: string } | null {
@@ -159,7 +153,8 @@ function parseHeading(line: string): { level: 1 | 2 | 3 | 4 | 5 | 6; text: strin
   return { level: (open[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6, text };
 }
 const HR = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/;
-const ITEM = /^(\s*)([-*+]|\d{1,9}[.)])\s+(.*)$/;
+// `s` lets `.` cross U+2028/U+2029, so a failing match cannot backtrack quadratically.
+const ITEM = /^([ \t]*)([-*+]|\d{1,9}[.)])[ \t]+(.*)$/s;
 const TABLE_CELL = /^:?-+:?$/;
 
 /** A table delimiter row such as `| :-- | --: |`, checked cell by cell. */
@@ -260,13 +255,17 @@ function parseBlocks(src: string, depth: number): Block[] {
       continue;
     }
     if (isTableStart(line, lines[i + 1])) {
-      const head = splitRow(line);
+      const head = splitRow(line).slice(0, MAX_TABLE_COLUMNS);
       const align = splitRow(at(i + 1)).map(alignOf);
       const rows: Inline[][][] = [];
       i += 2;
       while (i < lines.length && at(i).trim() && at(i).includes("|")) {
         const cells = splitRow(at(i));
-        rows.push(head.map((_, col) => parseInline(cells[col] ?? "")));
+        rows.push(
+          head.map((_, col) =>
+            col < cells.length ? parseInline(cells[col] as string) : NO_INLINES,
+          ),
+        );
         i += 1;
       }
       blocks.push({

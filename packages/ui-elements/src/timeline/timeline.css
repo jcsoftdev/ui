@@ -1,0 +1,119 @@
+[data-ui="timeline"] {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+[data-ui="timeline-item"] {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+[data-ui="timeline-item"] > [data-ui-part="group"] {
+  margin: 0;
+  padding-block-end: var(--gap-density-sm);
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+[data-ui="timeline-item"] > [data-ui-part="row"] {
+  display: flex;
+  gap: var(--gap-density);
+  min-width: 0;
+}
+[data-ui="timeline-item"] [data-ui-part="rail"] {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+}
+[data-ui="timeline-item"] [data-ui-part="marker"] {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--radius-badge);
+  background-color: var(--surface-2);
+  color: var(--ink-2);
+}
+[data-ui="timeline-item"][data-tone="accent"] [data-ui-part="marker"] {
+  background-color: var(--accent-soft);
+  color: var(--accent-ink);
+}
+[data-ui="timeline-item"][data-tone="success"] [data-ui-part="marker"] {
+  background-color: var(--success-soft);
+  color: var(--success);
+}
+[data-ui="timeline-item"][data-tone="warning"] [data-ui-part="marker"] {
+  background-color: var(--warning-soft);
+  color: var(--warning);
+}
+[data-ui="timeline-item"][data-tone="danger"] [data-ui-part="marker"] {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+}
+[data-ui="timeline-item"] [data-ui-part="marker"] svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+[data-ui="timeline-item"] [data-ui-part="dot"] {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+[data-ui="timeline-item"] [data-ui-part="connector"] {
+  flex: 1;
+  inline-size: 1px;
+  background-color: var(--border-color-divider);
+}
+[data-ui="timeline-item"]:last-child [data-ui-part="connector"] {
+  display: none;
+}
+[data-ui="timeline-item"] [data-ui-part="content"] {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding-block-end: var(--gap-density-lg);
+}
+[data-ui="timeline-item"]:last-child [data-ui-part="content"] {
+  padding-block-end: 0;
+}
+[data-ui="timeline-item"] [data-ui-part="header"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--gap-density-sm);
+  min-width: 0;
+}
+[data-ui="timeline-item"] [data-ui-part="title"] {
+  min-width: 0;
+  overflow-wrap: break-word;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+[data-ui="timeline-item"] [data-ui-part="time"],
+[data-ui="timeline-item"] [data-ui-part="actor"] {
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+[data-ui="timeline-item"] [data-ui-part="time"] {
+  flex-shrink: 0;
+}
+[data-ui="timeline-item"] [data-ui-part="description"] {
+  margin: 0;
+  overflow-wrap: break-word;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}

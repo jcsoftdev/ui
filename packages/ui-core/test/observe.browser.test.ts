@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCopier } from "../src/clipboard.ts";
 import { consumeContext, createContextKey, provideContext } from "../src/context.ts";
 import { isOnline, observeOnline } from "../src/observe/online.ts";
@@ -51,6 +51,25 @@ describe("stick-to-bottom", () => {
     expect(jumps.at(-1)).toBe(false);
     stick.destroy();
   });
+
+  it("releases when the reader scrolls up before the follow scroll event is delivered", async () => {
+    document.body.innerHTML = `<div id="s" style="height:100px;overflow:auto"><div id="c"></div></div>`;
+    const scroller = document.getElementById("s") as HTMLElement;
+    const content = document.getElementById("c") as HTMLElement;
+    const stick = createStickToBottom({ scroller, content });
+    // Runs right after the follow-scroll in the same resize pass, before its scroll event is
+    // dispatched: the browser then coalesces both moves into one event.
+    const reader = new ResizeObserver(() => {
+      if (scroller.scrollTop === 400) scroller.scrollTop = 100;
+    });
+    reader.observe(content);
+    content.style.height = "500px";
+    await frame();
+    reader.disconnect();
+    expect(scroller.scrollTop).toBe(100);
+    expect(stick.stuck).toBe(false);
+    stick.destroy();
+  });
 });
 
 describe("online", () => {
@@ -68,12 +87,26 @@ describe("online", () => {
 
 describe("clipboard", () => {
   it("flags copied for resetMs", async () => {
+    vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
     const states: boolean[] = [];
     const copier = createCopier((v) => states.push(v), 30);
     await copier.copy("hello");
     expect(copier.copied).toBe(true);
     await new Promise((resolve) => setTimeout(resolve, 80));
     expect(states).toEqual([true, false]);
+    vi.restoreAllMocks();
+    copier.destroy();
+  });
+
+  it("rejects, and never flags copied, when both copy paths are refused", async () => {
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("denied"));
+    vi.spyOn(document, "execCommand").mockReturnValue(false);
+    const states: boolean[] = [];
+    const copier = createCopier((v) => states.push(v));
+    await expect(copier.copy("x")).rejects.toThrow();
+    expect(states).toEqual([]);
+    expect(document.querySelector("textarea")).toBeNull();
+    vi.restoreAllMocks();
     copier.destroy();
   });
 });

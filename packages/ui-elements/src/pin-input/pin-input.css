@@ -1,0 +1,107 @@
+:host {
+  --ui-pin-input-height: var(--input-height);
+  --ui-pin-input-radius: var(--radius-input);
+  --ui-pin-input-dot: 12px;
+  --ui-pin-input-cell: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-inline-size: 0;
+  container-type: inline-size;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+:host([hidden]) {
+  display: none;
+}
+:host([disabled]) {
+  opacity: 0.6;
+}
+[part="dots"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-inline-size: 100%;
+}
+[part="dot"] {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  inline-size: var(--ui-pin-input-dot);
+  block-size: var(--ui-pin-input-dot);
+  border: 2px solid var(--border-color-control);
+  border-radius: var(--radius-pill);
+}
+[part="dot"][data-filled] {
+  border-color: var(--ink);
+  background-color: var(--ink);
+}
+[part="input"],
+[part="cell"] {
+  box-sizing: border-box;
+  block-size: var(--ui-pin-input-height);
+  margin: 0;
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--ui-pin-input-radius);
+  background-color: var(--surface-control);
+  color: var(--ink);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  text-align: center;
+}
+[part="input"] {
+  inline-size: 100%;
+  min-inline-size: 0;
+  padding: 0 8px;
+  letter-spacing: 0.15em;
+}
+[part="cells"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-inline-size: 100%;
+}
+[part="cell"] {
+  inline-size: var(--ui-pin-input-cell);
+  padding: 0;
+  font-size: 16px;
+}
+[part="input"]:focus-visible,
+[part="cell"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+  border-color: transparent;
+}
+[part="input"]:disabled,
+[part="cell"]:disabled {
+  cursor: not-allowed;
+}
+[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+[part="status"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@container (min-width: 240px) {
+  [part="dots"] {
+    gap: 12px;
+  }
+  [part="dot"] {
+    inline-size: 14px;
+    block-size: 14px;
+  }
+  [part="input"] {
+    padding: 0 12px;
+    letter-spacing: 0.3em;
+  }
+}

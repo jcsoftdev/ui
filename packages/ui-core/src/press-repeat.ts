@@ -46,6 +46,10 @@ export function createPressRepeat(target: HTMLElement, options: PressRepeatOptio
   };
   const schedule = (wait: number) => {
     timer = setTimeout(() => {
+      if (options.disabled?.()) {
+        stop();
+        return;
+      }
       count += 1;
       onRepeat(count);
       schedule(repeatInterval(count + 1, options));

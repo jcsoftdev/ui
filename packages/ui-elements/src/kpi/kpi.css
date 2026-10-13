@@ -1,0 +1,55 @@
+:host {
+  /* Component variables are --ui-kpi-*; everything else must be a ui-tokens token. */
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  box-sizing: border-box;
+  padding: 14px 18px;
+  background-color: var(--surface);
+  font-family: var(--font-sans);
+  container: kpi / inline-size;
+}
+:host([hidden]) {
+  display: none;
+}
+[part="label"],
+[part="value"],
+[part="description"] {
+  overflow-wrap: break-word;
+}
+[part="label"] {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+[part="value"] {
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+:host([variant="danger"]) [part="value"] {
+  color: var(--danger);
+}
+[part="suffix"] {
+  margin-inline-start: 4px;
+  color: var(--ink-3);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+[part="description"] {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+[hidden] {
+  display: none;
+}
+@container kpi (max-width: 9rem) {
+  [part="value"] {
+    font-size: 22px;
+  }
+}

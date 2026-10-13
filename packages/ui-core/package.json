@@ -103,6 +103,10 @@
       "types": "./dist/geo/*.d.ts",
       "import": "./dist/geo/*.js"
     },
+    "./grid/*": {
+      "types": "./dist/grid/*.d.ts",
+      "import": "./dist/grid/*.js"
+    },
     "./package.json": "./package.json",
     "./*": {
       "types": "./dist/*.d.ts",

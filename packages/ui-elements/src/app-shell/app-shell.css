@@ -1,0 +1,5 @@
+[data-ui="app-shell"] {
+  display: flex;
+  min-width: 0;
+  container: page / inline-size;
+}

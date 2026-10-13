@@ -448,6 +448,9 @@ export function bindSubmenuTrigger(
     clearTimeout(graceTimer);
     graceTimer = setTimeout(() => parent.setGrace(null), options.graceMs ?? GRACE_MS);
   };
+  const onPointerOut = (event: PointerEvent) => {
+    if (!trigger.contains(event.relatedTarget as Node | null)) onPointerLeave(event);
+  };
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.target !== trigger || disabled()) return;
     if (parent.search !== "" && event.key === " ") return;
@@ -460,6 +463,9 @@ export function bindSubmenuTrigger(
   trigger.addEventListener("click", onClick);
   trigger.addEventListener("pointermove", onPointerMove);
   trigger.addEventListener("pointerleave", onPointerLeave);
+  // `pointerout` reaches the parent content (which refocuses itself when the pointer leaves an
+  // item) before `pointerleave` fires: arm the grace area on the earlier event too.
+  trigger.addEventListener("pointerout", onPointerOut);
   trigger.addEventListener("keydown", onKeyDown);
   return () => {
     clearOpenTimer();
@@ -467,6 +473,7 @@ export function bindSubmenuTrigger(
     trigger.removeEventListener("click", onClick);
     trigger.removeEventListener("pointermove", onPointerMove);
     trigger.removeEventListener("pointerleave", onPointerLeave);
+    trigger.removeEventListener("pointerout", onPointerOut);
     trigger.removeEventListener("keydown", onKeyDown);
   };
 }
