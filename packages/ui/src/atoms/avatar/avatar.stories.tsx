@@ -34,3 +34,23 @@ export const Team: Story = {
     </div>
   ),
 };
+
+export const Tones: Story = {
+  render: (args) => (
+    <div className="flex items-center gap-2">
+      {(["neutral", "accent", "success", "warning", "danger", "info"] as const).map((tone) => (
+        <Avatar key={tone} {...args} tone={tone} />
+      ))}
+    </div>
+  ),
+};
+
+export const WithStatus: Story = {
+  render: (args) => (
+    <div className="flex items-center gap-3">
+      <Avatar {...args} size="md" status="success" statusLabel="En línea" />
+      <Avatar {...args} size="lg" status="warning" statusLabel="Ausente" />
+      <Avatar {...args} size="lg" status="neutral" statusLabel="Desconectado" />
+    </div>
+  ),
+};

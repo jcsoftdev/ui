@@ -36,7 +36,7 @@ import com.jcsoftdev.ui.atoms.IconButton
 import com.jcsoftdev.ui.atoms.Switch
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.containers.Card
-import com.jcsoftdev.ui.glass.GlassVariant
+import com.jcsoftdev.ui.glass.LiquidGlass
 import com.jcsoftdev.ui.glass.MaterialSurface
 import com.jcsoftdev.ui.glass.SurfaceMaterial
 import com.jcsoftdev.ui.glass.glassSource
@@ -73,14 +73,14 @@ fun GlassGallery(
     blur: Boolean = true,
     reduceTransparency: Boolean = false,
     open: String? = null,
-    variant: GlassVariant = GlassVariant.Frosted,
+    chromeGlass: SurfaceMaterial = SurfaceMaterial.Glass,
 ) {
     UiTheme(
         dark = dark,
         style = UiStyle.Glass,
         backdropBlur = blur,
         reduceTransparency = reduceTransparency,
-        glassVariant = variant,
+        chromeGlass = chromeGlass,
     ) {
         val glass = rememberGlassState()
         val toasts = remember { ToastHostState() }
@@ -184,7 +184,7 @@ private fun SideBySide() {
                 Text("Frosted", Modifier.align(Alignment.Center))
             }
             MaterialSurface(
-                SurfaceMaterial.Liquid,
+                LiquidGlass.Regular,
                 RoundedCornerShape(28.dp),
                 Modifier.size(140.dp, 120.dp).clickable(source, null) {},
                 glass = glass,
@@ -224,11 +224,11 @@ private fun LightBackdrop() {
             }
         }
         Row(Modifier.align(Alignment.Center), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            MaterialSurface(SurfaceMaterial.Liquid, RoundedCornerShape(28.dp), Modifier.size(140.dp, 110.dp), glass = glass) {
+            MaterialSurface(LiquidGlass.Regular, RoundedCornerShape(28.dp), Modifier.size(140.dp, 110.dp), glass = glass) {
                 Text("Liquid card", Modifier.align(Alignment.Center))
             }
             MaterialSurface(
-                SurfaceMaterial.Liquid,
+                LiquidGlass.Regular,
                 RoundedCornerShape(50),
                 Modifier.size(150.dp, 56.dp).align(Alignment.CenterVertically),
                 glass = glass,

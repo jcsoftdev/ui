@@ -1,0 +1,28 @@
+[data-ui="input-icon"] {
+  --ui-input-icon-gutter: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+[data-ui="input-icon"][hidden] {
+  display: none;
+}
+[data-ui="input-icon"] > [slot="icon"] {
+  position: absolute;
+  inset-inline-start: 10px;
+  z-index: 1;
+  inline-size: 16px;
+  block-size: 16px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+[data-ui="input-icon"] > :not([slot="icon"]) {
+  flex: 1;
+}
+[data-ui="input-icon"] > :not([slot="icon"])::part(input),
+[data-ui="input-icon"] > :not([slot="icon"])::part(textarea),
+[data-ui="input-icon"] > input {
+  padding-inline-start: var(--ui-input-icon-gutter);
+}

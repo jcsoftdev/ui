@@ -3,6 +3,7 @@ import type { ChartDockMode } from "../chart-dock.js";
 import type { ValueFormat } from "../format.js";
 import type { Curve } from "../path.js";
 import type { StackMode } from "../stack.js";
+import type { TooltipRow } from "../tooltip.js";
 import type {
   ChartAnnotation,
   ChartLabels,
@@ -85,6 +86,23 @@ export interface CartesianOverlay {
   html?: (plot: CartesianPlotInfo) => ReactNode;
 }
 
+/** What `tooltipRows` receives for the hovered category. */
+export interface CartesianTooltipContext {
+  /** Index in the `categories` you passed (not in the zoomed or downsampled window). */
+  index: number;
+  category: XValue;
+  /** The rows the tooltip would show. */
+  rows: TooltipRow[];
+}
+
+/** What `tooltipRows` may replace; omitted parts keep their default. */
+export interface CartesianTooltipContent {
+  title?: ReactNode;
+  rows?: TooltipRow[];
+  /** Rendered under the rows. */
+  footer?: ReactNode;
+}
+
 export interface CartesianChartProps {
   /** One entry per data point: strings, numbers or dates. */
   categories: readonly XValue[];
@@ -102,8 +120,8 @@ export interface CartesianChartProps {
   /** Stacks every area and column series. */
   stack?: StackMode;
   curve?: Curve;
-  /** Dots on every line point. Hovered points are always marked. */
-  markers?: boolean;
+  /** Dots on every line point, or only on these indices of `categories`. Hovered points are always marked. */
+  markers?: boolean | readonly number[];
   /** Values printed on the marks. */
   dataLabels?: boolean;
   /** Strokes lines with a gradient from each series color to the next palette color. */
@@ -145,9 +163,13 @@ export interface CartesianChartProps {
    * containers 480px wide or less and on coarse pointers, `always` / `never` force it.
    */
   dock?: ChartDockMode;
+  /** Customises the tooltip content of a category: replace the title or rows, or add a footer. */
+  tooltipRows?: (context: CartesianTooltipContext) => CartesianTooltipContent;
   annotations?: readonly ChartAnnotation[];
   /** Tilts the category labels (degrees, e.g. -45) so long names fit; vertical charts only. */
   categoryLabelRotation?: number;
+  /** Shows every n-th category label, or those the predicate accepts; replaces the automatic thinning. */
+  categoryTickEvery?: number | ((index: number, label: string) => boolean);
   /** Second tier of labels under the category axis (vertical charts); counts must add up to the categories. */
   categoryGroups?: readonly CategoryGroup[];
   /** Click (or Enter on the focused plot) on a category; receives its index in `categories`. */

@@ -1,11 +1,12 @@
 import { Button } from "@jcsoftdev/ui/atoms";
 import { Card } from "@jcsoftdev/ui/containers";
-import { LIQUID_PRESETS, liquidStyle, useGlassLens } from "@jcsoftdev/ui/glass";
+import { LIQUID_PRESETS, LiquidGlass, liquidStyle } from "@jcsoftdev/ui/liquid";
 import { Photo } from "./Photo";
 import { sceneById } from "./scenes";
 
 const install = "pnpm add @jcsoftdev/ui react react-dom";
 const photo = sceneById("wilderness");
+const card = liquidStyle({ ...LIQUID_PRESETS.regular, radius: 32 });
 const crystal = liquidStyle({ ...LIQUID_PRESETS.crystal, radius: 40, interactive: "drag" });
 
 interface Stat {
@@ -15,17 +16,17 @@ interface Stat {
 
 /** The hero: a real photo, a liquid-glass card with the pitch, and a crystal pill that can be dragged and springs back. */
 export default function HeroGlass({ components, charts }: { components: number; charts: number }) {
-  const pill = useGlassLens<HTMLDivElement>();
   const stats: Stat[] = [
     { value: components, label: "web components" },
     { value: charts, label: "chart types" },
   ];
   return (
     <div className="hero-stage" id="hero">
+      <LiquidGlass />
       <Photo scene={photo} priority sizes="100vw" className="scene-media" />
       <div className="hero-scrim" aria-hidden="true" />
       <div className="landing-wrap hero-grid">
-        <Card material={{ type: "liquid", preset: "regular", radius: 32 }} className="hero-card">
+        <Card material="liquid" style={card} className="hero-card">
           <p className="landing-kicker">
             <span className="pole w-10" aria-hidden="true" /> React, Tailwind and Compose
           </p>
@@ -57,7 +58,7 @@ export default function HeroGlass({ components, charts }: { components: number; 
           </div>
         </Card>
         <div className="hero-side">
-          <div ref={pill} className="liquid hero-pill" style={crystal} data-testid="hero-pill">
+          <div className="liquid hero-pill" style={crystal} data-testid="hero-pill">
             <span>Drag me</span>
           </div>
           <ul className="hero-stats" role="list">

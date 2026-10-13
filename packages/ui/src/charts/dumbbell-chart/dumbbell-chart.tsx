@@ -16,7 +16,12 @@ import { DIRECTION_COLORS, directionOf, seriesColor } from "../core/palette.js";
 import { PlotOverlay } from "../core/plot-overlay.js";
 import { linearScale } from "../core/scales/linear.js";
 import { ChartTooltip, type TooltipRow } from "../core/tooltip.js";
-import { type ChartLabels, resolveLabels, type ValueAxisOptions } from "../core/types.js";
+import {
+  type ChartLabels,
+  resolveAxisBound,
+  resolveLabels,
+  type ValueAxisOptions,
+} from "../core/types.js";
 
 export interface DumbbellItem {
   id?: string;
@@ -404,8 +409,8 @@ function DumbbellPlot({
     const lo = all.length ? Math.min(...all) : 0;
     const hi = all.length ? Math.max(...all) : 1;
     const domain: [number, number] = [
-      xAxis?.min ?? (lo > 0 && lo < hi * 0.4 ? 0 : lo),
-      xAxis?.max ?? hi,
+      resolveAxisBound(xAxis?.min, lo > 0 && lo < hi * 0.4 ? 0 : lo),
+      resolveAxisBound(xAxis?.max, hi),
     ];
     const format = resolveAxisFormat(xAxis?.format ?? valueFormat);
     if (vertical) {

@@ -53,8 +53,7 @@ class LiquidContrastRenderTest {
         backdrop: Color,
         width: Dp,
         height: Dp,
-        material: SurfaceMaterial,
-        style: LiquidGlassStyle,
+        material: LiquidGlass,
         dark: Boolean,
         pressed: Boolean,
     ): Bitmap {
@@ -64,7 +63,7 @@ class LiquidContrastRenderTest {
             setContent {
                 Box(Modifier.wrapContentSize(Alignment.TopStart)) {
                     Box(Modifier.size(width + 40.dp, height + 40.dp).testTag("frame")) {
-                        UiTheme(dark = dark, motion = Motion(0f), liquidGlassStyle = style) {
+                        UiTheme(dark = dark, motion = Motion(0f)) {
                             val glass = rememberGlassState()
                             Box(Modifier.fillMaxSize().glassSource(glass).background(backdrop))
                             Box(Modifier.offset(20.dp, 20.dp).wrapContentSize(Alignment.TopStart).size(width, height)) {
@@ -120,7 +119,7 @@ class LiquidContrastRenderTest {
     private fun ratios(
         w: Int,
         h: Int,
-        style: LiquidGlassStyle,
+        style: LiquidGlass,
         dark: Boolean,
         pressed: Boolean,
     ): Ratios {
@@ -130,7 +129,7 @@ class LiquidContrastRenderTest {
         var a = Float.MAX_VALUE
         var b = Float.MAX_VALUE
         for (backdrop in listOf(Color.Black, Color.White)) {
-            val bmp = render(backdrop, w.dp, h.dp, SurfaceMaterial.Liquid, style, dark, pressed)
+            val bmp = render(backdrop, w.dp, h.dp, style, dark, pressed)
             a = minOf(a, worst(bmp, w, h, ink))
             b = minOf(b, worst(bmp, w, h, ink2))
         }
@@ -138,7 +137,7 @@ class LiquidContrastRenderTest {
     }
 
     private val presets =
-        listOf("Regular" to LiquidGlassStyle.Regular, "Clear" to LiquidGlassStyle.Clear, "Thick" to LiquidGlassStyle.Thick)
+        listOf("Regular" to LiquidGlass.Regular, "Clear" to LiquidGlass.Clear, "Thick" to LiquidGlass.Thick)
 
     // Circles and pills of the sizes controls come in, and a card.
     private val sizes = listOf(56 to 56, 120 to 44, 160 to 56, 160 to 64, 200 to 120)
@@ -177,8 +176,8 @@ class LiquidContrastRenderTest {
     }
 
     @Test fun aDeepBevelCannotThinTheVeilUnderTheTextOfASmallPill() {
-        val deep = LiquidGlassStyle(bevelWidth = 60.dp)
-        val shallow = LiquidGlassStyle(bevelWidth = 14.dp)
+        val deep = LiquidGlass.Regular.copy(bevelWidth = 60.dp)
+        val shallow = LiquidGlass.Regular.copy(bevelWidth = 14.dp)
         for (dark in listOf(false, true)) {
             val d = ratios(120, 44, deep, dark, pressed = false)
             val s = ratios(120, 44, shallow, dark, pressed = false)

@@ -1,0 +1,81 @@
+[data-ui="scrolly"] {
+  /* Component variables are --ui-scrolly-*; everything else must be a ui-tokens token. */
+  --ui-scrolly-gap: 2rem;
+  --ui-scrolly-graphic-height: min(55svh, 26rem);
+  display: block;
+  width: 100%;
+  min-width: 0;
+  container: ui-scrolly / inline-size;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+[data-ui="scrolly"][hidden] {
+  display: none;
+}
+[data-ui="scrolly"] > [data-ui-part="layout"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--ui-scrolly-gap);
+}
+[data-ui="scrolly"] [data-ui-part="layout"] > :not([role="article"]) {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-width: 0;
+  height: var(--ui-scrolly-graphic-height);
+  align-self: start;
+  padding-bottom: 8px;
+  background: var(--bg);
+}
+[data-ui="scrolly"] [role="article"] {
+  display: flex;
+  min-width: 0;
+  min-height: 70svh;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 24px;
+  color: var(--ink);
+  opacity: 0.6;
+}
+[data-ui="scrolly"] [role="article"][data-active] {
+  opacity: 1;
+}
+@container ui-scrolly (min-width: 48rem) {
+  [data-ui="scrolly"] > [data-ui-part="layout"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  [data-ui="scrolly"] [data-ui-part="layout"] > :not([role="article"]) {
+    top: 16px;
+    padding-bottom: 0;
+    grid-row: 1 / span var(--ui-scrolly-count);
+    grid-column: 2;
+  }
+  [data-ui="scrolly"] [role="article"] {
+    grid-column: 1;
+  }
+  [data-ui="scrolly"][data-graphic-side="start"] [data-ui-part="layout"] > :not([role="article"]) {
+    grid-column: 1;
+  }
+  [data-ui="scrolly"][data-graphic-side="start"] [role="article"] {
+    grid-column: 2;
+  }
+  [data-ui="scrolly"]:dir(rtl) [data-ui-part="layout"] > :not([role="article"]) {
+    grid-column: 1;
+  }
+  [data-ui="scrolly"]:dir(rtl) [role="article"] {
+    grid-column: 2;
+  }
+  [data-ui="scrolly"]:dir(rtl)[data-graphic-side="start"]
+    [data-ui-part="layout"]
+    > :not([role="article"]) {
+    grid-column: 2;
+  }
+  [data-ui="scrolly"]:dir(rtl)[data-graphic-side="start"] [role="article"] {
+    grid-column: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui="scrolly"] [role="article"] {
+    transition: opacity 0.3s;
+  }
+}

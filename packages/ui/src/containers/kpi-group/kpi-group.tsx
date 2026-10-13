@@ -19,10 +19,19 @@ export interface KpiGroupItem {
   description?: ReactNode;
 }
 
+export type KpiGroupLayout = "divided" | "auto-fit";
+
 export type KpiGroupPart = "root" | "list" | "item" | "label" | "value" | "trend" | "description";
 
 export interface KpiGroupProps extends Omit<ComponentPropsWithoutRef<"dl">, "children"> {
   items: KpiGroupItem[];
+  /**
+   * `divided` (default): one card, 1, 2 or 4 columns by container width. `auto-fit`: separate
+   * cards in as many columns as fit `minItemWidth`.
+   */
+  layout?: KpiGroupLayout;
+  /** Minimum tile width in px for `layout="auto-fit"`. */
+  minItemWidth?: number;
   /** Animate numeric values counting up. */
   animate?: boolean;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root wrapper and is merged last. */
@@ -35,17 +44,32 @@ export interface KpiGroupProps extends Omit<ComponentPropsWithoutRef<"dl">, "chi
  */
 export function KpiGroup({
   items,
+  layout = "divided",
+  minItemWidth = 150,
   animate = true,
   className,
   classNames,
+  style,
   ...props
 }: KpiGroupProps) {
+  const autoFit = layout === "auto-fit";
   return (
     <div className={cn("@container/kpi-group min-w-0", classNames?.root, className)}>
       <dl
         {...props}
+        style={
+          autoFit
+            ? {
+                gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${minItemWidth}px), 1fr))`,
+                ...style,
+              }
+            : style
+        }
         className={cn(
-          "m-0 grid grid-cols-1 gap-px overflow-hidden rounded-card border-card bg-divider shadow-card @sm/kpi-group:grid-cols-2 @3xl/kpi-group:grid-cols-4",
+          "m-0 grid",
+          autoFit
+            ? "gap-density"
+            : "grid-cols-1 gap-px overflow-hidden rounded-card border-card bg-divider shadow-card @sm/kpi-group:grid-cols-2 @3xl/kpi-group:grid-cols-4",
           classNames?.list,
         )}
       >
@@ -54,6 +78,7 @@ export function KpiGroup({
             key={item.id}
             className={cn(
               "surface-card flex min-w-0 flex-col gap-density-sm p-card",
+              autoFit && "rounded-card border-card shadow-card",
               classNames?.item,
             )}
           >

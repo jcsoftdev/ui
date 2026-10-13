@@ -1,0 +1,15 @@
+[data-ui="toolbar"],
+[data-ui="toolbar-right"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+[data-ui="toolbar"][hidden],
+[data-ui="toolbar-right"][hidden] {
+  display: none;
+}
+[data-ui="toolbar-right"] {
+  margin-inline-start: auto;
+}

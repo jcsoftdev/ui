@@ -38,6 +38,8 @@ export interface ChartTooltipProps {
   rows: readonly TooltipRow[];
   /** Wrapped sentence under the title, for notes that are not series values. */
   body?: string;
+  /** Content under the rows. */
+  footer?: ReactNode;
   /** Forces the side of the anchor the card opens on (when it fits); by default it follows the anchor. */
   side?: "left" | "right";
   /**
@@ -73,6 +75,7 @@ export function ChartTooltip({
   title,
   rows,
   body,
+  footer,
   side,
   dock = "auto",
   className,
@@ -96,7 +99,13 @@ export function ChartTooltip({
   const docked = dock === "never" ? false : dock === "always" ? true : frame.docked;
   if (docked && frame.slot) {
     return createPortal(
-      <DockedDetails title={title} body={body} rows={rows} announce={frame.announce} />,
+      <DockedDetails
+        title={title}
+        body={body}
+        rows={rows}
+        footer={footer}
+        announce={frame.announce}
+      />,
       frame.slot,
     );
   }
@@ -119,7 +128,7 @@ export function ChartTooltip({
         transform: `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0) translateY(-50%)`,
       }}
     >
-      <TooltipBody title={title} body={body} rows={rows} />
+      <TooltipBody title={title} body={body} rows={rows} footer={footer} />
     </div>
   );
 }
@@ -128,10 +137,11 @@ interface BodyProps {
   title?: ReactNode;
   body?: string;
   rows: readonly TooltipRow[];
+  footer?: ReactNode;
   rowClassName?: string;
 }
 
-function TooltipBody({ title, body, rows, rowClassName }: BodyProps) {
+function TooltipBody({ title, body, rows, footer, rowClassName }: BodyProps) {
   return (
     <>
       {title ? <div className="mb-1.5 font-bold text-fs-120 text-ink">{title}</div> : null}
@@ -165,6 +175,7 @@ function TooltipBody({ title, body, rows, rowClassName }: BodyProps) {
           </div>
         ))}
       </div>
+      {footer ? <div className="mt-1.5 text-ink-2">{footer}</div> : null}
     </>
   );
 }
@@ -174,6 +185,7 @@ function DockedDetails({
   title,
   body,
   rows,
+  footer,
   announce,
 }: BodyProps & { announce: (text: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -188,7 +200,7 @@ function DockedDetails({
       data-docked=""
       className="rounded-popover surface-overlay px-3 py-2 text-fs-130"
     >
-      <TooltipBody title={title} body={body} rows={rows} rowClassName="min-h-11" />
+      <TooltipBody title={title} body={body} rows={rows} footer={footer} rowClassName="min-h-11" />
     </div>
   );
 }

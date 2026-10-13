@@ -1,0 +1,33 @@
+[data-ui="hover-card"] {
+  box-sizing: border-box;
+  width: 18rem;
+  max-width: var(--ui-popper-available-width, 100vw);
+  max-height: var(--ui-popper-available-height, 100vh);
+  margin: 0;
+  padding: var(--pad-card);
+  overflow: auto;
+  border-width: var(--border-width-card);
+  border-style: solid;
+  border-color: var(--border-color-card);
+  border-radius: var(--radius-popover);
+  background-color: var(--surface-overlay);
+  background-image: var(--surface-glass-layer);
+  -webkit-backdrop-filter: var(--surface-filter);
+  backdrop-filter: var(--surface-filter);
+  color: var(--ink);
+  box-shadow: var(--shadow-overlay);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  inset: auto;
+}
+[data-ui="hover-card"]:not([popover]) {
+  position: fixed;
+  z-index: 85;
+}
+[data-ui="hover-card"][hidden] {
+  display: none;
+}
+[data-ui="hover-card"][data-placing] {
+  visibility: hidden;
+}

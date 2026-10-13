@@ -1,0 +1,102 @@
+:host {
+  --ui-number-stepper-height: var(--input-height);
+  --ui-number-stepper-radius: var(--radius-input);
+  --ui-number-stepper-bg: var(--surface-control);
+  --ui-number-stepper-button: 36px;
+  display: inline-block;
+  max-inline-size: 100%;
+  min-inline-size: 128px;
+  vertical-align: middle;
+  font-family: var(--font-sans);
+  color: var(--ink);
+}
+:host([hidden]) {
+  display: none;
+}
+[part="root"] {
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  block-size: var(--ui-number-stepper-height);
+  overflow: hidden;
+  border: var(--border-width-control) solid var(--border-color-control);
+  border-radius: var(--ui-number-stepper-radius);
+  background-color: var(--ui-number-stepper-bg);
+}
+:host([disabled]) [part="root"] {
+  opacity: 0.6;
+}
+:host([invalid]) [part="root"] {
+  border-color: var(--danger);
+}
+button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  inline-size: var(--ui-number-stepper-button);
+  block-size: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  transition:
+    scale var(--motion-duration) var(--motion-ease),
+    background-color var(--motion-duration) var(--motion-ease);
+}
+button:hover:not(:disabled, [aria-disabled="true"]) {
+  background-color: var(--surface-sunken);
+  color: var(--ink);
+}
+button:active:not(:disabled, [aria-disabled="true"]) {
+  scale: var(--press-scale);
+}
+button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+button:disabled,
+button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+button svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+[part="input"] {
+  flex: 1;
+  inline-size: 56px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  outline: none;
+}
+[part="input"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+[part="input"]:disabled {
+  cursor: not-allowed;
+}
+[part="unit"] {
+  display: flex;
+  align-items: center;
+  padding-inline-end: 8px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+[part="unit"][hidden] {
+  display: none;
+}

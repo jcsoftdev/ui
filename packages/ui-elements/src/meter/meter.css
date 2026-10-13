@@ -1,0 +1,28 @@
+:host {
+  --ui-progress-height: 5px;
+  --ui-progress-track: var(--track);
+  --ui-progress-fill: var(--accent);
+  display: block;
+  block-size: var(--ui-progress-height);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background-color: var(--ui-progress-track);
+}
+:host([hidden]) {
+  display: none;
+}
+[part="indicator"] {
+  display: block;
+  block-size: 100%;
+  background-color: var(--ui-progress-fill);
+  transform: translateX(calc(-1 * var(--ui-progress-gap, 100%)));
+  transition: transform var(--motion-duration) var(--motion-ease);
+}
+:host(:dir(rtl)) [part="indicator"] {
+  transform: translateX(var(--ui-progress-gap, 100%));
+}
+@media (prefers-reduced-motion: reduce) {
+  [part="indicator"] {
+    transition: none;
+  }
+}

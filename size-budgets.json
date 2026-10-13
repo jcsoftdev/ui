@@ -53,7 +53,7 @@
       "id": "ui/ai",
       "kind": "js",
       "file": "packages/ui/dist/ai/index.js",
-      "maxGzip": 32500
+      "maxGzip": 34800
     },
     {
       "id": "ui/atoms",
@@ -95,13 +95,13 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 600
+      "maxGzip": 680
     },
     {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 11900
+      "maxGzip": 12900
     },
     {
       "id": "ui/overlays",
@@ -144,6 +144,158 @@
       "kind": "js",
       "file": "packages/ui/dist/xlsx/index.js",
       "maxGzip": 4150
+    },
+    {
+      "id": "ui-core/focus",
+      "kind": "js",
+      "file": "packages/ui-core/dist/focus.js",
+      "maxGzip": 1300
+    },
+    {
+      "id": "ui-core/roving",
+      "kind": "js",
+      "file": "packages/ui-core/dist/roving.js",
+      "maxGzip": 900
+    },
+    {
+      "id": "ui-core/popper",
+      "kind": "js",
+      "file": "packages/ui-core/dist/popper.js",
+      "maxGzip": 2550
+    },
+    {
+      "id": "ui-core/dismiss",
+      "kind": "js",
+      "file": "packages/ui-core/dist/dismiss.js",
+      "maxGzip": 900
+    },
+    {
+      "id": "ui-core/typeahead",
+      "kind": "js",
+      "file": "packages/ui-core/dist/typeahead.js",
+      "maxGzip": 350
+    },
+    {
+      "id": "ui-core/state",
+      "kind": "js",
+      "file": "packages/ui-core/dist/state.js",
+      "maxGzip": 250
+    },
+    {
+      "id": "ui-core/liquid tier: base frosted",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-base.mjs",
+      "maxGzip": 2950
+    },
+    {
+      "id": "ui-core/liquid tier: + refraction",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-refraction.mjs",
+      "maxGzip": 8250
+    },
+    {
+      "id": "ui-core/liquid tier: default look",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-default.mjs",
+      "maxGzip": 11400
+    },
+    {
+      "id": "ui-core/liquid tier: Crystal",
+      "kind": "js",
+      "file": "packages/ui-core/test/size/tier-crystal.mjs",
+      "maxGzip": 12850
+    },
+    {
+      "id": "ui-core/liquid/options",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/options.js",
+      "maxGzip": 1750
+    },
+    {
+      "id": "ui-core/liquid/lens",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/lens.js",
+      "maxGzip": 6350
+    },
+    {
+      "id": "ui-core/liquid/specular",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/specular.js",
+      "maxGzip": 1450
+    },
+    {
+      "id": "ui-core/liquid/dispersion",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/dispersion.js",
+      "maxGzip": 350
+    },
+    {
+      "id": "ui-core/liquid/crystal",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/crystal.js",
+      "maxGzip": 2850
+    },
+    {
+      "id": "ui-core/liquid/motion",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/motion.js",
+      "maxGzip": 3050
+    },
+    {
+      "id": "ui-core/liquid/presets/crystal",
+      "kind": "js",
+      "file": "packages/ui-core/dist/liquid/presets/crystal.js",
+      "maxGzip": 200
+    },
+    {
+      "id": "ui-elements material=\"liquid\" chunk (lazy)",
+      "kind": "js",
+      "file": "packages/ui-elements/dist/internal/liquid.js",
+      "maxGzip": 4650
+    },
+    {
+      "id": "ui/liquid",
+      "kind": "js",
+      "file": "packages/ui/dist/liquid/index.js",
+      "maxGzip": 3950
+    },
+    {
+      "id": "liquid tier 0: Topbar, no liquid",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nconsole.log(Topbar);",
+      "maxGzip": 9250
+    },
+    {
+      "id": "liquid tier 1: + liquidStyle options",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle);",
+      "maxGzip": 10850
+    },
+    {
+      "id": "liquid tier 2: + <LiquidGlass /> watcher",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "maxGzip": 12100
+    },
+    {
+      "id": "liquid tier 3: + refraction lens (lazy)",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "lazy": [
+        "glass/refraction.js"
+      ],
+      "maxGzip": 20600
+    },
+    {
+      "id": "liquid tier 4: + crystal and dispersion (lazy)",
+      "kind": "js",
+      "code": "import { Topbar } from \"./packages/ui/dist/shell/index.js\";\nimport { liquidStyle } from \"./packages/ui/dist/liquid/index.js\";\nimport { LiquidGlass } from \"./packages/ui/dist/liquid/index.js\";\nconsole.log(Topbar, liquidStyle, LiquidGlass);",
+      "lazy": [
+        "glass/refraction.js",
+        "glass/lens-crystal.js",
+        "glass/lens-dispersion.js"
+      ],
+      "maxGzip": 22650
     }
   ]
 }

@@ -41,10 +41,20 @@ export function safeHref(raw: string): string | null {
 
 const ESCAPABLE = /[\\`*_[\]()#+\-.!|>~]/;
 
+/** Table columns beyond this are dropped, so cells stay bounded by rows x MAX_COLUMNS. */
+const MAX_COLUMNS = 64;
+const NO_INLINES: Inline[] = [];
+
+/** Deeper blockquotes and list items are kept as literal text, so input cannot exhaust the stack. */
+const MAX_NESTING = 32;
+/** A link destination longer than this is not a link, which keeps the scan for `)` bounded. */
+const MAX_LINK_TARGET = 1024;
+
 /** Index of the `)` that closes a link destination, honoring balanced inner parentheses. */
 function closingParen(src: string, from: number): number {
   let depth = 0;
-  for (let i = from; i < src.length; i += 1) {
+  const stop = Math.min(src.length, from + MAX_LINK_TARGET);
+  for (let i = from; i < stop; i += 1) {
     if (src[i] === "(") depth += 1;
     else if (src[i] === ")") {
       if (depth === 0) return i;
@@ -62,6 +72,7 @@ export function parseInline(src: string): Inline[] {
     buf = "";
   };
   let i = 0;
+  let nextMid = -2;
   while (i < src.length) {
     const ch = src[i] as string;
     const next = src[i + 1];
@@ -105,7 +116,9 @@ export function parseInline(src: string): Inline[] {
       }
     }
     if (ch === "[") {
-      const mid = src.indexOf("](", i + 1);
+      // The first "](" after any earlier "[" is still the first one after this "[" while it lies ahead.
+      if (nextMid !== -1 && nextMid <= i) nextMid = src.indexOf("](", i + 1);
+      const mid = nextMid;
       const end = mid > i ? closingParen(src, mid + 2) : -1;
       if (end > mid) {
         flush();
@@ -119,7 +132,9 @@ export function parseInline(src: string): Inline[] {
       }
     }
     if (ch === "\n") {
-      buf = buf.replace(/ +$/, "");
+      let end = buf.length;
+      while (end > 0 && buf[end - 1] === " ") end -= 1;
+      buf = buf.slice(0, end);
       flush();
       out.push({ t: "br" });
       i += 1;
@@ -133,10 +148,31 @@ export function parseInline(src: string): Inline[] {
 }
 
 const FENCE = /^\s{0,3}(`{3,}|~{3,})\s*([\w+#.-]*)/;
-const HEADING = /^\s{0,3}(#{1,6})\s+(.*?)(?:\s+#+)?\s*$/;
+// Only space and tab count as whitespace here, and `s` lets `.` cross U+2028/U+2029: both keep matching linear.
+const HEADING = /^[ \t]{0,3}(#{1,6})[ \t](.*)$/s;
+
+/** Heading level and text; the optional closing `#` run is stripped in code to keep matching linear. */
+function matchHeading(line: string): { level: 1 | 2 | 3 | 4 | 5 | 6; text: string } | null {
+  const m = HEADING.exec(line);
+  if (!m) return null;
+  let text = (m[2] as string).trim();
+  let end = text.length;
+  while (end > 0 && text[end - 1] === "#") end -= 1;
+  if (end > 0 && end < text.length && /\s/.test(text[end - 1] as string)) {
+    text = text.slice(0, end).trimEnd();
+  }
+  return { level: (m[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6, text };
+}
 const HR = /^\s{0,3}([-*_])(?:\s*\1){2,}\s*$/;
-const ITEM = /^(\s*)([-*+]|\d{1,9}[.)])\s+(.*)$/;
-const TABLE_RULE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+const ITEM = /^([ \t]*)([-*+]|\d{1,9}[.)])[ \t]+(.*)$/s;
+const TABLE_CELL_RULE = /^:?-+:?$/;
+
+function isTableRule(line: string): boolean {
+  let row = line.trim();
+  if (row.startsWith("|")) row = row.slice(1);
+  if (row.endsWith("|")) row = row.slice(0, -1);
+  return row !== "" && row.split("|").every((cell) => TABLE_CELL_RULE.test(cell.trim()));
+}
 
 function splitRow(line: string): string[] {
   let row = line.trim();
@@ -154,7 +190,7 @@ function alignOf(cell: string): TableAlign {
 }
 
 function isTableStart(line: string, next: string | undefined): boolean {
-  return line.includes("|") && !!next?.includes("-") && TABLE_RULE.test(next);
+  return line.includes("|") && !!next?.includes("-") && isTableRule(next);
 }
 
 function startsBlock(line: string, next: string | undefined): boolean {
@@ -170,7 +206,23 @@ function startsBlock(line: string, next: string | undefined): boolean {
 
 /** Parses Markdown into blocks. An unclosed code fence runs to the end (streaming friendly). */
 export function parseMarkdown(src: string): Block[] {
+  return parseBlocks(src, 0);
+}
+
+function literal(src: string): Block[] {
+  return [{ t: "p", c: [{ t: "text", v: src }] }];
+}
+
+/** List markers indented past what the nesting cap can honor lose the excess, so deep input stays linear. */
+const EXCESS_INDENT = new RegExp(`^\\s{${2 * MAX_NESTING + 4},}(?=([-*+]|\\d{1,9}[.)])\\s)`);
+
+function parseBlocks(src: string, depth: number): Block[] {
   const lines = src.replace(/\r\n?/g, "\n").split("\n");
+  if (depth === 0) {
+    for (let n = 0; n < lines.length; n += 1) {
+      lines[n] = (lines[n] as string).replace(EXCESS_INDENT, " ".repeat(2 * MAX_NESTING + 4));
+    }
+  }
   const at = (n: number) => lines[n] as string;
   const blocks: Block[] = [];
   let i = 0;
@@ -195,13 +247,9 @@ export function parseMarkdown(src: string): Block[] {
       blocks.push({ t: "code", lang: fence[2] ?? "", v: body.join("\n") });
       continue;
     }
-    const heading = HEADING.exec(line);
+    const heading = matchHeading(line);
     if (heading) {
-      blocks.push({
-        t: "heading",
-        level: (heading[1] as string).length as 1 | 2 | 3 | 4 | 5 | 6,
-        c: parseInline(heading[2] as string),
-      });
+      blocks.push({ t: "heading", level: heading.level, c: parseInline(heading.text) });
       i += 1;
       continue;
     }
@@ -216,17 +264,25 @@ export function parseMarkdown(src: string): Block[] {
         body.push(at(i).replace(/^\s{0,3}>\s?/, ""));
         i += 1;
       }
-      blocks.push({ t: "quote", c: parseMarkdown(body.join("\n")) });
+      const inner = body.join("\n");
+      blocks.push({
+        t: "quote",
+        c: depth >= MAX_NESTING ? literal(inner) : parseBlocks(inner, depth + 1),
+      });
       continue;
     }
     if (isTableStart(line, lines[i + 1])) {
-      const head = splitRow(line);
+      const head = splitRow(line).slice(0, MAX_COLUMNS);
       const align = splitRow(at(i + 1)).map(alignOf);
       const rows: Inline[][][] = [];
       i += 2;
       while (i < lines.length && at(i).trim() && at(i).includes("|")) {
         const cells = splitRow(at(i));
-        rows.push(head.map((_, col) => parseInline(cells[col] ?? "")));
+        rows.push(
+          head.map((_, col) =>
+            col < cells.length ? parseInline(cells[col] as string) : NO_INLINES,
+          ),
+        );
         i += 1;
       }
       blocks.push({
@@ -258,7 +314,8 @@ export function parseMarkdown(src: string): Block[] {
         }
         items.push({
           c: parseInline(current[3] as string),
-          children: parseMarkdown(sub.join("\n")),
+          children:
+            depth >= MAX_NESTING ? literal(sub.join("\n")) : parseBlocks(sub.join("\n"), depth + 1),
         });
       }
       blocks.push({ t: "list", ordered, start, items });

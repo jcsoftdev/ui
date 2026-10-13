@@ -70,6 +70,10 @@ function safeId(raw: string): string {
   return raw.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
+function sourceIndex(indices: readonly number[] | undefined, start: number, index: number): number {
+  return start + (indices ? (indices[index] as number) : index);
+}
+
 function titleOf(value: XValue, xLabel: (value: XValue) => string, custom: boolean): string {
   if (value instanceof Date && !custom) return formatDate(value);
   return xLabel(value);
@@ -110,9 +114,11 @@ export function CartesianChart({
   legend,
   tooltip = true,
   dock,
+  tooltipRows,
   annotations,
   categoryGroups,
   categoryLabelRotation,
+  categoryTickEvery,
   onCategoryClick,
   brush = false,
   rangeSelect,
@@ -282,9 +288,11 @@ export function CartesianChart({
           axes={axes}
           grid={grid}
           tooltip={tooltip}
+          tooltipRows={tooltipRows}
           annotations={annotations}
           categoryGroups={categoryGroups}
           categoryLabelRotation={categoryLabelRotation}
+          categoryTickEvery={categoryTickEvery}
           onCategoryClick={onCategoryClick}
           rangeSelect={rangeSelect}
           overlay={overlay}
@@ -317,9 +325,11 @@ interface CartesianPlotProps
     | "axes"
     | "grid"
     | "tooltip"
+    | "tooltipRows"
     | "annotations"
     | "categoryGroups"
     | "categoryLabelRotation"
+    | "categoryTickEvery"
     | "onCategoryClick"
     | "rangeSelect"
     | "overlay"
@@ -378,9 +388,11 @@ function CartesianPlot({
   axes,
   grid = true,
   tooltip = true,
+  tooltipRows,
   annotations,
   categoryGroups,
   categoryLabelRotation,
+  categoryTickEvery,
   onCategoryClick,
   rangeSelect,
   overlay,
@@ -481,6 +493,7 @@ function CartesianPlot({
       annotations: annotations ?? [],
       categoryGroups: groupsOn,
       labelRotation: categoryLabelRotation,
+      categoryTickEvery,
     }),
     [
       width,
@@ -500,6 +513,7 @@ function CartesianPlot({
       annotations,
       groupsOn,
       categoryLabelRotation,
+      categoryTickEvery,
     ],
   );
   const natural = useMemo(() => computeLayout(layoutInput), [layoutInput]);
@@ -823,15 +837,25 @@ function CartesianPlot({
           emphasis: true,
         });
       }
-      return { title: titleOf(category, xLabel, customXLabel), rows };
+      const title = titleOf(category, xLabel, customXLabel);
+      const text = `${title}: ${rows.map((row) => `${row.name} ${row.value}`).join(", ")}`;
+      const custom = tooltipRows?.({
+        index: sourceIndex(sampled.indices ?? undefined, start, index),
+        category,
+        rows,
+      });
+      return {
+        title: custom?.title ?? title,
+        rows: custom?.rows ?? rows,
+        footer: custom?.footer,
+        text,
+      };
     },
-    [sampled, layout, stack, valueFormat, labels.total, xLabel, customXLabel],
+    [sampled, layout, stack, valueFormat, labels.total, xLabel, customXLabel, tooltipRows, start],
   );
 
   const details = active != null && active < count ? describe(active) : null;
-  const valueText = details
-    ? `${details.title}: ${details.rows.map((row) => `${row.name} ${row.value}`).join(", ")}`
-    : labels.explore;
+  const valueText = details ? details.text : labels.explore;
 
   let anchor: Pointer | null = null;
   if (active != null && active < count) {
@@ -854,6 +878,22 @@ function CartesianPlot({
       };
     }
   }
+
+  const markerSet = useMemo(
+    () =>
+      Array.isArray(markers)
+        ? new Set(
+            sampled.categories.flatMap((_, index) =>
+              markers.includes(sourceIndex(sampled.indices ?? undefined, start, index))
+                ? [index]
+                : [],
+            ),
+          )
+        : null,
+    [markers, sampled, start],
+  );
+  const markersFor = (dense: boolean): boolean | ReadonlySet<number> =>
+    markerSet ?? (markers === true && dense);
 
   const activePosition = active != null ? layout.positions[active] : undefined;
   const bandSize = layout.mode === "band" ? layout.step : 0;
@@ -986,7 +1026,7 @@ function CartesianPlot({
                   geometry={item}
                   dimmed={highlighted != null && highlighted !== item.id}
                   gradientId={gradient ? gradientId(item.id) : undefined}
-                  markers={markers && count <= Math.max(2, innerWidth / 9)}
+                  markers={markersFor(count <= Math.max(2, innerWidth / 9))}
                   stacked={stackedAreas}
                   {...markProps(item.id)}
                 />
@@ -1011,7 +1051,7 @@ function CartesianPlot({
                   key={item.id}
                   geometry={item}
                   dimmed={highlighted != null && highlighted !== item.id}
-                  markers={markers && count <= Math.max(2, innerWidth / 9)}
+                  markers={markersFor(count <= Math.max(2, innerWidth / 9))}
                   stacked={stackedAreas}
                   {...markProps(item.id)}
                 />
@@ -1199,6 +1239,7 @@ function CartesianPlot({
           containerWidth={width}
           title={details.title}
           rows={details.rows}
+          footer={details.footer}
         />
       ) : null}
 

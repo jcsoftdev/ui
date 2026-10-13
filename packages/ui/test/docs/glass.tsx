@@ -1,8 +1,9 @@
 // Type-checks the examples in site/src/content/docs/docs/glass.md against the built package.
 // Every ```tsx block in that page must equal one `#region` below (see test/docs-examples.mjs).
 import { Card, ItemCardGroup, type ItemCardGroupItem } from "@jcsoftdev/ui/containers";
-import { useGlassLens } from "@jcsoftdev/ui/glass";
+import { LIQUID_PRESET_CRYSTAL, LiquidGlass, liquidStyle } from "@jcsoftdev/ui/liquid";
 import { DialogContent } from "@jcsoftdev/ui/overlays";
+import type { ReactNode } from "react";
 
 // #region opt-in
 export function OptIn({ items }: { items: ItemCardGroupItem[] }) {
@@ -33,7 +34,11 @@ export function LiquidCards() {
 // #region crystal
 export function Crystal() {
   return (
-    <Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
+    <Card
+      material="liquid"
+      style={liquidStyle(LIQUID_PRESET_CRYSTAL)}
+      className="rounded-full px-8 py-4"
+    >
       <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">
         Liquid Glass
       </span>
@@ -43,12 +48,12 @@ export function Crystal() {
 // #endregion
 
 // #region lens
-export function Lens() {
-  const ref = useGlassLens<HTMLDivElement>();
+export function App({ children }: { children: ReactNode }) {
   return (
-    <div ref={ref} className="liquid-clear rounded-dialog p-6">
-      Bent edges
-    </div>
+    <>
+      <LiquidGlass />
+      {children}
+    </>
   );
 }
 // #endregion
@@ -57,8 +62,8 @@ export function Lens() {
 export function ConfiguredLiquid() {
   return (
     <Card
-      material={{
-        type: "liquid",
+      material="liquid"
+      style={liquidStyle({
         profile: "dome",
         frost: 4,
         refraction: 0.8,
@@ -66,7 +71,7 @@ export function ConfiguredLiquid() {
         shadow: { opacity: 0.8, offsetY: 14 },
         interactive: "drag",
         motion: "jelly",
-      }}
+      })}
     >
       A drop of glass
     </Card>

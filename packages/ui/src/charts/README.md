@@ -356,6 +356,10 @@ Every chart adapts to its exact parent, width and height, from the container and
 <BarChart series={[{ id: "a", name: "A", data, pattern: "stripes" }]} />
 <BarChart distributed /> // or series[].colors = ["var(--chart-up)", undefined, ...]
 <BarChart categoryLabelRotation={-45} />
+<BarChart categoryTickEvery={(i, label) => i % 5 === 0 || i === last} yAxis={{ max: (m) => Math.ceil(m / 400) * 400 }} />
+<LineChart markers={[3, 5]} tooltipRows={({ index, rows }) => ({ rows: [...rows, extraRow], footer: "Nota" })} />
+<HeatmapChart cellDetail={(row, column, value) => [{ id: "n", name: "Pagos", value: "12", color: "transparent" }]} />
+<DonutChart sliceLabels="percent" />
 <DrilldownBarChart data={tree} breadcrumbLabel="Ruta" />   // HierarchyDatum; click a bar with a `›`
 <BarRaceChart entities={[{ id, name }]} frames={[{ label: "Sem 1", values: [..] }]} topN={6} />
 <WaterfallChart orientation="horizontal" />
