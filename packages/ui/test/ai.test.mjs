@@ -172,3 +172,32 @@ test("prompt input submit key", () => {
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: false, isComposing: true }), false);
   assert.equal(keys.shouldSubmit({ key: "a", shiftKey: false, isComposing: false }), false);
 });
+
+test("markdown: pathological nesting and link scans stay bounded", () => {
+  const cases = {
+    quotes: `${">".repeat(20000)}x`,
+    lists: Array.from({ length: 2000 }, (_, n) => `${"  ".repeat(n)}- item`).join("\n"),
+    links: "[](".repeat(10000),
+    brackets: "[".repeat(20000),
+  };
+  for (const [name, src] of Object.entries(cases)) {
+    const start = performance.now();
+    assert.doesNotThrow(() => md.parseMarkdown(src), name);
+    const elapsed = performance.now() - start;
+    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  }
+});
+
+test("markdown: nesting beyond the cap degrades to literal text", () => {
+  const depthOf = (blocks) => {
+    let depth = 0;
+    let level = blocks;
+    while (level[0]?.t === "quote") {
+      depth += 1;
+      level = level[0].c;
+    }
+    return depth;
+  };
+  assert.equal(depthOf(md.parseMarkdown(`${">".repeat(10)}x`)), 10);
+  assert.equal(depthOf(md.parseMarkdown(`${">".repeat(500)}x`)), 33);
+});
