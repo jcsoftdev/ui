@@ -29,6 +29,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.glass.LocalGlassState
+import com.jcsoftdev.ui.glass.SurfaceMaterial
+import com.jcsoftdev.ui.glass.SurfaceMode
+import com.jcsoftdev.ui.glass.SurfaceRole
+import com.jcsoftdev.ui.glass.rememberResolvedMaterial
+import com.jcsoftdev.ui.glass.surfaceMaterial
 import com.jcsoftdev.ui.primitives.ToastHost
 import com.jcsoftdev.ui.primitives.ToastHostState
 import com.jcsoftdev.ui.primitives.ToastItem
@@ -103,7 +109,8 @@ public object ToasterDefaults {
  * [bottomBarHeight] when the host screen has its own bottom bar, with [margin] to the other edges. It is the styled
  * layer over the headless [ToastHost]: each toast is a polite live region; touching or focusing a toast pauses its
  * countdown, and the system accessibility timeout (when the platform gives one) replaces its duration. [Toaster] draws
- * above sheets and dialogs.
+ * above sheets and dialogs. A toast is chrome: Liquid Glass with `UiTheme(style = UiStyle.Glass)` (its text then uses the theme
+ * ink, not the inverse toast ink), opaque otherwise; [material] overrides that.
  */
 @Composable
 public fun Toaster(
@@ -117,6 +124,7 @@ public fun Toaster(
     textStyle: TextStyle = ToasterDefaults.textStyle,
     margin: PaddingValues = ToasterDefaults.margin,
     dotSize: Dp = ToasterDefaults.dotSize,
+    material: SurfaceMaterial? = null,
 ) {
     val sizes = UiTheme.sizes
     val lifted = remember(margin, bottomBarHeight) { LiftedPadding(margin, bottomBarHeight) }
@@ -125,7 +133,7 @@ public fun Toaster(
         modifier,
         contentPadding = lifted,
         spacing = sizes.space8,
-    ) { item -> ToastRow(item, state, colors, shape, maxWidth, contentPadding, textStyle, dotSize) }
+    ) { item -> ToastRow(item, state, colors, shape, maxWidth, contentPadding, textStyle, dotSize, material) }
 }
 
 private class LiftedPadding(
@@ -151,13 +159,15 @@ private fun ToastRow(
     contentPadding: PaddingValues,
     textStyle: TextStyle,
     dotSize: Dp,
+    material: SurfaceMaterial?,
 ) {
     val sizes = UiTheme.sizes
+    val resolved = rememberResolvedMaterial(material, SurfaceRole.Chrome)
+    val content = if (resolved.mode == SurfaceMode.Solid) colors.content else UiTheme.colors.ink
     Row(
         Modifier
             .widthIn(max = maxWidth)
-            .clip(shape)
-            .background(colors.container)
+            .surfaceMaterial(resolved, shape, colors.container, Color.Unspecified, LocalGlassState.current)
             .defaultMinSize(minHeight = sizes.minTouchTarget)
             .padding(contentPadding),
         horizontalArrangement = Arrangement.spacedBy(sizes.space10),
@@ -165,7 +175,7 @@ private fun ToastRow(
     ) {
         val dot = colors.dot(item.tone)
         if (dot != null) Box(Modifier.size(dotSize).background(dot, CircleShape))
-        Text(item.message, Modifier.weight(1f, fill = false), style = textStyle, color = colors.content)
+        Text(item.message, Modifier.weight(1f, fill = false), style = textStyle, color = content)
         val action = item.action
         if (action != null) {
             Box(
@@ -178,7 +188,7 @@ private fun ToastRow(
                     }.padding(horizontal = sizes.space12),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(action.label, style = textStyle.copy(fontWeight = FontWeight.Bold), color = colors.content)
+                Text(action.label, style = textStyle.copy(fontWeight = FontWeight.Bold), color = content)
             }
         }
     }

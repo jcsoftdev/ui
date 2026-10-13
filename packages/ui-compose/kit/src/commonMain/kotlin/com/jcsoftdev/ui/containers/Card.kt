@@ -1,6 +1,5 @@
 package com.jcsoftdev.ui.containers
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -20,7 +19,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
@@ -30,6 +28,12 @@ import com.jcsoftdev.ui.atoms.Divider
 import com.jcsoftdev.ui.atoms.LocalContentColor
 import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.foundation.pressScale
+import com.jcsoftdev.ui.glass.GlassNesting
+import com.jcsoftdev.ui.glass.LocalGlassState
+import com.jcsoftdev.ui.glass.SurfaceMaterial
+import com.jcsoftdev.ui.glass.SurfaceRole
+import com.jcsoftdev.ui.glass.rememberResolvedMaterial
+import com.jcsoftdev.ui.glass.surfaceMaterial
 import com.jcsoftdev.ui.theme.UiTheme
 
 /** Colors of a [Card]: fill, outline, the divider between slots and the footer text. */
@@ -102,6 +106,9 @@ public object CardDefaults {
  * ```
  *
  * Restyle one card through [colors], [shape] and the slot paddings (start from [CardDefaults]).
+ *
+ * A card is content: always solid, even with `UiStyle.Glass`. Pass [material] to opt one card into glass (for example over a
+ * photo); inside the app content a glass card is the translucent tint, and nested glass falls back to a near-solid fill.
  */
 @Composable
 public fun Card(
@@ -114,12 +121,14 @@ public fun Card(
     headerPadding: PaddingValues = CardDefaults.headerPadding,
     contentPadding: PaddingValues = CardDefaults.contentPadding,
     footerPadding: PaddingValues = CardDefaults.footerPadding,
+    material: SurfaceMaterial? = null,
     header: (@Composable RowScope.() -> Unit)? = null,
     footer: (@Composable RowScope.() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val source = remember { MutableInteractionSource() }
     val spacing = CardDefaults.slotSpacing
+    val resolved = rememberResolvedMaterial(material, SurfaceRole.Content)
     Column(
         modifier =
             modifier
@@ -132,29 +141,29 @@ public fun Card(
                     } else {
                         Modifier
                     },
-                ).clip(shape)
-                .background(colors.container)
-                .border(UiTheme.sizes.borderWidth, colors.border, shape),
+                ).surfaceMaterial(resolved, shape, colors.container, colors.border, LocalGlassState.current),
     ) {
-        if (header != null) {
-            Row(
-                Modifier.fillMaxWidth().defaultMinSize(minHeight = CardDefaults.headerMinHeight).padding(headerPadding),
-                Arrangement.spacedBy(spacing),
-                Alignment.CenterVertically,
-                content = header,
-            )
-            Divider(color = colors.divider)
-        }
-        Column(Modifier.fillMaxWidth().padding(contentPadding), content = content)
-        if (footer != null) {
-            Divider(color = colors.divider)
-            CompositionLocalProvider(LocalContentColor provides colors.footerContent) {
+        GlassNesting(resolved) {
+            if (header != null) {
                 Row(
-                    Modifier.fillMaxWidth().padding(footerPadding),
+                    Modifier.fillMaxWidth().defaultMinSize(minHeight = CardDefaults.headerMinHeight).padding(headerPadding),
                     Arrangement.spacedBy(spacing),
                     Alignment.CenterVertically,
-                    content = footer,
+                    content = header,
                 )
+                Divider(color = colors.divider)
+            }
+            Column(Modifier.fillMaxWidth().padding(contentPadding), content = content)
+            if (footer != null) {
+                Divider(color = colors.divider)
+                CompositionLocalProvider(LocalContentColor provides colors.footerContent) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(footerPadding),
+                        Arrangement.spacedBy(spacing),
+                        Alignment.CenterVertically,
+                        content = footer,
+                    )
+                }
             }
         }
     }

@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.profileinstaller)
     "baselineProfile"(project(":baselineprofile"))
+    testImplementation(kotlin("test"))
 }
 
 kotlin {

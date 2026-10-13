@@ -1,0 +1,86 @@
+# Liquid Glass in the Compose kit (ui-compose 0.2.0)
+
+## Objective
+Port the web kit's Liquid Glass (PR #32, `odd/tasks/liquid-glass.md`, `site/.../docs/glass.md`) to `packages/ui-compose` (`:kit`): a glass material (regular and clear) for the control/navigation layer, solid content surfaces by default, opt-in per surface through a `material` parameter, no glass on glass, accessibility forcing opaque surfaces, and real backdrop blur where the platform allows it. Zero third-party runtime dependencies (no Haze).
+
+## Apple principles honored
+Same list as the web document (HIG Materials; WWDC25 219 and 356): glass is a functional layer for controls and navigation; content stays solid; no glass on glass; regular and clear variants (clear needs a dim layer); specular edge; Reduce Transparency and Increase Contrast give opaque surfaces; concentric shapes (the existing shape tokens already are).
+
+## Mirror of the web decisions
+| Web | Compose |
+| --- | --- |
+| `glass` / `glass-clear` / `surface-solid` utilities | `SurfaceMaterial.Glass` / `GlassClear` / `Solid` |
+| `glass` preset | `UiTheme(style = UiStyle.Glass)` |
+| chrome glass only in the preset, content solid | `SurfaceRole.Chrome` (Sheet, Dialog, Menu, Toast, TopBar, ActionBar) glass only with `UiStyle.Glass`; `Card` is content |
+| `material` prop on surface components | `material: SurfaceMaterial? = null` (null = role default) on Card, Sheet, Dialog, Menu, Toaster, TopBar, ActionBar; `Modifier.material` / `MaterialSurface` for anything else |
+| glass-on-glass: near-solid `--glass-nested-tint` | `LocalGlassNested`; nested glass resolves to `colors.float` + hair border |
+| `--glass-*` tokens | generated `UiGlass.RegularLight/Dark`, `ClearLight/Dark` (`GlassMaterial`) |
+| layering: backdrop blur+saturate, tint, dim, edge, border | same order; sheen, shadow and noise are not ported (see risks) |
+| prefers-reduced-transparency, prefers-contrast: more | `UiTheme(reduceTransparency, highContrast)`; defaults read the OS where an API exists |
+| no blur tween, blur only on large chrome | constant radius from the token, never on list items |
+
+## Rendering design
+1. Tint-only (all platforms): tint + dim + 1px border + top edge highlight, drawn in a `Modifier.Node`.
+2. Real blur: `OverlayHost` records the app content into a shared `GraphicsLayer` (`glassSource`) while at least one glass surface is composed. A glass surface records `drawLayer(source)` (offset to its own position) into its own `GraphicsLayer` with `BlurEffect` and a saturation `ColorFilter`, clipped to its shape. Android needs API 31+; Skiko (desktop, iOS) supports it. Below that or without a source it falls back to tint-only.
+3. Overlays (Sheet, Dialog, Menu, Toast) are in-tree layers of `OverlayHost` (siblings of the app content), so they sample the host source with no setup. In-content chrome (TopBar) takes an explicit `GlassState` and the app marks the scrolling content with `Modifier.glassSource(state)`.
+
+## Constraints
+- CMP 1.8.2, Kotlin 2.1.21, foundation only, explicitApi, BCV, no new runtime dependencies.
+- English artifacts, Conventional Commits, no AI attribution. No push, tag or publish.
+- Performance: blur only on large chrome, never list items by default, no blur radius animation, capture only while a glass consumer exists.
+
+## TDD mode
+Disabled (owner override: implement first, then the tests that protect the change in the same commit). Runner: Gradle (`:kit:jvmTest`, `:kit:allTests`), Roborazzi for goldens.
+
+## Golden policy
+Goldens of record are Linux, recorded by `.github/workflows/ui-compose-record.yml`. New glass shots are recorded locally on macOS only as provisional files and are NOT added to the committed golden set; they are covered by `roborazzi` tests that run in record mode only when `-Proborazzi.test.record=true`. See CG6.
+
+## Delivery strategy
+`ask-on-risk`; direct work-unit commits on `feat/compose-liquid-glass` in worktree `/Users/jcsoftdev/personal/ui-compose-glass`. No push.
+
+## Tasks
+- [x] CG0 ODD document. Route: inline.
+- [x] CG1 Spike: confirm `GraphicsLayer.renderEffect`/`BlurEffect`/`ColorFilter` on Compose 1.8.2 (desktop Skiko render, Android emulator), confirm overlays are in-tree. Route: inline.
+- [x] CG2 Material model: `SurfaceMaterial`, `UiStyle`, theme flags, nested/accessibility resolution, pure resolver + JVM tests. Route: inline.
+- [x] CG3 Rendering: `GlassState`, `glassSource`, `Modifier.material`, `MaterialSurface`, tint + blur paths, `OverlayHost` source. Route: inline.
+- [x] CG4 Platform signals: expect/actual for blur support, reduce transparency, high contrast (Android, iOS, JVM). Route: inline.
+- [x] CG5 Component integration: Sheet, Dialog, Menu, Toaster, Card `material`; new `TopBar`, `ActionBar`. Route: delegated writer if over 4 non-trivial files, else inline.
+- [x] CG6 Tests and goldens: resolver tests, UI tests, provisional shots. Route: inline.
+- [x] CG7 Sample "Glass" screen over busy content, emulator screenshots (real blur vs fallback), frame timing. Route: inline.
+- [x] CG8 Docs: README "Glass", `docs/parity.md`, CHANGELOG 0.2.0 Unreleased, api dumps. Route: inline.
+- [x] CA Phase A corrections (version 0.2.0, opaque base under the backdrop, solid overlays hide the page from glass, dialog observe, contrast listener, mutation-killing tests, README fixes): 956094a, 9b54d09, 99ef62a, 557420c.
+- [x] CB Phase B Liquid variant: `Liquid`/`LiquidClear`, `GlassVariant`, lens shader per platform, rim/shadow/press, sample side by side, tests, docs. Route: inline.
+- [x] CC Verifier follow-ups: default `GlassVariant.Frosted` (web parity), Liquid contrast floor (tint 0.95/0.8, dim unscaled), token-math contrast test, shader unit tests (dispersion, per-corner radii), shadow pixel test, shared Android shader, removed dead `GlassState.width/height`, CHANGELOG signature list.
+- [x] CD Apple-likeness pass (user: "se ve bien pero no tanto como el de Apple"). See evidence below. Route: inline.
+- [x] CE Make every Liquid surface look like the ActionBar pill (user: card ugly, pill good). Route: inline.
+- [x] CF Lens across the whole surface (user: "el liquid deberia ser en toda la superficie"). Route: inline.
+- [x] CG Remove the diamond (user: "parece un diamante con solo 4 lados"). Route: inline.
+
+## Acceptance
+- Defaults: Default style keeps every surface exactly as before; Glass style turns only chrome to glass; Card is solid unless `material` is given.
+- Nested glass is solid-ish (float); reduceTransparency/highContrast force opaque with border.
+- Blur on Android 31+, desktop, iOS (compile verified); tint fallback otherwise.
+- `apiCheck`, `spotlessCheck`, `:kit:allTests -x :kit:iosSimulatorArm64Test`, `:kit:compileKotlinIosSimulatorArm64`, `:sample:assembleRelease` green.
+
+## Progress and verification evidence
+- CG1 spike: `GraphicsLayer.renderEffect = BlurEffect` and `ColorFilter` work on Skiko (pixel test) and Android API 35 (emulator). Gotcha: `layer.record(size = ...)` (DrawScope extension) is required to capture `drawContent()`; the member overload with explicit density draws content on the outer canvas and records nothing. Overlays are in-tree siblings of the content in `OverlayHost`; Menu is a platform popup (no sampling, tint only).
+- CG2-CG4: commit 83a322f. Resolver tests (11) in commonTest.
+- CG5: commit 2714278 (Sheet, Dialog, Menu, Toaster, Card, TopBar, ActionBar). Sheet passes an `observe` lambda so the backdrop follows the drag/enter translation exactly.
+- Fix: tint fallback is a 90% float veil (unblurred tint leaked text in the emulator shot); `UiTheme(backdropBlur)` added.
+- CG6: 8 pixel tests in `GlassRenderTest`; shots gated behind `GLASS_SHOTS=1` (macOS goldens are not of record).
+- CG7: emulator API 35 shots (blur vs tint vs reduce); frame timing: scrolling under glass top bar p50 29ms/p90 53ms with blur vs 16/27ms tint (software-GPU emulator, debug build); sheet open p50 16ms both, p90 29 vs 27ms.
+- CG8: README Glass, parity, CHANGELOG 0.2.0 Unreleased, api dumps.
+- Checks: spotlessCheck, apiCheck, :kit:allTests (-x iosSimulatorArm64Test) 267 tests 0 failures, :kit:compileKotlinIosSimulatorArm64, :sample:assembleRelease (R8): BUILD SUCCESSFUL. `verifyRoborazziJvm` on macOS: 15 failures, identical to origin/main (glyph rasterization), none from glass.
+- Phase B: lens samples inward (Android clips RenderEffect inputs to the surface clip, so outward samples came back transparent and truncated the right/bottom of the card); thickness shading is stacked strokes so no hard inner edge. Resolver variant tests (6), `LiquidRenderTest` (5: edge displacement vs center, frosted ignores the lens switch, liquid differs from frosted, press brightens). Frosted pixels hashed identical between 557420c and the Phase B tree (Glass and GlassClear scenes).
+- Perf (emulator API 35, software GPU, debug, 12 swipes under the glass TopBar): frosted p50 17 / p90 31 / p99 65 ms, janky 6.6%; liquid p50 17 / p90 26 / p99 32 ms, janky 3.3% (one first-use shader compile outlier in gpu p99).
+- CC evidence: LensShaderTest runs LENS_SHADER alone over a coordinate backdrop; mutants killed: dispersion removed, br/tr radius swap, y-axis radius swap, bl radius swap. Shadow: elevation 0 mutant killed by the pixel test (3px outside the surface; Skiko draws the shadow). Clamp removal survives by design: samples are already inward of the surface rectangle, so the clamp is redundant defense. Contrast (worst case over pure black/white, light and dark): Liquid regular ink/ink2 >= 4.5, LiquidClear ink >= 4.5; frosted ink3 is about 3.3 (pre-existing, pinned in the test, not changed).
+- CD sources: Kyant0/AndroidLiquidGlass (refraction height up to the smallest corner radius, amount about 2x, vibrancy + 4dp blur + lens(16dp, 32dp) + white surface alpha 0.5), flutter liquid_glass_renderer (frost 2 / 6.1 / 16.6pt by tint, clear 0.35pt), kube.io and WWDC25 #219 (directional specular, thin glint, recolor not white). Values now: bevel = min positive corner radius clamped 8..32dp and 0.45x the short side; amount 1.6x bevel (inward samples clamped to the surface); dispersion 0.04; blur 4dp regular / 2dp clear; veil: 16 stacked insets over 0.7x bevel (geometric ramp, one layer at the edge to all at the inside); glint 1.5dp sweep at -125 degrees (0.55x opposite, additive `BlendMode.Plus`), 0.75dp dark contour away from the light; press brightening unchanged.
+- CD tradeoff: Liquid's worst-case contrast (ink and ink2 >= 4.5 over pure black/white) forbids lowering the tint at the center; the transparency Apple shows comes instead from the bevel (veil thins, lens bends) and the low blur. A luminance-adaptive tint (item 6) would need a readback of the captured layer, so it is skipped. Materialize (animating the refraction on enter) and SDF merging are skipped; press keeps the 3% flex and brightening. Dark contour is drawn inside the silhouette (the surface is clipped).
+- CD evidence: before `cg/f-liquid-top.png`, after `cg/u4.png` (emulator API 35). Skiko pixel tests: `liquidThinsTheVeilAtTheBevelAndKeepsItInTheMiddle`, edge displacement scene seam moved to 12px inside to match the new bevel.
+- CE diagnosis: the 16 stacked inset strokes (veil) and 6 stacked strokes (thickness) banded along the rim, and the layer saturation filter ran after the refraction. Fix: veil (35% at the edge to full over 0.9x bevel, smoothstep), thickness shading (0.06 white on lit walls, 7% dark on away walls), glint (1.5dp, strength = edge alpha x 0.7, weaker opposite glint 0.55) and saturation (1.5x, applied before the veil) now live in LENS_SHADER as smooth functions of the SDF distance; the base fill is recorded inside the blur layer so the veil never sees a transparent source. Lens values: bevel = tanh soft cap 24dp on the smallest positive corner radius (min 8dp, max half the short side); amount 1.1x bevel; profile (1-t)^2.2; dispersion 0.025. Fallbacks (no shader) keep the uniform veil and the sweep glint; the stacked strokes are gone. Contrast tests unchanged and green (the center keeps the full veil).
+- CE evidence: `cg/w1c.png`/`cg/w2c.png` (light: card crop above the pill crop), `cg/w3c.png` (dark), `cg/w4-sheet.png` (sheet). The card now has the same smooth bevel, clean rim and glint as the pill. The pill's top is slightly whiter than before the thickness shading cut (0.10 to 0.06).
+- CF: depth = half the short side for every shape (no 24dp cap); edge term strength = min(0.9 x depth, 20dp) with profile (1-t)^3 (the exponent is 3 because the normal flips across the medial axis, and 2.2 left a faint diagonal seam in the card's corners); plus `dome` 0.05 (samples move toward the center by 5% of the distance from it, continuous everywhere, so the center is not a flat zone); dispersion 0.03 (it scales the displacement, so it only shows near the rim). The veil and thickness shading use their own `rimDepth` (22dp) so contrast at the center is unchanged and the contrast tests stay green. Coverage (`LENS_COVERAGE` = 1), dome, rim depth and max refraction are internal constants, not public API: the public surface stays `SurfaceMaterial` and `GlassVariant`, and a coverage knob would commit us to the profile.
+- CF evidence: `cg/w5c.png` (light card + dark card/pill), `cg/w5light.png` (Liquid card and pill over the same light backdrop with stripes, like the floating bar), `cg/w5-top.png`, `cg/w5-dark.png`, `cg/w5-sheet.png`. The sample gained a "LightBackdrop" section for the like-for-like comparison. Card and pill now read as the same material.
+- CG root cause (confirmed): the lens direction came from the SDF gradient, which flips across the medial axis (the rectangle diagonals); magnitude was only small there, so (1-t)^3 hid but did not remove the crease and the surface read as four faces. Fix: refraction from a superellipse height field r = (|u|^n + |v|^n)^(1/n) over the half-size normalized axes (u, v), direction = the analytic gradient of r (continuous everywhere except the exact center, where the displacement is zero), magnitude strength * clamp(r, 0, 1)^3 capped at 20dp, plus the 5% dome. n = 2 + 6 * (1 - sharpest corner radius / half the short side): 2 for a pill or circle, 8 for a sharp rectangle, about 5 for a card with a 28dp radius. The SDF is still used for the rim (veil, thickness shading, glint), where only the near-edge distance matters. The `depth` uniform became `exponent`.
+- CG tests: `theRefractionHasNoCreaseAlongTheDiagonals` walks the top-left diagonal and the center row at n = 2, 4 and 8 and asserts neighbouring pixels move by almost the same vector (jump below 3px); the SDF-direction mutant is killed (jump 16.7px at the diagonal). `eachCornerRadiusShapesItsOwnCorner` was rewritten to measure the SDF-driven veil per corner.
+- CG evidence: `cg/x1c.png` and the zoom `cg/x1zoom.png` (card over a straight grid and stripes: no faceting, no diagonals), `cg/x2c.png` (light top card, dark card and pill). The sample's LightBackdrop section now draws a thin straight grid under the card and pill.

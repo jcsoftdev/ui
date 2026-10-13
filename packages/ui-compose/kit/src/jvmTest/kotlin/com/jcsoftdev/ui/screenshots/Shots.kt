@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.RoborazziOptions
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.UiStrings
+import com.jcsoftdev.ui.theme.UiStyle
 import com.jcsoftdev.ui.theme.UiTheme
 import io.github.takahirom.roborazzi.captureRoboImage
 
@@ -57,6 +58,7 @@ internal fun shoot(
     name: String,
     width: Dp = 360.dp,
     height: Dp? = null,
+    style: UiStyle = UiStyle.Default,
     content: @Composable () -> Unit,
 ) {
     for (look in Look.entries) {
@@ -65,7 +67,7 @@ internal fun shoot(
                 CompositionLocalProvider(LocalDensity provides Density(SHOT_DENSITY, look.fontScale)) {
                     if (height == null) {
                         // The overlay host fills its parent, so a wrapping frame sits inside the theme.
-                        UiTheme(dark = look.dark, motion = Motion(0f), strings = UiStrings.En) {
+                        UiTheme(dark = look.dark, motion = Motion(0f), strings = UiStrings.En, style = style) {
                             Box(Modifier.wrapContentSize(Alignment.TopStart)) {
                                 Box(Modifier.width(width).testTag("shot").background(UiTheme.colors.bg)) { content() }
                             }
@@ -74,7 +76,7 @@ internal fun shoot(
                         // Overlays are laid out against the theme's host, so the fixed frame wraps the theme.
                         Box(Modifier.wrapContentSize(Alignment.TopStart)) {
                             Box(Modifier.size(width, height).testTag("shot")) {
-                                UiTheme(dark = look.dark, motion = Motion(0f), strings = UiStrings.En) {
+                                UiTheme(dark = look.dark, motion = Motion(0f), strings = UiStrings.En, style = style) {
                                     Box(Modifier.fillMaxSize().background(UiTheme.colors.bg)) { content() }
                                 }
                             }

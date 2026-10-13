@@ -88,11 +88,24 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `SettingsLayout`, `SettingsRow` | web-only | none | |
 | `Cols` | n/a | none | CSS grid helper. |
 
-## Overlays
+## Liquid Glass
 
 | Web | Status | Compose | Notes |
 | --- | --- | --- | --- |
-| `Dialog` | both | `overlays.Dialog` | |
+| `glass`, `glass-clear`, `surface-solid` utilities | both | `glass.SurfaceMaterial` (`Glass`, `GlassClear`, `Solid`) | `material` parameter on Card, Sheet, Dialog, Menu, Toaster, TopBar, ActionBar; `Modifier.material`, `MaterialSurface` for the rest. |
+| `glass` preset | both | `theme.UiStyle.Glass` (`UiTheme(style = ...)`) | Chrome glass, content solid. |
+| `--glass-regular-*`, `--glass-clear-*` | both | `theme.UiGlass`, `GlassMaterial` | Generated from the same tokens. Sheen, shadow and noise layers are not ported. |
+| `backdrop-filter` | both | `glass.GlassState`, `glassSource`, `rememberGlassState` | `GraphicsLayer` + `BlurEffect`; Android 31+, desktop, iOS. Tint fallback elsewhere. |
+| glass-on-glass nested tint | both | `glass.MaterialSurface` nesting marker | Near-solid `float` fill. |
+| reduced transparency, more contrast | both | `UiTheme(reduceTransparency, highContrast)` | OS defaults on iOS and Android high-contrast. |
+| refraction (SVG displacement) | both | `glass.SurfaceMaterial.Liquid`, `LiquidClear`, `GlassVariant` | Runtime shader lens (Android 13+, desktop, iOS); blur plus rim on API 31-32, tint plus rim below. Frosted stays available. |
+
+## Overlays
+
+
+| Web | Status | Compose | Notes |
+| --- | --- | --- | --- |
+| `Dialog` | both | `overlays.Dialog` | Glass with `UiStyle.Glass`. |
 | `Drawer` | both | `overlays.Sheet` | The web drawer is a side panel; Compose is a bottom sheet with scrollable body and pinned footer. |
 | `DropdownMenu` | both | `overlays.Menu` | Roles for items, checkbox and radio items; opens an anchored popup (no screenshot golden). |
 | `Toaster` / `toast` | both | `overlays.Toaster`, `primitives.ToastHostState` | Same `success`/`error`/`info` shape and queue of two. |
@@ -107,6 +120,8 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | --- | --- | --- | --- |
 | `Tabs` | both | `navigation.Tabs`, `TabItem` | Selected tab role, optional count. |
 | `Segmented` | both | `navigation.Segmented`, `SegmentedOption` | |
+| `Topbar` | both | `navigation.TopBar`, `BarColors`, `BarDefaults` | Chrome: glass with `UiStyle.Glass`. |
+| `ActionBar` | both | `navigation.ActionBar` | Floating capsule; chrome. |
 | `Stepper` | web-only | none | |
 | `FloatingToc` | n/a | none | |
 
