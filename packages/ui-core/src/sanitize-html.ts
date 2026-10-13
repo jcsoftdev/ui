@@ -76,6 +76,30 @@ const NAMED_ENTITIES: Record<string, string> = {
   sol: "/",
 };
 
+let decoder: HTMLTextAreaElement | null | undefined;
+const decodedNames = new Map<string, string>();
+
+/**
+ * Full HTML5 named-entity decoding. With a DOM, the engine's own parser does it through a detached
+ * textarea (it runs no script and loads nothing, and the input is only `&name;` characters); without
+ * one, only the small table above applies.
+ */
+function decodeNamed(match: string, body: string): string {
+  const known = NAMED_ENTITIES[body.toLowerCase()];
+  if (known !== undefined) return known;
+  if (decoder === undefined)
+    decoder = typeof document === "undefined" ? null : document.createElement("textarea");
+  if (!decoder) return match;
+  let out = decodedNames.get(match);
+  if (out === undefined) {
+    decoder.innerHTML = match;
+    out = decoder.value;
+    if (decodedNames.size > 512) decodedNames.clear();
+    decodedNames.set(match, out);
+  }
+  return out;
+}
+
 function decodeEntities(text: string): string {
   return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);?/gi, (match, body: string) => {
     if (body[0] === "#") {
@@ -84,7 +108,7 @@ function decodeEntities(text: string): string {
       if (!Number.isFinite(code) || code <= 0 || code > 0x10ffff) return "";
       return String.fromCodePoint(code);
     }
-    return NAMED_ENTITIES[body.toLowerCase()] ?? match;
+    return decodeNamed(match, body);
   });
 }
 
@@ -186,6 +210,9 @@ function parseTag(html: string, start: number): ParsedTag | null {
   };
 }
 
+/** Deepest run of open elements kept; tags beyond it are unwrapped (their text stays). */
+const MAX_OPEN_DEPTH = 128;
+
 /** Returns safe, balanced HTML containing only the editor's vocabulary. */
 export function sanitizeHtml(input: string): string {
   const html = String(input ?? "");
@@ -193,10 +220,21 @@ export function sanitizeHtml(input: string): string {
   const stack: string[] = [];
   let i = 0;
 
+  // Open count per tag: an unmatched closer then costs O(1) instead of a scan of the whole stack.
+  const open: Record<string, number> = Object.create(null);
+  const pop = () => {
+    const name = stack.pop() as string;
+    open[name] = (open[name] as number) - 1;
+    out.push(`</${name}>`);
+  };
+  const push = (name: string) => {
+    stack.push(name);
+    open[name] = (open[name] ?? 0) + 1;
+  };
   const closeTo = (name: string) => {
+    if (!open[name]) return;
     const at = stack.lastIndexOf(name);
-    if (at === -1) return;
-    while (stack.length > at) out.push(`</${stack.pop()}>`);
+    while (stack.length > at) pop();
   };
 
   while (i < html.length) {
@@ -227,11 +265,13 @@ export function sanitizeHtml(input: string): string {
     i = tag.end;
 
     if (!tag.closing && DROP_WITH_CONTENT.has(tag.name)) {
-      const closer = new RegExp(`</${tag.name}[\\s/>]`, "i").exec(html.slice(i));
-      if (!closer) {
+      const closer = new RegExp(`</${tag.name}[\\s/>]`, "gi");
+      closer.lastIndex = i;
+      const found = closer.exec(html);
+      if (!found) {
         i = html.length;
       } else {
-        const close = html.indexOf(">", i + closer.index);
+        const close = html.indexOf(">", found.index);
         i = close === -1 ? html.length : close + 1;
       }
       continue;
@@ -250,6 +290,7 @@ export function sanitizeHtml(input: string): string {
     }
     if (name === "a") {
       closeTo("a");
+      if (stack.length >= MAX_OPEN_DEPTH) continue;
       const href = tag.attributes.href;
       const normalized = href === undefined ? "" : normalizeHref(href);
       if (isSafeNormalized(normalized)) {
@@ -259,7 +300,7 @@ export function sanitizeHtml(input: string): string {
       } else {
         out.push("<a>");
       }
-      stack.push("a");
+      push("a");
       continue;
     }
     // Block elements cannot nest inside inline ones or inside paragraphs; close what they would break.
@@ -267,11 +308,12 @@ export function sanitizeHtml(input: string): string {
       for (const open of ["p", "h2", "h3"]) closeTo(open);
     }
     if (name === "li") closeTo("li");
+    if (stack.length >= MAX_OPEN_DEPTH) continue;
     out.push(`<${name}>`);
-    stack.push(name);
+    push(name);
   }
 
-  while (stack.length) out.push(`</${stack.pop()}>`);
+  while (stack.length) pop();
   return out.join("").replace(/<a><\/a>/g, "");
 }
 

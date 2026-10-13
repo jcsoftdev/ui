@@ -186,3 +186,26 @@ describe("sanitizeHtml: parity with the React kit", () => {
     }
   });
 });
+
+describe("sanitizer: hostile nesting stays cheap", () => {
+  const payloads: Record<string, string> = {
+    openThenBlocks: "<b>".repeat(40000) + "<p>".repeat(40000),
+    openThenStrayCloser: "<b>".repeat(70000) + "</p>".repeat(70000),
+    scripts: "<script></script>".repeat(20000),
+  };
+  for (const [name, input] of Object.entries(payloads)) {
+    it(`finishes ${name} under 200 ms and stays idempotent`, () => {
+      const start = performance.now();
+      const out = sanitizeHtml(input);
+      expect(performance.now() - start).toBeLessThan(200);
+      expect(sanitizeHtml(out)).toBe(out);
+    });
+  }
+
+  it("unwraps elements nested deeper than 128 and keeps the text", () => {
+    const out = sanitizeHtml(`${"<b>".repeat(300)}text${"</b>".repeat(300)}`);
+    expect(out.match(/<strong>/g)?.length).toBe(128);
+    expect(out).toContain("text");
+    expect(sanitizeHtml(out)).toBe(out);
+  });
+});
