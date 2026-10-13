@@ -341,6 +341,17 @@ export function toKotlinColor(css) {
   throw new Error(`Unsupported color for Kotlin: ${css}`);
 }
 
+const kotlinColorOf = (token, theme, base) => {
+  const value = valueFor(token, theme, base);
+  try {
+    return toKotlinColor(value);
+  } catch {
+    throw new Error(
+      `Token "${token.name}" (${theme}) has a color Kotlin cannot represent: ${value}. Use hex or rgb(a) values, or pass --no-kotlin.`,
+    );
+  }
+};
+
 const px = (value) => `${Number.parseFloat(value)}.dp`;
 
 export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme") {
@@ -368,7 +379,7 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme") {
   for (const theme of themes) {
     out.push(`    val ${pascal(theme)} = ThemeColors(`);
     for (const t of colors) {
-      out.push(`        ${camel(t.name)} = ${toKotlinColor(valueFor(t, theme, base))},`);
+      out.push(`        ${camel(t.name)} = ${kotlinColorOf(t, theme, base)},`);
     }
     out.push("    )");
   }
@@ -387,7 +398,7 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme") {
         const byName = new Map(tokens.color.tokens.map((t) => [t.name, t]));
         const args = Object.entries(PALETTE_ROLES).map(([role]) => {
           const tok = byName.get(roles[role]);
-          return tok ? toKotlinColor(valueFor(tok, theme, base)) : "Color.Unspecified";
+          return tok ? kotlinColorOf(tok, theme, base) : "Color.Unspecified";
         });
         out.push(`        "${id}" to AccentPalette(${args.join(", ")}),`);
       }
@@ -427,11 +438,12 @@ export function buildThemeKt(tokens, pkg = "com.jcsoftdev.ui.theme") {
   return out.join("\n");
 }
 
-export function buildTheme(tokens, { kotlinPackage } = {}) {
-  return {
+export function buildTheme(tokens, { kotlinPackage, kotlin = true } = {}) {
+  const css = {
     "tokens.css": buildTokensCss(tokens),
     "theme.css": buildThemeCss(tokens),
     "fonts.css": buildFontsCss(tokens),
-    "Theme.kt": buildThemeKt(tokens, kotlinPackage),
   };
+  if (!kotlin) return css;
+  return { ...css, "Theme.kt": buildThemeKt(tokens, kotlinPackage) };
 }
