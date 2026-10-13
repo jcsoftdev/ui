@@ -2,6 +2,27 @@
 
 ## 0.3.0 (unreleased)
 
+### App-level building blocks
+
+- **Tone palettes.** `tonePalettes` in a token file (optional) emits `--tone-<name>`, `--tone-<name>-soft` and `--tone-<name>-ink` for light and dark, plus `--color-tone-*` in `theme.css`. Names are kebab-case; `fill` and `soft` are required, `ink` falls back to `fill`. `buildTheme`, `buildTokensCss`, `buildThemeCss` and `ui-theme build` all honour it; files without the section build byte-identically.
+- **Open `tone`.** `Chip`, `StatusDot`, `Kpi` and `Avatar` accept any tone name besides the built-in ones (`ChipTone`, `StatusDotTone`, `KpiTone`, `AvatarTone` are the built-in union plus `string & {}`; `ChipBuiltinTone` and friends keep the closed unions). Unknown names resolve through `--tone-<name>` variables set inline, so no class needs generating.
+- **Kpi**: `tone`, `dot`, `icon`, `trend`. **KpiGroup**: `layout="auto-fit"` with `minItemWidth` (default 150) for separate cards in as many columns as fit.
+- **Avatar**: `tone`, and `status` + `statusLabel` for a small status dot at the bottom-right.
+- **EmptyState / ErrorState**: `variant="outlined"` (dashed border / danger border).
+- **PageHeader**: `compact` (centred, tighter, body-size lede).
+- **Topbar**: `onSearch`, `searchLabel`, `searchPlaceholder`, `breadcrumbs` and `breadcrumbsLabel` are optional; missing parts render nothing (and Cmd/Ctrl+K is only bound with `onSearch`).
+- **CardHeader**: `icon`, `title` and `action` slots; children still render as before.
+- **Segmented**: `options` (`{ value, label, disabled? }[]`), `block` (full width, control-height items) and `allowDeselect` (default `true`; `false` keeps the pressed item selected).
+- **Button**: while `loading` without a `loadingLabel`, the children stay and the UI string `loading` is announced.
+- **CopyField**: label, monospace read-only value and a copy button with a 1.5 s copied state and a live region; strings `copy` and `copied` join the UI strings (`en`, `es`).
+
+### Chart gaps
+
+- **Cartesian charts** (`BarChart`, `AreaChart`, `LineChart`, `ComboChart`): `tooltipRows({ index, category, rows })` returns `{ title?, rows?, footer? }` to replace parts of the tooltip (the default is unchanged when absent; the hidden data table is untouched); `categoryTickEvery` (a step or `(index, label) => boolean`) overrides the automatic thinning of the category labels; `markers` also takes an array of indices of `categories` to dot only those points.
+- **`ValueAxisOptions.min` / `max`** accept a function of the data bound, e.g. `max: (dataMax) => Math.ceil(dataMax / 400) * 400`. `resolveAxisBound` and `AxisBound` are exported from `core/types`; the horizontal bar, lollipop, dumbbell, range area and waterfall axes honour it too.
+- **`HeatmapChart`**: `cellDetail(row, column, value)` returns extra `TooltipRow`s under the cell value; `ChartTooltip` gained a `footer` slot.
+- **`DonutChart`**: `sliceLabels` (`true`, `"percent"` or `"value"`) draws the share or the formatted value inside the ring and skips slices too small to hold it; it combines with `outsideLabels`.
+
 ### Fixes
 
 - **Checkbox looks like a checkbox.** The box is square (`rounded-xs`, the 4px small-radius token, 3px in the compact theme) instead of a circle, and the checked and indeterminate fill is the accent (as in Switch and the selected RadioGroup row) instead of the success green. Round plus green read as a radio button in multi-select lists. Sizes, 44px touch hit area, focus ring, disabled state and the `box`/`indicator`/`icon` parts are unchanged; The indeterminate state draws a dash instead of a check mark, and a disabled checkbox is dimmed (`opacity-50`, `cursor-not-allowed`) like the other form controls. RadioGroup stays round.

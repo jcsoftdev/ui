@@ -88,3 +88,8 @@ export const GlassPreset: Story = {
     ),
   ],
 };
+
+/** Separate cards in as many columns as fit 150 px; resize the frame to see them reflow. */
+export const AutoFit: Story = {
+  args: { layout: "auto-fit", minItemWidth: 150 },
+};

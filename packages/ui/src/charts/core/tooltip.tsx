@@ -32,6 +32,8 @@ export interface ChartTooltipProps {
   rows: readonly TooltipRow[];
   /** Wrapped sentence under the title, for notes that are not series values. */
   body?: string;
+  /** Content under the rows. */
+  footer?: ReactNode;
   /** Forces the side of the anchor the card opens on (when it fits); by default it follows the anchor. */
   side?: "left" | "right";
   className?: string;
@@ -53,6 +55,7 @@ export function ChartTooltip({
   title,
   rows,
   body,
+  footer,
   side,
   className,
 }: ChartTooltipProps) {
@@ -110,6 +113,7 @@ export function ChartTooltip({
           </div>
         ))}
       </div>
+      {footer ? <div className="mt-1.5 text-ink-2">{footer}</div> : null}
     </div>
   );
 }
