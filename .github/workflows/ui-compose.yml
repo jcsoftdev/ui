@@ -8,6 +8,8 @@ on:
       - "packages/ui-tokens/scripts/build-theme.mjs"
       - "packages/ui-tokens/bin/ui-theme.mjs"
       - "packages/ui/icons/**"
+      - "packages/ui/src/charts/core/**"
+      - "scripts/chart-fixtures.test.mjs"
       - ".github/workflows/ui-compose.yml"
   pull_request:
     paths:
@@ -16,6 +18,8 @@ on:
       - "packages/ui-tokens/scripts/build-theme.mjs"
       - "packages/ui-tokens/bin/ui-theme.mjs"
       - "packages/ui/icons/**"
+      - "packages/ui/src/charts/core/**"
+      - "scripts/chart-fixtures.test.mjs"
       - ".github/workflows/ui-compose.yml"
 
 concurrency:
@@ -45,6 +49,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       # verifyRoborazziJvm re-runs the screenshot tests against the committed goldens in kit/screenshots.
       - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+      # The chart artifacts (see odd/tasks/compose-charts.md): the tests include ChartModuleGraphTest, the module-graph guard.
+      - run: ./gradlew :chart-core:allTests :chart:allTests :chart-cartesian:allTests :chart-race:allTests :chart-distribution:allTests :chart-plots:allTests :chart-polar:allTests :chart-hierarchy:allTests :chart-units:allTests :chart-gantt:allTests :chart-stock:allTests :chart-crossfilter:allTests :chart-geo:allTests :chart-geo-world:allTests :chart-geo-peru:allTests :chart-export:allTests
+      # R8 dex delta per artifact (size-probe), AAR classes.jar and the budgets in size-budgets.json.
+      - run: ./gradlew :size-probe:assembleRelease :chart-core:assembleRelease :chart:assembleRelease :chart-cartesian:assembleRelease :chart-race:assembleRelease :chart-distribution:assembleRelease :chart-plots:assembleRelease :chart-polar:assembleRelease :chart-hierarchy:assembleRelease :chart-units:assembleRelease :chart-gantt:assembleRelease :chart-stock:assembleRelease :chart-crossfilter:assembleRelease :chart-geo:assembleRelease :chart-geo-world:assembleRelease :chart-geo-peru:assembleRelease :chart-export:assembleRelease
+      - run: node scripts/check-chart-size.mjs --dex --aar
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -66,3 +75,23 @@ jobs:
           node-version: 22
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew :kit:compileKotlinIosSimulatorArm64
+      # Every chart module compiles for iOS, and the klib sizes stay inside size-budgets.json.
+      - run: ./gradlew compileKotlinIosArm64 compileKotlinIosSimulatorArm64
+      - run: node scripts/check-chart-size.mjs --klib
+
+  # The Compose chart goldens come from the React chart math; regenerate them and fail on drift.
+  chart-fixtures:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:chart-fixtures
+      - run: node --test scripts/chart-fixtures.test.mjs
