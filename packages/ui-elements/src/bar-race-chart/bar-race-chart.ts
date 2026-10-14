@@ -44,11 +44,11 @@ type Bar = SVGGElement;
  * `frames`, with play/pause, a moment slider and the frame label. Only the top `topn` bars race.
  * Under reduced motion (or `animate="off"`) it starts paused and steps from frame to frame.
  *
- * Properties: `entities` (`{ id, name, color? }[]`), `frames` (`{ label, values }[]`, `values[i]`
+ * Properties: `entities` (`{ id, name, color? }[]`, ids must be unique), `frames` (`{ label, values }[]`, `values[i]`
  * belongs to `entities[i]`), `frame` (integer; setting it pauses), `position` (fractional),
  * `playing` (read only); methods `play()`, `pause()`, `toggle()`, `step(delta)`.
  * Attributes: `topn` (6), `frame-duration` (ms between two frames, 1400), `autoplay="off"`,
- * `loop="off"`, `play-label`, `pause-label`, `moment-label`, plus the chart attributes.
+ * `loop="off"`, `play-label`, `pause-label`, `moment-label`, `category-label` (header of the screen-reader table), plus the chart attributes.
  * Events: `race-frame` (`{ index, label }` when the shown frame changes), `race-playing`
  * (`{ playing }`). The host carries `data-frame` and `data-playing`, so a test or a screenshot can
  * wait for a settled state: call `pause()`, or wait for `data-frame`.
@@ -67,6 +67,7 @@ export class UiBarRaceChart extends ChartElement {
     "play-label",
     "pause-label",
     "moment-label",
+    "category-label",
   ];
 
   #entities: readonly BarRaceEntity[] = [];
@@ -86,30 +87,22 @@ export class UiBarRaceChart extends ChartElement {
   #still = false;
 
   readonly #controls = document.createElement("div");
-  readonly #button = document.createElement("button");
-  readonly #icon = svg("path");
-  readonly #slider = document.createElement("input");
-  readonly #text = document.createElement("span");
+  readonly #button: HTMLButtonElement;
+  readonly #icon: SVGPathElement;
+  readonly #slider: HTMLInputElement;
+  readonly #text: HTMLElement;
 
   constructor() {
     super();
     this.#controls.dataset.uiPart = "controls";
-    this.#button.type = "button";
-    this.#button.dataset.uiPart = "play";
-    this.#button.append(
-      svg(
-        "svg",
-        { "aria-hidden": "true", width: 14, height: 14, viewBox: "0 0 24 24" },
-        this.#icon,
-      ),
-    );
-    this.#slider.type = "range";
-    this.#slider.min = "0";
-    this.#slider.step = "0.01";
-    this.#slider.dataset.uiPart = "moment";
-    this.#text.dataset.uiPart = "caption";
-    this.#text.setAttribute("aria-hidden", "true");
-    this.#controls.append(this.#button, this.#slider, this.#text);
+    this.#controls.innerHTML =
+      '<button type="button" data-ui-part="play"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<input type="range" min="0" step="0.01" data-ui-part="moment">' +
+      '<span data-ui-part="caption" aria-hidden="true"></span>';
+    this.#button = this.#controls.querySelector("button") as HTMLButtonElement;
+    this.#icon = this.#controls.querySelector("path") as SVGPathElement;
+    this.#slider = this.#controls.querySelector("input") as HTMLInputElement;
+    this.#text = this.#controls.querySelector("span") as HTMLElement;
   }
 
   get entities(): readonly BarRaceEntity[] {
@@ -117,7 +110,17 @@ export class UiBarRaceChart extends ChartElement {
   }
   set entities(value: readonly BarRaceEntity[]) {
     this.#entities = value;
-    this.#widest = Math.max(0, ...value.map((entity) => entity.name.length * NAME_SIZE * 0.58));
+    let widest = 0;
+    const ids = new Set<string>();
+    for (const entity of value) {
+      widest = Math.max(widest, entity.name.length * NAME_SIZE * 0.58);
+      ids.add(entity.id);
+    }
+    if (ids.size !== value.length)
+      console.warn(
+        "ui-bar-race-chart: entity ids must be unique; bars with a repeated id are not drawn.",
+      );
+    this.#widest = widest;
     this.#changed();
   }
   get frames(): readonly RaceFrame[] {
@@ -128,6 +131,8 @@ export class UiBarRaceChart extends ChartElement {
     this.#position = Math.min(this.#position, this.#last);
     this.#changed();
   }
+  /** The frames cut or padded to one value per entity, so a ragged frame cannot reach the maths. */
+  #view: readonly RaceFrame[] = [];
 
   /** Whether the race is running (it still counts as playing while paused offscreen or in a hidden tab). */
   get playing(): boolean {
@@ -226,8 +231,10 @@ export class UiBarRaceChart extends ChartElement {
     }
     if (!this.#started) {
       this.#started = true;
-      this.#playing = this.getAttribute("autoplay") !== "off" && !this.#calm;
+      this.#playing = this.getAttribute("autoplay") !== "off";
     }
+    // Reduced motion (also on a reconnect) never plays on its own.
+    if (this.#calm) this.#playing = false;
     this.#syncControls();
     this.#sync();
   }
@@ -251,6 +258,10 @@ export class UiBarRaceChart extends ChartElement {
   // ---- playback -------------------------------------------------------------------------------
 
   #changed(): void {
+    this.#view = this.#frames.map((frame) => ({
+      label: frame.label,
+      values: this.#entities.map((_, i) => frame.values[i] ?? 0),
+    }));
     this.#syncIndex();
     this.#syncControls();
     this.requestDraw();
@@ -334,10 +345,7 @@ export class UiBarRaceChart extends ChartElement {
     );
     this.#icon.setAttribute("d", this.#playing ? PAUSE : PLAY);
     this.#icon.setAttribute("fill", this.#playing ? "none" : "currentColor");
-    this.#icon.setAttribute("stroke", "currentColor");
     this.#icon.setAttribute("stroke-width", this.#playing ? "3.4" : "1.5");
-    this.#icon.setAttribute("stroke-linecap", "round");
-    this.#icon.setAttribute("stroke-linejoin", "round");
     this.#slider.setAttribute("aria-label", this.getAttribute("moment-label") ?? "Moment");
     this.#slider.max = `${this.#last}`;
     this.#slider.disabled = this.#last === 0;
@@ -353,19 +361,22 @@ export class UiBarRaceChart extends ChartElement {
   }
 
   #slideKey(event: KeyboardEvent): void {
-    const rtl = getComputedStyle(this).direction === "rtl";
-    const by: Record<string, number> = {
-      ArrowRight: rtl ? -1 : 1,
-      ArrowUp: 1,
-      ArrowLeft: rtl ? 1 : -1,
-      ArrowDown: -1,
-      PageUp: 1,
-      PageDown: -1,
-    };
     if (event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.key === "Home") this.frame = 0;
-    else if (event.key === "End") this.frame = this.#last;
-    else if (event.key in by) this.step(by[event.key] as number);
+    const rtl = getComputedStyle(this).direction === "rtl" ? -1 : 1;
+    const { key } = event;
+    const by =
+      key === "ArrowRight"
+        ? rtl
+        : key === "ArrowLeft"
+          ? -rtl
+          : key === "ArrowUp" || key === "PageUp"
+            ? 1
+            : key === "ArrowDown" || key === "PageDown"
+              ? -1
+              : 0;
+    if (key === "Home") this.frame = 0;
+    else if (key === "End") this.frame = this.#last;
+    else if (by) this.step(by);
     else return;
     event.preventDefault();
   }
@@ -398,7 +409,7 @@ export class UiBarRaceChart extends ChartElement {
     const entities = this.#entities;
     const limit = this.#limit;
     const shown = motion ? this.#position : Math.round(this.#position);
-    const items = raceItems(this.#frames, shown);
+    const items = raceItems(this.#view, shown);
     const max = visibleMax(items, limit) || 1;
     const left = Math.min(width * 0.34, Math.max(56, this.#widest + 12));
     const innerWidth = Math.max(20, width - left - RIGHT);
@@ -477,15 +488,23 @@ export class UiBarRaceChart extends ChartElement {
     );
     const racing = drawn.slice(0, limit);
     elements.forEach((el, i) => {
-      el.toggleAttribute("aria-hidden", i >= limit);
+      const hidden = i >= limit;
+      el.toggleAttribute("aria-hidden", hidden);
+      // A bar that dropped out of the top is no longer a mark: shed what the base gave it.
+      if (hidden) for (const name of ["role", "tabindex", "aria-label"]) el.removeAttribute(name);
     });
 
+    // TODO(#108): key the marks by entity id once the base takes per-mark identity keys, so a pin and
+    // the keyboard focus follow the bar instead of its rank slot when ranks change.
     const marks: ChartMark[] = racing.map((item, i) => ({
       el: elements[i] as Bar,
       label: `${(entities[item.index] as BarRaceEntity).name}: ${format(item.value)}, #${i + 1}`,
     }));
     const leader = racing[0] && (entities[racing[0].index] as BarRaceEntity).name;
-    const frames = this.#frames;
+    const view = this.#view;
+    const shownFrame = this.#index;
+    const title = this.getAttribute("label") ?? "";
+    const description = this.getAttribute("description");
     return {
       summary: leader ? `${caption}. #1 ${leader}` : caption,
       marks,
@@ -513,7 +532,8 @@ export class UiBarRaceChart extends ChartElement {
             {
               id: entity.id,
               name: caption,
-              value: format(item.value),
+              // The value of the frame the row is named after, not the one in between.
+              value: format(view[shownFrame]?.values[item.index] ?? 0),
               color: entity.color ?? color(item.index),
               note: `#${index + 1}`,
             },
@@ -523,15 +543,15 @@ export class UiBarRaceChart extends ChartElement {
         };
       },
       snapshot: () => ({
-        title: this.getAttribute("label") ?? "",
-        categoryHeader: "",
+        title: description ? `${title}. ${description}` : title,
+        categoryHeader: this.getAttribute("category-label") ?? "Category",
         categories: entities.map((entity) => entity.name),
-        series: frames.map((frame, i) => ({
+        series: view.map((frame, i) => ({
           id: `${i}-${frame.label}`,
           name: frame.label,
           color: color(0),
-          values: entities.map((_, e) => frame.values[e] ?? 0),
-          text: entities.map((_, e) => format(frame.values[e] ?? 0)),
+          values: frame.values,
+          text: frame.values.map((v) => format(v)),
         })),
         legend: [],
       }),

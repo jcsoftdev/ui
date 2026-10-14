@@ -46,9 +46,6 @@
   font-variant-numeric: tabular-nums;
   text-align: end;
 }
-[data-ui="bar-race-chart"] [data-entity] > rect {
-  transition: none;
-}
 [data-ui="bar-race-chart"] [data-entity][data-selected] > rect,
 [data-ui="bar-race-chart"] [data-entity][data-active] > rect {
   stroke: var(--ink);

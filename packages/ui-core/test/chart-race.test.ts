@@ -39,4 +39,23 @@ describe("bar race maths", () => {
       }
     expect(race.raceItems([], 0.5)).toEqual([]);
   });
+
+  it("treats a value that is not finite as 0 (React would turn the whole race into NaN)", () => {
+    const bad = [
+      { label: "a", values: [Number.NaN, 4, Number.POSITIVE_INFINITY, 2] },
+      { label: "b", values: [3, Number.NEGATIVE_INFINITY, 1, Number.NaN] },
+    ];
+    const zeroed = bad.map((f) => ({
+      ...f,
+      values: f.values.map((v) => (Number.isFinite(v) ? v : 0)),
+    }));
+    for (const position of [0, 0.4, 1]) {
+      const items = race.raceItems(bad, position);
+      expect(items).toEqual(race.raceItems(zeroed, position));
+      expect(items.every((i) => Number.isFinite(i.value) && Number.isFinite(i.rank))).toBe(true);
+      expect(race.visibleMax(items, 3)).toBe(race.visibleMax(race.raceItems(zeroed, position), 3));
+    }
+    expect(race.ranksOf([Number.NaN, 2, 1])).toEqual(race.ranksOf([0, 2, 1]));
+    expect(race.visibleMax([{ index: 0, value: Number.NaN, rank: 0 }], 1)).toBe(0);
+  });
 });

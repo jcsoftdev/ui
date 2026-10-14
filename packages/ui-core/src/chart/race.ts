@@ -15,12 +15,15 @@ export interface RaceItem {
   rank: number;
 }
 
+/** A value that is not a finite number races as 0 instead of poisoning ranks and bar lengths. */
+const finite = (value: number): number => (Number.isFinite(value) ? value : 0);
+
 /** Rank of every value, 0 for the largest; ties keep the entity order. */
 export function ranksOf(values: readonly number[]): number[] {
   const order = values
     .map((_, index) => index)
     .sort((a, b) => {
-      const diff = (values[b] as number) - (values[a] as number);
+      const diff = finite(values[b] as number) - finite(values[a] as number);
       return diff !== 0 ? diff : a - b;
     });
   const ranks = new Array<number>(values.length).fill(0);
@@ -48,10 +51,11 @@ export function raceItems(frames: readonly RaceFrame[], position: number): RaceI
   const ranksA = ranksOf(a.values);
   const ranksB = ranksOf(b.values);
   return a.values.map((value, index) => {
-    const next = b.values[index] ?? value;
+    const from = finite(value);
+    const next = finite(b.values[index] ?? value);
     return {
       index,
-      value: value + (next - value) * t,
+      value: from + (next - from) * t,
       rank:
         (ranksA[index] as number) +
         ((ranksB[index] as number) - (ranksA[index] as number)) * smooth(t),
@@ -62,6 +66,6 @@ export function raceItems(frames: readonly RaceFrame[], position: number): RaceI
 /** Largest value among the `limit` bars that are on screen at this moment. */
 export function visibleMax(items: readonly RaceItem[], limit: number): number {
   let max = 0;
-  for (const item of items) if (item.rank < limit) max = Math.max(max, item.value);
+  for (const item of items) if (item.rank < limit) max = Math.max(max, finite(item.value));
   return max;
 }

@@ -1,5 +1,5 @@
 import axe from "axe-core";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { commands, userEvent } from "vitest/browser";
 import type { UiBarRaceChart } from "../src/bar-race-chart/bar-race-chart.ts";
 import { defineBarRaceChart } from "../src/bar-race-chart/bar-race-chart.ts";
@@ -303,14 +303,83 @@ describe("ui-bar-race-chart: hover, touch, axe", () => {
     expect((el as unknown as { selected: number }).selected).toBe(1);
   });
 
-  it("passes axe on a settled frame", async () => {
-    const el = await race('autoplay="off"');
+  it("passes axe on a settled frame, table header and contrast included", async () => {
+    const el = await race('autoplay="off" description="Cumulative bookings"');
     el.pause();
-    const result = await axe.run(el, {
-      // Contrast needs the page theme; "region" is about the page, not the component.
-      rules: { "color-contrast": { enabled: false }, region: { enabled: false } },
-    });
-    expect(result.violations.map((v) => v.id)).toEqual([]);
+    await vi.waitFor(() =>
+      expect(el.querySelector("[data-ui-part=fallback-table] th")).toBeTruthy(),
+    );
+    const headers = [...el.querySelectorAll("[data-ui-part=fallback-table] th")];
+    expect(headers.every((th) => th.textContent?.trim())).toBe(true);
+    expect(headers[0]?.textContent).toBe("Category");
+    expect(el.querySelector("[data-ui-part=fallback-table] caption")?.textContent).toBe(
+      "Race. Cumulative bookings",
+    );
+    const result = await axe.run(el, { rules: { region: { enabled: false } } });
+    expect(result.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target)}`)).toEqual([]);
+  });
+
+  it("names the table header with category-label", async () => {
+    const el = await race('autoplay="off" category-label="Barbero"');
+    await vi.waitFor(() =>
+      expect(el.querySelector("[data-ui-part=fallback-table] th")).toBeTruthy(),
+    );
+    expect(el.querySelector("[data-ui-part=fallback-table] th")?.textContent).toBe("Barbero");
+  });
+
+  it("draws with values that are NaN or Infinity, missing, or in excess", async () => {
+    const el = await race('autoplay="off"');
+    el.frames = [
+      { label: "a", values: [Number.NaN, 30, Number.POSITIVE_INFINITY, 10, 99, 98] },
+      { label: "b", values: [5, 6] },
+    ];
+    await settle();
+    const widths = [...el.querySelectorAll("[data-entity] rect")].map((r) =>
+      r.getAttribute("width"),
+    );
+    expect(widths.length).toBeGreaterThan(0);
+    expect(widths.every((w) => Number.isFinite(Number(w)))).toBe(true);
+    expect(el.querySelectorAll("[data-entity]")).toHaveLength(4);
+    el.frame = 1;
+    await settle();
+    expect(names(el)).toHaveLength(3);
+    expect(el.querySelectorAll("[data-entity]")).toHaveLength(4);
+  });
+
+  it("warns once about repeated entity ids", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const el = await race('autoplay="off"');
+    el.entities = [...ENTITIES, { id: "kevin", name: "Kevin 2" }];
+    expect(warn).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it("shows the value of the frame named in the tooltip row, not the in-between one", async () => {
+    const el = await race('autoplay="off"');
+    drawing(el).dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
+    await wait(80);
+    el.position = 0.4;
+    await settle();
+    move(el, 200, row(0));
+    const info = (el as unknown as { hover: { rows: Array<{ name: string; value: string }> } })
+      .hover;
+    expect(info.rows[0]).toMatchObject({ name: "Sem 1", value: "40" });
+  });
+
+  it("stays paused after a reconnect under reduced motion", async () => {
+    const el = await race();
+    expect(el.playing).toBe(true);
+    await commands.reducedMotion("reduce");
+    await wait(50);
+    const host = el.parentElement as HTMLElement;
+    host.remove();
+    el.pause();
+    document.body.append(host);
+    (el as unknown as { play(): void }).play();
+    host.remove();
+    document.body.append(host);
+    await wait(100);
+    expect(el.playing).toBe(false);
   });
 
   it("shows the empty state without data", async () => {
