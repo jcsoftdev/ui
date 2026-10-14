@@ -487,10 +487,14 @@ export abstract class HierarchyChart extends ChartElement {
 
   /** Runs `use` with the zoom module (gestures, breadcrumb, tween), loading it the first time. */
   #withZoom(use: (zoom: Zoom) => void): void {
-    if (this.#zoom) return use(this.#zoom);
-    (this.#zoomLoad ??= import("./hierarchy-zoom.js").then((mod) => {
+    if (this.#zoom) {
+      use(this.#zoom);
+      return;
+    }
+    this.#zoomLoad ??= import("./hierarchy-zoom.js").then((mod) => {
       this.#zoom = new mod.Zoom(this.#host);
-    })).then(() => this.#zoom && use(this.#zoom));
+    });
+    this.#zoomLoad.then(() => this.#zoom && use(this.#zoom));
   }
 
   /** Gives the breadcrumb (named by `breadcrumb`, or the one inside the chart) the open path. */
