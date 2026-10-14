@@ -26,12 +26,12 @@ imports them, so it never pays for them.
 
 | Tag | What it is | Eager gzip |
 | --- | --- | --- |
-| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.9 KB |
-| `ui-sparkline` | the smallest real chart on the base | 6.7 KB |
+| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.7 KB |
+| `ui-sparkline` | the smallest real chart on the base | 6.5 KB |
 | `ui-chart-legend` | toggle buttons per series, hover dims the rest | 2.6 KB |
 | `ui-chart-tooltip` | floating card or docked panel | 4.2 KB |
 | `ui-chart-data-table` | the snapshot as a real `<table>` | 1.8 KB |
-| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.7 KB |
+| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.5 KB |
 | `ui-chart-breadcrumb` | drill-down path, `nav` with `aria-current` | 1.5 KB |
 
 A chart adds only its own geometry and the ui-core modules it uses (`chart/scale`, `chart/path`,
@@ -189,13 +189,14 @@ carries `{ revision }` (or `null` for the loading and empty states).
   `height="fill"` (use it with a CSS height on the host) or `aspect-ratio` always wins.
   **Never write attributes (or inline styles) on the host, in `connectedCallback` or anywhere
   else; use the hook.** Writing `height` there mutates the consumer's DOM and fights their own value.
-- **Theme.** The base watches the theme and redraws every chart as an `update` (with
-  `context.transient` true, so no `chart-data`). Sources: `data-theme`, `class` and `style` on
-  `<html>` and on the nearest `[data-theme]` ancestor, and `prefers-color-scheme`. One shared
-  `MutationObserver` and one media listener serve all charts (ref-counted, released on
-  disconnect). `context.themeVersion` is a counter that moves on each change: a painter that caches
-  resolved colors (a canvas cannot use `var()`) drops its cache when it differs from the last
-  draw. SVG marks that use CSS variables need nothing.
+- **Theme.** SVG marks that use CSS variables repaint on their own and pay nothing. A painter that
+  caches resolved colors (a canvas cannot use `var()`) opts in: calling `context.canvas()` does it,
+  or set `static themeAware = true`. The base then lazy-loads one shared `MutationObserver` and one
+  `prefers-color-scheme` listener (ref-counted across charts, released on disconnect) and redraws
+  the chart as an `update` (`context.transient` true, so no `chart-data`) when `data-theme`, `class`
+  or `style` change on `<html>` or the nearest `[data-theme]` ancestor, or the OS scheme flips.
+  `context.themeVersion` is 0 until that loads, then moves on each change: drop cached colors when
+  it differs from the last draw.
 - **States.** `loading` (with `skeleton="bars|line|ring"`) and `empty` (or `isEmpty()`) replace the
   drawing; `draw()` is not called and `chart-data` fires with `null`. The code and stylesheet are a
   lazy chunk. The SVG object is kept, so `setup()` does not run again afterwards. If a mark had

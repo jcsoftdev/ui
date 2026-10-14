@@ -13,7 +13,6 @@ import {
   type HoverInfo,
   type HoverSource,
 } from "./chart-protocol.js";
-import { watchTheme } from "./chart-theme.js";
 
 export { join, svg } from "./chart-dom.js";
 export * from "./chart-protocol.js";
@@ -81,7 +80,7 @@ export interface DrawContext {
   /** False when the user prefers reduced motion or the chart has `animate="off"`: tween data-to-data changes only if true. */
   motion: boolean;
   /**
-   * Bumps every time the page theme changes (`data-theme`, `class` or `style` on the root or the
+   * 0 until the theme observer is loaded (first `canvas()` call, or `static themeAware`), then bumps every time the page theme changes (`data-theme`, `class` or `style` on the root or the
    * nearest themed ancestor, or `prefers-color-scheme`); the chart redraws as `update`. A painter
    * that caches resolved colors (a canvas) drops its cache when this differs from the last draw.
    */
@@ -198,6 +197,8 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   static retain = false;
   /** CSS `touch-action` of the drawing (the attribute of the same name overrides it). */
   static touchAction = "pan-y";
+  /** Opt in to `themeVersion` without a canvas (a chart that caches resolved colors). A canvas chart is opted in by `canvas()`. */
+  static themeAware = false;
   /**
    * Height in px when the consumer sets no `height` and no `aspect-ratio`: a number, or a function of
    * the element (read its attributes, e.g. `orientation`). Applied to the inner drawing part, never to
@@ -229,6 +230,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   #measured = 0;
   #natural = 0;
   #themeVersion = 0;
+  #themed = false;
   #unwatch: (() => void) | undefined;
   #naturalPasses = 0;
   #result: DrawResult | undefined;
@@ -370,10 +372,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       this.getAttribute("touch-action") ?? (this.constructor as typeof ChartElement).touchAction;
     for (const type of WAKE) this.drawing.addEventListener(type, this.#onWake);
     this.#syncFill();
-    this.#unwatch = watchTheme(this, () => {
-      this.#themeVersion++;
-      this.requestDraw("transient");
-    });
+    if ((this.constructor as typeof ChartElement).themeAware || this.#themed) this.#watchTheme();
     this.#width = Math.floor(this.drawing.getBoundingClientRect().width);
     this.#observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
@@ -426,18 +425,11 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     const ratio = Number(this.getAttribute("aspect-ratio"));
     if (ratio > 0) return Math.max(1, Math.round(width / ratio));
     if (Number(attr) > 0) return Number(attr);
-    if (this.#natural > 0) return this.#natural;
     const base = (this.constructor as typeof ChartElement).defaultHeight;
-    const value = typeof base === "function" ? (base as (el: ChartElement) => number)(this) : base;
-    return value > 0 ? Math.round(value) : DEFAULT_HEIGHT;
-  }
-
-  /** True when the consumer fixed the height (`height`, `fill` or `aspect-ratio`), so the chart must not size itself. */
-  #sized(): boolean {
     return (
-      Number(this.getAttribute("height")) > 0 ||
-      this.getAttribute("height") === "fill" ||
-      Number(this.getAttribute("aspect-ratio")) > 0
+      this.#natural ||
+      (typeof base === "function" ? (base as (e: ChartElement) => number)(this) : base) ||
+      DEFAULT_HEIGHT
     );
   }
 
@@ -470,8 +462,21 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     });
   }
 
+  /** Loads the shared theme observer on demand: only canvas or color-caching charts pay for it. */
+  #watchTheme(): void {
+    this.#themed = true;
+    import("./chart-theme.js").then(({ watchTheme }) => {
+      if (!this.isConnected || this.#unwatch) return;
+      this.#unwatch = watchTheme(this, () => {
+        this.#themeVersion++;
+        this.requestDraw("transient");
+      });
+    });
+  }
+
   #canvasContext(width: number, height: number): CanvasRenderingContext2D {
     this.#canvasUsed = true;
+    if (!this.#themed) this.#watchTheme();
     this.#canvas ??= document.createElement("canvas");
     const canvas = this.#canvas;
     canvas.dataset.uiPart = "canvas";
@@ -578,7 +583,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     const dataChanged = this.#dirty || phase === "enter";
     if (dataChanged) this.#revision++;
     this.#result = result;
-    this.#settleNatural(result, height);
+    this.#settleNatural(result?.naturalHeight, height);
     this.#mount(root, result);
     if (!this.#setup) {
       this.#setup = new AbortController();
@@ -595,13 +600,12 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     }
   }
 
-  /** Adopts `DrawResult.naturalHeight` and re-lays out, at most twice in a row (a height that tracks `context.height` cannot loop). */
-  #settleNatural(result: DrawResult | undefined, height: number): void {
-    const wanted = result?.naturalHeight;
-    this.#natural = !this.#sized() && wanted && wanted > 0 ? Math.round(wanted) : 0;
-    if (!this.#natural || this.#natural === height || this.#naturalPasses >= 2) return;
-    this.#naturalPasses++;
-    this.requestDraw("size");
+  /** Adopts `DrawResult.naturalHeight` and re-lays out; two passes in a row at most, so it cannot loop. */
+  #settleNatural(wanted: number | undefined, height: number): void {
+    const fixed = this.hasAttribute("height") || this.hasAttribute("aspect-ratio");
+    this.#natural = fixed ? 0 : Math.round(wanted || 0);
+    if (this.#natural && this.#natural !== height && this.#naturalPasses++ < 2)
+      this.requestDraw("size");
   }
 
   #attrPalette(): string[] | undefined {
