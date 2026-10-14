@@ -1,6 +1,5 @@
 import { tint } from "@jcsoftdev/ui-core/chart/color-scale";
 import {
-  type SankeyDiffLink,
   type SankeyGraph,
   type SankeyLink,
   type SankeyLinkInput,
