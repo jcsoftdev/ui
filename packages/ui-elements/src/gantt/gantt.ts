@@ -1,6 +1,5 @@
 import { estimateTextWidth } from "@jcsoftdev/ui-core/chart/axis";
 import { tint } from "@jcsoftdev/ui-core/chart/color-scale";
-import { formatPercent } from "@jcsoftdev/ui-core/chart/format";
 import { attachPanZoom, type PanZoom, type PanZoomView } from "@jcsoftdev/ui-core/chart/pan-zoom";
 import { formatDate, shortMonth } from "@jcsoftdev/ui-core/chart/scale-time";
 import {
@@ -23,10 +22,12 @@ import {
   svg,
   type TooltipRow,
 } from "../internal/chart-base.js";
+import { upgradeProperties } from "../internal/e10.js";
 import {
-  type CriticalPath,
-  criticalPath,
+  addUnits,
   DAY_MS,
+  dayOfMonth,
+  daysBetween,
   GANTT_ZOOM_ORDER,
   GANTT_ZOOMS,
   type GanttHeader,
@@ -38,23 +39,24 @@ import {
   ganttScale,
   HOUR_MS,
   nonWorkingSpans,
-  snapTime,
+  parseWallDate,
+  startOf,
+  wallClock,
 } from "../internal/e23-gantt.js";
 import {
   barBox,
-  dependencyLinks,
   type GanttAnnotation,
   type GanttTask,
   HEADER_HEIGHT,
   HEADER_ROW,
-  LABEL_LANE,
   type Link,
   outsideLabel,
   type PlacedAnnotation,
-  placeAnnotations,
   type Row,
 } from "../internal/e23-gantt-layout.js";
 import css from "./gantt.css.js";
+import type * as ExtrasModule from "./gantt-extras.js";
+import type { CriticalPath, Draft, DragState } from "./gantt-extras.js";
 
 export type { GanttZoom } from "../internal/e23-gantt.js";
 export type { GanttAnnotation, GanttTask } from "../internal/e23-gantt-layout.js";
@@ -92,6 +94,9 @@ export interface GanttTexts {
   keyboardHint: string;
   /** Quarter label in the header, "Q3" by default. */
   quarter: (quarter: number) => string;
+  /** Toolbar: the name of the zoom switch and its level names. */
+  zoomLabel?: string;
+  zoomLevels?: Partial<Record<GanttZoom, string>>;
 }
 
 const DEFAULT_TEXTS: GanttTexts = {
@@ -118,6 +123,7 @@ const DEFAULT_TEXTS: GanttTexts = {
   quarter: (quarter) => `Q${quarter}`,
 };
 
+type Extras = typeof ExtrasModule;
 type Column = "start" | "end" | "progress";
 const COLUMN_WIDTH: Record<Column, number> = { start: 64, end: 64, progress: 52 };
 const NAME_MIN = 120;
@@ -125,25 +131,6 @@ const MIN_PANE = 96;
 const CHROME = HEADER_HEIGHT + 12;
 const ZOOM_STEP = 1.45;
 const SVG_SELECTOR = "[data-handle]";
-
-interface DragState {
-  id: string;
-  mode: "move" | "start" | "end" | "progress";
-  originX: number;
-  start: number;
-  end: number;
-  progress: number;
-  barLeft: number;
-  barWidth: number;
-  moved: boolean;
-}
-
-interface Draft {
-  id: string;
-  start: number;
-  end: number;
-  progress: number;
-}
 
 /** Everything the pointer and keyboard need of the last draw. */
 interface Layout {
@@ -157,11 +144,21 @@ interface Layout {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-const startOfDay = (time: number) => new Date(time).setHours(0, 0, 0, 0);
+const percents = new Map<string, Intl.NumberFormat>();
+/** Whole percent in the chart's locale (the full number formatter would be a chunk of its own). */
+function percentFormat(locale: string): Intl.NumberFormat {
+  let format = percents.get(locale);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 });
+    percents.set(locale, format);
+  }
+  return format;
+}
+
 const IDENTITY: PanZoomView = { k: 1, x: 0, y: 0 };
 
 /** Cuts `text` with an ellipsis so it fits `room` pixels. */
-function fit(text: string, room: number, size: number): string {
+function ellipsize(text: string, room: number, size: number): string {
   if (room <= 0) return "";
   if (estimateTextWidth(text, size) <= room) return text;
   let cut = text;
@@ -170,14 +167,22 @@ function fit(text: string, room: number, size: number): string {
 }
 
 /** A task ending at midnight is shown ending the day before (inclusive end). */
-function displayEnd(start: number, end: number): number {
-  const midnight = new Date(end).setHours(0, 0, 0, 0) === end;
-  return midnight && end - start >= DAY_MS ? end - 1 : end;
+function displayEnd(start: number, end: number, tz?: string): number {
+  const midnight = startOf(end, "day", tz) === end;
+  return midnight && addUnits(start, "day", 1, tz) <= end ? end - 1 : end;
 }
 
-function clockText(time: number): string {
-  const d = new Date(time);
-  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+function clockText(time: number, tz?: string): string {
+  const { hours, minutes } = wallClock(time, tz);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+/** Whole calendar days between two instants, rounded; `null` when the span is under a day. */
+function calendarDays(start: number, end: number, tz?: string): number | null {
+  if (addUnits(start, "day", 1, tz) > end) return null;
+  const whole = daysBetween(start, end, tz);
+  const rest = end - addUnits(start, "day", whole, tz);
+  return Math.max(1, Math.round(whole + rest / DAY_MS));
 }
 
 /**
@@ -213,8 +218,14 @@ export class UiGantt extends ChartElement {
     "dependencies",
     "critical-path",
     "baselines",
+    "toolbar",
+    "zoom-levels",
   ];
 
+  #extras: Extras | undefined;
+  #extrasLoading = false;
+  #toolbar: { element: HTMLElement; update(): void } | undefined;
+  #toolbarLoading = false;
   #tasks: readonly GanttTask[] = [];
   #holidays: ReadonlyArray<Date | number> | undefined;
   #annotations: readonly GanttAnnotation[] = [];
@@ -232,6 +243,7 @@ export class UiGantt extends ChartElement {
   #layout: Layout | undefined;
   #panZoom: PanZoom | undefined;
   #resetting = false;
+  readonly #touches = new Set<number>();
   #autoHeight: string | null = null;
   #rev = 0;
   #model: { key: string; value: Model } | undefined;
@@ -295,8 +307,56 @@ export class UiGantt extends ChartElement {
   override connectedCallback(): void {
     this.dataset.ui = "gantt";
     adoptStyles(rootOf(this), css);
+    upgradeProperties(this, ["tasks", "holidays", "annotations", "collapsed", "texts", "zoom"]);
     this.#syncHeight();
     super.connectedCallback();
+    this.#syncToolbar();
+  }
+
+  /** Dependencies, critical path, annotations, baselines and editing load on demand. */
+  #loadExtras(): void {
+    if (this.#extras || this.#extrasLoading) return;
+    const wanted =
+      this.#editable ||
+      this.hasAttribute("critical-path") ||
+      this.hasAttribute("baselines") ||
+      this.#annotations.length > 0 ||
+      (this.getAttribute("dependencies") !== "off" &&
+        this.#tasks.some((task) => task.dependencies?.length));
+    if (!wanted) return;
+    this.#extrasLoading = true;
+    import("./gantt-extras.js").then((module) => {
+      this.#extras = module;
+      adoptStyles(rootOf(this), module.styles);
+      this.#rev++;
+      this.requestDraw("data");
+    });
+  }
+
+  /** The toolbar (zoom levels, Today) is on unless `toolbar="off"`; its code loads on demand. */
+  get #toolbarOn(): boolean {
+    return !["off", "false"].includes(this.getAttribute("toolbar") ?? "");
+  }
+
+  #syncToolbar(): void {
+    const toolbar = this.#toolbar;
+    if (!this.#toolbarOn) {
+      toolbar?.element.remove();
+      return;
+    }
+    if (toolbar) {
+      if (this.firstChild !== toolbar.element) this.prepend(toolbar.element);
+      toolbar.update();
+      return;
+    }
+    if (this.#toolbarLoading) return;
+    this.#toolbarLoading = true;
+    import("./gantt-toolbar.js").then(({ mountGanttToolbar }) => {
+      this.#toolbarLoading = false;
+      if (this.#toolbar || !this.#toolbarOn) return;
+      this.#toolbar = mountGanttToolbar(this);
+      if (this.isConnected) this.prepend(this.#toolbar.element);
+    });
   }
 
   override attributeChangedCallback(name: string): void {
@@ -307,6 +367,8 @@ export class UiGantt extends ChartElement {
     this.#rev++;
     if (name === "row-height") this.#syncHeight();
     super.attributeChangedCallback(name);
+    if (name === "toolbar" || name === "zoom-levels" || name === "zoom" || name === "today")
+      if (this.isConnected) this.#syncToolbar();
   }
 
   protected override isEmpty(): boolean {
@@ -375,6 +437,16 @@ export class UiGantt extends ChartElement {
     emit(this, "gantt-change", change);
   }
 
+  /** Scrolls the timeline so today is near its left edge. */
+  scrollToToday(): void {
+    this.#goToday();
+  }
+
+  /** The texts in use: the defaults with the `texts` property on top. */
+  get resolvedTexts(): GanttTexts {
+    return this.#t();
+  }
+
   #goToday(): void {
     const layout = this.#layout;
     if (!layout || !this.#today()) return;
@@ -390,7 +462,7 @@ export class UiGantt extends ChartElement {
     const attr = this.getAttribute("today");
     if (attr === "off" || attr === "false") return null;
     if (attr && attr !== "auto") {
-      const time = Date.parse(attr);
+      const time = parseWallDate(attr, this.timeZone);
       return Number.isNaN(time) ? null : time;
     }
     return Date.now();
@@ -432,7 +504,27 @@ export class UiGantt extends ChartElement {
     root.addEventListener(
       "pointerdown",
       (event) => {
-        if (event.button !== 0) return;
+        if (event.button !== 0 && event.pointerType === "mouse") return;
+        if (event.pointerType !== "mouse") this.#touches.add(event.pointerId);
+        if (this.#touches.size <= 1) this.#zoomAcc = 1;
+        else {
+          // A second finger turns the gesture into a pinch: it never edits a bar. Both fingers
+          // are captured by the drawing, because the bars under them are rebuilt on every frame
+          // and a removed target would swallow their moves and their release.
+          for (const id of this.#touches) {
+            try {
+              drawing.setPointerCapture(id);
+            } catch {
+              // The pointer is already gone.
+            }
+          }
+          if (this.#drag || this.#draft) {
+            this.#drag = null;
+            this.#draft = null;
+            this.requestDraw("transient");
+          }
+          return;
+        }
         const target = event.target as Element;
         if (target.closest("[data-divider]")) {
           const layout = this.#layout;
@@ -445,7 +537,7 @@ export class UiGantt extends ChartElement {
         const handle = target.closest(SVG_SELECTOR)?.getAttribute("data-handle");
         const id = target.closest("[data-task]")?.getAttribute("data-task");
         const layout = this.#layout;
-        const row = layout?.rows.find((item) => item.task.id === id);
+        const row = layout?.rows.find((item) => item.key === id);
         if (!handle || !row || row.parent || !layout) return;
         const box = barBox(row, layout.scale, layout.rowHeight);
         const left = root.getBoundingClientRect().left + layout.gridW + box.x0 - this.#scroll.x;
@@ -475,7 +567,10 @@ export class UiGantt extends ChartElement {
     );
     // Registered after the pan-zoom's listeners, so `wasDrag()` is current when pointerup runs.
     drawing.addEventListener("pointermove", (event) => this.#onMove(event), opts);
-    const end = (event: PointerEvent) => this.#onEnd(event);
+    const end = (event: PointerEvent) => {
+      this.#touches.delete(event.pointerId);
+      this.#onEnd(event);
+    };
     drawing.addEventListener("pointerup", end, opts);
     drawing.addEventListener("pointercancel", end, opts);
     drawing.addEventListener(
@@ -503,6 +598,7 @@ export class UiGantt extends ChartElement {
   protected override teardown(): void {
     this.#panZoom = undefined;
     this.#parts = undefined;
+    this.#touches.clear();
   }
 
   #onPanZoom(view: PanZoomView): void {
@@ -542,32 +638,9 @@ export class UiGantt extends ChartElement {
     if (!drag) return;
     if (!drag.moved && Math.abs(event.clientX - drag.originX) < 4) return;
     drag.moved = true;
-    const level = GANTT_ZOOMS[this.zoom];
-    const snap = (time: number) => snapTime(time, level.snap);
-    const dt = (event.clientX - drag.originX) / layout.scale.k;
-    if (drag.mode === "move") {
-      const start = snap(drag.start + dt);
-      this.#draft = {
-        id: drag.id,
-        start,
-        end: start + (drag.end - drag.start),
-        progress: drag.progress,
-      };
-    } else if (drag.mode === "start") {
-      const start = Math.min(drag.end - level.snap, snap(drag.start + dt));
-      this.#draft = { id: drag.id, start, end: drag.end, progress: drag.progress };
-    } else if (drag.mode === "end") {
-      const end = Math.max(drag.start + level.snap, snap(drag.end + dt));
-      this.#draft = { id: drag.id, start: drag.start, end, progress: drag.progress };
-    } else {
-      const ratio = (event.clientX - drag.barLeft) / Math.max(1, drag.barWidth);
-      this.#draft = {
-        id: drag.id,
-        start: drag.start,
-        end: drag.end,
-        progress: Math.round(clamp(ratio, 0, 1) * 20) / 20,
-      };
-    }
+    const extras = this.#extras;
+    if (!extras) return;
+    this.#draft = extras.dragDraft(drag, event.clientX, this.zoom, layout.scale.k, this.timeZone);
     this.requestDraw("transient");
   }
 
@@ -626,41 +699,12 @@ export class UiGantt extends ChartElement {
       this.#toggle(row.task.id);
       return;
     }
-    if (!this.#editable || row.parent) return;
-    const level = GANTT_ZOOMS[this.zoom];
-    const sign = key === "ArrowRight" ? 1 : key === "ArrowLeft" ? -1 : 0;
-    if (sign !== 0 && (event.altKey || event.shiftKey)) {
-      event.preventDefault();
-      const step = level.snap * sign;
-      if (event.altKey || row.task.milestone)
-        this.#commit({
-          id: row.task.id,
-          start: new Date(row.start + step),
-          end: new Date(row.end + step),
-          progress: row.progress,
-          source: "move",
-        });
-      else
-        this.#commit({
-          id: row.task.id,
-          start: new Date(row.start),
-          end: new Date(Math.max(row.start + level.snap, row.end + step)),
-          progress: row.progress,
-          source: "resize",
-        });
-      return;
-    }
-    if (!row.task.milestone && (key === "+" || key === "=" || key === "-")) {
-      event.preventDefault();
-      const delta = key === "-" ? -0.1 : 0.1;
-      this.#commit({
-        id: row.task.id,
-        start: new Date(row.start),
-        end: new Date(row.end),
-        progress: Math.round(clamp(row.progress + delta, 0, 1) * 100) / 100,
-        source: "progress",
-      });
-    }
+    const extras = this.#extras;
+    if (!this.#editable || row.parent || !extras) return;
+    const change = extras.keyEdit(row, key, event.altKey, event.shiftKey, this.zoom, this.timeZone);
+    if (!change) return;
+    event.preventDefault();
+    this.#commit(change);
   }
 
   // ---- model ---------------------------------------------------------------------------------
@@ -686,9 +730,11 @@ export class UiGantt extends ChartElement {
       viewport,
       locale,
       this.#rowHeight,
-      today == null ? "" : startOfDay(today),
+      today == null ? "" : startOf(today, "day", this.timeZone),
       this.#hidden("critical"),
       this.#hidden("baseline"),
+      this.timeZone ?? "",
+      this.#extras ? 1 : 0,
     ].join("|");
     if (this.#model?.key === key) return this.#model.value;
     const rows = ganttRows(this.#tasks, this.#collapsed);
@@ -700,7 +746,8 @@ export class UiGantt extends ChartElement {
         if (row.task.baseline) times.push(+row.task.baseline.start, +row.task.baseline.end);
     for (const a of this.#annotations) times.push(+a.at, +(a.to ?? a.at));
     if (today != null) times.push(today);
-    const domain = ganttDomain(times.length ? times : [Date.now()], zoom);
+    const tz = this.timeZone;
+    const domain = ganttDomain(times.length ? times : [Date.now()], zoom, tz);
     const scale = ganttScale(domain, zoom, viewport);
     const level = GANTT_ZOOMS[zoom];
     const workingDays = (this.getAttribute("working-days") ?? "1,2,3,4,5")
@@ -708,18 +755,21 @@ export class UiGantt extends ChartElement {
       .map(Number)
       .filter((day) => day >= 0 && day <= 6);
     const critical = this.hasAttribute("critical-path") && !this.#hidden("critical");
+    const extras = this.#extras;
     const value: Model = {
       rows,
       domain,
       scale,
-      header: ganttHeader(scale, zoom, { locale, quarter: texts.quarter }),
-      shading: level.shadeNonWorking ? nonWorkingSpans(domain, workingDays, this.#holidays) : [],
+      header: ganttHeader(scale, zoom, { locale, timeZone: tz, quarter: texts.quarter }),
+      shading: level.shadeNonWorking
+        ? nonWorkingSpans(domain, workingDays, this.#holidays, tz)
+        : [],
       links:
-        this.getAttribute("dependencies") === "off"
-          ? []
-          : dependencyLinks(rows, scale, this.#rowHeight),
-      placed: placeAnnotations(this.#annotations, scale),
-      critical: critical ? criticalPath(this.#tasks) : null,
+        extras && this.getAttribute("dependencies") !== "off"
+          ? extras.dependencyLinks(rows, scale, this.#rowHeight)
+          : [],
+      placed: extras ? extras.placeAnnotations(this.#annotations, scale) : [],
+      critical: extras && critical ? extras.criticalPath(this.#tasks) : null,
       baselines: hasBaselines,
       todayX: today != null && today >= domain[0] && today <= domain[1] ? scale.x(today) : null,
       today,
@@ -737,6 +787,7 @@ export class UiGantt extends ChartElement {
   protected override draw(context: DrawContext): DrawResult {
     const { svg: root, width, height, locale, timeZone, animate, motion } = context;
     const texts = this.#t();
+    this.#loadExtras();
     const rowHeight = this.#rowHeight;
     const zoom = this.zoom;
     const withTime = zoom === "hour";
@@ -751,6 +802,12 @@ export class UiGantt extends ChartElement {
     );
     const viewport = Math.max(MIN_PANE, width - gridW);
     const model = this.#modelFor(viewport, locale, texts);
+    // The cached model is per day; the today line moves within it.
+    model.today = this.#today();
+    model.todayX =
+      model.today != null && model.today >= model.domain[0] && model.today <= model.domain[1]
+        ? model.scale.x(model.today)
+        : null;
     const { rows, scale, header, links } = model;
     const bodyHeight = Math.max(0, height - HEADER_HEIGHT);
     const contentHeight = rows.length * rowHeight;
@@ -770,20 +827,27 @@ export class UiGantt extends ChartElement {
     }
     this.#scroll.x = clamp(this.#scroll.x, 0, maxX);
     this.#scroll.y = clamp(this.#scroll.y, 0, maxY);
+    // Touch: a swipe scrolls the rows (not the page) while they overflow; otherwise the page may.
+    if (!this.hasAttribute("touch-action"))
+      this.drawing.style.touchAction = maxY > 0 ? "none" : "pan-y";
     const { x: scrollX, y: scrollY } = this.#scroll;
     const layout: Layout = { rows, scale, gridW, viewport, rowHeight, bodyHeight, contentHeight };
     this.#layout = layout;
 
     const format = (time: number) => formatDate(time, { locale, timeZone });
-    const percent = (value: number) => formatPercent(value, { locale, decimals: 0 });
+    const percent = (value: number) => percentFormat(locale).format(value);
     const shortDate = (time: number, clock: boolean) => {
-      const d = new Date(time);
-      const day = `${d.getDate()} ${shortMonth(d, { locale, timeZone })}`;
-      return clock ? `${day} ${clockText(time)}` : day;
+      const day = `${dayOfMonth(time, timeZone)} ${shortMonth(new Date(time), { locale, timeZone })}`;
+      return clock ? `${day} ${clockText(time, timeZone)}` : day;
     };
     const duration = (ms: number) => {
       if (ms < DAY_MS) return `${Math.round(ms / HOUR_MS)} ${texts.hours}`;
       const days = Math.round(ms / DAY_MS);
+      return `${days} ${days === 1 ? texts.day : texts.days}`;
+    };
+    const span = (start: number, end: number) => {
+      const days = calendarDays(start, end, timeZone);
+      if (days == null) return duration(end - start);
       return `${days} ${days === 1 ? texts.day : texts.days}`;
     };
     const names = new Map(this.#tasks.map((task) => [task.id, task.name]));
@@ -868,7 +932,7 @@ export class UiGantt extends ChartElement {
     this.#bands = join(
       parts.bands,
       visible,
-      (row) => row.task.id,
+      (row) => row.key,
       () => svg("rect", { class: "band" }),
       (el, _row, i) => {
         el.setAttribute("x", "0");
@@ -882,18 +946,29 @@ export class UiGantt extends ChartElement {
     // Annotations, dependency links and bars.
     const notes: SVGElement[] = [];
     for (const item of model.placed)
-      notes.push(...this.#annotation(item, scrollY, bodyHeight, scrollX, viewport));
+      notes.push(
+        ...(this.#extras?.annotationNodes(item, scrollY, bodyHeight, scrollX, viewport) ?? []),
+      );
     parts.notes.replaceChildren(...notes);
     const activeId = this.#activeId(rows, context.hover);
-    parts.links.replaceChildren(...this.#links(links, activeId, model.critical, parts.marker));
+    const shown = links.filter(
+      (link) =>
+        link.rows[1] >= first - 1 &&
+        link.rows[0] <= last &&
+        link.span[1] >= scrollX - 40 &&
+        link.span[0] <= scrollX + viewport + 40,
+    );
+    parts.links.replaceChildren(
+      ...(this.#extras?.linkNodes(shown, activeId, model.critical, parts.marker) ?? []),
+    );
     const bars = join(
       parts.bars,
       visible,
-      (row) => row.task.id,
+      (row) => row.key,
       () => svg("g", { "data-bar": "" }),
       (el, source, i) => {
         const row = draftOf(source);
-        el.setAttribute("data-task", row.task.id);
+        el.setAttribute("data-task", source.key);
         el.replaceChildren(...this.#bar(row, first + i, scale, rowHeight, model, texts, viewport));
       },
     );
@@ -915,7 +990,8 @@ export class UiGantt extends ChartElement {
     // Header (timeline) and list.
     parts.head.replaceChildren(...this.#header(header, scrollX, viewport, model, texts));
     const columns = this.#columns(gridW);
-    const columnDate = (time: number) => (withTime ? clockText(time) : shortDate(time, false));
+    const columnDate = (time: number) =>
+      withTime ? clockText(time, timeZone) : shortDate(time, false);
     const listRows: SVGElement[] = [];
     visible.forEach((source, i) => {
       const row = draftOf(source);
@@ -939,7 +1015,7 @@ export class UiGantt extends ChartElement {
       else
         out.push(
           `${texts.start} ${shortDate(row.start, withTime)}`,
-          `${texts.end} ${shortDate(withTime ? row.end : displayEnd(row.start, row.end), withTime)}`,
+          `${texts.end} ${shortDate(withTime ? row.end : displayEnd(row.start, row.end, timeZone), withTime)}`,
           `${texts.progress} ${percent(row.progress)}`,
         );
       const d = deps(row);
@@ -951,7 +1027,7 @@ export class UiGantt extends ChartElement {
       const color = row.task.color ?? (row.parent ? "var(--ink-2)" : "var(--accent-word)");
       const out: TooltipRow[] = [];
       const stamp = (time: number) =>
-        withTime ? `${format(time)} ${clockText(time)}` : format(time);
+        withTime ? `${format(time)} ${clockText(time, timeZone)}` : format(time);
       if (row.task.milestone && !row.parent)
         out.push({
           id: "date",
@@ -972,14 +1048,14 @@ export class UiGantt extends ChartElement {
           {
             id: "end",
             name: texts.end,
-            value: stamp(withTime ? row.end : displayEnd(row.start, row.end)),
+            value: stamp(withTime ? row.end : displayEnd(row.start, row.end, timeZone)),
             color: "var(--ink-3)",
             shape: "dot",
           },
           {
             id: "duration",
             name: texts.duration,
-            value: duration(row.end - row.start),
+            value: span(row.start, row.end),
             color: "var(--ink-3)",
             shape: "dot",
           },
@@ -1044,9 +1120,15 @@ export class UiGantt extends ChartElement {
     };
 
     const maxRows = 9;
+    let firstStart = Number.POSITIVE_INFINITY;
+    let lastEnd = Number.NEGATIVE_INFINITY;
+    for (const row of rows) {
+      if (row.start < firstStart) firstStart = row.start;
+      if (row.end > lastEnd) lastEnd = row.end;
+    }
     return {
       summary: rows.length
-        ? `${rows.length} ${texts.tasks.toLowerCase()}, ${format(Math.min(...rows.map((row) => row.start)))} - ${format(displayEnd(0, Math.max(...rows.map((row) => row.end))))}`
+        ? `${rows.length} ${texts.tasks.toLowerCase()}, ${format(firstStart)} - ${format(displayEnd(0, lastEnd, timeZone))}`
         : undefined,
       marks: {
         count: rows.length,
@@ -1085,7 +1167,17 @@ export class UiGantt extends ChartElement {
       },
       nav: (index, intent) => this.#nav(index, intent),
       snapshot: () =>
-        this.#snapshot(locale, timeZone, texts, model, format, duration, percent, context.color),
+        this.#snapshot(
+          locale,
+          timeZone,
+          texts,
+          model,
+          format,
+          duration,
+          span,
+          percent,
+          context.color,
+        ),
     };
   }
 
@@ -1320,7 +1412,7 @@ export class UiGantt extends ChartElement {
       svg(
         "text",
         { class: "list-head", x: 12, y: HEADER_HEIGHT - HEADER_ROW / 2, dy: "0.34em" },
-        fit(texts.tasks, gridW - 24, 11),
+        ellipsize(texts.tasks, gridW - 24, 11),
       ),
     ];
     let right = gridW;
@@ -1402,7 +1494,7 @@ export class UiGantt extends ChartElement {
       svg(
         "text",
         { class: row.parent ? "list-name strong" : "list-name", x, y: cy, dy: "0.34em" },
-        fit(row.task.name, gridW - reserve - x - 8, 12),
+        ellipsize(row.task.name, gridW - reserve - x - 8, 12),
       ),
     );
     let right = gridW;
@@ -1413,7 +1505,7 @@ export class UiGantt extends ChartElement {
           : isMilestone
             ? ""
             : column === "end"
-              ? columnDate(withTime ? row.end : displayEnd(row.start, row.end))
+              ? columnDate(withTime ? row.end : displayEnd(row.start, row.end, this.timeZone))
               : percent(row.progress);
       out.push(
         svg(
@@ -1425,74 +1517,6 @@ export class UiGantt extends ChartElement {
       right -= COLUMN_WIDTH[column];
     }
     return out;
-  }
-
-  #annotation(
-    item: PlacedAnnotation,
-    scrollY: number,
-    bodyHeight: number,
-    scrollX: number,
-    viewport: number,
-  ): SVGElement[] {
-    const label = estimateTextWidth(item.label, 10.5) + 14;
-    const y = scrollY + 4 + item.lane * LABEL_LANE;
-    const out: SVGElement[] = [];
-    const color = `stroke:${item.color}`;
-    if (item.x1 != null)
-      out.push(
-        svg("rect", {
-          class: "band-note",
-          x: item.x0,
-          y: scrollY,
-          width: Math.max(1, item.x1 - item.x0),
-          height: bodyHeight,
-          style: `fill:${item.color}`,
-        }),
-      );
-    out.push(
-      svg("line", {
-        class: "note-line",
-        x1: item.x0,
-        x2: item.x0,
-        y1: scrollY,
-        y2: scrollY + bodyHeight,
-        style: color,
-      }),
-    );
-    if (item.x0 + label < scrollX - 40 || item.x0 > scrollX + viewport + 40) return out;
-    out.push(
-      svg("rect", {
-        class: "note-pill",
-        x: item.x0 + 3,
-        y,
-        width: label,
-        height: 15,
-        rx: 7.5,
-        style: color,
-      }),
-      svg("text", { class: "note-label", x: item.x0 + 10, y: y + 7.5, dy: "0.34em" }, item.label),
-    );
-    return out;
-  }
-
-  #links(
-    links: readonly Link[],
-    activeId: string | null,
-    critical: CriticalPath | null,
-    marker: string,
-  ): SVGElement[] {
-    return links.map((link) => {
-      const active = activeId != null && (link.from === activeId || link.to === activeId);
-      const hot = !!critical?.links.has(link.key);
-      const tone = link.late || hot ? "late" : active ? "active" : "base";
-      return svg("path", {
-        class: `link link-${tone}`,
-        d: link.d,
-        "marker-end": `url(#${marker}-${tone})`,
-        "stroke-width": hot ? 2.25 : active ? 1.75 : 1.25,
-        style: `stroke-opacity:${hot || activeId == null || active ? 0.9 : 0.35}`,
-      });
-    });
   }
 
   #bar(
@@ -1600,20 +1624,8 @@ export class UiGantt extends ChartElement {
           style: `fill:${color}`,
         }),
       );
-    if (model.baselines && row.task.baseline) {
-      const a = scale.x(+row.task.baseline.start);
-      const b = scale.x(+row.task.baseline.end);
-      out.push(
-        svg("rect", {
-          class: "baseline",
-          x: a,
-          y: top + h + 2,
-          width: Math.max(2, b - a),
-          height: 4,
-          rx: 2,
-        }),
-      );
-    }
+    const baseline = model.baselines ? this.#extras?.baselineNode(row.task, scale, top, h) : null;
+    if (baseline) out.push(baseline);
     if (estimateTextWidth(row.task.name, 11) + 16 <= width)
       out.push(
         label(box.x0 + 8, row.task.name, {
@@ -1626,37 +1638,7 @@ export class UiGantt extends ChartElement {
         label(spot.x, spot.text, spot.end ? { "text-anchor": "end" } : {}, "bar-label outside"),
       );
     }
-    if (editable)
-      out.push(
-        svg(
-          "g",
-          { class: "handles" },
-          svg("rect", {
-            class: "ew",
-            "data-handle": "start",
-            x: box.x0 - 3,
-            y: top,
-            width: 8,
-            height: h,
-            rx: 3,
-          }),
-          svg("rect", {
-            class: "ew",
-            "data-handle": "end",
-            x: box.x1 - 5,
-            y: top,
-            width: 8,
-            height: h,
-            rx: 3,
-          }),
-          svg("rect", { class: "grip", x: box.x1 - 4, y: cy - 6, width: 3, height: 12, rx: 1.5 }),
-          svg("path", {
-            class: "knob",
-            "data-handle": "progress",
-            d: `M${box.x0 + width * row.progress},${top + h - 2}l6,9h-12Z`,
-          }),
-        ),
-      );
+    if (editable && this.#extras) out.push(this.#extras.handleNodes(box, row.progress, top, h, cy));
     return out;
   }
 
@@ -1666,7 +1648,8 @@ export class UiGantt extends ChartElement {
     texts: GanttTexts,
     model: Model,
     format: (time: number) => string,
-    duration: (ms: number) => string,
+    _duration: (ms: number) => string,
+    span: (start: number, end: number) => string,
     percent: (value: number) => string,
     color: DrawContext["color"],
   ): ChartSnapshot {
@@ -1690,12 +1673,12 @@ export class UiGantt extends ChartElement {
       column(
         "end",
         texts.end,
-        all.map((row) => format(displayEnd(row.start, row.end))),
+        all.map((row) => format(displayEnd(row.start, row.end, timeZone))),
       ),
       column(
         "duration",
         texts.duration,
-        all.map((row) => duration(row.end - row.start)),
+        all.map((row) => span(row.start, row.end)),
       ),
       column(
         "progress",
@@ -1722,7 +1705,7 @@ export class UiGantt extends ChartElement {
           ),
         ),
       );
-    const critical = this.hasAttribute("critical-path") ? criticalPath(this.#tasks) : null;
+    const critical = model.critical;
     if (critical)
       series.push(
         column(

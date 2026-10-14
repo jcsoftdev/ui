@@ -96,6 +96,9 @@ export interface Link {
   d: string;
   /** The successor starts before the predecessor ends. */
   late: boolean;
+  /** Rows (first, last) and pixels (left, right) the route spans, to draw only links in view. */
+  rows: readonly [number, number];
+  span: readonly [number, number];
 }
 
 /** Finish-to-start links between the visible rows, routed orthogonally. */
@@ -106,7 +109,10 @@ export function dependencyLinks(
 ): Link[] {
   // Short runs on compressed zooms, so links between close tasks stay readable.
   const gap = Math.min(10, Math.max(4, (scale.k * 86_400_000) / 2));
-  const index = new Map(rows.map((row, i) => [row.task.id, i]));
+  const index = new Map<string, number>();
+  rows.forEach((row, i) => {
+    if (!index.has(row.task.id)) index.set(row.task.id, i);
+  });
   const links: Link[] = [];
   rows.forEach((row, to) => {
     for (const id of row.task.dependencies ?? []) {
@@ -123,6 +129,8 @@ export function dependencyLinks(
         to: row.task.id,
         d: roundedPolyline(routeDependency(start, end, { gap, rowHeight }), 4),
         late: row.start < source.end,
+        rows: [Math.min(from, to), Math.max(from, to)],
+        span: [Math.min(start.x, end.x) - gap * 2, Math.max(start.x, end.x) + gap * 2],
       });
     }
   });

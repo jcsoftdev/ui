@@ -90,52 +90,6 @@
   font-weight: 700;
   font-size: 11.5px;
 }
-[data-ui="gantt"] .baseline {
-  fill: var(--ink-3);
-  fill-opacity: 0.55;
-  pointer-events: none;
-}
-[data-ui="gantt"] .link {
-  fill: none;
-  pointer-events: none;
-}
-[data-ui="gantt"] .link-base {
-  stroke: var(--ink-3);
-}
-[data-ui="gantt"] .link-active {
-  stroke: var(--ink);
-}
-[data-ui="gantt"] .link-late {
-  stroke: var(--danger);
-}
-[data-ui="gantt"] .arrow-base {
-  fill: var(--ink-3);
-}
-[data-ui="gantt"] .arrow-active {
-  fill: var(--ink);
-}
-[data-ui="gantt"] .arrow-late {
-  fill: var(--danger);
-}
-[data-ui="gantt"] .band-note {
-  fill-opacity: 0.12;
-  pointer-events: none;
-}
-[data-ui="gantt"] .note-line {
-  stroke-width: 1.5;
-  stroke-dasharray: 5 4;
-  pointer-events: none;
-}
-[data-ui="gantt"] .note-pill {
-  fill: var(--surface);
-  fill-opacity: 0.92;
-  pointer-events: none;
-}
-[data-ui="gantt"] .note-label {
-  fill: var(--ink);
-  font-size: 10.5px;
-  font-weight: 600;
-}
 [data-ui="gantt"] .toggle {
   cursor: pointer;
   pointer-events: all;
@@ -146,32 +100,6 @@
   stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-[data-ui="gantt"] .grab {
-  cursor: grab;
-}
-[data-ui="gantt"] .handles {
-  opacity: 0;
-}
-[data-ui="gantt"] [data-bar]:hover .handles,
-[data-ui="gantt"] [data-bar][data-active] .handles {
-  opacity: 1;
-}
-[data-ui="gantt"] .ew {
-  cursor: ew-resize;
-  fill: var(--ink);
-  fill-opacity: 0.001;
-}
-[data-ui="gantt"] .grip {
-  fill: var(--surface);
-  fill-opacity: 0.9;
-  pointer-events: none;
-}
-[data-ui="gantt"] .knob {
-  cursor: col-resize;
-  fill: var(--float);
-  stroke: var(--ink-2);
-  stroke-width: 1.25;
 }
 [data-ui="gantt"] .divider {
   cursor: col-resize;
