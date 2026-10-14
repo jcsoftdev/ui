@@ -5,6 +5,7 @@ import {
   DEFAULT_HISTORY_DEPTH,
   type HistoryCommand,
   pushCommand,
+  type RowRef,
   redoCommand,
   setHistoryDepth,
   summarizeHistory,
@@ -44,6 +45,9 @@ export function install(grid: UiDataGrid): void {
   let state = createHistory<Row>(depth() || 1);
   // The rows the history describes: replacing them from outside makes its steps meaningless.
   let known = grid.rows;
+  // The rows chunk, once it is there: only a grid with `editable-rows` has row steps to apply.
+  let rowsApi: typeof import("./rows.js") | undefined;
+  if (grid.hasAttribute("editable-rows")) void import("./rows.js").then((m) => (rowsApi = m));
 
   const changed = () => emit(grid, "historychange", summarizeHistory(state));
 
@@ -98,6 +102,19 @@ export function install(grid: UiDataGrid): void {
     });
   });
 
+  grid.addEventListener("rowschange", (event) => {
+    if (event.target !== grid) return;
+    const { type, rows, source } = (event as CustomEvent).detail as {
+      type: "add" | "remove";
+      rows: RowRef<Row>[];
+      source: ChangeSource;
+    };
+    // The grid replaced `rows` itself; that is not an outside change.
+    known = grid.rows;
+    if (source === "undo" || source === "redo") return;
+    record({ kind: type === "add" ? "rows-add" : "rows-remove", rows });
+  });
+
   /** The value a cell holds now, `undefined` when it is gone. */
   const held = (rowKey: string, columnId: string): { value: CellValue } | undefined => {
     const { view } = grid._i();
@@ -116,7 +133,10 @@ export function install(grid: UiDataGrid): void {
     command: HistoryCommand<Row>,
     source: "undo" | "redo",
   ): "done" | "partial" | "cancelled" => {
-    if (command.kind !== "cells") return "done";
+    if (command.kind !== "cells") {
+      const type = command.kind === "rows-add" ? "add" : "remove";
+      return rowsApi?.applyRows(grid, type, command.rows, source) ? "done" : "cancelled";
+    }
     const current = command.changes.filter((change) => {
       const now = held(change.rowId, change.columnId);
       return now && sameValue(now.value, change.before);

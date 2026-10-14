@@ -277,7 +277,7 @@ export function seriesFill(
       if (step !== null) {
         const last = items[items.length - 1] as Counted;
         const padded = items.some((item) => item.padded);
-        const width = Math.max(...items.map((item) => item.width));
+        const width = items.reduce((widest, item) => Math.max(widest, item.width), 0);
         return Array.from({ length: count }, (_unused, i) => ({
           value: formatCounted(
             first.prefix,

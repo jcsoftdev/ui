@@ -111,7 +111,8 @@ describe("lazy loading", () => {
 
   it("fetches a feature chunk only for the attribute that asks for it", async () => {
     await grid("");
-    for (const name of ["history", "range", "clipboard", "fill"]) expect(loaded(name)).toBe(false);
+    for (const name of ["history", "range", "clipboard", "fill", "formula", "rows"])
+      expect(loaded(name)).toBe(false);
     document.body.innerHTML = "";
     await grid("history");
     expect(loaded("history")).toBe(true);

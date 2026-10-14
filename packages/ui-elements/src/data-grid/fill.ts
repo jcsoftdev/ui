@@ -26,6 +26,7 @@ import {
   createLayer,
   firstColumn,
   isEditable,
+  isFormula,
   posOf,
   rangeOf,
   refAt,
@@ -42,7 +43,16 @@ import {
 // The result is ONE batch (`changeCells`, source `fill`), so it undoes as one step. Only
 // synchronous `validate` results are enforced, as in a paste.
 
+//
+// Formula addresses count columns in `columns` order, not the order on screen: a pinned column keeps
+// its place in the data, so filling across pinned and unpinned columns shifts references by the
+// data distance, not by the number of columns crossed.
+
 const installed = new WeakSet<UiDataGrid>();
+
+/** Position of a column in `columns`, the order formula addresses count in. */
+const indexOfColumn = (grid: UiDataGrid, id: string): number =>
+  grid.columns.findIndex((column) => column.id === id);
 
 const modeOf = (grid: UiDataGrid): DateStepMode => {
   const mode = grid.getAttribute("date-step");
@@ -57,6 +67,22 @@ function run(
   series: boolean,
   mode: DateStepMode,
 ): void {
+  // Formulas move their relative references as they are copied, which needs the formula module.
+  if (grid.hasAttribute("formulas"))
+    void import("@jcsoftdev/ui-core/grid/formula").then((f) =>
+      write(grid, base, extent, series, mode, f.shiftFormula),
+    );
+  else write(grid, base, extent, series, mode);
+}
+
+function write(
+  grid: UiDataGrid,
+  base: FillBounds,
+  extent: HandleExtent,
+  series: boolean,
+  mode: DateStepMode,
+  shift?: (text: string, dr: number, dc: number) => string,
+): void {
   const changes: { rowKey: string; columnId: string; value: CellValue }[] = [];
   const skipped: { rowKey: string; columnId: string; reason: string; message?: string }[] = [];
   const unvalidated: { rowKey: string; columnId: string }[] = [];
@@ -68,12 +94,15 @@ function run(
     const isDate = editorKind(first.column) === "date";
     const raw = sources.map((cell) => (cell ? getCellValue(cell.row, cell.column) : null));
     const values = isDate ? raw.map((value) => toDate(value) ?? value) : raw;
-    const results: FillResult[] = series
-      ? seriesFill(values, lane.targets.length, {
-          backward: isBackward(extent.direction),
-          dateStep: mode,
-        })
-      : copyFill(lane.targets.length, values.length, isBackward(extent.direction));
+    // A lane with a formula copies (shifted); counting up "=A1" to "=A2" would be a coincidence.
+    const formulaLane = shift !== undefined && raw.some(isFormula);
+    const results: FillResult[] =
+      series && !formulaLane
+        ? seriesFill(values, lane.targets.length, {
+            backward: isBackward(extent.direction),
+            dateStep: mode,
+          })
+        : copyFill(lane.targets.length, values.length, isBackward(extent.direction));
     const last = raw[isBackward(extent.direction) ? 0 : raw.length - 1];
     lane.targets.forEach((pos, i) => {
       const target = cellAt(grid, pos.r, pos.c);
@@ -85,11 +114,22 @@ function run(
         return;
       }
       const current = getCellValue(row, column);
-      const value =
+      let value =
         "value" in result
           ? likeOriginal(result.value, last as CellValue)
           : (raw[result.from] as CellValue);
-      const checked = validateSync(column, value, row);
+      const from = "value" in result ? -1 : result.from;
+      const origin = sources[from];
+      if (shift && origin && isFormula(value)) {
+        const dr =
+          grid._i().view.sourceAt(pos.r) - grid._i().view.sourceAt(lane.source[from]?.r ?? 0);
+        const dc = indexOfColumn(grid, columnId) - indexOfColumn(grid, origin.columnId);
+        value = shift(value, dr, dc);
+      }
+      const checked =
+        shift && isFormula(value)
+          ? { message: null, unvalidated: false }
+          : validateSync(column, value, row);
       if (checked.message) {
         skipped.push({ rowKey, columnId, reason: "invalid", message: checked.message });
         return;

@@ -83,8 +83,8 @@ describe("planPaste", () => {
       { maxR: 2, maxC: 2 },
     );
     expect(plan.targets).toEqual([
-      { r: 2, c: 1, text: "a" },
-      { r: 2, c: 2, text: "b" },
+      { r: 2, c: 1, text: "a", i: 0, j: 0 },
+      { r: 2, c: 2, text: "b", i: 0, j: 1 },
     ]);
     expect(plan.clipped).toBe(4);
   });
@@ -104,7 +104,9 @@ describe("planPaste", () => {
       ["3", "4"],
     ];
     const mine = planPaste(table, { r: 1, c: 1 }, { maxR: 2, maxC: 5 }).targets;
-    expect(mine).toEqual(reactEdit.planPaste(table, { r: 1, c: 1 }, { maxR: 2, maxC: 5 }));
+    const theirs = reactEdit.planPaste(table, { r: 1, c: 1 }, { maxR: 2, maxC: 5 });
+    // The table position (i, j) is an addition of this grid.
+    expect(mine.map(({ r, c, text }) => ({ r, c, text }))).toEqual(theirs);
   });
 });
 
@@ -371,6 +373,38 @@ describe("history", () => {
     ).toBe(s);
     s = history.pushCommand(s, cells(2));
     expect(history.canRedo(s)).toBe(false);
+  });
+});
+
+describe("planWrites with formulas", () => {
+  const column: GridColumn<Record<string, unknown>> = {
+    id: "n",
+    header: "N",
+    type: "number",
+    validate: () => "never",
+  };
+  const messages = {
+    yes: "Yes",
+    no: "No",
+    invalidNumber: "n",
+    invalidDate: "d",
+    invalidValue: "v",
+  };
+  const cellAt = () => ({
+    rowKey: "k",
+    columnId: "n",
+    row: {},
+    column,
+    current: 1 as never,
+    editable: true,
+  });
+  it("stores text that starts with = as typed, skipping parse and validators", () => {
+    const targets = [{ r: 0, c: 0, text: "=A1+1" }];
+    const on = planWrites(targets, cellAt, { locale: "en", messages, formulas: true });
+    expect(on.changes).toEqual([{ rowKey: "k", columnId: "n", value: "=A1+1" }]);
+    const off = planWrites(targets, cellAt, { locale: "en", messages });
+    expect(off.changes).toEqual([]);
+    expect(off.skipped).toHaveLength(1);
   });
 });
 

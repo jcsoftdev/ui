@@ -122,6 +122,9 @@ export interface PasteTarget {
   r: number;
   c: number;
   text: string;
+  /** Line and field of the pasted table this text came from (0, 0 for a single value filling). */
+  i?: number;
+  j?: number;
 }
 
 export interface PastePlan {
@@ -147,7 +150,7 @@ export function planPaste(
     const text = table[0]?.[0] ?? "";
     for (let r = selection.r0; r <= Math.min(selection.r1, limits.maxR); r += 1)
       for (let c = selection.c0; c <= Math.min(selection.c1, limits.maxC); c += 1)
-        targets.push({ r, c, text });
+        targets.push({ r, c, text, i: 0, j: 0 });
     return { targets, clipped: 0 };
   }
   let clipped = 0;
@@ -155,7 +158,7 @@ export function planPaste(
     line.forEach((text, dc) => {
       const r = origin.r + dr;
       const c = origin.c + dc;
-      if (r <= limits.maxR && c <= limits.maxC) targets.push({ r, c, text });
+      if (r <= limits.maxR && c <= limits.maxC) targets.push({ r, c, text, i: dr, j: dc });
       else clipped += 1;
     });
   });
@@ -292,7 +295,7 @@ const sameCell = (a: CellValue, b: CellValue) =>
 export function planWrites<T>(
   targets: readonly PasteTarget[],
   cellAt: (r: number, c: number) => (WriteCell<T> & { editable: boolean }) | null,
-  env: { locale: string; messages: PasteMessages },
+  env: { locale: string; messages: PasteMessages; formulas?: boolean },
 ): WritePlan {
   const plan: WritePlan = { changes: [], skipped: [], unvalidated: [], unchanged: 0 };
   for (const target of targets) {
@@ -306,12 +309,20 @@ export function planWrites<T>(
       plan.skipped.push({ rowKey, columnId, reason: "readonly" });
       continue;
     }
-    const parsed = parsePasted(column, target.text, row, current, env.locale, env.messages);
+    // With formulas on, text that starts with `=` is stored as typed, as the editor does.
+    const parsed: ParsedPaste =
+      env.formulas && target.text.trimStart().startsWith("=")
+        ? { ok: true, value: target.text }
+        : parsePasted(column, target.text, row, current, env.locale, env.messages);
     if (!parsed.ok) {
       plan.skipped.push({ rowKey, columnId, reason: "invalid", message: parsed.message });
       continue;
     }
-    const checked = validateSync(column, parsed.value, row);
+    const raw =
+      env.formulas && parsed.value === target.text && target.text.trimStart().startsWith("=");
+    const checked = raw
+      ? { message: null, unvalidated: false }
+      : validateSync(column, parsed.value, row);
     if (checked.message) {
       plan.skipped.push({ rowKey, columnId, reason: "invalid", message: checked.message });
       continue;
