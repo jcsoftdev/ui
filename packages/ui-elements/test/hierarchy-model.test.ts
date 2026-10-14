@@ -13,7 +13,7 @@ import {
   NAV_RIGHT,
   nodePath,
   nodeTooltipRows,
-} from "../src/internal/e21-hierarchy-model.ts";
+} from "../src/internal/hierarchy-model.ts";
 
 const tree = buildHierarchy({
   name: "Company",

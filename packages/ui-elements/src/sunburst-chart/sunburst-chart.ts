@@ -11,8 +11,8 @@ import {
   levelStrength,
   NAV_DOWN,
   num,
-} from "../internal/e21-hierarchy.js";
-import { PartitionChart, sameView } from "../internal/e21-partition.js";
+} from "../internal/hierarchy-base.js";
+import { PartitionChart, sameView } from "../internal/hierarchy-partition.js";
 import css from "./sunburst-chart.css.js";
 
 const TAU = Math.PI * 2;

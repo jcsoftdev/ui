@@ -13,7 +13,7 @@ import {
   svgOf,
   tap,
   violations,
-} from "./e21-helpers.ts";
+} from "./hierarchy-helpers.ts";
 import { wait } from "./setup.ts";
 
 beforeAll(() => defineHierarchyMorph());

@@ -13,8 +13,8 @@ import {
   NAV_RIGHT,
   nearestBox,
   num,
-} from "../internal/e21-hierarchy.js";
-import { PartitionChart } from "../internal/e21-partition.js";
+} from "../internal/hierarchy-base.js";
+import { PartitionChart } from "../internal/hierarchy-partition.js";
 import css from "./icicle-chart.css.js";
 
 const MIN_BAND = 84;

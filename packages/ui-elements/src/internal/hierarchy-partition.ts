@@ -6,7 +6,7 @@ import {
   type PartitionView,
   partitionLayout,
 } from "@jcsoftdev/ui-core/chart/partition";
-import { HierarchyChart, type HierarchyModel } from "./e21-hierarchy.js";
+import { HierarchyChart, type HierarchyModel } from "./hierarchy-base.js";
 
 const viewOf = (spans: Map<string, PartitionSpan>, node: HierarchyNode): PartitionView => {
   const span = spans.get(node.id) ?? { x0: 0, x1: 1 };

@@ -1,6 +1,6 @@
 import { adoptStyles, rootOf } from "../internal/base.js";
 import { svg } from "../internal/chart-dom.js";
-import type { TreeLabels } from "../internal/e21t-tree-labels.js";
+import type { TreeLabels } from "../internal/tree-labels.js";
 import css from "./tree-chart-ui.css.js";
 
 /** What the zoom toolbar and the search box need from the chart. */

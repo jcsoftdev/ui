@@ -12,7 +12,7 @@ import {
   NAV_DOWN,
   nearestBox,
   num,
-} from "../internal/e21-hierarchy.js";
+} from "../internal/hierarchy-base.js";
 import css from "./treemap-chart.css.js";
 
 const HEADER = 24;

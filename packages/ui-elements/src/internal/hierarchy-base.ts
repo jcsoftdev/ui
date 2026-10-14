@@ -30,11 +30,12 @@ import {
   type HoverContent,
   type HoverInfo,
 } from "./chart-base.js";
-import css from "./e21-hierarchy.css.js";
+import { easeOutCubic } from "./chart-text.js";
+import { numberAttr } from "./e5-forms.js";
+import css from "./hierarchy.css.js";
 import {
   branchColor,
   describeNode,
-  easeOutCubic,
   HIERARCHY_STRINGS,
   type HierarchyStrings,
   litPath,
@@ -42,20 +43,16 @@ import {
   nodeTooltipRows,
   percent,
   shareOf,
-} from "./e21-hierarchy-model.js";
+} from "./hierarchy-model.js";
 
-export * from "./e21-hierarchy-model.js";
+export * from "./hierarchy-model.js";
+export { fitLabel } from "./chart-text.js";
+export { numberAttr as num } from "./e5-forms.js";
 
 /** An attribute that is on unless it says `off` or `false` (`fallback` when it is absent). */
 export const flag = (element: Element, name: string, fallback: boolean): boolean => {
   const value = element.getAttribute(name);
   return value === null ? fallback : value !== "off" && value !== "false";
-};
-
-/** A number attribute, or `fallback`. */
-export const num = (element: Element, name: string, fallback: number): number => {
-  const value = Number.parseFloat(element.getAttribute(name) ?? "");
-  return Number.isFinite(value) ? value : fallback;
 };
 
 export interface HierarchyModel {

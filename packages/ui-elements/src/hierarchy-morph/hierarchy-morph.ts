@@ -21,7 +21,7 @@ import {
   levelStrength,
   NAV_DOWN,
   num,
-} from "../internal/e21-hierarchy.js";
+} from "../internal/hierarchy-base.js";
 import css from "./hierarchy-morph.css.js";
 
 export type HierarchyMorphMode = "treemap" | "sunburst";

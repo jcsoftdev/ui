@@ -64,14 +64,6 @@ export function levelStrength(node: HierarchyNode, focus: HierarchyNode): number
   return Math.max(26, 86 - (level - 1) * 24 - spread * 10);
 }
 
-/** The text, a shortened one with an ellipsis, or `null` when not even four characters fit. */
-export function fitLabel(text: string, maxWidth: number, fontSize = 12): string | null {
-  const charWidth = fontSize * 0.58;
-  if (text.length * charWidth <= maxWidth) return text;
-  const chars = Math.floor(maxWidth / charWidth) - 1;
-  return chars >= 4 ? `${text.slice(0, chars).trimEnd()}…` : null;
-}
-
 export const shareOf = (node: HierarchyNode, of: HierarchyNode): number =>
   of.value > 0 ? node.value / of.value : 0;
 
@@ -179,5 +171,3 @@ export function litPath(node: HierarchyNode): Set<string> {
     ids.add(current.id);
   return ids;
 }
-
-export const easeOutCubic = (t: number): number => 1 - (1 - t) ** 3;

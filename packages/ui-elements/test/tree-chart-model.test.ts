@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import * as mine from "../src/internal/e21t-tree-model.ts";
+import * as mine from "../src/internal/tree-model.ts";
 
 // The React kit's tree model, loaded by path at run time so the two can never drift apart.
 const react = (await import("../../ui/src/charts/tree-chart/tree-model.ts")) as typeof mine;

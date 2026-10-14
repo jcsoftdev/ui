@@ -1,4 +1,4 @@
-import { subtreeSize, type TreeChartNode } from "./e21t-tree-model.js";
+import { subtreeSize, type TreeChartNode } from "./tree-model.js";
 
 /** Visible strings of the tree chart. English defaults; override with `chart.labels = { ... }`. */
 export interface TreeLabels {

@@ -28,7 +28,7 @@ import {
   DEFAULT_TREE_LABELS,
   describeNode,
   type TreeLabels,
-} from "../internal/e21t-tree-labels.js";
+} from "../internal/tree-labels.js";
 import {
   ancestorIds,
   buildTreeModel,
@@ -43,7 +43,7 @@ import {
   type TreeEdgeColor,
   type TreeModel,
   visibleTree,
-} from "../internal/e21t-tree-model.js";
+} from "../internal/tree-model.js";
 import css from "./tree-chart.css.js";
 import type { Pose, Tween } from "./tree-chart-input.js";
 import type { TreeUi } from "./tree-chart-ui.js";
