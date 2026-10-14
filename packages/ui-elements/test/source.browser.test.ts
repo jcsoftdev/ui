@@ -1,10 +1,12 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { defineSource } from "../src/source/source.ts";
-import { ax, mount, wait } from "./setup.ts";
+import { ax, mount, parkPointer, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineSource();
 });
+
+beforeEach(parkPointer);
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -57,17 +59,16 @@ describe("ui-source", () => {
       `<ui-source heading="Doc" url="https://example.com" snippet="s"></ui-source>`,
     );
     const el = host.querySelector("ui-source")!;
-    await wait(50);
     const { card, link } = chips(el);
-    expect(getComputedStyle(card).visibility).toBe("hidden");
+    await expect.poll(() => link.hidden, { timeout: 5000 }).toBe(false);
+    const visibility = () => getComputedStyle(card).visibility;
+    expect(visibility()).toBe("hidden");
     link.focus();
-    await wait(300);
-    expect(getComputedStyle(card).visibility).toBe("visible");
+    await expect.poll(visibility, { timeout: 5000 }).toBe("visible");
     link.dispatchEvent(
       new KeyboardEvent("keydown", { key: "Escape", bubbles: true, composed: true }),
     );
-    await wait(300);
-    expect(getComputedStyle(card).visibility).toBe("hidden");
+    await expect.poll(visibility, { timeout: 5000 }).toBe("hidden");
   });
 
   it("renders a hostile title as text", () => {

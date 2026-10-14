@@ -177,7 +177,6 @@ export function rebase(values: IndicatorInput, base: number): IndicatorSeries {
   );
 }
 
-
 // ---- bars ----------------------------------------------------------------------------
 
 export interface StockBar {
@@ -484,4 +483,3 @@ export function distanceToSegment(
     length === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / length));
   return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
 }
-

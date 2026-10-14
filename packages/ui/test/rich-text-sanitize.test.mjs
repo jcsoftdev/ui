@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { assertScalesLinearly } from "./helpers/scaling.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -190,16 +191,14 @@ test("a safe link padded with unicode whitespace keeps working, trimmed", () => 
 
 test("hostile nesting stays cheap and idempotent", () => {
   const payloads = {
-    openThenBlocks: "<b>".repeat(40000) + "<p>".repeat(40000),
-    openThenStrayCloser: "<b>".repeat(70000) + "</p>".repeat(70000),
-    scripts: "<script></script>".repeat(20000),
+    openThenBlocks: (n) => "<b>".repeat(n) + "<p>".repeat(n),
+    openThenStrayCloser: (n) => "<b>".repeat(n) + "</p>".repeat(n),
+    scripts: (n) => "<script></script>".repeat(n),
   };
-  for (const [name, input] of Object.entries(payloads)) {
-    const start = performance.now();
-    const out = sanitizeHtml(input);
-    const elapsed = performance.now() - start;
-    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  for (const [name, make] of Object.entries(payloads)) {
+    const out = sanitizeHtml(make(4000));
     assert.equal(sanitizeHtml(out), out, name);
+    assertScalesLinearly(name, { make, run: sanitizeHtml, small: 5000 });
   }
 });
 
