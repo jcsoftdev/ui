@@ -142,3 +142,44 @@ export function createHeader(): { el: HTMLElement; update(state: HeaderState): v
 /** Tells the charts the provider's data or filters changed. */
 export const notify = (provider: HTMLElement, detail: unknown) =>
   emit(provider, PROVIDER_EVENT.change, detail);
+
+/**
+ * Plain settings of an element (`keys`, `texts`, ...) as accessors with defaults: assigning one
+ * redraws a connected element, and `upgradeProperties` can restore a value set before the element
+ * was defined (a class field would overwrite it).
+ */
+export function defineSettings(
+  ctor: { prototype: object },
+  defaults: Record<string, unknown>,
+): void {
+  const store = new WeakMap<object, Record<string, unknown>>();
+  for (const [name, fallback] of Object.entries(defaults))
+    Object.defineProperty(ctor.prototype, name, {
+      configurable: true,
+      enumerable: true,
+      get(this: object) {
+        return store.get(this)?.[name] ?? fallback;
+      },
+      set(this: HTMLElement & { sync?(): void }, value: unknown) {
+        let values = store.get(this);
+        if (!values) store.set(this, (values = {}));
+        values[name] = value;
+        if (this.isConnected) this.sync?.();
+      },
+    });
+}
+
+/**
+ * Names the chart after its `heading` unless the author set a `label`. Follows later changes of
+ * the heading; an authored label is never touched.
+ */
+export function followHeading(host: HTMLElement): (heading: string) => void {
+  let auto = "";
+  return (heading) => {
+    const current = host.getAttribute("label");
+    if (current != null && current !== auto) return;
+    if (heading) host.setAttribute("label", heading);
+    else if (current != null) host.removeAttribute("label");
+    auto = heading;
+  };
+}

@@ -1,6 +1,7 @@
 import { resolveFormat, type ValueFormat } from "@jcsoftdev/ui-core/chart/format";
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
 import { CHART_EVENT, type ChartHost } from "../internal/chart-protocol.js";
+import { upgradeProperties } from "../internal/e10.js";
 import { CartesianElement } from "../internal/e17-cartesian.js";
 import css from "../internal/e23-crossfilter.css.js";
 import {
@@ -9,7 +10,9 @@ import {
   createHeader,
   DEFAULT_TEXTS,
   DIMMED,
+  defineSettings,
   evenEdges,
+  followHeading,
   linkProvider,
   type ProviderLink,
   rangeOfBins,
@@ -43,14 +46,15 @@ export class UiCrossfilterHistogram extends CartesianElement {
   ];
   protected readonly kind = "column" as const;
 
-  edges: readonly number[] | undefined;
-  edgeFormat: ValueFormat | undefined;
-  texts: Partial<CrossfilterTexts> = {};
+  declare edges: readonly number[] | undefined;
+  declare edgeFormat: ValueFormat | undefined;
+  declare texts: Partial<CrossfilterTexts>;
 
   #link: ProviderLink | undefined;
   #header = createHeader();
   #bins: readonly number[] = [];
   #drag: Drag | null = null;
+  readonly #name = followHeading(this);
 
   constructor() {
     super();
@@ -69,7 +73,10 @@ export class UiCrossfilterHistogram extends CartesianElement {
     this.dataset.ui = "crossfilter-histogram";
     super.connectedCallback();
     this.prepend(this.#header.el);
+    upgradeProperties(this, ["edges", "edgeFormat", "texts"]);
     this.#link = linkProvider(this, () => this.sync());
+    // The provider may already hold data (the chart was added later): draw it now.
+    this.sync();
   }
 
   override disconnectedCallback(): void {
@@ -180,7 +187,7 @@ export class UiCrossfilterHistogram extends CartesianElement {
     const dimension = this.#dimension;
     const heading = this.getAttribute("heading") ?? "";
     const texts = { ...DEFAULT_TEXTS, ...this.texts };
-    if (heading && !this.hasAttribute("label")) this.setAttribute("label", heading);
+    this.#name(heading);
     if (!api || !api.accessors[dimension]) {
       this.categories = [];
       this.series = [];
@@ -228,6 +235,8 @@ export class UiCrossfilterHistogram extends CartesianElement {
     ];
   }
 }
+
+defineSettings(UiCrossfilterHistogram, { edges: undefined, edgeFormat: undefined, texts: {} });
 
 /** Registers `<ui-crossfilter-histogram>` (or `<prefix>-crossfilter-histogram`) and returns the tag. */
 export function defineCrossfilterHistogram(options?: DefineOptions): string {

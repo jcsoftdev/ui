@@ -5,6 +5,7 @@ import {
   ElementBase,
   rootOf,
 } from "../internal/base.js";
+import { upgradeProperties } from "../internal/e10.js";
 import css from "../internal/e23-crossfilter.css.js";
 import {
   type CrossfilterTexts,
@@ -20,7 +21,7 @@ import {
 export class UiCrossfilterSummary extends ElementBase {
   static observedAttributes = ["noun"];
 
-  texts: Partial<CrossfilterTexts> = {};
+  #texts: Partial<CrossfilterTexts> = {};
   #link: ProviderLink | undefined;
   #text = document.createElement("p");
   #button = document.createElement("button");
@@ -35,6 +36,7 @@ export class UiCrossfilterSummary extends ElementBase {
   connectedCallback(): void {
     this.dataset.ui = "crossfilter-summary";
     adoptStyles(rootOf(this), css);
+    upgradeProperties(this, ["texts"]);
     this.replaceChildren(this.#text, this.#button);
     this.#link = linkProvider(this, () => this.#render());
     this.#render();
@@ -47,6 +49,16 @@ export class UiCrossfilterSummary extends ElementBase {
 
   attributeChangedCallback(): void {
     this.#render();
+  }
+
+  /** Strings to override (see the shared `CrossfilterTexts`); assigning redraws. */
+  get texts(): Partial<CrossfilterTexts> {
+    return this.#texts;
+  }
+
+  set texts(value: Partial<CrossfilterTexts>) {
+    this.#texts = value;
+    if (this.isConnected) this.#render();
   }
 
   #render(): void {

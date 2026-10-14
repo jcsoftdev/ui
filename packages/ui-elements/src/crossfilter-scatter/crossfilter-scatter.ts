@@ -1,12 +1,15 @@
 import { type BrushRect, rangesToRect, rectToRanges } from "@jcsoftdev/ui-core/chart/brush";
 import { resolveFormat, type ValueFormat } from "@jcsoftdev/ui-core/chart/format";
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
+import { upgradeProperties } from "../internal/e10.js";
 import { XYElement, type XYPoint } from "../internal/e17-xy.js";
 import css from "../internal/e23-crossfilter.css.js";
 import {
   type CrossfilterTexts,
   createHeader,
   DEFAULT_TEXTS,
+  defineSettings,
+  followHeading,
   linkProvider,
   type ProviderLink,
 } from "../internal/e23-crossfilter.js";
@@ -33,13 +36,14 @@ export class UiCrossfilterScatter extends XYElement {
   ];
   protected readonly sized = false;
 
-  pointLabel: ((record: never) => string) | undefined;
-  xLabel: string | undefined;
-  yLabel: string | undefined;
-  texts: Partial<CrossfilterTexts> = {};
+  declare pointLabel: ((record: never) => string) | undefined;
+  declare xLabel: string | undefined;
+  declare yLabel: string | undefined;
+  declare texts: Partial<CrossfilterTexts>;
 
   #link: ProviderLink | undefined;
   #header = createHeader();
+  readonly #name = followHeading(this);
 
   override connectedCallback(): void {
     adoptStyles(rootOf(this), css);
@@ -49,12 +53,21 @@ export class UiCrossfilterScatter extends XYElement {
     super.connectedCallback();
     this.prepend(this.#header.el);
     this.addEventListener("brush", this.#onBrush);
+    // A click or tap filters (it clears the brush) and never pins a point: claim it before the
+    // pointer layer sees it.
+    this.addEventListener("click", this.#claim, true);
+    this.addEventListener("pointerup", this.#claim, true);
+    upgradeProperties(this, ["pointLabel", "xLabel", "yLabel", "texts", "xFormat", "yFormat"]);
     this.#link = linkProvider(this, () => this.sync());
+    // The provider may already hold data (the chart was added later): draw it now.
+    this.sync();
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener("brush", this.#onBrush);
+    this.removeEventListener("click", this.#claim, true);
+    this.removeEventListener("pointerup", this.#claim, true);
     this.#link?.stop();
     this.#link = undefined;
     this.#header.el.remove();
@@ -70,6 +83,10 @@ export class UiCrossfilterScatter extends XYElement {
     if (this.hasAttribute("no-brush")) this.removeAttribute("brush");
     else if (!this.hasAttribute("brush")) this.setAttribute("brush", "");
   }
+
+  readonly #claim = (event: Event) => {
+    if (!this.#header.el.contains(event.target as Node)) event.preventDefault();
+  };
 
   readonly #onBrush = (event: Event) => {
     if (event.target !== this) return;
@@ -88,7 +105,7 @@ export class UiCrossfilterScatter extends XYElement {
     const y = this.getAttribute("y") ?? "";
     const heading = this.getAttribute("heading") ?? "";
     const texts = { ...DEFAULT_TEXTS, ...this.texts };
-    if (heading && !this.hasAttribute("label")) this.setAttribute("label", heading);
+    this.#name(heading);
     const accessX = api?.accessors[x];
     const accessY = api?.accessors[y];
     if (!api || !accessX || !accessY) {
@@ -144,6 +161,13 @@ export class UiCrossfilterScatter extends XYElement {
     });
   }
 }
+
+defineSettings(UiCrossfilterScatter, {
+  pointLabel: undefined,
+  xLabel: undefined,
+  yLabel: undefined,
+  texts: {},
+});
 
 /** Registers `<ui-crossfilter-scatter>` (or `<prefix>-crossfilter-scatter`) and returns the tag. */
 export function defineCrossfilterScatter(options?: DefineOptions): string {

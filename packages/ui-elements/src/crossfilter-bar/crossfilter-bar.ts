@@ -1,5 +1,6 @@
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
 import { CHART_EVENT, type ChartHost } from "../internal/chart-protocol.js";
+import { upgradeProperties } from "../internal/e10.js";
 import { CartesianElement } from "../internal/e17-cartesian.js";
 import css from "../internal/e23-crossfilter.css.js";
 import {
@@ -8,6 +9,8 @@ import {
   DEFAULT_TEXTS,
   DIMMED,
   type DimensionValue,
+  defineSettings,
+  followHeading,
   type Group,
   isSelected,
   linkProvider,
@@ -33,14 +36,15 @@ export class UiCrossfilterBar extends CartesianElement {
   ];
   protected readonly kind = "column" as const;
 
-  keys: readonly DimensionValue[] | undefined;
-  keyLabel: (key: DimensionValue) => string = String;
-  measure: ((record: never) => number) | undefined;
-  texts: Partial<CrossfilterTexts> = {};
+  declare keys: readonly DimensionValue[] | undefined;
+  declare keyLabel: (key: DimensionValue) => string;
+  declare measure: ((record: never) => number) | undefined;
+  declare texts: Partial<CrossfilterTexts>;
 
   #link: ProviderLink | undefined;
   #header = createHeader();
   #groups: readonly Group[] = [];
+  readonly #name = followHeading(this);
 
   constructor() {
     super();
@@ -60,7 +64,10 @@ export class UiCrossfilterBar extends CartesianElement {
     this.dataset.ui = "crossfilter-bar";
     super.connectedCallback();
     this.prepend(this.#header.el);
+    upgradeProperties(this, ["keys", "keyLabel", "measure", "texts"]);
     this.#link = linkProvider(this, () => this.sync());
+    // The provider may already hold data (the chart was added later): draw it now.
+    this.sync();
   }
 
   override disconnectedCallback(): void {
@@ -81,7 +88,7 @@ export class UiCrossfilterBar extends CartesianElement {
     const dimension = this.getAttribute("dimension") ?? "";
     const heading = this.getAttribute("heading") ?? "";
     const texts = { ...DEFAULT_TEXTS, ...this.texts };
-    if (heading && !this.hasAttribute("label")) this.setAttribute("label", heading);
+    this.#name(heading);
     if (!api || !api.accessors[dimension]) {
       this.#groups = [];
       this.categories = [];
@@ -132,6 +139,13 @@ export class UiCrossfilterBar extends CartesianElement {
     ];
   }
 }
+
+defineSettings(UiCrossfilterBar, {
+  keys: undefined,
+  keyLabel: String,
+  measure: undefined,
+  texts: {},
+});
 
 /** Registers `<ui-crossfilter-bar>` (or `<prefix>-crossfilter-bar`) and returns the tag. */
 export function defineCrossfilterBar(options?: DefineOptions): string {

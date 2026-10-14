@@ -6,6 +6,7 @@ import {
   emit,
   rootOf,
 } from "../internal/base.js";
+import { upgradeProperties } from "../internal/e10.js";
 import {
   type Accessors,
   activeFilterCount,
@@ -98,6 +99,7 @@ export class UiCrossfilter extends ElementBase implements CrossfilterApi {
   connectedCallback(): void {
     this.dataset.ui = "crossfilter";
     adoptStyles(rootOf(this), css);
+    upgradeProperties(this, ["data", "dimensions", "filters"]);
     emit(this, PROVIDER_EVENT.ready);
   }
 

@@ -235,6 +235,89 @@ describe("ui-crossfilter", () => {
     expect((scatter as unknown as { selected: number | null }).selected).toBeNull();
   });
 
+  it("scatter: a click never pins a point and only clears the brush", async () => {
+    const { xf, scatter } = await board();
+    let selects = 0;
+    scatter.addEventListener("chart-select", () => selects++);
+    const box = svgOf(scatter).getBoundingClientRect();
+    const root = drawingOf(scatter);
+    const a = { x: box.left + box.width * 0.3, y: box.top + box.height * 0.3 };
+    const b = { x: box.left + box.width * 0.7, y: box.top + box.height * 0.7 };
+    fire(root, "pointerdown", a.x, a.y);
+    for (const t of [0.5, 1])
+      fire(root, "pointermove", a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+    fire(root, "pointerup", b.x, b.y);
+    await settle();
+    expect(xf.filters.price?.kind).toBe("range");
+    const dot = scatter.querySelector<SVGElement>('[data-e17="point"], circle');
+    const at = dot ? centerOf(dot) : { x: b.x, y: b.y };
+    await userEvent.click(document.elementFromPoint(at.x, at.y) ?? root);
+    await settle();
+    expect(selects).toBe(0);
+    expect(scatter.querySelector("[data-selected]")).toBeNull();
+    expect((scatter as unknown as { selected: number | null }).selected).toBeNull();
+  });
+
+  it("a chart appended to a populated provider draws at once", async () => {
+    const { xf } = await board();
+    const late = document.createElement("ui-crossfilter-bar");
+    late.setAttribute("dimension", "barber");
+    late.setAttribute("height", "160");
+    xf.append(late);
+    await settle();
+    expect(late.querySelector("svg")).not.toBeNull();
+    const hist = document.createElement("ui-crossfilter-histogram");
+    hist.setAttribute("dimension", "price");
+    hist.setAttribute("domain", "0,100");
+    hist.setAttribute("height", "160");
+    xf.append(hist);
+    const scatter = document.createElement("ui-crossfilter-scatter");
+    scatter.setAttribute("x", "price");
+    scatter.setAttribute("y", "minutes");
+    scatter.setAttribute("height", "160");
+    xf.append(scatter);
+    await settle();
+    expect(hist.querySelector("svg")).not.toBeNull();
+    expect(scatter.querySelector("svg")).not.toBeNull();
+  });
+
+  it("properties set before the elements upgrade survive it", async () => {
+    // Elements of an inert document are not upgraded, so these are plain own properties.
+    const inert = document.implementation.createHTMLDocument("");
+    const make = (tag: string) => inert.createElement(tag) as HTMLElement & Record<string, unknown>;
+    const xf = make("ui-crossfilter");
+    const bar = make("ui-crossfilter-bar");
+    const sum = make("ui-crossfilter-summary");
+    xf.dimensions = DIMENSIONS;
+    xf.data = SALES;
+    bar.setAttribute("dimension", "barber");
+    bar.setAttribute("height", "160");
+    bar.keyLabel = (key: unknown) => `<${String(key)}>`;
+    sum.texts = { count: () => "custom summary" };
+    xf.append(sum, bar);
+    const host = mount("<div style='width:600px'></div>");
+    host.firstElementChild?.append(document.adoptNode(xf));
+    await settle();
+    const live = host.querySelector("ui-crossfilter") as UiCrossfilter;
+    expect(live.data.length).toBe(120);
+    expect(host.querySelector("ui-crossfilter-bar")?.textContent).toContain("<Ana>");
+    expect(host.querySelector("ui-crossfilter-summary")?.textContent).toContain("custom summary");
+  });
+
+  it("a heading change renames the chart and the summary follows texts", async () => {
+    const { bar, summary } = await board();
+    bar.setAttribute("heading", "Per barber");
+    await settle();
+    expect(bar.getAttribute("label")).toBe("Per barber");
+    bar.setAttribute("label", "Mine");
+    bar.setAttribute("heading", "Other");
+    await settle();
+    expect(bar.getAttribute("label")).toBe("Mine");
+    (summary as unknown as { texts: unknown }).texts = { count: () => "custom summary" };
+    await settle();
+    expect(summary.textContent).toContain("custom summary");
+  });
+
   it("formats with the locale and no currency", async () => {
     const { summary, hist } = await board("de-DE");
     expect(summary.textContent).toContain("120 of 120");
