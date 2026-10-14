@@ -13,6 +13,7 @@ import {
 import type { CellEditor, CellValue, EditContext, GridColumn } from "@jcsoftdev/ui-core/grid/model";
 import type { UiDataGrid } from "./data-grid.js";
 import css from "./edit.css.js";
+import { announce, isEditable } from "./shared.js";
 
 /** What the grid hands over so this chunk shares no module with the grid's eager graph. */
 export interface EditDeps {
@@ -102,7 +103,11 @@ function textEditor(ctx: Ctx, kind: EditorKind | "custom", seed: string | undefi
   input.spellcheck = false;
   if (kind === "number") input.inputMode = "decimal";
   if (kind === "date") input.placeholder = datePlaceholder(locale);
-  input.value = seed ?? draftText(kind, ctx.value, locale);
+  // With formulas on, a formula is edited as the text that was typed, not as a number or a date.
+  const formulas = ctx.grid.hasAttribute("formulas");
+  const isFormula = (text: unknown): text is string =>
+    formulas && typeof text === "string" && text.trimStart().startsWith("=");
+  input.value = seed ?? (isFormula(ctx.value) ? ctx.value : draftText(kind, ctx.value, locale));
   return {
     element: input,
     dirty: seed !== undefined,
@@ -112,6 +117,7 @@ function textEditor(ctx: Ctx, kind: EditorKind | "custom", seed: string | undefi
       else input.setSelectionRange(input.value.length, input.value.length);
     },
     read() {
+      if (isFormula(input.value)) return { ok: true, value: input.value };
       const result = parseDraft(column, kind, input.value, row, locale);
       if ("value" in result) return { ok: true, value: result.value };
       const message =
@@ -214,23 +220,6 @@ interface Ctx {
   label: string;
 }
 
-function writable(grid: UiDataGrid, column: Col, row: Row): boolean {
-  if (grid.getAttribute("edit-mode") === "emit" || column.setter) return true;
-  return typeof (column.accessor ?? column.id) !== "function" && !Object.isFrozen(row);
-}
-
-/** Whether the cell can be edited and, in `mutate` mode, written back. */
-function isEditable(grid: UiDataGrid, column: Col, row: Row): boolean {
-  const editable = column.editable;
-  return (
-    row != null &&
-    (typeof editable === "function"
-      ? editable(row)
-      : (editable ?? grid.hasAttribute("editable"))) &&
-    writable(grid, column, row)
-  );
-}
-
 /** The row object for a key, for a cell that is not mounted. */
 function rowByKey(grid: UiDataGrid, key: string): Row {
   const keyOf = grid.rowKey;
@@ -322,16 +311,6 @@ function leave(grid: UiDataGrid, step: 1 | -1): void {
     !!(grid.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
   const next = step > 0 ? stops.find(after) : stops.filter((el) => !after(el)).pop();
   next?.focus();
-}
-
-/** Announces through the grid's status region. */
-function announce(grid: UiDataGrid, message: string): void {
-  const region = grid.querySelector<HTMLElement>("[data-ui-part=status]");
-  if (!region) return;
-  region.textContent = "";
-  queueMicrotask(() => {
-    region.textContent = message;
-  });
 }
 
 /** Opens the editor of a cell, after the cancelable `beforecelledit`. */
@@ -507,10 +486,15 @@ export async function beginEdit(
     try {
       const read = editor.read();
       let message = read.ok ? null : read.message;
-      const typed = (kind === "number" || kind === "date") && !column.parse;
+      const formula =
+        read.ok &&
+        grid.hasAttribute("formulas") &&
+        typeof read.value === "string" &&
+        read.value.trimStart().startsWith("=");
+      const typed = (kind === "number" || kind === "date") && !column.parse && !formula;
       const value = read.ok ? (typed ? likeOriginal(read.value, ctx.value) : read.value) : null;
       const changed = read.ok && !sameValue(value, ctx.value);
-      if (changed) {
+      if (changed && !formula) {
         validation = new AbortController();
         message = await validateValue(column, value, row, validation.signal);
       }
