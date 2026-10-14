@@ -82,6 +82,7 @@ const gridDeps = {
   "grid/group": ["grid/model", "grid/sort", "chart/format"],
   "grid/pivot": ["grid/model", "grid/sort", "chart/format"],
   "grid/export": ["grid/model", "chart/format"],
+  "grid/clipboard": ["grid/edit"],
 };
 const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
