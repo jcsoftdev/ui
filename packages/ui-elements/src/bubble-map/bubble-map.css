@@ -1,0 +1,64 @@
+[data-ui="bubble-map"] path[data-region] {
+  cursor: inherit;
+  pointer-events: none;
+}
+[data-ui="bubble-map"] [data-bubble] {
+  cursor: pointer;
+}
+[data-ui="bubble-map"] [data-bubble] circle {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+[data-ui="bubble-map"] [data-bubble][data-active] circle,
+[data-ui="bubble-map"] [data-bubble][data-selected] circle {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+[data-ui="bubble-map"] [data-bubble]:focus-visible circle {
+  stroke: var(--focus-ring-color);
+  stroke-width: 3;
+}
+[data-ui="bubble-map"] [data-bubble] text {
+  fill: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+[data-ui="bubble-map"] [data-route] path {
+  fill: none;
+  stroke: var(--ui-route-color);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+[data-ui="bubble-map"] [data-route-line] {
+  stroke-width: var(--ui-route-width);
+  opacity: 0.3;
+  pointer-events: none;
+}
+[data-ui="bubble-map"] [data-route][data-active] [data-route-line],
+[data-ui="bubble-map"] [data-route][data-selected] [data-route-line] {
+  opacity: 0.7;
+}
+[data-ui="bubble-map"] [data-route-dash] {
+  stroke-width: var(--ui-route-width);
+  stroke-dasharray: 6 8;
+  pointer-events: none;
+}
+[data-ui="bubble-map"] [data-route-hit] {
+  stroke: transparent;
+  stroke-width: 14px;
+  pointer-events: stroke;
+}
+[data-ui="bubble-map"] [data-flow] [data-route-dash] {
+  animation: ui-bubble-map-flow 1.1s linear infinite;
+}
+@keyframes ui-bubble-map-flow {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="bubble-map"] [data-flow] [data-route-dash] {
+    animation: none;
+  }
+}

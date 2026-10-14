@@ -1,0 +1,100 @@
+[data-ui="tree-chart"] > [data-ui-part="drawing"] {
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+}
+[data-ui="tree-chart"] [data-stage] {
+  transform-origin: 0 0;
+}
+[data-ui="tree-chart"] [data-card] {
+  transform-box: fill-box;
+  transform-origin: center;
+  outline: 0;
+  cursor: pointer;
+  transition: opacity 200ms;
+}
+[data-ui="tree-chart"] [data-bg] {
+  rx: var(--radius-tile);
+  fill: var(--surface-card);
+  stroke: var(--line);
+  stroke-width: 1;
+  transition: stroke 150ms;
+}
+[data-ui="tree-chart"] [data-chip] [data-bg] {
+  fill: var(--surface);
+}
+[data-ui="tree-chart"] [data-group] [data-bg] {
+  stroke-dasharray: 4 3;
+}
+[data-ui="tree-chart"] [data-bg][data-custom] {
+  fill: transparent;
+  stroke: none;
+}
+[data-ui="tree-chart"] [data-ring] {
+  rx: calc(var(--radius-tile) + 4px);
+  fill: none;
+  stroke: transparent;
+  stroke-width: 2;
+  pointer-events: none;
+}
+[data-ui="tree-chart"] [data-chip] [data-ring] {
+  rx: 18px;
+  ry: 18px;
+}
+[data-ui="tree-chart"] [data-name] {
+  fill: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+[data-ui="tree-chart"] [data-chip] [data-name] {
+  font-size: 11px;
+}
+[data-ui="tree-chart"] [data-sub] {
+  fill: var(--ink-3);
+  font-size: 11px;
+}
+[data-ui="tree-chart"] [data-initials] {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+[data-ui="tree-chart"] [data-pill] {
+  fill: var(--ink-2);
+  font-size: 10px;
+  font-weight: 700;
+}
+[data-ui="tree-chart"] [data-count] {
+  fill: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="tree-chart"] [data-image] {
+  clip-path: circle(50%) fill-box;
+}
+[data-ui="tree-chart"] [data-edge] {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 1.5;
+}
+[data-ui="tree-chart"] [data-toggle] {
+  cursor: pointer;
+}
+[data-ui="tree-chart"] [data-toggle] rect {
+  rx: var(--radius-badge);
+  fill: var(--surface-control);
+  stroke: var(--line);
+}
+[data-ui="tree-chart"] [data-toggle] text {
+  fill: var(--ink-2);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="tree-chart"] [data-card],
+  [data-ui="tree-chart"] [data-bg] {
+    transition: none;
+  }
+}

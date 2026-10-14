@@ -1,0 +1,30 @@
+[data-ui="hex-tile-map"] [data-tile] {
+  cursor: pointer;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+[data-ui="hex-tile-map"] [data-tile] polygon {
+  stroke: var(--surface);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  transition: fill 150ms;
+}
+[data-ui="hex-tile-map"] [data-tile][data-active] polygon,
+[data-ui="hex-tile-map"] [data-tile][data-selected] polygon {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+[data-ui="hex-tile-map"] [data-tile]:focus-visible polygon {
+  stroke: var(--focus-ring-color);
+  stroke-width: 3;
+}
+[data-ui="hex-tile-map"] [data-tile] text {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="hex-tile-map"] [data-tile] polygon {
+    transition: none;
+  }
+}
