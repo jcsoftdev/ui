@@ -1,0 +1,40 @@
+[data-ui="stock"] .guide {
+  stroke: var(--line);
+  stroke-dasharray: 3 3;
+}
+[data-ui="stock"] .hist[data-dir="up"] {
+  fill: var(--chart-up);
+  opacity: 0.8;
+}
+[data-ui="stock"] .hist[data-dir="down"] {
+  fill: var(--chart-down);
+  opacity: 0.8;
+}
+[data-ui="stock"] .ov,
+[data-ui="stock"] .osc-line {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+[data-ui="stock"] .osc-line {
+  stroke: var(--chart-cat-1);
+}
+[data-ui="stock"] .osc-line.signal {
+  stroke: var(--chart-cat-3);
+}
+[data-ui="stock"] .ov.dashed {
+  stroke-dasharray: 4 3;
+  opacity: 0.8;
+}
+[data-ui="stock"] .band {
+  opacity: 0.1;
+  stroke: none;
+}
+[data-ui="stock"] .pane-name {
+  fill: var(--ink-3);
+  font-weight: 600;
+}
+[data-ui="stock"] .flag text {
+  font-size: 10px;
+  font-weight: 700;
+}
