@@ -401,7 +401,7 @@ function RadialPlot({
               stroke={gradient ? `url(#${uid}-g${ring.index})` : item.color}
               dimmed={focusIndex != null && focusIndex !== ring.index}
               onEnter={(event) => nav.hover(position, event)}
-              onLeave={nav.leave}
+              onLeave={nav.pointerLeave}
             />
           );
         })}
@@ -538,6 +538,7 @@ const RingMark = memo(function RingMark({
       ) : null}
       <path
         d={hitPath}
+        data-chart-hit=""
         fill="none"
         strokeWidth={band + 4}
         strokeLinecap="butt"

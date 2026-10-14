@@ -45,7 +45,7 @@ const rows: Row[] = [
 const cols: model.GridColumn<Row>[] = [
   { id: "name", header: "Nombre" },
   { id: "qty", header: "Cantidad", type: "number" },
-  { id: "price", header: "Precio", type: "currency", maxWidth: 140 },
+  { id: "price", header: "Precio", type: "currency", currency: "PEN", maxWidth: 140 },
   { id: "when", header: "Fecha", type: "date" },
   { id: "ok", header: "Ok", type: "boolean", grow: 2 },
   { id: "calc", header: "Calc", accessor: (r) => (r.qty ?? 0) * r.price, width: 90, minWidth: 80 },
@@ -375,7 +375,11 @@ describe("grid locale and persisted layout", () => {
     );
     expect(model.formatCellValue(1234567.5, qty, { locale: "en-US" })).toBe("1,234,567.5");
     expect(model.formatCellValue(1234567.5, qty, { locale: "de-DE" })).toBe("1.234.567,5");
-    expect(model.formatCellValue(5, price, { locale: "en-US" })).toContain("5.00");
+    expect(model.formatCellValue(5, price, { locale: "en-US" })).toBe("5.00"); // no currency, no symbol
+    expect(model.formatCellValue(5, { ...price, currency: "USD" }, { locale: "en-US" })).toBe(
+      "$5.00",
+    );
+    expect(model.formatCellValue(5, price, { locale: "en-US", currency: "USD" })).toBe("$5.00");
     expect(model.formatCellValue(true, qty)).toBe("Yes");
     expect(model.formatCellValue(false, qty, { labels: { no: "Nope" } })).toBe("Nope");
     const date = new Date(2024, 1, 29);

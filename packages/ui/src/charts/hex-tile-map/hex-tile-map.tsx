@@ -250,7 +250,12 @@ function HexPlot({
   const anchor = current && active != null ? (grid.centers[active] ?? null) : null;
 
   return (
-    <div ref={nav.ref} className="relative" style={{ width, height }} onPointerLeave={nav.leave}>
+    <div
+      ref={nav.ref}
+      className="relative"
+      style={{ width, height }}
+      onPointerLeave={nav.pointerLeave}
+    >
       <svg
         ref={svgRef}
         role="img"

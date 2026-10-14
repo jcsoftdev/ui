@@ -1,0 +1,36 @@
+[data-ui-chart] {
+  display: flex;
+  position: relative;
+  box-sizing: border-box;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  container: ui-chart / inline-size;
+}
+[data-ui-chart][data-fill] {
+  height: 100%;
+}
+[data-ui-chart] > [data-ui-part="drawing"] {
+  position: relative;
+  flex: none;
+  min-width: 0;
+  order: 1;
+  touch-action: pan-y;
+}
+[data-ui-chart][data-fill] > [data-ui-part="drawing"] {
+  flex: 1 1 0;
+  min-height: 120px;
+}
+[data-ui-chart] > [data-ui-part="drawing"] > svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+  color: var(--ink-2);
+  font: inherit;
+  user-select: none;
+}

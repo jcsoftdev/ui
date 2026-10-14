@@ -10,6 +10,8 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const browser = {
   enabled: true,
   headless: true,
+  // A desktop viewport: the dock only follows a phone-sized viewport or a coarse pointer.
+  viewport: { width: 1280, height: 800 },
   provider: playwright(),
   instances: [{ browser: "chromium" as const }],
 };
