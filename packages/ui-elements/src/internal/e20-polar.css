@@ -1,0 +1,36 @@
+/* A polar chart's legend sits beside the drawing in a wide container, as in the React kit. The
+   room is reserved only when a legend is there. */
+@container ui-chart (min-width: 32rem) {
+  [data-ui-chart][data-polar] > [data-ui="chart-legend"] {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 0;
+    transform: translateY(-50%);
+    box-sizing: border-box;
+    width: 11rem;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  [data-ui-chart][data-polar]:has(> [data-ui="chart-legend"]) > [data-ui-part="drawing"] {
+    margin-inline-end: calc(11rem + 16px);
+  }
+  [data-ui-chart][data-polar] > [data-ui="chart-legend"] > ul {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+}
+[data-ui-chart][data-polar] [data-pointer-none] {
+  pointer-events: none;
+}
+[data-ui-chart][data-polar] [data-fade-on-focus] {
+  transition: opacity 150ms;
+}
+[data-ui-chart][data-polar] [data-slices]:has([data-active]) ~ [data-fade-on-focus] {
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart][data-polar] [data-fade-on-focus] {
+    transition: none;
+  }
+}
