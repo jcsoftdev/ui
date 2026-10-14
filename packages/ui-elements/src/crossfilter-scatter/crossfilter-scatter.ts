@@ -1,4 +1,5 @@
-import { type BrushRect, rangesToRect, rectToRanges } from "@jcsoftdev/ui-core/chart/brush";
+import type { BrushRect } from "@jcsoftdev/ui-core/chart/brush";
+import { rangesToRect, rectToRanges } from "@jcsoftdev/ui-core/chart/brush-rect";
 import { resolveFormat, type ValueFormat } from "@jcsoftdev/ui-core/chart/format";
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
 import { upgradeProperties } from "../internal/e10.js";
