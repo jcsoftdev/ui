@@ -23,7 +23,7 @@ Disabled (user override: implement first, tests where they buy safety). Runner: 
 ask-on-risk, single PR into main with work-unit commits.
 
 ## Tasks
-- [ ] A1 Tokens: distinct `danger-soft` (light and dark) from `accent-soft`, `count` text style 12/1.2, contrast test over the soft/ink pairs. Route: inline (tokens json, generated outputs, one test).
+- [x] A1 Tokens: distinct `danger-soft` (light and dark) from `accent-soft`, `count` text style 12/1.2, contrast test over the soft/ink pairs. Route: inline (tokens json, generated outputs, one test).
 - [ ] A2 Large font scale: `Button`, `Chip`, `Segmented` wrap to 2 lines when `fontScale > 1.3`. Route: inline.
 - [ ] A3 `Input`/`PasswordInput` content type (`InputContentType`), placeholder kept consistent. Route: inline.
 - [ ] A4 Disabled treatment for buttons (legible label, no alpha dim) and stronger card border (`CardDefaults.colors(outlined)`, high contrast). Route: inline.
