@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.cartesian/CartesianModule { // com.jcsoftdev
 
 final val com.jcsoftdev.ui.chart.cartesian/com_jcsoftdev_ui_chart_cartesian_CartesianModule$stableprop // com.jcsoftdev.ui.chart.cartesian/com_jcsoftdev_ui_chart_cartesian_CartesianModule$stableprop|#static{}com_jcsoftdev_ui_chart_cartesian_CartesianModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.cartesian/CartesianPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.cartesian/CartesianPlaceholder|CartesianPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.cartesian/com_jcsoftdev_ui_chart_cartesian_CartesianModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.cartesian/com_jcsoftdev_ui_chart_cartesian_CartesianModule$stableprop_getter|com_jcsoftdev_ui_chart_cartesian_CartesianModule$stableprop_getter(){}[0]

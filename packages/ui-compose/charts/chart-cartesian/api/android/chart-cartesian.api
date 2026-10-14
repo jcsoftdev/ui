@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/cartesian/CartesianModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/cartesian/CartesianModuleKt {
+	public static final fun CartesianPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

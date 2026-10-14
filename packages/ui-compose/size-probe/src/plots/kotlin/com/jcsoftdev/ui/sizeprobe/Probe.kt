@@ -1,5 +1,9 @@
 package com.jcsoftdev.ui.sizeprobe
 
-internal object Probe {
-    fun touch(): String = com.jcsoftdev.ui.chart.plots.PlotsModule.id
+import androidx.compose.runtime.Composable
+import com.jcsoftdev.ui.chart.plots.PlotsPlaceholder
+
+@Composable
+internal fun ProbeContent() {
+    PlotsPlaceholder()
 }

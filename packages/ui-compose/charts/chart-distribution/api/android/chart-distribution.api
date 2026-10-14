@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/distribution/DistributionModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/distribution/DistributionModuleKt {
+	public static final fun DistributionPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

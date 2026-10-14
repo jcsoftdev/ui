@@ -14,9 +14,10 @@ val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.ui)
+            // api: a chart's public signatures name Composable, Modifier and Color, so consumers see them without declaring Compose.
+            api(compose.runtime)
+            api(compose.foundation)
+            api(compose.ui)
         }
         jvmTest.dependencies {
             @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)

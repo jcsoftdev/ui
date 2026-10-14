@@ -1,7 +1,7 @@
-// Generates the Compose chart parity fixtures from the React chart math (see chart-fixtures/registry.mjs).
+// Generates the Compose chart parity fixtures from the React chart math (see charts/<module>/fixtures.mjs).
 //   node packages/ui-compose/scripts/chart-fixtures.mjs           write the fixtures, remove stale ones
 //   node packages/ui-compose/scripts/chart-fixtures.mjs --check   fail when the committed fixtures differ from a fresh run
-import { mkdirSync, mkdtempSync, readFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
@@ -10,7 +10,15 @@ import { fixturePath, serialize, staleFixtures, validateRegistry } from "./chart
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const chartsDir = join(repo, "packages/ui-compose/charts");
-const { fixtures } = await import(pathToFileURL(join(repo, "packages/ui-compose/chart-fixtures/registry.mjs")).href);
+
+// Each module owns its registry, charts/<module>/fixtures.mjs, so parallel batches never edit a shared file.
+const fixtures = [];
+for (const item of readdirSync(chartsDir, { withFileTypes: true })) {
+  const registry = join(chartsDir, item.name, "fixtures.mjs");
+  if (!item.isDirectory() || !existsSync(registry)) continue;
+  const { fixtures: own } = await import(pathToFileURL(registry).href);
+  fixtures.push(...own.map((fixture) => ({ ...fixture, module: item.name })));
+}
 const check = process.argv.includes("--check");
 
 const problems = validateRegistry(fixtures, chartsDir);
@@ -32,7 +40,7 @@ const drift = [];
 try {
   for (const fixture of fixtures) {
     const file = fixturePath(chartsDir, fixture);
-    const text = serialize(fixture.run(await load(fixture.source, scratch)));
+    const text = serialize(fixture.run(fixture.source ? await load(fixture.source, scratch) : undefined));
     const current = existsSync(file) ? readFileSync(file, "utf8") : null;
     if (current === text) continue;
     if (check) {

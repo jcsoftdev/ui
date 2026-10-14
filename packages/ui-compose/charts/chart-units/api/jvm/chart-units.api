@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/units/UnitsModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/units/UnitsModuleKt {
+	public static final fun UnitsPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

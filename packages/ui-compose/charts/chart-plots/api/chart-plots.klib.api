@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.plots/PlotsModule { // com.jcsoftdev.ui.char
 
 final val com.jcsoftdev.ui.chart.plots/com_jcsoftdev_ui_chart_plots_PlotsModule$stableprop // com.jcsoftdev.ui.chart.plots/com_jcsoftdev_ui_chart_plots_PlotsModule$stableprop|#static{}com_jcsoftdev_ui_chart_plots_PlotsModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.plots/PlotsPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.plots/PlotsPlaceholder|PlotsPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.plots/com_jcsoftdev_ui_chart_plots_PlotsModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.plots/com_jcsoftdev_ui_chart_plots_PlotsModule$stableprop_getter|com_jcsoftdev_ui_chart_plots_PlotsModule$stableprop_getter(){}[0]

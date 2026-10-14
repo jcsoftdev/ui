@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.gantt/GanttModule { // com.jcsoftdev.ui.char
 
 final val com.jcsoftdev.ui.chart.gantt/com_jcsoftdev_ui_chart_gantt_GanttModule$stableprop // com.jcsoftdev.ui.chart.gantt/com_jcsoftdev_ui_chart_gantt_GanttModule$stableprop|#static{}com_jcsoftdev_ui_chart_gantt_GanttModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.gantt/GanttPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.gantt/GanttPlaceholder|GanttPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.gantt/com_jcsoftdev_ui_chart_gantt_GanttModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.gantt/com_jcsoftdev_ui_chart_gantt_GanttModule$stableprop_getter|com_jcsoftdev_ui_chart_gantt_GanttModule$stableprop_getter(){}[0]

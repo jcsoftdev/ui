@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.hierarchy/HierarchyModule { // com.jcsoftdev
 
 final val com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop // com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop|#static{}com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.hierarchy/HierarchyPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.hierarchy/HierarchyPlaceholder|HierarchyPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop_getter|com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop_getter(){}[0]

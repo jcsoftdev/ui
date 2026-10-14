@@ -9,9 +9,18 @@ const charts = mkdtempSync(join(tmpdir(), "charts-"));
 mkdirSync(join(charts, "chart-core"));
 writeFileSync(join(charts, "chart-core", "build.gradle.kts"), "");
 const entry = { module: "chart-core", name: "scale", source: "x.ts", run: () => 1 };
+const pure = { module: "chart-core", name: "pure", run: () => 1 };
 
-test("serialize spells non-finite numbers and negative zero so Kotlin can read them back", () => {
-  assert.equal(serialize({ a: [NaN, Infinity, -Infinity, -0, 0, 1.5] }), JSON.stringify({ a: ["NaN", "Infinity", "-Infinity", "-0", 0, 1.5] }, null, 2) + "\n");
+test("serialize tags non-finite numbers and negative zero so a string stays a string", () => {
+  const f = (tag) => ({ $f: tag });
+  assert.deepEqual(JSON.parse(serialize({ a: [NaN, Infinity, -Infinity, -0, 0, 1.5], s: "NaN" })), {
+    a: [f("NaN"), f("Infinity"), f("-Infinity"), f("-0"), 0, 1.5],
+    s: "NaN",
+  });
+});
+
+test("serialize refuses data that uses the reserved tag key", () => {
+  assert.throws(() => serialize({ a: { $f: "NaN" } }), /reserved/);
 });
 
 test("serialize is stable for the same input", () => {
@@ -20,7 +29,7 @@ test("serialize is stable for the same input", () => {
 });
 
 test("registry validation rejects unknown modules, bad names and duplicates", () => {
-  assert.deepEqual(validateRegistry([entry], charts), []);
+  assert.deepEqual(validateRegistry([entry, pure], charts), []);
   assert.equal(validateRegistry([{ ...entry, module: "chart-nope" }], charts).length, 1);
   assert.equal(validateRegistry([{ ...entry, name: "Bad_Name" }], charts).length, 1);
   assert.equal(validateRegistry([entry, entry], charts).length, 1);

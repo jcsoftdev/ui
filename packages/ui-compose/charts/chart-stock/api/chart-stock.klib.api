@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.stock/StockModule { // com.jcsoftdev.ui.char
 
 final val com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop // com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop|#static{}com_jcsoftdev_ui_chart_stock_StockModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.stock/StockPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.stock/StockPlaceholder|StockPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop_getter|com_jcsoftdev_ui_chart_stock_StockModule$stableprop_getter(){}[0]

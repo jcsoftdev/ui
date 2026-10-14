@@ -6,7 +6,7 @@ plugins {
 }
 
 // One flavour per artifact. Each flavour reaches only its artifact's Probe through ProbeActivity, so the R8 dex of
-// <flavour>Release minus the `none` flavour (a Compose app on the kit) is what that artifact adds to an app. scripts/check-chart-size.mjs reads it.
+// <flavour>Release minus the `none` flavour (a Compose activity on UiTheme) is what that artifact adds to an app. scripts/check-chart-size.mjs reads it.
 android {
     namespace = "com.jcsoftdev.ui.sizeprobe"
     compileSdk = 36
@@ -62,6 +62,7 @@ dependencies {
     implementation(compose.runtime)
     implementation(compose.foundation)
     implementation(compose.ui)
+    implementation(libs.androidx.activity.compose)
     "chartCoreImplementation"(project(":chart-core"))
     "chartImplementation"(project(":chart"))
     "cartesianImplementation"(project(":chart-cartesian"))

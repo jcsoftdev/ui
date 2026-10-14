@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/gantt/GanttModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/gantt/GanttModuleKt {
+	public static final fun GanttPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/plots/PlotsModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/plots/PlotsModuleKt {
+	public static final fun PlotsPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

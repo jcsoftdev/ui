@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.export/ExportModule { // com.jcsoftdev.ui.ch
 
 final val com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop // com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop|#static{}com_jcsoftdev_ui_chart_export_ExportModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.export/ExportPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.export/ExportPlaceholder|ExportPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop_getter|com_jcsoftdev_ui_chart_export_ExportModule$stableprop_getter(){}[0]

@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.crossfilter/CrossfilterModule { // com.jcsof
 
 final val com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop // com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop|#static{}com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.crossfilter/CrossfilterPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.crossfilter/CrossfilterPlaceholder|CrossfilterPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop_getter|com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop_getter(){}[0]

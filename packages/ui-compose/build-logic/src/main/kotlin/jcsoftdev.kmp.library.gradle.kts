@@ -47,6 +47,27 @@ android {
     }
 }
 
+val isMac =
+    org.gradle.internal.os.OperatingSystem
+        .current()
+        .isMacOsX
+
+// The resolved dependency graph, read by ChartModuleGraphTest. The classpaths cover every target family: jvm, android, iOS.
+tasks.register<WriteModuleGraph>("writeModuleGraph") {
+    report.set(layout.buildDirectory.file("module-graph.txt"))
+    listOf("jvmRuntimeClasspath", "releaseRuntimeClasspath", "iosArm64CompileKlibraries").forEach { name ->
+        roots.put(name, configurations.named(name).flatMap { it.incoming.resolutionResult.rootComponent })
+    }
+}
+
+// Fixture decoding shared by every module's tests (see chart-testing/): sources, not a published module.
+kotlin {
+    sourceSets {
+        commonTest.get().kotlin.srcDir(rootProject.layout.projectDirectory.dir("chart-testing/common"))
+        jvmTest.get().kotlin.srcDir(rootProject.layout.projectDirectory.dir("chart-testing/jvm"))
+    }
+}
+
 apiValidation {
     @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
     klib {

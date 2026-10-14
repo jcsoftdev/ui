@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/export/ExportModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/export/ExportModuleKt {
+	public static final fun ExportPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

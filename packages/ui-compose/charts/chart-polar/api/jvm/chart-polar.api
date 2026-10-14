@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/polar/PolarModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/polar/PolarModuleKt {
+	public static final fun PolarPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

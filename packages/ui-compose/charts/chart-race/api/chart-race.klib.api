@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.race/RaceModule { // com.jcsoftdev.ui.chart.
 
 final val com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop // com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop|#static{}com_jcsoftdev_ui_chart_race_RaceModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.race/RacePlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.race/RacePlaceholder|RacePlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop_getter|com_jcsoftdev_ui_chart_race_RaceModule$stableprop_getter(){}[0]

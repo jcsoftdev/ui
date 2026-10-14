@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.polar/PolarModule { // com.jcsoftdev.ui.char
 
 final val com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop // com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop|#static{}com_jcsoftdev_ui_chart_polar_PolarModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.polar/PolarPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.polar/PolarPlaceholder|PolarPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop_getter|com_jcsoftdev_ui_chart_polar_PolarModule$stableprop_getter(){}[0]

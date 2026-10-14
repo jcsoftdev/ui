@@ -3,16 +3,24 @@ import { join } from "node:path";
 
 export const FIXTURE_DIR = "src/commonTest/resources/fixtures";
 
-/** JSON text for a fixture. Non-finite numbers and -0 are spelled as strings so Kotlin can read them back exactly. */
+export const TAG = "$f";
+
+/**
+ * JSON text for a fixture. A non-finite number or negative zero is the tagged object {"$f": "NaN" | "Infinity" | "-Infinity" | "-0"},
+ * so a plain string "NaN" stays a string; fixture data must not use a "$f" key itself.
+ */
 export function serialize(value) {
   const text = JSON.stringify(
     value,
     (_key, v) => {
+      if (typeof v === "object" && v !== null && !Array.isArray(v) && Object.hasOwn(v, TAG)) {
+        throw new Error(`fixture data uses the reserved "${TAG}" key`);
+      }
       if (typeof v !== "number") return v;
-      if (Number.isNaN(v)) return "NaN";
-      if (v === Infinity) return "Infinity";
-      if (v === -Infinity) return "-Infinity";
-      return Object.is(v, -0) ? "-0" : v;
+      if (Number.isNaN(v)) return { [TAG]: "NaN" };
+      if (v === Infinity) return { [TAG]: "Infinity" };
+      if (v === -Infinity) return { [TAG]: "-Infinity" };
+      return Object.is(v, -0) ? { [TAG]: "-0" } : v;
     },
     2,
   );
@@ -31,8 +39,9 @@ export function validateRegistry(fixtures, chartsDir) {
     if (!/^[a-z][a-z0-9-]*$/.test(fixture?.module ?? "") || !existsSync(join(chartsDir, fixture.module, "build.gradle.kts"))) {
       problems.push(`${label}: module is not a registered chart module`);
     }
+    if (fixture?.source !== undefined && typeof fixture.source !== "string") problems.push(`${label}: source must be a path`);
     if (!/^[a-z][a-z0-9-]*$/.test(fixture?.name ?? "")) problems.push(`${label}: name must be kebab-case`);
-    if (typeof fixture?.source !== "string" || typeof fixture?.run !== "function") problems.push(`${label}: needs source and run()`);
+    if (typeof fixture?.run !== "function") problems.push(`${label}: needs run()`);
     if (seen.has(label)) problems.push(`${label}: registered twice`);
     seen.add(label);
   }

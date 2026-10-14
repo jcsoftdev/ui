@@ -13,4 +13,5 @@ final object com.jcsoftdev.ui.chart.distribution/DistributionModule { // com.jcs
 
 final val com.jcsoftdev.ui.chart.distribution/com_jcsoftdev_ui_chart_distribution_DistributionModule$stableprop // com.jcsoftdev.ui.chart.distribution/com_jcsoftdev_ui_chart_distribution_DistributionModule$stableprop|#static{}com_jcsoftdev_ui_chart_distribution_DistributionModule$stableprop[0]
 
+final fun com.jcsoftdev.ui.chart.distribution/DistributionPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.distribution/DistributionPlaceholder|DistributionPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.chart.distribution/com_jcsoftdev_ui_chart_distribution_DistributionModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.distribution/com_jcsoftdev_ui_chart_distribution_DistributionModule$stableprop_getter|com_jcsoftdev_ui_chart_distribution_DistributionModule$stableprop_getter(){}[0]

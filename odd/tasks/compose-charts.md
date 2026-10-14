@@ -44,13 +44,41 @@ crossfilter -> cartesian. `chart-core` has no Compose. Nothing depends on `chart
 - Artifacts, code and comments in English.
 
 ## Conventions added by KC0
-- `build-logic` convention plugins: `jcsoftdev.kmp.library` (targets, `explicitApi`, ABI check, publishing) and
-  `jcsoftdev.kmp.compose-library` (Compose, stability config, Roborazzi). A module build file only declares its edges.
+- `build-logic` convention plugins: `jcsoftdev.kmp.library` (targets, `explicitApi`, ABI check, publishing, `writeModuleGraph`) and
+  `jcsoftdev.kmp.compose-library` (Compose as `api`, stability config, Roborazzi). A module build file only declares its edges.
 - Artifact id and Android namespace follow the project name (`:chart-core` -> `ui-compose-chart-core`, `com.jcsoftdev.ui.chart.core`).
-- `:size-probe`: Android app, one flavour per artifact, R8 release. Budgets in `packages/ui-compose/size-budgets.json`,
-  gate `packages/ui-compose/scripts/check-chart-size.mjs` (dex delta over the `none` flavour, AAR `classes.jar`, iosArm64 klib).
-- Parity fixtures: `packages/ui-compose/chart-fixtures/registry.mjs` -> `charts/<module>/src/commonTest/resources/fixtures/*.json`
-  via `pnpm chart:fixtures`; CI runs `pnpm check:chart-fixtures`.
+- Module-graph guard: every module writes its resolved classpaths (jvm, android release, iOS on macOS) to `build/module-graph.txt`;
+  `:chart:jvmTest` reads them and the main sources of all modules. The task declares them, settings and the catalog as inputs, so a
+  wrong edge fails on the next run without `--rerun`. Sources are scanned as whole text: imports, wildcards, aliases, qualified names,
+  comments, package declarations; any file under a `layout/` directory is pure math. `chart-core` and the geo data modules resolve no
+  Compose artifact and name nothing of the kit. Each bypass has a unit test in `ModuleGuardTest`.
+- `:size-probe`: Android app, one flavour per artifact, R8 release. The shared `ProbeActivity` is a `ComponentActivity` with
+  `setContent { UiTheme { ProbeContent() } }`, so Compose and the kit are in the `none` baseline. Budgets live in
+  `charts/<module>/size-budget.json`; the gate is `packages/ui-compose/scripts/check-chart-size.mjs`:
+  `dexBytes` (flavour minus `none`), `dexOverChartBytes` (families only, over the `chart` flavour), `aarClassesBytes` and
+  `klibBytes` (iosArm64 `linkdata` + `ir`, which exclude the path-bearing metadata so the size does not depend on the checkout).
+  Hard caps from the plan (chart-core 25 KB, chart 60 KB, families 40-90 KB over `chart`, export 50 KB, geo data 4 KB) are in the
+  script; `--update` rewrites budget files at measured +5% but never above a cap, and the caps change only by editing the script.
+- Parity fixtures: each module owns `charts/<module>/fixtures.mjs`, producing `src/commonTest/resources/fixtures/*.json` via
+  `pnpm chart:fixtures`; CI runs `pnpm check:chart-fixtures`. Non-finite numbers and -0 are `{"$f": "NaN"|"Infinity"|"-Infinity"|"-0"}`;
+  the Kotlin decoder is `chart-testing/common/FixtureJson.kt` (and `chart-testing/jvm/FixtureResources.kt`), compiled as test
+  sources into every module, with the round trip pinned by `chart-core`'s `FixtureJsonTest`.
+- Catalog: `kotlinx-coroutines-core`, `kotlinx-serialization-json` and `kotlinx-datetime` are pre-added. A batch that needs another
+  library adds exactly that one catalog line (and its version), nothing else in shared files.
+- Geo data modules (`chart-geo-world`, `chart-geo-peru`) expose primitive data only (arrays, strings, numbers). They carry no Compose
+  and no kit types, so `chart-geo` decodes them; the guard enforces it.
+- CI: path filters cover `packages/ui/src/charts/**`, `packages/ui-core/src/chart/**` and `.nvmrc`; a `changes` job runs the Gradle
+  and macOS jobs only when Compose paths changed (a web chart change runs only the fixture job). `verifyRoborazziJvm` runs
+  unqualified, so every module with goldens is verified without a workflow edit. The release publishes `:kit` only until KZ.
+
+## Keeping the size probe representative
+The probe measures what ProbeContent reaches, so a stand-in measures nothing. The batch that fills a module, in the same commit:
+1. replaces the module's `...Placeholder()` composable (and `...Module` object) with its chart code;
+2. rewrites `size-probe/src/<flavour>/.../Probe.kt` to render the heaviest representative chart of the module through its public
+   `@Composable` entry, with realistic data and every opt-in that adds code (tooltip, dock, a11y) switched on;
+3. runs `./gradlew :size-probe:assembleRelease` and `node scripts/check-chart-size.mjs --dex --update`, then commits the new
+   `charts/<module>/size-budget.json` with the reason. A number above the cap in the script is a failed batch, not a budget bump.
+Reviewers check that Probe.kt calls the real entry, not a helper.
 
 ## Checklist
 TDD mode: off. Implement first, then the tests that protect the change in the same work unit. Route: D = delegated direct writer,
@@ -86,8 +114,8 @@ I = direct inline. Batches KC3..KC10, KC13, KC14 run in parallel (file-disjoint 
 
 ## Checks
 - `./gradlew spotlessCheck apiCheck :kit:allTests :chart-core:allTests :chart:jvmTest <family>:allTests` (reachability runs in `:chart:jvmTest`)
-- `./gradlew :size-probe:assembleRelease :<module>:assembleRelease` then `node packages/ui-compose/scripts/check-chart-size.mjs`
-- macOS: `:<module>:compileKotlinIosArm64` + `check-chart-size.mjs --klib`, and `:kit:compileKotlinIosSimulatorArm64`
+- `./gradlew :size-probe:assembleRelease :<module>:assembleRelease` then `node packages/ui-compose/scripts/check-chart-size.mjs --dex --aar`
+- macOS: `:<module>:iosSimulatorArm64Test`, `:<module>:compileKotlinIosArm64` + `check-chart-size.mjs --klib`, and `:kit:compileKotlinIosSimulatorArm64`
 - `pnpm check:chart-fixtures` and `node --test scripts/*.test.mjs`
 
 ## Progress

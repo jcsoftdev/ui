@@ -4,3 +4,7 @@ public final class com/jcsoftdev/ui/chart/crossfilter/CrossfilterModule {
 	public final fun getId ()Ljava/lang/String;
 }
 
+public final class com/jcsoftdev/ui/chart/crossfilter/CrossfilterModuleKt {
+	public static final fun CrossfilterPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+
