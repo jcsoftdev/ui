@@ -7,7 +7,7 @@ import {
   type DrawResult,
   svg,
 } from "../internal/chart-base.js";
-import { clamp, EASE, jsonAttr, numberAttr, text, truncate } from "../internal/e20-polar.js";
+import { clamp, EASE, jsonAttr, numberAttr, paint, text, truncate } from "../internal/e20-polar.js";
 import type * as Shapes from "../internal/e20-unit-shapes.js";
 import type { ResolvedUnitShape, UnitIcon } from "../internal/e20-unit-shapes.js";
 
@@ -186,7 +186,6 @@ export class UiFillGaugeChart extends ChartElement {
         surface = svg("path", {
           "data-wave": "",
           d: wavePath(shape.width, shape.height, top, amplitude),
-          style: `fill:${color}`,
         });
       } else {
         surface = svg("rect", {
@@ -194,9 +193,9 @@ export class UiFillGaugeChart extends ChartElement {
           y: sideways ? 0 : top,
           width: sideways ? shape.width * ratio : shape.width,
           height: sideways ? shape.height : shape.height - top,
-          style: `fill:${color}`,
         });
       }
+      paint(surface, "fill", color);
       liquid.append(surface);
 
       const group = svg(

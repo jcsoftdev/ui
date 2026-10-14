@@ -175,6 +175,12 @@ export class Tween {
   }
 }
 
+/** Sets one CSS property from data (a color), never by splicing it into a style string. */
+export function paint<T extends SVGElement>(el: T, property: string, value: string): T {
+  el.style.setProperty(property, value);
+  return el;
+}
+
 export const EASE = "cubic-bezier(.22,1,.36,1)";
 
 /** Fades `element` in (entry animation: call it only when `context.animate` is true). */

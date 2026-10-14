@@ -7,7 +7,7 @@ import { formatPercent } from "@jcsoftdev/ui-core/chart/format";
 import { monochromeByValue } from "@jcsoftdev/ui-core/chart/palette";
 import { polarPoint, spreadLabels } from "@jcsoftdev/ui-core/chart/polar";
 import { svg } from "./chart-base.js";
-import { truncate } from "./e20-polar.js";
+import { paint, truncate } from "./e20-polar.js";
 
 const LABEL_ELBOW = 14;
 const LABEL_RUN = 30;
@@ -77,7 +77,7 @@ function pattern(id: string, kind: number, color: string): SVGPatternElement {
     height: 8,
     patternTransform: which === 0 || which === 3 ? "rotate(45)" : undefined,
   });
-  node.append(svg("rect", { width: 8, height: 8, style: `fill:${color}` }));
+  node.append(paint(svg("rect", { width: 8, height: 8 }), "fill", color));
   if (which === 0) node.append(svg("rect", { width: 8, height: 3, style: motif }));
   if (which === 1) node.append(svg("circle", { cx: 4, cy: 4, r: 1.6, style: motif }));
   if (which === 2)
@@ -111,11 +111,12 @@ export function fillDefs(
         svg(
           "radialGradient",
           { id, gradientUnits: "userSpaceOnUse", cx, cy, r: Math.max(1, radius) },
-          svg("stop", {
-            offset: Math.min(0.95, inner / Math.max(1, radius)),
-            style: `stop-color:color-mix(in oklab, ${item.color} 42%, var(--surface))`,
-          }),
-          svg("stop", { offset: 1, style: `stop-color:${item.color}` }),
+          paint(
+            svg("stop", { offset: Math.min(0.95, inner / Math.max(1, radius)) }),
+            "stop-color",
+            `color-mix(in oklab, ${item.color} 42%, var(--surface))`,
+          ),
+          paint(svg("stop", { offset: 1 }), "stop-color", item.color),
         ),
       );
   });

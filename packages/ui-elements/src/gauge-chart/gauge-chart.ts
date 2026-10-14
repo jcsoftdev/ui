@@ -17,6 +17,7 @@ import {
   fadeIn,
   jsonAttr,
   numberAttr,
+  paint,
   SideKeeper,
   signed,
   Tween,
@@ -225,15 +226,15 @@ export class UiGaugeChart extends ChartElement {
     const bandEls = bands.map((item) => {
       const from = angleFor(Math.min(item.from, item.to)) + 0.006;
       const to = angleFor(Math.max(item.from, item.to)) - 0.006;
-      return svg("path", {
+      const path = svg("path", {
         "data-band": "",
         "data-quiet": needle ? undefined : "",
         d: arcLine(cx, cy, mid, from, Math.max(from + 0.002, to)),
         fill: "none",
         "stroke-width": band,
         "stroke-linecap": "butt",
-        style: `stroke:${rangeColor(item)}`,
       });
+      return paint(path, "stroke", rangeColor(item));
     });
     if (bandEls.length) {
       const group = svg("g", {
@@ -246,14 +247,17 @@ export class UiGaugeChart extends ChartElement {
 
     if (!needle && fraction > 0)
       root.append(
-        svg("path", {
-          d: arcLine(cx, cy, mid, a0 + capAngle, Math.max(progressEnd, a0 + capAngle + 1e-3)),
-          fill: "none",
-          "stroke-width": band,
-          "stroke-linecap": roundedCaps ? "round" : "butt",
-          "data-pointer-none": "",
-          style: `stroke:${valueColor}`,
-        }),
+        paint(
+          svg("path", {
+            d: arcLine(cx, cy, mid, a0 + capAngle, Math.max(progressEnd, a0 + capAngle + 1e-3)),
+            fill: "none",
+            "stroke-width": band,
+            "stroke-linecap": roundedCaps ? "round" : "butt",
+            "data-pointer-none": "",
+          }),
+          "stroke",
+          valueColor,
+        ),
       );
 
     const fades: SVGElement[] = [];
@@ -402,14 +406,14 @@ export class UiGaugeChart extends ChartElement {
         );
       if (active?.label && bands.length > 0)
         group.append(
-          svg(
-            "text",
-            {
-              x: cx,
-              y: cy + layout.labelDy,
-              style: `fill:${valueColor};font-weight:700;font-size:11px`,
-            },
-            active.label,
+          paint(
+            svg(
+              "text",
+              { x: cx, y: cy + layout.labelDy, style: "font-weight:700;font-size:11px" },
+              active.label,
+            ),
+            "fill",
+            valueColor,
           ),
         );
       root.append(group);

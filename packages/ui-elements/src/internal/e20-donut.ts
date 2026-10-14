@@ -31,6 +31,7 @@ import {
   flagOrText,
   jsonAttr,
   numberAttr,
+  paint,
   Tween,
   text,
   truncate,
@@ -438,8 +439,9 @@ export class UiDonutBase extends ChartElement {
           endAngle: slice.end,
           cornerRadius,
         }),
-        style: `fill:${fills ? `url(#${this.#uid}-${index})` : item.color};--ui-dx:${shift.x.toFixed(2)}px;--ui-dy:${shift.y.toFixed(2)}px;transform-origin:${cx}px ${cy}px`,
+        style: `--ui-dx:${shift.x.toFixed(2)}px;--ui-dy:${shift.y.toFixed(2)}px;transform-origin:${cx}px ${cy}px`,
       });
+      paint(path, "fill", fills ? `url(#${this.#uid}-${index})` : item.color);
       paths.set(index, path);
       group.append(path);
     }
