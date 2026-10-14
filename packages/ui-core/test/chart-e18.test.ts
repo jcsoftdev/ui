@@ -1,8 +1,8 @@
 // Slope, waterfall and bullet layout maths are ports: each export is pinned to the
 // React kit's source value for value. The React modules are imported at runtime, by path.
 import { describe, expect, it } from "vitest";
-import * as timeAxis from "../src/chart/category-axis-time.ts";
 import * as bullet from "../src/chart/bullet.ts";
+import * as timeAxis from "../src/chart/category-axis-time.ts";
 import { spreadSlopeLabels } from "../src/chart/slope.ts";
 import * as waterfall from "../src/chart/waterfall.ts";
 
