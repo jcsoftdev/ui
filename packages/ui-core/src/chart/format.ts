@@ -70,9 +70,29 @@ export interface CurrencyFormatOptions {
   locale?: string;
 }
 
-/** "S/ 1 234.50" */
+let warnedCurrency = false;
+/** Warns once (not in production builds) that `value-format="currency"` has no currency code. */
+function warnMissingCurrency(): void {
+  if (warnedCurrency) return;
+  warnedCurrency = true;
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return;
+  console.warn('ui-core: the "currency" format needs a currency code; showing a plain number.');
+}
+
+/**
+ * "S/ 1 234.50". The currency is never guessed (not from the locale either): without a `currency`
+ * code the value is formatted as a plain number and a warning is logged once outside production.
+ */
 export function formatCurrency(value: number, options: CurrencyFormatOptions = {}): string {
-  const { currency = "PEN", decimals = 2, locale = "es-PE" } = options;
+  const { currency, decimals = 2, locale = "es-PE" } = options;
+  if (!currency) {
+    warnMissingCurrency();
+    return formatNumber(value, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      locale,
+    });
+  }
   return spaced(
     numberFormat(locale, {
       style: "currency",
@@ -123,7 +143,7 @@ export function formatCompact(value: number, options: CompactFormatOptions = {})
 export interface FormatLocaleOptions {
   /** BCP 47 tag; each preset keeps its es-PE default when omitted. */
   locale?: string;
-  /** ISO 4217 code of the "currency" preset (default "PEN"). */
+  /** ISO 4217 code of the "currency" preset. Required for it: there is no default currency. */
   currency?: string;
 }
 
@@ -166,7 +186,8 @@ export function resolveAxisFormat(
   if (typeof format === "function") return format;
   switch (format) {
     case "currency": {
-      const prefix = `${currency ? currencySymbol(currency, locale) : "S/"}${NBSP}`;
+      if (!currency) warnMissingCurrency();
+      const prefix = currency ? `${currencySymbol(currency, locale)}${NBSP}` : "";
       return (value) =>
         Math.abs(value) >= 10_000
           ? formatCompact(value, { prefix, locale })

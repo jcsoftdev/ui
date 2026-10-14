@@ -1,0 +1,49 @@
+[data-ui-chart] [data-ui-part="state"] {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 600;
+}
+[data-ui-chart] [data-ui-part="state"][data-state="loading"] {
+  align-items: flex-end;
+  justify-content: space-around;
+  padding: 16px;
+}
+[data-ui-chart] [data-ui-part="state"] > i {
+  display: block;
+  flex: 1;
+  max-width: 28px;
+  border-radius: var(--radius-xs);
+  background: var(--line-strong);
+  animation: ui-chart-pulse 1.4s ease-in-out infinite;
+}
+[data-ui-chart] [data-ui-part="state"][data-skeleton="line"] > i {
+  max-width: none;
+  height: 2px;
+}
+[data-ui-chart] [data-ui-part="state"][data-skeleton="ring"] > i {
+  flex: none;
+  align-self: center;
+  width: 55%;
+  max-width: 160px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-pill);
+  background: none;
+  box-shadow: inset 0 0 0 14px var(--line-strong);
+}
+@keyframes ui-chart-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart] [data-ui-part="state"] > i {
+    animation: none;
+  }
+}
