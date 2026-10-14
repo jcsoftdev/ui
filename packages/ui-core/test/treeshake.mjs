@@ -58,6 +58,7 @@ const independent = new Set([
 // Chart entries may build on each other only as listed; everything else stays separate.
 const chartDeps = {
   "chart/color-scale": ["chart/palette"],
+  "chart/tree-edge": ["chart/tree-edge-box", "chart/tree-edge-radial"],
   "chart/category-axis": ["chart/axis", "chart/scale"],
   "chart/category-axis-time": [
     "chart/axis",
@@ -78,12 +79,17 @@ const gridDeps = {
   "grid/resize": ["grid/columns"],
   "grid/reorder": ["sortable"],
   "grid/view": [],
+  "grid/filter": ["grid/edit", "grid/model", "chart/format"],
+  "grid/group": ["grid/model", "grid/sort", "chart/format"],
+  "grid/pivot": ["grid/model", "grid/sort", "chart/format"],
+  "grid/export": ["grid/model", "chart/format"],
+  "grid/clipboard": ["grid/edit"],
 };
 const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
   if (item.isFile() && item.name.endsWith(".ts") && !item.name.endsWith(".d.ts"))
     behaviours.push(item.name.slice(0, -3));
-  else if (item.isDirectory() && item.name !== "liquid")
+  else if (item.isDirectory() && item.name !== "liquid" && item.name !== "geo-data")
     for (const part of readdirSync(join(dist, "..", "src", item.name)))
       if (part.endsWith(".ts")) behaviours.push(`${item.name}/${part.slice(0, -3)}`);
 }
