@@ -81,6 +81,7 @@ export function FillGaugeChart({
 
   return (
     <ChartFrame
+      dock="never"
       height={height}
       aspectRatio={aspectRatio}
       labels={labels}

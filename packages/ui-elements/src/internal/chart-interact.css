@@ -1,0 +1,20 @@
+[data-ui-chart] [data-ui-part="drawing"]:focus,
+[data-ui-chart] [data-ui-part="proxy"]:focus,
+[data-ui-chart] [role="img"][tabindex]:focus {
+  outline: none;
+}
+[data-ui-chart] [role="img"][tabindex]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+[data-ui-chart] [data-series][data-dim] {
+  opacity: 0.38;
+}
+[data-ui-chart] [data-series] {
+  transition: opacity 150ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart] [data-series] {
+    transition: none;
+  }
+}

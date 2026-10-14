@@ -29,6 +29,7 @@ import {
   resolveHierarchyLabels,
 } from "../core/hierarchy-chart.js";
 import { EASE_OUT, useEntryAnimation } from "../core/motion.js";
+import { boxAt } from "../core/nearest.js";
 import { ChartTooltip } from "../core/tooltip.js";
 import { type DrillState, useAnimatedView, useDrill } from "../core/use-drill.js";
 
@@ -236,15 +237,13 @@ function IciclePlot({
   );
 
   const children = focus.children;
-  const hit = (x: number, y: number): Cell | null => {
-    for (let i = cells.length - 1; i >= 0; i--) {
-      const cell = cells[i] as Cell;
-      if (x >= cell.x && x <= cell.x + cell.width && y >= cell.y && y <= cell.y + cell.height) {
-        return cell;
-      }
-    }
-    return null;
-  };
+  const hit = (x: number, y: number): Cell | null =>
+    boxAt(cells, x, y, (cell) => ({
+      x0: cell.x,
+      y0: cell.y,
+      x1: cell.x + cell.width,
+      y1: cell.y + cell.height,
+    }));
 
   const local = (event: PointerEvent<HTMLDivElement>) => {
     const box = event.currentTarget.getBoundingClientRect();

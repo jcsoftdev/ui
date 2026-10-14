@@ -8,6 +8,7 @@ import { type Chord, chordLayout, chordsOf, ribbonPath } from "../core/chord.js"
 import { ChartDataTable } from "../core/data-table.js";
 import { DEFAULT_EXPORT_TEXTS, ExportMenu, type ExportTexts } from "../core/export-menu.js";
 import { resolveFormat, type ValueFormat, type ValueFormatter } from "../core/format.js";
+import { useLeaveGrace } from "../core/leave-grace.js";
 import { ChartLegend } from "../core/legend.js";
 import { EASE_OUT, fadeIn, useEntryAnimation } from "../core/motion.js";
 import { seriesColor } from "../core/palette.js";
@@ -250,6 +251,11 @@ function ChordPlot({
   );
   const nav = useIndexNavigation(order.length, { wrap: true });
   const [hover, setHover] = useState<{ focus: Focus; x: number; y: number } | null>(null);
+  const { leave: leaveSoon, hold } = useLeaveGrace(() => setHover(null));
+  const showHover = (next: { focus: Focus; x: number; y: number }) => {
+    hold();
+    setHover(next);
+  };
 
   const rim = showLabels && width >= 420;
   const labelRoom = rim
@@ -416,9 +422,9 @@ function ChordPlot({
             colors={colors}
             lit={lit}
             onEnter={(chord, event) =>
-              setHover({ focus: { kind: "chord", key: chordKey(chord) }, ...point(event) })
+              showHover({ focus: { kind: "chord", key: chordKey(chord) }, ...point(event) })
             }
-            onLeave={() => setHover(null)}
+            onLeave={leaveSoon}
           />
           {layout.groups.map((group) => {
             const dim = litGroups ? !litGroups.has(group.index) : false;
@@ -436,6 +442,7 @@ function ChordPlot({
                   endAngle: group.endAngle,
                   cornerRadius: 3,
                 })}
+                data-chart-hit=""
                 className={onGroupClick ? "cursor-pointer" : "cursor-default"}
                 style={{
                   fill: colors[group.index],
@@ -445,12 +452,12 @@ function ChordPlot({
                   transformOrigin: "center",
                 }}
                 onPointerEnter={(event) =>
-                  setHover({ focus: { kind: "group", index: group.index }, ...point(event) })
+                  showHover({ focus: { kind: "group", index: group.index }, ...point(event) })
                 }
                 onPointerMove={(event) =>
-                  setHover({ focus: { kind: "group", index: group.index }, ...point(event) })
+                  showHover({ focus: { kind: "group", index: group.index }, ...point(event) })
                 }
-                onPointerLeave={() => setHover(null)}
+                onPointerLeave={leaveSoon}
                 onClick={() => {
                   const input = groups[group.index];
                   if (input) onGroupClick?.(input, group.index);
@@ -531,6 +538,7 @@ const ChordRibbons = memo(function ChordRibbons({
           <path
             key={chordKey(chord)}
             data-ribbon=""
+            data-chart-hit=""
             d={ribbonPath(chord, radius)}
             className="motion-safe:transition-[fill-opacity] motion-safe:duration-150"
             style={{

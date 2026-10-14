@@ -347,7 +347,7 @@ function FunnelPlot({
             opacity={shape.opacity}
             dimmed={active != null && active !== i}
             onEnter={(event) => nav.hover(i, event)}
-            onLeave={nav.leave}
+            onLeave={nav.pointerLeave}
           />
         ))}
 
@@ -498,6 +498,7 @@ const StageMark = memo(function StageMark({
   return (
     <polygon
       data-stage=""
+      data-chart-hit=""
       points={points}
       strokeWidth={2}
       strokeLinejoin="round"

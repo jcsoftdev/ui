@@ -52,22 +52,95 @@ export function innerEdgePoint(slice: SVGPathElement, svg: SVGSVGElement) {
 }
 
 /**
- * A press and release on `target` with the over/out pairs React turns into enter/leave: a touch
- * or pen pointer leaves the element when it lifts, a mouse leaves when it moves away.
+ * A client point on `target` that really hits it: for an SVG shape, the point inside its fill or
+ * stroke closest to its box centre (a ring's box centre is its hole); otherwise the box centre.
  */
-export async function tapAndLift(target: Element, pointerType: "mouse" | "touch") {
+export function pointInside(target: Element): { x: number; y: number } {
   const box = target.getBoundingClientRect();
+  const middle = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+  if (!(target instanceof SVGGeometryElement)) return middle;
+  const matrix = target.getScreenCTM();
+  if (!matrix) return middle;
+  const filled = getComputedStyle(target).fill !== "none";
+  const local = target.getBBox();
+  const centre = new DOMPoint(local.x + local.width / 2, local.y + local.height / 2);
+  const step = Math.max(1, Math.min(local.width, local.height) / 40);
+  let best: { point: DOMPoint; distance: number } | null = null;
+  for (let x = local.x; x <= local.x + local.width; x += step) {
+    for (let y = local.y; y <= local.y + local.height; y += step) {
+      const point = new DOMPoint(x, y);
+      if (!(filled && target.isPointInFill(point)) && !target.isPointInStroke(point)) continue;
+      const distance = Math.hypot(x - centre.x, y - centre.y);
+      if (!best || distance < best.distance) best = { point, distance };
+    }
+  }
+  // A stroke-only shape (a ring track): its centre line.
+  const onLine =
+    !best && target.getTotalLength() > 0
+      ? target.getPointAtLength(target.getTotalLength() / 2)
+      : null;
+  const found = best?.point ?? onLine;
+  if (!found) return middle;
+  const at = new DOMPoint(found.x, found.y).matrixTransform(matrix);
+  return { x: at.x, y: at.y };
+}
+
+/**
+ * A press and release at a client point the way a browser reports a tap, on the element under it:
+ * `over`, `down`, `up`, then `out` (a touch or pen pointer leaves the element when it lifts).
+ * A mouse press also leaves when it moves away, which `moveAway` stands for.
+ */
+export async function tapAt(
+  point: { x: number; y: number },
+  pointerType: "mouse" | "touch" = "touch",
+  { travel = 0 }: { travel?: number } = {},
+) {
+  const target = document.elementFromPoint(point.x, point.y) ?? document.body;
   const init = {
     bubbles: true,
-    clientX: box.left + box.width / 2,
-    clientY: box.top + box.height / 2,
+    clientX: point.x,
+    clientY: point.y,
     pointerType,
     isPrimary: true,
+    pointerId: 7,
   };
   target.dispatchEvent(new PointerEvent("pointerover", init));
   target.dispatchEvent(new PointerEvent("pointerdown", init));
   await frame();
-  target.dispatchEvent(new PointerEvent("pointerup", init));
+  if (travel > 0) {
+    target.dispatchEvent(
+      new PointerEvent("pointermove", { ...init, clientX: point.x + travel, clientY: point.y }),
+    );
+    await frame();
+  }
+  target.dispatchEvent(
+    new PointerEvent(travel > 0 ? "pointercancel" : "pointerup", {
+      ...init,
+      clientX: point.x + travel,
+    }),
+  );
   target.dispatchEvent(new PointerEvent("pointerout", { ...init, relatedTarget: null }));
+  await frame();
+  await frame();
+  await frame();
+}
+
+/** A press and release on `target`, aimed at a point that hits it. */
+export async function tapAndLift(target: Element, pointerType: "mouse" | "touch") {
+  await tapAt(pointInside(target), pointerType);
+}
+
+/** A mouse pointer moved to a client point, dispatched on the element under it. */
+export async function moveTo(point: { x: number; y: number }) {
+  const target = document.elementFromPoint(point.x, point.y) ?? document.body;
+  target.dispatchEvent(
+    new PointerEvent("pointermove", {
+      bubbles: true,
+      clientX: point.x,
+      clientY: point.y,
+      pointerType: "mouse",
+      isPrimary: true,
+    }),
+  );
   await frame();
 }
