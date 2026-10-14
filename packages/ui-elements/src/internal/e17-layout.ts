@@ -7,13 +7,8 @@ import {
   valueTicks,
 } from "@jcsoftdev/ui-core/chart/axis";
 import type { ValueFormat, ValueFormatter } from "@jcsoftdev/ui-core/chart/format";
-import {
-  areaPath,
-  type BarEnd,
-  barPath,
-  type Curve,
-  linePath,
-} from "@jcsoftdev/ui-core/chart/path";
+import type { ChartTone } from "@jcsoftdev/ui-core/chart/palette";
+import type { Curve } from "@jcsoftdev/ui-core/chart/path";
 import {
   type BandScale,
   bandScale,
@@ -23,8 +18,9 @@ import {
   logScale,
   pointScale,
 } from "@jcsoftdev/ui-core/chart/scale";
-import { type DateLocaleOptions, timeScale } from "@jcsoftdev/ui-core/chart/scale-time";
 import { type StackLayer, type StackMode, stackLayers } from "@jcsoftdev/ui-core/chart/stack";
+import type { TimeKit } from "./e17-time.js";
+import { maxOf, minOf } from "./e17-util.js";
 
 export type XValue = string | number | Date;
 export type MarkKind = "line" | "area" | "column";
@@ -142,7 +138,88 @@ export interface CartesianLayout {
   geometry: SeriesGeometry[];
 }
 
-export interface LayoutInput extends DateLocaleOptions {
+/** Reference marks, as in the React kit. `axis: "y"` is the value axis, `"x"` the category axis. */
+export type ChartAnnotation = AnnotationBase &
+  (
+    | { type: "line"; axis: "y"; value: number; yAxis?: string }
+    | { type: "range"; axis: "y"; from: number; to: number; yAxis?: string }
+    | { type: "line"; axis: "x"; value: XValue }
+    | { type: "range"; axis: "x"; from: XValue; to: XValue }
+    | { type: "point"; x: XValue; y: number; yAxis?: string }
+    | { type: "text"; x: XValue; y: number; yAxis?: string }
+  );
+
+interface AnnotationBase {
+  label?: string;
+  /** Extra sentence for the native tooltip of a `point` or `text` mark. */
+  tooltip?: string;
+  /** Color family, `neutral` by default. */
+  tone?: ChartTone;
+}
+
+/** What the column code needs from the layout; supplied by the bar and combo entries only. */
+export interface BarContext {
+  horizontal: boolean;
+  band: BandScale;
+  bandwidth: number;
+  innerHeight: number;
+  dataLabels: boolean;
+  barRadius: number;
+  scaleOf: (axis: string) => ContinuousScale;
+  reversedOf: (axis: string) => boolean | undefined;
+}
+export interface BarPlan {
+  /** More than one bar slot per category: the bands get tighter padding. */
+  multi: boolean;
+  build: (item: ResolvedSeries, ctx: BarContext) => SeriesGeometry;
+}
+export type BarKit = (
+  series: readonly ResolvedSeries[],
+  stack: StackMode,
+  layers: ReadonlyMap<string, StackLayer>,
+) => BarPlan;
+
+/** What the line and area code needs from the layout; supplied by the line, area and combo entries. */
+export interface LineContext {
+  positions: readonly number[];
+  curve: Curve;
+  scale: ContinuousScale;
+  /** Pixel of the zero line (or the domain start) on `scale`, where an area is anchored. */
+  baseline: number;
+  count: number;
+  innerWidth: number;
+  dataLabels: boolean;
+}
+export interface LineKit {
+  build: (item: ResolvedSeries, ctx: LineContext, layer: StackLayer | undefined) => SeriesGeometry;
+  /** Shared indices (LTTB) of the data when it is denser than `max` points, else `null`. */
+  sample: (data: ReadonlyArray<ReadonlyArray<number | null>>, max: number) => number[] | null;
+  /** Draws the lines (or areas) of `layout` into `plot`; areas add their gradients to `defs`. */
+  paint: (
+    plot: SVGGElement,
+    defs: SVGDefsElement,
+    layout: CartesianLayout,
+    options: {
+      kind: "line" | "area";
+      clipId: string;
+      markers: boolean;
+      stacked: boolean;
+      gradient: boolean;
+    },
+  ) => void;
+}
+
+export interface LayoutInput {
+  /** Line and area geometry (`e17-lines`); without it those series are not drawn. */
+  lines?: LineKit;
+  /** Locale and time zone of a calendar axis. */
+  locale?: string;
+  timeZone?: string;
+  /** Column geometry (`e17-bars`); without it column series are not drawn. */
+  bars?: BarKit;
+  /** Calendar axis helpers (`e17-time`), loaded on demand; without them dates use a band axis. */
+  time?: TimeKit;
+  annotations?: readonly ChartAnnotation[];
   width: number;
   height: number;
   categories: readonly XValue[];
@@ -165,6 +242,10 @@ export interface LayoutInput extends DateLocaleOptions {
   /** Pixels reserved under the category axis (the brush strip). */
   reserveBottom?: number;
 }
+
+/** Height of the overview strip under a zoomable plot, and the gap above it. */
+export const BRUSH_HEIGHT = 52;
+export const BRUSH_GAP = 12;
 
 const clamp = (value: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, value));
 const resolveBound = (bound: AxisBound | undefined, value: number) =>
@@ -227,7 +308,7 @@ export function stackAxes(
   };
 }
 
-const isStackable = (series: ResolvedSeries, stack: StackMode) =>
+export const isStackable = (series: ResolvedSeries, stack: StackMode) =>
   stack !== "none" && series.kind !== "line" && !series.from;
 
 /** Stacks areas and columns separately, per axis and group. */
@@ -256,12 +337,16 @@ export function axisDomain(
   series: readonly ResolvedSeries[],
   layers: ReadonlyMap<string, StackLayer>,
   options: ValueAxisOptions,
+  annotationValues: readonly number[] = [],
 ): [number, number] {
   const values: number[] = [];
+  for (const value of annotationValues) values.push(value);
   for (const item of series) {
     const layer = layers.get(item.id);
-    if (layer) values.push(...layer.y0, ...layer.y1);
-    else {
+    if (layer) {
+      for (const value of layer.y0) values.push(value);
+      for (const value of layer.y1) values.push(value);
+    } else {
       for (const value of item.data) if (value != null) values.push(value);
       if (item.from) for (const value of item.from) if (value != null) values.push(value);
     }
@@ -287,6 +372,16 @@ function makeValueScale(
   return linearScale({ domain, range, tickCount, nice: !fixed });
 }
 
+/** `thinTicks` measures every label, so a huge axis is first reduced to an even sample of it. */
+const MAX_TICKS = 600;
+const sampleTicks = (ticks: AxisTick[]): AxisTick[] => {
+  if (ticks.length <= MAX_TICKS) return ticks;
+  const step = ticks.length / MAX_TICKS;
+  const out: AxisTick[] = [];
+  for (let i = 0; i < MAX_TICKS; i += 1) out.push(ticks[Math.floor(i * step)] as AxisTick);
+  return out;
+};
+
 const widestLabel = (ticks: readonly AxisTick[]) =>
   ticks.reduce((max, tick) => Math.max(max, estimateTextWidth(tick.label)), 0);
 
@@ -295,10 +390,11 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   const { width, height, categories, series, orientation, stack, curve, dataLabels } = input;
   const horizontal = orientation === "horizontal";
   const count = categories.length;
-  const hasColumns = series.some((item) => item.kind === "column");
+  const hasColumns = input.bars != null && series.some((item) => item.kind === "column");
   const percent = stack === "percent";
 
   const layers = buildLayers(series, stack);
+  const plan = hasColumns ? input.bars?.(series, stack, layers) : undefined;
   const axisSpecs = resolveAxes(
     input.yAxis,
     input.rightAxis,
@@ -309,13 +405,20 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   const axisIds = new Set(axisSpecs.map((axis) => axis.id));
   const axisOf = (id: string) => (axisIds.has(id) ? id : primaryId);
 
+  const yAnnotations = (axis: string) =>
+    (input.annotations ?? []).flatMap((note) => {
+      if (note.type === "point" || note.type === "text") return [];
+      if (note.axis !== "y" || axisOf(note.yAxis ?? primaryId) !== axis) return [];
+      return note.type === "line" ? [note.value] : [note.from, note.to];
+    });
+
   const categoryLabels = categories.map((value) => input.xLabel(value));
   const rotation = horizontal ? 0 : (input.labelRotation ?? 0);
   const rotationExtra = rotation
     ? Math.min(
         90,
         Math.ceil(
-          Math.max(0, ...categoryLabels.map((label) => estimateTextWidth(label))) *
+          maxOf(categoryLabels.map((label) => estimateTextWidth(label))) *
             Math.abs(Math.sin((rotation * Math.PI) / 180)),
         ),
       )
@@ -333,7 +436,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
     const own = series.filter((item) => axisOf(item.axis) === spec.id);
     return {
       spec,
-      domain: axisDomain(own, layers, spec.options),
+      domain: axisDomain(own, layers, spec.options, yAnnotations(spec.id)),
       format: input.axisFormat(
         spec.options.format ?? (percentAxis(own) ? "percent" : input.valueFormat),
       ),
@@ -350,10 +453,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   let offsets = new Map<string, number>();
   const tickCountOf = (options: ValueAxisOptions) => options.tickCount ?? valueTickCount;
   if (horizontal) {
-    const widestCategory = Math.max(
-      0,
-      ...categoryLabels.map((label) => estimateTextWidth(label, 12)),
-    );
+    const widestCategory = maxOf(categoryLabels.map((label) => estimateTextWidth(label, 12)));
     margin = {
       top: 8,
       right: dataLabels ? 48 : 10,
@@ -422,20 +522,13 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   });
 
   const useTime =
+    input.time != null &&
     !horizontal &&
     !hasColumns &&
     count > 1 &&
     input.xScale !== "band" &&
     categories.every((value) => value instanceof Date);
-  const columns = series.filter((item) => item.kind === "column");
-  const slotKeys: string[] = [];
-  const slotKeyOf = (item: ResolvedSeries) =>
-    isStackable(item, stack) ? `g:${item.axis}:${item.stackGroup ?? ""}` : `s:${item.id}`;
-  for (const item of columns) {
-    const key = slotKeyOf(item);
-    if (!slotKeys.includes(key)) slotKeys.push(key);
-  }
-  const multi = slotKeys.length > 1;
+  const multi = plan?.multi ?? false;
   const band: BandScale =
     hasColumns || horizontal
       ? bandScale({
@@ -451,8 +544,8 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   let mode: CartesianLayout["mode"];
   if (useTime) {
     const times = categories.map((value) => +value);
-    const time = timeScale({
-      domain: [Math.min(...times), Math.max(...times)],
+    const time = (input.time as TimeKit).timeScale({
+      domain: [minOf(times), maxOf(times)],
       range: categoryRange,
       locale: input.locale,
       timeZone: input.timeZone,
@@ -486,7 +579,7 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
           ? ticks
           : rotation
             ? ticks.filter((_, index) => index % Math.max(1, Math.ceil(14 / band.step)) === 0)
-            : thinTicks(ticks, 12);
+            : thinTicks(sampleTicks(ticks), 12);
     indexAt = band.indexAt;
     mode = band.type;
   }
@@ -499,38 +592,36 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
   const zeroInside =
     valueScale.type !== "log" && valueScale.domain[0] < 0 && valueScale.domain[1] > 0;
 
-  const groupCount = Math.max(1, slotKeys.length);
-  const anyStacked = columns.some((item) => isStackable(item, stack));
+  const barContext: BarContext = {
+    horizontal,
+    band,
+    bandwidth: band.bandwidth,
+    innerHeight,
+    dataLabels,
+    barRadius: input.barRadius,
+    scaleOf: (id) => scaleOf(id),
+    reversedOf: (id) =>
+      axisInfo.find((info) => info.spec.id === axisOf(id))?.spec.options.reversed ??
+      input.yAxis.reversed,
+  };
   const bandwidth = band.bandwidth;
-  const gap = groupCount > 1 ? clamp(bandwidth * 0.08, 2, 6) : 0;
-  const barThickness =
-    groupCount === 1
-      ? Math.min(bandwidth, anyStacked ? 64 : 48)
-      : Math.min((bandwidth - gap * (groupCount - 1)) / groupCount, 48);
-  const groupWidth = barThickness * groupCount + gap * (groupCount - 1);
-  const outer = new Map<string, { up?: string; down?: string }>();
-  for (const item of columns) {
-    const layer = layers.get(item.id);
-    if (!layer) continue;
-    const slotKey = slotKeyOf(item);
-    layer.y1.forEach((end, index) => {
-      const start = layer.y0[index] as number;
-      if (end === start) return;
-      const entry = outer.get(`${slotKey}:${index}`) ?? {};
-      if (end > start) entry.up = item.id;
-      else entry.down = item.id;
-      outer.set(`${slotKey}:${index}`, entry);
-    });
-  }
-  const pixelSign = (reversed: boolean | undefined) => (horizontal ? 1 : -1) * (reversed ? -1 : 1);
 
-  const labelEvery = (spacing: number) => Math.max(1, Math.ceil(34 / Math.max(1, spacing)));
   const geometry: SeriesGeometry[] = series.map((item) => {
     const scale = scaleOf(item.axis);
     const layer = layers.get(item.id);
-    const startOf = (index: number) => layer?.y0[index] ?? item.from?.[index] ?? 0;
-    const endOf = (index: number) => (layer ? (layer.y1[index] as number) : item.data[index]);
-    const base: SeriesGeometry = {
+    if (item.kind === "column") {
+      return (
+        plan?.build(item, barContext) ?? {
+          id: item.id,
+          kind: item.kind,
+          color: item.color,
+          dashed: item.dashed,
+          points: [],
+          labels: [],
+        }
+      );
+    }
+    const empty: SeriesGeometry = {
       id: item.id,
       kind: item.kind,
       color: item.color,
@@ -538,150 +629,20 @@ export function computeLayout(input: LayoutInput): CartesianLayout {
       points: [],
       labels: [],
     };
-
-    if (item.kind === "column") {
-      const slotKey = slotKeyOf(item);
-      const slot = slotKeys.indexOf(slotKey);
-      const stacked = isStackable(item, stack);
-      const floating = item.from != null;
-      const pixelDir = pixelSign(
-        axisInfo.find((info) => info.spec.id === axisOf(item.axis))?.spec.options.reversed ??
-          input.yAxis.reversed,
-      );
-      const bars: BarGeometry[] = [];
-      const radius = Math.min(input.barRadius, barThickness / 2);
-      item.data.forEach((raw, index) => {
-        if (raw == null || (floating && item.from?.[index] == null)) {
-          base.points.push(null);
-          return;
-        }
-        const startValue = startOf(index);
-        const endValue = endOf(index) as number;
-        const v0 = scale.map(startValue);
-        const v1 = scale.map(endValue);
-        const valueDown = endValue < startValue;
-        const dir = (valueDown ? -1 : 1) * pixelDir;
-        const negative = horizontal ? dir < 0 : dir > 0;
-        const along =
-          band.start(index) + (bandwidth - groupWidth) / 2 + slot * (barThickness + gap);
-        const isOuter =
-          !stacked || outer.get(`${slotKey}:${index}`)?.[valueDown ? "down" : "up"] === item.id;
-        const inset = stacked && startValue !== 0 ? 1.5 : 0;
-        let length = Math.abs(v1 - v0);
-        if (raw !== 0 && length < 1) length = 1;
-        let lo = dir > 0 ? v0 : v0 - length;
-        if (dir > 0) lo += inset;
-        length = Math.max(0, length - inset);
-        let end: BarEnd = "none";
-        if (floating) end = "all";
-        else if (isOuter)
-          end = horizontal ? (dir > 0 ? "right" : "left") : dir > 0 ? "bottom" : "top";
-        const color = item.pointColors?.[index];
-        const key = `${item.id}-${index}`;
-        if (horizontal) {
-          bars.push({
-            key,
-            index,
-            x: lo,
-            y: along,
-            width: length,
-            height: barThickness,
-            negative,
-            color,
-            d: barPath(lo, along, length, barThickness, radius, end),
-          });
-          base.points.push({ x: dir > 0 ? lo + length : lo, y: along + barThickness / 2 });
-        } else {
-          bars.push({
-            key,
-            index,
-            x: along,
-            y: lo,
-            width: barThickness,
-            height: length,
-            negative,
-            color,
-            d: barPath(along, lo, barThickness, length, radius, end),
-          });
-          base.points.push({ x: along + barThickness / 2, y: dir > 0 ? lo + length : lo });
-        }
-      });
-      base.bars = bars;
-      if (dataLabels) {
-        for (const bar of bars) {
-          const text = item.format(item.data[bar.index] as number);
-          if (stacked) {
-            const room = horizontal ? bar.width : bar.height;
-            const fits = horizontal
-              ? room >= estimateTextWidth(text, 10.5) + 8 && bar.height >= 14
-              : room >= 16 && bar.width >= estimateTextWidth(text, 10.5) + 4;
-            if (!fits) continue;
-            base.labels.push({
-              key: bar.key,
-              x: bar.x + bar.width / 2,
-              y: bar.y + bar.height / 2 + 3.5,
-              text,
-              anchor: "middle",
-              inside: true,
-            });
-          } else if (horizontal) {
-            base.labels.push({
-              key: bar.key,
-              x: bar.negative ? bar.x - 6 : bar.x + bar.width + 6,
-              y: bar.y + bar.height / 2 + 3.5,
-              text,
-              anchor: bar.negative ? "end" : "start",
-              inside: false,
-            });
-          } else {
-            if (bar.width + gap < estimateTextWidth(text, 10.5) && groupCount > 1) continue;
-            const outside = bar.negative ? bar.y + bar.height + 13 : bar.y - 6;
-            const inside = bar.negative ? outside > innerHeight - 2 : outside < 8;
-            base.labels.push({
-              key: bar.key,
-              x: bar.x + bar.width / 2,
-              y: inside ? (bar.negative ? bar.y + bar.height - 6 : bar.y + 14) : outside,
-              text,
-              anchor: "middle",
-              inside: inside && bar.height >= 18,
-            });
-          }
-        }
-      }
-      return base;
-    }
-
-    const points: Array<Point | null> = item.data.map((raw, index) => {
-      const value = endOf(index);
-      if (raw == null || value == null) return null;
-      return { x: positions[index] as number, y: scale.map(value) };
-    });
-    base.points = points;
-    base.line = linePath(points, curve);
-    if (item.kind === "area") {
-      const baseline = zeroPixel(scale);
-      const bottomEdge = points.map((point, index) => ({
-        x: point?.x ?? (positions[index] as number),
-        y: layer ? scale.map(startOf(index)) : baseline,
-      }));
-      base.area = areaPath(points, bottomEdge, curve);
-    }
-    if (dataLabels) {
-      const spacing = count > 1 ? innerWidth / (count - 1) : innerWidth;
-      const every = labelEvery(spacing);
-      points.forEach((point, index) => {
-        if (!point || index % every !== 0) return;
-        base.labels.push({
-          key: `${item.id}-${index}`,
-          x: point.x,
-          y: point.y - 10,
-          text: item.format(item.data[index] as number),
-          anchor: "middle",
-          inside: false,
-        });
-      });
-    }
-    return base;
+    if (!input.lines) return empty;
+    return input.lines.build(
+      item,
+      {
+        positions,
+        curve,
+        scale,
+        baseline: zeroPixel(scale),
+        count,
+        innerWidth,
+        dataLabels,
+      },
+      layer,
+    );
   });
 
   return {

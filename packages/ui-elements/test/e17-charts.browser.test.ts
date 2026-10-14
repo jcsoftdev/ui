@@ -1,5 +1,5 @@
 import axe from "axe-core";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineAreaChart } from "../src/area-chart/area-chart.ts";
 import { defineBarChart } from "../src/bar-chart/bar-chart.ts";
@@ -36,7 +36,7 @@ const CASES: Case[] = [
     fill: (el) => {
       el.categories = DAYS;
       el.series = [
-        { id: "a", name: "Cuts", type: "bar", data: [12, 18, 9, 22, 30, 41] },
+        { id: "a", name: "Cuts", type: "column", data: [12, 18, 9, 22, 30, 41] },
         { id: "b", name: "Rate", type: "line", axis: "right", data: [5, 8, 4, 12, 15, 22] },
       ];
     },
@@ -81,6 +81,24 @@ const tap = (c: Element, x: number, y: number) => {
   pointer(c, "pointerup", x, y, "touch");
 };
 
+/**
+ * The interaction code loads lazily: probe with a move until the chart answers (`hover` set), then
+ * leave, so the test starts from a clean state without a fixed wait.
+ */
+const awake = async (c: HTMLElement & { hover: unknown }, spec: Case, type = "mouse") => {
+  await vi.waitFor(
+    () => {
+      const [x, y] = spotOf(c, spec, spec.scatter ? 0 : 1);
+      pointer(c, "pointerenter", x, y, type);
+      pointer(c, "pointermove", x, y, type);
+      expect(c.hover).not.toBeNull();
+    },
+    { timeout: 4000, interval: 40 },
+  );
+  pointer(c, "pointerleave", -1000, -1000, type);
+  await vi.waitFor(() => expect(c.hover).toBeNull());
+};
+
 const make = async (spec: Case) => {
   const host = mount(
     `<div style="width:520px"><${spec.tag} label="${spec.tag}" height="260" locale="en-US" ${spec.attrs ?? ""}></${spec.tag}></div>`,
@@ -116,8 +134,9 @@ for (const spec of CASES) {
         if (d) seen.push(d.index);
         else leaves++;
       });
-      pointer(c, "pointerenter", -1000, -1000);
-      await wait(80);
+      await awake(c, spec);
+      seen.length = 0;
+      leaves = 0;
       const spots = spec.scatter ? [0, 3, 6] : [0, 2, 4];
       for (const i of spots) {
         const [x, y] = spotOf(c, spec, i);
@@ -148,8 +167,7 @@ for (const spec of CASES) {
 
     it("touch: a tap pins the mark, the same mark again clears it", async () => {
       const c = await make(spec);
-      pointer(c, "pointerenter", -1000, -1000, "touch");
-      await wait(80);
+      await awake(c, spec);
       const [x, y] = spotOf(c, spec, spec.scatter ? 2 : 1);
       tap(c, x, y);
       expect(c.selected).not.toBeNull();
@@ -187,5 +205,150 @@ describe("e17 specifics", () => {
     el.resetZoom();
     await settle();
     expect(el.querySelector('button[data-e17="reset"]')?.hasAttribute("hidden")).toBe(true);
+  });
+
+  const big = (n: number) => ({
+    categories: Array.from({ length: n }, (_, i) => i),
+    values: (k: number) => Array.from({ length: n }, (_, i) => ((i * 31 + k * 7) % 97) - 20),
+  });
+  const mountBig = async (tag: string, attrs: string, n: number, mode: "line" | "stack") => {
+    const errors: unknown[] = [];
+    const onError = (e: ErrorEvent) => errors.push(e.error ?? e.message);
+    window.addEventListener("error", onError);
+    const host = mount(
+      `<div style="width:600px"><${tag} label="big" height="240" locale="en-US" ${attrs}></${tag}></div>`,
+    );
+    const el = host.querySelector(tag) as any;
+    const d = big(n);
+    el.categories = d.categories;
+    el.series = [
+      { id: "a", name: "A", data: d.values(0) },
+      { id: "b", name: "B", data: d.values(1) },
+    ];
+    await settle();
+    await vi.waitFor(() => expect(el.querySelectorAll("svg path").length).toBeGreaterThan(0), {
+      timeout: 15000,
+    });
+    window.removeEventListener("error", onError);
+    expect(errors).toEqual([]);
+    return { el, mode };
+  };
+
+  it("regression: a brushed line chart with 150k points renders (no spread over the data)", async () => {
+    const { el } = await mountBig("ui-line-chart", "brush", 150_000, "line");
+    await vi.waitFor(() => expect(el.querySelector('[data-e17="slider"]')).not.toBeNull(), {
+      timeout: 8000,
+    });
+    expect(el.querySelectorAll("svg *").length).toBeLessThan(400);
+  });
+
+  it("regression: a stacked bar chart with 150k categories renders with few nodes", async () => {
+    const { el } = await mountBig("ui-bar-chart", 'stack="normal"', 150_000, "stack");
+    expect(el.querySelectorAll("svg *").length).toBeLessThan(400);
+  });
+
+  it("regression: a stacked area chart with 150k categories renders", async () => {
+    await mountBig("ui-area-chart", 'stack="normal"', 150_000, "stack");
+  });
+
+  it("combo: a column series draws bars; an unknown type warns and is drawn as a column", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const host = mount(
+      '<div style="width:520px"><ui-combo-chart label="c" height="240" locale="en-US"></ui-combo-chart></div>',
+    );
+    const el = host.querySelector("ui-combo-chart") as any;
+    el.categories = DAYS;
+    el.series = [
+      { id: "a", name: "A", type: "column", data: [1, 2, 3, 4, 5, 6] },
+      { id: "b", name: "B", type: "line", data: [2, 3, 4, 3, 2, 1] },
+      { id: "c", name: "C", type: "bar", data: [3, 1, 3, 1, 3, 1] },
+    ];
+    await settle();
+    // two column series (a and the fallback c) share each category slot
+    expect(el.querySelectorAll("svg path[data-bar]").length).toBe(12);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('unknown type "bar"'));
+    warn.mockRestore();
+  });
+
+  it("annotations: a goal line widens the axis, a range sits under the bars, labels show", async () => {
+    const host = mount(
+      '<div style="width:520px"><ui-bar-chart label="n" height="260" locale="en-US"></ui-bar-chart></div>',
+    );
+    const el = host.querySelector("ui-bar-chart") as any;
+    el.categories = DAYS;
+    el.series = [{ id: "a", name: "A", data: [10, 20, 30, 40, 50, 60] }];
+    el.annotations = [
+      { type: "line", axis: "y", value: 100, label: "Goal", tone: "success" },
+      { type: "range", axis: "x", from: "Tue", to: "Wed", label: "Promo" },
+      { type: "point", x: "Fri", y: 50, label: "Peak", tooltip: "Best day" },
+    ];
+    await vi.waitFor(() => expect(el.querySelector('[data-annotation="line"]')).not.toBeNull(), {
+      timeout: 4000,
+    });
+    expect(el.querySelector('[data-annotation="range"]')).not.toBeNull();
+    expect(el.querySelector('[data-annotation="point"] title')?.textContent).toBe("Best day");
+    const text = el.textContent as string;
+    expect(text).toContain("Goal");
+    expect(text).toContain("Promo");
+    // the 100 line is inside the plot: the value axis reaches it
+    expect(el.querySelector('[data-annotation="line"] line')).not.toBeNull();
+    const ticks = [...el.querySelectorAll('[data-e17="tick"]')].map((t) => t.textContent);
+    expect(ticks.join(" ")).toMatch(/100/);
+  });
+
+  it("an unsafe series color never reaches the style", async () => {
+    const host = mount(
+      '<div style="width:520px"><ui-bar-chart label="c" height="220" locale="en-US"></ui-bar-chart></div>',
+    );
+    const el = host.querySelector("ui-bar-chart") as any;
+    el.categories = DAYS;
+    el.series = [{ id: "a", name: "A", color: "red;background:url(x)", data: [1, 2, 3, 4, 5, 6] }];
+    await settle();
+    expect(el.innerHTML).not.toContain("url(x)");
+  });
+
+  it("zoom: a drag on the strip announces one zoom event, the reset button another", async () => {
+    const host = mount(
+      '<div style="width:520px"><ui-line-chart label="l" height="260" locale="en-US" brush></ui-line-chart></div>',
+    );
+    const el = host.querySelector("ui-line-chart") as any;
+    el.categories = Array.from({ length: 60 }, (_, i) => `d${i}`);
+    el.series = [{ id: "a", name: "A", data: Array.from({ length: 60 }, (_, i) => 10 + (i % 9)) }];
+    const zooms: unknown[] = [];
+    el.addEventListener("zoom", (e: Event) => zooms.push((e as CustomEvent).detail));
+    await vi.waitFor(() => expect(el.querySelector('[data-e17="slider"]')).not.toBeNull(), {
+      timeout: 4000,
+    });
+    const slider = el.querySelector('[data-e17="slider"]') as HTMLElement;
+    const box = slider.getBoundingClientRect();
+    const fire = (type: string, x: number) =>
+      slider.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          clientX: box.left + x,
+          clientY: box.top + 20,
+          pointerId: 7,
+          isPrimary: true,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
+      );
+    el.zoom = [10, 30];
+    await vi.waitFor(() =>
+      expect(el.querySelector('button[data-e17="reset"]')?.hidden).toBe(false),
+    );
+    zooms.length = 0;
+    const from = (20 / 59) * box.width;
+    await vi.waitFor(
+      () => {
+        // retried until the lazy brush code has attached: drag the window to the right
+        fire("pointerdown", from);
+        for (let i = 1; i <= 8; i++) fire("pointermove", from + i * 0.03 * box.width);
+        fire("pointerup", from + 0.24 * box.width);
+        expect(el.zoom[0]).toBeGreaterThan(10);
+      },
+      { timeout: 4000, interval: 60 },
+    );
+    expect(zooms.length).toBe(1);
   });
 });
