@@ -4,7 +4,6 @@
  * and drill-down. This module holds it; each tag's entry is a thin subclass. Never an element entry.
  */
 import { formatPercent, resolveFormat, type ValueFormat } from "@jcsoftdev/ui-core/chart/format";
-import { monochromeByValue } from "@jcsoftdev/ui-core/chart/palette";
 import {
   angleOf,
   arcPath,
@@ -13,7 +12,6 @@ import {
   normalizeAngle,
   polarPoint,
   sliceAngles,
-  spreadLabels,
   TAU,
 } from "@jcsoftdev/ui-core/chart/polar";
 import { uid } from "./base.js";
@@ -26,18 +24,19 @@ import {
   type SnapshotSeries,
   svg,
 } from "./chart-base.js";
+import type * as Extras from "./e20-donut-extras.js";
 import {
   adoptPolar,
   clamp,
   flagOrText,
   jsonAttr,
-  listAttr,
   numberAttr,
-  seedHidden,
   Tween,
   text,
   truncate,
+  warnDuplicates,
 } from "./e20-polar.js";
+import slices from "./e20-slices.css.js";
 
 export interface DonutDatum {
   /** Stable identity, used for the legend and for hiding a slice. */
@@ -58,7 +57,6 @@ export interface DonutCrumb {
 }
 
 type Fill = "solid" | "gradient" | "pattern";
-type Outside = "name" | "percent" | "both";
 
 interface Item {
   datum: DonutDatum;
@@ -89,65 +87,7 @@ interface View {
 }
 
 const EASE = "cubic-bezier(.22,1,.36,1)";
-const LABEL_ELBOW = 14;
-const LABEL_RUN = 30;
-const PATTERNS = 5;
-const CHAR_WIDTH = 0.6;
-const FILL_RATIO = 0.92;
 const BREADCRUMB = '[data-ui="chart-breadcrumb"]';
-
-/**
- * Where a horizontal label sits inside a ring slice, relative to the centre, or null when the text
- * does not fit: its box is projected on the radial and the tangential direction of the slice and
- * must stay within the ring thickness and the arc length at the middle radius.
- */
-function fitSliceLabel(
-  inner: number,
-  radius: number,
-  start: number,
-  end: number,
-  chars: number,
-  fontSize: number,
-): { x: number; y: number } | null {
-  const mid = (start + end) / 2;
-  const at = inner <= 0 ? radius * 0.62 : (inner + radius) / 2;
-  const thickness = inner <= 0 ? radius * 0.7 : radius - inner;
-  const arc = (end - start) * at;
-  const width = chars * fontSize * CHAR_WIDTH;
-  const height = fontSize * 1.1;
-  const rx = Math.sin(mid);
-  const ry = -Math.cos(mid);
-  const radial = width * Math.abs(rx) + height * Math.abs(ry);
-  const tangent = width * Math.abs(ry) + height * Math.abs(rx);
-  if (radial > thickness * FILL_RATIO || tangent > arc * FILL_RATIO) return null;
-  return { x: at * rx, y: at * ry };
-}
-
-/** A texture swatch for one slice: the color with a surface-colored motif on top. */
-function pattern(id: string, kind: number, color: string): SVGPatternElement {
-  const motif = "fill:var(--surface);fill-opacity:.5";
-  const line = "fill:none;stroke:var(--surface);stroke-opacity:.5";
-  const which = kind % PATTERNS;
-  const node = svg("pattern", {
-    id,
-    patternUnits: "userSpaceOnUse",
-    width: 8,
-    height: 8,
-    patternTransform: which === 0 || which === 3 ? "rotate(45)" : undefined,
-  });
-  node.append(svg("rect", { width: 8, height: 8, style: `fill:${color}` }));
-  if (which === 0) node.append(svg("rect", { width: 8, height: 3, style: motif }));
-  if (which === 1) node.append(svg("circle", { cx: 4, cy: 4, r: 1.6, style: motif }));
-  if (which === 2)
-    node.append(svg("path", { d: "M0 0H8M0 0V8", "stroke-width": 1.4, style: line }));
-  if (which === 3) node.append(svg("rect", { width: 8, height: 1.4, y: 3.3, style: motif }));
-  if (which === 4)
-    node.append(
-      svg("rect", { width: 4, height: 4, style: motif }),
-      svg("rect", { x: 4, y: 4, width: 4, height: 4, style: motif }),
-    );
-  return node;
-}
 
 const positive = (value: number): number => (Number.isFinite(value) && value > 0 ? value : 0);
 const off = (host: Element, name: string): boolean =>
@@ -188,7 +128,8 @@ export class UiDonutBase extends ChartElement {
   #view: View | undefined;
   #lit: string | null = null;
   #crumbs = "";
-  #seeded = false;
+  #extras: typeof Extras | undefined;
+  #loading: Promise<void> | undefined;
   readonly #uid = uid("donut");
 
   constructor() {
@@ -222,7 +163,7 @@ export class UiDonutBase extends ChartElement {
   }
   set data(value: readonly DonutDatum[]) {
     this.#data = value;
-    this.#trail = [];
+    this.#load();
     this.requestDraw();
   }
 
@@ -249,14 +190,45 @@ export class UiDonutBase extends ChartElement {
     this.requestDraw();
   }
 
+  /** Loads the optional parts (labels, fills, shades, drill trail) the first time the chart wants one. */
+  #wanted(): boolean {
+    return (
+      this.hasAttribute("fill") ||
+      this.hasAttribute("outside-labels") ||
+      this.hasAttribute("slice-labels") ||
+      this.hasAttribute("monochrome") ||
+      this.drillable
+    );
+  }
+  #load(): Promise<void> | undefined {
+    if (this.#extras || !this.#wanted()) return undefined;
+    this.#loading ??= import("./e20-donut-extras.js").then((module) => {
+      this.#extras = module;
+      if (this.isConnected) this.requestDraw();
+    });
+    return this.#loading;
+  }
+
+  override attributeChangedCallback(name: string): void {
+    super.attributeChangedCallback(name);
+    if (this.isConnected) this.#load();
+  }
+
   override connectedCallback(): void {
     this.dataset.ui = this.variant() === "pie" ? "pie-chart" : "donut-chart";
-    adoptPolar(this);
-    super.connectedCallback();
-    if (!this.#seeded) {
-      this.#seeded = true;
-      seedHidden(this, listAttr(this, "initial-hidden"));
+    adoptPolar(this, slices);
+    // The first paint waits for the optional parts, so labels and fills never pop in.
+    const pending = this.#load();
+    if (pending) {
+      void pending.then(() => this.isConnected && this.#start());
+      return;
     }
+    this.#start();
+  }
+
+  #start(): void {
+    super.connectedCallback();
+    // TODO(E20): seed hidden series with the base hook once it lands (`initial-hidden`).
   }
 
   override disconnectedCallback(): void {
@@ -339,7 +311,9 @@ export class UiDonutBase extends ChartElement {
   #syncCrumbs(): void {
     if (!this.drillable) return;
     const json = JSON.stringify(
-      this.crumbs.map((crumb, i) => (i === 0 && !crumb.name ? { ...crumb, name: "Chart" } : crumb)),
+      this.crumbs.map((crumb, i) =>
+        i === 0 && !crumb.name ? { ...crumb, name: this.labels.chart } : crumb,
+      ),
     );
     if (json === this.#crumbs) return;
     this.#crumbs = json;
@@ -372,14 +346,15 @@ export class UiDonutBase extends ChartElement {
     const outsideAttr = flagOrText(this, "outside-labels");
     const sliceLabels = flagOrText(this, "slice-labels");
     const currency = this.getAttribute("currency") || undefined;
+    const x = this.#extras;
 
     // Level and colors ---------------------------------------------------------------------
     const level = this.#levelData();
     const base = level.baseIndex >= 0 ? ctx.color(level.baseIndex, level.override) : undefined;
     const hue = typeof monochrome === "string" ? monochrome : base;
     const shades =
-      monochrome || base
-        ? monochromeByValue(
+      (monochrome || base) && x
+        ? x.monochromeShades(
             level.data.map((datum) => positive(datum.value)),
             hue,
           )
@@ -389,6 +364,10 @@ export class UiDonutBase extends ChartElement {
       color: datum.color ?? shades?.[index] ?? ctx.color(index),
       format: datum.format ? resolveFormat(datum.format, { locale, currency }) : ctx.format,
     }));
+    const keys = warnDuplicates(
+      this,
+      items.map((item) => item.datum.id),
+    );
     const levelKey = this.#trail.join("/");
     if (levelKey !== this.#tweenLevel) {
       this.#tween.stop();
@@ -397,21 +376,23 @@ export class UiDonutBase extends ChartElement {
     }
     if (!ctx.transient)
       this.#tween.to(
-        new Map(items.map((item) => [item.datum.id, positive(item.datum.value)])),
+        new Map(items.map((item, i) => [keys[i] as string, positive(item.datum.value)])),
         ctx.motion && ctx.phase === "update",
         () => this.requestDraw("transient"),
       );
-    const shown = items.map((item) => this.#tween.get(item.datum.id, positive(item.datum.value)));
+    const shown = items.map((item, i) =>
+      this.#tween.get(keys[i] as string, positive(item.datum.value)),
+    );
 
     // Geometry -----------------------------------------------------------------------------
     // Narrow charts drop the outside labels: the legend carries the names.
-    const outside: Outside | null =
+    const outside: Extras.Outside | null =
       width < 440 || !outsideAttr
         ? null
         : outsideAttr === true
           ? "both"
           : ["name", "percent", "both"].includes(outsideAttr)
-            ? (outsideAttr as Outside)
+            ? (outsideAttr as Extras.Outside)
             : "both";
     const visible = items
       .map((_, index) => index)
@@ -435,26 +416,9 @@ export class UiDonutBase extends ChartElement {
     const hits = sliceAngles(values, { startAngle: from, endAngle: to });
 
     // Slices -------------------------------------------------------------------------------
-    if (fill !== "solid") {
-      const defs = svg("defs");
-      items.forEach((item, index) => {
-        const id = `${this.#uid}-${index}`;
-        if (fill === "pattern") defs.append(pattern(id, index, item.color));
-        else
-          defs.append(
-            svg(
-              "radialGradient",
-              { id, gradientUnits: "userSpaceOnUse", cx, cy, r: Math.max(1, radius) },
-              svg("stop", {
-                offset: Math.min(0.95, inner / Math.max(1, radius)),
-                style: `stop-color:color-mix(in oklab, ${item.color} 42%, var(--surface))`,
-              }),
-              svg("stop", { offset: 1, style: `stop-color:${item.color}` }),
-            ),
-          );
-      });
-      root.append(defs);
-    }
+    const fills =
+      fill !== "solid" && x ? x.fillDefs(fill, items, this.#uid, cx, cy, radius, inner) : null;
+    if (fills) root.append(fills);
     const group = svg("g", { "data-slices": "" });
     const paths = new Map<number, SVGPathElement>();
     for (const index of visible) {
@@ -474,7 +438,7 @@ export class UiDonutBase extends ChartElement {
           endAngle: slice.end,
           cornerRadius,
         }),
-        style: `fill:${fill === "solid" ? item.color : `url(#${this.#uid}-${index})`};--ui-dx:${shift.x.toFixed(2)}px;--ui-dy:${shift.y.toFixed(2)}px;transform-origin:${cx}px ${cy}px`,
+        style: `fill:${fills ? `url(#${this.#uid}-${index})` : item.color};--ui-dx:${shift.x.toFixed(2)}px;--ui-dy:${shift.y.toFixed(2)}px;transform-origin:${cx}px ${cy}px`,
       });
       paths.set(index, path);
       group.append(path);
@@ -483,127 +447,34 @@ export class UiDonutBase extends ChartElement {
 
     // Labels -------------------------------------------------------------------------------
     const fades: SVGElement[] = [];
-    if (sliceLabels) {
-      const labels = svg("g", { "data-pointer-none": "", "data-fade": "" });
-      for (const index of visible) {
-        const slice = slices[index];
-        const item = items[index];
-        if (!slice || !item) continue;
-        const label =
-          sliceLabels === "value"
-            ? item.format(item.datum.value)
-            : formatPercent(slice.fraction, { decimals: 0, locale });
-        const fit = fitSliceLabel(inner, radius, slice.start, slice.end, label.length, 11);
-        if (!fit) continue;
-        labels.append(
-          svg(
-            "text",
-            {
-              x: cx + fit.x,
-              y: cy + fit.y,
-              "text-anchor": "middle",
-              "dominant-baseline": "central",
-              "aria-hidden": "true",
-              style:
-                "fill:var(--surface);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums",
-            },
-            label,
-          ),
-        );
-      }
+    if (sliceLabels && x) {
+      const labels = x.sliceLabelLayer({
+        visible,
+        slices,
+        items,
+        sliceLabels,
+        inner,
+        radius,
+        cx,
+        cy,
+        locale,
+      });
       root.append(labels);
       fades.push(labels);
     }
-    if (outside) {
-      const lines = outside === "both" ? 2 : 1;
-      const boxHeight = lines === 2 ? 30 : 15;
-      const sides: Record<"1" | "-1", Array<{ index: number; side: 1 | -1; y: number }>> = {
-        "1": [],
-        "-1": [],
-      };
-      for (const index of visible) {
-        const slice = slices[index];
-        if (!slice || slice.fraction < 0.02) continue;
-        const side: 1 | -1 = Math.sin(slice.mid) >= 0 ? 1 : -1;
-        sides[String(side) as "1" | "-1"].push({
-          index,
-          side,
-          y: polarPoint(cx, cy, radius + LABEL_ELBOW, slice.mid).y,
-        });
-      }
-      const labels = svg("g", { "data-pointer-none": "", "data-fade": "", "aria-hidden": "true" });
-      for (const entries of Object.values(sides)) {
-        const ys = spreadLabels(
-          entries.map((entry) => ({ y: entry.y, height: boxHeight })),
-          4,
-          height - 4,
-          3,
-        );
-        entries.forEach((entry, i) => {
-          const slice = slices[entry.index];
-          const item = items[entry.index];
-          if (!slice || !item) return;
-          const y = ys[i] ?? entry.y;
-          const x = cx + entry.side * (radius + LABEL_RUN);
-          const anchor = polarPoint(cx, cy, radius + 2, slice.mid);
-          const elbow = polarPoint(cx, cy, radius + LABEL_ELBOW, slice.mid);
-          const room = Math.max(24, (entry.side > 0 ? width - x : x) - 6);
-          const maxChars = Math.floor(room / (11 * 0.58));
-          const pct = formatPercent(slice.fraction, { decimals: 0, locale });
-          const tail = `${x - entry.side * 4},${y}`;
-          const label = svg(
-            "g",
-            { "data-series": item.datum.id },
-            svg("polyline", {
-              fill: "none",
-              "stroke-width": 1,
-              "stroke-linecap": "round",
-              "stroke-linejoin": "round",
-              points: `${anchor.x},${anchor.y} ${elbow.x},${elbow.y} ${tail}`,
-              style: "stroke:var(--ink-3);stroke-opacity:.55",
-            }),
-          );
-          const textNode = svg("text", {
-            x,
-            y,
-            "text-anchor": entry.side > 0 ? "start" : "end",
-            style: "font-size:11px",
-          });
-          if (lines === 2)
-            textNode.append(
-              svg(
-                "tspan",
-                { x, dy: "-0.25em", style: "fill:var(--ink-2);font-weight:500" },
-                truncate(item.datum.name, maxChars),
-              ),
-              svg(
-                "tspan",
-                {
-                  x,
-                  dy: "1.35em",
-                  style: "fill:var(--ink);font-weight:700;font-variant-numeric:tabular-nums",
-                },
-                pct,
-              ),
-            );
-          else
-            textNode.append(
-              svg(
-                "tspan",
-                {
-                  dy: "0.34em",
-                  style:
-                    outside === "percent"
-                      ? "fill:var(--ink);font-weight:700;font-variant-numeric:tabular-nums"
-                      : "fill:var(--ink-2);font-weight:500;font-variant-numeric:tabular-nums",
-                },
-                outside === "percent" ? pct : truncate(item.datum.name, maxChars),
-              ),
-            );
-          label.append(textNode);
-          labels.append(label);
-        });
-      }
+    if (outside && x) {
+      const labels = x.outsideLayer({
+        visible,
+        slices,
+        items,
+        outside,
+        cx,
+        cy,
+        radius,
+        width,
+        height,
+        locale,
+      });
       root.append(labels);
       fades.push(labels);
     }

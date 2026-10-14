@@ -1,0 +1,19 @@
+/* A hovered, focused or pinned slice steps out; the others fade. Hit testing never reads these
+   elements, so moving them cannot move the pointer off them. */
+[data-ui-chart][data-polar] [data-slice] {
+  transition:
+    transform 200ms ease-out,
+    opacity 150ms;
+}
+[data-ui-chart][data-polar] [data-slice][data-active],
+[data-ui-chart][data-polar] [data-slices]:has([data-dim]) > [data-slice]:not([data-dim]) {
+  transform: translate(var(--ui-dx, 0), var(--ui-dy, 0));
+}
+[data-ui-chart][data-polar] [data-slices]:has([data-active]) > [data-slice]:not([data-active]) {
+  opacity: 0.4;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart][data-polar] [data-slice] {
+    transition: none;
+  }
+}

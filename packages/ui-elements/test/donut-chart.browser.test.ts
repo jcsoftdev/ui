@@ -173,38 +173,48 @@ describe("ui-donut-chart", () => {
     ).not.toBe("absolute");
   });
 
-  it("drills into children, keeps the path in a breadcrumb and goes back", async () => {
+  it("drills into children, keeps the path in a breadcrumb, goes back, and keeps the level on new data", async () => {
     const c = await donut("", "<ui-chart-breadcrumb></ui-chart-breadcrumb>");
-    c.data = [
+    const tree = [
       {
         id: "a",
         name: "Hair",
         value: 10,
         children: [
           { id: "a1", name: "Cut", value: 6 },
-          { id: "a2", name: "Dye", value: 4 },
+          { id: "a2", name: "Dye", value: 3 },
+          { id: "a3", name: "Wash", value: 1 },
         ],
       },
       { id: "b", name: "Beard", value: 5 },
     ];
+    c.data = tree;
     await settle();
     await awake(c);
+    const names = () => marks(c).map((m) => m.getAttribute("aria-label")?.split(":")[0]);
+    expect(names()).toEqual(["Hair", "Beard"]);
     const p = onRing(c, 60);
     pointer(c, "pointermove", p.x, p.y);
-    pointer(c, "click", p.x, p.y);
+    await frame();
     await userEvent.click(c.querySelector("svg") as Element, { position: { x: p.x, y: p.y } });
     await settle();
-    expect(marks(c).map((m) => m.getAttribute("aria-label")?.split(":")[0])).toEqual([
-      "Cut",
-      "Dye",
-    ]);
-    const crumbs = [
-      ...c.querySelectorAll("ui-chart-breadcrumb button, ui-chart-breadcrumb [aria-current]"),
-    ];
-    expect(crumbs.length).toBeGreaterThan(0);
+    expect(names()).toEqual(["Cut", "Dye", "Wash"]);
+    const crumbs = JSON.parse(
+      c.querySelector("ui-chart-breadcrumb")?.getAttribute("items") ?? "[]",
+    );
+    expect(crumbs.map((x: { id: string }) => x.id)).toEqual(["", "a"]);
+    c.data = tree.map((item) => ({ ...item, value: item.value + 1 }));
+    await settle();
+    expect(names()).toEqual(["Cut", "Dye", "Wash"]);
     (c as unknown as { goTo(id: string): void }).goTo("");
     await settle();
-    expect(marks(c)).toHaveLength(2);
+    expect(names()).toEqual(["Hair", "Beard"]);
+  });
+
+  it("reserves no room for a legend that is not there", async () => {
+    const c = await donut("", "", 600);
+    expect(c.drawing.getBoundingClientRect().width).toBe(600);
+    expect(Number.parseFloat(getComputedStyle(c.drawing).marginInlineEnd)).toBe(0);
   });
 
   it("is a pie without the hole and a centre", async () => {
