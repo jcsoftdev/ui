@@ -1,11 +1,21 @@
+import type { PanZoomView } from "@jcsoftdev/ui-core/chart/pan-zoom";
 import type { TreeLayout, TreeLayoutNode } from "@jcsoftdev/ui-core/chart/tree";
+import { easeOutCubic } from "../internal/chart-text.js";
 
 // Pan and zoom, the keyboard moves, the layout tween, search, grouping, tooltip rows and the data
 // table: fetched right after the first draw.
 export { attachPanZoom } from "@jcsoftdev/ui-core/chart/pan-zoom";
-export { treeKeyMove, treeNeighbor } from "@jcsoftdev/ui-core/chart/tree-nav";
+export { bindEvents, keepFocus } from "./tree-chart-events.js";
 export { default as stateCss } from "./tree-chart-state.css.js";
-export { groupLeaves, searchTree, snapshotOf, tipRows } from "./tree-chart-tools.js";
+export {
+  groupLeaves,
+  navigate,
+  nearestCard,
+  reveal,
+  searchTree,
+  snapshotOf,
+  tipRows,
+} from "./tree-chart-tools.js";
 
 /** A laid-out node as drawn in the current frame. */
 export type Pose = TreeLayoutNode & { opacity: number };
@@ -60,4 +70,38 @@ export function buildTween(
   );
   if (!moved) return undefined;
   return { start, tracks, final: layout.nodes.map((node) => ({ ...node, opacity: 1 })) };
+}
+
+export type ViewTween = { from: PanZoomView; to: PanZoomView; start: number };
+
+const DURATION = 360;
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const progress = (start: number, now: number) => Math.min(1, Math.max(0, (now - start) / DURATION));
+
+/** The poses of a layout tween at `now`; `done` once it has reached its final poses. */
+export function tweenFrame(tween: Tween, now: number): { poses: Pose[]; done: boolean } {
+  const t = progress(tween.start, now);
+  if (t >= 1) return { poses: tween.final, done: true };
+  const e = easeOutCubic(t);
+  return {
+    done: false,
+    poses: tween.tracks.map(({ node, from, to }) => ({
+      ...node,
+      x: lerp(from.x, to.x, e),
+      y: lerp(from.y, to.y, e),
+      opacity: lerp(from.opacity, to.opacity, e),
+    })),
+  };
+}
+
+/** The pan and zoom of a view glide at `now`; `done` once it has arrived. */
+export function viewFrame(glide: ViewTween, now: number): { view: PanZoomView; done: boolean } {
+  const t = progress(glide.start, now);
+  if (t >= 1) return { view: glide.to, done: true };
+  const e = easeOutCubic(t);
+  const { from, to } = glide;
+  return {
+    done: false,
+    view: { k: lerp(from.k, to.k, e), x: lerp(from.x, to.x, e), y: lerp(from.y, to.y, e) },
+  };
 }

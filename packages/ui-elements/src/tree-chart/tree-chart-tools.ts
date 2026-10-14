@@ -1,5 +1,9 @@
 // What only some charts, or only the moments after the first draw, need: folding leaf siblings into
 // a group, the search, the tooltip rows and the data table. Lazy: loaded with the input chunk.
+import type { PanZoomView } from "@jcsoftdev/ui-core/chart/pan-zoom";
+import type { TreeDirection, TreeLayoutNode } from "@jcsoftdev/ui-core/chart/tree";
+import { treeKeyMove, treeNeighbor } from "@jcsoftdev/ui-core/chart/tree-nav";
+import type { NavIntent } from "../internal/chart-base.js";
 import type { ChartSnapshot, TooltipRow } from "../internal/chart-protocol.js";
 import type { TreeLabels } from "../internal/tree-labels.js";
 import {
@@ -10,6 +14,12 @@ import {
   type TreeModel,
 } from "../internal/tree-model.js";
 
+const KEYS: Record<string, string> = {
+  left: "ArrowLeft",
+  right: "ArrowRight",
+  up: "ArrowUp",
+  down: "ArrowDown",
+};
 const DETAIL_LABELS = { category: "Name", subtitle: "Role", parent: "Reports to" };
 
 /**
@@ -135,4 +145,73 @@ export function snapshotOf(
     ],
     legend: [],
   };
+}
+
+/** The index of the card under (or nearest to, within `reach` px) the point `px, py` of the stage, or -1. */
+export function nearestCard(
+  poses: readonly TreeLayoutNode[],
+  px: number,
+  py: number,
+  k: number,
+  reach: number,
+): number {
+  let best = -1;
+  let distance = reach;
+  for (let i = 0; i < poses.length; i += 1) {
+    const pose = poses[i] as TreeLayoutNode;
+    const dx = Math.max(Math.abs(px - pose.x) - pose.width / 2, 0);
+    const dy = Math.max(Math.abs(py - pose.y) - pose.height / 2, 0);
+    const d = Math.hypot(dx, dy) * k;
+    if (d === 0) return i;
+    if (d < distance) {
+      distance = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
+/** The id of the node a keyboard `intent` leads to from node `i` of the laid-out `nodes`. */
+export function navigate(
+  nodes: readonly TreeLayoutNode[],
+  i: number,
+  intent: NavIntent,
+  direction: TreeDirection,
+  rtl: boolean,
+  drilled: boolean,
+): string | undefined {
+  const current = nodes[i];
+  if (!current) return undefined;
+  if (intent === "home") return nodes[0]?.id;
+  if (intent === "end") return nodes[nodes.length - 1]?.id;
+  if (intent === "parent") return treeNeighbor(nodes, current.id, "parent");
+  // Shift+Enter just expanded or collapsed this node: the children are about to change.
+  if (intent === "child") return drilled ? undefined : treeNeighbor(nodes, current.id, "child");
+  // The layout is not mirrored in right-to-left pages, so the base's swap is undone.
+  const side = rtl
+    ? (({ left: "right", right: "left" } as Record<string, string>)[intent] ?? intent)
+    : intent;
+  const move = treeKeyMove(KEYS[side] as string, direction);
+  return move ? treeNeighbor(nodes, current.id, move) : undefined;
+}
+
+/** The view that brings `node` fully into a drawing of `size`, or `undefined` when it already is. */
+export function reveal(
+  node: TreeLayoutNode,
+  view: PanZoomView,
+  size: { width: number; height: number },
+): PanZoomView | undefined {
+  const margin = 12;
+  const { k, x, y } = view;
+  const left = x + (node.x - node.width / 2) * k;
+  const right = x + (node.x + node.width / 2) * k;
+  const top = y + (node.y - node.height / 2) * k;
+  const bottom = y + (node.y + node.height / 2) * k;
+  let dx = 0;
+  let dy = 0;
+  if (left < margin) dx = margin - left;
+  else if (right > size.width - margin) dx = size.width - margin - right;
+  if (top < margin) dy = margin - top;
+  else if (bottom > size.height - margin) dy = size.height - margin - bottom;
+  return dx || dy ? { k, x: x + dx, y: y + dy } : undefined;
 }

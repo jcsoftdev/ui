@@ -157,8 +157,15 @@ export function mountUi(drawing: HTMLElement, bridge: TreeBridge): TreeUi {
     drawing.append(hint);
   }
 
+  let last = "";
   return {
-    sync({ zoom, query, count, index }) {
+    sync(state) {
+      // The toolbar and the box show again after the drawing was emptied by a state screen.
+      for (const part of parts) if (!part.isConnected) drawing.append(part);
+      const key = JSON.stringify(state);
+      if (key === last) return;
+      last = key;
+      const { zoom, query, count, index } = state;
       if (zoomText) zoomText.textContent = `${Math.round(zoom * 100)}%`;
       if (input && input.value !== query) input.value = query;
       if (status)
@@ -168,8 +175,6 @@ export function mountUi(drawing: HTMLElement, bridge: TreeBridge): TreeUi {
             ? `${index + 1} ${labels.of} ${count}`
             : labels.noMatches;
       if (previous && next) previous.disabled = next.disabled = count === 0;
-      // The toolbar and the box show again after the drawing was emptied by a state screen.
-      for (const part of parts) if (!part.isConnected) drawing.append(part);
     },
     destroy() {
       for (const part of parts) part.remove();

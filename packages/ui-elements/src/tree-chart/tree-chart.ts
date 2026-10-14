@@ -6,7 +6,7 @@ import {
   type TreeLayoutNode,
   treeLayout,
 } from "@jcsoftdev/ui-core/chart/tree";
-import { type TreeEdgeStyle, treeEdgePath } from "@jcsoftdev/ui-core/chart/tree-edge";
+import { type TreeEdgeStyle, treeEdgePath } from "@jcsoftdev/ui-core/chart/tree-edge-box";
 import { type TreeFitMode, treeFitView } from "@jcsoftdev/ui-core/chart/tree-fit";
 import { adoptStyles, type DefineOptions, defineElement, emit, rootOf } from "../internal/base.js";
 import {
@@ -21,7 +21,7 @@ import {
   svg,
 } from "../internal/chart-base.js";
 import { SR_ONLY } from "../internal/chart-dom.js";
-import { cachedJson, easeOutCubic, fitLabel, textWidth } from "../internal/chart-text.js";
+import { cachedJson, fitLabel, textWidth } from "../internal/chart-text.js";
 import { numberAttr } from "../internal/e5-forms.js";
 import {
   CORE_TREE_LABELS,
@@ -43,7 +43,7 @@ import {
   visibleTree,
 } from "../internal/tree-model.js";
 import css from "./tree-chart.css.js";
-import type { Pose, Tween } from "./tree-chart-input.js";
+import type { Pose, Tween, ViewTween } from "./tree-chart-input.js";
 import type { TreeUi } from "./tree-chart-ui.js";
 
 export type { TreeChartDatum, TreeChartNode, TreeLabels };
@@ -75,37 +75,19 @@ export interface TreeNodeState {
   height: number;
 }
 
-type ViewTween = { from: PanZoomView; to: PanZoomView; start: number };
 type Stage = { g: SVGGElement; edges: SVGGElement; nodes: SVGGElement; toggles: SVGGElement };
 
-const DURATION = 360;
 const ZOOM_STEP = 1.25;
 const TOOLBAR_BAND = 36;
 const VIRTUAL_FROM = 1000;
 const DIRECTIONS = ["top", "bottom", "left", "right"];
-const KEYS: Record<string, string> = {
-  left: "ArrowLeft",
-  right: "ArrowRight",
-  up: "ArrowUp",
-  down: "ArrowDown",
-};
 /** `text` cut with an ellipsis to fit `max` pixels at `size` px. */
 const clip = (text: string, max: number, size: number) =>
   max > 0 ? (fitLabel(text, max, size) ?? "…") : "";
 const round = (n: number) => Math.round(n * 100) / 100;
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /** Point of a node box that faces its children, where the toggle button sits. */
-function toggleAnchor(pose: TreeLayoutNode, direction: TreeDirection, radial: boolean) {
-  if (radial && pose.angle != null) {
-    const dx = Math.sin(pose.angle);
-    const dy = -Math.cos(pose.angle);
-    const reach = Math.min(
-      pose.width / 2 / Math.max(1e-6, Math.abs(dx)),
-      pose.height / 2 / Math.max(1e-6, Math.abs(dy)),
-    );
-    return { x: pose.x + dx * reach, y: pose.y + dy * reach };
-  }
+function toggleAnchor(pose: TreeLayoutNode, direction: TreeDirection) {
   switch (direction) {
     case "top":
       return { x: pose.x, y: pose.y + pose.height / 2 };
@@ -269,7 +251,6 @@ export class UiTreeChart extends ChartElement {
   #snapshotWaiting = false;
   #ui: TreeUi | undefined;
   #uiKey = "";
-  #uiState = "";
 
   constructor() {
     super();
@@ -603,7 +584,7 @@ export class UiTreeChart extends ChartElement {
 
   /** Moves to `view` at once, or glides there over the next frames. */
   #goTo(view: PanZoomView, glide: boolean): void {
-    if (glide) {
+    if (glide && input) {
       this.#viewTween = { from: this.#view, to: view, start: performance.now() };
       this.requestDraw("transient");
     } else {
@@ -651,34 +632,22 @@ export class UiTreeChart extends ChartElement {
     this.#panZoom = panZoom;
   }
 
-  /** The view that brings a node fully into the drawing, or `undefined` when it already is. */
-  #reveal(id: string): PanZoomView | undefined {
-    const node = this.#target?.nodes.find((candidate) => candidate.id === id);
-    if (!node) return undefined;
-    const margin = 12;
-    const { k, x, y } = this.#view;
-    const left = x + (node.x - node.width / 2) * k;
-    const right = x + (node.x + node.width / 2) * k;
-    const top = y + (node.y - node.height / 2) * k;
-    const bottom = y + (node.y + node.height / 2) * k;
-    const { width, height } = this.#size;
-    let dx = 0;
-    let dy = 0;
-    if (left < margin) dx = margin - left;
-    else if (right > width - margin) dx = width - margin - right;
-    if (top < margin) dy = margin - top;
-    else if (bottom > height - margin) dy = height - margin - bottom;
-    return dx || dy ? { k, x: x + dx, y: y + dy } : undefined;
-  }
-
   // ---- setup --------------------------------------------------------------------------------------------
 
   protected override setup(_svg: SVGSVGElement, signal: AbortSignal): void {
-    const drawing = this.drawing;
     loadInput().then((late) => {
       if (signal.aborted) return;
       adoptStyles(rootOf(this), late.stateCss);
       this.#bindPanZoom();
+      late.bindEvents(this, this.drawing, signal, {
+        selectable: () => this.#selectable,
+        nodeOf: (id) => this.#model?.byId.get(id),
+        reveal: (id) => {
+          const node = this.#target?.nodes.find((n) => n.id === id);
+          const view = node && late.reveal(node, this.#view, this.#size);
+          if (view) this.#panZoom?.setView(view);
+        },
+      });
       // The table asked for its data before the chunk that builds it arrived: ask again.
       if (this.#snapshotWaiting) {
         this.#snapshotWaiting = false;
@@ -693,91 +662,6 @@ export class UiTreeChart extends ChartElement {
       this.#ui = undefined;
       this.#uiKey = "";
     });
-    const toggleOf = (event: Event) =>
-      (event.target as Element | null)?.closest?.("[data-toggle]") ?? null;
-    let press: { x: number; y: number; dragged: boolean } | undefined;
-    let dragged = false;
-    const capture = { capture: true, signal };
-    // A drag pans: it is claimed (`preventDefault`) so it never becomes a selection. A press on a
-    // toggle button is claimed too, and its click expands or collapses the node.
-    drawing.addEventListener(
-      "pointerdown",
-      (event) => {
-        if ((event.target as Element).closest?.("[data-tree-ui]")) return;
-        press = { x: event.clientX, y: event.clientY, dragged: false };
-        dragged = false;
-        if (toggleOf(event)) event.preventDefault();
-      },
-      capture,
-    );
-    drawing.addEventListener(
-      "pointermove",
-      (event) => {
-        if (!press || press.dragged) return;
-        if (Math.hypot(event.clientX - press.x, event.clientY - press.y) < 4) return;
-        press.dragged = true;
-        this.toggleAttribute("data-panning", true);
-      },
-      capture,
-    );
-    const release = (event: Event) => {
-      if (press?.dragged) {
-        dragged = true;
-        event.preventDefault();
-        // The click that ends a drag arrives right after this event.
-        setTimeout(() => {
-          dragged = false;
-        });
-      }
-      press = undefined;
-      this.removeAttribute("data-panning");
-    };
-    drawing.addEventListener("pointerup", release, capture);
-    drawing.addEventListener("pointercancel", release, capture);
-    // A click on a node is `node-click`, then it expands or collapses the node (cancel the event to
-    // do something else) or, with `selectable`, pins it (the base pins on the mouse click itself).
-    // A double click is two clicks: the base's double-click drill is switched off.
-    drawing.addEventListener(
-      "click",
-      (event) => {
-        const target = event.target as Element;
-        if (target.closest?.("[data-tree-ui]")) return;
-        const toggle = toggleOf(event);
-        const selectable = this.#selectable;
-        if (toggle || !selectable) event.preventDefault();
-        if (dragged) return;
-        if (toggle) return this.toggle(toggle.getAttribute("data-id") ?? "");
-        const id = target.closest?.("[data-card]")?.getAttribute("data-id") ?? "";
-        const node = this.#model?.byId.get(id);
-        if (node && emit(this, "node-click", { id, node }, true) && !selectable) this.toggle(id);
-      },
-      capture,
-    );
-    drawing.addEventListener("dblclick", (event) => event.preventDefault(), capture);
-    drawing.addEventListener(
-      "keydown",
-      (event) => {
-        if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
-        if ((event.target as Element).closest?.("[data-tree-ui]")) return;
-        if (event.key === "+" || event.key === "=") this.zoomIn();
-        else if (event.key === "-" || event.key === "_") this.zoomOut();
-        else if (event.key === "0") this.fit();
-        else return;
-        event.preventDefault();
-      },
-      { signal },
-    );
-    // A node reached with the keyboard is brought into view.
-    drawing.addEventListener(
-      "focusin",
-      (event) => {
-        const target = event.target as Element;
-        if (!target.matches?.("[data-card]") || !target.matches(":focus-visible")) return;
-        const view = this.#reveal(target.getAttribute("data-id") ?? "");
-        if (view) this.#panZoom?.setView(view);
-      },
-      { signal },
-    );
   }
 
   protected override teardown(): void {
@@ -811,22 +695,16 @@ export class UiTreeChart extends ChartElement {
         search: (query) => this.search(query),
         step: (delta) => this.#step(delta),
       });
-      this.#uiState = "";
       this.#syncUi();
     });
   }
   #syncUi(): void {
-    if (!this.#ui) return;
-    const state = {
+    this.#ui?.sync({
       zoom: this.#view.k,
       query: this.#query,
       count: this.#matches.length,
       index: this.#matchIndex,
-    };
-    const text = JSON.stringify(state);
-    if (text === this.#uiState && this.drawing.querySelector("[data-tree-ui]")) return;
-    this.#uiState = text;
-    this.#ui.sync(state);
+    });
   }
 
   // ---- draw ---------------------------------------------------------------------------------------------
@@ -891,21 +769,11 @@ export class UiTreeChart extends ChartElement {
     let poses: Pose[];
     const tween = this.#tween;
     let moving = false;
-    if (tween) {
-      const t = Math.min(1, Math.max(0, (now - tween.start) / DURATION));
-      if (t >= 1) {
-        this.#tween = undefined;
-        poses = tween.final;
-      } else {
-        const e = easeOutCubic(t);
-        poses = tween.tracks.map(({ node, from, to }) => ({
-          ...node,
-          x: lerp(from.x, to.x, e),
-          y: lerp(from.y, to.y, e),
-          opacity: lerp(from.opacity, to.opacity, e),
-        }));
-        moving = true;
-      }
+    if (tween && input) {
+      const frame = input.tweenFrame(tween, now);
+      poses = frame.poses;
+      if (frame.done) this.#tween = undefined;
+      else moving = true;
     } else poses = layout.nodes.map((node) => ({ ...node, opacity: 1 }));
     this.#poses = new Map(poses.map((pose) => [pose.id, pose]));
 
@@ -952,19 +820,12 @@ export class UiTreeChart extends ChartElement {
         else this.#goTo(view, false);
       }
     }
-    const view = this.#viewTween;
-    if (view) {
-      const t = Math.min(1, Math.max(0, (now - view.start) / DURATION));
-      const e = easeOutCubic(t);
-      this.#view = {
-        k: lerp(view.from.k, view.to.k, e),
-        x: lerp(view.from.x, view.to.x, e),
-        y: lerp(view.from.y, view.to.y, e),
-      };
-      if (t >= 1) {
-        this.#view = view.to;
-        this.#viewTween = undefined;
-      } else moving = true;
+    const glide = this.#viewTween;
+    if (glide && input) {
+      const frame = input.viewFrame(glide, now);
+      this.#view = frame.view;
+      if (frame.done) this.#viewTween = undefined;
+      else moving = true;
     }
 
     // ---- the stage
@@ -1112,7 +973,10 @@ export class UiTreeChart extends ChartElement {
         (pose) => svg("g", { "data-toggle": "", "data-id": pose.id, "aria-hidden": "true" }),
         (el, pose) => {
           const node = model.byId.get(pose.id) as TreeChartNode;
-          const at = toggleAnchor(pose, direction, radial);
+          const at =
+            radial && pose.angle != null
+              ? (radialModule as NonNullable<typeof radialModule>).radialAnchor(pose)
+              : toggleAnchor(pose, direction);
           const loading = this.#busy.has(node.id);
           const label = loading
             ? ""
@@ -1200,27 +1064,16 @@ export class UiTreeChart extends ChartElement {
     queueMicrotask(() => this.#syncUi());
 
     // ---- keep focus on the same node across a change of the visible set
-    if (focusInside && !virtual) {
-      let wanted = keepWanted;
-      while (wanted && !index.has(wanted)) wanted = model.byId.get(wanted)?.parent?.id;
-      const oldIndex = focusedId ? before.indexOf(focusedId) : -1;
-      if (wanted)
-        queueMicrotask(() => {
-          const el = this.#cards.get(wanted as string) as SVGElement | undefined;
-          if (!el?.isConnected || !this.isConnected) return;
-          const current = document.activeElement;
-          if (current === el && oldIndex === index.get(wanted as string)) return;
-          for (const card of this.#cards.values())
-            card.setAttribute("tabindex", card === el ? "0" : "-1");
-          if (current !== el && (this.drawing.contains(current) || current === document.body))
-            el.focus({ preventScroll: true });
-          else if (current === el && oldIndex !== index.get(wanted as string)) {
-            // The index of the focused node changed: refocus so the details follow the node.
-            el.blur();
-            el.focus({ preventScroll: true });
-          }
-        });
-    }
+    if (focusInside && !virtual && input)
+      input.keepFocus(
+        this.drawing,
+        this.#cards,
+        index,
+        (id) => model.byId.get(id)?.parent?.id,
+        keepWanted,
+        focusedId,
+        before,
+      );
     // The base pins a mark index, and the index of a node moves when others appear or fold away: once
     // it has mounted these marks, pin the node again by id (or drop a pin that points at another node).
     this.#settling = true;
@@ -1244,24 +1097,16 @@ export class UiTreeChart extends ChartElement {
         const direct = owner ? navIndex(owner) : undefined;
         if (direct !== undefined) return direct;
         const { k, x: vx, y: vy } = this.#view;
-        const px = (x - vx) / k;
-        const py = (y - vy) / k;
         // The card under the pointer, else the nearest one: the gutters between cards belong to a card.
-        const reach = Math.max(radius, this.#siblingGap * k);
-        let best = -1;
-        let distance = reach;
-        for (let i = 0; i < markPoses.length; i += 1) {
-          const pose = markPoses[i] as Pose;
-          const dx = Math.max(Math.abs(px - pose.x) - pose.width / 2, 0);
-          const dy = Math.max(Math.abs(py - pose.y) - pose.height / 2, 0);
-          const d = Math.hypot(dx, dy) * k;
-          if (d === 0) return i;
-          if (d < distance) {
-            distance = d;
-            best = i;
-          }
-        }
-        return best;
+        return (
+          input?.nearestCard(
+            markPoses,
+            (x - vx) / k,
+            (y - vy) / k,
+            k,
+            Math.max(radius, this.#siblingGap * k),
+          ) ?? -1
+        );
       },
       hover: (i) => {
         const pose = markPoses[i];
@@ -1279,28 +1124,15 @@ export class UiTreeChart extends ChartElement {
         };
       },
       nav: (i, intent: NavIntent) => {
-        const nodes = this.#navNodes;
-        const current = nodes[i];
-        if (!current || !input) return undefined;
-        const { treeKeyMove, treeNeighbor } = input;
-        const at = (id: string) => index.get(id);
-        if (intent === "home") return 0;
-        if (intent === "end") return nodes.length - 1;
-        if (intent === "parent") return at(treeNeighbor(nodes, current.id, "parent"));
-        if (intent === "child")
-          // Shift+Enter just expanded or collapsed this node: the children are about to change.
-          return this.#drilled ? undefined : at(treeNeighbor(nodes, current.id, "child"));
-        // The layout is not mirrored in right-to-left pages, so the base's swap is undone.
-        const rtl = getComputedStyle(this).direction === "rtl";
-        const side = rtl
-          ? intent === "left"
-            ? "right"
-            : intent === "right"
-              ? "left"
-              : intent
-          : intent;
-        const move = treeKeyMove(KEYS[side] as string, direction);
-        return move ? at(treeNeighbor(nodes, current.id, move)) : undefined;
+        const at = input?.navigate(
+          this.#navNodes,
+          i,
+          intent,
+          direction,
+          getComputedStyle(this).direction === "rtl",
+          this.#drilled,
+        );
+        return at === undefined ? undefined : index.get(at);
       },
       snapshot: () => {
         const title = this.getAttribute("label") || this.labels.chart || "Tree";
