@@ -248,4 +248,13 @@ describe("fill gauge", () => {
     expect(await violations(c)).toEqual([]);
     expect(c.chartSnapshot?.categories).toEqual(ITEMS.map((i) => i.name));
   });
+
+  it("loads a non-default shape before the first paint", async () => {
+    const c = await chart("ui-fill-gauge-chart", 'shape="star"', "", 360);
+    (c as unknown as { data: unknown }).data = [{ id: "a", name: "Goal", value: 0.5 }];
+    await settle();
+    await wait(60);
+    const clip = svgOf(c).querySelector("clipPath path, path");
+    expect(clip?.getAttribute("d")).not.toContain("M12 1.8c3.9");
+  });
 });

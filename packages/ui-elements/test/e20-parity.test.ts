@@ -56,9 +56,31 @@ describe("E20 ports match the React kit", () => {
       react("radar-chart/radar-chart.tsx"),
       import("@jcsoftdev/ui-core/chart/polar"),
     ]);
-    if (ui)
-      for (const key of Object.keys(ui))
-        expect(typeof (core as Record<string, unknown>)[key]).toBe(typeof ui[key]);
+    expect(ui).not.toBeNull();
+    for (const variant of ["semi", "three-quarter"] as const)
+      for (const mode of ["progress", "needle"] as const)
+        for (const [width, height] of [
+          [480, 230],
+          [320, 290],
+          [140, 120],
+        ] as const) {
+          const input = {
+            width,
+            height,
+            variant,
+            mode,
+            thickness: 18,
+            endLabels: true,
+            customCenter: false,
+            caption: true,
+            bandLabel: true,
+            valueChars: 5,
+          };
+          expect(core.layoutGauge(input)).toEqual(ui.layoutGauge(input));
+        }
+    for (const labels of [true, false])
+      for (const ticks of [0, 3, 8])
+        expect(core.showEndLabels(labels, ticks)).toBe(ui.showEndLabels(labels, ticks));
     if (radar)
       for (const v of [0, 3, 47, 120, 999])
         expect(polar.niceRadarMax(v, 4)).toBe(radar.niceRadarMax(v, 4));

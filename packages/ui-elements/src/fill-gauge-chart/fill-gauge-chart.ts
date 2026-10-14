@@ -7,20 +7,19 @@ import {
   type DrawResult,
   svg,
 } from "../internal/chart-base.js";
-import {
-  adoptPolar,
-  clamp,
-  EASE,
-  jsonAttr,
-  numberAttr,
-  text,
-  truncate,
-} from "../internal/e20-polar.js";
-import {
-  type ResolvedUnitShape,
-  resolveUnitShape,
-  type UnitIcon,
-} from "../internal/e20-unit-shapes.js";
+import { clamp, EASE, jsonAttr, numberAttr, text, truncate } from "../internal/e20-polar.js";
+import type * as Shapes from "../internal/e20-unit-shapes.js";
+import type { ResolvedUnitShape, UnitIcon } from "../internal/e20-unit-shapes.js";
+
+/** The default silhouette ships with the chart; the others load on demand. */
+const DROPLET: ResolvedUnitShape = {
+  path: "M12 1.8c3.9 4.8 7.5 9 7.5 13a7.5 7.5 0 0 1-15 0c0-4 3.6-8.2 7.5-13z",
+  width: 24,
+  height: 24,
+  fillRule: "nonzero",
+  fill: "up",
+  labelY: 12,
+};
 
 export interface FillGaugeItem {
   id: string;
@@ -85,15 +84,41 @@ export class UiFillGaugeChart extends ChartElement {
   }
   set data(value: readonly FillGaugeItem[]) {
     this.#data = value;
+    this.#load();
     this.requestDraw();
+  }
+
+  #shapes: typeof Shapes | undefined;
+  #loading: Promise<void> | undefined;
+
+  #wanted(): boolean {
+    const named = this.getAttribute("shape");
+    return (!!named && named !== "droplet") || this.data.some((item) => item.shape !== undefined);
+  }
+  #load(): Promise<void> | undefined {
+    if (this.#shapes || !this.#wanted()) return undefined;
+    this.#loading ??= import("../internal/e20-unit-shapes.js").then((module) => {
+      this.#shapes = module;
+      if (this.isConnected) this.requestDraw();
+    });
+    return this.#loading;
+  }
+
+  override attributeChangedCallback(name: string): void {
+    super.attributeChangedCallback(name);
+    if (this.isConnected) this.#load();
   }
 
   override connectedCallback(): void {
     this.dataset.ui = "fill-gauge-chart";
-    adoptPolar(this);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", "200");
-    super.connectedCallback();
+    // TODO(E20): default height 200 once the base has a natural-height hook (no host writes).
+    const pending = this.#load();
+    if (pending) void pending.then(() => this.isConnected && super.connectedCallback());
+    else super.connectedCallback();
+  }
+
+  #shape(icon: UnitIcon): ResolvedUnitShape {
+    return icon === "droplet" ? DROPLET : (this.#shapes?.resolveUnitShape(icon) ?? DROPLET);
   }
 
   protected override isEmpty(): boolean {
@@ -136,7 +161,7 @@ export class UiFillGaugeChart extends ChartElement {
       const row = Math.floor(index / columns);
       const ratio = ratioOf(item);
       next.set(item.id, ratio);
-      const shape: ResolvedUnitShape = resolveUnitShape(item.shape ?? shapeName);
+      const shape = this.#shape(item.shape ?? shapeName);
       const x = column * cellWidth + (cellWidth - size) / 2;
       const y = blockTop(row);
       const id = `${this.#uid}-${index}`;
@@ -288,14 +313,14 @@ export class UiFillGaugeChart extends ChartElement {
           },
           {
             id: "max",
-            name: "Max",
+            name: text(this, "max"),
             color: "",
             values: data.map((item) => item.max ?? max),
             text: data.map((item) => rawOf(item, item.max ?? max)),
           },
           {
             id: "share",
-            name: "%",
+            name: text(this, "share"),
             color: "",
             values: data.map(ratioOf),
             text: data.map((item) => formatPercent(ratioOf(item), { locale })),

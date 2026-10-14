@@ -9,6 +9,7 @@ import {
   type DrawResult,
   svg,
 } from "../internal/chart-base.js";
+import gaugeCss from "../internal/e20-gauge.css.js";
 import {
   adoptPolar,
   clamp,
@@ -115,9 +116,8 @@ export class UiGaugeChart extends ChartElement {
 
   override connectedCallback(): void {
     this.dataset.ui = "gauge-chart";
-    adoptPolar(this);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", this.getAttribute("variant") === "three-quarter" ? "290" : "230");
+    adoptPolar(this, gaugeCss);
+    // TODO(E20): default height 230 (290 for three-quarter) through the base natural-height hook.
     super.connectedCallback();
   }
 

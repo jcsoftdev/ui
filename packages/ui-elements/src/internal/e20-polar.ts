@@ -14,6 +14,7 @@ const DEFAULTS = {
   value: "Value",
   share: "Share",
   total: "Total",
+  max: "Max",
   category: "Category",
   seats: "Seats",
   majority: "Majority",
@@ -26,9 +27,10 @@ export function text(chart: ChartElement, key: PolarLabelKey): string {
 }
 
 /** Marks the host as a polar chart (legend beside the drawing in a wide container) and adopts the styles. */
-export function adoptPolar(host: HTMLElement): void {
+export function adoptPolar(host: HTMLElement, ...extra: string[]): void {
   host.setAttribute("data-polar", "");
   adoptStyles(rootOf(host), css);
+  for (const sheet of extra) adoptStyles(rootOf(host), sheet);
 }
 
 /** A JSON attribute, or `fallback` when it is missing or not valid JSON. */
@@ -41,13 +43,6 @@ export function jsonAttr<T>(host: Element, name: string, fallback: T): T {
     return fallback;
   }
 }
-
-/** `"a, b"` to `["a", "b"]`. */
-export const listAttr = (host: Element, name: string): string[] =>
-  (host.getAttribute(name) ?? "")
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
 
 /** `""`/`"true"` to true, `"false"`/missing to false, anything else to the string itself. */
 export function flagOrText(host: Element, name: string): boolean | string {
@@ -70,11 +65,34 @@ export const clamp = (value: number, lo: number, hi: number): number =>
 
 export const round2 = (value: number): number => Math.round(value * 100) / 100;
 
-const PRESETS = new Set(["number", "integer", "currency", "percent", "compact"]);
 /** The chart's `value-format` as a `ValueFormat`: the property, else the preset attribute. */
 export function valueFormatOf(chart: ChartElement): ValueFormat | undefined {
-  const preset = chart.getAttribute("value-format");
-  return chart.valueFormat ?? (preset && PRESETS.has(preset) ? (preset as ValueFormat) : undefined);
+  return (
+    chart.valueFormat ?? ((chart.getAttribute("value-format") as ValueFormat | null) || undefined)
+  );
+}
+
+const warned = new WeakSet<Element>();
+/**
+ * One key per entry: an id used twice gets its position appended, so two entries never share a
+ * tween (or a mark identity). Warns once per chart, since the legend still toggles by id.
+ */
+export function warnDuplicates(host: Element, ids: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const keys = ids.map((id, i) => {
+    if (!seen.has(id)) {
+      seen.add(id);
+      return id;
+    }
+    return `${id}#${i}`;
+  });
+  if (keys.some((key, i) => key !== ids[i]) && !warned.has(host)) {
+    warned.add(host);
+    console.warn(
+      `<${host.localName}>: ids must be unique; duplicates fall back to their position.`,
+    );
+  }
+  return keys;
 }
 
 /** The tooltip side that sticks: flips right to left past 65% of the width, back below 55%. */
@@ -155,20 +173,6 @@ export class Tween {
     this.#raf = 0;
     this.#shown = new Map(this.#target);
   }
-}
-
-/**
- * Hides the series in `ids` once the chart has drawn (the `hidden` attribute): the base keeps the
- * hidden set private, so this goes through the same `toggleSeries` the legend uses.
- */
-export function seedHidden(chart: ChartElement, ids: readonly string[]): void {
-  if (!ids.length) return;
-  const seed = (event: Event) => {
-    if (!(event as CustomEvent).detail) return;
-    chart.removeEventListener("chart-data", seed);
-    for (const id of ids) if (!chart.isHidden(id)) chart.toggleSeries(id);
-  };
-  chart.addEventListener("chart-data", seed);
 }
 
 export const EASE = "cubic-bezier(.22,1,.36,1)";
