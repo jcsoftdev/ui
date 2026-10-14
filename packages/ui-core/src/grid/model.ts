@@ -131,14 +131,21 @@ export const DEFAULT_LOCALE = "en";
 
 const dateFormats = new Map<string, Intl.DateTimeFormat>();
 
-/** A usable BCP 47 tag: an invalid or empty one falls back to the default locale. */
+const usable = new Map<string, string>();
+
+/** A usable BCP 47 tag: an invalid or empty one falls back to the default locale. Memoized. */
 function usableLocale(locale: string | undefined): string {
   if (!locale) return DEFAULT_LOCALE;
-  try {
-    return Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE;
-  } catch {
-    return DEFAULT_LOCALE;
+  let tag = usable.get(locale);
+  if (tag === undefined) {
+    try {
+      tag = Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE;
+    } catch {
+      tag = DEFAULT_LOCALE;
+    }
+    usable.set(locale, tag);
   }
+  return tag;
 }
 
 function dateFormat(locale: string): Intl.DateTimeFormat {

@@ -1,5 +1,5 @@
 import type { CellValue } from "../grid/model.js";
-import { isEmptyValue, toNumber } from "./grid-values.js";
+import { isEmptyValue, rawKey, toNumber } from "./grid-values.js";
 
 export type AggregateKind =
   | "sum"
@@ -45,7 +45,7 @@ export class Accumulator {
     } else if (kind === "countDistinct") {
       if (!isEmptyValue(value)) {
         this.distinct ??= new Set();
-        this.distinct.add(value instanceof Date ? value.getTime() : value);
+        this.distinct.add(rawKey(value));
       }
     } else if (kind === "first" || kind === "last") {
       if (!isEmptyValue(value)) {

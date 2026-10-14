@@ -86,9 +86,15 @@ describe("data-grid core parity with the React kit", () => {
         { id: "nope", direction: "asc" },
       ],
     ];
+    // React reads a date-only string as UTC midnight; here it is the local day. Parity is checked
+    // with local-day Dates, whatever the timezone.
+    const localDays = rows.map((r) => {
+      const day = typeof r.when === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(r.when) : null;
+      return day ? { ...r, when: new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3])) } : r;
+    });
     for (const rule of rules)
-      expect(sort.sortRows(rows, cols, rule, "es-PE").map((r) => r.id)).toEqual(
-        reactModel.sortRows(rows, rcols, rule).map((r: Row) => r.id),
+      expect(sort.sortRows(localDays, cols, rule, "es-PE").map((r) => r.id)).toEqual(
+        reactModel.sortRows(localDays, rcols, rule).map((r: Row) => r.id),
       );
     const values = [1, "b", null, "a10", "a2", true, new Date(0), "", undefined, 0];
     for (const a of values)

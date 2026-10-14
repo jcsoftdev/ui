@@ -1,5 +1,5 @@
 import { Accumulator, type Aggregator } from "../internal/grid-aggregate.js";
-import { selectKey } from "../internal/grid-values.js";
+import { canonicalLocale, selectKey } from "../internal/grid-values.js";
 import {
   type CellValue,
   type FormatOptions,
@@ -47,6 +47,8 @@ export interface PivotResult {
 }
 
 export const PIVOT_TOTAL_ID = "pivot:total";
+/** Id prefix of the generated value columns; a data value can never reach `PIVOT_TOTAL_ID`. */
+export const PIVOT_VALUE_PREFIX = "pivot:v:";
 export const DEFAULT_PIVOT_MAX_COLUMNS = 500;
 
 export function isPivotValid<T>(
@@ -85,10 +87,29 @@ export function buildPivot<T>(
   const pivotColumn = byId.get(config.column);
   const valueColumn = byId.get(config.value);
   if (!pivotColumn || !valueColumn) return empty;
-  const format: FormatOptions = { locale: config.locale, labels: config.labels };
+  const locale = canonicalLocale(config.locale);
+  const format: FormatOptions = { locale, labels: config.labels };
   const make = () => new Accumulator(config.aggregate);
 
+  // First pass: the distinct pivot values, to rank and cap the columns before accumulating.
   const keyValues = new Map<string, CellValue>();
+  for (let r = 0; r < rows.length; r += 1) {
+    const pivotValue = getCellValue(rows[r] as T, pivotColumn);
+    const key = selectKey(pivotValue, pivotColumn, format);
+    if (!keyValues.has(key)) keyValues.set(key, pivotValue);
+  }
+  const allKeys = [...keyValues.entries()]
+    .sort((a, b) => compareValues(a[1], b[1], locale))
+    .map(([k]) => k);
+  const requested = config.maxColumns;
+  const max = Math.max(
+    0,
+    typeof requested === "number" && Number.isFinite(requested)
+      ? Math.floor(requested)
+      : DEFAULT_PIVOT_MAX_COLUMNS,
+  );
+  const keys = allKeys.length > max ? allKeys.slice(0, max) : allKeys;
+  const kept = new Set(keys);
   const groups = new Map<string, RowGroup>();
   const byPivotKey = new Map<string, Accumulator>();
   const grand = make();
@@ -99,7 +120,6 @@ export function buildPivot<T>(
     const row = rows[r] as T;
     const pivotValue = getCellValue(row, pivotColumn);
     const key = selectKey(pivotValue, pivotColumn, format);
-    if (!keyValues.has(key)) keyValues.set(key, pivotValue);
     const cell = getCellValue(row, valueColumn);
     for (let i = 0; i < rowColumns.length; i += 1) {
       const column = rowColumns[i] as GridColumn<T>;
@@ -109,7 +129,7 @@ export function buildPivot<T>(
     const id = JSON.stringify(keyParts);
     let group = groups.get(id);
     if (!group) {
-      const labels: Record<string, string> = {};
+      const labels: Record<string, string> = Object.create(null);
       for (let i = 0; i < rowColumns.length; i += 1) {
         const column = rowColumns[i] as GridColumn<T>;
         labels[column.id] = formatCellValue(parts[i], column, format) || "—";
@@ -117,28 +137,23 @@ export function buildPivot<T>(
       group = { labels, sortKeys: parts.slice(), byKey: new Map(), total: make() };
       groups.set(id, group);
     }
+    group.total.add(cell);
+    grand.add(cell);
+    if (!kept.has(key)) continue;
     let acc = group.byKey.get(key);
     if (!acc) {
       acc = make();
       group.byKey.set(key, acc);
     }
     acc.add(cell);
-    group.total.add(cell);
     let forKey = byPivotKey.get(key);
     if (!forKey) {
       forKey = make();
       byPivotKey.set(key, forKey);
     }
     forKey.add(cell);
-    grand.add(cell);
   }
 
-  const locale = config.locale;
-  const allKeys = [...keyValues.entries()]
-    .sort((a, b) => compareValues(a[1], b[1], locale))
-    .map(([k]) => k);
-  const max = Math.max(0, config.maxColumns ?? DEFAULT_PIVOT_MAX_COLUMNS);
-  const keys = allKeys.length > max ? allKeys.slice(0, max) : allKeys;
   const ordered = [...groups.entries()].sort((a, b) => {
     for (let i = 0; i < rowColumns.length; i += 1) {
       const order = compareValues(a[1].sortKeys[i], b[1].sortKeys[i], locale);
@@ -148,11 +163,11 @@ export function buildPivot<T>(
   });
   const emptyCell = () => make().result();
   const out: PivotRow[] = ordered.map(([id, group]) => {
-    const values: Record<string, CellValue> = {};
+    const values: Record<string, CellValue> = Object.create(null);
     for (const key of keys) values[key] = (group.byKey.get(key) ?? { result: emptyCell }).result();
     return { id, labels: group.labels, values, total: group.total.result() };
   });
-  const totals: Record<string, CellValue> = {};
+  const totals: Record<string, CellValue> = Object.create(null);
   for (const key of keys) totals[key] = (byPivotKey.get(key) ?? { result: emptyCell }).result();
   return {
     keys,
@@ -199,7 +214,7 @@ export function pivotColumns<T>(
     editable: false,
   }));
   const values: GridColumn<PivotRow>[] = result.keys.map((key) => ({
-    id: `pivot:${key}`,
+    id: `${PIVOT_VALUE_PREFIX}${key}`,
     header: key || "—",
     accessor: (row: PivotRow) => row.values[key] ?? null,
     type,
@@ -221,7 +236,8 @@ export function pivotColumns<T>(
 
 /** Footer values for the pivot columns (exact for every aggregate kind). */
 export function pivotFooter(result: PivotResult): Record<string, CellValue> {
-  const out: Record<string, CellValue> = { [PIVOT_TOTAL_ID]: result.grandTotal };
-  for (const key of result.keys) out[`pivot:${key}`] = result.totals[key] ?? null;
+  const out: Record<string, CellValue> = Object.create(null);
+  out[PIVOT_TOTAL_ID] = result.grandTotal;
+  for (const key of result.keys) out[`${PIVOT_VALUE_PREFIX}${key}`] = result.totals[key] ?? null;
   return out;
 }

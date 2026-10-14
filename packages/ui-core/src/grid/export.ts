@@ -1,3 +1,4 @@
+import { toDate } from "../internal/grid-values.js";
 import type { XlsxCellValue, XlsxColumn, XlsxFormat, XlsxSheet } from "../xlsx.js";
 import {
   type CellValue,
@@ -24,10 +25,16 @@ export interface ExportOptions<T> extends FormatOptions {
   columns: readonly GridColumn<T>[];
   values?: ExportValues;
   /**
-   * `rows` keeps group rows (label in the first column, aggregates in their columns) and, in
-   * xlsx, gives them outline levels; `omit` (default) exports data rows only.
+   * `omit` (default) exports every filtered row in sorted order, as the React kit does, collapsed
+   * groups included. `rows` follows what is on screen: group rows (label in the first column,
+   * aggregates in their columns; outline levels in xlsx) and only the rows of expanded groups.
    */
   groups?: "omit" | "rows";
+  /**
+   * Row keys to export (selected rows only). Group rows are left out. Without it, every row of
+   * the view is exported.
+   */
+  selected?: ReadonlySet<string>;
 }
 
 export interface ExportRow {
@@ -43,14 +50,37 @@ export interface ExportTable<T> {
   rows: ExportRow[];
 }
 
-/** The "what you see" table: view rows in order and visible columns, values still raw. */
+/** The table to export: the view's rows (see `ExportOptions.groups`), values still raw. */
 export function buildExportTable<T>(options: ExportOptions<T>): ExportTable<T> {
-  const { view, rows, columns, groups = "omit" } = options;
+  const { view, rows, columns, groups = "omit", selected } = options;
   const out: ExportRow[] = [];
+  const cellsOf = (source: number) => {
+    const row = rows[source] as T;
+    const cells: CellValue[] = [];
+    for (let c = 0; c < columns.length; c += 1)
+      cells.push(getCellValue(row, columns[c] as GridColumn<T>));
+    return cells;
+  };
+  if (groups === "omit" || selected) {
+    if (groups === "omit") {
+      const order = view.sourceOrder();
+      for (let i = 0; i < order.length; i += 1) {
+        const source = order[i] as number;
+        if (selected && !selected.has(view.sourceKey(source))) continue;
+        out.push({ kind: "data", level: 0, cells: cellsOf(source) });
+      }
+    } else {
+      for (let v = 0; v < view.count; v += 1) {
+        const entry = view.row(v);
+        if (entry.kind === "data" && selected?.has(entry.key))
+          out.push({ kind: "data", level: entry.depth, cells: cellsOf(entry.source) });
+      }
+    }
+    return { columns, headers: columns.map((column) => column.header), rows: out };
+  }
   for (let v = 0; v < view.count; v += 1) {
     const entry = view.row(v);
     if (entry.kind === "group") {
-      if (groups !== "rows") continue;
       const info = entry.group;
       const cells: CellValue[] = [];
       for (let c = 0; c < columns.length; c += 1) {
@@ -58,13 +88,7 @@ export function buildExportTable<T>(options: ExportOptions<T>): ExportTable<T> {
         cells.push(c === 0 ? (info?.label ?? "") : (info?.aggregates[id] ?? null));
       }
       out.push({ kind: "group", level: entry.depth, cells });
-      continue;
-    }
-    const source = rows[entry.source] as T;
-    const cells: CellValue[] = [];
-    for (let c = 0; c < columns.length; c += 1)
-      cells.push(getCellValue(source, columns[c] as GridColumn<T>));
-    out.push({ kind: "data", level: groups === "rows" ? entry.depth : 0, cells });
+    } else out.push({ kind: "data", level: entry.depth, cells: cellsOf(entry.source) });
   }
   return { columns, headers: columns.map((column) => column.header), rows: out };
 }
@@ -86,27 +110,35 @@ function cellText<T>(
   column: GridColumn<T>,
   mode: ExportValues,
   format: FormatOptions,
-): { text: string; numeric: boolean } {
+): { text: string; numeric: boolean; plain?: boolean } {
   const formatted = () => formatCellValue(value, column, format);
   if (mode !== "formatted") {
     if (typeof value === "number")
-      return { text: Number.isFinite(value) ? String(value) : "", numeric: true };
-    if (value instanceof Date) return { text: isoDate(value), numeric: true };
+      return { text: Number.isFinite(value) ? String(value) : "", numeric: true, plain: true };
+    if (value instanceof Date) return { text: isoDate(value), numeric: true, plain: true };
     if (mode === "raw") {
-      if (typeof value === "boolean") return { text: String(value), numeric: true };
+      if (typeof value === "boolean") return { text: String(value), numeric: true, plain: true };
       return { text: value === null || value === undefined ? "" : value, numeric: false };
     }
   }
   return { text: formatted(), numeric: typeof value === "number" };
 }
 
-const FORMULA = /^[=+\-@\t\r]/;
-const NUMERIC = /^[-+]?\d[\d.,\s  ']*$/;
+const FORMULA = /^[=+\-@\t\r\uff1d\uff0b\uff0d\uff20\u2212]/;
+// A formatted number or currency: optional sign and currency mark, digits with grouping, and a
+// trailing mark or percent (`-S/ 1 234.50`, `(1,5) %`-free). Letters only appear as a short mark.
+const NUMERIC =
+  /^[-+\u2212]?\s*[\p{Sc}A-Za-z]{0,3}[./]?\s*[-+\u2212]?\d[\d.,\s'\u00a0\u202f\u2019]*\s*[\p{Sc}%]?$/u;
 
-/** Prefixes `'` to text a spreadsheet would run as a formula (`= + - @`, tab, CR). */
+/**
+ * Prefixes `'` to text a spreadsheet would run as a formula (`= + - @`, their fullwidth forms, tab,
+ * CR), after leading spaces. `numeric` marks the text of a number cell: a formatted number or
+ * currency (`-S/ 1 234.50`) is left alone, `-abc` or `=1+1` never are.
+ */
 export function neutralizeFormula(text: string, numeric = false): string {
-  if (!FORMULA.test(text)) return text;
-  return numeric && NUMERIC.test(text) ? text : `'${text}`;
+  const lead = text.replace(/^[ \u00a0]+/, "");
+  if (!FORMULA.test(lead)) return text;
+  return numeric && NUMERIC.test(lead) ? text : `'${text}`;
 }
 
 export interface DelimitedOptions {
@@ -138,8 +170,8 @@ export function toDelimited<T>(
     values = "auto",
   } = options;
   const format: FormatOptions = { locale: options.locale, labels: options.labels };
-  const safe = (text: string, numeric: boolean) =>
-    field(neutralize ? neutralizeFormula(text, numeric) : text, separator);
+  const safe = (text: string, numeric: boolean, plain = false) =>
+    field(neutralize && !plain ? neutralizeFormula(text, numeric) : text, separator);
   const lines = [table.headers.map((header) => safe(header, false)).join(separator)];
   for (const row of table.rows) {
     const parts = new Array<string>(table.columns.length);
@@ -149,8 +181,13 @@ export function toDelimited<T>(
         parts[c] = safe(String(value ?? ""), false);
         continue;
       }
-      const { text, numeric } = cellText(value, table.columns[c] as GridColumn<T>, values, format);
-      parts[c] = safe(text, numeric);
+      const { text, numeric, plain } = cellText(
+        value,
+        table.columns[c] as GridColumn<T>,
+        values,
+        format,
+      );
+      parts[c] = safe(text, numeric, plain);
     }
     lines.push(parts.join(separator));
   }
@@ -204,6 +241,8 @@ export function toXlsxSheet<T>(table: ExportTable<T>, options: XlsxExportOptions
         return formatCellValue(value, table.columns[c] as GridColumn<T>, format);
       if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
       if (typeof value === "number") return Number.isFinite(value) ? value : null;
+      if (typeof value === "string" && (table.columns[c] as GridColumn<T>).type === "date")
+        return toDate(value) ?? value;
       return value;
     }),
   );

@@ -78,7 +78,7 @@ const gridDeps = {
   "grid/resize": ["grid/columns"],
   "grid/reorder": ["sortable"],
   "grid/view": [],
-  "grid/filter": ["grid/model", "chart/format"],
+  "grid/filter": ["grid/edit", "grid/model", "chart/format"],
   "grid/group": ["grid/model", "grid/sort", "chart/format"],
   "grid/pivot": ["grid/model", "grid/sort", "chart/format"],
   "grid/export": ["grid/model", "chart/format"],

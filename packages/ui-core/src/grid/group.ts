@@ -1,5 +1,5 @@
 import { Accumulator, type Aggregator } from "../internal/grid-aggregate.js";
-import { isEmptyValue, selectKey } from "../internal/grid-values.js";
+import { canonicalLocale, isEmptyValue, rawKey } from "../internal/grid-values.js";
 import {
   type CellValue,
   type FormatOptions,
@@ -38,9 +38,12 @@ export interface GroupOptions<T> {
   emptyLabel?: string;
 }
 
-/** The key of a group: its path as JSON, e.g. `["status:open","city:Lima"]`. */
+/**
+ * The key of a group: its path as JSON behind a control-character prefix, so it can never equal
+ * the key of a data row. Path entries are `columnId:value` with the raw value (locale independent).
+ */
 export function groupKey(path: readonly string[]): string {
-  return JSON.stringify(path);
+  return `\u0000group:${JSON.stringify(path)}`;
 }
 
 /** Returns a copy of `keys` with `key` flipped. */
@@ -81,11 +84,13 @@ interface Bucket {
  * The view's group stage: nests the (already filtered and sorted) data rows by `groupBy` and
  * inserts a group row (`kind: "group"`, `source: -1`, `group` info with count and aggregates)
  * before the rows of each group. Data rows keep their order inside a group, so sorting before
- * grouping is sorting within groups. Collapsed groups emit only their header; their aggregates
+ * grouping is sorting within groups. The stage owns the rows it receives (as `buildView` passes
+ * them): their `depth` is updated in place instead of allocating a row per data row. Collapsed groups emit only their header; their aggregates
  * still cover every row.
  */
 export function createGroupStage<T>(options: GroupOptions<T>): (rows: ViewRow[]) => ViewRow[] {
-  const { rows, collapsed, expanded, sort = [], locale, emptyLabel = "—" } = options;
+  const { rows, collapsed, expanded, sort = [], emptyLabel = "—" } = options;
+  const locale = canonicalLocale(options.locale);
   const format: FormatOptions = { locale, labels: options.labels };
   const byId = new Map<string, GridColumn<T>>();
   for (const column of options.columns) byId.set(column.id, column);
@@ -110,7 +115,8 @@ export function createGroupStage<T>(options: GroupOptions<T>): (rows: ViewRow[])
       if (!column) {
         for (let i = 0; i < items.length; i += 1) {
           const row = items[i] as ViewRow;
-          out.push({ kind: "data", key: row.key, source: row.source, depth });
+          row.depth = depth;
+          out.push(row);
         }
         return;
       }
@@ -119,7 +125,7 @@ export function createGroupStage<T>(options: GroupOptions<T>): (rows: ViewRow[])
         const item = items[i] as ViewRow;
         const source = rows[item.source] as T;
         const value = getCellValue(source, column);
-        const k = selectKey(value, column, format);
+        const k = rawKey(value);
         let bucket = buckets.get(k);
         if (!bucket) {
           bucket = { value, items: [], accs: specs.map((s) => new Accumulator(s.aggregator)) };

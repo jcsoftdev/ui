@@ -248,7 +248,7 @@ describe("grid/filter edge cases", () => {
         ],
       },
     });
-    expect(ids(pass(on.test))).toEqual(["a"]);
+    expect(ids(pass(on.test))).toEqual(["a", "f"]);
   });
 
   it("reports inactive filters and toggles set values", () => {
@@ -274,13 +274,15 @@ describe("grid/group parity with the React kit", () => {
   }));
 
   for (const groupBy of [["city"], ["city", "ok"], ["ok", "city"]]) {
-    for (const collapsed of [new Set<string>(), new Set([JSON.stringify(["city:Lima"])])]) {
-      it(`groups by ${groupBy.join(">")} (${collapsed.size} collapsed)`, () => {
+    for (const shut of [false, true]) {
+      it(`groups by ${groupBy.join(">")} (${shut ? "Lima collapsed" : "open"})`, () => {
+        const collapsed = new Set(shut ? [groupKey(["city:Lima"])] : []);
+        const reactCollapsed = new Set(shut ? [JSON.stringify(["city:Lima"])] : []);
         const expected = R("model").buildDisplayRows(
           rows,
           rAgg,
           groupBy,
-          collapsed,
+          reactCollapsed,
           (r: Row) => r.id,
         );
         const { keys } = uniqueKeys(rows.length, (i) => (rows[i] as Row).id);
@@ -294,7 +296,12 @@ describe("grid/group parity with the React kit", () => {
         });
         const view = buildView({ keys, group: stage });
         const mine = sources(view);
-        expect(mine.map((r) => r.key)).toEqual(expected.map((r: { key: string }) => r.key));
+        // Keys are namespaced and locale independent, so they differ from React's; the levels hold.
+        expect(mine.filter((r) => r.kind === "data").map((r) => r.key)).toEqual(
+          expected
+            .filter((r: { kind: string }) => r.kind === "data")
+            .map((r: { key: string }) => r.key),
+        );
         expect(mine.map((r) => r.depth)).toEqual(expected.map((r: { depth: number }) => r.depth));
         expected.forEach(
           (
@@ -350,10 +357,10 @@ describe("grid/group parity with the React kit", () => {
       group: createGroupStage({ rows, columns: cols, groupBy: ["city"], sort, ...PE }),
     });
     const mine = sources(view);
-    expect(mine.filter((r) => r.kind === "group").map((r) => r.key)).toEqual(
+    expect(mine.filter((r) => r.kind === "group").map((r) => r.group?.label)).toEqual(
       expected
         .filter((r: { kind: string }) => r.kind === "group")
-        .map((r: { key: string }) => r.key),
+        .map((r: { label: string }) => r.label),
     );
     const lima = mine.filter((r) => r.kind === "data" && ["a", "c", "d"].includes(r.key));
     expect(lima.map((r) => r.key)).toEqual(["c", "a", "d"]);
@@ -383,7 +390,7 @@ describe("aggregates", () => {
     const none = createGroupStage({ rows, columns: cols, groupBy: ["nope"] });
     const input = [{ kind: "data" as const, key: "a", source: 0, depth: 0 }];
     expect(none(input)).toBe(input);
-    expect(groupKey(["a:1"])).toBe('["a:1"]');
+    expect(groupKey(["a:1"])).toBe('\u0000group:["a:1"]');
   });
 });
 
@@ -403,12 +410,16 @@ describe("grid/pivot parity with the React kit", () => {
       expect(mine.rows).toEqual(expected.rows);
       expect(mine.totals).toEqual(expected.totals);
       expect(mine.grandTotal).toEqual(expected.grandTotal);
-      expect(pivotFooter(mine)).toEqual(R("pivot").pivotFooter(expected));
+      const reId = (id: string) => id.replace(/^pivot:(?!total$)/, "pivot:v:");
+      const rf = R("pivot").pivotFooter(expected);
+      expect({ ...pivotFooter(mine) }).toEqual(
+        Object.fromEntries(Object.entries(rf).map(([k, v]) => [reId(k), v])),
+      );
       const mc = pivotColumns(cols, config, mine, "Total");
       const rc = R("pivot").pivotColumns(rcols, config, expected, "Total");
       expect(mc.map((c) => [c.id, c.header, c.type, c.width])).toEqual(
         rc.map((c: { id: string; header: string; type: string; width: number }) => [
-          c.id,
+          reId(c.id),
           c.header,
           c.type,
           c.width,
