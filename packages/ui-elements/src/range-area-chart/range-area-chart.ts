@@ -37,8 +37,6 @@ import {
 
 import { importTimeAxis } from "./time-axis-chunk.js";
 
-export type { XValue };
-
 /** The time-axis stack (calendar ticks, date formatting): fetched only when categories are dates. */
 type TimeAxis = typeof import("@jcsoftdev/ui-core/chart/category-axis-time");
 let timeAxis: TimeAxis | undefined;
