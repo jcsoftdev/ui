@@ -58,6 +58,7 @@ const independent = new Set([
 // Chart entries may build on each other only as listed; everything else stays separate.
 const chartDeps = {
   "chart/color-scale": ["chart/palette"],
+  "chart/distribution": ["chart/axis", "chart/format", "chart/scale"],
   "chart/category-axis": ["chart/axis", "chart/scale"],
   "chart/category-axis-time": [
     "chart/axis",
