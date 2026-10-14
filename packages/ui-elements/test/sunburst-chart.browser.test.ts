@@ -197,7 +197,6 @@ describe("ui-sunburst-chart", () => {
   it("empty data shows the empty state", async () => {
     const c = await mountChart(TAG);
     c.data = { name: "x", children: [] };
-    await settle();
-    expect(svgOf(c)?.querySelectorAll("[role=img]").length ?? 0).toBe(0);
+    await expect.poll(() => svgOf(c)?.querySelectorAll("[role=img]").length ?? 0).toBe(0);
   });
 });
