@@ -1,0 +1,25 @@
+[data-ui="stock"] .drawing line,
+[data-ui="stock"] .drawing .range-box,
+[data-ui="stock"] .drawing .fib-box {
+  stroke: var(--accent);
+}
+[data-ui="stock"] .drawing .range-box,
+[data-ui="stock"] .drawing .fib-box {
+  fill: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+[data-ui="stock"] .drawing .handle {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+[data-ui="stock"] .measure .measure-label {
+  fill: var(--surface);
+  font-weight: 600;
+}
+[data-ui="stock"] .drawing-label {
+  fill: var(--accent-ink);
+  font-weight: 600;
+}
+[data-ui="stock"] .drawing-label.small {
+  font-size: 10px;
+}

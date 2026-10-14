@@ -1,5 +1,6 @@
 // Shared by the hierarchy chart tests (sunburst, treemap, icicle, hierarchy morph).
 import axe from "axe-core";
+import { expect } from "vitest";
 import { userEvent } from "vitest/browser";
 import { frame, mount, wait } from "./setup.ts";
 
@@ -59,6 +60,8 @@ export async function mountChart(tag: string, attrs = "", inner = "", width = 48
   );
   const chart = host.querySelector(tag) as HierarchyEl;
   chart.data = ORG;
+  // The first draw waits for lazy chunks; wait for it (the drawing or the state view) rather than a sleep.
+  await expect.poll(() => chart.querySelector("svg, [data-ui-part=state]")).not.toBeNull();
   await settle();
   return chart;
 }
@@ -97,7 +100,10 @@ export const awake = async (c: Element) => {
   drawingOf(c).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
-  await wait(60);
+  // Awaiting the module runs after the chart's own continuation, which attaches the layer.
+  await import("../src/internal/chart-interact.ts");
+  await frame();
+  await frame();
 };
 
 /** Marks' centers in drawing units, by label start. */
