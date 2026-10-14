@@ -104,3 +104,53 @@ export function paintObservations(
   }
   g.globalAlpha = 1;
 }
+
+/**
+ * Turns any CSS color (`var(--chart-cat-1)` included) into the computed `rgb()` a canvas accepts,
+ * once per distinct color: the returned function caches by input.
+ */
+export function colorResolver(host: Element): (color: string) => string {
+  const cache = new Map<string, string>();
+  return (color) => {
+    const known = cache.get(color);
+    if (known !== undefined) return known;
+    const probe = document.createElement("span");
+    probe.style.color = color;
+    host.append(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    cache.set(color, resolved);
+    return resolved;
+  };
+}
+
+export interface RainOptions {
+  values: readonly number[];
+  map: (value: number) => number;
+  random: () => number;
+  /** Top of the rain band and its height. */
+  from: number;
+  spread: number;
+  radius: number;
+  color: string;
+  left: number;
+  top: number;
+}
+
+/** A raincloud's rain painted in one loop on the canvas layer. */
+export function paintRain(
+  g: CanvasRenderingContext2D,
+  { values, map, random, from, spread, radius, color, left, top }: RainOptions,
+): void {
+  g.globalAlpha = 0.55;
+  g.fillStyle = color;
+  g.beginPath();
+  for (const value of values) {
+    const x = map(value) + left;
+    const y = from + random() * spread + top;
+    g.moveTo(x + radius, y);
+    g.arc(x, y, radius, 0, Math.PI * 2);
+  }
+  g.fill();
+  g.globalAlpha = 1;
+}

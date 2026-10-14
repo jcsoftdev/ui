@@ -24,7 +24,6 @@ import {
   CANVAS_AT,
   type ColoredSeries,
   categoryAxes,
-  colorResolver,
   colorSeries,
   type DistributionSeries,
   dotsChunk,
@@ -105,7 +104,6 @@ export class UiBoxPlot extends ChartElement {
   #axis: DistributionAxisOptions | undefined;
   #labels: Partial<StatLabels> | undefined;
   #prepared: Prepared | null = null;
-  #textMissed = false;
 
   get categories(): readonly string[] {
     return this.#categories ?? jsonAttr<string[]>(this, "categories") ?? [];
@@ -224,11 +222,6 @@ export class UiBoxPlot extends ChartElement {
     loadThen(showPoints ? [dotsChunk, ...(coloring === "value" ? [gradedChunk] : [])] : [], () =>
       this.requestDraw(),
     );
-    loadThen([textChunk], () => {
-      if (!this.#textMissed) return;
-      this.#textMissed = false;
-      this.requestDraw();
-    });
 
     const items: BoxItem[] = [];
     let samples = 0;
@@ -263,7 +256,7 @@ export class UiBoxPlot extends ChartElement {
 
     if (dots && dotsReady && samples > CANVAS_AT) {
       const g = ctx.canvas();
-      const resolve = colorResolver(this);
+      const resolve = dots.colorResolver(this);
       for (const item of items)
         dots.paintObservations(g, {
           points: item.dots,
@@ -375,7 +368,7 @@ export class UiBoxPlot extends ChartElement {
         const item = items[index];
         if (!item) return null;
         const text = textChunk.get();
-        if (!text) this.#textMissed = true;
+        if (!text) loadThen([textChunk], () => this.requestDraw());
         return {
           title: nameOf(item),
           rows:
@@ -389,7 +382,7 @@ export class UiBoxPlot extends ChartElement {
         const legend = all.map((item) => ({ id: item.id, name: item.name, color: item.color }));
         const text = textChunk.get();
         if (!text) {
-          this.#textMissed = true;
+          loadThen([textChunk], () => this.requestDraw());
           return emptySnapshot(title, legend);
         }
         return text.statsSnapshot(

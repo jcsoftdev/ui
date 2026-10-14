@@ -24,8 +24,8 @@ import {
   boxValueText,
   CANVAS_AT,
   categoryAxes,
-  colorResolver,
   type DistributionSeries,
+  dotsChunk,
   emptySnapshot,
   extentOf,
   groupName,
@@ -107,7 +107,6 @@ export class UiRaincloudChart extends ChartElement {
         rows: Array<Array<Prepared | null>>;
       }
     | undefined;
-  #textMissed = false;
   readonly #height = new AutoHeight(this);
 
   get categories(): readonly string[] {
@@ -260,15 +259,13 @@ export class UiRaincloudChart extends ChartElement {
     root.append(plot);
     plot.append(categoryAxes(layout, { title: axis?.title, grid }));
 
-    loadThen([textChunk], () => {
-      if (!this.#textMissed) return;
-      this.#textMissed = false;
-      this.requestDraw();
-    });
     let samples = 0;
     for (const item of items) samples += item.entry.values.length;
-    const painter = rain && samples > CANVAS_AT ? ctx.canvas() : null;
-    const resolve = colorResolver(this);
+    const onCanvas = rain && samples > CANVAS_AT;
+    const dots = onCanvas ? dotsChunk.get() : undefined;
+    if (onCanvas) loadThen([dotsChunk], () => this.requestDraw());
+    const painter = dots ? ctx.canvas() : null;
+    const resolve = dots?.colorResolver(this);
 
     const cloudNodes: Element[] = [];
     const rainNodes: Element[] = [];
@@ -325,18 +322,19 @@ export class UiRaincloudChart extends ChartElement {
       const spread = Math.max(0, bands.rainTo - bands.rainFrom);
       if (rain && spread > 0) {
         const random = seededRandom(seed + item.category * 977 + item.series.index * 131);
-        if (painter) {
-          painter.globalAlpha = 0.55;
-          painter.fillStyle = resolve(color);
-          painter.beginPath();
-          for (const value of entry.values) {
-            const x = map(value) + margin.left;
-            const y = bands.rainFrom + random() * spread + margin.top;
-            painter.moveTo(x + pointRadius, y);
-            painter.arc(x, y, pointRadius, 0, Math.PI * 2);
-          }
-          painter.fill();
-          painter.globalAlpha = 1;
+        if (onCanvas) {
+          if (painter && dots && resolve)
+            dots.paintRain(painter, {
+              values: entry.values,
+              map,
+              random,
+              from: bands.rainFrom,
+              spread,
+              radius: pointRadius,
+              color: resolve(color),
+              left: margin.left,
+              top: margin.top,
+            });
         } else {
           const drops = document.createDocumentFragment();
           for (const value of entry.values)
@@ -409,7 +407,7 @@ export class UiRaincloudChart extends ChartElement {
         const item = items[index];
         if (!item) return null;
         const text = textChunk.get();
-        if (!text) this.#textMissed = true;
+        if (!text) loadThen([textChunk], () => this.requestDraw());
         return {
           title: item.name,
           rows:
@@ -428,7 +426,7 @@ export class UiRaincloudChart extends ChartElement {
         const legend = all.map(({ id, name, color }) => ({ id, name, color }));
         const text = textChunk.get();
         if (!text) {
-          this.#textMissed = true;
+          loadThen([textChunk], () => this.requestDraw());
           return emptySnapshot(title, legend);
         }
         return text.statsSnapshot(

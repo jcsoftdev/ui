@@ -29,7 +29,6 @@ import {
   CANVAS_AT,
   type ColoredSeries,
   categoryAxes,
-  colorResolver,
   colorSeries,
   type DistributionSeries,
   dotsChunk,
@@ -120,7 +119,6 @@ export class UiViolinChart extends ChartElement {
   #axis: DistributionAxisOptions | undefined;
   #stat: Partial<StatLabels> | undefined;
   #prepared: Prepared | null = null;
-  #textMissed = false;
   readonly #height = new AutoHeight(this);
 
   get categories(): readonly string[] {
@@ -275,11 +273,6 @@ export class UiViolinChart extends ChartElement {
     loadThen(showPoints ? [dotsChunk, ...(coloring === "value" ? [gradedChunk] : [])] : [], () =>
       this.requestDraw(),
     );
-    loadThen([textChunk], () => {
-      if (!this.#textMissed) return;
-      this.#textMissed = false;
-      this.requestDraw();
-    });
     const pointsOf = (item: Item): JitteredValue[] => {
       const top = maxFor(item);
       const sign = item.side === "start" ? -1 : 1;
@@ -296,7 +289,7 @@ export class UiViolinChart extends ChartElement {
     for (const item of items) samples += item.stats.count;
     if (dots && dotsReady && samples > CANVAS_AT) {
       const g = ctx.canvas();
-      const resolve = colorResolver(this);
+      const resolve = dots.colorResolver(this);
       for (const item of items)
         dots.paintObservations(g, {
           points: pointsOf(item),
@@ -455,7 +448,7 @@ export class UiViolinChart extends ChartElement {
         if (!item) return null;
         const format = seriesFormat(this, ctx, item.series);
         const text = textChunk.get();
-        if (!text) this.#textMissed = true;
+        if (!text) loadThen([textChunk], () => this.requestDraw());
         return {
           title: nameOf(item),
           rows: text?.boxTooltipRows(item.stats, labels, format, item.series.color) ?? [],
@@ -466,7 +459,7 @@ export class UiViolinChart extends ChartElement {
       snapshot: () => {
         const text = textChunk.get();
         if (!text) {
-          this.#textMissed = true;
+          loadThen([textChunk], () => this.requestDraw());
           return emptySnapshot(title, all);
         }
         return text.statsSnapshot(

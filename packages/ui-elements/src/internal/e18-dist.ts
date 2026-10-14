@@ -286,51 +286,31 @@ export function extentOf(values: Iterable<[number, number]>): [number, number] |
   return Number.isFinite(lo) ? [lo, hi] : null;
 }
 
-/** A module loaded on demand: `get()` is its value once it has arrived, `load()` fetches it once. */
-export interface Chunk<T> {
+/** A module fetched on demand: `get()` is its value once it has arrived. */
+interface Chunk<T> {
   get(): T | undefined;
-  load(): Promise<T>;
+  load(): Promise<unknown>;
 }
 
 function chunk<T>(load: () => Promise<T>): Chunk<T> {
   let value: T | undefined;
-  let pending: Promise<T> | undefined;
-  return {
-    get: () => value,
-    load: () => (pending ??= load().then((loaded) => (value = loaded))),
-  };
+  let pending: Promise<unknown> | undefined;
+  return { get: () => value, load: () => (pending ??= load().then((m) => (value = m))) };
 }
 
 /** Tooltip rows and the data table snapshot: only needed on hover, focus and table reads. */
-export const textChunk = chunk(() => import("./e18-dist-text.js"));
-/** Observation dots (SVG and canvas): only needed with `show-points`. */
-export const dotsChunk = chunk(() => import("./e18-dist-dots.js"));
+export const textChunk = /* @__PURE__ */ chunk(() => import("./e18-dist-text.js"));
+/** Observation dots, canvas painting and `colorResolver`: only needed above `CANVAS_AT` or with `show-points`. */
+export const dotsChunk = /* @__PURE__ */ chunk(() => import("./e18-dist-dots.js"));
 /** The sequential color scale: only needed with `point-color="value"`. */
-export const gradedChunk = chunk(() => import("@jcsoftdev/ui-core/chart/color-scale"));
+export const gradedChunk = /* @__PURE__ */ chunk(
+  () => import("@jcsoftdev/ui-core/chart/color-scale"),
+);
 
-/** Fetches `chunks` in the background and calls `ready` once all of those missing have arrived. */
+/** Fetches the chunks in the background and calls `ready` once they have arrived. */
 export function loadThen(chunks: ReadonlyArray<Chunk<unknown>>, ready: () => void): void {
   const missing = chunks.filter((item) => item.get() === undefined);
   if (missing.length) Promise.all(missing.map((item) => item.load())).then(ready, () => {});
-}
-
-/**
- * Turns any CSS color (`var(--chart-cat-1)` included) into the computed `rgb()` a canvas accepts,
- * once per distinct color: the returned function caches by input.
- */
-export function colorResolver(host: Element): (color: string) => string {
-  const cache = new Map<string, string>();
-  return (color) => {
-    const known = cache.get(color);
-    if (known !== undefined) return known;
-    const probe = document.createElement("span");
-    probe.style.color = color;
-    host.append(probe);
-    const resolved = getComputedStyle(probe).color;
-    probe.remove();
-    cache.set(color, resolved);
-    return resolved;
-  };
 }
 
 /** What the table and legend hold until the text chunk arrives: valid, with the legend only. */
