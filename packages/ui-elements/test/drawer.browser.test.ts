@@ -164,12 +164,12 @@ describe("ui-drawer", () => {
     const popover = host.querySelector<UiPopover>("ui-popover")!;
     drawer.show();
     await userEvent.click(host.querySelector("#t")!);
-    expect(popover.open).toBe(true);
+    await expect.poll(() => popover.open).toBe(true);
     await userEvent.keyboard("{Escape}");
-    expect(popover.open).toBe(false);
+    await expect.poll(() => popover.open).toBe(false);
     expect(drawer.open).toBe(true);
     await userEvent.keyboard("{Escape}");
-    expect(drawer.open).toBe(false);
+    await expect.poll(() => drawer.open).toBe(false);
   });
 
   it("stacks inside a dialog: Escape closes the drawer, then the dialog", async () => {
