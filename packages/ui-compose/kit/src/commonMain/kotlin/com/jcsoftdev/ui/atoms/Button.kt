@@ -72,6 +72,22 @@ public object ButtonDefaults {
         }
     }
 
+    /**
+     * The colors of [variant] while the button is disabled. The label keeps at least 4.5:1 against the fill (a dimmed
+     * primary button would fall to about 1.4:1 for its label), and the fill drops to a neutral tone so the button still
+     * reads as unavailable; there is no opacity dimming on top.
+     */
+    @Composable
+    @ReadOnlyComposable
+    public fun disabledColors(variant: ButtonVariant = ButtonVariant.Secondary): ButtonColors {
+        val c = UiTheme.colors
+        return when (variant) {
+            ButtonVariant.Primary, ButtonVariant.Danger -> ButtonColors(c.sunken, c.ink3)
+            ButtonVariant.Secondary -> ButtonColors(c.surface, c.ink3, c.line)
+            ButtonVariant.Ghost -> ButtonColors(Color.Transparent, c.ink3)
+        }
+    }
+
     /** Corner shape; the theme `control` shape. */
     public val shape: Shape
         @Composable @ReadOnlyComposable
@@ -126,7 +142,10 @@ public object ButtonDefaults {
  * (already localized) is announced as the state. The visual height is 30/36/52dp (sm/md/lg) by default, [block] fills the width,
  * the touch target is at least the theme `minTouchTarget` (48dp).
  *
- * Restyle one button through [colors], [shape], [height], [contentPadding], [textStyle] and the [loadingIndicator] glyph (start from [ButtonDefaults]), or
+ * A disabled button swaps to [disabledColors] (a neutral fill with a label that stays legible) instead of dimming its
+ * [colors], so pass both when you restyle a button.
+ *
+ * Restyle one button through [colors], [disabledColors], [shape], [height], [contentPadding], [textStyle] and the [loadingIndicator] glyph (start from [ButtonDefaults]), or
  * every button through the [UiTheme] tokens.
  */
 @Composable
@@ -141,6 +160,7 @@ public fun Button(
     loading: Boolean = false,
     loadingDescription: String? = null,
     colors: ButtonColors = ButtonDefaults.colors(variant),
+    disabledColors: ButtonColors = ButtonDefaults.disabledColors(variant),
     shape: Shape = ButtonDefaults.shape,
     height: Dp = ButtonDefaults.height(size),
     contentPadding: PaddingValues = ButtonDefaults.contentPadding(size),
@@ -151,23 +171,23 @@ public fun Button(
 ) {
     val source = remember { MutableInteractionSource() }
     val borderWidth = UiTheme.sizes.borderWidth
+    val shown = if (enabled) colors else disabledColors
     Row(
         modifier =
             modifier
                 .then(if (block) Modifier.fillMaxWidth() else Modifier)
                 .pressableTarget(onClick, enabled && !loading, Role.Button, source)
                 .semantics { if (loading && loadingDescription != null) stateDescription = loadingDescription }
-                .dimWhenDisabled(enabled)
                 .clip(shape)
-                .background(colors.container)
-                .then(if (colors.border.alpha > 0f) Modifier.border(borderWidth, colors.border, shape) else Modifier)
+                .background(shown.container)
+                .then(if (shown.border.alpha > 0f) Modifier.border(borderWidth, shown.border, shape) else Modifier)
                 .defaultMinSize(minHeight = height)
                 .padding(contentPadding),
         horizontalArrangement = Arrangement.spacedBy(ButtonDefaults.iconSpacing, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CompositionLocalProvider(LocalContentColor provides colors.content) {
-            if (loading) loadingIndicator(colors.content) else leading?.invoke()
+        CompositionLocalProvider(LocalContentColor provides shown.content) {
+            if (loading) loadingIndicator(shown.content) else leading?.invoke()
             Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = labelMaxLines(), overflow = TextOverflow.Ellipsis)
             trailing?.invoke()
         }
