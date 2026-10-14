@@ -1,6 +1,6 @@
 import axe from "axe-core";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { userEvent } from "vitest/browser";
+import { commands, userEvent } from "vitest/browser";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineStock, type StockInputBar, type UiStock } from "../src/stock/stock.ts";
 import { ax, frame, mount, wait } from "./setup.ts";
@@ -15,8 +15,9 @@ beforeEach(async () => {
   );
   await userEvent.hover(park.firstElementChild as Element);
 });
-afterEach(() => {
+afterEach(async () => {
   document.body.innerHTML = "";
+  await commands.timezone(null);
 });
 
 function walk(n: number, start = new Date(2025, 0, 1)): StockInputBar[] {
@@ -47,9 +48,14 @@ const settle = async () => {
   await wait(30);
 };
 
+/** Waits (up to two seconds) for a lazy part of the chart to load and draw. */
+const until = async (check: () => unknown) => {
+  for (let i = 0; i < 40 && !check(); i += 1) await wait(50);
+};
+
 const stock = async (attrs = "", bars: StockInputBar[] = walk(120), width = 800) => {
   const host = mount(
-    `<div style="width:${width}px"><ui-stock label="ACME" ${attrs.includes("locale") ? "" : 'locale="en-US"'} ${attrs}><ui-chart-tooltip></ui-chart-tooltip></ui-stock></div>`,
+    `<div style="width:${width}px"><ui-stock label="ACME" ${attrs.includes("locale") ? "" : 'locale="en-US"'} ${attrs.includes("toolbar") ? "" : 'toolbar="off"'} ${attrs}><ui-chart-tooltip></ui-chart-tooltip></ui-stock></div>`,
   );
   const el = host.querySelector("ui-stock") as UiStock;
   el.data = bars;
@@ -258,6 +264,7 @@ describe("ui-stock", () => {
     const el = await stock('oscillator="rsi"', bars);
     el.overlays = [{ type: "sma", period: 10 }, { type: "bollinger" }];
     el.flags = [{ date: bars[60]?.date as Date, label: "P", text: "Product launch" }];
+    await until(() => svgOf(el).querySelector(".flag"));
     await settle();
     expect(svgOf(el).querySelectorAll(".overlays .ov").length).toBeGreaterThanOrEqual(4);
     expect(svgOf(el).querySelectorAll(".flag")).toHaveLength(1);
@@ -279,6 +286,7 @@ describe("ui-stock", () => {
     expect(svgOf(el).querySelectorAll(".bars .bar").length).toBeGreaterThan(20);
     for (const type of ["ohlc", "line", "area", "column", "heikin-ashi", "renko"]) {
       el.setAttribute("series-type", type);
+      await wait(120);
       await settle();
       expect(svgOf(el).querySelector("[role=slider]")).toBeTruthy();
     }
@@ -320,6 +328,78 @@ describe("ui-stock", () => {
     expect(axisText(en)).not.toMatch(/PEN|S\//);
     expect(axisText(en)).not.toBe("");
     expect(axisText(de)).not.toBe(axisText(en));
+  });
+
+  it("200 000 bars render with the volume strip and a MACD pane (no argument-spread crash)", async () => {
+    const el = await stock('oscillator="macd"', walk(200_000), 800);
+    await until(() => svgOf(el).querySelector(".osc path"));
+    expect(el.data).toHaveLength(200_000);
+    expect(svgOf(el).querySelector(".osc path")).toBeTruthy();
+    expect(svgOf(el).querySelectorAll(".osc .hist").length).toBeLessThan(500);
+    expect(el.querySelector("canvas")).toBeTruthy();
+  });
+
+  it("an ISO date-only string is a local date, not UTC midnight", async () => {
+    await commands.timezone("America/Lima");
+    const bars = walk(30).map((bar, i) => ({
+      ...bar,
+      date: `2026-03-${String(i + 1).padStart(2, "0")}`,
+    }));
+    const el = await stock("", bars);
+    expect(el.data[0]?.date.getDate()).toBe(1);
+    expect(el.data[0]?.date.getHours()).toBe(0);
+    // Not read as intraday: the dates carry no clock.
+    expect(el.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
+    const zoned = await stock('time-zone="America/New_York"', bars);
+    expect(zoned.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
+  });
+
+  it("the crosshair price tag follows the chart locale", async () => {
+    const big = walk(60).map((b) => ({ ...b, open: 1234.5, high: 1300, low: 1200, close: 1234.5 }));
+    const el = await stock('locale="de-DE" value-format="integer"', big);
+    await awake(el);
+    const step = Number(svgOf(el).querySelector("[data-track]")?.getAttribute("width")) / 60;
+    pointer(el, "pointermove", 20.5 * step, 120);
+    await wait(40);
+    const tags = [...svgOf(el).querySelectorAll(".cross .tag text")].map((t) => t.textContent);
+    expect(tags[0]).toContain("1.23");
+  });
+
+  it("a property set before the element upgrades is not lost", async () => {
+    const host = document.createElement("div");
+    host.style.width = "800px";
+    const plain = document.createElement("ui-stock") as UiStock;
+    Object.defineProperty(plain, "data", { value: walk(40), configurable: true, writable: true });
+    plain.setAttribute("toolbar", "off");
+    host.append(plain);
+    document.body.append(host);
+    await settle();
+    expect(svgOf(plain).querySelectorAll(".bars .bar").length).toBeGreaterThan(0);
+  });
+
+  it("toolbar: ranges, series types and tools, on by default", async () => {
+    const el = await stock('toolbar="on" tools="all" range="all"');
+    await wait(150);
+    const bar = el.querySelector("[data-ui-part=toolbar]") as HTMLElement;
+    expect(bar).toBeTruthy();
+    expect(bar.nextElementSibling).toBe(drawingOf(el));
+    const click = async (selector: string) => {
+      (bar.querySelector(selector) as HTMLButtonElement).click();
+      await settle();
+    };
+    const all = el.window.end - el.window.start;
+    await click('[data-range="1m"]');
+    expect(el.getAttribute("range")).toBe("1m");
+    expect(el.window.end - el.window.start).toBeLessThan(all);
+    expect(bar.querySelector('[data-range="1m"]')?.getAttribute("aria-pressed")).toBe("true");
+    await click('[data-type="line"]');
+    expect(el.seriesType).toBe("line");
+    await click('[data-tool="trend"]');
+    expect(el.tool).toBe("trend");
+    expect(bar.querySelector('[data-tool="trend"]')?.getAttribute("aria-pressed")).toBe("true");
+    el.setAttribute("toolbar", "off");
+    await settle();
+    expect(el.querySelector("[data-ui-part=toolbar]")).toBeNull();
   });
 
   it("has no accessibility violations", async () => {

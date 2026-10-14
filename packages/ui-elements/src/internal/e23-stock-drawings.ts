@@ -11,6 +11,10 @@ import {
   type StockDrawing,
   timeAtIndex,
 } from "./e23-stock.js";
+import css from "./e23-stock-drawings.css.js";
+
+/** The styles of the drawing tools, adopted by the chart when this module loads. */
+export const styles = css;
 
 /** Where the price pane sits and how pixels map to moments and prices. */
 export interface DrawingGeometry {

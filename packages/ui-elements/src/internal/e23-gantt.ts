@@ -5,6 +5,7 @@
  * routing of finish-to-start dependency arrows.
  */
 
+import { type Calendar, calendarFor } from "@jcsoftdev/ui-core/chart/calendar";
 import type { Point } from "@jcsoftdev/ui-core/chart/path";
 import {
   type DateLocaleOptions,
@@ -92,40 +93,95 @@ export const GANTT_ZOOM_ORDER: readonly GanttZoom[] = [
   "year",
 ];
 
-/** Start of the calendar unit holding `time`, in local time. Weeks start on Monday. */
-export function startOf(time: number, unit: CalendarUnit): number {
-  const d = new Date(time);
+/** Milliseconds the wall clock of `tz` (the local zone when omitted) is ahead of UTC at `time`. */
+export function wallOffset(time: number, tz?: string): number {
+  if (!tz) return -new Date(time).getTimezoneOffset() * 60_000;
+  return calendarFor(tz).wall(time).getTime() - time;
+}
+
+/** Start of the calendar unit holding `time`, in `tz` (local time by default). Weeks start on Monday. */
+export function startOf(time: number, unit: CalendarUnit, tz?: string): number {
+  const cal: Calendar = calendarFor(tz);
+  const d = cal.wall(time);
   if (unit === "hour") {
-    d.setMinutes(0, 0, 0);
-    return d.getTime();
+    // Zones with a half-hour offset still start their hours on the hour of the wall clock.
+    d.setUTCMinutes(0, 0, 0);
+    return tz ? cal.instant(d) : new Date(time).setMinutes(0, 0, 0);
   }
-  d.setHours(0, 0, 0, 0);
-  if (unit === "week") d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  else if (unit === "month") d.setDate(1);
-  else if (unit === "quarter") d.setMonth(Math.floor(d.getMonth() / 3) * 3, 1);
-  else if (unit === "year") d.setMonth(0, 1);
-  return d.getTime();
+  cal.midnight(d);
+  if (unit === "week") cal.setDate(d, cal.date(d) - ((cal.day(d) + 6) % 7));
+  else if (unit === "month") cal.setDate(d, 1);
+  else if (unit === "quarter") {
+    cal.setMonth(d, Math.floor(cal.month(d) / 3) * 3);
+    cal.setDate(d, 1);
+  } else if (unit === "year") {
+    cal.setMonth(d, 0);
+    cal.setDate(d, 1);
+  }
+  return cal.instant(d);
 }
 
 /** `time` moved by `count` calendar units (daylight saving safe for days and above). */
-export function addUnits(time: number, unit: CalendarUnit, count: number): number {
-  const d = new Date(time);
+export function addUnits(time: number, unit: CalendarUnit, count: number, tz?: string): number {
   if (unit === "hour") return time + count * HOUR_MS;
-  if (unit === "day") d.setDate(d.getDate() + count);
-  else if (unit === "week") d.setDate(d.getDate() + count * 7);
-  else if (unit === "month") d.setMonth(d.getMonth() + count);
-  else if (unit === "quarter") d.setMonth(d.getMonth() + count * 3);
-  else d.setFullYear(d.getFullYear() + count);
-  return d.getTime();
+  const cal = calendarFor(tz);
+  const d = cal.wall(time);
+  if (unit === "day") cal.setDate(d, cal.date(d) + count);
+  else if (unit === "week") cal.setDate(d, cal.date(d) + count * 7);
+  else if (unit === "month") cal.setMonth(d, cal.month(d) + count);
+  else if (unit === "quarter") cal.setMonth(d, cal.month(d) + count * 3);
+  else cal.setYear(d, cal.year(d) + count);
+  return cal.instant(d);
+}
+
+/** Whole calendar days from `from` to `to` (a day is 23 or 25 hours across a daylight saving change). */
+export function daysBetween(from: number, to: number, tz?: string): number {
+  const cal = calendarFor(tz);
+  const a = cal.wall(from);
+  const b = cal.wall(to);
+  const utc = (d: Date) => Date.UTC(cal.year(d), cal.month(d), cal.date(d));
+  return Math.round((utc(b) - utc(a)) / DAY_MS);
+}
+
+/** Hours and minutes on the wall clock of `tz` (the local zone when omitted). */
+export function wallClock(time: number, tz?: string): { hours: number; minutes: number } {
+  const t = (((time + wallOffset(time, tz)) % DAY_MS) + DAY_MS) % DAY_MS;
+  return { hours: Math.floor(t / HOUR_MS), minutes: Math.floor((t % HOUR_MS) / 60_000) };
+}
+
+/** Day of the month of `time` on the calendar of `tz`. */
+export function dayOfMonth(time: number, tz?: string): number {
+  const cal = calendarFor(tz);
+  return cal.date(cal.wall(time));
+}
+
+/**
+ * Parses a date. A date-only string (`2026-10-05`) is midnight of that day in `tz` (local time by
+ * default), not UTC midnight; anything else goes through `Date.parse`. NaN when it is not a date.
+ */
+export function parseWallDate(text: string, tz?: string): number {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text.trim());
+  if (!match) return Date.parse(text);
+  const [year = 0, month = 1, date = 1] = match.slice(1).map(Number);
+  if (!tz) return new Date(year, month - 1, date).getTime();
+  return calendarFor(tz).instant(new Date(Date.UTC(year, month - 1, date)));
 }
 
 /** Visible window for a zoom: the tasks padded by one `pad` unit on each side, on unit boundaries. */
-export function ganttDomain(times: readonly number[], zoom: GanttZoom): [number, number] {
+export function ganttDomain(
+  times: readonly number[],
+  zoom: GanttZoom,
+  tz?: string,
+): [number, number] {
   const { pad } = GANTT_ZOOMS[zoom];
-  const min = Math.min(...times);
-  const max = Math.max(...times);
-  const start = startOf(min, pad);
-  const end = addUnits(startOf(max, pad), pad, 1);
+  let min = Number.POSITIVE_INFINITY;
+  let max = Number.NEGATIVE_INFINITY;
+  for (const time of times) {
+    if (time < min) min = time;
+    if (time > max) max = time;
+  }
+  const start = startOf(min, pad, tz);
+  const end = addUnits(startOf(max, pad, tz), pad, 1, tz);
   return [start, end];
 }
 
@@ -160,11 +216,15 @@ export function ganttScale(
   };
 }
 
-/** Rounds `time` to the nearest hour (`step` under a day) or the nearest local midnight. */
-export function snapTime(time: number, step: number): number {
-  if (step >= DAY_MS) return startOf(time + DAY_MS / 2, "day");
-  const offset = new Date(time).getTimezoneOffset() * 60_000;
-  return Math.round((time - offset) / step) * step + offset;
+/** Rounds `time` to the nearest hour (`step` under a day) or the nearest midnight of `tz`. */
+export function snapTime(time: number, step: number, tz?: string): number {
+  if (step >= DAY_MS) {
+    const before = startOf(time, "day", tz);
+    const after = addUnits(before, "day", 1, tz);
+    return time - before < after - time ? before : after;
+  }
+  const offset = wallOffset(time, tz);
+  return Math.round((time + offset) / step) * step - offset;
 }
 
 export interface HeaderCell {
@@ -185,23 +245,29 @@ export interface HeaderLabelOptions extends DateLocaleOptions {
 }
 
 function unitLabel(time: number, unit: CalendarUnit, width: number, options: HeaderLabelOptions) {
+  const tz = options.timeZone;
+  const cal = calendarFor(tz);
   const d = new Date(time);
-  if (unit === "hour") return String(d.getHours()).padStart(2, "0");
-  if (unit === "day") {
-    if (width >= 120) return `${shortWeekday(d, options)} ${d.getDate()} ${shortMonth(d, options)}`;
-    return width >= 34
-      ? `${shortWeekday(d, options).slice(0, 2)} ${d.getDate()}`
-      : String(d.getDate());
+  const wall = cal.wall(time);
+  const day = cal.date(wall);
+  if (unit === "hour") {
+    const hours = Math.floor(
+      ((((time + wallOffset(time, tz)) % DAY_MS) + DAY_MS) % DAY_MS) / HOUR_MS,
+    );
+    return String(hours).padStart(2, "0");
   }
-  if (unit === "week")
-    return width >= 52 ? `${d.getDate()} ${shortMonth(d, options)}` : String(d.getDate());
+  if (unit === "day") {
+    if (width >= 120) return `${shortWeekday(d, options)} ${day} ${shortMonth(d, options)}`;
+    return width >= 34 ? `${shortWeekday(d, options).slice(0, 2)} ${day}` : String(day);
+  }
+  if (unit === "week") return width >= 52 ? `${day} ${shortMonth(d, options)}` : String(day);
   if (unit === "month") {
-    if (width >= 140) return `${shortMonth(d, options)} ${d.getFullYear()}`;
+    if (width >= 140) return `${shortMonth(d, options)} ${cal.year(wall)}`;
     return width >= 30 ? shortMonth(d, options) : shortMonth(d, options).slice(0, 1);
   }
   if (unit === "quarter")
-    return (options.quarter ?? ((q) => `Q${q}`))(Math.floor(d.getMonth() / 3) + 1);
-  return String(d.getFullYear());
+    return (options.quarter ?? ((q) => `Q${q}`))(Math.floor(cal.month(wall) / 3) + 1);
+  return String(cal.year(wall));
 }
 
 /** Cells of one header row, clipped to the scale. */
@@ -211,9 +277,10 @@ export function headerCells(
   options: HeaderLabelOptions = {},
 ): HeaderCell[] {
   const [start, end] = scale.domain;
+  const tz = options.timeZone;
   const cells: HeaderCell[] = [];
-  for (let t = startOf(start, unit); t < end; t = addUnits(t, unit, 1)) {
-    const next = addUnits(t, unit, 1);
+  for (let t = startOf(start, unit, tz); t < end; t = addUnits(t, unit, 1, tz)) {
+    const next = addUnits(t, unit, 1, tz);
     const x0 = Math.max(0, scale.x(t));
     const x1 = Math.min(scale.width, scale.x(next));
     if (x1 <= x0) continue;
@@ -235,9 +302,9 @@ export function ganttHeader(
   };
 }
 
-/** Local midnight key of a date, for holiday lookups. */
-export function dayKey(time: number): number {
-  return startOf(time, "day");
+/** Midnight key of a date in `tz`, for holiday lookups. */
+export function dayKey(time: number, tz?: string): number {
+  return startOf(time, "day", tz);
 }
 
 /**
@@ -248,13 +315,16 @@ export function nonWorkingSpans(
   domain: readonly [number, number],
   workingDays: readonly number[],
   holidays: ReadonlyArray<Date | number> = [],
+  tz?: string,
 ): Array<[number, number]> {
-  const off = new Set(holidays.map((day) => dayKey(+day)));
+  const cal = calendarFor(tz);
+  const off = new Set<number>();
+  for (const day of holidays) off.add(dayKey(+day, tz));
   const spans: Array<[number, number]> = [];
-  for (let t = startOf(domain[0], "day"); t < domain[1]; t = addUnits(t, "day", 1)) {
-    const free = !workingDays.includes(new Date(t).getDay()) || off.has(t);
+  for (let t = startOf(domain[0], "day", tz); t < domain[1]; t = addUnits(t, "day", 1, tz)) {
+    const free = !workingDays.includes(cal.day(cal.wall(t))) || off.has(t);
     if (!free) continue;
-    const next = addUnits(t, "day", 1);
+    const next = addUnits(t, "day", 1, tz);
     const last = spans[spans.length - 1];
     if (last && last[1] === t) last[1] = next;
     else spans.push([t, next]);
@@ -339,6 +409,8 @@ export interface GanttTaskLike {
 
 export interface GanttRow<T extends GanttTaskLike = GanttTaskLike> {
   task: T;
+  /** Unique within the plan: the task id, or `id#2` for a repeated id. */
+  key: string;
   depth: number;
   /** Has visible or collapsed children: drawn as a summary bar. */
   parent: boolean;
@@ -367,7 +439,21 @@ export function ganttRows<T extends GanttTaskLike>(
   tasks: readonly T[],
   collapsed: ReadonlySet<string> = new Set(),
 ): GanttRow<T>[] {
+  const valid: T[] = [];
+  for (const task of tasks) {
+    if (Number.isFinite(+task.start) && Number.isFinite(+task.end)) valid.push(task);
+    else warnOnce(`ui-gantt: task "${task.id}" has an invalid date and was skipped.`);
+  }
+  tasks = valid;
   const ids = new Set(tasks.map((task) => task.id));
+  const seen = new Map<string, number>();
+  const keys = new Map<T, string>();
+  for (const task of tasks) {
+    const count = (seen.get(task.id) ?? 0) + 1;
+    seen.set(task.id, count);
+    keys.set(task, count === 1 ? task.id : `${task.id}#${count}`);
+    if (count === 2) warnOnce(`ui-gantt: the task id "${task.id}" repeats; ids should be unique.`);
+  }
   const children = new Map<string | undefined, T[]>();
   for (const task of tasks) {
     const key = task.parentId && ids.has(task.parentId) ? task.parentId : undefined;
@@ -376,12 +462,13 @@ export function ganttRows<T extends GanttTaskLike>(
     else children.set(key, [task]);
   }
 
-  const rollups = new Map<string, Rollup>();
+  const rollups = new Map<T, Rollup>();
   const visiting = new Set<string>();
   const rollup = (task: T): Rollup => {
-    const cached = rollups.get(task.id);
+    const cached = rollups.get(task);
     if (cached) return cached;
-    const kids = visiting.has(task.id) ? [] : (children.get(task.id) ?? []);
+    const kids =
+      visiting.has(task.id) || keys.get(task) !== task.id ? [] : (children.get(task.id) ?? []);
     visiting.add(task.id);
     let result: Rollup;
     if (kids.length === 0) {
@@ -399,7 +486,7 @@ export function ganttRows<T extends GanttTaskLike>(
         result.done += r.done;
       }
     }
-    rollups.set(task.id, result);
+    rollups.set(task, result);
     return result;
   };
 
@@ -407,10 +494,11 @@ export function ganttRows<T extends GanttTaskLike>(
   const walk = (parent: string | undefined, depth: number) => {
     for (const task of children.get(parent) ?? []) {
       const r = rollup(task);
-      const parentRow = (children.get(task.id)?.length ?? 0) > 0;
+      const parentRow = keys.get(task) === task.id && (children.get(task.id)?.length ?? 0) > 0;
       const isCollapsed = parentRow && collapsed.has(task.id);
       rows.push({
         task,
+        key: keys.get(task) ?? task.id,
         depth,
         parent: parentRow,
         collapsed: isCollapsed,
@@ -423,6 +511,13 @@ export function ganttRows<T extends GanttTaskLike>(
   };
   walk(undefined, 0);
   return rows;
+}
+
+const warned = new Set<string>();
+function warnOnce(message: string): void {
+  if (warned.has(message)) return;
+  warned.add(message);
+  console.warn(message);
 }
 
 function clamp01(value: number): number {
