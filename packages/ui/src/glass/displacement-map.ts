@@ -180,6 +180,9 @@ export function computeDisplacementField({
   const r = clamp(radius, 0, Math.min(w, h) / 2);
   const pw = Math.max(1, Math.round(w * ratio));
   const ph = Math.max(1, Math.round(h * ratio));
+  // Rounding makes the real pixels-per-px a hair off `ratio`: positions use the effective ones.
+  const rx = pw / w;
+  const ry = ph / h;
   const data = new Uint8ClampedArray(pw * ph * 4);
   // Neutral everywhere (128, 128, 255, 255), then only the rim is computed: rows between the
   // rims are visited at their two ends. Little-endian packing of R, G, B, A.
@@ -195,20 +198,20 @@ export function computeDisplacementField({
   const columnPull = new Float64Array(full ? pw : 0);
   const columnShape = new Float64Array(full ? pw : 0);
   for (let i = 0; full && i < pw; i++) {
-    const px = (i + 0.5) / ratio - hx;
+    const px = (i + 0.5) / rx - hx;
     const au = Math.abs(px) / hx;
     columnPull[i] = Math.sign(px) * au ** (shape.exponent - 1);
     columnShape[i] = au ** shape.exponent;
   }
   for (let j = 0; j < ph; j++) {
-    const py = (j + 0.5) / ratio - hy;
+    const py = (j + 0.5) / ry - hy;
     const inner = Math.abs(py) < hy - rim;
     const av = Math.abs(py) / hy;
     const gv = full ? Math.sign(py) * av ** (shape.exponent - 1) : 0;
     const vn = av ** shape.exponent;
     for (let i = 0; i < pw; i++) {
       if (!full && inner && i === band) i = Math.max(band, pw - band);
-      const px = (i + 0.5) / ratio - hx;
+      const px = (i + 0.5) / rx - hx;
       const o = (j * pw + i) * 4;
       if (full) {
         const gx = columnPull[i] as number;

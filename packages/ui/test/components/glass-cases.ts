@@ -5,6 +5,7 @@ export {
   lensAmplitude,
   lensProfile,
   scaleFor,
+  WHOLE_SHAPES,
 } from "../../src/glass/displacement-map.js";
 export {
   computeCrystalField,

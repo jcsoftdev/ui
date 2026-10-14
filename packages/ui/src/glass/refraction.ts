@@ -114,6 +114,16 @@ function mapRatio(width: number, height: number, dpr = window.devicePixelRatio |
   return Math.max(1, Math.min(dpr, MAX_MAP_RATIO, room));
 }
 
+/**
+ * The specular map is not capped by area: only a thin rim of it is shaded, but the one-pixel
+ * contour and the glint are drawn in it, and at one pixel per CSS pixel on a dense screen they
+ * come out soft. It keeps the full ratio (up to {@link MAX_MAP_RATIO}) where the refraction map
+ * above has dropped to 1.
+ */
+function specularRatio(dpr = window.devicePixelRatio || 1): number {
+  return Math.max(1, Math.min(dpr, MAX_MAP_RATIO));
+}
+
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
 
@@ -729,7 +739,13 @@ function createController(element: HTMLElement): Controller {
         specularImage.setAttribute("height", String(height));
         specularImage.setAttribute(
           "href",
-          createSpecularMap({ width, height, radius, dpr, angle: runtime.angle }),
+          createSpecularMap({
+            width,
+            height,
+            radius,
+            dpr: specularRatio(),
+            angle: runtime.angle,
+          }),
         );
       }
     };
