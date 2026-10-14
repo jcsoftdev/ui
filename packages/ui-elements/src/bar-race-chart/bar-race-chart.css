@@ -1,0 +1,56 @@
+[data-ui="bar-race-chart"] [data-ui-part="controls"] {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  order: 2;
+}
+[data-ui="bar-race-chart"] [data-ui-part="controls"][hidden] {
+  display: none;
+}
+[data-ui="bar-race-chart"] [data-ui-part="play"] {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+[data-ui="bar-race-chart"] [data-ui-part="play"]:hover:not(:disabled) {
+  background: var(--sunken);
+  color: var(--ink);
+}
+[data-ui="bar-race-chart"] [data-ui-part="play"]:focus-visible,
+[data-ui="bar-race-chart"] [data-ui-part="moment"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+[data-ui="bar-race-chart"] [data-ui-part="moment"] {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 6px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+[data-ui="bar-race-chart"] [data-ui-part="caption"] {
+  min-width: 3em;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+[data-ui="bar-race-chart"] [data-entity] > rect {
+  transition: none;
+}
+[data-ui="bar-race-chart"] [data-entity][data-selected] > rect,
+[data-ui="bar-race-chart"] [data-entity][data-active] > rect {
+  stroke: var(--ink);
+  stroke-width: 1.5px;
+}
