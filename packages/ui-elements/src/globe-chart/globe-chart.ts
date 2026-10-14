@@ -106,6 +106,7 @@ export class UiGlobeChart extends ChartElement {
   #source: MapSource;
   #map: GeoMap | null = null;
   #renderer: GlobeRenderer | undefined;
+  #bound: { root: SVGSVGElement; signal: AbortSignal } | undefined;
   #failed = false;
   /** connectedCallback has run: before that, attribute callbacks of an upgrade must not start a load. */
   #started = false;
@@ -297,7 +298,11 @@ export class UiGlobeChart extends ChartElement {
       done: (map, lazy) => {
         this.#failed = false;
         this.#map = map;
-        if (lazy) this.#renderer ??= new lazy.GlobeRenderer(this);
+        if (lazy && !this.#renderer) {
+          this.#renderer = new lazy.GlobeRenderer(this);
+          // The base ran `setup` after its first draw, which can precede the renderer: bind it now.
+          if (this.#bound) this.#renderer.setup(this.#bound.root, this.#bound.signal);
+        }
         this.requestDraw();
         this.#renderer?.syncSpin();
       },
@@ -316,6 +321,7 @@ export class UiGlobeChart extends ChartElement {
   }
 
   protected override setup(root: SVGSVGElement, signal: AbortSignal): void {
+    this.#bound = { root, signal };
     this.#renderer?.setup(root, signal);
   }
 
