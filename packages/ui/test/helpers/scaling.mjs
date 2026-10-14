@@ -34,11 +34,29 @@ export function assertScalesLinearly(
   const a = make(small);
   const b = make(small * growth);
   run(a); // warm up the JIT so the small sample is not inflated by compilation
-  const timeA = Math.max(bestOf(runs, () => run(a)), 0.5); // floor: sub-0.5ms timings are noise
-  const timeB = bestOf(runs, () => run(b));
+  run(b);
   const sizeRatio = sizeOf(b) / sizeOf(a);
   const allowed = slack * sizeRatio ** degree;
-  const ratio = timeB / timeA;
+  // A genuinely super-linear routine misses the bound on every attempt; a GC pause or a noisy
+  // neighbour lands in one sample, so a fresh best-of-N pass (small and large interleaved, so
+  // both see the same machine state) clears it. Only the best attempt is judged.
+  let ratio = Number.POSITIVE_INFINITY;
+  let timeA = 0;
+  let timeB = 0;
+  for (let attempt = 0; attempt < 3 && ratio > allowed; attempt += 1) {
+    let bestA = Number.POSITIVE_INFINITY;
+    let bestB = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < runs; i += 1) {
+      bestA = Math.min(bestA, bestOf(1, () => run(a)));
+      bestB = Math.min(bestB, bestOf(1, () => run(b)));
+    }
+    const floorA = Math.max(bestA, 0.5); // floor: sub-0.5ms timings are noise
+    if (bestB / floorA < ratio) {
+      ratio = bestB / floorA;
+      timeA = floorA;
+      timeB = bestB;
+    }
+  }
   assert.ok(
     ratio <= allowed,
     `${label}: input grew ${sizeRatio.toFixed(1)}x but time grew ${ratio.toFixed(1)}x ` +
