@@ -30,6 +30,8 @@ import css from "./beeswarm.css.js";
 /** Above this many dots the layer is a canvas; below it every dot is an SVG circle, kept by `join()`. */
 const CANVAS_AT = 1500;
 const ENTRY_DOTS = 600;
+/** Rows of the data table of a canvas swarm. */
+const TABLE_ROWS = 1000;
 
 export interface BeeswarmPoint {
   value: number;
@@ -115,8 +117,9 @@ export class UiBeeswarm extends ChartElement {
   #canvas = false;
   #rings = new Map<number, SVGCircleElement>();
   #parts: { axes: SVGGElement; dots: SVGGElement; rings: SVGGElement } | undefined;
+  /** The last layout, reused while the size, the data and every attribute stay the same. */
   #last:
-    | { width: number; height: number; layout: CategoryLayout; points: Placed[]; sized: boolean }
+    | { key: string; layout: CategoryLayout; points: Placed[]; series: unknown; categories: unknown; hidden: string }
     | undefined;
 
   constructor() {
@@ -169,6 +172,13 @@ export class UiBeeswarm extends ChartElement {
     );
   }
 
+  #warned = false;
+  #warnOnce(message: string): void {
+    if (this.#warned) return;
+    this.#warned = true;
+    console.warn(`<ui-beeswarm>: ${message}`);
+  }
+
   #categoryList(): readonly string[] {
     if (this.#categories) return this.#categories;
     const seen = new Set<string>();
@@ -200,14 +210,21 @@ export class UiBeeswarm extends ChartElement {
     const sized = all.some((item) => item.points.some((point) => point.size != null));
     const parts = this.#layers(root);
 
-    const reuse = context.transient && this.#last?.width === width && this.#last.height === height;
+    const hidden = visible.map((item) => item.id).join("\u0000");
+    const key = `${width}x${height}|${locale}|${horizontalAttr}|${UiBeeswarm.observedAttributes.map((name) => this.getAttribute(name)).join("&")}`;
+    const last = this.#last;
     let layout: CategoryLayout;
     let points: Placed[];
-    if (reuse && this.#last) {
-      ({ layout, points } = this.#last);
+    if (
+      last?.key === key &&
+      last.series === all &&
+      last.categories === this.#categories &&
+      last.hidden === hidden
+    ) {
+      ({ layout, points } = last);
     } else {
       ({ layout, points } = this.#place(context, categories, visible, all, sized, horizontalAttr));
-      this.#last = { width, height, layout, points, sized };
+      this.#last = { key, layout, points, series: all, categories: this.#categories, hidden };
     }
     const { margin, innerWidth, innerHeight, horizontal } = layout;
     const title = this.getAttribute("axis-title") ?? undefined;
@@ -396,10 +413,14 @@ export class UiBeeswarm extends ChartElement {
         return target === undefined ? index : rowStart[target];
       },
       snapshot: () => {
-        const flat = all.flatMap((item, seriesIndex) =>
-          item.points
-            .filter((point) => Number.isFinite(point.value))
-            .map((point, index) => ({ item, seriesIndex, point, index })),
+        // A canvas-sized swarm lists its first rows only: a table of every dot would defeat the canvas.
+        const flat: Array<{ item: BeeswarmSeries; seriesIndex: number; point: BeeswarmPoint; index: number }> = [];
+        const limit = this.#canvas ? TABLE_ROWS : Number.POSITIVE_INFINITY;
+        all.forEach((item, seriesIndex) =>
+          item.points.forEach((point, index) => {
+            if (flat.length < limit && Number.isFinite(point.value))
+              flat.push({ item, seriesIndex, point, index });
+          }),
         );
         const column = (
           id: string,
@@ -523,6 +544,14 @@ export class UiBeeswarm extends ChartElement {
       });
     }
     const placed: Placed[] = [];
+    const taken = new Map<string, number>();
+    const unique = all.map((item) => {
+      const seen = taken.get(item.id) ?? 0;
+      taken.set(item.id, seen + 1);
+      return seen ? `${item.id}~${seen}` : item.id;
+    });
+    if (taken.size < all.length || new Set(categories).size < categories.length)
+      this.#warnOnce("duplicate series ids or categories: dots stay separate, but ids should be unique");
     members.forEach((row, category) => {
       if (row.length === 0) return;
       const slot = layout.slot(category, 0);
@@ -546,7 +575,7 @@ export class UiBeeswarm extends ChartElement {
         const along = layout.valueScale.map(point.value);
         const cross = slot.center + Math.max(-limit, Math.min(limit, offsets[i] ?? 0));
         placed.push({
-          key: `${series.id}-${index}`,
+          key: `${unique[seriesIndex]}-${index}`,
           series,
           seriesIndex,
           point,

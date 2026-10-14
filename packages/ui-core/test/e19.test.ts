@@ -103,3 +103,60 @@ describe("category layout", () => {
         }
   });
 });
+
+describe("robustness and cost", () => {
+  it("stream layout treats NaN and Infinity as zero instead of blanking every stream", () => {
+    const clean = streamLayout(
+      [
+        [1, 2, 3],
+        [4, 0, 6],
+      ],
+      "zero",
+    );
+    const dirty = streamLayout(
+      [
+        [1, 2, 3],
+        [4, Number.NaN, 6],
+        [Number.POSITIVE_INFINITY, 1, 1],
+      ],
+      "zero",
+      "none",
+    );
+    expect(dirty.domain.every(Number.isFinite)).toBe(true);
+    expect(JSON.stringify(dirty).includes("null")).toBe(false);
+    expect(clean.domain.every(Number.isFinite)).toBe(true);
+    const wiggle = streamLayout(
+      [
+        [1, Number.NaN, 3],
+        [2, 2, 2],
+      ],
+      "wiggle",
+    );
+    expect(wiggle.domain.every(Number.isFinite)).toBe(true);
+  });
+
+  it("lays 10k spread points out in under 100 ms and survives a tight cluster", () => {
+    const spread = Array.from({ length: 10000 }, () => ({
+      position: between(0, 600),
+      radius: 4.5,
+    }));
+    // CPU time of the fastest of a few passes: a busy machine inflates wall time, not this.
+    let fastest = Number.POSITIVE_INFINITY;
+    let offsets: number[] = [];
+    for (let pass = 0; pass < 6; pass += 1) {
+      const t0 = process.cpuUsage();
+      offsets = beeswarm(spread, { gap: 1.25 });
+      const spent = process.cpuUsage(t0);
+      fastest = Math.min(fastest, (spent.user + spent.system) / 1000);
+    }
+    expect(fastest).toBeLessThan(100);
+    expect(offsets.every(Number.isFinite)).toBe(true);
+    const cluster = Array.from({ length: 2500 }, () => ({
+      position: between(100, 112),
+      radius: 3,
+    }));
+    const t1 = performance.now();
+    expect(beeswarm(cluster, { gap: 1 }).every(Number.isFinite)).toBe(true);
+    expect(performance.now() - t1).toBeLessThan(3000);
+  });
+});

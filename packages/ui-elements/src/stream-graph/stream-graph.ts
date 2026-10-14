@@ -247,6 +247,12 @@ export class UiStreamGraph extends ChartElement {
     // One column per category: the keyboard stop, the hit area and the crosshair (the line after it).
     const half = Math.max(2, axis.step / 2);
     const columns: ChartMark[] = [];
+    // The focused stream (Up and Down) leads the announced text of the column it is read in.
+    const columnLabel = (i: number): string => {
+      const parts = visible.map((item) => `${item.name}: ${format(item.data[i] ?? 0)}`);
+      const focus = visible.find((item) => item.id === this.#focus);
+      return `${focus ? `${focus.name}. ` : ""}${fullLabel(i)}. ${parts.join(", ")}`;
+    };
     const fullLabel = (i: number) =>
       this.xFormat
         ? this.xFormat(categories[i] as XValue)
@@ -296,11 +302,9 @@ export class UiStreamGraph extends ChartElement {
           style: "stroke:var(--chart-crosshair)",
         }),
       );
-      const parts = visible.map((item) => `${item.name}: ${format(item.data[i] ?? 0)}`);
-      columns.push({ el: rect, label: `${fullLabel(i)}. ${parts.join(", ")}` });
+      columns.push({ el: rect, label: columnLabel(i) });
     });
     root.append(plot);
-
     if (animate) {
       shapes.animate(
         [
@@ -375,6 +379,8 @@ export class UiStreamGraph extends ChartElement {
         if (intent === "up" || intent === "down") {
           this.#focus = pick(this.#focus, intent === "down" ? 1 : -1);
           this.highlight(this.#focus);
+          for (let k = 0; k < columns.length; k += 1)
+            (columns[k] as { el: Element }).el.setAttribute("aria-label", columnLabel(k));
           // Same column, other stream: a transient frame re-runs `hover` so the tooltip names it.
           this.requestDraw("transient");
         }

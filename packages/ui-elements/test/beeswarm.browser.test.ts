@@ -148,4 +148,34 @@ describe("ui-beeswarm", () => {
     await settle();
     expect(c.textContent).toContain("No data");
   });
+
+  it("keeps every dot and row with duplicate ids, and reuses the layout until an attribute changes", async () => {
+    const warn = console.warn;
+    const warnings: string[] = [];
+    console.warn = (...args: unknown[]) => warnings.push(String(args[0]));
+    try {
+      const twin = [
+        { id: "a", name: "First", points: points("Diego", [10, 20]) },
+        { id: "a", name: "Second", points: points("Diego", [10, 20]) },
+      ];
+      const c = await swarm(twin);
+      expect(dots(c)).toHaveLength(4);
+      expect(warnings.some((w) => w.includes("duplicate"))).toBe(true);
+      const before = dots(c).map((d) => d.getAttribute("cy"));
+      c.requestDraw();
+      await settle();
+      expect(dots(c).map((d) => d.getAttribute("cy"))).toEqual(before);
+      c.setAttribute("gap", "12");
+      await settle();
+      expect(dots(c).map((d) => d.getAttribute("cy"))).not.toEqual(before);
+    } finally {
+      console.warn = warn;
+    }
+  });
+
+  it("bounds the data table of a canvas swarm", async () => {
+    const many = Array.from({ length: 2500 }, (_, i) => ({ value: (i * 37) % 1000, category: "A" }));
+    const c = await swarm([{ id: "big", name: "Big", points: many }], 'height="300"');
+    expect(c.chartSnapshot?.categories.length).toBeLessThanOrEqual(1000);
+  });
 });

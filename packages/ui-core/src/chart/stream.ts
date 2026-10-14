@@ -75,9 +75,13 @@ export function streamLayout(
   offset: StreamOffset = "wiggle",
   order: StreamOrder = "inside-out",
 ): StreamLayout {
-  const length = Math.max(0, ...series.map((data) => data.length));
+  let length = 0;
+  for (const values of series) if (values.length > length) length = values.length;
   const data = series.map((values) =>
-    Array.from({ length }, (_, i) => Math.max(0, values[i] ?? 0)),
+    Array.from({ length }, (_, i) => {
+      const v = values[i];
+      return typeof v === "number" && Number.isFinite(v) ? Math.max(0, v) : 0;
+    }),
   );
   const totals = Array.from({ length }, (_, i) => sum(data.map((values) => values[i] as number)));
   const stack = streamOrder(data, order);

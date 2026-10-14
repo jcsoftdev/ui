@@ -93,6 +93,7 @@ describe("ui-stream-graph", () => {
     await userEvent.keyboard("{ArrowDown}");
     await settle();
     expect(c.hover?.body).toMatch(/^(Cuts|Beards|Color): \d+$/);
+    expect(cols(c)[2]?.getAttribute("aria-label")).toMatch(/^(Cuts|Beards|Color)\. /);
     expect(document.activeElement).toBe(cols(c)[2]);
     expect(c.querySelectorAll("path[data-stream][data-dim]")).toHaveLength(2);
     await userEvent.keyboard("{End}");

@@ -106,7 +106,8 @@ export function categoryLayout(input: CategoryLayoutInput): CategoryLayout {
   let margin: PlotMargin;
   let tickCount: number;
   if (horizontal) {
-    const labelWidth = Math.max(0, ...categories.map((label) => estimateTextWidth(label, 12)));
+    let labelWidth = 0;
+    for (const label of categories) labelWidth = Math.max(labelWidth, estimateTextWidth(label, 12));
     margin = { top, right: 18, bottom, left: clamp(labelWidth + 18, 36, width * 0.34) };
     tickCount =
       axis.tickCount ?? clamp(Math.round((width - margin.left - margin.right) / 90), 2, 9);
