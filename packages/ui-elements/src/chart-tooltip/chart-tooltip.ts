@@ -233,6 +233,16 @@ export class UiChartTooltip extends ElementBase {
       sideOffset: OFFSET,
       collisionPadding: EDGE,
     });
+    // The card jumps to the other side of the pointer; it does not slide across it.
+    if (
+      this.dataset.side &&
+      placement.side !== this.dataset.side &&
+      this.hasAttribute("data-ready")
+    ) {
+      this.removeAttribute("data-ready");
+      cancelAnimationFrame(this.#frame);
+      this.#frame = requestAnimationFrame(() => this.setAttribute("data-ready", ""));
+    }
     this.style.transform = `translate3d(${Math.round(placement.x)}px, ${Math.round(placement.y)}px, 0)`;
     this.dataset.side = placement.side;
   }

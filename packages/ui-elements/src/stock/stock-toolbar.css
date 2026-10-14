@@ -1,0 +1,58 @@
+[data-ui="stock"] > [data-ui-part="toolbar"] {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 8px;
+  order: 0;
+  min-width: 0;
+}
+[data-ui="stock"] [data-ui-part="toolbar"] fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--surface-2);
+}
+[data-ui="stock"] [data-ui-part="toolbar"] fieldset:disabled {
+  opacity: 0.5;
+}
+[data-ui="stock"] [data-ui-part="toolbar"] legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+[data-ui="stock"] [data-ui-part="toolbar"] button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="stock"] [data-ui-part="toolbar"] button:hover:not(:disabled) {
+  color: var(--ink);
+}
+[data-ui="stock"] [data-ui-part="toolbar"] button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+}
+[data-ui="stock"] [data-ui-part="toolbar"] button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+[data-ui="stock"] [data-ui-part="toolbar"] button:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 1px;
+}

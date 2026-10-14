@@ -2,6 +2,13 @@ import { clamp, type DisplacementField } from "./lens-map.js";
 import { cached } from "./raster.js";
 
 /**
+ * The crystal map covers the surface and its margin (often several times the surface), and every
+ * pixel of it is computed on the main thread: past this many it is rasterised coarser, down to half
+ * a pixel per CSS pixel, which the smooth field and the bilinear `feImage` scaling do not show.
+ */
+const CRYSTAL_MAP_PIXELS = 48_000;
+
+/**
  * The crystal lens: a thick, clear, convex lens that minifies the backdrop. Every output pixel at
  * `p` (measured from the centre of the surface) shows the backdrop at `p + (g(t) - 1) p` with `g(t)
  * = 1 + (gMax - 1) s(t)`, `s(t) = 0.3 + 0.3 t^2 + 0.4 t^6` and `t` the superellipse radial coordinate (1 at
@@ -51,7 +58,10 @@ export interface CrystalMapOptions {
   height: number;
   /** Source offset at the silhouette, in px, from {@link crystalAmplitude}; sets the margin. */
   amplitude: number;
-  /** Device pixel ratio the map is rasterised at. Default 1, capped at 2. */
+  /**
+   * Map pixels per CSS pixel. Default 1, between 0.5 and 2: the field is smooth and most of it lies
+   * in the margin the layer clips away, so a large lens can go below one.
+   */
   dpr?: number;
   /** Margin past the surface, in px. Default {@link crystalMargin} of `amplitude`. */
   margin?: number;
@@ -87,7 +97,7 @@ export function computeCrystalField({
   room,
   reach = 1,
 }: CrystalMapOptions): DisplacementField {
-  const ratio = clamp(dpr, 1, 2);
+  const ratio = clamp(dpr, 0.5, 2);
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const m = margin ?? crystalMargin(amplitude);
@@ -330,7 +340,15 @@ export function mountCrystal(element: HTMLElement, options: CrystalMountOptions)
         target.setAttribute(name, value);
       image.setAttribute(
         "href",
-        createCrystalMap({ width, height, amplitude, dpr, margin, room, reach }),
+        createCrystalMap({
+          width,
+          height,
+          amplitude,
+          dpr: Math.max(0.5, Math.min(dpr, Math.sqrt(CRYSTAL_MAP_PIXELS / (wide * tall)))),
+          margin,
+          room,
+          reach,
+        }),
       );
       return (2 * Math.max(amplitude, 1) * 255) / 254;
     },

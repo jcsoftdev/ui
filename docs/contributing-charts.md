@@ -26,12 +26,12 @@ imports them, so it never pays for them.
 
 | Tag | What it is | Eager gzip |
 | --- | --- | --- |
-| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.5 KB |
-| `ui-sparkline` | the smallest real chart on the base | 6.3 KB |
+| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.7 KB |
+| `ui-sparkline` | the smallest real chart on the base | 6.5 KB |
 | `ui-chart-legend` | toggle buttons per series, hover dims the rest | 2.6 KB |
 | `ui-chart-tooltip` | floating card or docked panel | 4.2 KB |
 | `ui-chart-data-table` | the snapshot as a real `<table>` | 1.8 KB |
-| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.7 KB |
+| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.5 KB |
 | `ui-chart-breadcrumb` | drill-down path, `nav` with `aria-current` | 1.5 KB |
 
 A chart adds only its own geometry and the ui-core modules it uses (`chart/scale`, `chart/path`,
@@ -180,6 +180,41 @@ carries `{ revision }` (or `null` for the loading and empty states).
 - **Sizing.** A `ResizeObserver` on the drawing box. `height` is a number (default 240), or `fill` to
   take the parent's definite height (minimum 120). `aspect-ratio` wins over a pixel height. The SVG
   is absolutely positioned, so drawing can never grow the box (no resize loop).
+- **Intrinsic height.** A chart that cannot use 240px sizes itself through the base, never by
+  touching the host. Either set `static override defaultHeight = 320` (or
+  `(el) => el.getAttribute("orientation") === "horizontal" ? 200 : 320`, read on every draw, so an
+  attribute change re-evaluates it) or return `naturalHeight` from `draw()` when the content decides
+  (rows, tree depth). The base applies it to the inner drawing part and, for `naturalHeight`, lays out
+  again once, in the same frame, so the first paint is already at the right height. An explicit `height`,
+  `height="fill"` (use it with a CSS height on the host) or `aspect-ratio` always wins.
+  **Never write attributes (or inline styles) on the host, in `connectedCallback` or anywhere
+  else; use the hook.** Writing `height` there mutates the consumer's DOM and fights their own value.
+- **Stable marks (`markKey`).** Return `markKey: (i) => id` from `draw()` when marks can reorder
+  between draws (a bar race, a re-sorted list). The base remaps the pinned mark, the keyboard hover,
+  the roving tab stop and focus to the same entity by key, and a remap caused only by reordering does
+  not fire `chart-select` again. Keys must be unique (a duplicate logs a warning). The base reads
+  the keys right after each draw, so `(i) => this.names[i]` is safe, but prefer closing over the
+  draw's own data. If the pinned mark's key is gone from the new draw, the pin clears and
+  `chart-select` fires with `null`; the tab stop and focus clamp to a valid index. Without
+  `markKey` everything stays by index.
+- **Hidden series from the start.** `initial-hidden='["b","c"]'` (a JSON array of series ids; a
+  JSON string is ignored) or the `initialHidden` property, set before or after upgrade, seeds the
+  hidden set before the first draw, once (not again on reconnect). Read it in `draw()` with
+  `this.isHidden(id)`. It must leave at least one series visible: if it hides them all, the last one
+  is shown again after the first draw. No `chart-series` event fires for the seed; the legend and the
+  snapshot see it like any toggle. The parser is a lazy chunk, fetched only by charts that use it.
+- **Canvas.** `context.canvas()` lives in a lazy chunk. Set `static override canvas = true` on a
+  chart that calls it, so the chunk is fetched with the first draw. Without it the first call drops
+  that draw and runs it again once the chunk is in (correct, but the draw runs twice).
+- **Theme.** SVG marks that use CSS variables repaint on their own and pay nothing. A painter
+  that caches resolved colors (a canvas cannot use `var()`) opts in: calling `context.canvas()` does
+  it, or set `static themeAware = true`. The base then lazy-loads one shared `MutationObserver` and
+  one `prefers-color-scheme` listener (ref-counted across charts, released on disconnect). When
+  `data-theme`, `class` or `style` change on `<html>` or the nearest `[data-theme]` ancestor, or the
+  OS scheme flips, the chart checks its `color-scheme` and core tokens and, only if they changed,
+  redraws as an `update` (`context.transient` true, so no `chart-data`). `context.themeVersion` is 0
+  until the chunk loads, then moves on each real change: drop cached colors when it differs from the
+  last draw.
 - **States.** `loading` (with `skeleton="bars|line|ring"`) and `empty` (or `isEmpty()`) replace the
   drawing; `draw()` is not called and `chart-data` fires with `null`. The code and stylesheet are a
   lazy chunk. The SVG object is kept, so `setup()` does not run again afterwards. If a mark had
