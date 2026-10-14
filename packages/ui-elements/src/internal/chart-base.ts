@@ -179,6 +179,12 @@ const loadFormat = () =>
     formatter = module.resolveFormat;
   });
 
+let canvasMod: typeof import("./chart-canvas.js") | undefined;
+const loadCanvas = () => import("./chart-canvas.js").then((module) => (canvasMod = module));
+let lateMod: typeof import("./chart-late.js") | undefined;
+/** Thrown by `ctx.canvas()` before its chunk is in: the draw is dropped and runs again once it is. */
+const NEED_CANVAS = Symbol();
+
 const isVirtual = (marks: DrawResult["marks"]): marks is VirtualMarks =>
   !!marks && "count" in marks;
 
@@ -210,10 +216,12 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
    * the element (read its attributes, e.g. `orientation`). Applied to the inner drawing part, never to
    * the host, and re-read on every draw.
    */
-  static defaultHeight: number | ((element: never) => number) = DEFAULT_HEIGHT;
+  static defaultHeight: number | ((element: HTMLElement) => number) = DEFAULT_HEIGHT;
+  /** Set on a chart that calls `ctx.canvas()`: its chunk is fetched with the first draw, so that draw is not repeated. */
+  static canvas = false;
 
-  /** Series ids hidden before the first draw (attribute `initial-hidden`, a JSON array). Seeds silently: no `chart-series`. */
-  initialHidden: readonly string[] | undefined;
+  /** Series ids hidden before the first draw (attribute `initial-hidden`, a JSON array). Seeds once, silently: no `chart-series`. */
+  declare initialHidden: readonly string[] | undefined;
   /** Property forms of the matching attributes. */
   valueFormat: ValueFormat | undefined;
   palette: readonly string[] | undefined;
@@ -238,9 +246,9 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   #measured = 0;
   #natural = 0;
   #themeVersion = 0;
-  #themed = false;
-  #unwatch: (() => void) | undefined;
-  #naturalPasses = 0;
+  #unwatch: Promise<() => void> | undefined;
+  #wait: Promise<unknown> | undefined;
+  #seed: 0 | 1 | 2 | undefined;
   #result: DrawResult | undefined;
   #revision = 0;
   #snapshot: { revision: number; value: ChartSnapshot | null } | undefined;
@@ -363,13 +371,16 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
    * the revision stays, the table does not sync and no `chart-data` fires. `"size"` re-lays out.
    */
   requestDraw(kind: "data" | "size" | "transient" = "data"): void {
-    if (kind !== "size") this.#naturalPasses = 0;
     if (kind === "data") this.#dirty = true;
     else if (kind === "transient") this.#transient = true;
     if (!this.#frame && this.isConnected)
-      this.#frame = requestAnimationFrame(() =>
-        formatter ? this.#run() : loadFormat().then(() => this.#frame && this.#run()),
-      );
+      this.#frame = requestAnimationFrame(() => {
+        const wait = this.#wait;
+        this.#wait = undefined;
+        if (wait || !formatter)
+          Promise.all([wait, loadFormat()]).then(() => this.#frame && this.#run());
+        else this.#run();
+      });
   }
 
   connectedCallback(): void {
@@ -380,13 +391,11 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       this.getAttribute("touch-action") ?? (this.constructor as typeof ChartElement).touchAction;
     for (const type of WAKE) this.drawing.addEventListener(type, this.#onWake);
     this.#syncFill();
-    if (!this.#result) {
-      try {
-        const raw = this.getAttribute("initial-hidden");
-        for (const id of this.initialHidden ?? JSON.parse(raw || "[]")) this.#hidden.add(`${id}`);
-      } catch {}
-    }
-    if ((this.constructor as typeof ChartElement).themeAware || this.#themed) this.#watchTheme();
+    const own = this.constructor as typeof ChartElement;
+    this.#seed ??= this.initialHidden || this.hasAttribute("initial-hidden") ? 1 : 0;
+    if (this.#seed === 1) this.#wait = import("./chart-late.js").then((m) => (lateMod = m));
+    if (own.canvas) this.#wait = Promise.all([this.#wait, loadCanvas()]);
+    if (own.themeAware || this.#unwatch) this.#watchTheme();
     this.#width = Math.floor(this.drawing.getBoundingClientRect().width);
     this.#observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
@@ -408,8 +417,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     cancelAnimationFrame(this.#frame);
     this.#frame = 0;
     this.#observer?.disconnect();
-    this.#unwatch?.();
-    this.#unwatch = undefined;
+    this.#unwatch?.then((stop) => stop());
     for (const type of WAKE) this.drawing.removeEventListener(type, this.#onWake);
     this.#interact?.detach();
     this.#interact = undefined;
@@ -425,7 +433,6 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   attributeChangedCallback(name: string): void {
     if (!this.isConnected) return;
     if (name === "height") this.#syncFill();
-    this.#naturalPasses = 0;
     this.requestDraw(name === "height" || name === "aspect-ratio" ? "size" : "data");
   }
 
@@ -440,11 +447,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (ratio > 0) return Math.max(1, Math.round(width / ratio));
     if (Number(attr) > 0) return Number(attr);
     const base = (this.constructor as typeof ChartElement).defaultHeight;
-    return (
-      this.#natural ||
-      (typeof base === "function" ? (base as (e: ChartElement) => number)(this) : base) ||
-      DEFAULT_HEIGHT
-    );
+    return this.#natural || (typeof base === "function" ? base(this) : base) || DEFAULT_HEIGHT;
   }
 
   /** Loading and empty: the previous result is gone, the SVG object is kept for the next `enter`. */
@@ -478,56 +481,20 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
 
   /** Loads the shared theme observer on demand: only canvas or color-caching charts pay for it. */
   #watchTheme(): void {
-    this.#themed = true;
-    import("./chart-theme.js").then(({ watchTheme }) => {
-      if (!this.isConnected || this.#unwatch) return;
-      this.#unwatch = watchTheme(this, () => {
+    this.#unwatch = loadCanvas().then((module) =>
+      module.bindTheme(this, () => {
         this.#themeVersion++;
         this.requestDraw("transient");
-      });
-    });
+      }),
+    );
   }
 
-  #canvasContext(width: number, height: number): CanvasRenderingContext2D {
-    this.#canvasUsed = true;
-    if (!this.#themed) this.#watchTheme();
-    this.#canvas ??= document.createElement("canvas");
-    const canvas = this.#canvas;
-    canvas.dataset.uiPart = "canvas";
-    canvas.setAttribute("aria-hidden", "true");
-    canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
-    const scale = devicePixelRatio || 1;
-    // Assigning the size clears the bitmap.
-    canvas.width = Math.round(width * scale);
-    canvas.height = Math.round(height * scale);
-    if (!canvas.isConnected) this.drawing.prepend(canvas);
-    this.#watchDpr();
-    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    context.setTransform(scale, 0, 0, scale, 0, 0);
-    return context;
-  }
-
-  /** A window dragged to a screen with another pixel ratio, or a browser zoom, redraws the canvas layer sharp. */
-  #watchDpr(): void {
-    if (this.#dpr) return;
-    const stop = new AbortController();
-    this.#dpr = stop;
-    const arm = () => {
-      matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener(
-        "change",
-        () => {
-          if (stop.signal.aborted) return;
-          this.requestDraw("size");
-          arm();
-        },
-        { once: true, signal: stop.signal },
-      );
-    };
-    arm();
-  }
-
-  #run(): void {
+  #run(again = false): void {
     this.#frame = 0;
+    if (this.#seed === 1 && lateMod) {
+      lateMod.seed(this, this.#hidden);
+      this.#seed = 2;
+    }
     const fill = this.hasAttribute("data-fill");
     const height = this.#height(this.#width);
     if (!fill) this.drawing.style.height = `${height}px`;
@@ -572,38 +539,55 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#canvasUsed = false;
     this.#stateKind = undefined;
     const motion = this.getAttribute("animate") !== "off" && !this.reduced;
-    const result = this.draw({
-      svg: root,
-      width,
-      height,
-      phase,
-      previous: this.#result,
-      locale: this.locale,
-      timeZone: this.timeZone,
-      format,
-      animate: phase === "enter" && motion,
-      motion,
-      transient,
-      themeVersion: this.#themeVersion,
-      hover: this.#interact?.info()?.index ?? null,
-      color: (index, override) =>
-        override ?? palette?.[index % palette.length] ?? seriesColor(index),
-      retain: () => {
-        this.#retain = true;
-      },
-      canvas: () => this.#canvasContext(width, height),
-    });
+    let result: DrawResult | undefined;
+    try {
+      result = this.draw({
+        svg: root,
+        width,
+        height,
+        phase,
+        previous: this.#result,
+        locale: this.locale,
+        timeZone: this.timeZone,
+        format,
+        animate: phase === "enter" && motion,
+        motion,
+        transient,
+        themeVersion: this.#themeVersion,
+        hover: this.#interact?.info()?.index ?? null,
+        color: (index, override) =>
+          override ?? palette?.[index % palette.length] ?? seriesColor(index),
+        retain: () => {
+          this.#retain = true;
+        },
+        canvas: () => {
+          if (!canvasMod) throw NEED_CANVAS;
+          this.#canvasUsed = true;
+          if (!this.#unwatch) this.#watchTheme();
+          const [canvas, context] = canvasMod.layer(this.drawing, this.#canvas, width, height);
+          this.#canvas = canvas;
+          this.#dpr ??= canvasMod.watchDpr(this);
+          return context;
+        },
+      });
+    } catch (error) {
+      if (error !== NEED_CANVAS) throw error;
+      this.#busy = false;
+      loadCanvas().then(() => this.requestDraw("size"));
+      return;
+    }
+    // The content decided its own height: lay out again, once, in this frame, so it never paints at the wrong one.
+    this.#natural = Math.round(result?.naturalHeight || 0);
+    if (!again && this.#height(width) !== height) {
+      this.#run(true);
+      return;
+    }
     if (!this.#canvasUsed) this.#canvas?.remove();
     const dataChanged = this.#dirty || phase === "enter";
     if (dataChanged) this.#revision++;
-    const previous = this.#result;
     this.#result = result;
-    const remap = this.#remapper(previous, result);
-    if (remap) {
-      this.#active = remap(this.#active);
-      if (focused >= 0) focused = remap(focused);
-    }
-    this.#settleNatural(result?.naturalHeight, height);
+    const map = this.#interact?.remap(result);
+    if (map && focused >= 0) focused = map(focused);
     this.#mount(root, result);
     if (!this.#setup) {
       this.#setup = new AbortController();
@@ -612,30 +596,16 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (hadFocus && !drawing.contains(document.activeElement))
       this.#interact?.restoreFocus(focused);
     this.#busy = false;
-    if (remap) this.#interact?.remap(remap);
+    if (this.#seed === 2) {
+      this.#seed = 0;
+      if (lateMod?.settle(this, this.#hidden)) this.requestDraw();
+    }
     this.#interact?.refresh();
     if (dataChanged) {
       this.#dirty = false;
       this.#syncTable();
       emit(this, CHART_EVENT.data, { revision: this.#revision });
     }
-  }
-
-  /** Adopts `DrawResult.naturalHeight` and re-lays out; two passes in a row at most, so it cannot loop. */
-  #settleNatural(wanted: number | undefined, height: number): void {
-    const fixed = this.hasAttribute("height") || this.hasAttribute("aspect-ratio");
-    this.#natural = fixed ? 0 : Math.round(wanted || 0);
-    if (this.#natural && this.#natural !== height && this.#naturalPasses++ < 2)
-      this.requestDraw("size");
-  }
-
-  /** Old mark index to new mark index by `markKey`, or undefined when either draw has no keys. */
-  #remapper(a: DrawResult | undefined, b: DrawResult | undefined) {
-    if (!a?.markKey || !b?.markKey) return undefined;
-    const marks = b.marks;
-    const count = !marks ? 0 : isVirtual(marks) ? marks.count : marks.length;
-    const at = new Map(Array.from({ length: count }, (_, i) => [b.markKey?.(i), i]));
-    return (i: number) => at.get(a.markKey?.(i)) ?? i;
   }
 
   #attrPalette(): string[] | undefined {

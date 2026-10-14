@@ -62,4 +62,34 @@ describe("chart natural height", () => {
     expect(sizing.draws).toBe(draws);
     expect(heightOf(el)).toBe(140);
   });
+
+  it("paints its first frame at the natural height, never at the default first", async () => {
+    sizing.draws = 0;
+    const seen: string[] = [];
+    const host = mount(
+      '<div style="width:200px"><ui-test-natural natural="140"></ui-test-natural></div>',
+    );
+    const el = host.firstElementChild?.firstElementChild as HTMLElement;
+    const drawing = el.querySelector("[data-ui-part=drawing]") as HTMLElement;
+    new MutationObserver(() => seen.push(drawing.style.height)).observe(drawing, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
+    await settle();
+    expect(seen.every((h) => h === "140px")).toBe(true);
+    expect(seen.length).toBeGreaterThan(0);
+  });
+
+  it("falls back to the default when the natural height is removed", async () => {
+    const el = await chart('natural="140"');
+    expect(heightOf(el)).toBe(140);
+    el.removeAttribute("natural");
+    await settle();
+    expect(heightOf(el)).toBe(60);
+  });
+
+  it("treats an invalid height or aspect-ratio as unset", async () => {
+    expect(heightOf(await chart('height="abc" natural="140"'))).toBe(140);
+    expect(heightOf(await chart('aspect-ratio="0" natural="140"'))).toBe(140);
+  });
 });

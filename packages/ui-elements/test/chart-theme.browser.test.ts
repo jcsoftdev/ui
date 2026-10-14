@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { themeWatchers } from "../src/internal/chart-theme.ts";
+import { themeWatchers } from "../src/internal/chart-canvas.ts";
 import { defineTestCanvas } from "./chart-fixture.ts";
 import { frame, mount, wait } from "./setup.ts";
 

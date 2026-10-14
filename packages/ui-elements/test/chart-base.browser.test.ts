@@ -761,9 +761,11 @@ describe("chart tooltip", () => {
     const c = await chart("", "<ui-chart-tooltip></ui-chart-tooltip>", 520);
     await awake(c);
     const tip = c.querySelector("ui-chart-tooltip") as HTMLElement;
+    sweep(c, 10);
+    await wait(250);
     const side = tip.dataset.side;
-    let x = 0;
-    for (; x <= 519 && tip.dataset.side === side; x += 4) {
+    expect(side).toBeTruthy();
+    for (let x = 10; x <= 519 && tip.dataset.side === side; x += 4) {
       sweep(c, x);
       await frame();
     }

@@ -45,8 +45,12 @@ export interface Interact {
   reset(): void;
   /** A redraw replaced the focused mark: give focus to its successor, silently. */
   restoreFocus(index: number): void;
-  /** A redraw reordered the marks: move the pinned and keyboard-hovered index to the same entity, silently. */
-  remap(map: (index: number) => number): void;
+  /**
+   * Called after every draw: when marks have keys, moves the pinned mark, the keyboard hover and the
+   * tab stop to the same entity, and returns the old-to-new index map (-1: gone). Keys are read now,
+   * right after the draw, so a `markKey` closing over mutable state still sees this draw's data.
+   */
+  remap(result: DrawResult | undefined): ((index: number) => number) | undefined;
   info(): HoverInfo | null;
   selected(): number | null;
   select(index: number | null, source: HoverSource): void;
@@ -95,6 +99,18 @@ export function attach(api: InteractApi): Interact {
   let activeEl: Element | null = null;
   let selectedEl: Element | null = null;
   let dimmed: string | null = null;
+
+  let keys: string[] | undefined;
+  const keysOf = (result: DrawResult | undefined) => {
+    const key = result?.markKey;
+    const marks = result?.marks;
+    if (!key || !result) return undefined;
+    const count = !marks ? 0 : "count" in marks ? marks.count : marks.length;
+    const list = Array.from({ length: count }, (_, i) => key.call(result, i));
+    if (new Set(list).size < count) console.warn("markKey(): keys must be unique per mark.");
+    return list;
+  };
+  keys = keysOf(api.result());
 
   const dim = () => {
     for (const node of api.svg()?.querySelectorAll<SVGElement>("[data-series]") ?? [])
@@ -405,11 +421,26 @@ export function attach(api: InteractApi): Interact {
       publish();
       if (api.virtual() && api.proxy() === document.activeElement) renderOption(api.active);
     },
-    remap(map) {
-      if (selected !== null) selected = map(selected);
+    remap(result) {
+      const before = keys;
+      keys = keysOf(result);
+      if (!before || !keys) return undefined;
+      const at = new Map(keys.map((key, i) => [key, i]));
+      const map = (i: number) => at.get(before[i] as string) ?? -1;
+      if (selected !== null) {
+        selected = map(selected);
+        if (selected < 0) {
+          selected = null;
+          emit(host, CHART_EVENT.select, null);
+        }
+      }
       if (hoverIndex >= 0 && hoverSource !== "pointer") hoverIndex = map(hoverIndex);
+      const active = map(api.active);
+      if (active >= 0) api.active = active;
+      return map;
     },
     reset() {
+      keys = undefined;
       hoverIndex = -1;
       if (selected !== null) {
         selected = null;

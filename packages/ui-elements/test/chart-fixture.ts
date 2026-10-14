@@ -57,6 +57,7 @@ export const lastDraw = () => ({ animate: log.animate.at(-1) });
  * side the tooltip prefers.
  */
 class TestBars extends ChartElement {
+  static override canvas = true;
   static override observedAttributes = [
     ...CHART_ATTRIBUTES,
     "rows",
@@ -435,7 +436,10 @@ class TestKeyed extends ChartElement {
         title: "k",
         categoryHeader: "k",
         categories: names,
-        series: [{ id: "hid", name: "Hid", color: "red", values: names.map(() => 1), text: names }],
+        series: [
+          { id: "hid", name: "Hid", color: "red", values: names.map(() => 1), text: names },
+          { id: "other", name: "Other", color: "blue", values: names.map(() => 2), text: names },
+        ],
       }),
     };
   }

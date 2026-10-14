@@ -23,6 +23,7 @@ type Keyed = HTMLElement & {
   select(i: number | null): void;
   requestDraw(): void;
   isHidden(id: string): boolean;
+  toggleSeries(id: string): void;
 };
 const rects = (c: HTMLElement) => [...c.querySelectorAll("rect")];
 
@@ -48,6 +49,23 @@ describe("markKey", () => {
     expect(rects(c).map((r) => r.getAttribute("tabindex"))).toEqual(["-1", "-1", "-1", "0"]); // the tab stop was on "a"
     expect(selects).toEqual([{ index: 1, category: 1 }]);
   });
+
+  it("clears the pin, without re-pinning another mark, when its key vanishes; keys may read mutable state", async () => {
+    const host = mount(
+      '<div style="width:200px"><ui-test-keyed height="60" id="k"></ui-test-keyed></div>',
+    );
+    const c = host.querySelector("#k") as Keyed;
+    await settle();
+    const selects: unknown[] = [];
+    c.addEventListener("chart-select", (e) => selects.push((e as CustomEvent).detail));
+    c.select(1);
+    await settle();
+    c.names = ["a", "c", "d", "e"];
+    c.requestDraw();
+    await settle();
+    expect(c.selected).toBeNull();
+    expect(selects).toEqual([{ index: 1, category: 1 }, null]);
+  });
 });
 
 describe("initial-hidden", () => {
@@ -62,5 +80,26 @@ describe("initial-hidden", () => {
     expect(c.isHidden("hid")).toBe(true);
     expect(c.drawn).toEqual(["no-hid"]);
     expect(events).toEqual([]);
+  });
+
+  it("ignores a JSON string, keeps at least one series visible and seeds only once", async () => {
+    const make = async (attr: string) => {
+      const host = mount(
+        `<div style="width:200px"><ui-test-keyed height="60" initial-hidden='${attr}'></ui-test-keyed></div>`,
+      );
+      await settle();
+      return host.querySelector("ui-test-keyed") as Keyed;
+    };
+    expect((await make('"hid"')).isHidden("hid")).toBe(false);
+    const all = await make('["hid","other"]');
+    expect(all.isHidden("hid") && all.isHidden("other")).toBe(false);
+    const c = await make('["hid"]');
+    c.toggleSeries("hid"); // shown again by the user
+    await settle();
+    const parent = c.parentElement as HTMLElement;
+    parent.removeChild(c);
+    parent.append(c);
+    await settle();
+    expect(c.isHidden("hid")).toBe(false);
   });
 });
