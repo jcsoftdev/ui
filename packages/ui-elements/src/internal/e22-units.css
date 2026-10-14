@@ -1,0 +1,39 @@
+[data-unit-chart] [data-cat] {
+  transition: opacity 160ms ease-out;
+}
+[data-unit-chart]:has([data-cat][data-active]) [data-cat]:not([data-active]),
+[data-unit-chart] [data-cat][data-dim] {
+  opacity: 0.24;
+}
+[data-unit-chart] [data-cat]:focus {
+  outline: none;
+}
+[data-unit-chart] [data-cat]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 4px;
+}
+[data-unit-chart] [data-unit-label] {
+  fill: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+[data-unit-chart] [data-unit-value] {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+[data-unit-chart] > [data-ui-part="unit-key"] {
+  display: flex;
+  align-items: center;
+  order: 5;
+  gap: 6px;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-unit-chart] [data-cat] {
+    transition: none;
+  }
+}
