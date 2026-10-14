@@ -4,23 +4,9 @@
  * map loader. The geometry itself comes from `@jcsoftdev/ui-core/geo/*`; the topology data is never
  * imported here, only through `loadGeoMap`, so each map is fetched when an element asks for it.
  */
-import {
-  type ColorRange,
-  type ColorStop,
-  divergingColor,
-  normalize,
-  rangeColor,
-  rangeIndex,
-  type ScaleColors,
-  sequentialColor,
-} from "@jcsoftdev/ui-core/chart/color-scale";
-import {
-  type AreaGeometry,
-  type GeoFeature,
-  type GeoMap,
-  topologyFeatures,
-} from "@jcsoftdev/ui-core/geo/topology";
-import type { LegendItem, LegendScale } from "./chart-protocol.js";
+import type { GeoMap } from "@jcsoftdev/ui-core/geo/topology";
+import type { Kit } from "./e24-kit.js";
+import type { KeyItem } from "./e24-key.js";
 
 /** A value for one region, matched by region id or name (accents and case ignored). */
 export interface RegionDatum {
@@ -88,108 +74,6 @@ export const finiteValues = (data: readonly RegionDatum[]): number[] =>
     typeof datum.value === "number" && Number.isFinite(datum.value) ? [datum.value] : [],
   );
 
-export interface ColorScaleOptions {
-  scale?: "sequential" | "diverging";
-  /** Fixed `[min, max]`; the data extent by default. */
-  domain?: readonly [number, number];
-  /** Neutral value of a diverging scale. */
-  center?: number;
-  colors?: ScaleColors;
-  /** Stepped coloring: each value takes the color of the range that contains it. */
-  ranges?: readonly ColorRange[];
-}
-
-export interface RegionScale {
-  domain: readonly [number, number];
-  /** `null` when the value falls outside every range. */
-  color(value: number): ColorStop | null;
-}
-
-/** Builds the color function of a choropleth or tile map from its options and every finite value. */
-export function colorScale(
-  values: readonly number[],
-  { scale = "sequential", domain, center = 0, colors, ranges }: ColorScaleOptions,
-): RegionScale {
-  let min = Number.POSITIVE_INFINITY;
-  let max = Number.NEGATIVE_INFINITY;
-  for (const value of values) {
-    if (value < min) min = value;
-    if (value > max) max = value;
-  }
-  if (!Number.isFinite(min)) {
-    min = 0;
-    max = 1;
-  }
-  const extent: readonly [number, number] = domain ?? [
-    scale === "sequential" ? Math.min(0, min) : min,
-    max,
-  ];
-  if (ranges && ranges.length > 0)
-    return {
-      domain: extent,
-      color: (value) => {
-        const index = rangeIndex(value, ranges);
-        return index < 0 ? null : rangeColor(ranges[index] as ColorRange, index, ranges.length);
-      },
-    };
-  return {
-    domain: extent,
-    color: (value) =>
-      scale === "diverging"
-        ? divergingColor(value, extent, center, colors)
-        : sequentialColor(value, extent, colors),
-  };
-}
-
-/**
- * What the legend shows for the scale: a gradient (`scale`) for a continuous one, one item per
- * range (`legend`) for a stepped one. The diverging gradient puts its neutral color at `center`.
- */
-export function legendFor(
-  options: ColorScaleOptions,
-  domain: readonly [number, number],
-  format: (value: number) => string,
-  label: string,
-): { scale?: LegendScale; legend?: LegendItem[] } {
-  const { scale = "sequential", center = 0, colors, ranges } = options;
-  if (ranges && ranges.length > 0)
-    return {
-      legend: ranges.map((range, index) => ({
-        id: `range-${index}`,
-        name: range.label,
-        color: rangeColor(range, index, ranges.length).color,
-        shape: "square",
-      })),
-    };
-  const [min, max] = domain;
-  if (scale === "diverging") {
-    const at = (value: number) => divergingColor(value, domain, center, colors).color;
-    const middle = Math.min(1, Math.max(0, normalize(center, min, max)));
-    return {
-      scale: {
-        min,
-        max,
-        colors: [at(min), at(center), at(max)],
-        stops: [0, middle, 1],
-        format,
-        label,
-      },
-    };
-  }
-  return {
-    scale: {
-      min,
-      max,
-      colors: [
-        sequentialColor(min, domain, colors).color,
-        sequentialColor(max, domain, colors).color,
-      ],
-      format,
-      label,
-    },
-  };
-}
-
 /** Index of the range a legend id (`range-N`) stands for, or -1. */
 export const rangeOfId = (id: string): number =>
   id.startsWith("range-") ? Number(id.slice(6)) : -1;
@@ -241,8 +125,9 @@ const loading = new Map<string, Promise<GeoMap | null>>();
 
 /**
  * The map a `map` attribute or property names. A `GeoMap` object resolves at once. A bundled id
- * loads its topology through ui-core's `geo/maps` (a dynamic import of a JSON chunk), once per id,
- * so a page pays only for the maps it shows. An unknown id resolves to `null`.
+ * loads its topology through ui-core's `geo/maps` (a dynamic import of a module per map), once per
+ * id, so a page pays only for the maps it shows. An unknown id resolves to `null`. A failed fetch
+ * rejects and is forgotten, so the next call retries instead of replaying the failure.
  */
 export function loadGeoMap(source: MapSource): Promise<GeoMap | null> {
   if (!source) return Promise.resolve(null);
@@ -255,108 +140,57 @@ export function loadGeoMap(source: MapSource): Promise<GeoMap | null> {
         : null,
     );
     loading.set(source, pending);
+    pending.catch(() => {
+      if (loading.get(source) === pending) loading.delete(source);
+    });
   }
   return pending;
 }
 
-// ---- hit testing on the sphere ---------------------------------------------------------------
+let kitLoad: Promise<Kit> | undefined;
 
-function ringContains(
-  ring: ReadonlyArray<readonly [number, number]>,
-  x: number,
-  y: number,
-): boolean {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
-    const [xi, yi] = ring[i] as readonly [number, number];
-    const [xj, yj] = ring[j] as readonly [number, number];
-    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+/** The lazy half of the map family (projection, paths, topology decoding, color scale), once. */
+export function loadKit(): Promise<Kit> {
+  if (!kitLoad) {
+    kitLoad = import("./e24-kit.js");
+    kitLoad.catch(() => {
+      kitLoad = undefined;
+    });
   }
-  return inside;
+  return kitLoad;
 }
 
-/** Whether `[lon, lat]` lies inside an area (holes excluded). */
-export function geometryContains(geometry: AreaGeometry, lon: number, lat: number): boolean {
-  const polygons = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
-  return polygons.some(
-    ([outer, ...holes]) =>
-      !!outer &&
-      ringContains(outer, lon, lat) &&
-      !holes.some((hole) => ringContains(hole, lon, lat)),
-  );
-}
-
-/** Colors a CSS expression (a `var()`, a `color-mix()`) resolves to, for painting on a canvas. */
-export function createColorResolver(host: HTMLElement): {
-  resolve(css: string): string;
-  clear(): void;
-} {
-  const cache = new Map<string, string>();
-  let probe: HTMLSpanElement | undefined;
-  return {
-    resolve(css) {
-      let value = cache.get(css);
-      if (value) return value;
-      probe ??= document.createElement("span");
-      probe.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;color:${css}`;
-      host.append(probe);
-      value = getComputedStyle(probe).color;
-      probe.remove();
-      cache.set(css, value);
-      return value;
-    },
-    clear: () => cache.clear(),
-  };
-}
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 /**
- * Gives an element an `aspect-ratio` that suits its content when the author set neither `height`
- * nor `aspect-ratio`, and steps aside the moment the author sets either (a tall country gets a tall
- * box, a world map a wide one). The ratio is width / height, kept within `[0.6, 2.5]`.
+ * Sizes the drawing to its content when the author set neither `height` nor `aspect-ratio`, the way
+ * React does: `height = clamp(220, width * ratio, 640)`. It writes the `height` attribute (the base
+ * has no other hook for a computed height) and steps aside the moment the author sets either.
  */
 export class AutoAspect {
   readonly #host: HTMLElement;
-  #auto = false;
-  #setting = false;
+  /** Height / width of the content. */
+  #ratio: number | null = null;
+  /** The `height` value written last: any other value on the host is the author's. */
+  #written: string | null = null;
   constructor(host: HTMLElement) {
     this.#host = host;
   }
-  apply(ratio: number | null): void {
+  /** Sets the content ratio (height / width) and sizes to `width` (the host's width by default). */
+  set(ratio: number | null, width = this.#host.clientWidth): void {
+    this.#ratio = ratio;
+    this.fit(width);
+  }
+  fit(width: number): void {
     const host = this.#host;
-    if (
-      ratio === null ||
-      host.hasAttribute("height") ||
-      (host.hasAttribute("aspect-ratio") && !this.#auto)
-    )
-      return;
-    this.#setting = true;
-    host.setAttribute("aspect-ratio", Math.min(2.5, Math.max(0.6, ratio)).toFixed(2));
-    this.#setting = false;
-    this.#auto = true;
+    if (this.#ratio === null || !width || host.hasAttribute("aspect-ratio")) return;
+    const current = host.getAttribute("height");
+    if (current !== null && current !== this.#written) return;
+    const next = `${Math.round(clamp(width * this.#ratio, 220, 640))}`;
+    if (current === next) return;
+    this.#written = next;
+    host.setAttribute("height", next);
   }
-  /** Call from `attributeChangedCallback`. */
-  changed(name: string): void {
-    if (this.#setting || !this.#auto) return;
-    if (name === "aspect-ratio") this.#auto = false;
-    else if (name === "height" && this.#host.hasAttribute("height")) {
-      this.#setting = true;
-      this.#host.removeAttribute("aspect-ratio");
-      this.#setting = false;
-      this.#auto = false;
-    }
-  }
-}
-
-const featureCache = new WeakMap<GeoMap, GeoFeature[]>();
-
-/** Decoded features of a map, once per map object. */
-export function mapFeatures(map: GeoMap): GeoFeature[] {
-  let features = featureCache.get(map);
-  if (!features) {
-    features = topologyFeatures(map.topology, map.object);
-    featureCache.set(map, features);
-  }
-  return features;
 }
 
 // ---- markers and routes ----------------------------------------------------------------------
@@ -417,4 +251,19 @@ export function resolveRoutes(
       ? [{ route, name: route.name ?? `${from.name} → ${to.name}`, from: from.at, to: to.at }]
       : [];
   });
+}
+
+const keySignatures = new WeakMap<HTMLElement, string>();
+
+/**
+ * Shows `items` (the "No data" swatch, the globe's marker categories) under the chart's drawing, or
+ * removes the key when there are none. The drawing code lives in a chunk fetched on first use.
+ */
+export function setGeoKey(host: HTMLElement, items: readonly KeyItem[]): void {
+  const signature = JSON.stringify(items);
+  if (keySignatures.get(host) === signature) return;
+  const had = keySignatures.has(host);
+  keySignatures.set(host, signature);
+  if (items.length === 0 && !had) return;
+  import("./e24-key.js").then(({ renderKey }) => renderKey(host, items));
 }

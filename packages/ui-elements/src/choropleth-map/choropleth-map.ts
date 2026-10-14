@@ -3,20 +3,17 @@ import {
   rangeIndex,
   type ScaleColors,
 } from "@jcsoftdev/ui-core/chart/color-scale";
-import { createRegionIndex } from "@jcsoftdev/ui-core/geo/match";
 import { type DefineOptions, defineElement } from "../internal/base.js";
 import type { DrawContext, DrawResult } from "../internal/chart-base.js";
 import {
-  colorScale,
   directionalNav,
   finiteValues,
-  legendFor,
   type RegionDatum,
   type RegionInfo,
+  setGeoKey,
 } from "../internal/e24-geo.js";
+import { NO_DATA_FILL } from "../internal/e24-scale.js";
 import { GeoMapElement } from "../internal/e24-map.js";
-
-const NO_DATA_FILL = "var(--surface-2)";
 
 interface Model {
   values: Array<number | null>;
@@ -25,6 +22,8 @@ interface Model {
   texts: Array<string | null> | undefined;
   finite: number;
   domain: readonly [number, number];
+  /** Some region shows the "No data" fill: it has no value, or its range is hidden. */
+  missing: boolean;
 }
 
 /**
@@ -104,7 +103,7 @@ export class UiChoroplethMap extends GeoMapElement {
   }
 
   protected override isEmpty(): boolean {
-    return finiteValues(this.data).length === 0;
+    return super.isEmpty() || finiteValues(this.data).length === 0;
   }
 
   protected override draw(ctx: DrawContext): DrawResult | undefined {
@@ -129,11 +128,15 @@ export class UiChoroplethMap extends GeoMapElement {
     }));
     const elements = this.paintRegions(stage, model.fills);
     this.paintLabels(stage, model.texts);
-    const map = this.loadedMap;
     const options = this.#scaleOptions();
+    setGeoKey(
+      this,
+      model.missing
+        ? [{ id: "no-data", name: noData, color: NO_DATA_FILL, outline: true }]
+        : [],
+    );
     return {
-      label: map?.name,
-      summary: `${map?.name ?? ""}: ${features.length} regions, ${model.finite} with data${
+      summary: `${features.length} regions, ${model.finite} with data${
         model.finite ? ` (${ctx.format(model.domain[0])} to ${ctx.format(model.domain[1])})` : ""
       }`,
       marks: elements.map((el, index) => ({ el, label: `${model.names[index]}: ${text(index)}` })),
@@ -155,7 +158,7 @@ export class UiChoroplethMap extends GeoMapElement {
       nav: (index, intent) => directionalNav(anchors, index, intent),
       maxHoverRows: 1,
       snapshot: () => ({
-        title: this.getAttribute("label") || map?.name || "",
+        title: this.getAttribute("label") || this.resolvedLabels.chart,
         categoryHeader: labels.region,
         categories: model.names,
         series: [
@@ -167,7 +170,7 @@ export class UiChoroplethMap extends GeoMapElement {
             text: model.values.map((_, index) => text(index)),
           },
         ],
-        ...legendFor(options, model.domain, ctx.format, name),
+        ...this.kit.legendFor(options, model.domain, ctx.format, name),
       }),
     };
   }
@@ -184,6 +187,7 @@ export class UiChoroplethMap extends GeoMapElement {
   }
 
   #build(ctx: DrawContext, features: ReadonlyArray<{ id: string; name: string }>): Model {
+    const { colorScale, createRegionIndex } = this.kit;
     const lookup = createRegionIndex(this.#data);
     const scale = colorScale(finiteValues(this.#data), this.#scaleOptions());
     const values = features.map((feature) => {
@@ -215,6 +219,7 @@ export class UiChoroplethMap extends GeoMapElement {
       texts,
       finite: values.filter((value) => value != null).length,
       domain: scale.domain,
+      missing: fills.some((fill) => fill === NO_DATA_FILL),
     };
   }
 }

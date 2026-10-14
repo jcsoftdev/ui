@@ -29,6 +29,8 @@ export interface ViewHost {
   motion(): boolean;
   /** The drawing size and the map's pixel box at zoom 1. */
   frame(): { width: number; height: number; content: Box; maxZoom: number };
+  /** One finger scrolls the page until the map is engaged (tapped or focused): tells the host to switch `touch-action`. */
+  engage(on: boolean): void;
 }
 
 const MOVE_THRESHOLD = 4;
@@ -42,6 +44,8 @@ export class MapViewer {
   /** True from the moment a press moved until the next press: the click after a drag is ignored. */
   dragged = false;
   gestures = true;
+  /** Tapped or focused: a single touch pans. Before that, one finger scrolls the page and two pan and pinch. */
+  engaged = false;
   wheelZoom: "always" | "modifier" = "modifier";
   readonly #host: ViewHost;
   readonly #pointers = new Map<number, { x: number; y: number }>();
@@ -131,9 +135,30 @@ export class MapViewer {
     return this.view.k > DEFAULT_LIMITS.minZoom + 1e-6;
   }
 
-  /** Wires the gestures to the SVG; everything is removed with `signal`. */
-  attach(root: SVGSVGElement, signal: AbortSignal): void {
+  #engage(on: boolean): void {
+    if (this.engaged === on) return;
+    this.engaged = on;
+    this.#host.engage(on);
+  }
+
+  /** Wires the gestures to the SVG (and the focus to `scope`); everything is removed with `signal`. */
+  attach(root: SVGSVGElement, signal: AbortSignal, scope: HTMLElement = root.parentElement ?? document.body): void {
     const opts = { signal };
+    scope.addEventListener("focusin", () => this.#engage(true), opts);
+    scope.addEventListener(
+      "focusout",
+      (event) => {
+        if (!scope.contains(event.relatedTarget as Node | null)) this.#engage(false);
+      },
+      opts,
+    );
+    document.addEventListener(
+      "pointerdown",
+      (event) => {
+        if (this.engaged && !scope.contains(event.target as Node | null)) this.#engage(false);
+      },
+      opts,
+    );
     const local = (event: { clientX: number; clientY: number }) => {
       const box = root.getBoundingClientRect();
       return { x: event.clientX - box.left, y: event.clientY - box.top };
@@ -163,6 +188,8 @@ export class MapViewer {
         const g = this.#gesture;
         if (!this.gestures || !g || !this.#pointers.has(event.pointerId)) return;
         this.#pointers.set(event.pointerId, local(event));
+        // A single finger belongs to the page's scroll until the map is engaged.
+        if (event.pointerType === "touch" && !this.engaged && this.#pointers.size < 2) return;
         const c = center();
         if (
           !g.moved &&
@@ -193,6 +220,7 @@ export class MapViewer {
     const release = (event: PointerEvent) => {
       // The press moved: the drag owns it, so the base must not read it as a tap or a click.
       if (this.#gesture?.moved) event.preventDefault();
+      else if (event.pointerType === "touch" && event.type === "pointerup") this.#engage(true);
       this.#pointers.delete(event.pointerId);
       if (this.#pointers.size === 0) {
         this.#gesture = undefined;

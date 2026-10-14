@@ -1,20 +1,17 @@
 /**
  * `GeoMapElement`: the stage shared by `ui-choropleth-map` and `ui-bubble-map`. It loads the map
- * (a bundled id or a `GeoMap` object, lazily), fits it to the drawing with ui-core's projections,
- * owns zoom and pan, the region layer, the region labels and the zoom buttons. A subclass supplies
- * the fills, the overlay and `hit`/`hover`/`snapshot`.
+ * (a bundled id or a `GeoMap` object, lazily) together with the projection and scale code, fits it to
+ * the drawing, and owns the region layer, the region labels, zoom and pan. A subclass supplies the
+ * fills, the overlay and `hit`/`hover`/`snapshot`.
+ *
+ * Weight: this module is the eager shell. The topology, `e24-kit` (projection, paths, color scale)
+ * and `e24-view` (gestures and zoom buttons, fetched on the first pointer, focus or wheel) are
+ * separate chunks, so a page that never touches the map never pays for them.
  */
-import {
-  type Bounds,
-  featurePositions,
-  geometryExtent,
-  geometryPath,
-  labelAnchor,
-} from "@jcsoftdev/ui-core/geo/path";
-import { fitProjection, type Projection } from "@jcsoftdev/ui-core/geo/projection";
+import type { Bounds } from "@jcsoftdev/ui-core/geo/path";
 import type { GeoFeature, GeoMap, ProjectionKind } from "@jcsoftdev/ui-core/geo/topology";
-import { type MapView, toScreen } from "@jcsoftdev/ui-core/geo/view";
-import { adoptStyles, rootOf } from "./base.js";
+import type { MapView } from "@jcsoftdev/ui-core/geo/view";
+import { adoptStyles, emit, rootOf } from "./base.js";
 import {
   CHART_ATTRIBUTES,
   CHART_EVENT,
@@ -30,90 +27,16 @@ import {
   AutoAspect,
   DEFAULT_MAP_LABELS,
   loadGeoMap,
+  loadKit,
   type MapLabels,
   type MapSource,
-  mapFeatures,
 } from "./e24-geo.js";
-import { MapViewer, type ZoomControls, zoomControls } from "./e24-view.js";
+import type { Kit, MapGeometry } from "./e24-kit.js";
+import type { MapViewer, ZoomControls } from "./e24-view.js";
 
-/** A map fitted to a box: everything the drawing layers need, in zoom-1 pixels. */
-export interface MapGeometry {
-  features: GeoFeature[];
-  projection: Projection;
-  paths: string[];
-  /** Label position of each region. */
-  anchors: Array<[number, number]>;
-  /** Pixel box of each region. */
-  boxes: Bounds[];
-  /** Pixel box of the whole map. */
-  bounds: Bounds;
-}
+export type { MapGeometry };
 
-const anchorCache = new WeakMap<GeoFeature[], Array<readonly [number, number]>>();
-
-const lonLatAnchors = (features: GeoFeature[]) => {
-  let anchors = anchorCache.get(features);
-  if (!anchors) {
-    anchors = features.map((feature) => labelAnchor(feature.geometry));
-    anchorCache.set(features, anchors);
-  }
-  return anchors;
-};
-
-/** Height / width of `map` once projected: a tall country gets a tall box and a world map a wide one. */
-export function mapAspect(map: GeoMap, kind: ProjectionKind = map.projection): number {
-  const positions = featurePositions(mapFeatures(map));
-  const fitted = fitProjection(kind, positions, 1000, 1000, { padding: 0 });
-  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const [lon, lat] of positions) {
-    const [x, y] = fitted.project(lon, lat);
-    if (x < x0) x0 = x;
-    if (x > x1) x1 = x;
-    if (y < y0) y0 = y;
-    if (y > y1) y1 = y;
-  }
-  return (y1 - y0) / Math.max(1, x1 - x0);
-}
-
-function fitGeometry(
-  map: GeoMap,
-  width: number,
-  height: number,
-  kind: ProjectionKind,
-): MapGeometry {
-  const features = mapFeatures(map);
-  const projection = fitProjection(kind, featurePositions(features), width, height, { padding: 8 });
-  const project = projection.project;
-  const boxes = features.map((feature): Bounds => {
-    const [west, south, east, north] = geometryExtent(feature.geometry);
-    const corners = [
-      project(west, south),
-      project(east, south),
-      project(east, north),
-      project(west, north),
-    ];
-    const xs = corners.map((corner) => corner[0]);
-    const ys = corners.map((corner) => corner[1]);
-    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
-  });
-  const bounds = boxes.reduce<Bounds>(
-    (all, box) => [
-      Math.min(all[0], box[0]),
-      Math.min(all[1], box[1]),
-      Math.max(all[2], box[2]),
-      Math.max(all[3], box[3]),
-    ],
-    [Infinity, Infinity, -Infinity, -Infinity],
-  );
-  return {
-    features,
-    projection,
-    paths: features.map((feature) => geometryPath(feature.geometry, project, 1)),
-    anchors: lonLatAnchors(features).map(([lon, lat]) => project(lon, lat)),
-    boxes,
-    bounds,
-  };
-}
+const IDENTITY: MapView = { k: 1, x: 0, y: 0 };
 
 /** What `GeoMapElement.stage()` hands a subclass for one draw. */
 export interface Stage {
@@ -137,7 +60,15 @@ const textWidth = (text: string) => text.length * 6.6;
  * Base of the zoomable map elements. Attributes: `map` (a bundled id, `world` or `peru`),
  * `projection`, `zoomable="off"`, `wheel-zoom` (`modifier` default, or `always`), `max-zoom` (16),
  * plus the chart attributes. Property: `map` also takes a `GeoMap` object, `labels`.
- * The topology of a bundled map is a separate chunk, fetched when the element first needs it.
+ *
+ * Loading: the topology of a bundled map is a separate chunk, fetched with the projection and scale
+ * code when the element connects (and again on a `map` change). If it fails, or the id is unknown,
+ * the element shows the empty state, fires `map-error` (`detail`: `{ map, reason }`) and draws no map
+ * at all; setting `map` again, or changing the attribute, retries.
+ *
+ * Touch: the drawing keeps `touch-action: pan-y`. One finger scrolls the page; two fingers pan and
+ * pinch; a tap (or focus) engages the map and then one finger pans too, until focus or a tap goes
+ * elsewhere. The wheel zooms with Ctrl or Cmd (or always, with `wheel-zoom="always"`).
  */
 export abstract class GeoMapElement extends ChartElement {
   static override observedAttributes = [
@@ -151,18 +82,15 @@ export abstract class GeoMapElement extends ChartElement {
   static override retain = true;
   declare labels: Partial<ChartLabels> & Partial<MapLabels>;
 
-  protected readonly viewer = new MapViewer({
-    request: () => this.requestDraw("transient"),
-    motion: () => this.getAttribute("animate") !== "off" && !this.reduced,
-    frame: () => ({
-      width: this.#width,
-      height: this.#height,
-      content: this.#geo?.bounds ?? [0, 0, this.#width, this.#height],
-      maxZoom: this.maxZoom,
-    }),
-  });
+  #viewer: MapViewer | undefined;
+  #viewerLoad: Promise<void> | undefined;
+  #root: SVGSVGElement | undefined;
+  #signal: AbortSignal | undefined;
+  #wired = false;
   #source: MapSource;
   #map: GeoMap | null = null;
+  #kit: Kit | undefined;
+  #failed = false;
   #token = 0;
   #width = 0;
   #height = 0;
@@ -180,6 +108,7 @@ export abstract class GeoMapElement extends ChartElement {
     | undefined;
   #controls: ZoomControls | undefined;
   readonly #aspect = new AutoAspect(this);
+  #listeners: AbortController | undefined;
 
   get map(): MapSource {
     return this.#source ?? this.getAttribute("map");
@@ -191,6 +120,18 @@ export abstract class GeoMapElement extends ChartElement {
   /** The map being drawn, once loaded. */
   get loadedMap(): GeoMap | null {
     return this.#map;
+  }
+  /** The lazy projection and scale code; only available from the draw that follows the load. */
+  protected get kit(): Kit {
+    return this.#kit as Kit;
+  }
+  /** The zoom of the current view; the identity until the viewer has loaded. */
+  protected get viewState(): MapView {
+    return this.#viewer?.view ?? IDENTITY;
+  }
+  /** A pan is in progress: hover is ignored. */
+  protected get panning(): boolean {
+    return this.#viewer?.dragging ?? false;
   }
   get mapLabels(): MapLabels {
     return { ...DEFAULT_MAP_LABELS, ...this.labels };
@@ -218,7 +159,7 @@ export abstract class GeoMapElement extends ChartElement {
       this.onHover(info);
       if (info?.source === "keyboard") {
         const anchor = this.revealAt(info.index);
-        if (anchor && this.zoomable) this.viewer.reveal(anchor[0], anchor[1]);
+        if (anchor && this.zoomable) this.#viewer?.reveal(anchor[0], anchor[1]);
       }
     });
   }
@@ -227,52 +168,132 @@ export abstract class GeoMapElement extends ChartElement {
     this.dataset.uiGeo = "";
     adoptStyles(rootOf(this), css);
     super.connectedCallback();
-    this.#syncGestures();
+    this.toggleAttribute("data-zoomable", this.zoomable);
+    this.#listeners = new AbortController();
+    const { signal } = this.#listeners;
+    // The gestures and the zoom buttons are fetched by the first sign of a person.
+    const wake = () => this.#wake();
+    for (const type of ["pointerenter", "pointerdown", "focusin", "wheel"])
+      this.drawing.addEventListener(type, wake, { signal, passive: true });
+    if (matchMedia("(pointer: coarse)").matches)
+      (window.requestIdleCallback ?? setTimeout)(() => this.#wake());
     this.#load();
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.viewer.stop();
+    this.#listeners?.abort();
+    this.#viewer?.stop();
+    this.#wired = false;
+    // Gestures were wired to a signal the base has now aborted.
+    this.#signal = undefined;
+    this.#root = undefined;
   }
 
   override attributeChangedCallback(name: string): void {
-    this.#aspect.changed(name);
     if (name === "map" && this.#source === undefined && this.isConnected) this.#load();
+    if (name === "projection" && this.#map) this.#aspect.set(this.#aspectOf(this.#map));
     if (name === "zoomable" || name === "wheel-zoom") this.#syncGestures();
     super.attributeChangedCallback(name);
   }
 
+  #aspectOf(map: GeoMap): number | null {
+    return this.#kit ? this.#kit.mapAspect(map, this.projectionKind) : null;
+  }
+
   #syncGestures(): void {
-    this.viewer.gestures = this.zoomable;
-    this.viewer.wheelZoom = this.getAttribute("wheel-zoom") === "always" ? "always" : "modifier";
-    this.drawing.style.touchAction = this.zoomable ? "none" : "pan-y";
     this.toggleAttribute("data-zoomable", this.zoomable);
+    const viewer = this.#viewer;
+    if (!viewer) return;
+    viewer.gestures = this.zoomable;
+    viewer.wheelZoom = this.getAttribute("wheel-zoom") === "always" ? "always" : "modifier";
+    if (!this.zoomable) viewer.stop();
+    if (this.#controls) this.#controls.root.hidden = !this.zoomable;
+  }
+
+  #wake(): void {
+    if (this.#viewerLoad || !this.zoomable) return;
+    this.#viewerLoad = import("./e24-view.js")
+      .then(({ MapViewer, zoomControls }) => {
+        this.#viewer = new MapViewer({
+          request: () => this.requestDraw("transient"),
+          motion: () => this.getAttribute("animate") !== "off" && !this.reduced,
+          frame: () => ({
+            width: this.#width,
+            height: this.#height,
+            content: this.#geo?.bounds ?? [0, 0, this.#width, this.#height],
+            maxZoom: this.maxZoom,
+          }),
+          engage: (on) => {
+            if (!this.hasAttribute("touch-action"))
+              this.drawing.style.touchAction = on ? "none" : "pan-y";
+          },
+        });
+        this.#controls = zoomControls(this.#viewer);
+        this.#syncGestures();
+        this.#wire();
+        this.requestDraw("transient");
+      })
+      .catch(() => {
+        this.#viewerLoad = undefined;
+      });
+  }
+
+  #wire(): void {
+    if (this.#wired || !this.#viewer || !this.#root || !this.#signal) return;
+    this.#wired = true;
+    this.#viewer.attach(this.#root, this.#signal, this.drawing);
   }
 
   #load(): void {
     const source = this.#source ?? this.getAttribute("map");
     const token = ++this.#token;
     if (!source) {
-      this.#loaded(null);
+      this.#loaded(null, null);
       return;
     }
     if (typeof source !== "string") {
-      this.#loaded(source);
+      loadKit().then(
+        (kit) => token === this.#token && this.#loaded(source, kit),
+        () => token === this.#token && this.#failure(source, "load"),
+      );
       return;
     }
-    loadGeoMap(source).then((map) => {
-      if (token === this.#token) this.#loaded(map);
-    });
+    Promise.all([loadGeoMap(source), loadKit()]).then(
+      ([map, kit]) => {
+        if (token !== this.#token) return;
+        if (map) this.#loaded(map, kit);
+        else this.#failure(source, "unknown");
+      },
+      () => {
+        if (token === this.#token) this.#failure(source, "load");
+      },
+    );
   }
 
-  #loaded(map: GeoMap | null): void {
-    this.#map = map;
+  #failure(source: MapSource, reason: "load" | "unknown"): void {
+    this.#failed = true;
+    this.#map = null;
+    this.#geo = undefined;
     this.#geoKey = "";
-    this.viewer.reset();
-    this.#aspect.apply(map ? 1 / mapAspect(map, this.projectionKind) : null);
+    this.onMap(null);
+    emit(this, "map-error", { map: typeof source === "string" ? source : null, reason });
+    this.requestDraw();
+  }
+
+  #loaded(map: GeoMap | null, kit: Kit | null): void {
+    this.#failed = false;
+    this.#map = map;
+    this.#kit = kit ?? this.#kit;
+    this.#geoKey = "";
+    this.#viewer?.reset();
+    this.#aspect.set(map ? this.#aspectOf(map) : null);
     this.onMap(map);
     this.requestDraw();
+  }
+
+  protected override isEmpty(): boolean {
+    return this.#failed;
   }
 
   /** The map arrived (or was cleared). */
@@ -294,13 +315,15 @@ export abstract class GeoMapElement extends ChartElement {
   }
 
   protected override setup(root: SVGSVGElement, signal: AbortSignal): void {
-    this.viewer.attach(root, signal);
+    this.#root = root;
+    this.#signal = signal;
+    this.#wire();
     this.drawing.addEventListener(
       "keydown",
       (event) => {
-        if (!this.zoomable || event.defaultPrevented) return;
+        if (!this.zoomable || event.defaultPrevented || !this.#viewer) return;
         if (event.target instanceof HTMLButtonElement) return;
-        if (this.viewer.key(event)) event.preventDefault();
+        if (this.#viewer.key(event)) event.preventDefault();
       },
       { signal },
     );
@@ -312,15 +335,17 @@ export abstract class GeoMapElement extends ChartElement {
    */
   protected stage(ctx: DrawContext): Stage | null {
     const map = this.#map;
-    if (!map) return null;
+    const kit = this.#kit;
+    if (!map || !kit) return null;
     this.#width = ctx.width;
     this.#height = ctx.height;
-    const kind = this.projectionKind ?? map.projection;
-    const key = `${map.id}|${ctx.width}|${ctx.height}|${kind}`;
+    this.#aspect.fit(ctx.width);
+    const mapKind = this.projectionKind ?? map.projection;
+    const key = `${map.id}|${ctx.width}|${ctx.height}|${mapKind}`;
     if (key !== this.#geoKey) {
-      this.#geo = fitGeometry(map, ctx.width, ctx.height, kind);
+      this.#geo = kit.fitGeometry(map, ctx.width, ctx.height, mapKind);
       this.#geoKey = key;
-      this.viewer.reset();
+      this.#viewer?.reset();
     }
     const geo = this.#geo as MapGeometry;
     if (ctx.phase === "enter" || !this.#layers || this.#layers.root !== ctx.svg) {
@@ -335,20 +360,21 @@ export abstract class GeoMapElement extends ChartElement {
       this.#layers = { root: ctx.svg, regions, scene, hl, overlay, labels };
     }
     const layers = this.#layers;
-    const view = this.viewer.view;
+    const view = this.viewState;
     const transform = `translate(${view.x} ${view.y}) scale(${view.k})`;
     layers.regions.setAttribute("transform", transform);
     layers.scene.setAttribute("transform", transform);
-    this.toggleAttribute("data-dragging", this.viewer.dragging);
-    this.#controls ??= zoomControls(this.viewer);
+    this.toggleAttribute("data-dragging", this.panning);
     const controls = this.#controls;
-    controls.sync(this.mapLabels, this.viewer);
-    controls.root.hidden = !this.zoomable;
-    // The base puts the SVG into the drawing after this draw returns, so the buttons go in after it.
-    queueMicrotask(() => {
-      if (this.isConnected && controls.root.parentNode !== this.drawing)
-        this.drawing.append(controls.root);
-    });
+    if (controls && this.#viewer) {
+      controls.sync(this.mapLabels, this.#viewer);
+      controls.root.hidden = !this.zoomable;
+      // The base puts the SVG into the drawing after this draw returns, so the buttons go in after it.
+      queueMicrotask(() => {
+        if (this.isConnected && controls.root.parentNode !== this.drawing)
+          this.drawing.append(controls.root);
+      });
+    }
     return {
       geo,
       view,
@@ -358,7 +384,7 @@ export abstract class GeoMapElement extends ChartElement {
       scene: layers.scene,
       overlay: layers.overlay,
       labels: layers.labels,
-      toScreen: (x, y) => toScreen(view, x, y),
+      toScreen: (x, y) => [x * view.k + view.x, y * view.k + view.y],
     };
   }
 
@@ -426,7 +452,7 @@ export abstract class GeoMapElement extends ChartElement {
 
   /** Region under the pointer, from the element the pointer is on. */
   protected regionOf(target: Element | null): number {
-    if (this.viewer.dragging) return -1;
+    if (this.panning) return -1;
     const hit = target?.closest?.("path[data-i]");
     return hit ? Number((hit as SVGElement).dataset.i) : -1;
   }
