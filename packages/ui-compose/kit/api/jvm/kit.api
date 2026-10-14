@@ -1589,6 +1589,12 @@ public final class com/jcsoftdev/ui/navigation/TabsKt {
 	public static final fun Tabs-au3_HiA (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/navigation/TabsColors;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/overlays/ComposableSingletons$FullScreenModalKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/ComposableSingletons$FullScreenModalKt;
+	public fun <init> ()V
+	public final fun getLambda$1557053709$kit ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class com/jcsoftdev/ui/overlays/ComposableSingletons$OverlayHostKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/ComposableSingletons$OverlayHostKt;
 	public fun <init> ()V
@@ -1623,6 +1629,31 @@ public final class com/jcsoftdev/ui/overlays/DialogDefaults {
 
 public final class com/jcsoftdev/ui/overlays/DialogKt {
 	public static final fun Dialog-g4P7Ru4 (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;ZZLjava/lang/String;Lcom/jcsoftdev/ui/overlays/DialogColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/primitives/OverlayMotion;FLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getDivider-0d7_KjU ()J
+	public final fun getTitle-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/FullScreenModalDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getHeaderHeight-D9Ej5fM ()F
+	public final fun getHeaderPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getMotion ()Lcom/jcsoftdev/ui/primitives/OverlayMotion;
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalKt {
+	public static final fun FullScreenModal-uYRUAWA (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/primitives/OverlayMotion;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/overlays/MenuColors {
