@@ -3,9 +3,13 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { userEvent } from "vitest/browser";
 import { defineAreaChart } from "../src/area-chart/area-chart.ts";
 import { defineBarChart } from "../src/bar-chart/bar-chart.ts";
+import { defineBubbleChart } from "../src/bubble-chart/bubble-chart.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineComboChart } from "../src/combo-chart/combo-chart.ts";
+import { defineHistogram } from "../src/histogram/histogram.ts";
 import { defineLineChart } from "../src/line-chart/line-chart.ts";
+import { defineLollipopChart } from "../src/lollipop-chart/lollipop-chart.ts";
+import { defineScatterChart } from "../src/scatter-chart/scatter-chart.ts";
 import { frame, mount, wait } from "./setup.ts";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,6 +20,14 @@ const cartesian = (el: any) => {
     { id: "b", name: "Beards", data: [5, 8, 4, 12, 15, 22] },
   ];
 };
+const points = (size: boolean) => (n: number, k: number) =>
+  Array.from({ length: n }, (_, i) => ({
+    x: i * 10 + k,
+    y: ((i * 37 + k * 11) % 90) + 5,
+    ...(size ? { size: 10 + ((i * 13) % 50) } : {}),
+    label: `P${i}`,
+  }));
+
 interface Case {
   tag: string;
   define: () => string;
@@ -39,6 +51,44 @@ const CASES: Case[] = [
         { id: "a", name: "Cuts", type: "column", data: [12, 18, 9, 22, 30, 41] },
         { id: "b", name: "Rate", type: "line", axis: "right", data: [5, 8, 4, 12, 15, 22] },
       ];
+    },
+    sweep: "x",
+  },
+  {
+    tag: "ui-scatter-chart",
+    define: defineScatterChart,
+    fill: (el) => {
+      el.series = [{ id: "a", name: "Visits", points: points(false)(24, 0) }];
+    },
+    sweep: "x",
+    scatter: true,
+  },
+  {
+    tag: "ui-bubble-chart",
+    define: defineBubbleChart,
+    fill: (el) => {
+      el.series = [{ id: "a", name: "Shops", points: points(true)(12, 0) }];
+    },
+    sweep: "x",
+    scatter: true,
+  },
+  {
+    tag: "ui-histogram",
+    define: defineHistogram,
+    attrs: 'bins="6"',
+    fill: (el) => {
+      el.series = [
+        { id: "a", name: "Wait", values: Array.from({ length: 80 }, (_, i) => (i * 7) % 41) },
+      ];
+    },
+    sweep: "x",
+  },
+  {
+    tag: "ui-lollipop-chart",
+    define: defineLollipopChart,
+    attrs: 'orientation="vertical"',
+    fill: (el) => {
+      el.items = DAYS.map((label, i) => ({ label, value: [12, 18, 9, 22, 30, 41][i] }));
     },
     sweep: "x",
   },
@@ -351,4 +401,147 @@ describe("e17 specifics", () => {
     );
     expect(zooms.length).toBe(1);
   });
+
+  it("scatter brush: a drag emits a rectangle and does not pin a point", async () => {
+    const spec = CASES.find((c) => c.tag === "ui-scatter-chart") as Case;
+    const c = await make({ ...spec, attrs: "brush" });
+    const rects: unknown[] = [];
+    c.addEventListener("brush", (e) => rects.push((e as CustomEvent).detail));
+    await awake(c, spec);
+    await vi.waitFor(
+      () => {
+        // the brush code loads lazily: repeat the drag until it answers
+        pointer(c, "pointerdown", 80, 60);
+        for (let i = 1; i <= 6; i++) pointer(c, "pointermove", 80 + i * 30, 60 + i * 20);
+        pointer(c, "pointerup", 260, 180);
+        expect(rects.length).toBeGreaterThan(0);
+      },
+      { timeout: 4000, interval: 80 },
+    );
+    expect(c.selected).toBeNull();
+  });
+
+  it("histogram: explode toggle swaps bars for dots", async () => {
+    const spec = CASES.find((c) => c.tag === "ui-histogram") as Case;
+    const c = await make({ ...spec, attrs: 'bins="6" explode-toggle' });
+    expect(c.querySelectorAll("svg path[style*=fill]").length).toBeGreaterThan(0);
+    (c.querySelector('button[data-e17="reset"]') as HTMLButtonElement).click();
+    await settle();
+    expect(c.hasAttribute("exploded")).toBe(true);
+    expect(c.querySelectorAll("svg circle").length).toBeGreaterThan(10);
+  });
+
+  const canvasScatter = async (n: number, apart = false) => {
+    const host = mount(
+      `<div style="width:600px"><ui-scatter-chart label="big" height="300" locale="en-US" renderer="canvas" ${apart ? "" : "trend-line"}></ui-scatter-chart></div>`,
+    );
+    const el = host.querySelector("ui-scatter-chart") as any;
+    // apart: series a fills the left half, b the right half, so dimming one is measurable.
+    const mk = (k: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        x: ((i * 17 + k) % 5000) + (apart && k > 1 ? 5000 : 0),
+        y: (i * 31 + k * 3) % 9973,
+      }));
+    el.series = [
+      { id: "a", name: "A", points: mk(1) },
+      { id: "b", name: "B", points: mk(5) },
+    ];
+    await vi.waitFor(() => expect(el.querySelector("canvas")).not.toBeNull(), { timeout: 20000 });
+    return el;
+  };
+  const alphaSum = (canvas: HTMLCanvasElement) => {
+    const data = canvas.getContext("2d")?.getImageData(0, 0, canvas.width, canvas.height).data;
+    let total = 0;
+    for (let i = 3; i < (data?.length ?? 0); i += 4) total += data?.[i] ?? 0;
+    return total;
+  };
+
+  it("regression: a canvas scatter chart with 200k points per series renders (no spread over the data)", async () => {
+    const errors: unknown[] = [];
+    const onError = (e: ErrorEvent) => errors.push(e.error ?? e.message);
+    window.addEventListener("error", onError);
+    const el = await canvasScatter(200_000);
+    window.removeEventListener("error", onError);
+    expect(errors).toEqual([]);
+    expect(el.querySelectorAll("svg *").length).toBeLessThan(200);
+  });
+
+  it("canvas scatter: the legend highlight dims the other series on the canvas", async () => {
+    const el = await canvasScatter(400, true);
+    const canvas = el.querySelector("canvas") as HTMLCanvasElement;
+    const full = alphaSum(canvas);
+    el.dispatchEvent(
+      new CustomEvent("chart-series", { detail: { highlight: "b" }, bubbles: true }),
+    );
+    await vi.waitFor(() => expect(alphaSum(el.querySelector("canvas"))).toBeLessThan(full * 0.9));
+    el.dispatchEvent(
+      new CustomEvent("chart-series", { detail: { highlight: null }, bubbles: true }),
+    );
+    await vi.waitFor(() =>
+      expect(alphaSum(el.querySelector("canvas"))).toBeGreaterThan(full * 0.97),
+    );
+  });
+
+  it("canvas scatter: a theme change repaints the canvas", async () => {
+    const el = await canvasScatter(400);
+    const fill = vi.spyOn(CanvasRenderingContext2D.prototype, "fill");
+    await settle();
+    fill.mockClear();
+    document.documentElement.setAttribute("data-theme", "dark");
+    await vi.waitFor(() => expect(fill).toHaveBeenCalled(), { timeout: 3000 });
+    document.documentElement.removeAttribute("data-theme");
+    fill.mockRestore();
+  });
+
+  it("attributes: junk values fall back instead of becoming NaN", async () => {
+    const host = mount(
+      '<div style="width:520px"><ui-scatter-chart label="j" height="240" locale="en-US" jitter="abc" seed="" radius="x" size-range="a,b"></ui-scatter-chart></div>',
+    );
+    const el = host.querySelector("ui-scatter-chart") as any;
+    el.series = [{ id: "a", name: "A", points: points(false)(10, 0) }];
+    await settle();
+    const circles = [...el.querySelectorAll("[data-point]")];
+    expect(circles.length).toBe(10);
+    for (const c of circles) {
+      expect(Number.isFinite(Number(c.getAttribute("cx")))).toBe(true);
+      expect(Number(c.getAttribute("r"))).toBe(5);
+    }
+  });
+
+  it("regression: a lollipop chart with 150k items renders", async () => {
+    const errors: unknown[] = [];
+    const onError = (e: ErrorEvent) => errors.push(e.error ?? e.message);
+    window.addEventListener("error", onError);
+    const host = mount(
+      '<div style="width:600px"><ui-lollipop-chart label="big" height="300" locale="en-US" orientation="vertical" data-labels="off"></ui-lollipop-chart></div>',
+    );
+    const el = host.querySelector("ui-lollipop-chart") as any;
+    el.items = Array.from({ length: 150_000 }, (_, i) => ({
+      label: `i${i}`,
+      value: (i * 7) % 101,
+    }));
+    await vi.waitFor(
+      () => expect(el.querySelectorAll("svg g[data-dense] path").length).toBeGreaterThan(0),
+      {
+        timeout: 30000,
+      },
+    );
+    window.removeEventListener("error", onError);
+    expect(errors).toEqual([]);
+    // Merged paths, not a group per item.
+    expect(el.querySelectorAll("svg *").length).toBeLessThan(200);
+  }, 40000);
+
+  it("regression: a histogram of 300k values renders", async () => {
+    const host = mount(
+      '<div style="width:600px"><ui-histogram label="big" height="260" locale="en-US"></ui-histogram></div>',
+    );
+    const el = host.querySelector("ui-histogram") as any;
+    el.series = [
+      { id: "a", name: "A", values: Array.from({ length: 300_000 }, (_, i) => (i * 13) % 997) },
+    ];
+    await vi.waitFor(() => expect(el.querySelectorAll("svg path").length).toBeGreaterThan(3), {
+      timeout: 15000,
+    });
+  }, 25000);
 });

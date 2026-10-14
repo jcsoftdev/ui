@@ -15,6 +15,7 @@ import {
 import { axisBottom, axisCategoryLeft, axisLeft, gridLines } from "../internal/e17-axes.js";
 import css from "../internal/e17-chart.css.js";
 import type { ValueAxisOptions } from "../internal/e17-layout.js";
+import { cssColor, maxOf, minOf, numberAttr } from "../internal/e17-util.js";
 
 export type { ValueAxisOptions };
 
@@ -26,6 +27,15 @@ export interface LollipopItem {
   color?: string;
 }
 
+/** Above this many items the sticks and dots are merged paths, not elements. */
+const DENSE = 1500;
+/** At most ~600 candidate tick indices so thinTicks never sees a huge array. */
+function sampledIndices(count: number): number[] {
+  const step = Math.max(1, Math.ceil(count / 600));
+  const out: number[] = [];
+  for (let i = 0; i < count; i += step) out.push(i);
+  return out;
+}
 const PAD = { top: 12, bottom: 28 };
 
 const fitLabel = (text: string, room: number): string => {
@@ -95,11 +105,13 @@ export class UiLollipopChart extends ChartElement {
     });
   }
 
+  // TODO(chart-base natural height): a horizontal list should be max(120, rows * 34 + 40) px tall like
+  // React; the base has no hook for it yet, so for long lists set `height`.
   protected override draw(context: DrawContext): DrawResult {
     const { svg: root, width, height } = context;
     const vertical = this.getAttribute("orientation") === "vertical";
     const sort = this.getAttribute("sort");
-    const dot = Number(this.getAttribute("dot-size")) || 7;
+    const dot = Math.max(1, numberAttr(this.getAttribute("dot-size"), 7));
     this.#dot = dot;
     const dataLabels = this.getAttribute("data-labels") !== "off";
     const grid = this.getAttribute("grid") !== "off";
@@ -108,7 +120,7 @@ export class UiLollipopChart extends ChartElement {
     const locale = context.locale;
     const fmt = resolveFormat(this.valueFormat, { locale, currency });
     const axisFmt = resolveAxisFormat(this.yAxis.format ?? this.valueFormat, { locale, currency });
-    const color = context.color(0, this.getAttribute("color") ?? undefined);
+    const color = context.color(0, cssColor(this.getAttribute("color")));
     const rows = [...this.#items];
     if (sort === "desc") rows.sort((a, b) => b.value - a.value);
     else if (sort === "asc") rows.sort((a, b) => a.value - b.value);
@@ -116,8 +128,8 @@ export class UiLollipopChart extends ChartElement {
     const values = rows.map((row) => row.value);
     const bound = (b: ValueAxisOptions["min"], value: number) =>
       typeof b === "function" ? b(value) : (b ?? value);
-    let lo = bound(this.yAxis.min, Math.min(0, ...values));
-    let hi = bound(this.yAxis.max, Math.max(0, ...values));
+    let lo = bound(this.yAxis.min, Math.min(0, minOf(values, 0)));
+    let hi = bound(this.yAxis.max, Math.max(0, maxOf(values, 0)));
     if (lo === hi) hi = lo + 1;
     if (lo > hi) [lo, hi] = [hi, lo];
     const top = PAD.top + (vertical && dataLabels ? 8 : 0);
@@ -135,7 +147,7 @@ export class UiLollipopChart extends ChartElement {
         tickCount: this.yAxis.tickCount ?? Math.max(2, Math.round(innerHeight / 52)),
       });
       ticks = scale.ticks().map((t) => ({ key: t, position: scale.map(t), label: axisFmt(t) }));
-      left = Math.max(...ticks.map((t) => estimateTextWidth(t.label)), 16) + 14;
+      left = Math.max(maxOf(ticks.map((t) => estimateTextWidth(t.label))), 16) + 14;
       innerWidth = Math.max(40, width - left - 10);
       band = bandScale({
         count: rows.length,
@@ -144,17 +156,16 @@ export class UiLollipopChart extends ChartElement {
         paddingOuter: 0.15,
       });
       catTicks = thinTicks(
-        rows.map((row, i) => ({
-          key: row.id ?? row.label,
-          position: band.center(i),
-          label: row.label,
-        })),
+        sampledIndices(rows.length).map((i) => {
+          const row = rows[i] as LollipopItem;
+          return { key: row.id ?? row.label, position: band.center(i), label: row.label };
+        }),
         12,
       );
     } else {
       left = Math.min(
         width * 0.36,
-        Math.max(48, ...rows.map((row) => estimateTextWidth(row.label, 12))) + 14,
+        Math.max(48, maxOf(rows.map((row) => estimateTextWidth(row.label, 12)))) + 14,
       );
       innerWidth = Math.max(40, width - left - (dataLabels ? 56 : 14));
       scale = linearScale({
@@ -169,11 +180,14 @@ export class UiLollipopChart extends ChartElement {
         paddingInner: 0.2,
         paddingOuter: 0.1,
       });
-      catTicks = rows.map((row, i) => ({
-        key: row.id ?? row.label,
-        position: band.center(i),
-        label: fitLabel(row.label, left - 14),
-      }));
+      catTicks = sampledIndices(rows.length).map((i) => {
+        const row = rows[i] as LollipopItem;
+        return {
+          key: row.id ?? row.label,
+          position: band.center(i),
+          label: fitLabel(row.label, left - 14),
+        };
+      });
     }
     const zero = scale.map(0);
 
@@ -196,56 +210,97 @@ export class UiLollipopChart extends ChartElement {
 
     const layer = svg("g");
     g.append(layer);
-    const built = join(
-      layer,
-      rows,
-      (row) => row.id ?? row.label,
-      () => svg("g"),
-      (el, row) => {
-        const i = rows.indexOf(row);
-        const fill = context.color(0, row.color ?? this.getAttribute("color") ?? undefined);
+    const rowColor = (row: LollipopItem) =>
+      context.color(0, cssColor(row.color) ?? cssColor(this.getAttribute("color")));
+    const dense = rows.length > DENSE;
+    if (dense) {
+      layer.setAttribute("data-dense", "");
+      // Thousands of items: one stick path and one dot path per color instead of a group per row.
+      const sticks = new Map<string, string[]>();
+      const dots = new Map<string, string[]>();
+      rows.forEach((row, i) => {
+        const fill = rowColor(row);
         const c = band.center(i);
         const end = scale.map(row.value);
-        const negative = row.value < 0;
-        const cx = vertical ? c : end;
-        const cy = vertical ? end : c;
-        el.replaceChildren(
-          svg("line", {
-            "data-stick": "",
-            x1: vertical ? c : zero,
-            x2: cx,
-            y1: vertical ? zero : c,
-            y2: cy,
+        const [x1, y1, x2, y2] = vertical ? [c, zero, c, end] : [zero, c, end, c];
+        const stick = `M${x1.toFixed(1)},${y1.toFixed(1)}L${x2.toFixed(1)},${y2.toFixed(1)}`;
+        const arc = `M${(x2 + dot).toFixed(1)},${y2.toFixed(1)}a${dot},${dot} 0 1 0 ${-2 * dot},0a${dot},${dot} 0 1 0 ${2 * dot},0`;
+        for (const [map, d] of [
+          [sticks, stick],
+          [dots, arc],
+        ] as const) {
+          const list = map.get(fill);
+          if (list) list.push(d);
+          else map.set(fill, [d]);
+        }
+      });
+      for (const [fill, parts] of sticks)
+        layer.append(
+          svg("path", {
+            d: parts.join(""),
+            fill: "none",
             "stroke-width": 2.5,
-            "stroke-linecap": "round",
-            style: `stroke:${fill};transform-box:fill-box;transform-origin:${vertical ? (negative ? "center top" : "center bottom") : negative ? "right center" : "left center"}`,
+            style: `stroke:${fill}`,
           }),
-          svg("circle", {
-            cx,
-            cy,
-            r: dot,
-            "stroke-width": 2,
-            style: `fill:${fill};stroke:var(--surface)`,
-          }),
-          ...(dataLabels
-            ? [
-                svg(
-                  "text",
-                  {
-                    "data-e17": "label",
-                    x: vertical ? cx : cx + (negative ? -(dot + 6) : dot + 6),
-                    y: vertical ? cy + (negative ? dot + 14 : -(dot + 6)) : cy,
-                    dy: vertical ? undefined : "0.34em",
-                    "text-anchor": vertical ? "middle" : negative ? "end" : "start",
-                    "aria-hidden": "true",
-                  },
-                  fmt(row.value),
-                ),
-              ]
-            : []),
         );
-        el.setAttribute("style", "transition:opacity .15s");
-      },
+      for (const [fill, parts] of dots)
+        layer.append(svg("path", { d: parts.join(""), style: `fill:${fill}` }));
+    }
+    const indexOf = new Map(rows.map((row, i) => [row, i]));
+    const built = (
+      dense
+        ? []
+        : join(
+            layer,
+            rows,
+            (row) => row.id ?? row.label,
+            () => svg("g"),
+            (el, row) => {
+              const i = indexOf.get(row) as number;
+              const fill = rowColor(row);
+              const c = band.center(i);
+              const end = scale.map(row.value);
+              const negative = row.value < 0;
+              const cx = vertical ? c : end;
+              const cy = vertical ? end : c;
+              el.replaceChildren(
+                svg("line", {
+                  "data-stick": "",
+                  x1: vertical ? c : zero,
+                  x2: cx,
+                  y1: vertical ? zero : c,
+                  y2: cy,
+                  "stroke-width": 2.5,
+                  "stroke-linecap": "round",
+                  style: `stroke:${fill};transform-box:fill-box;transform-origin:${vertical ? (negative ? "center top" : "center bottom") : negative ? "right center" : "left center"}`,
+                }),
+                svg("circle", {
+                  cx,
+                  cy,
+                  r: dot,
+                  "stroke-width": 2,
+                  style: `fill:${fill};stroke:var(--surface)`,
+                }),
+                ...(dataLabels
+                  ? [
+                      svg(
+                        "text",
+                        {
+                          "data-e17": "label",
+                          x: vertical ? cx : cx + (negative ? -(dot + 6) : dot + 6),
+                          y: vertical ? cy + (negative ? dot + 14 : -(dot + 6)) : cy,
+                          dy: vertical ? undefined : "0.34em",
+                          "text-anchor": vertical ? "middle" : negative ? "end" : "start",
+                          "aria-hidden": "true",
+                        },
+                        fmt(row.value),
+                      ),
+                    ]
+                  : []),
+              );
+              el.setAttribute("style", "transition:opacity .15s");
+            },
+          )
     ) as SVGGElement[];
     this.#rows = built;
     if (context.animate && rows.length <= 200) {
@@ -270,7 +325,7 @@ export class UiLollipopChart extends ChartElement {
     const labelOf = (i: number) =>
       `${(rows[i] as LollipopItem).label}: ${fmt((rows[i] as LollipopItem).value)}`;
     return {
-      summary: `${rows.length} items from ${fmt(Math.min(...values))} to ${fmt(Math.max(...values))}`,
+      summary: `${rows.length} items from ${fmt(minOf(values))} to ${fmt(maxOf(values))}`,
       marks: {
         count: rows.length,
         label: labelOf,
@@ -291,7 +346,7 @@ export class UiLollipopChart extends ChartElement {
               id: "value",
               name: seriesName,
               value: fmt(row.value),
-              color: context.color(0, row.color ?? this.getAttribute("color") ?? undefined),
+              color: context.color(0, cssColor(row.color) ?? cssColor(this.getAttribute("color"))),
               shape: "dot",
             },
           ],

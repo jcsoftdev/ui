@@ -28,6 +28,7 @@ import {
 import { axisBottom, axisLeft, baseline, gridLines } from "./e17-axes.js";
 import css from "./e17-chart.css.js";
 import { createPointIndex, linearRegression, mean, seededRandom } from "./e17-stats.js";
+import { cssColor, maxOf, minOf, numberAttr, numberList } from "./e17-util.js";
 import {
   type DistributionAxisOptions,
   truncateLabel,
@@ -113,7 +114,7 @@ export interface PlacedPoint {
 
 const finite = (point: XYPoint) => Number.isFinite(point.x) && Number.isFinite(point.y);
 const extentOf = (values: number[]): [number, number] | null =>
-  values.length ? [Math.min(...values), Math.max(...values)] : null;
+  values.length ? [minOf(values), maxOf(values)] : null;
 
 /** Shared by the scatter and bubble elements. */
 export abstract class XYElement extends ChartElement {
@@ -164,6 +165,9 @@ export abstract class XYElement extends ChartElement {
   #brushLoad = false;
   #slider: HTMLElement | undefined;
   #live: HTMLElement | undefined;
+  /** Series the legend is pointing at; the canvas layer dims the rest (SVG marks dim by `data-series`). */
+  #dimmed: string | null = null;
+  #themeWatch: { stop(): void } | undefined;
 
   constructor() {
     super();
@@ -173,6 +177,14 @@ export abstract class XYElement extends ChartElement {
     });
     this.addEventListener(CHART_EVENT.data, (event) => {
       if ((event as CustomEvent).detail) this.#restoreOverlays();
+    });
+    this.addEventListener(CHART_EVENT.series, (event) => {
+      const detail = (event as CustomEvent<{ highlight?: string | null }>).detail;
+      if (!detail || !("highlight" in detail)) return;
+      const next = detail.highlight ?? null;
+      if (next === this.#dimmed) return;
+      this.#dimmed = next;
+      if (this.getAttribute("renderer") === "canvas") this.requestDraw("transient");
     });
   }
 
@@ -217,6 +229,8 @@ export abstract class XYElement extends ChartElement {
     this.#brushLoad = false;
     this.#slider?.remove();
     this.#live?.remove();
+    this.#themeWatch?.stop();
+    this.#themeWatch = undefined;
   }
 
   protected override isEmpty(): boolean {
@@ -251,8 +265,8 @@ export abstract class XYElement extends ChartElement {
         : resolveFormat(this.xFormat, { locale, currency });
     const fy = resolveFormat(this.yFormat, { locale, currency });
     const fs = resolveFormat(this.sizeFormat, { locale, currency });
-    const radius = Number(this.getAttribute("radius")) || 5;
-    const sizeRange = (this.getAttribute("size-range") ?? "4,30").split(",").map(Number) as [
+    const radius = Math.max(0.5, numberAttr(this.getAttribute("radius"), 5));
+    const sizeRange = (numberList(this.getAttribute("size-range"), 2) ?? [4, 30]) as [
       number,
       number,
     ];
@@ -262,16 +276,17 @@ export abstract class XYElement extends ChartElement {
     const trend = this.hasAttribute("trend-line");
     const hasImages = this.#series.some((item) => item.points.some((point) => point.image));
     const canvasMode = this.getAttribute("renderer") === "canvas" && !shading && !hasImages;
-    const spread = (this.getAttribute("jitter") ?? "0").split(",").map(Number);
+    const jitterAttr = this.getAttribute("jitter");
+    const spread = numberList(jitterAttr, 2) ?? [numberAttr(jitterAttr, 0)];
     const jx = Math.max(0, spread[0] ?? 0);
     const jy = Math.max(0, spread[1] ?? spread[0] ?? 0);
-    const seed = Number(this.getAttribute("seed") ?? 17);
+    const seed = numberAttr(this.getAttribute("seed"), 17);
 
     const all: Colored[] = this.#series.map((source, index) => ({
       source,
       index,
       id: source.id,
-      color: context.color(index, source.color),
+      color: context.color(index, cssColor(source.color)),
     }));
     const visible = all.filter((item) => !this.isHidden(item.id));
     const xs: number[] = [];
@@ -465,6 +480,8 @@ export abstract class XYElement extends ChartElement {
       points.removeAttribute("clip-path");
       this.#paintCanvas(context, drawOrder, visible, margin, sized);
     } else {
+      this.#themeWatch?.stop();
+      this.#themeWatch = undefined;
       points.setAttribute("clip-path", sized ? "" : `url(#${clipId})`);
       if (sized) points.removeAttribute("clip-path");
       const built = join(
@@ -508,15 +525,17 @@ export abstract class XYElement extends ChartElement {
       "aria-hidden": "true",
       "data-e17": "ring",
     });
-    const fits = (width: number) => width;
-    void fits;
     if (trend)
       for (const item of visible) {
         const clean = item.source.points.filter(finite);
         const fit = linearRegression(clean);
         if (!fit) continue;
-        const lo = Math.min(...clean.map((point) => point.x));
-        const hi = Math.max(...clean.map((point) => point.x));
+        let lo = Number.POSITIVE_INFINITY;
+        let hi = Number.NEGATIVE_INFINITY;
+        for (const point of clean) {
+          if (point.x < lo) lo = point.x;
+          if (point.x > hi) hi = point.x;
+        }
         const [x1, y1, x2, y2] = [
           xScale.map(lo),
           yScale.map(fit.predict(lo)),
@@ -765,23 +784,26 @@ export abstract class XYElement extends ChartElement {
   ): void {
     const g = context.canvas();
     g.translate(margin.left, margin.top);
-    const probe = getComputedStyle(this);
-    const ring = probe.getPropertyValue("--surface").trim() || "#fff";
-    const paint = document.createElement("canvas").getContext("2d") as CanvasRenderingContext2D;
+    // Canvas needs concrete colors: resolve tokens through one probe element per paint.
+    const holder = document.createElement("i");
+    this.append(holder);
     const resolve = (color: string) => {
-      paint.fillStyle = "#000";
-      const holder = document.createElement("i");
       holder.style.color = color;
-      this.append(holder);
-      const value = getComputedStyle(holder).color;
-      holder.remove();
-      return value;
+      return getComputedStyle(holder).color;
     };
+    const ring = resolve("var(--surface)");
+    const bySeries = new Map<string, PlacedPoint[]>();
+    for (const p of points) {
+      const list = bySeries.get(p.series.id);
+      if (list) list.push(p);
+      else bySeries.set(p.series.id, [p]);
+    }
     for (const item of visible) {
-      const mine = points.filter((p) => p.series.id === item.id);
-      if (!mine.length) continue;
+      const mine = bySeries.get(item.id);
+      if (!mine?.length) continue;
       const fill = resolve(item.color);
-      g.globalAlpha = sized ? 0.5 : 0.75;
+      const faded = this.#dimmed !== null && this.#dimmed !== item.id ? 0.2 : 1;
+      g.globalAlpha = (sized ? 0.5 : 0.75) * faded;
       g.fillStyle = fill;
       g.beginPath();
       for (const p of mine) {
@@ -790,13 +812,33 @@ export abstract class XYElement extends ChartElement {
       }
       g.fill();
       if (sized || (mine[0] && mine[0].r >= 3)) {
-        g.globalAlpha = 0.9;
+        g.globalAlpha = 0.9 * faded;
         g.lineWidth = 1;
         g.strokeStyle = sized ? fill : ring;
         g.stroke();
       }
     }
+    holder.remove();
     g.globalAlpha = 1;
+    this.#watchTheme();
+  }
+
+  /** The canvas holds resolved colors, so a theme change must repaint it. */
+  #watchTheme(): void {
+    if (this.#themeWatch) return;
+    const repaint = () => this.requestDraw("transient");
+    const observer = new MutationObserver(repaint);
+    const options = { attributes: true, attributeFilter: ["class", "data-theme", "style"] };
+    observer.observe(document.documentElement, options);
+    if (document.body) observer.observe(document.body, options);
+    const scheme = window.matchMedia("(prefers-color-scheme: dark)");
+    scheme.addEventListener("change", repaint);
+    this.#themeWatch = {
+      stop: () => {
+        observer.disconnect();
+        scheme.removeEventListener("change", repaint);
+      },
+    };
   }
 
   #sizeKey(
@@ -901,7 +943,7 @@ export abstract class XYElement extends ChartElement {
       plot: () => ({ x: margin.left, y: margin.top, width: innerWidth, height: innerHeight }),
       value: this.#brushValue,
       keyTarget: slider,
-      touchDelay: Number(this.getAttribute("touch-delay") ?? TOUCH_DELAY),
+      touchDelay: Math.max(0, numberAttr(this.getAttribute("touch-delay"), TOUCH_DELAY)),
       onDraft: (rect: BrushRect | null) => {
         this.#draft = rect;
         if (rect) speak(rect, false);

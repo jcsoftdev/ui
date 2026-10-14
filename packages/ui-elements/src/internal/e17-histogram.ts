@@ -33,7 +33,9 @@ import {
   sortedFinite,
   standardDeviation,
 } from "./e17-stats.js";
+import { cssColor, numberAttr, numberList } from "./e17-util.js";
 import { type DistributionAxisOptions, xyLayout } from "./e17-xy-layout.js";
+import zoomCss from "./e17-zoom.css.js";
 
 export type { Bin, BinRule, DistributionAxisOptions };
 
@@ -133,6 +135,7 @@ export class UiHistogram extends ChartElement {
 
   override connectedCallback(): void {
     adoptStyles(rootOf(this), css);
+    adoptStyles(rootOf(this), zoomCss);
     super.connectedCallback();
   }
 
@@ -174,22 +177,17 @@ export class UiHistogram extends ChartElement {
     const grid = this.getAttribute("grid") !== "off";
     const binsAttr = this.getAttribute("bins");
     const bins: BinRule | number | undefined =
-      binsAttr == null
-        ? undefined
-        : Number.isFinite(Number(binsAttr))
-          ? Number(binsAttr)
-          : (binsAttr as BinRule);
-    const binWidth = Number(this.getAttribute("bin-width")) || undefined;
-    const domainAttr = this.getAttribute("domain")?.split(",").map(Number);
-    const domain =
-      domainAttr && domainAttr.length === 2 && domainAttr.every(Number.isFinite)
-        ? ([domainAttr[0], domainAttr[1]] as [number, number])
-        : undefined;
+      binsAttr === "auto" || binsAttr === "sturges" || binsAttr === "freedman-diaconis"
+        ? binsAttr
+        : numberAttr(binsAttr, 0) || undefined;
+    const binWidth = numberAttr(this.getAttribute("bin-width"), 0) || undefined;
+    const domainPair = numberList(this.getAttribute("domain"), 2);
+    const domain = domainPair ? ([domainPair[0], domainPair[1]] as [number, number]) : undefined;
 
     const all = this.#series.map((source, index) => ({
       source,
       id: source.id,
-      color: context.color(index, source.color),
+      color: context.color(index, cssColor(source.color)),
     }));
     const visible = all.filter((item) => !this.isHidden(item.id));
     const pooled: number[] = [];
