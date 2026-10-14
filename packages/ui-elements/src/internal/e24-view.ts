@@ -142,7 +142,11 @@ export class MapViewer {
   }
 
   /** Wires the gestures to the SVG (and the focus to `scope`); everything is removed with `signal`. */
-  attach(root: SVGSVGElement, signal: AbortSignal, scope: HTMLElement = root.parentElement ?? document.body): void {
+  attach(
+    root: SVGSVGElement,
+    signal: AbortSignal,
+    scope: HTMLElement = root.parentElement ?? document.body,
+  ): void {
     const opts = { signal };
     scope.addEventListener("focusin", () => this.#engage(true), opts);
     scope.addEventListener(

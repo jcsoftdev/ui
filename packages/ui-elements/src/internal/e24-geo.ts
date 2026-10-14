@@ -5,8 +5,8 @@
  * imported here, only through `loadGeoMap`, so each map is fetched when an element asks for it.
  */
 import type { GeoMap } from "@jcsoftdev/ui-core/geo/topology";
-import type { Kit } from "./e24-kit.js";
 import type { KeyItem } from "./e24-key.js";
+import type { Kit } from "./e24-kit.js";
 
 /** A value for one region, matched by region id or name (accents and case ignored). */
 export interface RegionDatum {
