@@ -23,10 +23,11 @@ describe("ui-tree-chart radial layout", () => {
       name: "A",
       children: [{ name: "B", children: [{ name: "C" }] }, { name: "D" }],
     } as never;
-    for (let i = 0; i < 2; i += 1) await frame();
-    await wait(80);
+    await expect
+      .poll(() => vi.mocked(radialTreeLayout).mock.calls.length, { timeout: 5000 })
+      .toBeGreaterThan(0);
+    await wait(100);
     const first = vi.mocked(radialTreeLayout).mock.calls.length;
-    expect(first).toBeGreaterThan(0);
     for (const width of [600, 500, 700]) {
       (host as HTMLElement).style.width = `${width}px`;
       chart.requestDraw();
