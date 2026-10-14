@@ -118,7 +118,9 @@
     z-index: 20;
     background: var(--bg);
     padding-block: 0.5rem;
+    /* The background bleeds past the column; the padding keeps the content in it, or .pg clips it. */
     margin-inline: -0.25rem;
+    padding-inline: 0.25rem;
   }
   .pg-stage {
     height: 38vh;
@@ -170,6 +172,17 @@
   position: absolute;
   opacity: 0;
   pointer-events: none;
+}
+/* Phones: one row that scrolls sideways, since a second row makes the sticky preview taller. */
+@media (max-width: 1023px) {
+  .pg-scenes {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pg-scene {
+    flex: none;
+  }
 }
 .pg-thumb {
   display: block;
