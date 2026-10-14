@@ -1,3 +1,4 @@
+import { toTime } from "../internal/grid-values.js";
 import { type CellValue, type GridColumn, getCellValue } from "./model.js";
 
 const DEFAULT_LOCALE = "en";
@@ -7,15 +8,6 @@ export type SortDirection = "asc" | "desc";
 export interface SortRule {
   id: string;
   direction: SortDirection;
-}
-
-function toTime(value: CellValue): number | null {
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.getTime();
-  if (typeof value === "string" || typeof value === "number") {
-    const time = new Date(value).getTime();
-    return Number.isNaN(time) ? null : time;
-  }
-  return null;
 }
 
 const collators = new Map<string, Intl.Collator | undefined>();
