@@ -26,9 +26,9 @@ import css from "./e24-geo.css.js";
 import {
   AutoAspect,
   DEFAULT_MAP_LABELS,
-  loadGeoMap,
   loadKit,
   type MapLabels,
+  MapLoader,
   type MapSource,
 } from "./e24-geo.js";
 import type { Kit, MapGeometry } from "./e24-kit.js";
@@ -91,6 +91,8 @@ export abstract class GeoMapElement extends ChartElement {
   #map: GeoMap | null = null;
   #kit: Kit | undefined;
   #failed = false;
+  /** connectedCallback has run: before that, attribute callbacks of an upgrade must not start a load. */
+  #started = false;
   #token = 0;
   #width = 0;
   #height = 0;
@@ -108,6 +110,7 @@ export abstract class GeoMapElement extends ChartElement {
     | undefined;
   #controls: ZoomControls | undefined;
   readonly #aspect = new AutoAspect(this);
+  readonly #loader = new MapLoader(loadKit);
   #listeners: AbortController | undefined;
 
   get map(): MapSource {
@@ -128,6 +131,11 @@ export abstract class GeoMapElement extends ChartElement {
   /** The zoom of the current view; the identity until the viewer has loaded. */
   protected get viewState(): MapView {
     return this.#viewer?.view ?? IDENTITY;
+  }
+  /** Zooms to a zoom-1 pixel box (waits for the viewer chunk if it is not there yet). */
+  protected focusBox(box: readonly [number, number, number, number]): void {
+    this.#wake();
+    this.#viewerLoad?.then(() => this.#viewer?.focusBox(box));
   }
   /** A pan is in progress: hover is ignored. */
   protected get panning(): boolean {
@@ -177,11 +185,13 @@ export abstract class GeoMapElement extends ChartElement {
       this.drawing.addEventListener(type, wake, { signal, passive: true });
     if (matchMedia("(pointer: coarse)").matches)
       (window.requestIdleCallback ?? setTimeout)(() => this.#wake());
+    this.#started = true;
     this.#load();
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.#started = false;
     this.#listeners?.abort();
     this.#viewer?.stop();
     this.#wired = false;
@@ -191,7 +201,7 @@ export abstract class GeoMapElement extends ChartElement {
   }
 
   override attributeChangedCallback(name: string): void {
-    if (name === "map" && this.#source === undefined && this.isConnected) this.#load();
+    if (name === "map" && this.#source === undefined && this.#started) this.#load();
     if (name === "projection" && this.#map) this.#aspect.set(this.#aspectOf(this.#map));
     if (name === "zoomable" || name === "wheel-zoom") this.#syncGestures();
     super.attributeChangedCallback(name);
@@ -246,32 +256,14 @@ export abstract class GeoMapElement extends ChartElement {
   }
 
   #load(): void {
-    const source = this.#source ?? this.getAttribute("map");
-    const token = ++this.#token;
-    if (!source) {
-      this.#loaded(null, null);
-      return;
-    }
-    if (typeof source !== "string") {
-      loadKit().then(
-        (kit) => token === this.#token && this.#loaded(source, kit),
-        () => token === this.#token && this.#failure(source, "load"),
-      );
-      return;
-    }
-    Promise.all([loadGeoMap(source), loadKit()]).then(
-      ([map, kit]) => {
-        if (token !== this.#token) return;
-        if (map) this.#loaded(map, kit);
-        else this.#failure(source, "unknown");
-      },
-      () => {
-        if (token === this.#token) this.#failure(source, "load");
-      },
-    );
+    this.#loader.load(this.#source ?? this.getAttribute("map"), {
+      done: (map, kit) => this.#loaded(map, kit),
+      fail: (reason) => this.#failure(reason),
+    });
   }
 
-  #failure(source: MapSource, reason: "load" | "unknown"): void {
+  #failure(reason: "load" | "unknown"): void {
+    const source = this.#source ?? this.getAttribute("map");
     this.#failed = true;
     this.#map = null;
     this.#geo = undefined;

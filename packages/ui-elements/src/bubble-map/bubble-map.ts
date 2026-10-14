@@ -1,6 +1,5 @@
 import { seriesColor } from "@jcsoftdev/ui-core/chart/palette";
-import { type Cluster, clusterPoints } from "@jcsoftdev/ui-core/geo/cluster";
-import { greatCircle, routeArcPath, routePolylinePath } from "@jcsoftdev/ui-core/geo/routes";
+import type { Cluster } from "@jcsoftdev/ui-core/geo/cluster";
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
 import {
   CHART_EVENT,
@@ -92,6 +91,11 @@ export class UiBubbleMap extends GeoMapElement {
   #shapes: Shape[] = [];
   #anchors: Array<[number, number]> = [];
   #key = "";
+  #clusterMod: typeof import("@jcsoftdev/ui-core/geo/cluster") | undefined;
+  #routesMod: typeof import("@jcsoftdev/ui-core/geo/routes") | undefined;
+  /** Zoom the clusters were last computed at, and the timer that recomputes them after a gesture. */
+  #clusterZoom = 1;
+  #settle = 0;
 
   constructor() {
     super();
@@ -106,7 +110,7 @@ export class UiBubbleMap extends GeoMapElement {
       const xs = members.map((m) => (base[m] as { x: number }).x);
       const ys = members.map((m) => (base[m] as { y: number }).y);
       const pad = 14;
-      this.viewer.focusBox([
+      this.focusBox([
         Math.min(...xs) - pad,
         Math.min(...ys) - pad,
         Math.max(...xs) + pad,
@@ -135,6 +139,7 @@ export class UiBubbleMap extends GeoMapElement {
   }
   set routes(value: readonly MapRoute[]) {
     this.#routes = value ?? [];
+    this.#need();
     this.requestDraw();
   }
   /** What mark `index` stands for: a point, a cluster of points or a route. */
@@ -146,10 +151,36 @@ export class UiBubbleMap extends GeoMapElement {
     adoptStyles(rootOf(this), css);
     this.dataset.ui = "bubble-map";
     super.connectedCallback();
+    this.#need();
+  }
+
+  override attributeChangedCallback(name: string): void {
+    super.attributeChangedCallback(name);
+    if (name === "cluster") this.#need();
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    clearTimeout(this.#settle);
+  }
+
+  /** Clustering and routes are separate chunks, fetched only by a bubble map that uses them. */
+  #need(): void {
+    if (this.hasAttribute("cluster") && !this.#clusterMod)
+      import("@jcsoftdev/ui-core/geo/cluster").then((mod) => {
+        this.#clusterMod = mod;
+        this.#key = "";
+        this.requestDraw();
+      });
+    if (this.#routes.length > 0 && !this.#routesMod)
+      import("@jcsoftdev/ui-core/geo/routes").then((mod) => {
+        this.#routesMod = mod;
+        this.requestDraw();
+      });
   }
 
   protected override isEmpty(): boolean {
-    return this.#points.length === 0;
+    return super.isEmpty() || this.#points.length === 0;
   }
 
   protected override revealAt(index: number) {
@@ -195,12 +226,19 @@ export class UiBubbleMap extends GeoMapElement {
     const distance = Number(this.getAttribute("cluster-distance")) || 36;
     const zoom = stage.view.k;
 
-    const key = `${stage.geo.projection.scale}|${stage.width}|${stage.height}|${visible.length}|${zoom}|${this.hasAttribute("cluster")}|${distance}`;
+    // Clusters depend on the zoom, but a gesture is dozens of frames: they are rebuilt once it settles.
+    const clustering = this.hasAttribute("cluster") && !!this.#clusterMod;
+    const key = `${stage.geo.projection.scale}|${stage.width}|${stage.height}|${visible.length}|${clustering}|${distance}|${this.#points.length}`;
+    if (clustering && ctx.transient && zoom !== this.#clusterZoom) {
+      clearTimeout(this.#settle);
+      this.#settle = window.setTimeout(() => this.requestDraw(), 160);
+    }
     if (key !== this.#key || !ctx.transient) {
       const base = this.#base(visible);
-      const clusters: Cluster[] = this.hasAttribute("cluster")
-        ? clusterPoints(base, distance / zoom)
-        : base.map((point, index) => ({ ...point, members: [index] }));
+      const clusters: Cluster[] =
+        clustering && this.#clusterMod
+          ? this.#clusterMod.clusterPoints(base, distance / zoom)
+          : base.map((point, index) => ({ ...point, members: [index] }));
       const top = Math.max(0, ...clusters.map((entry) => entry.value));
       this.#items = clusters.map((entry): Item => {
         const members = entry.members.map((index) => visible[index] as MapPoint);
@@ -224,6 +262,7 @@ export class UiBubbleMap extends GeoMapElement {
         };
       });
       this.#key = key;
+      this.#clusterZoom = zoom;
     }
     const items = this.#items;
     this.#shapes = this.#routeShapes(stage);
@@ -324,13 +363,15 @@ export class UiBubbleMap extends GeoMapElement {
     const categoryName = (point: MapPoint) =>
       categories.find((category) => category.id === (point.category ?? ""))?.name ?? "";
 
+    // The data table lists every point, then every route: a mark's `category` is its row there.
+    const rowOf = new Map(this.#points.map((point, row) => [point, row]));
+    const rowOfItem = (item: Item) => rowOf.get(item.points[0] as MapPoint) ?? 0;
     const screenOf = items.map((item) => stage.toScreen(item.cluster.x, item.cluster.y));
     const showLegend =
       categories.length > 1 && categories.every((category) => category.name !== "");
 
     return {
-      label: this.loadedMap?.name,
-      summary: `${this.loadedMap?.name ?? ""}: ${visible.length} markers${shapes.length ? `, ${shapes.length} routes` : ""}`,
+      summary: `${visible.length} markers${shapes.length ? `, ${shapes.length} routes` : ""}`,
       marks: [
         ...items.map((item, index) => ({
           el: bubbleEls[index] as SVGElement,
@@ -347,7 +388,7 @@ export class UiBubbleMap extends GeoMapElement {
         })),
       ],
       hit: (x, y, target, radius) => {
-        if (this.viewer.dragging) return -1;
+        if (this.panning) return -1;
         // Bubbles sit over routes; of overlapping bubbles the smaller one is drawn on top, and a
         // finger that misses everything takes the nearest bubble within reach.
         const slack = radius > 12 ? 10 : 2;
@@ -375,6 +416,7 @@ export class UiBubbleMap extends GeoMapElement {
           const sum = total(item);
           const category = item.points.length === 1 ? categoryName(first) : "";
           return {
+            category: rowOfItem(item),
             title: describe(item),
             rows: [
               ...(sum ? [{ id: "value", name, value: sum, color: item.color }] : []),
@@ -391,6 +433,7 @@ export class UiBubbleMap extends GeoMapElement {
         if (!shape) return null;
         const at = this.anchorOf(stage, shape.mid[0], shape.mid[1]);
         return {
+          category: this.#points.length + (index - items.length),
           title: shape.name,
           rows:
             shape.route.value == null
@@ -411,55 +454,86 @@ export class UiBubbleMap extends GeoMapElement {
       },
       nav: (index, intent) => directionalNav(this.#anchors, index, intent),
       maxHoverRows: 2,
-      snapshot: () => ({
-        title: this.getAttribute("label") || this.loadedMap?.name || "",
-        categoryHeader: labels.region,
-        categories: this.#points.map((point) => point.name),
-        series: [
-          {
-            id: "value",
-            name,
-            color: ctx.color(0),
-            values: this.#points.map((point) => point.value ?? null),
-            text: this.#points.map((point) => (point.value == null ? "" : ctx.format(point.value))),
-          },
-          {
-            id: "category",
-            name: labels.category,
-            color: ctx.color(1),
-            values: this.#points.map((point) => categoryName(point)),
-            text: this.#points.map((point) => categoryName(point)),
-          },
-          {
-            id: "lon",
-            name: labels.longitude,
-            color: ctx.color(2),
-            values: this.#points.map((point) => point.lon),
-            text: this.#points.map((point) => point.lon.toFixed(4)),
-          },
-          {
-            id: "lat",
-            name: labels.latitude,
-            color: ctx.color(3),
-            values: this.#points.map((point) => point.lat),
-            text: this.#points.map((point) => point.lat.toFixed(4)),
-          },
-        ],
-        legend: showLegend
-          ? categories.map((category, index) => ({
-              id: category.id,
-              name: category.name,
-              color: seriesColor(index, category.color),
-              shape: "dot" as const,
-            }))
-          : [],
-      }),
+      snapshot: () => {
+        const points = this.#points;
+        const pad = <T>(values: T[], fill: T): T[] => [...values, ...shapes.map(() => fill)];
+        return {
+          title: this.getAttribute("label") || this.resolvedLabels.chart,
+          categoryHeader: labels.region,
+          categories: [...points.map((point) => point.name), ...shapes.map((shape) => shape.name)],
+          series: [
+            {
+              id: "value",
+              name,
+              color: ctx.color(0),
+              values: [
+                ...points.map((point) => point.value ?? null),
+                ...shapes.map((shape) => shape.route.value ?? null),
+              ],
+              text: [
+                ...points.map((point) => (point.value == null ? "" : ctx.format(point.value))),
+                ...shapes.map((shape) =>
+                  shape.route.value == null ? "" : ctx.format(shape.route.value),
+                ),
+              ],
+            },
+            {
+              id: "category",
+              name: labels.category,
+              color: ctx.color(1),
+              values: pad(
+                points.map((point) => categoryName(point)),
+                labels.routes,
+              ),
+              text: pad(
+                points.map((point) => categoryName(point)),
+                labels.routes,
+              ),
+            },
+            {
+              id: "lon",
+              name: labels.longitude,
+              color: ctx.color(2),
+              values: pad<number | null>(
+                points.map((point) => point.lon),
+                null,
+              ),
+              text: pad(
+                points.map((point) => point.lon.toFixed(4)),
+                "",
+              ),
+            },
+            {
+              id: "lat",
+              name: labels.latitude,
+              color: ctx.color(3),
+              values: pad<number | null>(
+                points.map((point) => point.lat),
+                null,
+              ),
+              text: pad(
+                points.map((point) => point.lat.toFixed(4)),
+                "",
+              ),
+            },
+          ],
+          legend: showLegend
+            ? categories.map((category, index) => ({
+                id: category.id,
+                name: category.name,
+                color: seriesColor(index, category.color),
+                shape: "dot" as const,
+              }))
+            : [],
+        };
+      },
     };
   }
 
   #routeShapes(stage: Stage): Shape[] {
     const routes = this.#routes;
-    if (routes.length === 0) return [];
+    const mod = this.#routesMod;
+    if (routes.length === 0 || !mod) return [];
     const project = stage.geo.projection.project;
     const top = Math.max(0, ...routes.map((route) => route.value ?? 0));
     const bend =
@@ -470,10 +544,12 @@ export class UiBubbleMap extends GeoMapElement {
       const a = project(from[0], from[1]);
       const b = project(to[0], to[1]);
       const d = great
-        ? routePolylinePath(
-            greatCircle(from, to, 40).map((piece) => piece.map(([lon, lat]) => project(lon, lat))),
+        ? mod.routePolylinePath(
+            mod
+              .greatCircle(from, to, 40)
+              .map((piece) => piece.map(([lon, lat]) => project(lon, lat))),
           )
-        : routeArcPath(a, b, bend);
+        : mod.routeArcPath(a, b, bend);
       return {
         route,
         name: resolved.name,

@@ -17,8 +17,8 @@ import { mapFeatures } from "./e24-features.js";
 
 export { createRegionIndex } from "@jcsoftdev/ui-core/geo/match";
 export { toScreen } from "@jcsoftdev/ui-core/geo/view";
-export { mapFeatures };
 export { colorScale, legendFor } from "./e24-scale.js";
+export { mapFeatures };
 
 /** A map fitted to a box: everything the drawing layers need, in zoom-1 pixels. */
 export interface MapGeometry {

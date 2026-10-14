@@ -28,7 +28,11 @@ type Chart = HTMLElement & {
   routes: typeof ROUTES;
   selected: number | null;
   markInfo(index: number): { kind: string; points?: unknown[] } | undefined;
-  chartSnapshot: { legend?: Array<{ id: string }>; categories: string[] } | null;
+  chartSnapshot: {
+    legend?: Array<{ id: string }>;
+    categories: string[];
+    series: Array<{ id: string; text: string[] }>;
+  } | null;
 };
 
 async function chart(attrs = 'locale="en-US"') {
@@ -149,5 +153,32 @@ describe("ui-bubble-map", () => {
     expect(
       results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.html.slice(0, 80))}`),
     ).toEqual([]);
+  });
+
+  it("hover and select report the snapshot row, with clusters and hidden categories", async () => {
+    const c = await chart('locale="en-US" animate="off" cluster');
+    await awake(c);
+    const rows = () => c.chartSnapshot?.categories ?? [];
+    expect(rows()).toEqual([...POINTS.map((p) => p.name), "Lima → Cusco"]);
+    (c as unknown as { toggleSeries(id: string): void }).toggleSeries("North");
+    await settle(120);
+    const hovers = record(c, "chart-hover");
+    const found = reachable(bubbles(c));
+    expect(found.length).toBeGreaterThan(0);
+    for (const p of found) {
+      pointerAt("pointermove", p.x, p.y);
+      pointerAt("pointermove", p.x + 0.5, p.y);
+    }
+    // Each hovered bubble reports the row of the (first) point it stands for.
+    for (const hover of hovers) {
+      const mark = c.markInfo(hover?.index as number);
+      const row = hover?.category as number;
+      if (mark?.kind === "route") expect(rows()[row]).toBe("Lima → Cusco");
+      else
+        expect(rows()[row]).toBe((mark?.points as Array<{ name: string }> | undefined)?.[0]?.name);
+    }
+    // The routes are rows of the table too, after the points.
+    const value = c.chartSnapshot?.series.find((s) => s.id === "value") as { text: string[] };
+    expect(value.text.at(-1)).toBe("30");
   });
 });

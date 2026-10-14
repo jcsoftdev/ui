@@ -12,8 +12,8 @@ import {
   type RegionInfo,
   setGeoKey,
 } from "../internal/e24-geo.js";
-import { NO_DATA_FILL } from "../internal/e24-scale.js";
 import { GeoMapElement } from "../internal/e24-map.js";
+import { NO_DATA_FILL } from "../internal/e24-scale.js";
 
 interface Model {
   values: Array<number | null>;
@@ -131,9 +131,7 @@ export class UiChoroplethMap extends GeoMapElement {
     const options = this.#scaleOptions();
     setGeoKey(
       this,
-      model.missing
-        ? [{ id: "no-data", name: noData, color: NO_DATA_FILL, outline: true }]
-        : [],
+      model.missing ? [{ id: "no-data", name: noData, color: NO_DATA_FILL, outline: true }] : [],
     );
     return {
       summary: `${features.length} regions, ${model.finite} with data${

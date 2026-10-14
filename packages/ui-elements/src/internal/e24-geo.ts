@@ -5,8 +5,8 @@
  * imported here, only through `loadGeoMap`, so each map is fetched when an element asks for it.
  */
 import type { GeoMap } from "@jcsoftdev/ui-core/geo/topology";
-import type { Kit } from "./e24-kit.js";
 import type { KeyItem } from "./e24-key.js";
+import type { Kit } from "./e24-kit.js";
 
 /** A value for one region, matched by region id or name (accents and case ignored). */
 export interface RegionDatum {
@@ -145,6 +145,43 @@ export function loadGeoMap(source: MapSource): Promise<GeoMap | null> {
     });
   }
   return pending;
+}
+
+/**
+ * Loads a map together with the lazy code an element needs to draw it (`e24-kit`, the globe
+ * renderer), in parallel, and reports only the latest request: a `map` switch while a fetch is in
+ * flight drops the old one. `done(null, null)` means "no map set"; `fail` says why nothing arrived
+ * (`unknown` id, or the `load` failed), after which the element shows no map at all.
+ */
+export class MapLoader<K> {
+  #token = 0;
+  readonly #lazy: () => Promise<K>;
+  constructor(lazy: () => Promise<K>) {
+    this.#lazy = lazy;
+  }
+  load(
+    source: MapSource,
+    on: {
+      done(map: GeoMap | null, lazy: K | null): void;
+      fail(reason: "load" | "unknown"): void;
+    },
+  ): void {
+    const token = ++this.#token;
+    if (!source) {
+      on.done(null, null);
+      return;
+    }
+    Promise.all([loadGeoMap(source), this.#lazy()]).then(
+      ([map, lazy]) => {
+        if (token !== this.#token) return;
+        if (map) on.done(map, lazy);
+        else on.fail("unknown");
+      },
+      () => {
+        if (token === this.#token) on.fail("load");
+      },
+    );
+  }
 }
 
 let kitLoad: Promise<Kit> | undefined;

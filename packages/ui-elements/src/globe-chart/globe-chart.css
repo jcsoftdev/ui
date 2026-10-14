@@ -1,6 +1,5 @@
 [data-ui="globe-chart"] [data-ui-part="drawing"] {
   cursor: grab;
-  touch-action: none;
   position: relative;
 }
 [data-ui="globe-chart"][data-dragging] [data-ui-part="drawing"] {
@@ -63,4 +62,8 @@
 [data-ui="globe-chart"] [data-ui-part="globe-controls"] button:focus-visible {
   outline: 2px solid var(--focus-ring-color);
   outline-offset: 2px;
+}
+[data-ui="globe-chart"] [data-ui-part="globe-controls"] button {
+  min-block-size: var(--touch-target, 0px);
+  min-inline-size: var(--touch-target, 0px);
 }
