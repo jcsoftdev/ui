@@ -201,14 +201,11 @@ describe("ui-sankey-chart", () => {
     await settle();
     expect(removed).toHaveLength(1);
     const diff = await sankey("", { compare: LINKS.map((l) => ({ ...l, value: l.value / 2 })) });
-    expect(diff.chartSnapshot?.series.map((s) => s.id)).toEqual([
-      "before",
-      "after",
-      "change",
-      "source",
-      "total",
-    ]);
-    expect(diff.querySelectorAll("[data-ghost]").length).toBe(LINKS.length);
+    // The diff view is a lazy chunk: the chart redraws with it once it lands.
+    await expect
+      .poll(() => diff.chartSnapshot?.series.map((s) => s.id))
+      .toEqual(["before", "after", "change", "source", "total"]);
+    await expect.poll(() => diff.querySelectorAll("[data-ghost]").length).toBe(LINKS.length);
   });
 
   it("uses the locale attribute for numbers and percentages and never es-PE", async () => {
@@ -259,11 +256,12 @@ describe("ui-sankey-chart", () => {
 
   it("pauses the particles of a dimmed link", async () => {
     const c = await sankey("particles");
-    await wait(80);
-    await settle();
+    // The particles are a lazy chunk: the chart redraws with them once it lands.
+    await expect
+      .poll(() => c.querySelectorAll("[data-particles] circle").length)
+      .toBeGreaterThan(0);
     await awake(c);
     const dots = [...c.querySelectorAll<SVGCircleElement>("[data-particles] circle")];
-    expect(dots.length).toBeGreaterThan(0);
     const running = () => dots.map((d) => d.getAnimations()[0]?.playState);
     expect(new Set(running())).toEqual(new Set(["running"]));
     const nodeCount = c.querySelectorAll("rect[data-node]").length;
