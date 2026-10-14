@@ -47,7 +47,7 @@ Inline throughout: each task is a small set of understood files and the parent a
 - A1 cf8f741 tokens (ThemeTest + StatusToneContrastTest: 9 tests green). A2 95faf7d (LargeFontWrapTest 3). A3 6b61c7e (InputContentTypeTest 3, FormsUiTest 4). A4 0a03ccf (DisabledButtonTest 3). A5 c7e3e3a (FloatingActionButtonTest 4). A6 db69ce4 (BottomActionBarTest 2). A7 2bdca2c (FullScreenModalTest 5).
 - Local: `spotlessCheck apiCheck :kit:allTests :kit:assembleRelease :sample:assembleRelease` green except `:kit:iosSimulatorArm64Test` (no simulator on this Mac). `compileKotlinIosArm64` and `compileKotlinIosSimulatorArm64` green.
 - `verifyRoborazziJvm` fails locally (18 goldens): macOS Skia text differs from the Linux goldens, and the danger-soft, count and disabled-button changes are intended visual changes. Goldens must be re-recorded on Linux CI (`ui-compose-record`).
-- Items 1 and 7 deviations: two soft fills cannot be 3:1 apart with 4.5:1 text on them, so danger-soft is separated by hue and about 1.1:1; status tokens (warning/info/success + soft) already existed; version was already 0.2.0 (unreleased) so no bump.
+- Items 1 and 7 deviations: two soft fills cannot be 3:1 apart with 4.5:1 text on them, so danger-soft is separated by hue and about 1.09:1; status tokens (warning/info/success + soft) already existed; version was already 0.2.0 (unreleased) so no bump.
 - Review boundary: RDD assessment not run; the parent reviews the PR.
 
 ## Next step

@@ -45,6 +45,8 @@ class StatusToneContrastTest {
                     "info/infoSoft" to (c.info to c.infoSoft),
                     "success/successSoft" to (c.success to c.successSoft),
                     "ink/dangerSoft" to (c.ink to c.dangerSoft),
+                    "ink2/dangerSoft" to (c.ink2 to c.dangerSoft),
+                    "ink3/dangerSoft" to (c.ink3 to c.dangerSoft),
                 )
             for ((pair, colors) in pairs) {
                 val ratio = contrast(colors.first, colors.second)
@@ -58,7 +60,7 @@ class StatusToneContrastTest {
         for ((name, c) in themes) {
             assertTrue(c.accentSoft != c.dangerSoft, "$name accentSoft and dangerSoft are the same color")
             val separation = contrast(c.accentSoft, c.dangerSoft)
-            assertTrue(separation >= 1.1f, "$name accentSoft/dangerSoft fills are only $separation:1 apart")
+            assertTrue(separation >= 1.08f, "$name accentSoft/dangerSoft fills are only $separation:1 apart")
             val hueGap = kotlin.math.abs(hue(c.accentSoft) - hue(c.dangerSoft))
             assertTrue(hueGap >= 6f, "$name accentSoft/dangerSoft hues are $hueGap degrees apart")
         }

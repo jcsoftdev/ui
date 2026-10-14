@@ -536,8 +536,8 @@
    {
     "name": "danger-soft",
     "value": {
-     "light": "#ffdcd3",
-     "dark": "#4a1a0d"
+     "light": "#ffe0d4",
+     "dark": "#431608"
     },
     "usage": "Fondo de la cita con ausencia y del chip de error."
    },
