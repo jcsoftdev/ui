@@ -161,8 +161,8 @@ export function defineSettings(
         return store.get(this)?.[name] ?? fallback;
       },
       set(this: HTMLElement & { sync?(): void }, value: unknown) {
-        let values = store.get(this);
-        if (!values) store.set(this, (values = {}));
+        const values = store.get(this) ?? {};
+        store.set(this, values);
         values[name] = value;
         if (this.isConnected) this.sync?.();
       },
