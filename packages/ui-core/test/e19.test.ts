@@ -2,9 +2,9 @@
 // time by path (never statically), and every ui-core entry must agree with them value for value.
 import { describe, expect, it } from "vitest";
 import { categoryLayout } from "../src/chart/distribution-layout.ts";
-import { streamLayout } from "../src/chart/stream.ts";
 import { heatmapScale } from "../src/chart/heatmap-scale.ts";
 import { hexLayout, hexPath } from "../src/chart/hex-layout.ts";
+import { streamLayout } from "../src/chart/stream.ts";
 import { beeswarm } from "../src/chart/swarm.ts";
 
 const react = (path: string) =>

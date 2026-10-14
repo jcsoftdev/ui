@@ -59,6 +59,8 @@ const independent = new Set([
 const chartDeps = {
   "chart/color-scale": ["chart/palette"],
   "chart/distribution-layout": ["chart/axis", "chart/scale"],
+  "chart/heatmap-scale": ["chart/color-scale", "chart/palette"],
+  "chart/lanes": ["chart/scale-time"],
   "chart/category-axis": ["chart/axis", "chart/scale"],
   "chart/category-axis-time": [
     "chart/axis",
