@@ -45,7 +45,7 @@ export function waterfallLayout(steps: ReadonlyArray<WaterfallStep>): WaterfallL
   let max = 0;
   const bars = steps.map((step, index): WaterfallBar => {
     const type = step.type ?? "delta";
-    const value = step.value ?? 0;
+    const value = Number.isFinite(step.value) ? (step.value as number) : 0;
     let kind: WaterfallKind;
     let from: number;
     let to: number;
@@ -100,13 +100,28 @@ export function pickLabels(
   lineHeight = 13,
 ): boolean[] {
   const kept: WaterfallLabelBox[] = [];
+  // Boxes arrive left to right, so only the kept labels within reach of this one can clash: scan back
+  // from the last kept label until the horizontal gap alone rules the rest out (linear overall).
+  // Unordered input keeps the full scan.
+  let ordered = true;
+  for (let i = 1; i < boxes.length && ordered; i += 1)
+    ordered = (boxes[i] as WaterfallLabelBox).center >= (boxes[i - 1] as WaterfallLabelBox).center;
+  let widest = 0;
   return boxes.map((box) => {
-    const clash = kept.some(
-      (other) =>
-        Math.abs(other.center - box.center) < (other.width + box.width) / 2 + gap &&
-        Math.abs(other.y - box.y) < lineHeight,
-    );
-    if (!clash) kept.push(box);
+    let clash = false;
+    for (let k = kept.length - 1; k >= 0; k -= 1) {
+      const other = kept[k] as WaterfallLabelBox;
+      const reach = (other.width + box.width) / 2 + gap;
+      if (ordered && box.center - other.center >= (widest + box.width) / 2 + gap) break;
+      if (Math.abs(other.center - box.center) < reach && Math.abs(other.y - box.y) < lineHeight) {
+        clash = true;
+        break;
+      }
+    }
+    if (!clash) {
+      kept.push(box);
+      if (box.width > widest) widest = box.width;
+    }
     return !clash;
   });
 }

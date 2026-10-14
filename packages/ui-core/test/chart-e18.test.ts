@@ -61,6 +61,44 @@ describe("waterfall layout", () => {
   });
 });
 
+describe("waterfall label picking and non-finite steps", () => {
+  it("matches React on left-to-right boxes and stays linear on 100k of them", async () => {
+    const react = await load<typeof waterfall>("waterfall");
+    for (let run = 0; run < 30; run += 1) {
+      let x = 0;
+      const boxes = Array.from({ length: int(1, 60) }, () => {
+        x += between(0, 40);
+        return { center: x, width: between(10, 70), y: between(0, 60) };
+      });
+      expect(waterfall.pickLabels(boxes)).toEqual(react.pickLabels(boxes));
+    }
+    const many = Array.from({ length: 100_000 }, (_, i) => ({
+      center: i * 30,
+      width: 20,
+      y: i % 7,
+    }));
+    const t0 = performance.now();
+    waterfall.pickLabels(many);
+    expect(performance.now() - t0).toBeLessThan(500);
+  });
+
+  it("deviates from React on purpose: one NaN step does not poison the running totals", () => {
+    const layout = waterfall.waterfallLayout([
+      { label: "a", value: 10, type: "start" },
+      { label: "b", value: Number.NaN },
+      { label: "c", value: Number.POSITIVE_INFINITY },
+      { label: "d", value: 5 },
+      { label: "t", type: "total" },
+    ]);
+    expect(layout.final).toBe(15);
+    expect(layout.bars.every((bar) => Number.isFinite(bar.from) && Number.isFinite(bar.to))).toBe(
+      true,
+    );
+    expect(layout.min).toBe(0);
+    expect(layout.max).toBe(15);
+  });
+});
+
 describe("bullet layout", () => {
   it("matches the React bands, domain, level and opacity", async () => {
     const react = await load<typeof bullet>("bullet");

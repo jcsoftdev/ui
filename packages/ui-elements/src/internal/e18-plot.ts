@@ -96,11 +96,41 @@ export function axisLeft(ticks: readonly AxisTick[], offset: number, title?: str
   return group;
 }
 
-/** Shortens `text` with an ellipsis so it fits `room` pixels (about 7 per character at 12px). */
-export function fitLabel(label: string, room: number, size = 12): string {
+/**
+ * Shortens `label` with an ellipsis so it fits `room` pixels (about 7 per character at 12px). With
+ * `min`, a label that would keep fewer than `min` characters becomes an empty string instead.
+ */
+export function fitLabel(label: string, room: number, size = 12, min = 0): string {
   if (estimateTextWidth(label, size) <= room) return label;
-  const chars = Math.max(2, Math.floor(room / (size * 0.58)) - 1);
-  return `${label.slice(0, chars).trimEnd()}…`;
+  const chars = Math.floor(room / (size * 0.58)) - 1;
+  return chars < min ? "" : `${label.slice(0, Math.max(1, chars)).trimEnd()}…`;
+}
+
+/** `value` when it is a finite number, else `fallback`: nothing but numbers reaches an SVG attribute. */
+export const finite = (value: unknown, fallback = 0): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+/** Smallest and largest finite number of `values` in one pass (no spread: safe for 100k entries). */
+export function minMax(
+  values: Iterable<number>,
+  fallback: [number, number] = [0, 1],
+): [number, number] {
+  let lo = Number.POSITIVE_INFINITY;
+  let hi = Number.NEGATIVE_INFINITY;
+  for (const value of values) {
+    if (!Number.isFinite(value)) continue;
+    if (value < lo) lo = value;
+    if (value > hi) hi = value;
+  }
+  return lo > hi ? fallback : [lo, hi];
+}
+
+/** A numeric attribute, or `fallback` when it is absent or not a finite number. */
+export function numAttr(host: Element, name: string, fallback: number): number {
+  const raw = host.getAttribute(name);
+  if (raw === null || raw.trim() === "") return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : fallback;
 }
 
 /** Transparent rectangle that is the keyboard stop and the hit area of a mark. */
