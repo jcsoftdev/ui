@@ -45,6 +45,20 @@ const columns = (): GridColumn<Item>[] => [
 
 const FEATURES = "editable range-selection clipboard fill-handle history";
 
+/** The lazy chunk behind each opt-in feature attribute. */
+const CHUNKS: Record<string, string> = {
+  history: "history",
+  "range-selection": "range",
+  clipboard: "clipboard",
+  "fill-handle": "fill",
+  formulas: "formula",
+  "editable-rows": "rows",
+};
+const loaded = (name: string) =>
+  performance
+    .getEntriesByType("resource")
+    .some((e) => new RegExp(`data-grid/${name}\\.ts`).test(e.name));
+
 const grid = async (
   attrs = FEATURES,
   rows: Item[] = items(),
@@ -60,7 +74,10 @@ const grid = async (
   await frame();
   await frame();
   // The feature chunks load on demand; the first paint after they arrive is what tests need.
-  await wait(60);
+  for (const [attribute, chunk] of Object.entries(CHUNKS))
+    if (el.hasAttribute(attribute))
+      await vi.waitFor(() => expect(loaded(chunk)).toBe(true), { timeout: 10_000 });
+  await frame();
   await frame();
   return el;
 };
@@ -104,18 +121,13 @@ const shiftArrow = (key: string, times = 1) =>
 const mod = navigator.platform.includes("Mac") ? "Meta" : "Control";
 
 describe("lazy loading", () => {
-  const loaded = (name: string) =>
-    performance
-      .getEntriesByType("resource")
-      .some((e) => new RegExp(`data-grid/${name}\\.ts`).test(e.name));
-
   it("fetches a feature chunk only for the attribute that asks for it", async () => {
     await grid("");
     for (const name of ["history", "range", "clipboard", "fill", "formula", "rows"])
       expect(loaded(name)).toBe(false);
     document.body.innerHTML = "";
     await grid("history");
-    expect(loaded("history")).toBe(true);
+    await vi.waitFor(() => expect(loaded("history")).toBe(true), { timeout: 10_000 });
     for (const name of ["range", "clipboard", "fill"]) expect(loaded(name)).toBe(false);
     const el = document.querySelector("ui-data-grid") as UiDataGrid;
     el.setAttribute("clipboard", "");
