@@ -1,6 +1,6 @@
 import axe from "axe-core";
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { userEvent } from "vitest/browser";
+import { commands, userEvent } from "vitest/browser";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineGantt, type GanttTask, type UiGantt } from "../src/gantt/gantt.ts";
 import { ax, frame, mount, wait } from "./setup.ts";
@@ -15,8 +15,9 @@ beforeEach(async () => {
   );
   await userEvent.hover(park.firstElementChild as Element);
 });
-afterEach(() => {
+afterEach(async () => {
   document.body.innerHTML = "";
+  await commands.timezone(null);
 });
 
 const day = (n: number) => new Date(2026, 9, n); // 2026-10-n, local midnight
@@ -61,7 +62,7 @@ const settle = async () => {
 
 const gantt = async (attrs = "", tasks: GanttTask[] = TASKS, width = 900) => {
   const host = mount(
-    `<div style="width:${width}px"><ui-gantt label="Plan" ${attrs.includes("locale") ? "" : 'locale="en-US"'} today="2026-10-12" ${attrs}><ui-chart-tooltip></ui-chart-tooltip></ui-gantt></div>`,
+    `<div style="width:${width}px"><ui-gantt label="Plan" ${attrs.includes("locale") ? "" : 'locale="en-US"'} ${attrs.includes("toolbar") ? "" : 'toolbar="off"'} today="2026-10-12" ${attrs}><ui-chart-tooltip></ui-chart-tooltip></ui-gantt></div>`,
   );
   const el = host.querySelector("ui-gantt") as UiGantt;
   el.tasks = tasks;
@@ -205,19 +206,11 @@ describe("ui-gantt", () => {
     await settle();
     expect(pane(el).getAttribute("transform")).not.toBe(x0);
     expect(selects).toEqual([]);
+    expect(el.selected).toBeNull();
     // A plain click on the list still selects.
-    pointer(el, "pointerdown", 30, listY(3));
-    pointer(el, "pointerup", 30, listY(3));
-    drawingOf(el).dispatchEvent(
-      new MouseEvent("click", {
-        bubbles: true,
-        clientX: svgOf(el).getBoundingClientRect().left + 30,
-        clientY: svgOf(el).getBoundingClientRect().top + listY(3),
-        detail: 1,
-      }),
-    );
+    await userEvent.click(drawingOf(el), { position: { x: 30, y: listY(3) } });
     await wait(30);
-    expect(el.selected === null || el.selected === 3).toBe(true);
+    expect(el.selected).toBe(3);
   });
 
   it("zoom: the attribute, the keys and Ctrl+wheel change the level and report it", async () => {
@@ -334,6 +327,165 @@ describe("ui-gantt", () => {
     const de = await gantt('locale="de-DE"');
     expect(svgOf(de).textContent).toContain("okt 2026");
     expect(svgOf(de).textContent).not.toContain("oct 2026");
+  });
+
+  it("time zone: the list, the end date and the day grid follow time-zone, not the runtime", async () => {
+    await commands.timezone("America/Lima");
+    const at = (d: number, h: number) => new Date(Date.UTC(2026, 9, d, h));
+    // 06:00 UTC is 01:00 on the 5th in Lima but 23:00 on the 4th in Los Angeles.
+    const tasks: GanttTask[] = [{ id: "z", name: "Zone", start: at(5, 6), end: at(9, 6) }];
+    const la = await gantt('time-zone="America/Los_Angeles"', tasks);
+    const cells = [...svgOf(la).querySelectorAll(".list-cell")].map((c) => c.textContent);
+    expect(cells).toContain("4 oct");
+    expect(cells).toContain("8 oct");
+    document.body.innerHTML = "";
+    const lima = await gantt('time-zone="America/Lima"', tasks);
+    const limaCells = [...svgOf(lima).querySelectorAll(".list-cell")].map((c) => c.textContent);
+    expect(limaCells).toContain("5 oct");
+    expect(limaCells).toContain("9 oct");
+  });
+
+  it("daylight saving: a one-day task is one day, not 23 hours", async () => {
+    const day = (d: number) => new Date(2026, 2, d); // 8 March 2026 is 23 hours long in the US
+    const tasks: GanttTask[] = [{ id: "d", name: "Spring", start: day(8), end: day(9) }];
+    await commands.timezone("America/Los_Angeles");
+    const el = await gantt('time-zone="America/Los_Angeles"', [
+      {
+        id: "d",
+        name: "Spring",
+        start: new Date("2026-03-08T08:00:00Z"),
+        end: new Date("2026-03-09T07:00:00Z"),
+      },
+    ]);
+    const duration = el.chartSnapshot?.series?.find((s) => s.id === "duration");
+    expect(duration?.text?.[0]).toBe("1 day");
+    expect(tasks).toHaveLength(1);
+  });
+
+  it("a task with an invalid date is skipped and a repeated id keeps its row", async () => {
+    const warn = console.warn;
+    const warned: string[] = [];
+    console.warn = (message: string) => void warned.push(String(message));
+    try {
+      const el = await gantt("", [
+        { id: "a", name: "One", start: day(5), end: day(8) },
+        { id: "a", name: "Two", start: day(6), end: day(9) },
+        { id: "bad", name: "Broken", start: new Date("nope"), end: day(9) },
+      ]);
+      expect(el.chartSnapshot?.categories).toEqual(["One", "Two"]);
+      expect(svgOf(el).querySelectorAll("[data-task]")).toHaveLength(2);
+      expect(warned.some((m) => m.includes('"bad"'))).toBe(true);
+      expect(warned.some((m) => m.includes('"a"'))).toBe(true);
+    } finally {
+      console.warn = warn;
+    }
+  });
+
+  it("a property set before the element upgrades is not lost", async () => {
+    const host = document.createElement("div");
+    const plain = document.createElement("ui-gantt") as UiGantt;
+    // Not yet defined as a gantt for this node: own properties shadow the accessors.
+    Object.defineProperty(plain, "tasks", { value: TASKS, configurable: true, writable: true });
+    host.append(plain);
+    document.body.append(host);
+    host.style.width = "900px";
+    plain.setAttribute("toolbar", "off");
+    await settle();
+    expect(svgOf(plain).querySelectorAll("[data-task]")).toHaveLength(TASKS.length);
+  });
+
+  it("toolbar: on by default, switches the zoom level and goes to today", async () => {
+    const el = await gantt('toolbar="on" zoom="week"');
+    await wait(120);
+    const bar = el.querySelector("[data-ui-part=toolbar]") as HTMLElement;
+    expect(bar).toBeTruthy();
+    expect(bar.nextElementSibling).toBe(drawingOf(el));
+    const pressed = () => bar.querySelector("[aria-pressed=true]")?.getAttribute("data-zoom");
+    expect(pressed()).toBe("week");
+    (bar.querySelector('[data-zoom="month"]') as HTMLButtonElement).click();
+    await settle();
+    expect(el.zoom).toBe("month");
+    expect(pressed()).toBe("month");
+    const before = pane(el).getAttribute("transform");
+    (bar.querySelector("[data-ui-part=today]") as HTMLButtonElement).click();
+    await settle();
+    expect(pane(el).getAttribute("transform")).toBeDefined();
+    expect(before).toBeDefined();
+    el.setAttribute("toolbar", "off");
+    await settle();
+    expect(el.querySelector("[data-ui-part=toolbar]")).toBeNull();
+  });
+
+  describe("touch (CDP)", () => {
+    const many: GanttTask[] = Array.from({ length: 60 }, (_, i) => ({
+      id: `t${i}`,
+      name: `Task ${i}`,
+      start: day(5 + (i % 10)),
+      end: day(8 + (i % 10)),
+    }));
+    const mountTall = async (attrs = "", tasks = many) => {
+      const el = await gantt(`height="400" ${attrs}`, tasks, 380);
+      el.parentElement?.insertAdjacentHTML("afterend", '<div style="height:3000px"></div>');
+      await settle();
+      return el;
+    };
+    const center = (target: Element) => {
+      const box = target.getBoundingClientRect();
+      return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    };
+
+    it("a vertical swipe scrolls the rows, not the page", async () => {
+      const el = await mountTall();
+      expect(svgOf(el).querySelector('[data-task="t0"]')).toBeTruthy();
+      const { x, y } = center(drawingOf(el));
+      const log: string[] = [];
+      drawingOf(el).addEventListener("pointerdown", (e) => log.push(`${e.pointerType}`));
+      await commands.touch([
+        { type: "touchStart", points: [{ x, y: y + 80, id: 0 }] },
+        ...[40, 0, -40, -80].map((dy) => ({
+          type: "touchMove" as const,
+          points: [{ x, y: y + dy + 80 - 40, id: 0 }],
+        })),
+        { type: "touchEnd", points: [] },
+      ]);
+      await settle();
+      expect(log).toContain("touch");
+      expect(document.scrollingElement?.scrollTop).toBe(0);
+      expect(svgOf(el).querySelector('[data-task="t0"]')).toBeNull();
+    });
+
+    it("a pinch that starts on an editable bar zooms and never drags it", async () => {
+      const el = await mountTall('editable zoom="week"', TASKS);
+      const changes: unknown[] = [];
+      el.addEventListener("gantt-change", (e) => changes.push((e as CustomEvent).detail));
+      const bar = svgOf(el).querySelector('[data-task="c"] [data-handle="move"]') as Element;
+      const { x, y } = center(bar);
+      const pinch = async (from: number, to: number) => {
+        const at = (gap: number) => [
+          { x: x - gap / 2, y, id: 0 },
+          { x: x + gap / 2, y, id: 1 },
+        ];
+        const steps = 10;
+        await commands.touch([
+          { type: "touchStart", points: at(from) },
+          ...Array.from({ length: steps }, (_, i) => ({
+            type: "touchMove" as const,
+            points: at(from + ((to - from) * (i + 1)) / steps),
+          })),
+          { type: "touchEnd", points: [] },
+        ]);
+        await settle();
+      };
+      const order = ["hour", "day", "week", "month", "quarter", "year"];
+      const level = () => order.indexOf(el.zoom);
+      await pinch(40, 100); // spread: finer levels
+      const zoomedIn = level();
+      expect(zoomedIn).toBeLessThan(order.indexOf("week"));
+      expect(changes).toEqual([]);
+      await pinch(100, 40); // pinch in: steps back to coarser levels
+      expect(level()).toBeGreaterThan(zoomedIn);
+      expect(changes).toEqual([]);
+    });
   });
 
   it("has no accessibility violations", async () => {
