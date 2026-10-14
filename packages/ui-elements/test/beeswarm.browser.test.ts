@@ -174,7 +174,10 @@ describe("ui-beeswarm", () => {
   });
 
   it("bounds the data table of a canvas swarm", async () => {
-    const many = Array.from({ length: 2500 }, (_, i) => ({ value: (i * 37) % 1000, category: "A" }));
+    const many = Array.from({ length: 2500 }, (_, i) => ({
+      value: (i * 37) % 1000,
+      category: "A",
+    }));
     const c = await swarm([{ id: "big", name: "Big", points: many }], 'height="300"');
     expect(c.chartSnapshot?.categories.length).toBeLessThanOrEqual(1000);
   });
