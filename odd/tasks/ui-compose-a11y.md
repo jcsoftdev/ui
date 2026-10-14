@@ -27,7 +27,7 @@ ask-on-risk, single PR into main with work-unit commits.
 - [x] A2 Large font scale: `Button`, `Chip`, `Segmented` wrap to 2 lines when `fontScale > 1.3`. Route: inline.
 - [x] A3 `Input`/`PasswordInput` content type (`InputContentType`), placeholder kept consistent. Route: inline.
 - [x] A4 Disabled treatment for buttons (legible label, no alpha dim) and stronger card border (`CardDefaults.colors(outlined)`, high contrast). Route: inline.
-- [ ] A5 `FloatingActionButton` (extended and icon-only, 56dp, role, reduced motion). Route: inline.
+- [x] A5 `FloatingActionButton` (extended and icon-only, 56dp, role, reduced motion). Route: inline.
 - [ ] A6 `BottomActionBar` (pinned above a dock, insets). Route: inline.
 - [ ] A7 `FullScreenModal` (hides background from a11y, focus to header, back). Route: inline.
 - [ ] A8 CHANGELOG, parity doc, sample gallery, API dumps, final checks, push, PR, CI.
