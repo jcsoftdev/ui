@@ -197,6 +197,15 @@ export function computeDisplacementField({
   const hy = h / 2;
   const amp = lensAmplitude(w, h, bezel, coverage, cap);
   const norm = Math.max(amp.x, amp.y, 1);
+  // The whole-surface terms of a column are the same on every row: computed once per column.
+  const columnPull = new Float64Array(full ? pw : 0);
+  const columnShape = new Float64Array(full ? pw : 0);
+  for (let i = 0; full && i < pw; i++) {
+    const px = (i + 0.5) / ratio - hx;
+    const au = Math.abs(px) / hx;
+    columnPull[i] = Math.sign(px) * au ** (shape.exponent - 1);
+    columnShape[i] = au ** shape.exponent;
+  }
   for (let j = 0; j < ph; j++) {
     const py = (j + 0.5) / ratio - hy;
     const inner = Math.abs(py) < hy - rim;
@@ -208,10 +217,9 @@ export function computeDisplacementField({
       const px = (i + 0.5) / ratio - hx;
       const o = (j * pw + i) * 4;
       if (full) {
-        const au = Math.abs(px) / hx;
-        const gx = Math.sign(px) * au ** (shape.exponent - 1);
+        const gx = columnPull[i] as number;
         const g = Math.hypot(gx, gv);
-        const t = Math.min((au ** shape.exponent + vn) ** (1 / shape.exponent) / corner, 1);
+        const t = Math.min(((columnShape[i] as number) + vn) ** (1 / shape.exponent) / corner, 1);
         const pull = g > 0 ? t ** shape.power / g : 0;
         data[o] = 128 - gx * pull * 127 * (amp.x / norm);
         data[o + 1] = 128 - gv * pull * 127 * (amp.y / norm);
