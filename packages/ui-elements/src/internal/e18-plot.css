@@ -1,0 +1,19 @@
+[data-e18] [data-row] {
+  transition: opacity 150ms;
+}
+[data-e18] svg:has([data-active]) [data-row]:not(:has([data-active])) {
+  opacity: 0.4;
+}
+[data-e18] [data-row] [data-band] {
+  opacity: 0;
+  transition: opacity 150ms;
+}
+[data-e18] [data-row]:has([data-active]) [data-band] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-e18] [data-row],
+  [data-e18] [data-row] [data-band] {
+    transition: none;
+  }
+}
