@@ -4,6 +4,10 @@ import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineFillGaugeChart } from "../src/fill-gauge-chart/fill-gauge-chart.ts";
 import { defineGaugeChart } from "../src/gauge-chart/gauge-chart.ts";
+import { defineParliamentChart } from "../src/parliament-chart/parliament-chart.ts";
+import { definePolarAreaChart } from "../src/polar-area-chart/polar-area-chart.ts";
+import { defineRadarChart } from "../src/radar-chart/radar-chart.ts";
+import { defineRadialBarChart } from "../src/radial-bar-chart/radial-bar-chart.ts";
 import {
   awake,
   chart,
@@ -21,6 +25,10 @@ import { frame, wait } from "./setup.ts";
 beforeAll(() => {
   defineGaugeChart();
   defineFillGaugeChart();
+  defineRadarChart();
+  defineRadialBarChart();
+  definePolarAreaChart();
+  defineParliamentChart();
   defineChartLegend();
   defineChartTooltip();
 });
@@ -40,7 +48,7 @@ const RANGES = [
   { from: 40, to: 70, label: "Mid", color: "#db3" },
   { from: 70, to: 100, label: "High", color: "#3a3" },
 ];
-const _RADAR = {
+const RADAR = {
   axes: ["Fade", "Beard", "Color", "Style", "Speed"],
   series: [
     { id: "a", name: "Ana", data: [80, 60, 40, 90, 70] },
@@ -67,6 +75,27 @@ const SPECS: Record<string, Spec> = {
     count: 3,
     wait: 1200,
     noWrap: true,
+  },
+  radar: { tag: "ui-radar-chart", attrs: 'height="340"', props: RADAR, count: 5 },
+  "radial-bar": {
+    tag: "ui-radial-bar-chart",
+    attrs: "",
+    props: { data: ITEMS.map((i) => ({ ...i, value: i.value / 1.5 })) },
+    count: 4,
+    width: 500,
+  },
+  "polar-area": {
+    tag: "ui-polar-area-chart",
+    attrs: "",
+    props: { data: ITEMS },
+    count: 4,
+    width: 560,
+  },
+  parliament: {
+    tag: "ui-parliament-chart",
+    attrs: "majority center-label=Seats",
+    props: { data: ITEMS },
+    count: 4,
   },
 };
 
@@ -168,6 +197,44 @@ describe.each(Object.entries(SPECS))("ui-%s-chart", (_name, spec) => {
       "<ui-chart-legend></ui-chart-legend><ui-chart-tooltip></ui-chart-tooltip>",
     );
     expect(await violations(c)).toEqual([]);
+  });
+});
+
+describe("legend toggling by id", () => {
+  it.each(["radial-bar", "polar-area", "parliament"])(
+    "%s hides a group from the legend",
+    async (name) => {
+      const c = await make(SPECS[name] as Spec, "", "<ui-chart-legend></ui-chart-legend>");
+      await wait(60);
+      const buttons = [...c.querySelectorAll<HTMLButtonElement>("ui-chart-legend button")];
+      expect(buttons.map((b) => b.textContent)).toEqual(["Haircut", "Beard", "Color", "Kids"]);
+      buttons[1]?.click();
+      await wait(80);
+      expect(c.isHidden("beard")).toBe(true);
+      expect(marks(c)).toHaveLength(3);
+    },
+  );
+});
+
+describe("parliament seats", () => {
+  it("keeps the group while the pointer crosses the space between two seats", async () => {
+    const c = await make(SPECS.parliament as Spec);
+    await awake(c);
+    const events = record(c, "chart-hover") as Array<{ index: number } | null>;
+    const [first] = marks(c);
+    const seats = [...(first as SVGElement).querySelectorAll("circle")];
+    const a = seats[0] as SVGCircleElement;
+    const b = seats[1] as SVGCircleElement;
+    for (let t = 0; t <= 1.001; t += 0.1) {
+      pointer(
+        c,
+        "pointermove",
+        a.cx.baseVal.value + (b.cx.baseVal.value - a.cx.baseVal.value) * t,
+        a.cy.baseVal.value + (b.cy.baseVal.value - a.cy.baseVal.value) * t,
+      );
+      await frame();
+    }
+    expect(events.map((e) => e?.index)).toEqual([0]);
   });
 });
 
