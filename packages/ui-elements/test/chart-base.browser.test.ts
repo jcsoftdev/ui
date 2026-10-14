@@ -760,6 +760,24 @@ describe("chart tooltip", () => {
     expect(sides).toEqual(["right", "left"]);
   });
 
+  it("jumps to the other side of the pointer instead of sliding across it", async () => {
+    const c = await chart("", "<ui-chart-tooltip></ui-chart-tooltip>", 520);
+    await awake(c);
+    const tip = c.querySelector("ui-chart-tooltip") as HTMLElement;
+    sweep(c, 10);
+    await wait(250);
+    const side = tip.dataset.side;
+    expect(side).toBeTruthy();
+    for (let x = 10; x <= 519 && tip.dataset.side === side; x += 4) {
+      sweep(c, x);
+      await frame();
+    }
+    expect(tip.dataset.side).not.toBe(side);
+    const landed = tip.getBoundingClientRect().left;
+    await wait(250);
+    expect(Math.abs(tip.getBoundingClientRect().left - landed)).toBeLessThan(2);
+  });
+
   it("docks a full-width panel under a narrow chart, with readable text, and keeps the pinned details", async () => {
     const c = await chart("", "<ui-chart-tooltip></ui-chart-tooltip>", 360);
     await awake(c);

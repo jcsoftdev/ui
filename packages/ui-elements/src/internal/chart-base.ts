@@ -79,6 +79,12 @@ export interface DrawContext {
   animate: boolean;
   /** False when the user prefers reduced motion or the chart has `animate="off"`: tween data-to-data changes only if true. */
   motion: boolean;
+  /**
+   * 0 until the theme observer is loaded (first `canvas()` call, or `static themeAware`), then bumps every time the page theme changes (`data-theme`, `class` or `style` on the root or the
+   * nearest themed ancestor, or `prefers-color-scheme`); the chart redraws as `update`. A painter
+   * that caches resolved colors (a canvas) drops its cache when this differs from the last draw.
+   */
+  themeVersion: number;
   /** True for a frame asked for with `requestDraw("transient")`: nothing about the data changed. */
   transient: boolean;
   /**
@@ -102,6 +108,18 @@ export interface DrawContext {
 }
 
 export interface DrawResult {
+  /**
+   * The height in px this content needs (rows, a tree depth). The base applies it to the drawing part
+   * and redraws once, unless the consumer set `height`, `height="fill"` or `aspect-ratio`. Never write
+   * the host: return it here, or set `static defaultHeight`.
+   */
+  naturalHeight?: number;
+  /**
+   * Identity of mark `index`, unique per mark and stable across draws. When both the previous and the
+   * new draw have it, a redraw that reorders the marks keeps the selection, the keyboard hover, the
+   * roving tab stop and focus on the same entity (no `chart-select`). Without it they stay by index.
+   */
+  markKey?(index: number): string;
   /** Accessible name when the element has no `label` attribute. */
   label?: string;
   /** One sentence for screen readers (first, last, min, max...). Becomes the description. */
@@ -161,6 +179,12 @@ const loadFormat = () =>
     formatter = module.resolveFormat;
   });
 
+let canvasMod: typeof import("./chart-canvas.js") | undefined;
+const loadCanvas = () => import("./chart-canvas.js").then((module) => (canvasMod = module));
+let lateMod: typeof import("./chart-late.js") | undefined;
+/** Thrown by `ctx.canvas()` before its chunk is in: the draw is dropped and runs again once it is. */
+const NEED_CANVAS = Symbol();
+
 const isVirtual = (marks: DrawResult["marks"]): marks is VirtualMarks =>
   !!marks && "count" in marks;
 
@@ -185,7 +209,19 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   static retain = false;
   /** CSS `touch-action` of the drawing (the attribute of the same name overrides it). */
   static touchAction = "pan-y";
+  /** Opt in to `themeVersion` without a canvas (a chart that caches resolved colors). A canvas chart is opted in by `canvas()`. */
+  static themeAware = false;
+  /**
+   * Height in px when the consumer sets no `height` and no `aspect-ratio`: a number, or a function of
+   * the element (read its attributes, e.g. `orientation`). Applied to the inner drawing part, never to
+   * the host, and re-read on every draw.
+   */
+  static defaultHeight: number | ((element: HTMLElement) => number) = DEFAULT_HEIGHT;
+  /** Set on a chart that calls `ctx.canvas()`: its chunk is fetched with the first draw, so that draw is not repeated. */
+  static canvas = false;
 
+  /** Series ids hidden before the first draw (attribute `initial-hidden`, a JSON array). Seeds once, silently: no `chart-series`. */
+  declare initialHidden: readonly string[] | undefined;
   /** Property forms of the matching attributes. */
   valueFormat: ValueFormat | undefined;
   palette: readonly string[] | undefined;
@@ -208,6 +244,11 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   #stateKind: "loading" | "empty" | undefined;
   #width = 0;
   #measured = 0;
+  #natural = 0;
+  #themeVersion = 0;
+  #unwatch: Promise<() => void> | undefined;
+  #wait: Promise<unknown> | undefined;
+  #seed: 0 | 1 | 2 | undefined;
   #result: DrawResult | undefined;
   #revision = 0;
   #snapshot: { revision: number; value: ChartSnapshot | null } | undefined;
@@ -333,9 +374,18 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (kind === "data") this.#dirty = true;
     else if (kind === "transient") this.#transient = true;
     if (!this.#frame && this.isConnected)
-      this.#frame = requestAnimationFrame(() =>
-        formatter ? this.#run() : loadFormat().then(() => this.#frame && this.#run()),
-      );
+      this.#frame = requestAnimationFrame(() => {
+        const wait = this.#wait;
+        this.#wait = undefined;
+        if (wait || !formatter)
+          Promise.all([wait, loadFormat()]).then(() => this.#frame && this.#run());
+        else this.#run();
+      });
+  }
+
+  /** Fetches the canvas chunk with the next draw, so a chart that is about to call `ctx.canvas()` draws once. */
+  protected preloadCanvas(): void {
+    if (!canvasMod) this.#wait = Promise.all([this.#wait, loadCanvas()]);
   }
 
   connectedCallback(): void {
@@ -346,6 +396,11 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       this.getAttribute("touch-action") ?? (this.constructor as typeof ChartElement).touchAction;
     for (const type of WAKE) this.drawing.addEventListener(type, this.#onWake);
     this.#syncFill();
+    const own = this.constructor as typeof ChartElement;
+    this.#seed ??= this.initialHidden || this.hasAttribute("initial-hidden") ? 1 : 0;
+    if (this.#seed === 1) this.#wait = import("./chart-late.js").then((m) => (lateMod = m));
+    if (own.canvas) this.preloadCanvas();
+    if (own.themeAware || this.#unwatch) this.#watchTheme();
     this.#width = Math.floor(this.drawing.getBoundingClientRect().width);
     this.#observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
@@ -367,6 +422,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     cancelAnimationFrame(this.#frame);
     this.#frame = 0;
     this.#observer?.disconnect();
+    this.#unwatch?.then((stop) => stop());
     for (const type of WAKE) this.drawing.removeEventListener(type, this.#onWake);
     this.#interact?.detach();
     this.#interact = undefined;
@@ -394,7 +450,9 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (attr === "fill") return this.#measured || FALLBACK_HEIGHT;
     const ratio = Number(this.getAttribute("aspect-ratio"));
     if (ratio > 0) return Math.max(1, Math.round(width / ratio));
-    return Number(attr) > 0 ? Number(attr) : DEFAULT_HEIGHT;
+    if (Number(attr) > 0) return Number(attr);
+    const base = (this.constructor as typeof ChartElement).defaultHeight;
+    return this.#natural || (typeof base === "function" ? base(this) : base) || DEFAULT_HEIGHT;
   }
 
   /** Loading and empty: the previous result is gone, the SVG object is kept for the next `enter`. */
@@ -426,45 +484,22 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     });
   }
 
-  #canvasContext(width: number, height: number): CanvasRenderingContext2D {
-    this.#canvasUsed = true;
-    this.#canvas ??= document.createElement("canvas");
-    const canvas = this.#canvas;
-    canvas.dataset.uiPart = "canvas";
-    canvas.setAttribute("aria-hidden", "true");
-    canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
-    const scale = devicePixelRatio || 1;
-    // Assigning the size clears the bitmap.
-    canvas.width = Math.round(width * scale);
-    canvas.height = Math.round(height * scale);
-    if (!canvas.isConnected) this.drawing.prepend(canvas);
-    this.#watchDpr();
-    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    context.setTransform(scale, 0, 0, scale, 0, 0);
-    return context;
+  /** Loads the shared theme observer on demand: only canvas or color-caching charts pay for it. */
+  #watchTheme(): void {
+    this.#unwatch = loadCanvas().then((module) =>
+      module.bindTheme(this, () => {
+        this.#themeVersion++;
+        this.requestDraw("transient");
+      }),
+    );
   }
 
-  /** A window dragged to a screen with another pixel ratio, or a browser zoom, redraws the canvas layer sharp. */
-  #watchDpr(): void {
-    if (this.#dpr) return;
-    const stop = new AbortController();
-    this.#dpr = stop;
-    const arm = () => {
-      matchMedia(`(resolution: ${devicePixelRatio}dppx)`).addEventListener(
-        "change",
-        () => {
-          if (stop.signal.aborted) return;
-          this.requestDraw("size");
-          arm();
-        },
-        { once: true, signal: stop.signal },
-      );
-    };
-    arm();
-  }
-
-  #run(): void {
+  #run(again = false): void {
     this.#frame = 0;
+    if (this.#seed === 1 && lateMod) {
+      lateMod.seed(this, this.#hidden);
+      this.#seed = 2;
+    }
     const fill = this.hasAttribute("data-fill");
     const height = this.#height(this.#width);
     if (!fill) this.drawing.style.height = `${height}px`;
@@ -485,7 +520,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#busy = true;
     const active = document.activeElement;
     const hadFocus = !!active && drawing.contains(active);
-    const focused = hadFocus ? this.#indexOf(active) : -1;
+    let focused = hadFocus ? this.#indexOf(active) : -1;
     const transient = this.#transient;
     this.#transient = false;
     const phase: DrawPhase = !this.#result
@@ -509,30 +544,55 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#canvasUsed = false;
     this.#stateKind = undefined;
     const motion = this.getAttribute("animate") !== "off" && !this.reduced;
-    const result = this.draw({
-      svg: root,
-      width,
-      height,
-      phase,
-      previous: this.#result,
-      locale: this.locale,
-      timeZone: this.timeZone,
-      format,
-      animate: phase === "enter" && motion,
-      motion,
-      transient,
-      hover: this.#interact?.info()?.index ?? null,
-      color: (index, override) =>
-        override ?? palette?.[index % palette.length] ?? seriesColor(index),
-      retain: () => {
-        this.#retain = true;
-      },
-      canvas: () => this.#canvasContext(width, height),
-    });
+    let result: DrawResult | undefined;
+    try {
+      result = this.draw({
+        svg: root,
+        width,
+        height,
+        phase,
+        previous: this.#result,
+        locale: this.locale,
+        timeZone: this.timeZone,
+        format,
+        animate: phase === "enter" && motion,
+        motion,
+        transient,
+        themeVersion: this.#themeVersion,
+        hover: this.#interact?.info()?.index ?? null,
+        color: (index, override) =>
+          override ?? palette?.[index % palette.length] ?? seriesColor(index),
+        retain: () => {
+          this.#retain = true;
+        },
+        canvas: () => {
+          if (!canvasMod) throw NEED_CANVAS;
+          this.#canvasUsed = true;
+          if (!this.#unwatch) this.#watchTheme();
+          const [canvas, context] = canvasMod.layer(this.drawing, this.#canvas, width, height);
+          this.#canvas = canvas;
+          this.#dpr ??= canvasMod.watchDpr(this);
+          return context;
+        },
+      });
+    } catch (error) {
+      if (error !== NEED_CANVAS) throw error;
+      this.#busy = false;
+      loadCanvas().then(() => this.requestDraw("size"));
+      return;
+    }
+    // The content decided its own height: lay out again, once, in this frame, so it never paints at the wrong one.
+    this.#natural = Math.round(result?.naturalHeight || 0);
+    if (!again && this.#height(width) !== height) {
+      this.#run(true);
+      return;
+    }
     if (!this.#canvasUsed) this.#canvas?.remove();
     const dataChanged = this.#dirty || phase === "enter";
     if (dataChanged) this.#revision++;
     this.#result = result;
+    const map = this.#interact?.remap(result);
+    if (map && focused >= 0) focused = map(focused);
     this.#mount(root, result);
     if (!this.#setup) {
       this.#setup = new AbortController();
@@ -541,6 +601,10 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (hadFocus && !drawing.contains(document.activeElement))
       this.#interact?.restoreFocus(focused);
     this.#busy = false;
+    if (this.#seed === 2) {
+      this.#seed = 0;
+      if (lateMod?.settle(this, this.#hidden)) this.requestDraw();
+    }
     this.#interact?.refresh();
     if (dataChanged) {
       this.#dirty = false;
