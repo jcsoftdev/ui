@@ -1,6 +1,5 @@
 package com.jcsoftdev.ui.chart.core
 
-import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.log10
 import kotlin.math.max
@@ -131,8 +130,8 @@ public fun logScale(
     val b = finiteOr(domainEnd, 10.0)
     val lo = max(min(a, b), Double.MIN_VALUE)
     val hi = max(max(a, b), lo)
-    val e0 = floor(log10(lo)).toInt()
-    val e1 = max(ceil(log10(hi)).toInt(), e0 + 1)
+    val e0 = floorLog10(lo)
+    val e1 = max(ceilLog10(hi), e0 + 1)
     return LogScale(e0, e1, NumberRange(finiteOr(rangeStart, 0.0), finiteOr(rangeEnd, 1.0)))
 }
 
