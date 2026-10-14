@@ -1,4 +1,9 @@
+import { toDate } from "../internal/grid-values.js";
 import type { CellValue, GridColumn } from "./model.js";
+
+export { toDate };
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
 export type EditorKind = "text" | "number" | "select" | "boolean" | "date";
 
@@ -194,17 +199,6 @@ export function parseDate(text: string, locale: string): Date | null {
   return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
     ? date
     : null;
-}
-
-const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-/** A stored date value as a Date: a date-only ISO string is the LOCAL day, not UTC midnight. */
-export function toDate(value: CellValue): Date | null {
-  if (value instanceof Date) return value;
-  if (typeof value !== "string") return null;
-  const day = DATE_ONLY.exec(value);
-  const date = day ? new Date(Number(day[1]), Number(day[2]) - 1, Number(day[3])) : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 /** The text an editor starts with for a stored value. */
