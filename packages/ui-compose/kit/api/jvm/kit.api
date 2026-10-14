@@ -1511,6 +1511,17 @@ public final class com/jcsoftdev/ui/navigation/BarsKt {
 	public static final fun TopBar-tJlDC5Y (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lcom/jcsoftdev/ui/navigation/BarColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/navigation/BottomActionBarDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/navigation/BottomActionBarDefaults;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getShape ()Landroidx/compose/ui/graphics/Shape;
+}
+
+public final class com/jcsoftdev/ui/navigation/BottomActionBarKt {
+	public static final fun BottomActionBar-Uww-Ezs (Landroidx/compose/ui/Modifier;FLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lcom/jcsoftdev/ui/navigation/BarColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/navigation/SegmentedColors {
 	public static final field $stable I
 	public synthetic fun <init> (JJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
