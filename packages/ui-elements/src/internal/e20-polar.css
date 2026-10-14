@@ -1,0 +1,94 @@
+/* The legend of a polar chart sits beside the drawing in a wide container, as in the React kit. */
+@container ui-chart (min-width: 32rem) {
+  [data-ui-chart][data-polar] > [data-ui="chart-legend"] {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 0;
+    transform: translateY(-50%);
+    box-sizing: border-box;
+    width: 11rem;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  [data-ui-chart][data-polar] > [data-ui-part="drawing"] {
+    margin-inline-end: calc(11rem + 16px);
+  }
+  [data-ui-chart][data-polar] > [data-ui="chart-legend"] > ul {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+  }
+}
+
+/* A hovered, focused or pinned slice steps out; the others fade. Hit testing never reads these
+   elements, so moving them cannot move the pointer off them. */
+[data-ui-chart][data-polar] [data-slice] {
+  transition:
+    transform 200ms ease-out,
+    opacity 150ms;
+}
+[data-ui-chart][data-polar] [data-slice][data-active],
+[data-ui-chart][data-polar] [data-slices]:has([data-dim]) > [data-slice]:not([data-dim]) {
+  transform: translate(var(--ui-dx, 0), var(--ui-dy, 0));
+}
+[data-ui-chart][data-polar] [data-slices]:has([data-active]) > [data-slice]:not([data-active]) {
+  opacity: 0.4;
+}
+[data-ui-chart][data-polar] [data-pointer-none] {
+  pointer-events: none;
+}
+[data-ui-chart][data-polar] [data-fade-on-focus] {
+  transition: opacity 150ms;
+}
+[data-ui-chart][data-polar] [data-slices]:has([data-active]) ~ [data-fade-on-focus] {
+  opacity: 0.55;
+}
+[data-ui-chart][data-polar] [data-ring-group] {
+  transition: opacity 150ms;
+}
+[data-ui-chart][data-polar]
+  [data-rings]:has([data-active])
+  > [data-ring-group]:not(:has([data-active])) {
+  opacity: 0.4;
+}
+[data-ui-chart][data-polar] [data-axis-label][data-on] {
+  fill: var(--ink);
+  font-weight: 700;
+}
+[data-ui-chart][data-polar] [data-band] {
+  opacity: 0.92;
+  transition: opacity 150ms;
+}
+[data-ui-chart][data-polar] [data-band][data-quiet] {
+  opacity: 0;
+}
+[data-ui-chart][data-polar] [data-band][data-quiet][data-active] {
+  opacity: 0.32;
+}
+[data-ui-chart][data-polar]
+  [data-bands]:has([data-active])
+  > [data-band]:not([data-quiet], [data-active]) {
+  opacity: 0.46;
+}
+[data-ui-chart][data-polar] [data-spoke] {
+  stroke: var(--chart-grid);
+}
+[data-ui-chart][data-polar] [data-spoke][data-on] {
+  stroke: var(--chart-crosshair);
+  stroke-width: 1.5;
+}
+[data-ui-chart][data-polar] [data-marker] {
+  transition: r 150ms;
+}
+[data-ui-chart][data-polar] [data-marker][data-on] {
+  r: 5.5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart][data-polar] [data-slice],
+  [data-ui-chart][data-polar] [data-fade-on-focus],
+  [data-ui-chart][data-polar] [data-ring-group],
+  [data-ui-chart][data-polar] [data-band],
+  [data-ui-chart][data-polar] [data-marker] {
+    transition: none;
+  }
+}
