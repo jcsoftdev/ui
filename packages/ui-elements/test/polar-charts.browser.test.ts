@@ -20,7 +20,7 @@ import {
   tap,
   violations,
 } from "./e20-charts.ts";
-import { frame, wait } from "./setup.ts";
+import { frame, mount, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineGaugeChart();
@@ -249,13 +249,22 @@ describe("fill gauge", () => {
     expect(c.chartSnapshot?.categories).toEqual(ITEMS.map((i) => i.name));
   });
 
-  it("loads a non-default shape before the first paint", async () => {
-    const c = await chart("ui-fill-gauge-chart", 'shape="star"', "", 360);
-    (c as unknown as { data: unknown }).data = [{ id: "a", name: "Goal", value: 0.5 }];
+  it("paints the requested shape first, never the person", async () => {
+    const host = mount(
+      '<div style="width:360px"><ui-fill-gauge-chart label="Goal" locale="en-US" shape="heart" data=\'[{"id":"a","name":"Goal","value":0.5}]\'></ui-fill-gauge-chart></div>',
+    );
+    const paths: string[] = [];
+    const watch = new MutationObserver(() => {
+      for (const d of host.querySelectorAll("svg path")) paths.push(d.getAttribute("d") ?? "");
+    });
+    watch.observe(host, { childList: true, subtree: true });
     await settle();
-    await wait(60);
-    const clip = svgOf(c).querySelector("clipPath path, path");
-    expect(clip?.getAttribute("d")).not.toContain("M12 1.8c3.9");
+    await wait(80);
+    watch.disconnect();
+    const person = "M12 2.5a4 4 0 1 1 0 8a4 4 0 1 1 0-8z";
+    expect(paths.length).toBeGreaterThan(0);
+    expect(paths.some((d) => d.startsWith(person))).toBe(false);
+    expect(paths.some((d) => d.startsWith("M12 21.2C5.6"))).toBe(true);
   });
 });
 

@@ -93,7 +93,31 @@ export class UiFillGaugeChart extends ChartElement {
   override connectedCallback(): void {
     this.dataset.ui = "fill-gauge-chart";
     // TODO(E20): default height 200 once the base has a natural-height hook (no host writes).
-    super.connectedCallback();
+    // A shape that is not the droplet may still be loading: the first paint waits for it, so the
+    // wrong silhouette never shows. The droplet path stays synchronous.
+    const pending = this.#pending();
+    if (pending) void pending.then(() => this.isConnected && super.connectedCallback());
+    else super.connectedCallback();
+  }
+
+  #pending(): Promise<void> | undefined {
+    const names = new Set<string>();
+    const wanted = this.getAttribute("shape");
+    if (wanted) names.add(wanted);
+    for (const item of this.data) if (typeof item.shape === "string") names.add(item.shape);
+    names.delete("droplet");
+    const person = resolveUnitShape("person").path;
+    const waits: Promise<void>[] = [];
+    for (const name of names) {
+      if (name === "person") continue;
+      let settle: () => void = () => {};
+      const wait = new Promise<void>((resolve) => {
+        settle = resolve;
+      });
+      // A shape that is already known (or is a raw path) resolves at once and never calls back.
+      if (resolveUnitShape(name, settle).path === person) waits.push(wait);
+    }
+    return waits.length ? Promise.all(waits).then(() => undefined) : undefined;
   }
 
   #shape(icon: UnitIcon): ResolvedUnitShape {
