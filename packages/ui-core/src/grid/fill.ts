@@ -279,7 +279,12 @@ export function seriesFill(
         const padded = items.some((item) => item.padded);
         const width = Math.max(...items.map((item) => item.width));
         return Array.from({ length: count }, (_unused, i) => ({
-          value: formatCounted(first.prefix, Math.max(0, last.value + step * (i + 1)), width, padded),
+          value: formatCounted(
+            first.prefix,
+            Math.max(0, last.value + step * (i + 1)),
+            width,
+            padded,
+          ),
         }));
       }
     }

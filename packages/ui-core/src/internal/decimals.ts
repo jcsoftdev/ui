@@ -6,4 +6,3 @@ export function decimalsOf(n: number): number {
 
 /** `n` rounded to `places` decimals, which drops the noise of binary arithmetic (0.1 + 0.2). */
 export const roundTo = (n: number, places: number): number => Number(n.toFixed(places));
-
