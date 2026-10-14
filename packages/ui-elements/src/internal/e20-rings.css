@@ -1,0 +1,13 @@
+[data-ui-chart][data-polar] [data-ring-group] {
+  transition: opacity 150ms;
+}
+[data-ui-chart][data-polar]
+  [data-rings]:has([data-active])
+  > [data-ring-group]:not(:has([data-active])) {
+  opacity: 0.4;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart][data-polar] [data-ring-group] {
+    transition: none;
+  }
+}
