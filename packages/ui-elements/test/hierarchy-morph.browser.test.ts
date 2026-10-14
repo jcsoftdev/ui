@@ -37,6 +37,32 @@ describe("ui-hierarchy-morph", () => {
     expect(labels).toHaveLength(8);
   });
 
+  it("cannot drill: no hint, and the zoom attributes are ignored", async () => {
+    const c = await mountChart(TAG, 'focus-id="root/Sales" breadcrumb="nope" drill-down="on"');
+    await awake(c);
+    const labels = marksOf(c).map((m) => m.getAttribute("aria-label"));
+    expect(labels[0]).toMatch(/^Engineering/);
+    const [x, y] = centerOf(c, "Engineering:");
+    pointer(c, "pointermove", x, y);
+    const rows = (c.hover as unknown as { rows: Array<{ id: string }> }).rows;
+    expect(rows.some((row) => row.id === "hint")).toBe(false);
+  });
+
+  it("does not make shapes too small to see focusable", async () => {
+    const c = await mountChart(TAG);
+    c.data = {
+      name: "Co",
+      children: [
+        { name: "Big", value: 100000 },
+        { name: "Tiny", value: 1 },
+      ],
+    };
+    await settle();
+    const labels = marksOf(c).map((m) => m.getAttribute("aria-label") ?? "");
+    expect(labels.some((l) => l.startsWith("Big"))).toBe(true);
+    expect(labels.some((l) => l.startsWith("Tiny"))).toBe(false);
+  });
+
   it("switches view with the buttons, morphs the paths and announces nothing new", async () => {
     const c = await mountChart(TAG);
     const modes: string[] = [];

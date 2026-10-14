@@ -53,6 +53,20 @@ describe("ui-treemap-chart", () => {
     expect(events.at(-1)).toBeNull();
   });
 
+  it("never reports a group while the pointer crosses the gaps between its leaves", async () => {
+    const c = await mountChart(TAG);
+    await awake(c);
+    const events = hoverLog(c);
+    const [x] = centerOf(c, "Engineering › Platform");
+    const box = svgOf(c).getBoundingClientRect();
+    for (let y = 60; y < box.height - 4; y += 1) pointer(c, "pointermove", x, y);
+    const names = events.map(
+      (i) => marksOf(c)[i as number]?.getAttribute("aria-label")?.split(":")[0] ?? "",
+    );
+    expect(names.length).toBeGreaterThan(1);
+    expect(names.every((name) => name.includes("›"))).toBe(true);
+  });
+
   it("keeps the hover through a redraw", async () => {
     const c = await mountChart(TAG);
     await awake(c);

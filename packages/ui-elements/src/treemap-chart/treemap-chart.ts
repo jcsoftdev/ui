@@ -5,6 +5,7 @@ import { type TreemapCell, treemapLayout } from "@jcsoftdev/ui-core/chart/treema
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
 import { type DrawContext, type DrawResult, join, svg } from "../internal/chart-base.js";
 import {
+  type Box,
   fitLabel,
   HierarchyChart,
   type HierarchyModel,
@@ -187,13 +188,40 @@ export class UiTreemapChart extends HierarchyChart {
 
     const marks = this.marksOf(nodes, model, ctx, (_, i) => elements[i] as SVGElement);
     const reach = gap + 1;
+    // Gutters snap to a leaf: when the nearest box is a group and the pointer is not on its header,
+    // the nearest leaf inside it answers, so the tooltip never flips to the parent between two cells.
+    const inside = (cell: Box, x: number, y: number) =>
+      x >= cell.x0 && x <= cell.x1 && y >= cell.y0 && y <= cell.y1;
+    const snapToLeaf = (group: number, x: number, y: number): number => {
+      const box = cells[group] as Box;
+      let best = group;
+      let distance = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < cells.length; i += 1) {
+        const cell = cells[i] as (typeof cells)[number];
+        if (cell.group || !inside(box, (cell.x0 + cell.x1) / 2, (cell.y0 + cell.y1) / 2)) continue;
+        const d = Math.hypot(
+          Math.max(cell.x0 - x, 0, x - cell.x1),
+          Math.max(cell.y0 - y, 0, y - cell.y1),
+        );
+        if (d < distance) {
+          distance = d;
+          best = i;
+        }
+      }
+      return best;
+    };
     return {
       label: model.root.name,
       summary: `${focus.name}: ${format(focus.value)}, ${focus.children.length}`,
       marks,
       snapshot: this.snapshotOf(model, ctx),
       maxHoverRows: 3,
-      hit: (x, y) => nearestBox(cells, x, y, reach),
+      hit: (x, y) => {
+        const near = nearestBox(cells, x, y, reach);
+        const cell = cells[near];
+        if (!cell?.group || y <= cell.y0 + HEADER) return near;
+        return snapToLeaf(near, x, y);
+      },
       hover: (i) => {
         const cell = cells[i];
         if (!cell) return null;

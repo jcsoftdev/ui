@@ -13,7 +13,6 @@ import {
   ancestors,
   buildHierarchy,
   descendants,
-  findNode,
   type HierarchyDatum,
   type HierarchyNode,
 } from "@jcsoftdev/ui-core/chart/hierarchy";
@@ -42,6 +41,7 @@ import {
   nodePath,
   nodeTooltipRows,
   percent,
+  pruneTree,
   shareOf,
 } from "./hierarchy-model.js";
 
@@ -64,7 +64,18 @@ export interface HierarchyModel {
   focus: HierarchyNode;
   /** Root first, `focus` last. */
   path: HierarchyNode[];
+  /** Value of the open node with nothing hidden: shares are measured against it, never renormalized. */
+  total: number;
+  /** Every node of the whole tree by id. */
+  byId: ReadonlyMap<string, HierarchyNode>;
+  /** Every node of the drawn tree by id. */
+  drawn: ReadonlyMap<string, HierarchyNode>;
+  /** Base color per node of the whole tree, filled as the nodes ask. */
+  tones: Map<HierarchyNode, string>;
 }
+
+const indexOf = (root: HierarchyNode): Map<string, HierarchyNode> =>
+  new Map(descendants(root).map((node) => [node.id, node]));
 
 const parseData = (text: string | null): HierarchyDatum | undefined => {
   if (!text) return undefined;
@@ -75,6 +86,9 @@ const parseData = (text: string | null): HierarchyDatum | undefined => {
     return undefined;
   }
 };
+
+/** A pointer that moves farther than this (px) between down and up is a swipe, not a tap. */
+const TAP_SLOP = 10;
 
 const EMPTY: HierarchyDatum = { name: "", children: [] };
 
@@ -104,14 +118,6 @@ export function nearestBox(boxes: ArrayLike<Box>, x: number, y: number, toleranc
   return distance <= tolerance ? best : -1;
 }
 
-/** The datum of `node` without the branches in `hidden`. */
-function prune(node: HierarchyNode, hidden: ReadonlySet<string>): HierarchyDatum {
-  const kept = node.children.filter((child) => !hidden.has(child.id));
-  return kept.length > 0
-    ? { ...node.data, children: kept.map((c) => prune(c, hidden)) }
-    : node.data;
-}
-
 export abstract class HierarchyChart extends ChartElement {
   static override observedAttributes = [
     ...CHART_ATTRIBUTES,
@@ -129,14 +135,19 @@ export abstract class HierarchyChart extends ChartElement {
   protected lighting = true;
   #data: HierarchyDatum | undefined;
   #parsed: { text: string | null; value: HierarchyDatum | undefined } | undefined;
-  #built: { data: HierarchyDatum; sort: boolean; full: HierarchyNode } | undefined;
-  #pruned: { key: string; root: HierarchyNode } | undefined;
+  #built:
+    | { data: HierarchyDatum; sort: boolean; full: HierarchyNode; byId: Map<string, HierarchyNode> }
+    | undefined;
+  #pruned: { key: string; root: HierarchyNode; byId: Map<string, HierarchyNode> } | undefined;
+  #model: HierarchyModel | undefined;
+  #touch = false;
   #focusId: string | null = null;
   #refocus: string | null = null;
   #last: DrawResult | undefined;
   #frame = 0;
   #crumb: { el: HTMLElement; stop: AbortController } | undefined;
   #crumbItems: unknown;
+  #down: { x: number; y: number } | undefined;
 
   constructor() {
     super();
@@ -161,6 +172,7 @@ export abstract class HierarchyChart extends ChartElement {
   }
   set data(value: HierarchyDatum | undefined) {
     this.#data = value;
+    this.#model = undefined;
     this.requestDraw();
   }
 
@@ -177,6 +189,27 @@ export abstract class HierarchyChart extends ChartElement {
     return this.model().path.map((node) => ({ id: node.id, name: node.name }));
   }
 
+  /**
+   * The node behind mark `index` of the last draw (what `chart-select` and `chart-drill` report as
+   * `detail.index`), or `undefined`. `path` runs from the root to the node.
+   */
+  nodeAt(
+    index: number,
+  ):
+    | { id: string; name: string; depth: number; value: number; path: readonly string[] }
+    | undefined {
+    const node = this.nodes[index];
+    return (
+      node && {
+        id: node.id,
+        name: node.name,
+        depth: node.depth,
+        value: node.value,
+        path: ancestors(node).map((n) => n.name),
+      }
+    );
+  }
+
   /** Whether opening a node is on (`drill-down="off"` turns it off). */
   protected get drillable(): boolean {
     return flag(this, "drill-down", true);
@@ -189,37 +222,84 @@ export abstract class HierarchyChart extends ChartElement {
     return this.getAttribute("animate") !== "off" && !this.reduced;
   }
 
-  /** The hierarchy for the current data, `sort`, hidden branches and open node. */
+  /** The `focus-id` attribute: a subclass that cannot zoom ignores it. */
+  protected get wantedFocus(): string | null {
+    return this.#focusId ?? this.getAttribute("focus-id");
+  }
+  /** Id of the breadcrumb element (`off` for none), `null` to look for one inside the chart. */
+  protected get crumbId(): string | null {
+    return this.getAttribute("breadcrumb");
+  }
+
+  /**
+   * The hierarchy for the current data, `sort`, hidden branches and open node. Built once per draw
+   * (and again when the data, an attribute or the open node changes), so asking is free.
+   */
   protected model(): HierarchyModel {
+    if (this.#model) return this.#model;
     const data = this.data ?? EMPTY;
     const sort = flag(this, "sort", true);
     if (this.#built?.data !== data || this.#built.sort !== sort) {
-      this.#built = { data, sort, full: buildHierarchy(data, { sort }) };
+      const full = buildHierarchy(data, { sort });
+      this.#built = { data, sort, full, byId: indexOf(full) };
       this.#pruned = undefined;
     }
-    const full = this.#built.full;
-    const hidden = new Set(
-      descendants(full)
-        .filter((node) => this.isHidden(node.id))
-        .map((n) => n.id),
-    );
+    const { full, byId } = this.#built;
+    const hidden = new Set<string>();
+    for (const id of byId.keys()) if (this.isHidden(id)) hidden.add(id);
     let root = full;
+    let drawn = byId;
     if (hidden.size > 0) {
       const key = [...hidden].join("\n");
-      if (this.#pruned?.key !== key)
-        this.#pruned = { key, root: buildHierarchy(prune(full, hidden), { sort }) };
+      if (this.#pruned?.key !== key) {
+        const pruned = pruneTree(full, hidden);
+        this.#pruned = { key, root: pruned, byId: indexOf(pruned) };
+      }
       root = this.#pruned.root;
+      drawn = this.#pruned.byId;
     }
-    const wanted = this.#focusId ?? this.getAttribute("focus-id");
-    const focus = (wanted ? findNode(root, wanted) : null) ?? root;
-    return { root, full, focus, path: ancestors(focus) };
+    const wanted = this.wantedFocus;
+    const focus = (wanted ? drawn.get(wanted) : undefined) ?? root;
+    const total = (byId.get(focus.id) ?? focus).value;
+    this.#model = {
+      root,
+      full,
+      focus,
+      path: ancestors(focus),
+      total,
+      byId,
+      drawn,
+      tones: new Map(),
+    };
+    return this.#model;
   }
 
   /** Base color of `node`: its own, else the palette slot of its branch (stable when a branch is hidden). */
   protected tone(node: HierarchyNode, model: HierarchyModel, ctx: DrawContext): string {
-    const whole = findNode(model.full, node.id) ?? node;
-    const focus = findNode(model.full, model.focus.id) ?? model.focus;
-    return branchColor(whole, focus, (i) => ctx.color(i));
+    const { tones, byId } = model;
+    const climb: HierarchyNode[] = [];
+    let color = "";
+    let current: HierarchyNode = byId.get(node.id) ?? node;
+    for (;;) {
+      const known = tones.get(current);
+      if (known !== undefined) {
+        color = known;
+        break;
+      }
+      const parent: HierarchyNode | null = current.parent;
+      if (current.color) color = current.color;
+      else if (!parent) color = ctx.color(0);
+      else if (parent.id === model.focus.id) color = ctx.color(current.index);
+      else {
+        climb.push(current);
+        current = parent;
+        continue;
+      }
+      tones.set(current, color);
+      break;
+    }
+    for (const passed of climb) tones.set(passed, color);
+    return color;
   }
 
   protected override isEmpty(): boolean {
@@ -228,14 +308,19 @@ export abstract class HierarchyChart extends ChartElement {
 
   /** Opens `id` (a node with children, or any ancestor). Returns false when nothing changed. */
   zoomTo(id: string): boolean {
-    const { root, focus } = this.model();
-    const node = findNode(root, id);
+    const { drawn, focus } = this.model();
+    const node = drawn.get(id);
     if (!node || node.id === focus.id || node.children.length === 0) return false;
+    // The legend lists the open node's children: branches hidden on the way would stay out of reach.
+    for (const hiddenId of this.model().byId.keys())
+      if (this.isHidden(hiddenId)) this.toggleSeries(hiddenId);
     this.#focusId = node.id;
+    this.#model = undefined;
     if (this.selected !== null) this.select(null);
     this.onZoom(focus, node);
     this.requestDraw();
     const path = ancestors(node).map((n) => ({ id: n.id, name: n.name }));
+    this.#syncCrumb();
     emit(this, "chart-focus", { id: node.id, name: node.name, depth: node.depth, path });
     return true;
   }
@@ -288,7 +373,11 @@ export abstract class HierarchyChart extends ChartElement {
     const { focus } = model;
     return {
       title: node.parent && node.parent !== focus ? nodePath(node.parent, focus) : focus.name,
-      rows: nodeTooltipRows(node, focus, ctx.format, this.strings, this.tone(node, model, ctx)),
+      rows: nodeTooltipRows(node, focus, ctx.format, this.strings, this.tone(node, model, ctx), {
+        total: model.total,
+        drill: this.drillable,
+        touch: this.#touch,
+      }),
       x,
       y,
       side,
@@ -304,17 +393,17 @@ export abstract class HierarchyChart extends ChartElement {
   ): ChartMark[] {
     return nodes.map((node, i) => ({
       el: el(node, i),
-      label: describeNode(node, model.focus, ctx.format),
+      label: describeNode(node, model.focus, ctx.format, model.total),
     }));
   }
 
   /** The legend, data table and export of the open level. */
   protected snapshotOf(model: HierarchyModel, ctx: DrawContext): () => ChartSnapshot {
     return () => {
-      const { root, focus, full } = model;
+      const { root, focus } = model;
       const strings = this.strings;
       const nodes = descendants(root).slice(1);
-      const whole = findNode(full, focus.id) ?? focus;
+      const whole = model.byId.get(focus.id) ?? focus;
       return {
         title: this.getAttribute("label") || root.name,
         categoryHeader: strings.category,
@@ -331,8 +420,8 @@ export abstract class HierarchyChart extends ChartElement {
             id: "share",
             name: strings.share,
             color: ctx.color(1),
-            values: nodes.map((node) => shareOf(node, root)),
-            text: nodes.map((node) => percent(shareOf(node, root))),
+            values: nodes.map((node) => shareOf(node, model.full)),
+            text: nodes.map((node) => percent(shareOf(node, model.full))),
           },
         ],
         legend: whole.children.slice(0, 8).map((child) => ({
@@ -347,8 +436,9 @@ export abstract class HierarchyChart extends ChartElement {
   protected abstract render(ctx: DrawContext, model: HierarchyModel): DrawResult;
 
   protected override draw(ctx: DrawContext): DrawResult {
+    this.#model = undefined;
     const model = this.model();
-    this.#bindCrumb(model.path);
+    this.#syncCrumb();
     const result = this.render(ctx, model);
     this.#last = result;
     queueMicrotask(() => {
@@ -387,8 +477,13 @@ export abstract class HierarchyChart extends ChartElement {
       el.toggleAttribute("data-lit", !!ids?.has(el.getAttribute("data-node") ?? ""));
   }
 
-  #bindCrumb(path: readonly HierarchyNode[]): void {
-    const id = this.getAttribute("breadcrumb");
+  /**
+   * Wires the breadcrumb (named by `breadcrumb`, or the one inside the chart) and gives it the path.
+   * Runs on connect, on every draw and on every zoom; a breadcrumb element that is not defined yet
+   * gets the path once it is, whichever was defined first.
+   */
+  #syncCrumb(): void {
+    const id = this.crumbId;
     const el =
       id === "off"
         ? null
@@ -410,10 +505,14 @@ export abstract class HierarchyChart extends ChartElement {
           },
           { signal: stop.signal },
         );
+        if (el.localName.includes("-") && !customElements.get(el.localName))
+          customElements.whenDefined(el.localName).then(() => {
+            if (this.#crumb?.el === el) this.#syncCrumb();
+          });
       }
     }
     if (!el || !("items" in el)) return;
-    const items = path.map((node) => ({ id: node.id, name: node.name }));
+    const items = this.model().path.map((node) => ({ id: node.id, name: node.name }));
     const same =
       this.#crumbItems === (el as HTMLElement & { items: unknown }).items &&
       JSON.stringify(this.#crumbItems) === JSON.stringify(items);
@@ -447,11 +546,22 @@ export abstract class HierarchyChart extends ChartElement {
       },
       opts,
     );
-    // A second tap on the pinned node opens it (the first tap pins).
+    svg.addEventListener(
+      "pointerdown",
+      (event) => {
+        this.#touch = event.pointerType !== "mouse";
+        this.#down = { x: event.clientX, y: event.clientY };
+      },
+      opts,
+    );
+    // A second tap on the pinned node opens it (the first tap pins). A swipe that ends on it does not.
     svg.addEventListener(
       "pointerup",
       (event) => {
+        const down = this.#down;
+        this.#down = undefined;
         if (event.pointerType === "mouse" || !this.drillable) return;
+        if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > TAP_SLOP) return;
         const [x, y] = this.#local(svg, event);
         const index = this.#last?.hit?.(x, y, event.target as Element, 44) ?? -1;
         const node = this.nodes[index];
@@ -484,6 +594,7 @@ export abstract class HierarchyChart extends ChartElement {
     this.toggleAttribute("data-hierarchy", true);
     adoptStyles(rootOf(this), css);
     super.connectedCallback();
+    this.#syncCrumb();
   }
 
   override disconnectedCallback(): void {
@@ -495,6 +606,7 @@ export abstract class HierarchyChart extends ChartElement {
 
   override attributeChangedCallback(name: string): void {
     if (name === "focus-id") this.#focusId = null;
+    this.#model = undefined;
     super.attributeChangedCallback(name);
   }
 }

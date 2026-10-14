@@ -30,6 +30,8 @@ const HEADER = 22;
 const TAU = Math.PI * 2;
 const LABEL_FONT = 11;
 const LABEL_PAD = 6;
+/** Smallest side (px) of a cell that is worth drawing and focusing. */
+const MIN_SEEN = 4;
 
 interface Shape {
   node: HierarchyNode;
@@ -90,8 +92,11 @@ const sectorRoom = (angle: number, arc: number, thick: number) => {
  * and `mode-change` (`{ mode }`) when the switch is used.
  */
 export class UiHierarchyMorph extends HierarchyChart {
+  // It shows the whole tree and cannot zoom: no `focus-id`, `drill-down` or `breadcrumb`.
   static override observedAttributes = [
-    ...HierarchyChart.observedAttributes,
+    ...HierarchyChart.observedAttributes.filter(
+      (name) => name !== "focus-id" && name !== "drill-down" && name !== "breadcrumb",
+    ),
     "mode",
     "levels",
     "gap",
@@ -118,6 +123,12 @@ export class UiHierarchyMorph extends HierarchyChart {
 
   protected override get drillable(): boolean {
     return false;
+  }
+  protected override get wantedFocus(): string | null {
+    return null;
+  }
+  protected override get crumbId(): string {
+    return "off";
   }
 
   override connectedCallback(): void {
@@ -214,6 +225,12 @@ export class UiHierarchyMorph extends HierarchyChart {
           const a1 = span.x1 * TAU - padAngle;
           const sector = sectorRing(cx, cy, r0, r1, a0, Math.max(a0 + 1e-3, a1));
           const cell = cellOf.get(child.id);
+          // Too small to see in either view: not drawn, and not a tab stop.
+          const seen = cell ? Math.min(cell.x1 - cell.x0, cell.y1 - cell.y0) >= MIN_SEEN : false;
+          if (!seen && (a1 - a0) * mid < MIN_SEEN / 2) {
+            visit(child);
+            continue;
+          }
           let rect: RingPoint[];
           let rectLabel: Shape["rectLabel"] = null;
           if (cell) {

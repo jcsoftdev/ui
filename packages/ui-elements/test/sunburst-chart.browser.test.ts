@@ -176,13 +176,17 @@ describe("ui-sunburst-chart", () => {
 
   it("hides a branch from the legend and keeps the other colors", async () => {
     const c = await mountChart(TAG);
-    const snapshot = (c as unknown as { chartSnapshot: { legend: { id: string }[] } })
-      .chartSnapshot;
-    expect(snapshot.legend.map((l) => l.id)).toEqual([
-      "root/Engineering",
-      "root/Sales",
-      "root/Support",
-    ]);
+    await awake(c);
+    const fills = () =>
+      marksOf(c).map((m) => (m as SVGElement).style.fill.match(/var\(--[\w-]+\)/)?.[0]);
+    const before = fills();
+    const chart = c as unknown as { toggleSeries(id: string): void; isHidden(id: string): boolean };
+    chart.toggleSeries("root/Support");
+    await settle();
+    expect(chart.isHidden("root/Support")).toBe(true);
+    expect(marksOf(c)).toHaveLength(7);
+    // Engineering and Sales keep their hues.
+    expect(fills().slice(0, 5)).toEqual(before.slice(0, 5));
   });
 
   it("passes axe", async () => {

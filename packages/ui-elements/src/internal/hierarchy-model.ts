@@ -15,8 +15,10 @@ export interface HierarchyStrings {
   breadcrumb: string;
   /** Tooltip row: share of the open node. */
   share: string;
-  /** Hint in the details of a node that can be opened. */
+  /** Hint in the details of a node that can be opened (pointer and keyboard). */
   drillHint: string;
+  /** The same hint on a touch screen, where the second tap opens. */
+  drillHintTouch: string;
 }
 
 export const HIERARCHY_STRINGS: HierarchyStrings = {
@@ -24,6 +26,7 @@ export const HIERARCHY_STRINGS: HierarchyStrings = {
   breadcrumb: "Drill-down path",
   share: "Share",
   drillHint: "Double-click or press Shift+Enter to open",
+  drillHintTouch: "Tap again to open",
 };
 
 /**
@@ -64,8 +67,20 @@ export function levelStrength(node: HierarchyNode, focus: HierarchyNode): number
   return Math.max(26, 86 - (level - 1) * 24 - spread * 10);
 }
 
-export const shareOf = (node: HierarchyNode, of: HierarchyNode): number =>
-  of.value > 0 ? node.value / of.value : 0;
+export const shareOf = (node: HierarchyNode, of: HierarchyNode | number): number => {
+  const total = typeof of === "number" ? of : of.value;
+  return total > 0 ? node.value / total : 0;
+};
+
+/** What a share is measured against, and whether the details offer to open the node. */
+export interface DetailOptions {
+  /** Value of the open node with nothing hidden (the default is the drawn value). */
+  total?: number;
+  /** Offer the "open" hint on a node with children (off for a chart that cannot drill). */
+  drill?: boolean;
+  /** The hint is for a touch screen. */
+  touch?: boolean;
+}
 
 export const percent = (value: number): string => `${(value * 100).toFixed(value < 0.1 ? 1 : 0)}%`;
 
@@ -74,8 +89,9 @@ export function describeNode(
   node: HierarchyNode,
   focus: HierarchyNode,
   format: (value: number) => string,
+  total: number = focus.value,
 ): string {
-  return `${nodePath(node, focus)}: ${format(node.value)} (${percent(shareOf(node, focus))})`;
+  return `${nodePath(node, focus)}: ${format(node.value)} (${percent(shareOf(node, total))})`;
 }
 
 export function nodeTooltipRows(
@@ -84,20 +100,21 @@ export function nodeTooltipRows(
   format: (value: number) => string,
   strings: HierarchyStrings,
   color: string,
+  { total = focus.value, drill = true, touch = false }: DetailOptions = {},
 ): TooltipRow[] {
   const rows: TooltipRow[] = [
     { id: "value", name: node.name, value: format(node.value), color },
     {
       id: "share",
       name: `${strings.share} · ${focus.name}`,
-      value: percent(shareOf(node, focus)),
+      value: percent(shareOf(node, total)),
       color: "transparent",
     },
   ];
-  if (node.children.length > 0)
+  if (drill && node.children.length > 0)
     rows.push({
       id: "hint",
-      name: strings.drillHint,
+      name: touch ? strings.drillHintTouch : strings.drillHint,
       value: `${node.children.length}`,
       color: "transparent",
       emphasis: true,
@@ -170,4 +187,27 @@ export function litPath(node: HierarchyNode): Set<string> {
   for (let current: HierarchyNode | null = node; current; current = current.parent)
     ids.add(current.id);
   return ids;
+}
+
+/**
+ * A copy of `node` without the branches in `hidden`. Ids, depth, branch and color stay those of the
+ * whole tree (a hidden branch changes no hue and no id); values and sibling ranks are recomputed.
+ */
+export function pruneTree(
+  node: HierarchyNode,
+  hidden: ReadonlySet<string>,
+  parent: HierarchyNode | null = null,
+): HierarchyNode {
+  const copy: HierarchyNode = { ...node, parent, children: [] };
+  let value = 0;
+  for (const child of node.children) {
+    if (hidden.has(child.id)) continue;
+    const kept = pruneTree(child, hidden, copy);
+    if (kept.value <= 0) continue;
+    kept.index = copy.children.length;
+    copy.children.push(kept);
+    value += kept.value;
+  }
+  copy.value = node.children.length > 0 ? value : node.value;
+  return copy;
 }
