@@ -3,9 +3,13 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineAreaChart } from "../src/area-chart/area-chart.ts";
 import { defineBarChart } from "../src/bar-chart/bar-chart.ts";
+import { defineBubbleChart } from "../src/bubble-chart/bubble-chart.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineComboChart } from "../src/combo-chart/combo-chart.ts";
+import { defineHistogram } from "../src/histogram/histogram.ts";
 import { defineLineChart } from "../src/line-chart/line-chart.ts";
+import { defineLollipopChart } from "../src/lollipop-chart/lollipop-chart.ts";
+import { defineScatterChart } from "../src/scatter-chart/scatter-chart.ts";
 import { frame, mount, wait } from "./setup.ts";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -16,6 +20,14 @@ const cartesian = (el: any) => {
     { id: "b", name: "Beards", data: [5, 8, 4, 12, 15, 22] },
   ];
 };
+const points = (size: boolean) => (n: number, k: number) =>
+  Array.from({ length: n }, (_, i) => ({
+    x: i * 10 + k,
+    y: ((i * 37 + k * 11) % 90) + 5,
+    ...(size ? { size: 10 + ((i * 13) % 50) } : {}),
+    label: `P${i}`,
+  }));
+
 interface Case {
   tag: string;
   define: () => string;
@@ -39,6 +51,44 @@ const CASES: Case[] = [
         { id: "a", name: "Cuts", type: "bar", data: [12, 18, 9, 22, 30, 41] },
         { id: "b", name: "Rate", type: "line", axis: "right", data: [5, 8, 4, 12, 15, 22] },
       ];
+    },
+    sweep: "x",
+  },
+  {
+    tag: "ui-scatter-chart",
+    define: defineScatterChart,
+    fill: (el) => {
+      el.series = [{ id: "a", name: "Visits", points: points(false)(24, 0) }];
+    },
+    sweep: "x",
+    scatter: true,
+  },
+  {
+    tag: "ui-bubble-chart",
+    define: defineBubbleChart,
+    fill: (el) => {
+      el.series = [{ id: "a", name: "Shops", points: points(true)(12, 0) }];
+    },
+    sweep: "x",
+    scatter: true,
+  },
+  {
+    tag: "ui-histogram",
+    define: defineHistogram,
+    attrs: 'bins="6"',
+    fill: (el) => {
+      el.series = [
+        { id: "a", name: "Wait", values: Array.from({ length: 80 }, (_, i) => (i * 7) % 41) },
+      ];
+    },
+    sweep: "x",
+  },
+  {
+    tag: "ui-lollipop-chart",
+    define: defineLollipopChart,
+    attrs: 'orientation="vertical"',
+    fill: (el) => {
+      el.items = DAYS.map((label, i) => ({ label, value: [12, 18, 9, 22, 30, 41][i] }));
     },
     sweep: "x",
   },
@@ -173,6 +223,21 @@ for (const spec of CASES) {
 }
 
 describe("e17 specifics", () => {
+  it("scatter brush: a drag emits a rectangle and does not pin a point", async () => {
+    const spec = CASES.find((c) => c.tag === "ui-scatter-chart") as Case;
+    const c = await make({ ...spec, attrs: "brush" });
+    const rects: unknown[] = [];
+    c.addEventListener("brush", (e) => rects.push((e as CustomEvent).detail));
+    pointer(c, "pointerenter", -1000, -1000);
+    await wait(150);
+    pointer(c, "pointerdown", 80, 60);
+    for (let i = 1; i <= 6; i++) pointer(c, "pointermove", 80 + i * 30, 60 + i * 20);
+    pointer(c, "pointerup", 260, 180);
+    await wait(60);
+    expect(c.selected).toBeNull();
+    expect(rects.length).toBeGreaterThan(0);
+  });
+
   it("line brush strip zooms and the reset button restores the range", async () => {
     const host = mount(
       '<div style="width:520px"><ui-line-chart label="l" height="260" locale="en-US" brush></ui-line-chart></div>',
@@ -187,5 +252,15 @@ describe("e17 specifics", () => {
     el.resetZoom();
     await settle();
     expect(el.querySelector('button[data-e17="reset"]')?.hasAttribute("hidden")).toBe(true);
+  });
+
+  it("histogram: explode toggle swaps bars for dots", async () => {
+    const spec = CASES.find((c) => c.tag === "ui-histogram") as Case;
+    const c = await make({ ...spec, attrs: 'bins="6" explode-toggle' });
+    expect(c.querySelectorAll("svg path[style*=fill]").length).toBeGreaterThan(0);
+    (c.querySelector('button[data-e17="reset"]') as HTMLButtonElement).click();
+    await settle();
+    expect(c.hasAttribute("exploded")).toBe(true);
+    expect(c.querySelectorAll("svg circle").length).toBeGreaterThan(10);
   });
 });
