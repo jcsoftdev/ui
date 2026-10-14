@@ -1,0 +1,46 @@
+[data-ui-chart] [data-e17="track"] {
+  fill: var(--surface-2);
+  fill-opacity: 0.5;
+}
+[data-ui-chart] [data-e17="veil"] {
+  fill: var(--surface);
+  fill-opacity: 0.72;
+}
+[data-ui-chart] [data-e17="window"] {
+  fill: var(--accent);
+  fill-opacity: 0.1;
+  stroke: var(--accent-word);
+}
+[data-ui-chart] [data-e17="handle"] {
+  fill: var(--float);
+  stroke: var(--accent-word);
+}
+[data-ui-chart] button[data-e17="reset"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+[data-ui-chart] button[data-e17="reset"][hidden] {
+  display: none;
+}
+[data-ui-chart] button[data-e17="reset"]:hover {
+  color: var(--ink);
+}
+[data-ui-chart] button[data-e17="reset"]:focus-visible,
+[data-ui-chart] div[data-e17="slider"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
