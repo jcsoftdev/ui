@@ -1,0 +1,38 @@
+[data-ui="candlestick"] > [data-ui-part="brush"] {
+  position: relative;
+  order: 2;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  border-radius: var(--radius-event, 10px);
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+[data-ui="candlestick"] > [data-ui-part="brush"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+[data-ui="candlestick"] > [data-ui-part="brush"] > svg {
+  display: block;
+  overflow: visible;
+  cursor: crosshair;
+}
+[data-ui="candlestick"] > [data-ui-part="reset"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-button, 10px);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+[data-ui="candlestick"] > [data-ui-part="reset"][hidden] {
+  display: none;
+}

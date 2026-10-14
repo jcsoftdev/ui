@@ -159,3 +159,7 @@ export function autoHeight(host: HTMLElement, px: number): void {
   autoHeights.set(host, next);
   if (current !== next) host.setAttribute("height", next);
 }
+
+/** True while the `height` of the host is the one `autoHeight` set (no author height). */
+export const hasAutoHeight = (host: Element): boolean =>
+  !host.hasAttribute("height") || host.getAttribute("height") === autoHeights.get(host);
