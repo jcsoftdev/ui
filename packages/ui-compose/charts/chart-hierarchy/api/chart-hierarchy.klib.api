@@ -1,0 +1,16 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-hierarchy>
+final object com.jcsoftdev.ui.chart.hierarchy/HierarchyModule { // com.jcsoftdev.ui.chart.hierarchy/HierarchyModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.hierarchy/HierarchyModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.hierarchy/HierarchyModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop // com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop|#static{}com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.hierarchy/com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop_getter|com_jcsoftdev_ui_chart_hierarchy_HierarchyModule$stableprop_getter(){}[0]

@@ -1,0 +1,16 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-race>
+final object com.jcsoftdev.ui.chart.race/RaceModule { // com.jcsoftdev.ui.chart.race/RaceModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.race/RaceModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.race/RaceModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop // com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop|#static{}com_jcsoftdev_ui_chart_race_RaceModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.race/com_jcsoftdev_ui_chart_race_RaceModule$stableprop_getter|com_jcsoftdev_ui_chart_race_RaceModule$stableprop_getter(){}[0]

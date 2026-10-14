@@ -1,0 +1,16 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-crossfilter>
+final object com.jcsoftdev.ui.chart.crossfilter/CrossfilterModule { // com.jcsoftdev.ui.chart.crossfilter/CrossfilterModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.crossfilter/CrossfilterModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.crossfilter/CrossfilterModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop // com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop|#static{}com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.crossfilter/com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop_getter|com_jcsoftdev_ui_chart_crossfilter_CrossfilterModule$stableprop_getter(){}[0]

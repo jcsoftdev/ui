@@ -1,0 +1,16 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-stock>
+final object com.jcsoftdev.ui.chart.stock/StockModule { // com.jcsoftdev.ui.chart.stock/StockModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.stock/StockModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.stock/StockModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop // com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop|#static{}com_jcsoftdev_ui_chart_stock_StockModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.stock/com_jcsoftdev_ui_chart_stock_StockModule$stableprop_getter|com_jcsoftdev_ui_chart_stock_StockModule$stableprop_getter(){}[0]

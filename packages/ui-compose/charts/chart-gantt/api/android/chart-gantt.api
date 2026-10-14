@@ -1,0 +1,6 @@
+public final class com/jcsoftdev/ui/chart/gantt/GanttModule {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/gantt/GanttModule;
+	public final fun getId ()Ljava/lang/String;
+}
+

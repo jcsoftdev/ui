@@ -1,0 +1,16 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-polar>
+final object com.jcsoftdev.ui.chart.polar/PolarModule { // com.jcsoftdev.ui.chart.polar/PolarModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.polar/PolarModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.polar/PolarModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop // com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop|#static{}com_jcsoftdev_ui_chart_polar_PolarModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.polar/com_jcsoftdev_ui_chart_polar_PolarModule$stableprop_getter|com_jcsoftdev_ui_chart_polar_PolarModule$stableprop_getter(){}[0]

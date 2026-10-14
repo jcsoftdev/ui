@@ -1,0 +1,6 @@
+public final class com/jcsoftdev/ui/chart/cartesian/CartesianModule {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/cartesian/CartesianModule;
+	public final fun getId ()Ljava/lang/String;
+}
+

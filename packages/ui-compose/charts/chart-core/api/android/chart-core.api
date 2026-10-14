@@ -1,0 +1,5 @@
+public final class com/jcsoftdev/ui/chart/core/CoreModule {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/core/CoreModule;
+	public final fun getId ()Ljava/lang/String;
+}
+
