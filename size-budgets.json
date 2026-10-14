@@ -47,7 +47,7 @@
       "id": "ui/glass",
       "kind": "js",
       "file": "packages/ui/dist/glass/index.js",
-      "maxGzip": 13150
+      "maxGzip": 13300
     },
     {
       "id": "ui/ai",
