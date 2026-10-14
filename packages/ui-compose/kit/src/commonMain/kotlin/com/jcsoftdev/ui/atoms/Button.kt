@@ -168,7 +168,7 @@ public fun Button(
     ) {
         CompositionLocalProvider(LocalContentColor provides colors.content) {
             if (loading) loadingIndicator(colors.content) else leading?.invoke()
-            Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = labelMaxLines(), overflow = TextOverflow.Ellipsis)
             trailing?.invoke()
         }
     }
