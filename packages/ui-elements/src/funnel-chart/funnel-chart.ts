@@ -11,7 +11,9 @@ import {
   svg,
   type TooltipRow,
 } from "../internal/chart-base.js";
-import { cachedJson, numberAttr, percentText } from "../internal/e21b-flow.js";
+import { percentText } from "../internal/chart-flow.js";
+import { cachedJson } from "../internal/chart-text.js";
+import { numberAttr } from "../internal/e5-forms.js";
 import css from "./funnel-chart.css.js";
 
 export interface FunnelDatum {
@@ -44,6 +46,7 @@ const EASE = "cubic-bezier(.22,1,.36,1)";
 const PAD = 4;
 const PILL = 44;
 
+const finite = (value: number): number => (Number.isFinite(value) ? value : 0);
 const truncate = (text: string, max: number): string =>
   text.length <= max ? text : `${text.slice(0, Math.max(1, max - 1)).trimEnd()}…`;
 
@@ -65,9 +68,10 @@ interface Shape {
  * Attributes: `stages` (JSON `[{ id, name, value, color? }]`), `variant` (`funnel`, `pyramid`),
  * `orientation` (`vertical`, `horizontal`), `tapered="off"`, `neck` (0-1, default 0.72),
  * `show-conversion="off"`, `tone` (`categorical`, `accent`), `gap` (px, default 4), plus the chart
- * attributes. Height defaults to 360 (vertical) or 280 (horizontal). Properties: `stages`,
- * `labels` (`category`, `value`, `share`, `conversion`, `summary`). Stages are legend items:
- * `ui-chart-legend` toggles them.
+ * attributes. Properties: `stages`, `labels` (`category`, `value`, `share`, `conversion`,
+ * `summary`). Stages are legend items: `ui-chart-legend` toggles them. A stage hidden through the
+ * legend leaves the funnel, so each conversion rate is between two adjacent VISIBLE stages (and
+ * the share is of the first visible stage). Values that are not finite numbers count as 0.
  */
 export class UiFunnelChart extends ChartElement {
   static override observedAttributes = [
@@ -104,11 +108,7 @@ export class UiFunnelChart extends ChartElement {
   override connectedCallback(): void {
     this.dataset.ui = "funnel-chart";
     adoptStyles(rootOf(this), css);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute(
-        "height",
-        this.getAttribute("orientation") === "horizontal" ? "280" : "360",
-      );
+    // TODO(natural-height): the base PR will add a natural-height hook; the default height goes there.
     super.connectedCallback();
   }
 
@@ -147,6 +147,7 @@ export class UiFunnelChart extends ChartElement {
     const accent = this.getAttribute("tone") === "accent";
     const showConversion = this.getAttribute("show-conversion") !== "off";
     const pct = (value: number) => percentText(value, locale, 1, false);
+    const show = (value: number) => format(finite(value));
 
     const side = vertical ? Math.round(Math.min(200, Math.max(96, width * 0.36))) : 0;
     const head = vertical ? 0 : 42;
@@ -158,7 +159,7 @@ export class UiFunnelChart extends ChartElement {
     };
     const length = vertical ? area.h : area.w;
     const layout = funnelStages(
-      stages.map((stage) => stage.value),
+      stages.map((stage) => finite(stage.value)),
       {
         length,
         thickness: vertical ? area.w : area.h,
@@ -243,7 +244,7 @@ export class UiFunnelChart extends ChartElement {
             svg(
               "tspan",
               { style: "fill:var(--ink);font-weight:700;font-variant-numeric:tabular-nums" },
-              format(datum.value),
+              show(datum.value),
             ),
             svg(
               "tspan",
@@ -276,7 +277,7 @@ export class UiFunnelChart extends ChartElement {
               style:
                 "fill:var(--ink);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums",
             },
-            truncate(format(datum.value), max + 2),
+            truncate(show(datum.value), max + 2),
           ),
         );
       }
@@ -346,7 +347,7 @@ export class UiFunnelChart extends ChartElement {
         {
           id: "value",
           name: text.value,
-          value: format((stages[i] as FunnelDatum).value),
+          value: show((stages[i] as FunnelDatum).value),
           color: tone,
         },
         { id: "share", name: text.share, value: pct(stage.ofFirst), color: tone },
@@ -362,13 +363,13 @@ export class UiFunnelChart extends ChartElement {
         last && first
           ? text.summary
               .replace("{count}", `${count}`)
-              .replace("{first}", format(first.value))
-              .replace("{last}", format((stages[count - 1] as FunnelDatum).value))
+              .replace("{first}", show(first.value))
+              .replace("{last}", show((stages[count - 1] as FunnelDatum).value))
               .replace("{rate}", pct(last.ofFirst))
           : undefined,
       marks: polygons.map((el, i) => ({
         el,
-        label: `${(stages[i] as FunnelDatum).name}: ${format((stages[i] as FunnelDatum).value)}, ${pct((layout[i] as (typeof layout)[number]).ofFirst)}${
+        label: `${(stages[i] as FunnelDatum).name}: ${show((stages[i] as FunnelDatum).value)}, ${pct((layout[i] as (typeof layout)[number]).ofFirst)}${
           (layout[i] as (typeof layout)[number]).conversion != null
             ? `, ${text.conversion} ${pct((layout[i] as (typeof layout)[number]).conversion as number)}`
             : ""
@@ -408,8 +409,8 @@ export class UiFunnelChart extends ChartElement {
             id: "value",
             name: text.value,
             color: color(0),
-            values: stages.map((stage) => stage.value),
-            text: stages.map((stage) => format(stage.value)),
+            values: stages.map((stage) => finite(stage.value)),
+            text: stages.map((stage) => show(stage.value)),
           },
           {
             id: "share",

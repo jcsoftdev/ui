@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineSankeyChart } from "../src/sankey-chart/sankey-chart.ts";
@@ -15,7 +15,7 @@ import {
   svgOf,
   sweep,
   tap,
-} from "./e21b-helpers.ts";
+} from "./flow-helpers.ts";
 import { ax, wait } from "./setup.ts";
 
 beforeAll(() => {
@@ -227,5 +227,54 @@ describe("ui-sankey-chart", () => {
   it("plays the entry animation only when motion is allowed", async () => {
     expect(await animateCalls(() => sankey(), true)).toBe(0);
     expect(await animateCalls(() => sankey(), false)).toBeGreaterThan(0);
+  });
+
+  it("writes no height and no custom property on the host", async () => {
+    const c = await mountChart("ui-sankey-chart", 'label="Funnel flows" link-opacity=".6"', {
+      nodes: NODES,
+      links: LINKS,
+    });
+    expect(c.hasAttribute("height")).toBe(false);
+    expect(c.style.getPropertyValue("--ui-sankey-link-opacity")).toBe("");
+    expect(svgOf(c).style.getPropertyValue("--ui-sankey-link-opacity")).toBe("0.6");
+  });
+
+  it("keeps the first node of a duplicate id, resolves links to it and warns", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const c = await sankey("", {
+      nodes: [...NODES, { id: "a", name: "Visits again", color: "red" }],
+    });
+    expect(c.querySelectorAll("rect[data-node]")).toHaveLength(NODES.length);
+    expect(marksOf(c).some((m) => /Visits again/.test(m.getAttribute("aria-label") ?? ""))).toBe(
+      false,
+    );
+    expect(
+      marksOf(c).filter((m) => /^Visits:/.test(m.getAttribute("aria-label") ?? "")),
+    ).toHaveLength(1);
+    expect(warn.mock.calls.some(([message]) => /duplicate node id/.test(String(message)))).toBe(
+      true,
+    );
+    warn.mockRestore();
+  });
+
+  it("pauses the particles of a dimmed link", async () => {
+    const c = await sankey("particles");
+    await wait(80);
+    await settle();
+    await awake(c);
+    const dots = [...c.querySelectorAll<SVGCircleElement>("[data-particles] circle")];
+    expect(dots.length).toBeGreaterThan(0);
+    const running = () => dots.map((d) => d.getAnimations()[0]?.playState);
+    expect(new Set(running())).toEqual(new Set(["running"]));
+    const nodeCount = c.querySelectorAll("rect[data-node]").length;
+    (c as unknown as { select(i: number | null): void }).select(nodeCount); // first link
+    await settle();
+    const lit = dots.filter((d) => !d.hasAttribute("data-dim"));
+    expect(lit.length).toBeGreaterThan(0);
+    expect(lit.length).toBeLessThan(dots.length);
+    for (const d of dots)
+      expect(d.getAnimations()[0]?.playState).toBe(
+        d.hasAttribute("data-dim") ? "paused" : "running",
+      );
   });
 });

@@ -15,7 +15,7 @@ import {
   svgOf,
   sweep,
   tap,
-} from "./e21b-helpers.ts";
+} from "./flow-helpers.ts";
 import { ax, wait } from "./setup.ts";
 
 beforeAll(() => defineChordChart());
@@ -165,5 +165,50 @@ describe("ui-chord-chart", () => {
   it("plays the entry animation only when motion is allowed", async () => {
     expect(await animateCalls(() => chord(), true)).toBe(0);
     expect(await animateCalls(() => chord(), false)).toBeGreaterThan(0);
+  });
+
+  it("writes no height on the host", async () => {
+    const c = await mountChart("ui-chord-chart", 'label="Switching"', {
+      groups: GROUPS,
+      matrix: MATRIX,
+    });
+    expect(c.hasAttribute("height")).toBe(false);
+  });
+
+  it("shows the empty state for no groups and for an all-zero matrix", async () => {
+    const none = await mountChart("ui-chord-chart", `label="Switching" height="${SIZE}"`, {
+      groups: [],
+      matrix: MATRIX,
+    });
+    const zero = await mountChart("ui-chord-chart", `label="Switching" height="${SIZE}"`, {
+      groups: GROUPS,
+      matrix: MATRIX.map((row) => row.map(() => 0)),
+    });
+    for (const c of [none, zero]) {
+      expect(c.querySelector("[role=status]")).toBeTruthy();
+      expect(c.querySelectorAll("path[data-arc]")).toHaveLength(0);
+    }
+  });
+
+  it("never prints NaN or Infinity for flows that are not finite", async () => {
+    const c = await mountChart(
+      "ui-chord-chart",
+      `label="Switching" height="${SIZE}"`,
+      {
+        groups: GROUPS,
+        matrix: [
+          [0, Number.NaN, 5],
+          [8, 0, Number.POSITIVE_INFINITY],
+          [2, 4, 0],
+        ],
+      },
+      SIZE,
+    );
+    const text = [
+      ...marksOf(c).map((m) => m.getAttribute("aria-label")),
+      ...(c.chartSnapshot?.series.flatMap((s) => s.text) ?? []),
+    ].join(" ");
+    expect(marksOf(c).length).toBeGreaterThan(0);
+    expect(text).not.toMatch(/NaN|Infinity|∞/);
   });
 });

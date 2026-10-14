@@ -19,7 +19,9 @@ import {
   svg,
   type TooltipRow,
 } from "../internal/chart-base.js";
-import { cachedJson, numberAttr, textWidth } from "../internal/e21b-flow.js";
+import { dimExcept } from "../internal/chart-flow.js";
+import { cachedJson, textWidth } from "../internal/chart-text.js";
+import { numberAttr } from "../internal/e5-forms.js";
 import css from "./chord-chart.css.js";
 
 export interface ChordGroupInput {
@@ -62,6 +64,7 @@ type Sort = "input" | "ascending" | "descending";
 const sortOf = (value: string | null, fallback: Sort): Sort =>
   value === "input" || value === "ascending" || value === "descending" ? value : fallback;
 
+const finite = (value: number): number => (Number.isFinite(value) ? value : 0);
 const normalize = (angle: number) => ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
 /**
@@ -80,7 +83,7 @@ const normalize = (angle: number) => ((angle % (Math.PI * 2)) + Math.PI * 2) % (
  * the flow from group i to group j), `pad-angle` (degrees, default 3), `start-angle` (degrees),
  * `ring-width` (fraction of the radius, default .09), `sort-groups` and `sort-subgroups`
  * (`input`, `ascending`, `descending`; subgroups default `descending`), `show-labels="off"`, plus
- * the chart attributes (height defaults to 420). Properties: `groups`, `matrix`, `labels`;
+ * the chart attributes. Properties: `groups`, `matrix`, `labels`;
  * `describe(index)` names the group or ribbon behind a mark index. The groups are legend items
  * (`ui-chart-legend` toggles them).
  */
@@ -139,24 +142,26 @@ export class UiChordChart extends ChartElement {
   override connectedCallback(): void {
     this.dataset.ui = "chord-chart";
     adoptStyles(rootOf(this), css);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", "420");
+    // TODO(natural-height): the base PR will add a natural-height hook; the default height goes there.
     super.connectedCallback();
   }
 
   protected override isEmpty(): boolean {
-    return chordLayout(this.matrix).groups.length === 0;
+    return this.groups.length === 0 || !this.matrix.some((row) => row.some((value) => value > 0));
   }
 
   #light(index: number | null): void {
     const view = this.#view;
     if (!view) return;
     const lit = index == null || index < 0 ? null : view.lit(index);
-    for (const group of view.groups)
-      for (const el of group.els)
-        el.toggleAttribute("data-dim", lit !== null && !lit.groups.has(group.index));
-    for (const ribbon of view.ribbons)
-      ribbon.el.toggleAttribute("data-dim", lit !== null && !lit.ribbons.has(ribbon.key));
+    dimExcept(
+      view.groups.map(({ index: key, els }) => ({ key, els })),
+      lit ? lit.groups : null,
+    );
+    dimExcept(
+      view.ribbons.map(({ key, el }) => ({ key, els: [el] })),
+      lit ? lit.ribbons : null,
+    );
   }
 
   protected draw({
@@ -169,13 +174,14 @@ export class UiChordChart extends ChartElement {
     hover,
   }: DrawContext): DrawResult {
     const text = { ...DEFAULTS, ...this.labels };
+    const show = (value: number) => format(finite(value));
     const groups = this.groups;
     // Hidden groups leave the matrix; `kept[k]` is the original index of visible group `k`.
     const kept = groups
       .map((_, i) => i)
       .filter((i) => !this.isHidden((groups[i] as ChordGroupInput).id));
     const source = this.matrix;
-    const matrix = kept.map((i) => kept.map((j) => source[i]?.[j] ?? 0));
+    const matrix = kept.map((i) => kept.map((j) => finite(source[i]?.[j] ?? 0)));
     const layout = chordLayout(matrix, {
       padAngle: degToRad(numberAttr(this, "pad-angle", 3)),
       startAngle: degToRad(numberAttr(this, "start-angle", 0)),
@@ -188,14 +194,11 @@ export class UiChordChart extends ChartElement {
     const colorOf = (k: number) => colors[kept[k] as number] as string;
 
     const rim = this.getAttribute("show-labels") !== "off" && width >= 420;
-    const labelRoom = rim
-      ? Math.min(
-          width * 0.28,
-          Math.max(...kept.map((i) => textWidth((groups[i] as ChordGroupInput).name, 11.5))) +
-            RIM_GAP +
-            6,
-        )
-      : 0;
+    let widest = 0;
+    if (rim)
+      for (const i of kept)
+        widest = Math.max(widest, textWidth((groups[i] as ChordGroupInput).name, 11.5));
+    const labelRoom = rim ? Math.min(width * 0.28, widest + RIM_GAP + 6) : 0;
     const radius = Math.max(40, Math.min(width / 2 - labelRoom - 4, height / 2 - (rim ? 16 : 4)));
     const inner =
       radius * (1 - Math.min(0.4, Math.max(0.03, numberAttr(this, "ring-width", 0.09))));
@@ -453,17 +456,17 @@ export class UiChordChart extends ChartElement {
         {
           id: "out",
           name: text.outflow,
-          value: format((layout.groups.find((g) => g.index === group) as { value: number }).value),
+          value: show((layout.groups.find((g) => g.index === group) as { value: number }).value),
           color: colorOf(group),
           shape: "dot",
         },
-        { id: "in", name: text.inflow, value: format(inflowOf(group)), color: "transparent" },
+        { id: "in", name: text.inflow, value: show(inflowOf(group)), color: "transparent" },
       ];
       for (const { value, j } of flowsOut(group).slice(0, 4))
         rows.push({
           id: `to-${j}`,
           name: `→ ${input(j).name}`,
-          value: format(value),
+          value: show(value),
           color: colorOf(j),
           shape: "dot",
         });
@@ -472,19 +475,19 @@ export class UiChordChart extends ChartElement {
     const labelOf = (index: number): string => {
       if (index < groupCount) {
         const group = (ring[index] as (typeof ring)[number]).index;
-        const flows = flowsOut(group).map(({ value, j }) => `${input(j).name} ${format(value)}`);
-        return `${input(group).name}: ${text.outflow} ${format((ring[index] as { value: number }).value)}, ${text.inflow} ${format(inflowOf(group))}. ${flows.join(", ")}`;
+        const flows = flowsOut(group).map(({ value, j }) => `${input(j).name} ${show(value)}`);
+        return `${input(group).name}: ${text.outflow} ${show((ring[index] as { value: number }).value)}, ${text.inflow} ${show(inflowOf(group))}. ${flows.join(", ")}`;
       }
       const chord = ribbons[index - groupCount] as Chord;
       const [a, b] = [chord.source.index, chord.target.index];
       return a === b
-        ? `${input(a).name} → ${input(a).name}: ${format(matrix[a]?.[a] ?? 0)}`
-        : `${input(a).name} → ${input(b).name}: ${format(matrix[a]?.[b] ?? 0)}; ${input(b).name} → ${input(a).name}: ${format(matrix[b]?.[a] ?? 0)}`;
+        ? `${input(a).name} → ${input(a).name}: ${show(matrix[a]?.[a] ?? 0)}`
+        : `${input(a).name} → ${input(b).name}: ${show(matrix[a]?.[b] ?? 0)}; ${input(b).name} → ${input(a).name}: ${show(matrix[b]?.[a] ?? 0)}`;
     };
 
     const total = layout.groups.reduce((sum, group) => sum + group.value, 0);
     return {
-      summary: text.summary.replace("{groups}", `${groupCount}`).replace("{total}", format(total)),
+      summary: text.summary.replace("{groups}", `${groupCount}`).replace("{total}", show(total)),
       marks: [...arcEls, ...ribbonEls].map((el, index) => ({ el, label: labelOf(index) })),
       maxHoverRows: 6,
       hit,
@@ -508,7 +511,7 @@ export class UiChordChart extends ChartElement {
           {
             id: "ab",
             name: `${input(a).name} → ${input(b).name}`,
-            value: format(matrix[a]?.[b] ?? 0),
+            value: show(matrix[a]?.[b] ?? 0),
             color: colorOf(a),
             shape: "dot",
           },
@@ -517,7 +520,7 @@ export class UiChordChart extends ChartElement {
           rows.push({
             id: "ba",
             name: `${input(b).name} → ${input(a).name}`,
-            value: format(matrix[b]?.[a] ?? 0),
+            value: show(matrix[b]?.[a] ?? 0),
             color: colorOf(b),
             shape: "dot",
           });
@@ -533,8 +536,8 @@ export class UiChordChart extends ChartElement {
           name: `${text.to} ${group.name}`,
           color: colors[j] as string,
           shape: "dot" as const,
-          values: groups.map((_, i) => source[i]?.[j] ?? 0),
-          text: groups.map((_, i) => format(source[i]?.[j] ?? 0)),
+          values: groups.map((_, i) => finite(source[i]?.[j] ?? 0)),
+          text: groups.map((_, i) => show(source[i]?.[j] ?? 0)),
         })),
         legend: groups.map((group, i) => ({
           id: group.id,

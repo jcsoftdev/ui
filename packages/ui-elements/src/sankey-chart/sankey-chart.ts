@@ -6,7 +6,6 @@ import {
   type SankeyLinkInput,
   type SankeyNode,
   type SankeyNodeInput,
-  sankeyDiff,
   sankeyFlowOf,
   sankeyLayout,
   sankeyLinkPath,
@@ -33,14 +32,10 @@ import {
   svg,
   type TooltipRow,
 } from "../internal/chart-base.js";
-import {
-  cachedJson,
-  devWarn,
-  fitLabel,
-  numberAttr,
-  sharePercent,
-  textWidth,
-} from "../internal/e21b-flow.js";
+import { dimExcept, sharePercent } from "../internal/chart-flow.js";
+import { cachedJson, devWarn, fitLabel, textWidth } from "../internal/chart-text.js";
+import { numberAttr } from "../internal/e5-forms.js";
+import type { Particles } from "./particles.js";
 import css from "./sankey-chart.css.js";
 
 export type { SankeyLinkInput, SankeyNodeInput };
@@ -137,19 +132,6 @@ function bandDistance(
   return Math.max(0, Math.abs(y - yAt) - half);
 }
 
-/** "+12 (+8.5%)" for a diff link. */
-function signed(
-  entry: Pick<SankeyDiffLink, "before" | "delta">,
-  format: (value: number) => string,
-  locale: string,
-): string {
-  const sign = entry.delta > 0 ? "+" : entry.delta < 0 ? "-" : "";
-  const amount = `${sign}${format(Math.abs(entry.delta))}`;
-  if (entry.before <= 0) return amount;
-  const ratio = Math.abs(entry.delta) / entry.before;
-  return `${amount} (${sign}${sharePercent(ratio, locale)})`;
-}
-
 /**
  * `<ui-sankey-chart>`: flows between columns of nodes, band widths proportional to the value, on
  * the chart base. Hover (or focus) a node to follow its flows upstream and downstream, or a link
@@ -168,7 +150,7 @@ function signed(
  * `particles`, `columns` (JSON array or comma list of column titles), `relax="off"`, `node-width`,
  * `node-padding` (default 14), `align` (`justify`, `left`), `iterations` (default 6), `link-color`
  * (`gradient`, `source`, `target`, `neutral`), `link-opacity` (0-1, default .38), `label-position`
- * (`outside`, `inside`), `show-values="off"`, plus the chart attributes (height defaults to 380).
+ * (`outside`, `inside`), `show-values="off"`, plus the chart attributes.
  * Properties: `nodes`, `links`, `compare`, `columns`, `legendItems`, `labels`; `describe(index)`
  * names the node or link behind a mark index of `chart-select` and `chart-drill`. Events:
  * `removed-links` (`detail`: the links left out, with the reason).
@@ -196,6 +178,10 @@ export class UiSankeyChart extends ChartElement {
   legendItems: ReadonlyArray<{ id: string; name: string; color: string }> | undefined;
   readonly #id = uid("sankey");
   readonly #json = cachedJson(this);
+  /** The diff view and the particles load on first use; a draw before then leaves them out. */
+  #diffKit: typeof import("./diff.js") | undefined;
+  #particles: typeof import("./particles.js") | undefined;
+  #duplicates = "";
   #nodes: readonly SankeyNodeInput[] | undefined;
   #links: readonly SankeyLinkInput[] | undefined;
   #compare: readonly SankeyLinkInput[] | undefined;
@@ -207,6 +193,7 @@ export class UiSankeyChart extends ChartElement {
         lit(index: number): { nodes: Set<string>; links: Set<string> } | null;
         nodes: Array<{ id: string; els: Element[] }>;
         links: Array<{ id: string; els: Element[] }>;
+        particles: Particles | undefined;
       }
     | undefined;
 
@@ -259,18 +246,51 @@ export class UiSankeyChart extends ChartElement {
   override connectedCallback(): void {
     this.dataset.ui = "sankey-chart";
     adoptStyles(rootOf(this), css);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", "380");
+    // TODO(natural-height): the base PR will add a natural-height hook; the default height goes there.
     super.connectedCallback();
+  }
+
+  /** The nodes with one entry per id (the first wins, links resolve to it); duplicates warn in development. */
+  #uniqueNodes(): SankeyNodeInput[] {
+    const seen = new Set<string>();
+    const dropped: string[] = [];
+    const unique = this.nodes.filter((node) => {
+      if (!seen.has(node.id)) return seen.add(node.id);
+      dropped.push(node.id);
+      return false;
+    });
+    const key = dropped.join("|");
+    if (key !== this.#duplicates) {
+      this.#duplicates = key;
+      if (key)
+        devWarn(
+          `ui-sankey-chart "${this.getAttribute("label") ?? ""}": duplicate node id(s) ${[...new Set(dropped)].join(", ")}; the first node of each id is kept`,
+        );
+    }
+    return unique;
   }
 
   protected override isEmpty(): boolean {
     return (
-      sankeyLayout(this.nodes, this.compare ? sankeyDiff(this.compare, this.links) : this.links, {
+      sankeyLayout(this.#uniqueNodes(), [...this.links, ...(this.compare ?? [])], {
         width: 1,
         height: 1,
       }).nodes.length === 0
     );
+  }
+
+  #loadDiff(): void {
+    void import("./diff.js").then((kit) => {
+      this.#diffKit = kit;
+      this.requestDraw();
+    });
+  }
+
+  #loadParticles(): void {
+    void import("./particles.js").then((kit) => {
+      this.#particles = kit;
+      this.requestDraw();
+    });
   }
 
   /** Lights what the mark at `index` touches and dims the rest (`null` clears). */
@@ -278,12 +298,15 @@ export class UiSankeyChart extends ChartElement {
     const view = this.#view;
     if (!view) return;
     const lit = index == null || index < 0 ? null : view.lit(index);
-    for (const node of view.nodes)
-      for (const el of node.els)
-        el.toggleAttribute("data-dim", lit !== null && !lit.nodes.has(node.id));
-    for (const link of view.links)
-      for (const el of link.els)
-        el.toggleAttribute("data-dim", lit !== null && !lit.links.has(link.id));
+    dimExcept(
+      view.nodes.map(({ id, els }) => ({ key: id, els })),
+      lit ? lit.nodes : null,
+    );
+    dimExcept(
+      view.links.map(({ id, els }) => ({ key: id, els })),
+      lit ? lit.links : null,
+    );
+    view.particles?.dim(lit ? lit.links : null);
   }
 
   protected draw({
@@ -298,7 +321,7 @@ export class UiSankeyChart extends ChartElement {
     hover,
   }: DrawContext): DrawResult {
     const text = { ...DEFAULTS, ...this.labels };
-    const allNodes = this.nodes;
+    const allNodes = this.#uniqueNodes();
     const hidden = new Set(
       allNodes.filter((node) => this.isHidden(node.id)).map((node) => node.id),
     );
@@ -306,7 +329,9 @@ export class UiSankeyChart extends ChartElement {
     const nodeInputs = hidden.size ? allNodes.filter((node) => !hidden.has(node.id)) : allNodes;
     const currentLinks = this.links.filter(visible);
     const previousLinks = this.compare?.filter(visible);
-    const diff = previousLinks ? sankeyDiff(previousLinks, currentLinks) : null;
+    const kit = previousLinks ? this.#diffKit : undefined;
+    if (previousLinks && !kit) this.#loadDiff();
+    const diff = kit && previousLinks ? kit.sankeyDiff(previousLinks, currentLinks) : null;
     const diffById = new Map(
       (diff ?? []).map((entry) => [`${entry.source}->${entry.target}`, entry]),
     );
@@ -340,7 +365,13 @@ export class UiSankeyChart extends ChartElement {
     const labelRoom = inside ? nodeWidth - 12 : step - nodeWidth - LABEL_GAP * 2;
     const pathTracing = this.hasAttribute("path-tracing");
     const linkColor = this.getAttribute("link-color") ?? "gradient";
-    this.style.setProperty("--ui-sankey-link-opacity", `${numberAttr(this, "link-opacity", 0.38)}`);
+    // On the drawing, never the host: the CSS falls back to .38 and a page may set the property itself.
+    if (this.hasAttribute("link-opacity"))
+      root.style.setProperty(
+        "--ui-sankey-link-opacity",
+        `${numberAttr(this, "link-opacity", 0.38)}`,
+      );
+    else root.style.removeProperty("--ui-sankey-link-opacity");
 
     // Mark order: nodes (column by column, top to bottom), then the links.
     const ordered = [...graph.nodes].sort((a, b) => a.column - b.column || a.y0 - b.y0);
@@ -416,36 +447,8 @@ export class UiSankeyChart extends ChartElement {
     const linkEls = graph.links.map((link, j) => {
       const entry = diffById.get(link.id);
       const d = sankeyLinkPath(link);
-      if (entry) {
-        const tone =
-          entry.delta > 0
-            ? "var(--chart-up)"
-            : entry.delta < 0
-              ? "var(--chart-down)"
-              : "var(--ink-3)";
-        const ghost = svg(
-          "g",
-          { "data-ghost": "" },
-          svg("path", {
-            d,
-            "stroke-width": Math.max(1, entry.before * graph.ky),
-            style: "stroke:var(--ink-3);stroke-opacity:.2",
-          }),
-        );
-        ghost.append(
-          entry.after > 0
-            ? svg("path", {
-                d,
-                "stroke-width": Math.max(1, entry.after * graph.ky),
-                style: `stroke:${tone};stroke-opacity:.58`,
-              })
-            : svg("path", {
-                d,
-                "stroke-width": Math.max(1, entry.before * graph.ky),
-                "stroke-dasharray": "5 4",
-                style: `stroke:${tone};stroke-opacity:.7`,
-              }),
-        );
+      if (entry && kit) {
+        const ghost = kit.ghostOf(d, entry, graph.ky);
         ghostLayer.append(ghost);
         ghosts.set(link.id, ghost);
       }
@@ -468,45 +471,16 @@ export class UiSankeyChart extends ChartElement {
       return el;
     });
 
+    let dots: Particles | undefined;
     if (this.hasAttribute("particles") && motion) {
-      const dots = svg("g", {
-        "aria-hidden": "true",
-        "data-export-skip": "",
-        "data-particles": "",
-      });
-      for (const link of graph.links) {
-        const width0 = diff ? (diffById.get(link.id)?.after ?? 0) * graph.ky : link.width;
-        if (width0 < 3) continue;
-        const d = sankeyLinkPath(link);
-        const length = Math.hypot(link.target.x0 - link.source.x1, link.y1 - link.y0) * 1.1;
-        const duration = Math.min(14, Math.max(3.5, length / 42));
-        const count = Math.min(5, Math.max(1, Math.round(width0 / 6)));
-        const radius = Math.min(2.6, Math.max(1.3, width0 * 0.16));
-        for (let i = 0; i < count; i += 1) {
-          const begin = `-${((i / count) * duration).toFixed(2)}s`;
-          dots.append(
-            svg(
-              "circle",
-              { r: radius, style: "fill:var(--surface);fill-opacity:.92", "data-link-id": link.id },
-              svg("animateMotion", {
-                dur: `${duration}s`,
-                begin,
-                repeatCount: "indefinite",
-                path: d,
-              }),
-              svg("animate", {
-                attributeName: "opacity",
-                values: "0;1;1;0",
-                keyTimes: "0;0.12;0.88;1",
-                dur: `${duration}s`,
-                begin,
-                repeatCount: "indefinite",
-              }),
-            ),
-          );
-        }
+      const kitParticles = this.#particles;
+      if (!kitParticles) this.#loadParticles();
+      else {
+        dots = kitParticles.particles(graph.links, (link) =>
+          diff ? (diffById.get(link.id)?.after ?? 0) * graph.ky : link.width,
+        );
+        linkLayer.append(dots.layer);
       }
-      linkLayer.append(dots);
     }
 
     const nodeEls = ordered.map((node, i) => {
@@ -612,6 +586,7 @@ export class UiSankeyChart extends ChartElement {
     ];
     this.#view = {
       marks,
+      particles: dots,
       lit: (index) => {
         if (index < nodeCount) return sankeyFlowOf(nodeOf(index));
         const link = linkOf(index);
@@ -739,24 +714,7 @@ export class UiSankeyChart extends ChartElement {
     const pct = (value: number) => sharePercent(value, locale);
     const nodeRows = (node: SankeyNode): TooltipRow[] => {
       const tone = colorOf(node.id);
-      if (diff) {
-        const flows = flowsOf(node);
-        const sum = (pick: (entry: SankeyDiffLink) => number) =>
-          flows.reduce((acc, link) => acc + pick(diffById.get(link.id) as SankeyDiffLink), 0);
-        const before = sum((entry) => entry.before);
-        const after = sum((entry) => entry.after);
-        return [
-          { id: "before", name: text.before, value: format(before), color: "var(--ink-3)" },
-          { id: "after", name: text.after, value: format(after), color: tone },
-          {
-            id: "change",
-            name: text.change,
-            value: signed({ before, delta: after - before }, format, locale) || "0",
-            color: "transparent",
-            emphasis: true,
-          },
-        ];
-      }
+      if (diff && kit) return kit.nodeRows(flowsOf(node), diffById, tone, text, format, locale);
       const rows: TooltipRow[] = [
         {
           id: "value",
@@ -785,25 +743,7 @@ export class UiSankeyChart extends ChartElement {
     };
     const linkRows = (link: SankeyLink): TooltipRow[] => {
       const entry = diffById.get(link.id);
-      if (entry) {
-        const tone =
-          entry.delta > 0
-            ? "var(--chart-up)"
-            : entry.delta < 0
-              ? "var(--chart-down)"
-              : "var(--ink-3)";
-        return [
-          { id: "before", name: text.before, value: format(entry.before), color: "var(--ink-3)" },
-          { id: "after", name: text.after, value: format(entry.after), color: tone },
-          {
-            id: "change",
-            name: text.change,
-            value: signed(entry, format, locale) || "0",
-            color: "transparent",
-            emphasis: true,
-          },
-        ];
-      }
+      if (entry && kit) return kit.linkRows(entry, text, format, locale);
       return [
         {
           id: "value",
@@ -911,19 +851,8 @@ export class UiSankeyChart extends ChartElement {
           categoryHeader: text.category,
           categories: rows.map((row) => row.name),
           series: [
-            ...(diff
-              ? [
-                  column("before", text.before, (row) => row.before, format),
-                  column("after", text.after, (row) => row.after, format),
-                  {
-                    ...column("change", text.change, (row) => row.delta, format),
-                    text: rows.map((row) =>
-                      row.delta == null
-                        ? ""
-                        : signed({ before: row.before ?? 0, delta: row.delta }, format, locale),
-                    ),
-                  },
-                ]
+            ...(diff && kit
+              ? kit.series(rows, text, format, locale, color(0))
               : [column("value", text.value, (row) => row.value, format)]),
             column(
               "source",

@@ -13,7 +13,7 @@ import {
   settle,
   sweep,
   tap,
-} from "./e21b-helpers.ts";
+} from "./flow-helpers.ts";
 import { ax } from "./setup.ts";
 
 beforeAll(() => defineFunnelChart());
@@ -28,8 +28,14 @@ const STAGES = [
   { id: "trial", name: "Trials", value: 300 },
   { id: "paid", name: "Paid", value: 90 },
 ];
-const funnel = (attrs = "", width = 520) =>
-  mountChart("ui-funnel-chart", `label="Conversion" ${attrs}`, { stages: STAGES }, width);
+// The element writes no default height (the base will own it), so the tests size the chart.
+const funnel = (attrs = "", width = 520, props: Record<string, unknown> = { stages: STAGES }) =>
+  mountChart(
+    "ui-funnel-chart",
+    `label="Conversion" ${/\bheight=/.test(attrs) ? "" : `height="${attrs.includes("horizontal") ? 280 : 360}"`} ${attrs}`,
+    props,
+    width,
+  );
 
 type Stage = { widthFrom: number; widthTo: number; from: number };
 const poly = (c: Element) =>
@@ -137,5 +143,36 @@ describe("ui-funnel-chart", () => {
   it("plays the entry animation only when motion is allowed", async () => {
     expect(await animateCalls(() => funnel(), true)).toBe(0);
     expect(await animateCalls(() => funnel(), false)).toBeGreaterThan(0);
+  });
+
+  it("writes no height on the host", async () => {
+    const c = await mountChart("ui-funnel-chart", 'label="Conversion"', { stages: STAGES });
+    expect(c.hasAttribute("height")).toBe(false);
+  });
+
+  it("never prints NaN or Infinity for stages that are not finite", async () => {
+    const c = await funnel("", 520, {
+      stages: [
+        { id: "a", name: "A", value: 100 },
+        { id: "b", name: "B", value: Number.NaN },
+        { id: "c", name: "C", value: Number.POSITIVE_INFINITY },
+      ],
+    });
+    const text = [
+      c.textContent,
+      ...marksOf(c).map((m) => m.getAttribute("aria-label")),
+      ...(c.chartSnapshot?.series.flatMap((s) => s.text) ?? []),
+    ].join(" ");
+    expect(text).not.toMatch(/NaN|Infinity|∞/);
+    expect(poly(c).flat(2).every(Number.isFinite)).toBe(true);
+  });
+
+  it("computes the conversion between adjacent visible stages when one is hidden", async () => {
+    const c = await funnel();
+    (c as unknown as { toggleSeries(id: string): void }).toggleSeries("signup");
+    await settle();
+    await settle();
+    // Visits 1000, Trials 300, Paid 90: 30% and 30%, not the 50% of the hidden Sign ups.
+    expect(c.chartSnapshot?.series[2]?.text).toEqual(["", "30%", "30%"]);
   });
 });
