@@ -1,9 +1,10 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { type ChartGridContext, defineChartGrid } from "../src/chart-grid/chart-grid.ts";
-import { ax, frame, mount, wait } from "./setup.ts";
+import { ax, frame, mount, parkPointer, wait } from "./setup.ts";
 import { violations } from "./unit-chart-helpers.ts";
 
 beforeAll(() => defineChartGrid());
+beforeEach(parkPointer);
 afterEach(() => {
   document.body.innerHTML = "";
 });
@@ -118,18 +119,18 @@ describe("ui-chart-grid", () => {
     el.querySelector("[data-ui-chart]")?.addEventListener("chart-grid-context", (event) =>
       ctxs.push((event as CustomEvent<ChartGridContext>).detail.highlight),
     );
-    const beards = el.querySelectorAll<HTMLElement>(
-      "[data-ui-part=legend] button",
-    )[1] as HTMLElement;
-    beards.dispatchEvent(new PointerEvent("pointerover", { bubbles: true }));
-    await settle();
-    expect(seen).toEqual(["beards"]);
-    expect(ctxs.at(-1)).toBe("beards");
+    const legendButtons = () => el.querySelectorAll<HTMLElement>("[data-ui-part=legend] button");
+    // The legend is built from a lazy chunk.
+    await expect.poll(() => legendButtons().length).toBe(2);
+    (legendButtons()[1] as HTMLElement).dispatchEvent(
+      new PointerEvent("pointerover", { bubbles: true }),
+    );
+    await expect.poll(() => seen).toEqual(["beards"]);
+    await expect.poll(() => ctxs.at(-1)).toBe("beards");
     el.querySelector("[data-ui-part=legend]")?.dispatchEvent(new PointerEvent("pointerleave"));
     expect(seen).toEqual(["beards", null]);
     el.panels = [];
-    await settle();
-    expect(el.querySelector("[data-ui-part=empty]")?.textContent).toBe("No data");
+    await expect.poll(() => el.querySelector("[data-ui-part=empty]")?.textContent).toBe("No data");
   });
 
   it("passes axe", async () => {
