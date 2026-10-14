@@ -223,4 +223,119 @@ describe("ui-choropleth-map", () => {
       results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.html.slice(0, 80))}`),
     ).toEqual([]);
   });
+
+  it("shows the empty state and fires map-error for an unknown map, then recovers", async () => {
+    const c = await chart();
+    const errors = record(c, "map-error");
+    c.setAttribute("map", "atlantis");
+    await settle(120);
+    expect(errors).toEqual([{ map: "atlantis", reason: "unknown" }]);
+    expect(regionEls(c)).toHaveLength(0);
+    expect(c.querySelector("svg")).toBeNull();
+    c.setAttribute("map", "peru");
+    await settle(160);
+    expect(regionEls(c)).toHaveLength(26);
+  });
+
+  it("keys the regions without a value with a No data swatch", async () => {
+    const c = await chart();
+    const key = () => c.querySelector("[data-ui-part=geo-key]")?.textContent ?? "";
+    expect(key()).toContain("No data");
+    c.data = c.regions.map((region) => ({ id: region.id, value: 10 }));
+    await settle(120);
+    expect(key()).toBe("");
+  });
+
+  it("names the chart from its label, never from the bundled map name", async () => {
+    const host = mount(
+      '<div style="width:400px"><ui-choropleth-map id="n" map="world" locale="en-US"></ui-choropleth-map></div>',
+    );
+    const c = host.querySelector("ui-choropleth-map") as Chart;
+    c.data = [{ id: "PE", value: 3 }];
+    await settle(200);
+    expect(await ax("group", "Mundo")).toBeUndefined();
+  });
+
+  it("sizes the box like React (220 to 640 px) without writing aspect-ratio, and follows projection", async () => {
+    const c = await chart('locale="en-US"', 300);
+    expect(c.hasAttribute("aspect-ratio")).toBe(false);
+    const height = () => Number(c.getAttribute("height"));
+    expect(height()).toBeGreaterThanOrEqual(220);
+    expect(height()).toBeLessThanOrEqual(640);
+    const before = height();
+    c.setAttribute("projection", "equirectangular");
+    await settle(100);
+    expect(height()).not.toBe(before);
+    c.setAttribute("height", "300");
+    await settle(100);
+    expect(height()).toBe(300);
+  });
+
+  describe("touch", () => {
+    const touch = (
+      type: string,
+      target: Element,
+      id: number,
+      x: number,
+      y: number,
+      extra: PointerEventInit = {},
+    ) =>
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          clientX: x,
+          clientY: y,
+          pointerType: "touch",
+          pointerId: id,
+          isPrimary: id === 1,
+          ...extra,
+        }),
+      );
+
+    it("one finger leaves the page scrolling; a tap engages and then one finger pans", async () => {
+      const c = await chart('locale="en-US" animate="off"');
+      await awake(c);
+      const drawing = c.querySelector("[data-ui-part=drawing]") as HTMLElement;
+      const svg = svgOf(c);
+      const group = svg.querySelector("[data-layer=regions]") as SVGGElement;
+      expect(drawing.style.touchAction).toBe("pan-y");
+      c.querySelector<HTMLButtonElement>("[data-ui-part=geo-controls] [data-kind=in]")?.click();
+      await settle();
+      const zoomed = group.getAttribute("transform");
+      const box = svg.getBoundingClientRect();
+      const [x, y] = [box.left + 200, box.top + 100];
+      touch("pointerdown", svg, 1, x, y);
+      for (let i = 1; i <= 5; i += 1) touch("pointermove", svg, 1, x + i * 10, y);
+      touch("pointerup", svg, 1, x + 50, y);
+      await settle();
+      expect(group.getAttribute("transform")).toBe(zoomed);
+      // The tap engaged the map.
+      expect(drawing.style.touchAction).toBe("none");
+      touch("pointerdown", svg, 1, x, y);
+      for (let i = 1; i <= 5; i += 1) touch("pointermove", svg, 1, x + i * 10, y);
+      touch("pointerup", svg, 1, x + 50, y);
+      await settle();
+      expect(group.getAttribute("transform")).not.toBe(zoomed);
+    });
+
+    it("two fingers pinch-zoom without engaging first", async () => {
+      const c = await chart('locale="en-US" animate="off"');
+      await awake(c);
+      const svg = svgOf(c);
+      const group = svg.querySelector("[data-layer=regions]") as SVGGElement;
+      const box = svg.getBoundingClientRect();
+      const [x, y] = [box.left + 200, box.top + 100];
+      touch("pointerdown", svg, 1, x - 20, y);
+      touch("pointerdown", svg, 2, x + 20, y);
+      for (let i = 1; i <= 4; i += 1) {
+        touch("pointermove", svg, 1, x - 20 - i * 12, y);
+        touch("pointermove", svg, 2, x + 20 + i * 12, y);
+      }
+      await settle();
+      expect(group.getAttribute("transform")).toMatch(/scale\((?!1\))/);
+      touch("pointerup", svg, 1, x, y);
+      touch("pointerup", svg, 2, x, y);
+    });
+  });
 });

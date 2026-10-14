@@ -24,20 +24,19 @@ import {
 } from "../internal/chart-base.js";
 import {
   AutoAspect,
-  colorScale,
   DEFAULT_MAP_LABELS,
   directionalNav,
   finiteValues,
-  legendFor,
   type MapLabels,
   type RegionDatum,
   type RegionInfo,
+  setGeoKey,
 } from "../internal/e24-geo.js";
+import { colorScale, legendFor, NO_DATA_FILL } from "../internal/e24-scale.js";
 import css from "./hex-tile-map.css.js";
 
 export type { HexTile };
 
-const NO_DATA_FILL = "var(--surface-2)";
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 interface Cell {
@@ -136,14 +135,9 @@ export class UiHexTileMap extends ChartElement {
     super.connectedCallback();
   }
 
-  override attributeChangedCallback(name: string): void {
-    this.#aspect.changed(name);
-    super.attributeChangedCallback(name);
-  }
-
   #fitAspect(): void {
     const grid = layoutHexGrid(this.#tiles, 1000, 1000);
-    this.#aspect.apply(grid.height > 0 ? grid.width / grid.height : null);
+    this.#aspect.set(grid.width > 0 ? grid.height / grid.width : null);
   }
 
   protected override isEmpty(): boolean {
@@ -177,6 +171,7 @@ export class UiHexTileMap extends ChartElement {
       };
     });
     this.#cells = cells;
+    this.#aspect.fit(ctx.width);
     const grid = layoutHexGrid(this.#tiles, ctx.width, ctx.height);
     const gap = Math.max(1.5, grid.size * 0.08);
     const codeSize = clamp(grid.size * 0.46, 8, 13);
@@ -240,6 +235,12 @@ export class UiHexTileMap extends ChartElement {
         );
       });
 
+    setGeoKey(
+      this,
+      cells.some((cell) => cell.color === NO_DATA_FILL)
+        ? [{ id: "no-data", name: labels.noData, color: NO_DATA_FILL, outline: true }]
+        : [],
+    );
     const finite = cells.filter((cell) => cell.value != null).length;
     return {
       summary: `${cells.length} regions, ${finite} with data`,

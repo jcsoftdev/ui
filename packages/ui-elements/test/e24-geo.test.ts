@@ -1,14 +1,10 @@
 // The map family's ported math is pinned to the React kit's sources, value for value.
 import type { AreaGeometry } from "@jcsoftdev/ui-core/geo/topology";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { heatmapScale } from "../../ui/src/charts/heatmap-chart/heatmap-scale.ts";
-import {
-  colorScale,
-  directionalNav,
-  geometryContains,
-  legendFor,
-  resolveRoutes,
-} from "../src/internal/e24-geo.ts";
+import { geometryContains } from "../src/internal/e24-features.ts";
+import { directionalNav, loadGeoMap, resolveRoutes } from "../src/internal/e24-geo.ts";
+import { colorScale, legendFor } from "../src/internal/e24-scale.ts";
 
 const RANGES = [
   { from: 0, to: 100, label: "Low" },
@@ -103,5 +99,30 @@ describe("e24 geometry and routes", () => {
     );
     expect(routes).toHaveLength(1);
     expect(routes[0]).toMatchObject({ name: "A → B", from: [1, 2], to: [3, 4] });
+  });
+});
+
+const calls = vi.hoisted(() => ({ count: 0 }));
+vi.mock("@jcsoftdev/ui-core/geo/maps", () => ({
+  MAP_IDS: ["world", "peru"],
+  loadMap: (id: string) => {
+    calls.count += 1;
+    return calls.count === 1
+      ? Promise.reject(new Error("offline"))
+      : Promise.resolve({ id, name: id });
+  },
+}));
+
+describe("e24 loadGeoMap", () => {
+  it("forgets a failed fetch so the next call retries, and caches a success", async () => {
+    await expect(loadGeoMap("world")).rejects.toThrow("offline");
+    const map = await loadGeoMap("world");
+    expect(map).toMatchObject({ id: "world" });
+    expect(await loadGeoMap("world")).toBe(map);
+    expect(calls.count).toBe(2);
+  });
+  it("resolves null for an unknown id and for nothing", async () => {
+    expect(await loadGeoMap("atlantis")).toBeNull();
+    expect(await loadGeoMap(null)).toBeNull();
   });
 });
