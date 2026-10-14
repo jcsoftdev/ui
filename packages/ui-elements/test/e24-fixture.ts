@@ -25,7 +25,10 @@ export async function awake(c: Element) {
   drawingOf(c).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
-  await wait(60);
+  // Awaiting the module runs after the chart's own continuation, which attaches the layer.
+  await import("../src/internal/chart-interact.ts");
+  await frame();
+  await frame();
 }
 
 /** Sends a pointer event at a viewport point, to the element that is under it. */

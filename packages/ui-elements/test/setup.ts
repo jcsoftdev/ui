@@ -1,11 +1,13 @@
 import "@jcsoftdev/ui-tokens/styles/tokens.css";
 import { commands, userEvent } from "vitest/browser";
-import type { AxNode } from "./commands.ts";
+import type { AxNode, TouchStep } from "./commands.ts";
 
 declare module "vitest/browser" {
   interface BrowserCommands {
     axTree: () => Promise<AxNode[]>;
     reducedMotion: (value: "reduce" | "no-preference") => Promise<void>;
+    touch: (steps: TouchStep[]) => Promise<void>;
+    timezone: (id: string | null) => Promise<void>;
   }
 }
 
