@@ -35,15 +35,28 @@ import {
   type ValueAxis,
 } from "../internal/e18-plot.js";
 
+import { importTimeAxis } from "./time-axis-chunk.js";
+
 export type { XValue };
 
 /** The time-axis stack (calendar ticks, date formatting): fetched only when categories are dates. */
 type TimeAxis = typeof import("@jcsoftdev/ui-core/chart/category-axis-time");
 let timeAxis: TimeAxis | undefined;
-let timeAxisLoad: Promise<TimeAxis> | undefined;
-const loadTimeAxis = (): Promise<TimeAxis> =>
-  (timeAxisLoad ??= import("@jcsoftdev/ui-core/chart/category-axis-time").then(
-    (module) => (timeAxis = module),
+let timeAxisLoad: Promise<unknown> | undefined;
+/** Set when the chunk could not load: date charts then draw on the point axis instead of staying blank. */
+let timeAxisFailed = false;
+const loadTimeAxis = (): Promise<unknown> =>
+  (timeAxisLoad ??= importTimeAxis().then(
+    (module) => {
+      timeAxis = module;
+    },
+    (error: unknown) => {
+      timeAxisFailed = true;
+      console.warn(
+        "ui-range-area-chart: the time axis failed to load, drawing a point axis",
+        error,
+      );
+    },
   ));
 
 const ISO_DATE =
@@ -188,7 +201,13 @@ export class UiRangeAreaChart extends ChartElement {
 
   /** Starts fetching the time-axis chunk as soon as the categories turn out to be dates. */
   #prime(): void {
-    if (timeAxis || !this.isConnected || !this.categories.some((c) => c instanceof Date)) return;
+    if (
+      timeAxis ||
+      timeAxisFailed ||
+      !this.isConnected ||
+      !this.categories.some((c) => c instanceof Date)
+    )
+      return;
     loadTimeAxis().then(() => this.requestDraw());
   }
 
@@ -204,7 +223,7 @@ export class UiRangeAreaChart extends ChartElement {
     const { svg: root, width, height, locale, timeZone, animate } = ctx;
     const categories = this.categories;
     // Date categories wait for the time-axis chunk: drawing now would flash a point axis.
-    if (!timeAxis && categories.some((value) => value instanceof Date)) {
+    if (!timeAxis && !timeAxisFailed && categories.some((value) => value instanceof Date)) {
       loadTimeAxis().then(() => this.requestDraw());
       return {};
     }
