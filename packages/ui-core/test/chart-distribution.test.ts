@@ -144,10 +144,67 @@ describe("distribution maths", () => {
       const theirs = layout.categoryLayout(input);
       expect(mine.margin).toEqual(theirs.margin);
       expect(mine.valueTicks).toEqual(theirs.valueTicks);
-      expect(mine.categoryTicks).toEqual(theirs.categoryTicks);
+      // Deliberate deviation: React's float round-trip (`labelWidth + 18 - 18`) truncated the widest
+      // label even though it fits. Everything else, positions included, is identical.
+      expect(mine.categoryTicks.map((tick) => tick.position)).toEqual(
+        theirs.categoryTicks.map((tick) => tick.position),
+      );
+      mine.categoryTicks.forEach((tick, i) => {
+        const other = theirs.categoryTicks[i]?.label as string;
+        expect(
+          tick.label === other || (other.endsWith("…") && tick.label.length >= other.length),
+        ).toBe(true);
+      });
       expect(mine.valueScale.domain).toEqual(theirs.valueScale.domain);
       expect(mine.slot(0, 0)).toEqual(theirs.slot(0, 0));
       expect(mine.band.bandwidth).toBe(theirs.band.bandwidth);
     }
+  });
+
+  it("never truncates the widest category label when the margin was sized for it", () => {
+    const names = ["Ana", "Carlos Eduardo Fernandez", "Dina"];
+    for (let width = 300; width < 900; width += 7) {
+      const layout = distribution.categoryLayout({
+        width,
+        height: 300,
+        orientation: "horizontal",
+        categories: names,
+        seriesCount: 1,
+        extent: [0, 10],
+      });
+      const left = layout.margin.left;
+      const widest = Math.max(...names.map((n) => n.length * 12 * 0.58));
+      if (widest + 18 <= width * 0.34) expect(layout.categoryTicks[1]?.label).toBe(names[1]);
+      expect(left).toBeGreaterThanOrEqual(36);
+    }
+  });
+
+  it("accepts a tick formatter and a boolean title, and sorts once with the *Sorted variants", () => {
+    const base = {
+      width: 400,
+      height: 300,
+      orientation: "vertical" as const,
+      categories: ["a"],
+      seriesCount: 1,
+      extent: [0, 100] as [number, number],
+    };
+    const layout = distribution.categoryLayout({ ...base, format: (v) => `<${v}>` });
+    expect(layout.valueTicks.every((tick) => /^<.*>$/.test(tick.label))).toBe(true);
+    expect(distribution.categoryLayout({ ...base, axis: { title: true } }).margin.top).toBe(24);
+    expect(distribution.categoryLayout(base).margin.top).toBe(10);
+    const raw = sample(80, -5, 90);
+    const sorted = distribution.sortedFinite(raw);
+    expect(distribution.boxStatsSorted(sorted)).toEqual(distribution.boxStats(raw));
+    expect(distribution.silvermanBandwidthSorted(sorted)).toBe(
+      distribution.silvermanBandwidth(raw),
+    );
+    expect(distribution.gaussianKdeSorted(sorted, { points: 20 })).toEqual(
+      distribution.gaussianKde(raw, { points: 20 }),
+    );
+  });
+
+  it("handles 200k samples without spreading them", () => {
+    const big = sample(200_000, 0, 1000);
+    expect(distribution.boxStats(big)?.count).toBe(200_000);
   });
 });

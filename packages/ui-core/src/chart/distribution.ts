@@ -73,7 +73,11 @@ export function boxStats(
   values: Iterable<number | null | undefined>,
   whisker = 1.5,
 ): BoxStats | null {
-  const sorted = sortedFinite(values);
+  return boxStatsSorted(sortedFinite(values), whisker);
+}
+
+/** `boxStats` of values that are already finite and ascending (see `sortedFinite`): no second sort. */
+export function boxStatsSorted(sorted: readonly number[], whisker = 1.5): BoxStats | null {
   const n = sorted.length;
   if (n === 0) return null;
   const q1 = quantileSorted(sorted, 0.25);
@@ -113,7 +117,11 @@ export function boxStats(
  * measure when one of them is zero, and to 1 for constant data.
  */
 export function silvermanBandwidth(values: Iterable<number | null | undefined>): number {
-  const sorted = sortedFinite(values);
+  return silvermanBandwidthSorted(sortedFinite(values));
+}
+
+/** `silvermanBandwidth` of values that are already finite and ascending. */
+export function silvermanBandwidthSorted(sorted: readonly number[]): number {
   const n = sorted.length;
   if (n < 2) return 1;
   const sd = standardDeviation(sorted);
@@ -148,11 +156,20 @@ export function gaussianKde(
   values: Iterable<number | null | undefined>,
   options: KdeOptions = {},
 ): DensityPoint[] {
-  const sorted = sortedFinite(values);
+  return gaussianKdeSorted(sortedFinite(values), options);
+}
+
+/** `gaussianKde` of values that are already finite and ascending. */
+export function gaussianKdeSorted(
+  sorted: readonly number[],
+  options: KdeOptions = {},
+): DensityPoint[] {
   const n = sorted.length;
   if (n === 0) return [];
   const h =
-    options.bandwidth && options.bandwidth > 0 ? options.bandwidth : silvermanBandwidth(sorted);
+    options.bandwidth && options.bandwidth > 0
+      ? options.bandwidth
+      : silvermanBandwidthSorted(sorted);
   const cut = options.cut ?? 2;
   const [lo, hi] = options.extent ?? [
     (sorted[0] as number) - cut * h,
@@ -302,8 +319,8 @@ export interface DistributionAxisOptions {
   tickCount?: number;
   /** Tick format; defaults to a short form of the chart `valueFormat`. */
   format?: ValueFormat;
-  /** Short axis title, e.g. "min" or "$". */
-  title?: string;
+  /** Short axis title, e.g. "min" or "$". Only its presence matters to the layout, so `true` reserves the room. */
+  title?: string | boolean;
 }
 
 export interface PlotMargin {
@@ -372,6 +389,8 @@ export interface CategoryLayoutInput {
   /** Locale and currency of the tick labels. */
   locale?: string;
   currency?: string;
+  /** Formats the ticks directly; wins over `axis.format`, `valueFormat`, `locale` and `currency`. */
+  format?: (value: number) => string;
 }
 
 export interface CategoryLayout {
@@ -397,17 +416,20 @@ export function categoryLayout(input: CategoryLayoutInput): CategoryLayout {
   const horizontal = input.orientation === "horizontal";
   const domain = domainOf(input.extent, axis);
   const fixed = axis.min != null && axis.max != null;
-  const toText = resolveAxisFormat(axis.format ?? valueFormat, {
-    locale: input.locale,
-    currency: input.currency,
-  });
+  const toText =
+    input.format ??
+    resolveAxisFormat(axis.format ?? valueFormat, {
+      locale: input.locale,
+      currency: input.currency,
+    });
   const top = axis.title ? 24 : 10;
   const bottom = 28;
 
   let margin: PlotMargin;
   let tickCount: number;
   if (horizontal) {
-    const labelWidth = Math.max(0, ...categories.map((label) => estimateTextWidth(label, 12)));
+    let labelWidth = 0;
+    for (const label of categories) labelWidth = Math.max(labelWidth, estimateTextWidth(label, 12));
     margin = { top, right: 18, bottom, left: clamp(labelWidth + 18, 36, width * 0.34) };
     tickCount =
       axis.tickCount ?? clamp(Math.round((width - margin.left - margin.right) / 90), 2, 9);
@@ -441,7 +463,7 @@ export function categoryLayout(input: CategoryLayoutInput): CategoryLayout {
   const categoryTicks = categories.map((label, index) => ({
     key: index,
     position: band.center(index),
-    label: horizontal ? truncateLabel(label, margin.left - 18, 12) : label,
+    label: horizontal ? truncateLabel(label, margin.left - 18 + 1e-6, 12) : label,
   }));
   const groups = Math.max(1, seriesCount);
   const inner = band.bandwidth / groups;
