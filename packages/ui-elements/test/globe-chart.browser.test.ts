@@ -4,7 +4,7 @@ import { commands } from "vitest/browser";
 import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineGlobeChart } from "../src/globe-chart/globe-chart.ts";
 import { awake, parkMouse, pointerAt, reachable, record, settle, svgOf } from "./e24-fixture.ts";
-import { ax, mount, wait } from "./setup.ts";
+import { ax, frame, mount, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineGlobeChart();
@@ -51,7 +51,11 @@ async function chart(attrs = 'locale="en-US"') {
     { id: "PE", value: 900 },
     { id: "AR", value: 300 },
   ];
-  await settle(300);
+  // Ready means the map is painted and the markers are drawn.
+  await expect
+    .poll(() => Boolean(c.querySelector("canvas")) && markers(c).length > 0, { timeout: 8000 })
+    .toBe(true);
+  await settle(40);
   return c;
 }
 const markers = (c: Element) => [...c.querySelectorAll<SVGElement>("svg [data-marker]")];
@@ -86,6 +90,17 @@ function drag(c: Element, from: [number, number], to: [number, number], steps = 
   return { moves, up };
 }
 
+/** True when the view did not move for `frames` consecutive animation frames. */
+async function stillFor(c: Chart, frames: number) {
+  let last = c.rotation.lon;
+  for (let i = 0; i < frames; i += 1) {
+    await frame();
+    if (c.rotation.lon !== last) return false;
+    last = c.rotation.lon;
+  }
+  return true;
+}
+
 describe("ui-globe-chart", () => {
   it("loads the world lazily, paints it on a canvas and names markers", async () => {
     const c = await chart();
@@ -105,9 +120,18 @@ describe("ui-globe-chart", () => {
     const found = reachable(markers(c));
     expect(found.length).toBeGreaterThan(0);
     const p = found[0] as { index: number; x: number; y: number };
-    pointerAt("pointermove", p.x, p.y);
+    // Keep moving onto the marker until the chart reports it (the hit test is wired once the drawing is
+    // ready), then check that nudging within the mark and a redraw do not report it again.
+    await expect
+      .poll(
+        () => {
+          pointerAt("pointermove", p.x, p.y);
+          return hovers.length;
+        },
+        { timeout: 6000 },
+      )
+      .toBeGreaterThan(0);
     pointerAt("pointermove", p.x + 0.5, p.y);
-    expect(hovers).toHaveLength(1);
     c.data = [...c.data];
     await settle(60);
     expect(hovers).toHaveLength(1);
@@ -133,13 +157,36 @@ describe("ui-globe-chart", () => {
   it("a flick keeps turning when motion is on", async () => {
     const c = await chart();
     await awake(c);
-    const box = svgOf(c).getBoundingClientRect();
+    const svg = svgOf(c);
+    const box = svg.getBoundingClientRect();
     const cx = box.left + box.width / 2;
     const cy = box.top + box.height / 2;
-    drag(c, [cx, cy], [cx + 80, cy], 4);
+    const send = (type: string, x: number) =>
+      svg.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          clientX: x,
+          clientY: cy,
+          pointerType: "mouse",
+          pointerId: 1,
+          isPrimary: true,
+          buttons: 1,
+        }),
+      );
+    send("pointerdown", cx);
+    // A frame between the early moves keeps them apart in time; the last move and the release go out together
+    // so a slow frame under load cannot make the release look like a stop.
+    for (let i = 1; i <= 3; i += 1) {
+      send("pointermove", cx + i * 20);
+      await frame();
+    }
+    send("pointermove", cx + 80);
+    send("pointerup", cx + 80);
     const after = c.rotation.lon;
-    await wait(200);
-    expect(c.rotation.lon).not.toBeCloseTo(after, 3);
+    await expect
+      .poll(() => Math.abs(c.rotation.lon - after), { timeout: 4000 })
+      .toBeGreaterThan(0.001);
   });
 
   it("keyboard: arrows reveal marks, shift rotates, zero resets", async () => {
@@ -235,10 +282,12 @@ describe("ui-globe-chart", () => {
         '<div style="position:fixed;top:-4000px;width:300px"><ui-globe-chart map="world" auto-rotate auto-rotate-speed="90" rotation="-70,-10" locale="en-US"></ui-globe-chart></div>',
       );
       const c = host.querySelector("ui-globe-chart") as Chart;
-      await settle(300);
-      const start = c.rotation.lon;
-      await wait(300);
-      expect(c.rotation.lon).toBe(start);
+      // Only a loaded globe can spin, so wait for the map before judging that it holds still.
+      await expect.poll(() => c.querySelector("canvas, svg path"), { timeout: 8000 }).toBeTruthy();
+      // The map loads and the observer reports "off screen" on their own schedule: wait until the view
+      // has stopped moving, then check that it stays put over more frames.
+      await expect.poll(() => stillFor(c, 6), { timeout: 8000, interval: 50 }).toBe(true);
+      expect(await stillFor(c, 12)).toBe(true);
     });
   });
 
@@ -339,17 +388,16 @@ describe("ui-globe-chart", () => {
       touch("pointerdown", svg, 1, x, y);
       for (let i = 1; i <= 5; i += 1) touch("pointermove", svg, 1, x + i * 12, y);
       touch("pointerup", svg, 1, x + 60, y);
-      await settle();
+      // The tap engages the globe; a one-finger swipe before that scrolls the page and never turns it.
+      await expect.poll(() => drawing.style.touchAction, { timeout: 4000 }).toBe("none");
+      expect(await stillFor(c, 4)).toBe(true);
       expect(c.rotation.lon).toBe(start);
-      expect(drawing.style.touchAction).toBe("none");
       touch("pointerdown", svg, 1, x, y);
       for (let i = 1; i <= 5; i += 1) touch("pointermove", svg, 1, x + i * 12, y);
       touch("pointerup", svg, 1, x + 60, y);
-      await settle();
-      expect(c.rotation.lon).not.toBe(start);
+      await expect.poll(() => c.rotation.lon, { timeout: 4000 }).not.toBe(start);
       document.body.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
-      await settle();
-      expect(drawing.style.touchAction).toBe("pan-y");
+      await expect.poll(() => drawing.style.touchAction, { timeout: 4000 }).toBe("pan-y");
       const before = c.rotation.lon;
       touch("pointerdown", svg, 1, x - 20, y);
       touch("pointerdown", svg, 2, x + 20, y);
@@ -357,8 +405,7 @@ describe("ui-globe-chart", () => {
         touch("pointermove", svg, 1, x - 20 + i * 10, y);
         touch("pointermove", svg, 2, x + 20 + i * 10, y);
       }
-      await settle();
-      expect(c.rotation.lon).not.toBe(before);
+      await expect.poll(() => c.rotation.lon, { timeout: 4000 }).not.toBe(before);
     });
   });
 });
