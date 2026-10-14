@@ -4,6 +4,8 @@ import { formatCurrency, formatNumber } from "../chart/format.js";
 export type CellValue = string | number | boolean | Date | null | undefined;
 
 export type ColumnType = "text" | "number" | "currency" | "date" | "status" | "boolean";
+/** How a column is filtered: `range` is numeric, `dateRange` by day, `select` / `set` by distinct value. */
+export type FilterKind = "text" | "range" | "dateRange" | "select" | "set";
 export type ColumnAlign = "start" | "center" | "end";
 
 /** What a custom cell renderer receives. */
@@ -76,6 +78,8 @@ export interface GridColumn<T> {
   grow?: number;
   align?: ColumnAlign;
   sortable?: boolean;
+  /** Overrides the filter kind picked from `type` (see `grid/filter`). */
+  filter?: FilterKind;
   pinnable?: boolean;
   resizable?: boolean;
   reorderable?: boolean;
@@ -131,14 +135,21 @@ export const DEFAULT_LOCALE = "en";
 
 const dateFormats = new Map<string, Intl.DateTimeFormat>();
 
-/** A usable BCP 47 tag: an invalid or empty one falls back to the default locale. */
+const usable = new Map<string, string>();
+
+/** A usable BCP 47 tag: an invalid or empty one falls back to the default locale. Memoized. */
 function usableLocale(locale: string | undefined): string {
   if (!locale) return DEFAULT_LOCALE;
-  try {
-    return Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE;
-  } catch {
-    return DEFAULT_LOCALE;
+  let tag = usable.get(locale);
+  if (tag === undefined) {
+    try {
+      tag = Intl.getCanonicalLocales(locale)[0] ?? DEFAULT_LOCALE;
+    } catch {
+      tag = DEFAULT_LOCALE;
+    }
+    usable.set(locale, tag);
   }
+  return tag;
 }
 
 function dateFormat(locale: string): Intl.DateTimeFormat {
