@@ -2,6 +2,20 @@
 
 ## 0.3.0 (unreleased)
 
+### Liquid Glass on phones
+
+- **Cheaper lens maps.** The displacement and specular maps are rasterised at no more than 1.5
+  pixels per CSS pixel (they are smooth fields that `feImage` stretches), and a large surface drops
+  toward one, so a 3x phone no longer builds a map 4x the size of the surface on the main thread.
+  The crystal map, which mostly covers the margin its layer clips away, is held near 48,000 pixels
+  and may go down to half a pixel per CSS pixel. `computeCrystalField` now accepts a `dpr` from 0.5.
+  The whole-surface field computes its per-column terms once, with the same output.
+- **No long task from several lenses at once.** The per-frame pass that installs and resizes lenses
+  stops after about 12 ms and leaves the rest for the next frame.
+- **A crystal lens no longer drops while an ancestor changes.** `<LiquidGlass />` read the crystal
+  surface (whose backdrop filter moves to its own layer) as not painting one, so any class, style or
+  `data-*` change above it, such as dragging, released and rebuilt the lens.
+
 ### Liquid Glass is opt-in (breaking for the 0.3.0 previews)
 
 Liquid Glass now costs nothing until an app asks for it. This replaces the material objects and
