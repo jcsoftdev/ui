@@ -2,10 +2,10 @@
 import { buildHierarchy, descendants } from "@jcsoftdev/ui-core/chart/hierarchy";
 import { seriesColor } from "@jcsoftdev/ui-core/chart/palette";
 import { describe, expect, it } from "vitest";
+import { fitLabel } from "../src/internal/chart-text.ts";
 import {
   branchColor,
   describeNode,
-  fitLabel,
   HIERARCHY_STRINGS,
   hierarchyNav,
   levelStrength,

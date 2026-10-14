@@ -45,9 +45,9 @@ import {
   shareOf,
 } from "./hierarchy-model.js";
 
-export * from "./hierarchy-model.js";
 export { fitLabel } from "./chart-text.js";
 export { numberAttr as num } from "./e5-forms.js";
+export * from "./hierarchy-model.js";
 
 /** An attribute that is on unless it says `off` or `false` (`fallback` when it is absent). */
 export const flag = (element: Element, name: string, fallback: boolean): boolean => {
