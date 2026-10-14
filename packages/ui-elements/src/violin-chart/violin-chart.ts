@@ -1,15 +1,16 @@
 import {
   type BoxStats,
-  boxStats,
+  boxStatsSorted,
   categoryLayout,
   type DensityPoint,
   type DistributionAxisOptions,
   densityAt,
-  gaussianKde,
+  gaussianKdeSorted,
   groupSeed,
   type JitteredValue,
   jitterValues,
-  silvermanBandwidth,
+  silvermanBandwidthSorted,
+  sortedFinite,
   toXY,
   violinPath,
 } from "@jcsoftdev/ui-core/chart/distribution";
@@ -24,20 +25,24 @@ import {
 } from "../internal/chart-base.js";
 import {
   boxGlyph,
-  boxTooltipRows,
   boxValueText,
+  CANVAS_AT,
   type ColoredSeries,
   categoryAxes,
+  colorResolver,
   colorSeries,
   type DistributionSeries,
+  dotsChunk,
+  emptySnapshot,
   extentOf,
+  gradedChunk,
   groupName,
-  observationDots,
+  loadThen,
   type PointColoring,
   type StatLabels,
   seriesFormat,
   statLabelsOf,
-  statsSnapshot,
+  textChunk,
 } from "../internal/e18-dist.js";
 import {
   AutoHeight,
@@ -46,6 +51,7 @@ import {
   flag,
   hitRect,
   jsonAttr,
+  numAttr,
   valueFormatOf,
 } from "../internal/e18-plot.js";
 import css from "./violin-chart.css.js";
@@ -71,13 +77,6 @@ interface Item {
   halfWidth: number;
   side: "both" | "start" | "end";
 }
-
-const num = (host: Element, name: string): number | undefined => {
-  const raw = host.getAttribute(name);
-  if (raw == null || raw === "") return undefined;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : undefined;
-};
 
 /**
  * `<ui-violin-chart>`: a Gaussian kernel density mirrored around each category axis, with an
@@ -121,6 +120,7 @@ export class UiViolinChart extends ChartElement {
   #axis: DistributionAxisOptions | undefined;
   #stat: Partial<StatLabels> | undefined;
   #prepared: Prepared | null = null;
+  #textMissed = false;
   readonly #height = new AutoHeight(this);
 
   get categories(): readonly string[] {
@@ -174,16 +174,17 @@ export class UiViolinChart extends ChartElement {
   /** Statistics and 72-point density of every series and category; cached until the data changes. */
   #prepare(): Prepared {
     if (this.#prepared) return this.#prepared;
-    const bandwidth = num(this, "bandwidth");
+    const given = numAttr(this, "bandwidth", Number.NaN);
+    const bandwidth = Number.isFinite(given) ? given : undefined;
     const categories = this.categories;
     const series = this.series;
     const cells = series.map((item) =>
       categories.map((_, index) => {
-        const values = item.data[index] ?? [];
-        const stats = boxStats(values);
+        const sorted = sortedFinite(item.data[index] ?? []);
+        const stats = boxStatsSorted(sorted);
         if (!stats) return null;
-        const h = bandwidth ?? silvermanBandwidth(values);
-        return { stats, density: gaussianKde(values, { bandwidth: h, points: 72 }) };
+        const h = bandwidth ?? silvermanBandwidthSorted(sorted);
+        return { stats, density: gaussianKdeSorted(sorted, { bandwidth: h, points: 72 }) };
       }),
     );
     this.#prepared = { categories, series, cells };
@@ -201,10 +202,10 @@ export class UiViolinChart extends ChartElement {
     const split = flag(this, "split") && visible.length === 2;
     const scaleMode = this.getAttribute("scale") === "area" ? "area" : "width";
     const showPoints = flag(this, "show-points");
-    const share = Math.min(1, Math.max(0, num(this, "jitter") ?? 0.8));
+    const share = Math.min(1, Math.max(0, numAttr(this, "jitter", 0.8)));
     const coloring: PointColoring =
       this.getAttribute("point-color") === "value" ? "value" : "series";
-    const seed = num(this, "seed") ?? 11;
+    const seed = numAttr(this, "seed", 11);
     const axis = this.#axis;
 
     const cell = (item: ColoredSeries, category: number) => cells[item.index]?.[category] ?? null;
@@ -267,6 +268,51 @@ export class UiViolinChart extends ChartElement {
     const plot = svg("g", { transform: `translate(${margin.left},${margin.top})` });
     root.append(plot);
     plot.append(categoryAxes(layout, { title: axis?.title, grid: flag(this, "grid", true) }));
+
+    const dots = dotsChunk.get();
+    const graded = gradedChunk.get();
+    const dotsReady = showPoints && dots != null && (coloring === "series" || graded != null);
+    loadThen(showPoints ? [dotsChunk, ...(coloring === "value" ? [gradedChunk] : [])] : [], () =>
+      this.requestDraw(),
+    );
+    loadThen([textChunk], () => {
+      if (!this.#textMissed) return;
+      this.#textMissed = false;
+      this.requestDraw();
+    });
+    const pointsOf = (item: Item): JitteredValue[] => {
+      const top = maxFor(item);
+      const sign = item.side === "start" ? -1 : 1;
+      const placed = jitterValues(
+        item.series.source.data[item.category] ?? [],
+        groupSeed(seed, item.category, item.series.index),
+        (value) => (densityAt(item.density, value) / top) * item.halfWidth * share,
+      );
+      return item.side === "both"
+        ? placed
+        : placed.map((point) => ({ ...point, offset: sign * Math.abs(point.offset) }));
+    };
+    let samples = 0;
+    for (const item of items) samples += item.stats.count;
+    if (dots && dotsReady && samples > CANVAS_AT) {
+      const g = ctx.canvas();
+      const resolve = colorResolver(this);
+      for (const item of items)
+        dots.paintObservations(g, {
+          points: pointsOf(item),
+          map,
+          center: item.center,
+          horizontal,
+          color: item.series.color,
+          coloring,
+          range: [item.stats.min, item.stats.max],
+          sequential: graded?.sequentialColor,
+          resolve,
+          left: margin.left,
+          top: margin.top,
+        });
+    }
+    const svgDots = dots && dotsReady && samples <= CANVAS_AT ? dots : undefined;
 
     const quartileLine = (item: Item, value: number, kind: "median" | "quartile") => {
       const reach = (densityAt(item.density, value) / maxFor(item)) * item.halfWidth;
@@ -352,29 +398,19 @@ export class UiViolinChart extends ChartElement {
           { duration: 620, delay: index * 50, easing: EASE, fill: "backwards" },
         );
 
-      if (showPoints) {
-        const top = maxFor(item);
-        const sign = side === "start" ? -1 : 1;
-        const placed: JitteredValue[] = jitterValues(
-          owner.source.data[item.category] ?? [],
-          groupSeed(seed, item.category, owner.index),
-          (value) => (densityAt(density, value) / top) * halfWidth * share,
-        );
+      if (svgDots)
         group.append(
-          observationDots({
-            points:
-              side === "both"
-                ? placed
-                : placed.map((point) => ({ ...point, offset: sign * Math.abs(point.offset) })),
+          svgDots.observationDots({
+            points: pointsOf(item),
             map,
             center,
             horizontal,
             color: owner.color,
             coloring,
             range: [stats.min, stats.max],
+            sequential: graded?.sequentialColor,
           }),
         );
-      }
 
       const el = hitRect(band.x, band.y, band.width, band.height);
       group.append(el);
@@ -391,32 +427,49 @@ export class UiViolinChart extends ChartElement {
       maxHoverRows: 8,
       hit: (x, y) => {
         const cross = horizontal ? y - margin.top : x - margin.left;
+        const along = horizontal ? x - margin.left : y - margin.top;
+        if (items.length === 0 || cross < 0 || cross > (horizontal ? innerHeight : innerWidth))
+          return -1;
+        if (along < 0 || along > (horizontal ? innerWidth : innerHeight)) return -1;
         let best = -1;
         let distance = Number.POSITIVE_INFINITY;
+        let nearest = 0;
+        let nearestDistance = Number.POSITIVE_INFINITY;
         for (const [index, item] of items.entries()) {
+          const d = Math.abs(item.center - cross);
+          if (d < nearestDistance) {
+            nearest = index;
+            nearestDistance = d;
+          }
           if (item.side === "start" && cross > item.center) continue;
           if (item.side === "end" && cross < item.center) continue;
-          const d = Math.abs(item.center - cross);
-          if (d <= item.halfWidth + 8 && d < distance) {
+          if (d < distance) {
             best = index;
             distance = d;
           }
         }
-        return best;
+        return best >= 0 ? best : nearest;
       },
       hover: (index) => {
         const item = items[index];
         if (!item) return null;
         const format = seriesFormat(this, ctx, item.series);
+        const text = textChunk.get();
+        if (!text) this.#textMissed = true;
         return {
           title: nameOf(item),
-          rows: boxTooltipRows(item.stats, labels, format, item.series.color),
+          rows: text?.boxTooltipRows(item.stats, labels, format, item.series.color) ?? [],
           x: margin.left + (horizontal ? map(item.stats.q3) : item.center + item.halfWidth / 2),
           y: margin.top + (horizontal ? item.center : map(item.stats.median)),
         };
       },
-      snapshot: () =>
-        statsSnapshot(
+      snapshot: () => {
+        const text = textChunk.get();
+        if (!text) {
+          this.#textMissed = true;
+          return emptySnapshot(title, all);
+        }
+        return text.statsSnapshot(
           title,
           all.flatMap((item) =>
             categories.map((category, index) => ({
@@ -427,7 +480,8 @@ export class UiViolinChart extends ChartElement {
           ),
           labels,
           all,
-        ),
+        );
+      },
     };
   }
 }

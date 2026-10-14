@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineViolinChart } from "../src/violin-chart/violin-chart.ts";
@@ -13,7 +13,7 @@ import {
   violations,
   walkKeys,
 } from "./e18-fixture.ts";
-import { ax } from "./setup.ts";
+import { ax, wait } from "./setup.ts";
 
 const wave = (base: number, spread: number) =>
   Array.from({ length: 40 }, (_, i) => base + Math.sin(i * 1.7) * spread + (i % 7) * 0.4);
@@ -52,6 +52,34 @@ const centers = (c: HTMLElement) => {
     const r = m.getBoundingClientRect();
     return { x: r.left - origin.left + r.width / 2, y: r.top - origin.top + r.height / 2 };
   });
+};
+
+/** Plot box inside the drawing, from the translate of the plot group (the bottom margin is 28). */
+const plotBox = (c: Element) => {
+  const svg = svgOf(c);
+  const [left = 0, top = 0] = (svg.querySelector(":scope > g")?.getAttribute("transform") ?? "")
+    .replace(/[^\d.,-]/g, "")
+    .split(",")
+    .map(Number);
+  const box = svg.getBoundingClientRect();
+  return { left, top, right: box.width - 14, bottom: box.height - 28 };
+};
+
+const until = async (done: () => boolean, ms = 4000) => {
+  const end = performance.now() + ms;
+  while (!done() && performance.now() < end) await wait(20);
+};
+
+const bigSamples = (n: number) =>
+  Array.from({ length: n }, (_, i) => 50 + Math.sin(i * 0.37) * 20 + ((i * 7919) % 100) / 10);
+
+/** The hover log of a sweep must be a non-decreasing run of real marks with no leave in it. */
+const expectSteady = (seen: Array<number | null>, count: number) => {
+  expect(seen.length).toBeGreaterThan(0);
+  expect(seen).not.toContain(null);
+  const marks = seen as number[];
+  expect([...marks].sort((a, b) => a - b)).toEqual(marks);
+  expect(new Set(marks).size).toBe(count);
 };
 
 describe("ui-violin-chart", () => {
@@ -121,5 +149,74 @@ describe("ui-violin-chart", () => {
     expect(c.chartSnapshot?.series[0]?.text[0]).toBe("4");
     expect(c.chartSnapshot?.series.find((s) => s.id === "median")?.text[0]).toBe("1.650");
     expect(await violations(c)).toEqual([]);
+  });
+
+  it("keeps the tooltip across the gutters of the whole plot, split or not", async () => {
+    for (const attrs of ["", "split", 'orientation="horizontal" split']) {
+      const c = await mountChart(attrs);
+      const p = plotBox(c);
+      const horizontal = attrs.includes("horizontal");
+      const path: Array<[number, number]> = [];
+      if (horizontal) for (let y = p.top + 1; y < p.bottom; y += 2) path.push([p.left + 20, y]);
+      else for (let x = p.left + 1; x < p.right; x += 2) path.push([x, (p.top + p.bottom) / 2]);
+      expectSteady(await sweep(c, path), 6);
+    }
+  });
+
+  it("does not hover outside the plot", async () => {
+    const c = await mountChart();
+    const p = plotBox(c);
+    expect(
+      await sweep(c, [
+        [p.left - 6, 100],
+        [p.right + 6, 100],
+        [200, p.bottom + 6],
+      ]),
+    ).toEqual([]);
+  });
+
+  it("draws a 200k-sample cell with points and 20k samples on a canvas", async () => {
+    const c = await mountChart("show-points", 560, [
+      { id: "a", name: "A", data: [bigSamples(200_000), [], []] },
+    ]);
+    await until(() => c.querySelector("canvas") != null, 8000);
+    expect(marks(c)).toHaveLength(1);
+    expect(c.querySelector("canvas")).not.toBeNull();
+
+    const many = await mountChart("show-points", 560, [
+      { id: "a", name: "A", data: [bigSamples(1), bigSamples(1), bigSamples(1)] },
+    ]);
+    const start = performance.now();
+    many.series = [
+      { id: "a", name: "A", data: [bigSamples(7000), bigSamples(7001), bigSamples(6000)] },
+    ];
+    await until(() => many.querySelector("canvas") != null);
+    const took = performance.now() - start;
+    console.log(`violin 20k samples drawn in ${took.toFixed(0)} ms`);
+    expect(many.querySelector("canvas")).not.toBeNull();
+    expect(svgOf(many).querySelectorAll("*").length).toBeLessThan(300);
+    expect(took).toBeLessThan(1500);
+  });
+
+  it("grades the dots by value once the color scale has loaded", async () => {
+    const c = await mountChart('show-points point-color="value"');
+    await until(() => c.querySelector("[data-observations] circle") != null);
+    expect(c.querySelectorAll("[data-observations] circle")).toHaveLength(6 * 40);
+  });
+
+  it("sorts each cell once: a resize or a hover sorts nothing", async () => {
+    const c = await mountChart("show-points");
+    await until(() => c.querySelector("[data-observations] circle") != null);
+    const sort = vi.spyOn(Array.prototype, "sort");
+    try {
+      (c.parentElement as HTMLElement).style.width = "430px";
+      await settle();
+      await settle();
+      const p = plotBox(c);
+      await sweep(c, [[p.left + 30, 100]]);
+      expect(sort).not.toHaveBeenCalled();
+    } finally {
+      sort.mockRestore();
+    }
   });
 });

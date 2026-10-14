@@ -2,24 +2,13 @@
 // the category axes, the box glyph, observation dots, and the statistics rows of tooltip, key-board
 // text and data table. Charts import this file, never each other's entry.
 
-import { sequentialColor } from "@jcsoftdev/ui-core/chart/color-scale";
-import type {
-  BoxStats,
-  CategoryLayout,
-  JitteredValue,
-} from "@jcsoftdev/ui-core/chart/distribution";
+import type { BoxStats, CategoryLayout } from "@jcsoftdev/ui-core/chart/distribution";
 import {
   resolveFormat,
   type ValueFormat,
   type ValueFormatter,
 } from "@jcsoftdev/ui-core/chart/format";
-import type {
-  ChartElement,
-  ChartSnapshot,
-  DrawContext,
-  SnapshotSeries,
-  TooltipRow,
-} from "./chart-base.js";
+import type { ChartElement, ChartSnapshot, DrawContext } from "./chart-base.js";
 import { svg } from "./chart-dom.js";
 import { axisBottom, axisLeft, gridLines, text } from "./e18-plot.js";
 
@@ -46,6 +35,9 @@ export interface StatLabels {
   outliers: string;
   category: string;
 }
+
+/** Samples above which a chart paints its dots on the canvas layer instead of SVG circles. */
+export const CANVAS_AT = 5000;
 
 export const DEFAULT_STAT_LABELS: StatLabels = {
   count: "n",
@@ -103,10 +95,11 @@ export const groupName = (category: string, series: ColoredSeries, seriesCount: 
 /** Gridlines along the value axis plus both axes of a `categoryLayout`. */
 export function categoryAxes(
   layout: CategoryLayout,
-  { title, grid = true }: { title?: string; grid?: boolean },
+  { title, grid = true }: { title?: string | boolean; grid?: boolean },
 ): SVGGElement {
   const { horizontal, innerWidth, innerHeight, valueTicks, categoryTicks } = layout;
   const group = svg("g");
+  const heading = typeof title === "string" && title ? title : undefined;
   if (grid)
     group.append(
       gridLines(
@@ -126,15 +119,15 @@ export function categoryAxes(
         ),
       );
     group.append(labels, axisBottom(valueTicks, innerHeight));
-    if (title)
+    if (heading)
       group.append(
         text(
-          title,
+          heading,
           { x: innerWidth, y: -10, "text-anchor": "end" },
           "fill:var(--ink-3);font-size:10.5px;font-weight:700",
         ),
       );
-  } else group.append(axisLeft(valueTicks, 0, title), axisBottom(categoryTicks, innerHeight));
+  } else group.append(axisLeft(valueTicks, 0, heading), axisBottom(categoryTicks, innerHeight));
   group.append(
     svg("line", {
       x1: 0,
@@ -264,79 +257,6 @@ export function boxGlyph({
   return g;
 }
 
-export interface ObservationOptions {
-  points: readonly JitteredValue[];
-  map: (value: number) => number;
-  center: number;
-  horizontal: boolean;
-  color: string;
-  /** "value" grades the fill from a pale tint of `color` to `color` across `range`. */
-  coloring?: PointColoring;
-  range?: readonly [number, number];
-  radius?: number;
-}
-
-/** Raw observations of a box or violin as small dots (jitter already applied). */
-export function observationDots({
-  points,
-  map,
-  center,
-  horizontal,
-  color,
-  coloring = "series",
-  range,
-  radius = 2.6,
-}: ObservationOptions): SVGGElement {
-  const graded = coloring === "value" && range != null;
-  const g = svg("g", { "data-observations": "", "aria-hidden": "true", "pointer-events": "none" });
-  for (const point of points) {
-    const at = map(point.value);
-    const fill = graded
-      ? sequentialColor(point.value, range, { mid: "var(--surface)", high: color }).color
-      : color;
-    g.append(
-      svg("circle", {
-        cx: horizontal ? at : center + point.offset,
-        cy: horizontal ? center + point.offset : at,
-        r: radius,
-        "stroke-width": graded ? 0.75 : 0.5,
-        style: `fill:${fill};fill-opacity:${graded ? 0.95 : 0.6};stroke:${graded ? color : "var(--surface)"}`,
-      }),
-    );
-  }
-  return g;
-}
-
-/** Tooltip rows for a five-number summary. */
-export function boxTooltipRows(
-  stats: BoxStats,
-  labels: StatLabels,
-  format: ValueFormatter,
-  color: string,
-  showMean = true,
-): TooltipRow[] {
-  const row = (id: string, name: string, value: string, emphasis = false): TooltipRow => ({
-    id,
-    name,
-    value,
-    color,
-    shape: "square",
-    emphasis,
-  });
-  const rows = [
-    row("max", labels.max, format(stats.max)),
-    row("q3", labels.q3, format(stats.q3)),
-    row("median", labels.median, format(stats.median)),
-    row("q1", labels.q1, format(stats.q1)),
-    row("min", labels.min, format(stats.min)),
-  ];
-  if (showMean) rows.push(row("mean", labels.mean, format(stats.mean)));
-  rows.push(row("count", labels.count, String(stats.count), true));
-  if (stats.outliers.length)
-    rows.push(row("outliers", labels.outliers, String(stats.outliers.length)));
-  return rows;
-}
-
 /** One-line summary of a box: the accessible name of its mark. */
 export function boxValueText(
   name: string,
@@ -345,38 +265,6 @@ export function boxValueText(
   format: ValueFormatter,
 ): string {
   return `${name}: ${labels.median} ${format(stats.median)}, ${labels.q1} ${format(stats.q1)}, ${labels.q3} ${format(stats.q3)}, ${labels.min} ${format(stats.min)}, ${labels.max} ${format(stats.max)}, ${labels.mean} ${format(stats.mean)}, ${labels.count} ${stats.count}${stats.outliers.length ? `, ${labels.outliers} ${stats.outliers.length}` : ""}`;
-}
-
-/** The summary of every box, violin or cloud as data table columns and legend items. */
-export function statsSnapshot(
-  title: string,
-  rows: ReadonlyArray<{ name: string; stats: BoxStats | null; format: ValueFormatter }>,
-  labels: StatLabels,
-  legend: ReadonlyArray<{ id: string; name: string; color: string }>,
-): ChartSnapshot {
-  const keys = ["count", "min", "q1", "median", "q3", "max", "mean", "outliers"] as const;
-  const series: SnapshotSeries[] = keys.map((key) => ({
-    id: key,
-    name: labels[key],
-    color: "transparent",
-    values: rows.map(({ stats }) => {
-      if (!stats) return null;
-      return key === "outliers" ? stats.outliers.length : stats[key];
-    }),
-    text: rows.map(({ stats, format }) => {
-      if (!stats) return "";
-      if (key === "count") return String(stats.count);
-      if (key === "outliers") return stats.outliers.map(format).join(", ");
-      return format(stats[key]);
-    }),
-  }));
-  return {
-    title,
-    categoryHeader: labels.category,
-    categories: rows.map((row) => row.name),
-    series,
-    legend: legend.map((item) => ({ ...item, shape: "square" as const })),
-  };
 }
 
 /** The `statLabels` property of the chart over the English defaults. */
@@ -396,4 +284,65 @@ export function extentOf(values: Iterable<[number, number]>): [number, number] |
     if (b > hi) hi = b;
   }
   return Number.isFinite(lo) ? [lo, hi] : null;
+}
+
+/** A module loaded on demand: `get()` is its value once it has arrived, `load()` fetches it once. */
+export interface Chunk<T> {
+  get(): T | undefined;
+  load(): Promise<T>;
+}
+
+function chunk<T>(load: () => Promise<T>): Chunk<T> {
+  let value: T | undefined;
+  let pending: Promise<T> | undefined;
+  return {
+    get: () => value,
+    load: () => (pending ??= load().then((loaded) => (value = loaded))),
+  };
+}
+
+/** Tooltip rows and the data table snapshot: only needed on hover, focus and table reads. */
+export const textChunk = chunk(() => import("./e18-dist-text.js"));
+/** Observation dots (SVG and canvas): only needed with `show-points`. */
+export const dotsChunk = chunk(() => import("./e18-dist-dots.js"));
+/** The sequential color scale: only needed with `point-color="value"`. */
+export const gradedChunk = chunk(() => import("@jcsoftdev/ui-core/chart/color-scale"));
+
+/** Fetches `chunks` in the background and calls `ready` once all of those missing have arrived. */
+export function loadThen(chunks: ReadonlyArray<Chunk<unknown>>, ready: () => void): void {
+  const missing = chunks.filter((item) => item.get() === undefined);
+  if (missing.length) Promise.all(missing.map((item) => item.load())).then(ready, () => {});
+}
+
+/**
+ * Turns any CSS color (`var(--chart-cat-1)` included) into the computed `rgb()` a canvas accepts,
+ * once per distinct color: the returned function caches by input.
+ */
+export function colorResolver(host: Element): (color: string) => string {
+  const cache = new Map<string, string>();
+  return (color) => {
+    const known = cache.get(color);
+    if (known !== undefined) return known;
+    const probe = document.createElement("span");
+    probe.style.color = color;
+    host.append(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    cache.set(color, resolved);
+    return resolved;
+  };
+}
+
+/** What the table and legend hold until the text chunk arrives: valid, with the legend only. */
+export function emptySnapshot(
+  title: string,
+  legend: ReadonlyArray<{ id: string; name: string; color: string }>,
+): ChartSnapshot {
+  return {
+    title,
+    categoryHeader: "",
+    categories: [],
+    series: [],
+    legend: legend.map((item) => ({ ...item, shape: "square" as const })),
+  };
 }

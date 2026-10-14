@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
 import { defineRaincloudChart } from "../src/raincloud-chart/raincloud-chart.ts";
@@ -13,7 +13,7 @@ import {
   violations,
   walkKeys,
 } from "./e18-fixture.ts";
-import { ax } from "./setup.ts";
+import { ax, wait } from "./setup.ts";
 
 const wave = (base: number, n: number) =>
   Array.from({ length: n }, (_, i) => base + ((i * 37) % 23) + (i % 5));
@@ -44,6 +44,34 @@ const mountChart = (attrs = "", series: unknown = SERIES, width = 520) =>
       c.series = series;
     },
   });
+
+/** Plot box inside the drawing, from the translate of the plot group (the bottom margin is 28). */
+const plotBox = (c: Element) => {
+  const svg = svgOf(c);
+  const [left = 0, top = 0] = (svg.querySelector(":scope > g")?.getAttribute("transform") ?? "")
+    .replace(/[^\d.,-]/g, "")
+    .split(",")
+    .map(Number);
+  const box = svg.getBoundingClientRect();
+  return { left, top, right: box.width - 14, bottom: box.height - 28 };
+};
+
+const until = async (done: () => boolean, ms = 4000) => {
+  const end = performance.now() + ms;
+  while (!done() && performance.now() < end) await wait(20);
+};
+
+const bigSamples = (n: number) =>
+  Array.from({ length: n }, (_, i) => 50 + Math.sin(i * 0.37) * 20 + ((i * 7919) % 100) / 10);
+
+/** The hover log of a sweep must be a non-decreasing run of real marks with no leave in it. */
+const expectSteady = (seen: Array<number | null>, count: number) => {
+  expect(seen.length).toBeGreaterThan(0);
+  expect(seen).not.toContain(null);
+  const marks = seen as number[];
+  expect([...marks].sort((a, b) => a - b)).toEqual(marks);
+  expect(new Set(marks).size).toBe(count);
+};
 
 describe("ui-raincloud-chart", () => {
   it("sizes its rows and names each cloud with its summary", async () => {
@@ -128,5 +156,84 @@ describe("ui-raincloud-chart", () => {
     c.series = [];
     await settle();
     expect(marks(c)).toHaveLength(0);
+  });
+
+  it("keeps the tooltip across the gutters of the whole plot height", async () => {
+    for (const series of [SERIES, TWO]) {
+      const c = await mountChart("", series);
+      const p = plotBox(c);
+      const path: Array<[number, number]> = [];
+      for (let y = p.top + 1; y < p.bottom; y += 2) path.push([200, y]);
+      expectSteady(await sweep(c, path), series.length * 3);
+    }
+  });
+
+  it("does not hover outside the plot", async () => {
+    const c = await mountChart();
+    const p = plotBox(c);
+    expect(
+      await sweep(c, [
+        [200, p.top - 4],
+        [200, p.bottom + 4],
+        [p.right + 6, 100],
+      ]),
+    ).toEqual([]);
+  });
+
+  it("takes its tick format from the value-format preset", async () => {
+    const c = await mountChart("", [
+      {
+        id: "a",
+        name: "A",
+        data: [
+          [0.1, 0.2, 0.3],
+          [0.2, 0.4],
+          [0.5, 0.6],
+        ],
+      },
+    ]);
+    c.setAttribute("value-format", "percent");
+    await settle();
+    expect(svgOf(c).textContent).toContain("%");
+  });
+
+  it("reads the JSON attributes", async () => {
+    const c = await chart("ui-raincloud-chart", {
+      attrs: `categories='["X","Y"]' series='[{"id":"a","name":"A","data":[[1,2,3],[4,5,6]]}]' seed="3" point-radius="3"`,
+    });
+    expect(marks(c)).toHaveLength(2);
+    expect(c.querySelector("[data-rain] circle")?.getAttribute("r")).toBe("3");
+  });
+
+  it("draws a 200k-sample cell and 20k samples on a canvas", async () => {
+    const c = await mountChart("", [{ id: "a", name: "A", data: [bigSamples(200_000), [], []] }]);
+    await until(() => c.querySelector("canvas") != null, 8000);
+    expect(marks(c)).toHaveLength(1);
+    expect(c.querySelector("canvas")).not.toBeNull();
+
+    const many = await mountChart("", [{ id: "a", name: "A", data: [[1], [2], [3]] }]);
+    const start = performance.now();
+    many.series = [
+      { id: "a", name: "A", data: [bigSamples(7000), bigSamples(7001), bigSamples(6000)] },
+    ];
+    await until(() => many.querySelector("canvas") != null);
+    const took = performance.now() - start;
+    console.log(`raincloud 20k samples drawn in ${took.toFixed(0)} ms`);
+    expect(svgOf(many).querySelectorAll("*").length).toBeLessThan(300);
+    expect(took).toBeLessThan(1500);
+  });
+
+  it("sorts each cell once: a resize or a hover sorts nothing", async () => {
+    const c = await mountChart();
+    const sort = vi.spyOn(Array.prototype, "sort");
+    try {
+      (c.parentElement as HTMLElement).style.width = "430px";
+      await settle();
+      await settle();
+      await sweep(c, [[200, 100]]);
+      expect(sort).not.toHaveBeenCalled();
+    } finally {
+      sort.mockRestore();
+    }
   });
 });
