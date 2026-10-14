@@ -316,6 +316,8 @@ export type LensOwner = "manual" | "auto";
 interface Controller {
   /** Adds or updates the owner's claim; returns its release. The manual options win. */
   claim(owner: LensOwner, options: GlassRefractionOptions): () => void;
+  /** The computed `backdrop-filter` of the surface without the engine's own inline writes. */
+  ownBackdropFilter(): string;
 }
 
 /** One controller per element, so applying twice never stacks a second `url()` filter. */
@@ -783,6 +785,22 @@ function createController(element: HTMLElement): Controller {
     active++;
   };
 
+  /**
+   * What the surface's own CSS resolves `backdrop-filter` to. While the lens is on, the inline
+   * value is the engine's (a url filter, or `none` for a crystal lens, whose filter is on its
+   * layer), so the author's inline value is put back for a moment to read the cascade.
+   */
+  const ownBackdropFilter = () => {
+    if (!installed) return getComputedStyle(element).backdropFilter;
+    const css = element.style.cssText;
+    element.style.backdropFilter = original;
+    if (originalPrefixed) element.style.setProperty("-webkit-backdrop-filter", originalPrefixed);
+    else element.style.removeProperty("-webkit-backdrop-filter");
+    const own = getComputedStyle(element).backdropFilter;
+    element.style.cssText = css;
+    return own;
+  };
+
   /** Bring the element in line with the current preferences, engine and tokens. */
   function sync() {
     if (stopped) return;
@@ -902,6 +920,7 @@ function createController(element: HTMLElement): Controller {
     sync();
   };
   return {
+    ownBackdropFilter,
     claim(owner, next) {
       if (!claims[owner]) generation[owner]++;
       const claimed = generation[owner];
@@ -935,6 +954,16 @@ export function applyGlassRefraction(
   options: GlassRefractionOptions = {},
 ): () => void {
   return claimLens(element, "manual", options);
+}
+
+/**
+ * The `backdrop-filter` the surface's own styles resolve to, as if no lens were on it (the engine
+ * replaces the inline value, and a crystal lens moves the filter to its layer). It is how the
+ * watcher tells a lensed surface that still paints a backdrop from one that merely inherits the
+ * `--glass-lens` flag after its own liquid class stopped applying.
+ */
+export function ownBackdropFilter(element: HTMLElement): string {
+  return controllers.get(element)?.ownBackdropFilter() ?? getComputedStyle(element).backdropFilter;
 }
 
 /**
