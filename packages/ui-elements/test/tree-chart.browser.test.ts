@@ -239,8 +239,9 @@ describe("ui-tree-chart", () => {
   it("lays out radial and dendrogram trees with chips", async () => {
     for (const layout of ["radial", "dendrogram"]) {
       const c = await make(`layout="${layout}"`, 700);
-      expect(names(c)).toEqual(PRE_ORDER);
-      expect(cards(c)[0]?.hasAttribute("data-chip")).toBe(true);
+      // The layout code is a lazy chunk: the chart draws once it has arrived.
+      await expect.poll(() => names(c), { timeout: 5000 }).toEqual(PRE_ORDER);
+      await expect.poll(() => cards(c)[0]?.hasAttribute("data-chip"), { timeout: 5000 }).toBe(true);
     }
   });
 

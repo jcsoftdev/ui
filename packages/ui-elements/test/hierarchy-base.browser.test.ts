@@ -133,16 +133,20 @@ describe("hierarchy charts: hiding a branch", () => {
 });
 
 describe("hierarchy charts: a large tree", () => {
-  it("draws 6000 nodes in a frame well under the quadratic cost", async () => {
-    const groups = Array.from({ length: 20 }, (_, g) => ({
+  const tree = (groups: number) => ({
+    name: "Big",
+    children: Array.from({ length: groups }, (_, g) => ({
       name: `G${g}`,
       children: Array.from({ length: 15 }, (_, h) => ({
         name: `H${g}.${h}`,
         children: Array.from({ length: 20 }, (_, l) => ({ name: `L${g}.${h}.${l}`, value: 1 + l })),
       })),
-    }));
+    })),
+  });
+  /** Best of three frames, in ms, to draw `groups` x 300 nodes. */
+  const drawTime = async (groups: number) => {
     const c = (await mountChart(TAG, 'animate="off" levels="3"')) as Chart;
-    c.data = { name: "Big", children: groups };
+    c.data = tree(groups);
     await settle();
     await wait(100);
     const spans: number[] = [];
@@ -152,12 +156,22 @@ describe("hierarchy charts: a large tree", () => {
         start = performance.now();
       });
       c.requestDraw();
-      const took = await new Promise<number>((resolve) =>
-        requestAnimationFrame(() => resolve(performance.now() - start)),
+      spans.push(
+        await new Promise<number>((resolve) =>
+          requestAnimationFrame(() => resolve(performance.now() - start)),
+        ),
       );
-      spans.push(took);
       await wait(50);
     }
-    expect(Math.min(...spans)).toBeLessThan(50);
+    document.body.innerHTML = "";
+    return Math.min(...spans);
+  };
+
+  it("draws in near-linear time: four times the nodes costs far less than sixteen times", async () => {
+    // A quadratic colour lookup would cost 16x for 4x the nodes; a linear draw costs about 4x.
+    // The ratio does not depend on how fast or loaded the machine is.
+    const small = await drawTime(5);
+    const large = await drawTime(20);
+    expect(large / Math.max(small, 1)).toBeLessThan(9);
   });
 });
