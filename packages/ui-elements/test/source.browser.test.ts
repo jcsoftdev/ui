@@ -62,7 +62,10 @@ describe("ui-source", () => {
     const { card, link } = chips(el);
     await expect.poll(() => link.hidden, { timeout: 5000 }).toBe(false);
     const visibility = () => getComputedStyle(card).visibility;
-    expect(visibility()).toBe("hidden");
+    // The pointer is shared by every test file running in the page: put it back out of the way
+    // and wait for any hover-driven card (and its transition) to settle before asserting.
+    await parkPointer();
+    await expect.poll(visibility, { timeout: 5000 }).toBe("hidden");
     link.focus();
     await expect.poll(visibility, { timeout: 5000 }).toBe("visible");
     link.dispatchEvent(
