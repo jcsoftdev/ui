@@ -1,10 +1,12 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { defineSource } from "../src/source/source.ts";
-import { ax, mount, wait } from "./setup.ts";
+import { ax, mount, parkPointer, wait } from "./setup.ts";
 
 beforeAll(() => {
   defineSource();
 });
+
+beforeEach(parkPointer);
 
 afterEach(() => {
   document.body.innerHTML = "";

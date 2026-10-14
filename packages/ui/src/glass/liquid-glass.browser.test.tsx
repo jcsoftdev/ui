@@ -116,6 +116,23 @@ describe("the watcher decides from the computed flag", () => {
     await vi.waitFor(() => expect(element.dataset.glassRefraction).toBeUndefined());
   });
 
+  test("a crystal lens survives attribute changes above it (its backdrop filter is on its layer)", async () => {
+    const element = surface("liquid", "--liquid-profile:crystal");
+    stops.push(startLiquidGlass());
+    await vi.waitFor(() => expect(element.querySelector("[data-glass-lens-layer]")).not.toBeNull());
+    const layer = element.querySelector("[data-glass-lens-layer]");
+    const parent = host as HTMLElement;
+    // What dragging the playground panel does on every frame: a data attribute and an inline style.
+    for (let i = 0; i < 5; i++) {
+      parent.dataset.dragging = String(i);
+      parent.style.left = `${i}px`;
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    await settle();
+    expect(element.dataset.glassRefraction).toBe("on");
+    expect(element.querySelector("[data-glass-lens-layer]")).toBe(layer);
+  });
+
   test("a descendant that only inherits --glass-lens gets no lens claim", async () => {
     const claimed: Element[] = [];
     setLiquidEngineLoader(async () => {

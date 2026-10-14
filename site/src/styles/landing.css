@@ -128,9 +128,18 @@ body.landing {
 }
 
 /* Barber-pole stripes: a repeating diagonal in the accent, used as a rule and as a hero wash. */
+/* The stripes are a wider layer that slides: a transform, so the spin never repaints (and never
+   re-runs the lens of the glass card it sits on). */
 .pole {
+  position: relative;
+  overflow: hidden;
   height: 0.5rem;
   border-radius: 999px;
+}
+.pole::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 -2.83rem;
   background: repeating-linear-gradient(
     -45deg,
     var(--accent) 0 0.5rem,
@@ -298,10 +307,10 @@ body.landing {
 
   @keyframes pole-spin {
     to {
-      background-position-x: 2.83rem;
+      transform: translateX(2.83rem);
     }
   }
-  .pole {
+  .pole::before {
     animation: pole-spin 1.6s linear infinite;
   }
 }

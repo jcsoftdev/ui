@@ -39,7 +39,8 @@ export interface FunnelOptions {
 export function funnelStages(values: readonly number[], options: FunnelOptions): FunnelStage[] {
   const { length, thickness, gap = 0, variant = "funnel", neck = 0.72, tapered = true } = options;
   const clean = values.map((value) => (Number.isFinite(value) && value > 0 ? value : 0));
-  const max = Math.max(0, ...clean);
+  let max = 0;
+  for (const value of clean) if (value > max) max = value;
   const count = clean.length;
   const first = clean[0] ?? 0;
   const size = count > 0 ? Math.max(0, (length - gap * (count - 1)) / count) : 0;

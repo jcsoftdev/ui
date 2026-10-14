@@ -1,11 +1,13 @@
 import "@jcsoftdev/ui-tokens/styles/tokens.css";
-import { commands } from "vitest/browser";
-import type { AxNode } from "./commands.ts";
+import { commands, userEvent } from "vitest/browser";
+import type { AxNode, TouchStep } from "./commands.ts";
 
 declare module "vitest/browser" {
   interface BrowserCommands {
     axTree: () => Promise<AxNode[]>;
     reducedMotion: (value: "reduce" | "no-preference") => Promise<void>;
+    touch: (steps: TouchStep[]) => Promise<void>;
+    timezone: (id: string | null) => Promise<void>;
   }
 }
 
@@ -25,3 +27,15 @@ export function mount(html: string): HTMLElement {
 export const frame = () =>
   new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
 export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Rests the real mouse on a corner. It keeps the position the last test left it at, so an element
+ * mounted under that spot is hovered before the test acts, and hover-driven state starts wrong.
+ */
+export async function parkPointer(): Promise<void> {
+  const park = mount(
+    '<i style="position:fixed;right:0;bottom:0;display:block;width:6px;height:6px"></i>',
+  );
+  await userEvent.hover(park.firstElementChild as Element);
+  park.remove();
+}

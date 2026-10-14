@@ -1,0 +1,22 @@
+[data-ui-chart][data-polar] [data-axis-label][data-on] {
+  fill: var(--ink);
+  font-weight: 700;
+}
+[data-ui-chart][data-polar] [data-spoke] {
+  stroke: var(--chart-grid);
+}
+[data-ui-chart][data-polar] [data-spoke][data-on] {
+  stroke: var(--chart-crosshair);
+  stroke-width: 1.5;
+}
+[data-ui-chart][data-polar] [data-marker] {
+  transition: r 150ms;
+}
+[data-ui-chart][data-polar] [data-marker][data-on] {
+  r: 5.5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart][data-polar] [data-marker] {
+    transition: none;
+  }
+}

@@ -206,6 +206,7 @@ export abstract class XYElement extends ChartElement {
 
   override connectedCallback(): void {
     adoptStyles(rootOf(this), css);
+    if (this.getAttribute("renderer") === "canvas") this.preloadCanvas();
     super.connectedCallback();
     if (this.hasAttribute("brush") && !this.hasAttribute("touch-action"))
       this.drawing.style.touchAction =
@@ -214,6 +215,7 @@ export abstract class XYElement extends ChartElement {
 
   override attributeChangedCallback(name: string): void {
     super.attributeChangedCallback(name);
+    if (name === "renderer" && this.getAttribute("renderer") === "canvas") this.preloadCanvas();
     if (name === "brush" && this.isConnected && !this.hasAttribute("touch-action"))
       this.drawing.style.touchAction = this.hasAttribute("brush")
         ? this.getAttribute("touch-delay") === "0"

@@ -125,6 +125,18 @@ const DISPERSION_AREA = 100_000;
 /** Lenses alive at once; further surfaces keep the plain liquid look until one is released. */
 const MAX_ACTIVE = 8;
 
+/**
+ * The maps are smooth fields that `feImage` stretches to the surface, so past 1.5 device pixels per
+ * CSS pixel they only cost more: the field is computed per pixel on the main thread. A large surface
+ * gets fewer, down to one per CSS pixel, so its map stays near `MAP_PIXELS` whatever the screen.
+ */
+const MAX_MAP_RATIO = 1.5;
+const MAP_PIXELS = 120_000;
+function mapRatio(width: number, height: number, dpr = window.devicePixelRatio || 1): number {
+  const room = Math.sqrt(MAP_PIXELS / Math.max(1, width * height));
+  return Math.max(1, Math.min(dpr, MAX_MAP_RATIO, room));
+}
+
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
 
@@ -133,18 +145,31 @@ let active = 0;
 /** Surfaces that are eligible but found no free slot; the next one is woken when a slot frees. */
 const waiting = new Set<() => void>();
 
-/** Size changes are coalesced into one pass per frame, whatever the number of surfaces. */
+/**
+ * Size changes are coalesced into one pass per frame, whatever the number of surfaces. A pass that
+ * has used its share of the frame leaves the rest for the next one, so the maps of several surfaces
+ * built at once (at load, on a slow phone) never add up to one long task.
+ */
 const dirty = new Set<() => void>();
 let frame = 0;
+const FRAME_BUDGET_MS = 12;
+function flush() {
+  frame = 0;
+  const batch = [...dirty];
+  dirty.clear();
+  const started = performance.now();
+  for (let i = 0; i < batch.length; i++) {
+    if (i > 0 && performance.now() - started > FRAME_BUDGET_MS) {
+      for (const task of batch.slice(i)) dirty.add(task);
+      if (!frame) frame = requestAnimationFrame(flush);
+      return;
+    }
+    (batch[i] as () => void)();
+  }
+}
 function schedule(run: () => void) {
   dirty.add(run);
-  if (frame) return;
-  frame = requestAnimationFrame(() => {
-    frame = 0;
-    const batch = [...dirty];
-    dirty.clear();
-    for (const task of batch) task();
-  });
+  if (!frame) frame = requestAnimationFrame(flush);
 }
 
 const matches = (query: string) => typeof matchMedia === "function" && matchMedia(query).matches;
@@ -539,7 +564,7 @@ function createController(element: HTMLElement, initial: LensOptions): Controlle
         bezelFor(radius, width, height, coverage);
       const cap = whole ? (settings.bevel ?? FULL_CAP) : FULL_CAP;
       const soft = bezelFor(radius, width, height, "rim");
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = mapRatio(width, height);
       // A bigger piece of glass is thicker: its shadow is deeper (see `liquidShadow`).
       element.style.setProperty(
         "--liquid-size",
