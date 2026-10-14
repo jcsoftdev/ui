@@ -116,8 +116,8 @@ describe("ui-stock", () => {
       "Visible range",
     );
     expect(el.getAttribute("height")).toBe("476");
-    await expect.poll(() => el.chartSnapshot?.series.map((s) => s.id)).toContain("close");
-    await expect.poll(() => el.chartSnapshot?.categories).toHaveLength(120);
+    expect(el.chartSnapshot?.series.map((s) => s.id)).toContain("close");
+    expect(el.chartSnapshot?.categories).toHaveLength(120);
   });
 
   it("hover: one event per bar in order, none per pixel, and the tooltip shows OHLC", async () => {
@@ -269,9 +269,7 @@ describe("ui-stock", () => {
     expect(svgOf(el).querySelectorAll(".overlays .ov").length).toBeGreaterThanOrEqual(4);
     expect(svgOf(el).querySelectorAll(".flag")).toHaveLength(1);
     expect(svgOf(el).querySelector(".osc .osc-line")).toBeTruthy();
-    await expect
-      .poll(() => el.chartSnapshot?.legend?.map((l) => l.name))
-      .toEqual(["SMA 10", "Bollinger 20, 2"]);
+    expect(el.chartSnapshot?.legend?.map((l) => l.name)).toEqual(["SMA 10", "Bollinger 20, 2"]);
     el.comparisons = [{ id: "idx", name: "Index", values: bars.map((b) => b.close * 0.9) }];
     await settle();
     expect(svgOf(el).querySelector(".cmp")).toBeTruthy();
@@ -348,9 +346,9 @@ describe("ui-stock", () => {
     expect(el.data[0]?.date.getDate()).toBe(1);
     expect(el.data[0]?.date.getHours()).toBe(0);
     // Not read as intraday: the dates carry no clock.
-    await expect.poll(() => el.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
+    expect(el.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
     const zoned = await stock('time-zone="America/New_York"', bars);
-    await expect.poll(() => zoned.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
+    expect(zoned.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
   });
 
   it("the crosshair price tag follows the chart locale", async () => {
