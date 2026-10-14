@@ -3,9 +3,6 @@
   cursor: grab;
   user-select: none;
 }
-[data-ui="tree-chart"][data-panning] > [data-ui-part="drawing"] {
-  cursor: grabbing;
-}
 [data-ui="tree-chart"] [data-stage] {
   transform-origin: 0 0;
 }
@@ -29,16 +26,9 @@
 [data-ui="tree-chart"] [data-group] [data-bg] {
   stroke-dasharray: 4 3;
 }
-[data-ui="tree-chart"] [data-path] [data-bg] {
-  stroke: var(--ui-tree-color);
-  stroke-width: 1.5;
-}
 [data-ui="tree-chart"] [data-bg][data-custom] {
   fill: transparent;
   stroke: none;
-}
-[data-ui="tree-chart"] [data-dimmed] {
-  opacity: 0.55;
 }
 [data-ui="tree-chart"] [data-ring] {
   rx: calc(var(--radius-tile) + 4px);
@@ -50,13 +40,6 @@
 [data-ui="tree-chart"] [data-chip] [data-ring] {
   rx: 18px;
   ry: 18px;
-}
-[data-ui="tree-chart"] [data-matched] [data-ring] {
-  stroke: var(--accent-word);
-}
-[data-ui="tree-chart"] [data-card]:focus-visible [data-ring],
-[data-ui="tree-chart"] [data-card][data-selected] [data-ring] {
-  stroke: var(--ink);
 }
 [data-ui="tree-chart"] [data-name] {
   fill: var(--ink);
@@ -94,9 +77,6 @@
   stroke-linecap: round;
   stroke-width: 1.5;
 }
-[data-ui="tree-chart"] [data-edge][data-on] {
-  stroke-width: 2.5;
-}
 [data-ui="tree-chart"] [data-toggle] {
   cursor: pointer;
 }
@@ -112,32 +92,9 @@
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
-[data-ui="tree-chart"] [data-toggle]:hover text {
-  fill: var(--ink);
-}
-[data-ui="tree-chart"] [data-toggle][data-path] rect {
-  stroke: var(--ui-tree-color);
-}
-[data-ui="tree-chart"] [data-spin] {
-  fill: none;
-  stroke: var(--ink-2);
-  stroke-width: 3;
-  stroke-linecap: round;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: ui-tree-spin 900ms linear infinite;
-}
-@keyframes ui-tree-spin {
-  to {
-    transform: rotate(1turn);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   [data-ui="tree-chart"] [data-card],
   [data-ui="tree-chart"] [data-bg] {
     transition: none;
-  }
-  [data-ui="tree-chart"] [data-spin] {
-    animation-duration: 2.4s;
   }
 }

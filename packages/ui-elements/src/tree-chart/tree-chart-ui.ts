@@ -5,7 +5,8 @@ import css from "./tree-chart-ui.css.js";
 
 /** What the zoom toolbar and the search box need from the chart. */
 export interface TreeBridge {
-  labels: TreeLabels;
+  /** The consumer's labels over the chart's core ones; the toolbar and search defaults are below. */
+  labels: Partial<TreeLabels> & Pick<TreeLabels, "of">;
   controls: boolean;
   searchable: boolean;
   /** Show the wheel hint under the drawing. */
@@ -27,6 +28,18 @@ export interface TreeUi {
   sync(state: TreeUiState): void;
   destroy(): void;
 }
+
+const UI_LABELS = {
+  zoomIn: "Zoom in",
+  zoomOut: "Zoom out",
+  fit: "Fit to view",
+  controls: "Zoom controls",
+  zoomHint: "Drag to pan · Ctrl + wheel to zoom",
+  search: "Search",
+  searchPrevious: "Previous match",
+  searchNext: "Next match",
+  noMatches: "No matches",
+};
 
 const ICONS = {
   minus: "M5 12h14",
@@ -71,7 +84,7 @@ const button = (label: string, path: string, onClick: () => void, size?: number)
  */
 export function mountUi(drawing: HTMLElement, bridge: TreeBridge): TreeUi {
   adoptStyles(rootOf(drawing), css);
-  const { labels } = bridge;
+  const labels = { ...UI_LABELS, ...bridge.labels };
   const parts: HTMLElement[] = [];
   const shield = (el: HTMLElement) => {
     for (const type of ["pointerdown", "pointerup", "dblclick", "wheel"])

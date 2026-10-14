@@ -55,54 +55,81 @@ export interface TreeModel {
   byId: Map<string, TreeChartNode>;
 }
 
+/** Deepest level that is built; deeper nodes are dropped (a guard against runaway or cyclic data). */
+export const MAX_DEPTH = 128;
+
+const COLOR =
+  /^(?:#[\da-f]{3,8}|[a-z]+|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|var)\([^;{}<>"'\\@]*\))$/i;
+const UNSAFE = /url|expression|image|attr|env|\/\*/i;
+
+/** `value` when it is plain CSS color syntax (hex, name, color function, token), else `undefined`. */
+export function safeColor(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const color = value.trim();
+  return COLOR.test(color) && !UNSAFE.test(color) ? color : undefined;
+}
+
+const text = (value: unknown): string | undefined => (value == null ? undefined : String(value));
+
 /**
  * Builds the node model. `loaded` holds children fetched lazily, keyed by the
- * node's path id; they take the place of an empty `children`.
+ * node's path id; they take the place of an empty `children`. The walk is
+ * iterative, stops at `MAX_DEPTH` and skips a child that is its own ancestor.
  */
 export function buildTreeModel(
   data: TreeChartDatum,
   loaded: ReadonlyMap<string, readonly TreeChartDatum[]> = new Map(),
 ): TreeModel {
   const nodes: TreeChartNode[] = [];
-  const visit = (
-    item: TreeChartDatum,
-    parent: TreeChartNode | null,
-    id: string,
-    index: number,
-  ): TreeChartNode => {
+  type Frame = { item: TreeChartDatum; parent: TreeChartNode | null; id: string; index: number };
+  const stack: Frame[] = [{ item: data, parent: null, id: text(data.id) ?? "root", index: 0 }];
+  for (let frame = stack.pop(); frame; frame = stack.pop()) {
+    const { item, parent, id, index } = frame;
     const depth = parent ? parent.depth + 1 : 0;
+    const fetched = loaded.get(id);
+    const own = item.children?.length ? item.children : fetched;
     const node: TreeChartNode = {
       id,
-      name: item.name,
-      subtitle: item.subtitle,
-      badge: item.badge,
+      name: text(item.name) ?? "",
+      subtitle: text(item.subtitle),
+      badge: text(item.badge),
       image: item.image,
       color:
-        item.color ??
+        safeColor(item.color) ??
         (depth === 0 ? seriesColor(0) : depth === 1 ? seriesColor(index + 1) : parent?.color) ??
         seriesColor(0),
       depth,
       parent,
       children: [],
       index,
-      lazy: false,
+      lazy: !!item.lazy && !fetched && !item.children?.length,
       group: !!item.group,
       data: item,
     };
     nodes.push(node);
+    parent?.children.push(node);
+    if (depth >= MAX_DEPTH) continue;
     const seen = new Map<string, number>();
-    const fetched = loaded.get(id);
-    const own = item.children?.length ? item.children : fetched;
-    node.lazy = !!item.lazy && !fetched && !item.children?.length;
-    node.children = (own ?? []).map((child, position) => {
-      const key = child.id ?? child.name;
+    const next: Frame[] = [];
+    for (const child of own ?? []) {
+      if (!child || typeof child !== "object") continue;
+      let cycle = false;
+      for (let up: TreeChartNode | null = node; up && !cycle; up = up.parent)
+        cycle = up.data === child;
+      if (cycle) continue;
+      const key = text(child.id) ?? text(child.name) ?? "";
       const count = seen.get(key) ?? 0;
       seen.set(key, count + 1);
-      return visit(child, node, `${id}/${count ? `${key}~${count}` : key}`, position);
-    });
-    return node;
-  };
-  const root = visit(data, null, data.id ?? "root", 0);
+      next.push({
+        item: child,
+        parent: node,
+        id: `${id}/${count ? `${key}~${count}` : key}`,
+        index: next.length,
+      });
+    }
+    for (let i = next.length - 1; i >= 0; i -= 1) stack.push(next[i] as Frame);
+  }
+  const root = nodes[0] as TreeChartNode;
   return { root, nodes, byId: new Map(nodes.map((node) => [node.id, node])) };
 }
 
@@ -122,17 +149,32 @@ export function visibleTree(
   collapsed: ReadonlySet<string>,
   size: (node: TreeChartNode) => { width: number; height: number },
 ): TreeLayoutInput {
-  const visit = (node: TreeChartNode): TreeLayoutInput => ({
-    id: node.id,
-    ...size(node),
-    children: collapsed.has(node.id) ? [] : node.children.map(visit),
-  });
-  return visit(root);
+  type Input = TreeLayoutInput & { children: TreeLayoutInput[] };
+  const input = (node: TreeChartNode): Input => ({ id: node.id, ...size(node), children: [] });
+  const top = input(root);
+  const stack: Array<[TreeChartNode, Input]> = [[root, top]];
+  for (let item = stack.pop(); item; item = stack.pop()) {
+    const [node, at] = item;
+    if (collapsed.has(node.id)) continue;
+    for (const child of node.children) {
+      const next = input(child);
+      at.children.push(next);
+      stack.push([child, next]);
+    }
+  }
+  return top;
 }
 
 /** Every node below `node`. */
 export function subtreeSize(node: TreeChartNode): number {
-  return node.children.reduce((sum, child) => sum + 1 + subtreeSize(child), 0);
+  let count = 0;
+  const stack = [node];
+  for (let at = stack.pop(); at; at = stack.pop())
+    for (const child of at.children) {
+      count += 1;
+      stack.push(child);
+    }
+  return count;
 }
 
 /** "AR" for "Ana Rojas", "K" for "Kevin". */
@@ -141,63 +183,6 @@ export function initials(name: string): string {
   const first = words[0]?.[0] ?? "";
   const last = words.length > 1 ? (words[words.length - 1]?.[0] ?? "") : "";
   return `${first}${last}`.toUpperCase();
-}
-
-/**
- * Folds runs of leaf siblings into one group node, so a manager with twenty
- * apprentices shows "20 apprentices" instead of twenty cards. A node is
- * grouped when it has at least `min` leaf children; the group starts collapsed
- * and expands to the original leaves. Nodes with other children keep them.
- */
-export function groupLeaves(
-  data: TreeChartDatum,
-  min: number,
-  label: (count: number) => string = (count) => `${count}`,
-): TreeChartDatum {
-  const visit = (item: TreeChartDatum, key: string): TreeChartDatum => {
-    const children = item.children ?? [];
-    if (children.length === 0) return item;
-    const leaves = children.filter((child) => !child.children?.length && !child.lazy);
-    const next = children.map((child) =>
-      leaves.includes(child) ? child : visit(child, child.id ?? child.name),
-    );
-    if (leaves.length < min) return { ...item, children: next };
-    const group: TreeChartDatum = {
-      id: `${key}~leaves`,
-      name: label(leaves.length),
-      subtitle: leaves
-        .slice(0, 3)
-        .map((leaf) => leaf.name)
-        .join(", "),
-      group: true,
-      collapsed: true,
-      children: leaves,
-    };
-    const kept = next.filter((child) => !leaves.includes(child));
-    return { ...item, children: [...kept, group] };
-  };
-  return visit(data, data.id ?? data.name);
-}
-
-/** Lower-case text without accents, for forgiving searches. */
-export function foldText(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-/**
- * Nodes whose name, subtitle or badge contains every word of `query`, in
- * pre-order (document order). An empty query matches nothing.
- */
-export function searchTree(model: TreeModel, query: string): TreeChartNode[] {
-  const words = foldText(query).split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-  return model.nodes.filter((node) => {
-    const haystack = foldText([node.name, node.subtitle, node.badge].filter(Boolean).join(" "));
-    return words.every((word) => haystack.includes(word));
-  });
 }
 
 /** Ids of the ancestors of `node`, root first (the node itself excluded). */

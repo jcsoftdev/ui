@@ -37,25 +37,19 @@ export interface TreeLabels {
   loadFailed: string;
 }
 
-export const DEFAULT_TREE_LABELS: TreeLabels = {
+/** The strings the chart needs for its first draw; the toolbar, search and table defaults load with their own chunks. */
+export type CoreTreeLabels = Pick<
+  TreeLabels,
+  "explore" | "level" | "children" | "collapsed" | "of" | "groupWord" | "descendants" | "loadFailed"
+>;
+
+export const CORE_TREE_LABELS: CoreTreeLabels = {
   explore:
     "Tree. Arrow keys move between parent, children and siblings; Shift+Enter expands or collapses; plus and minus zoom; 0 fits the view.",
-  category: "Name",
-  zoomIn: "Zoom in",
-  zoomOut: "Zoom out",
-  fit: "Fit to view",
-  controls: "Zoom controls",
-  zoomHint: "Drag to pan · Ctrl + wheel to zoom",
-  subtitle: "Role",
   level: "Level",
-  parent: "Reports to",
   children: "Direct reports",
   collapsed: "collapsed",
   of: "of",
-  search: "Search",
-  searchPrevious: "Previous match",
-  searchNext: "Next match",
-  noMatches: "No matches",
   groupWord: "more",
   descendants: "Total below",
   loadFailed: "Could not load. Try again.",
@@ -65,7 +59,7 @@ export const DEFAULT_TREE_LABELS: TreeLabels = {
 export function describeNode(
   node: TreeChartNode,
   collapsed: ReadonlySet<string>,
-  labels: TreeLabels,
+  labels: CoreTreeLabels,
 ): string {
   const parts = [node.name];
   if (node.subtitle) parts.push(node.subtitle);

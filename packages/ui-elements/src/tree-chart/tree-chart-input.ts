@@ -1,8 +1,11 @@
 import type { TreeLayout, TreeLayoutNode } from "@jcsoftdev/ui-core/chart/tree";
 
-// Pan and zoom, the keyboard moves and the layout tween: fetched right after the first draw.
+// Pan and zoom, the keyboard moves, the layout tween, search, grouping, tooltip rows and the data
+// table: fetched right after the first draw.
 export { attachPanZoom } from "@jcsoftdev/ui-core/chart/pan-zoom";
 export { treeKeyMove, treeNeighbor } from "@jcsoftdev/ui-core/chart/tree-nav";
+export { default as stateCss } from "./tree-chart-state.css.js";
+export { groupLeaves, searchTree, snapshotOf, tipRows } from "./tree-chart-tools.js";
 
 /** A laid-out node as drawn in the current frame. */
 export type Pose = TreeLayoutNode & { opacity: number };

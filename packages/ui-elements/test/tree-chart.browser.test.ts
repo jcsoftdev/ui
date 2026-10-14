@@ -412,4 +412,162 @@ describe("ui-tree-chart", () => {
     await wait(450);
     expect(transform(c)).not.toBe(before);
   });
+
+  it("keeps the pin on the same node when other nodes appear or fold away", async () => {
+    const pinned = (c: Element) =>
+      c.querySelector("[data-card][data-selected]")?.getAttribute("aria-label")?.split(". ")[0];
+    const c = await make();
+    c.select(4); // Kevin Salas
+    await settle();
+    expect(pinned(c)).toBe("Kevin Salas");
+    // Luis folds: Kevin moves from mark 4 to mark 2, and mark 4 is Pia Leon now.
+    c.collapse("root/Luis Paredes");
+    await settle();
+    expect(c.selectedId).toBe("root/Kevin Salas");
+    expect(c.selected).toBe(2);
+    expect(pinned(c)).toBe("Kevin Salas");
+    c.expand("root/Luis Paredes");
+    await settle();
+    expect(c.selected).toBe(4);
+    expect(pinned(c)).toBe("Kevin Salas");
+    // The last node: its old mark index is gone after Kevin folds, the pin still follows it.
+    c.focusNode("root/Rita Campos");
+    await settle();
+    expect(c.selected).toBe(8);
+    c.collapse("root/Kevin Salas");
+    await settle();
+    expect(c.selectedId).toBe("root/Rita Campos");
+    expect(pinned(c)).toBe("Rita Campos");
+    // A pinned node that folds away is unpinned on screen and pinned again when it comes back.
+    c.collapse("root/Luis Paredes");
+    c.focusNode("root/Luis Paredes/Mia Torres");
+    await settle();
+    expect(pinned(c)).toBe("Mia Torres");
+    c.collapse("root/Luis Paredes");
+    await settle();
+    expect(pinned(c)).toBeUndefined();
+    expect(c.selected).toBeNull();
+    c.expand("root/Luis Paredes");
+    await settle();
+    expect(pinned(c)).toBe("Mia Torres");
+  });
+
+  it("keeps the pin on the same node after a lazy load adds nodes before it", async () => {
+    const data = { name: "Root", children: [{ name: "Branch", lazy: true }, { name: "Last" }] };
+    const c = await make("", 700, data);
+    c.loadChildren = async () => [{ name: "Leaf A" }, { name: "Leaf B" }];
+    c.focusNode("root/Last");
+    await settle();
+    expect(c.selected).toBe(2);
+    c.expand("root/Branch");
+    await settle();
+    await wait(100);
+    expect(names(c)).toEqual(["Root", "Branch", "Leaf A", "Leaf B", "Last"]);
+    expect(c.selectedId).toBe("root/Last");
+    expect(c.selected).toBe(4);
+    expect(c.querySelector("[data-card][data-selected]")?.getAttribute("aria-label")).toMatch(
+      /^Last/,
+    );
+  });
+
+  it("redraws a custom template when the node data or the template changes", async () => {
+    const host = mount(
+      `<div style="width:700px"><ui-tree-chart label="x" height="300" fit="contain" animate="off"></ui-tree-chart></div>`,
+    );
+    const c = host.querySelector("ui-tree-chart") as UiTreeChart;
+    const text = (prefix: string) => (node: { name: string; data: { subtitle?: string } }) => {
+      const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      t.setAttribute("data-custom-node", "");
+      t.textContent = `${prefix}${node.name}:${node.data.subtitle}`;
+      return t;
+    };
+    c.renderNode = text("");
+    c.data = {
+      id: "r",
+      name: "A",
+      subtitle: "one",
+      children: [{ id: "b", name: "B", subtitle: "x" }],
+    };
+    await settle();
+    const shown = () => [...c.querySelectorAll("[data-custom-node]")].map((el) => el.textContent);
+    expect(shown()).toEqual(["A:one", "B:x"]);
+    // Same ids, same state, new data: the card must not keep the old drawing.
+    c.data = {
+      id: "r",
+      name: "A",
+      subtitle: "two",
+      children: [{ id: "b", name: "B", subtitle: "y" }],
+    };
+    await settle();
+    expect(shown()).toEqual(["A:two", "B:y"]);
+    c.renderNode = text("> ");
+    await settle();
+    expect(shown()).toEqual(["> A:two", "> B:y"]);
+  });
+
+  it("fires node-click on every click and expands or collapses without selectable", async () => {
+    const c = await make();
+    await awake(c);
+    const clicks = events(c, "node-click") as Array<{ id: string; node: { name: string } }>;
+    const toggles = events(c, "toggle");
+    const selects = events(c, "select");
+    await userEvent.click(cards(c)[4] as Element); // Kevin Salas
+    await settle();
+    expect(clicks.map((click) => [click.id, click.node.name])).toEqual([
+      ["root/Kevin Salas", "Kevin Salas"],
+    ]);
+    expect(toggles).toEqual([{ id: "root/Kevin Salas", expanded: false }]);
+    expect(names(c)).toHaveLength(6);
+    expect(c.selected).toBeNull();
+    expect(selects).toEqual([]);
+    // A leaf has nothing to toggle but still reports the click.
+    await userEvent.click(cards(c)[3] as Element);
+    expect(clicks).toHaveLength(2);
+    // A cancelled node-click leaves the node as it is.
+    c.addEventListener("node-click", (event) => event.preventDefault());
+    await userEvent.click(cards(c)[4] as Element);
+    await settle();
+    expect(toggles).toHaveLength(1);
+    expect(names(c)).toHaveLength(6);
+  });
+
+  it("pins on click with selectable, tells select, and takes selectedId and default-selected-id", async () => {
+    const c = await make("selectable");
+    await awake(c);
+    const clicks = events(c, "node-click");
+    const selects = events(c, "select") as Array<{ id: string; node: { name: string } } | null>;
+    await userEvent.click(cards(c)[4] as Element);
+    await settle();
+    expect(clicks).toHaveLength(1);
+    expect(names(c)).toEqual(PRE_ORDER); // pinned, not collapsed
+    expect(c.selectedId).toBe("root/Kevin Salas");
+    expect(selects.map((event) => event?.id)).toEqual(["root/Kevin Salas"]);
+    expect(selects[0]?.node.name).toBe("Kevin Salas");
+    await userEvent.click(cards(c)[4] as Element);
+    await settle();
+    expect(c.selectedId).toBeNull();
+    expect(selects.at(-1)).toBeNull();
+
+    // selectedId pins without panning (and without telling select).
+    const before = transform(c);
+    const count = selects.length;
+    c.selectedId = "root/Rita Campos";
+    await settle();
+    expect(c.selected).toBe(8);
+    expect(transform(c)).toBe(before);
+    expect(selects).toHaveLength(count);
+
+    const d = await make('selectable default-selected-id="root/Luis Paredes/Noa Quispe"');
+    expect(d.selectedId).toBe("root/Luis Paredes/Noa Quispe");
+    expect(d.selected).toBe(3);
+    expect(d.querySelectorAll("[data-card][data-path]")).toHaveLength(3);
+  });
+
+  it("names a big tree with virtual marks instead of an element per node", async () => {
+    const leaves = Array.from({ length: 1100 }, (_, i) => ({ name: `Leaf ${i}` }));
+    const c = await make("", 1300, { name: "Root", children: leaves });
+    expect(cards(c)).toHaveLength(1101);
+    expect(c.querySelectorAll("[data-card][aria-label]")).toHaveLength(0);
+    expect(c.querySelector("[role=listbox]")).not.toBeNull();
+  });
 });
