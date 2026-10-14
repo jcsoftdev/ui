@@ -1,17 +1,11 @@
 import type { GeoMap } from "../internal/geo.js";
 
-/** Ids of the bundled maps. Each one is a separate JSON chunk, fetched only when it is loaded. */
+/** Ids of the bundled maps. Each one is a separate lazy chunk, fetched only when it is loaded. */
 export type MapId = "world" | "peru";
 
 const loaders: Record<MapId, () => Promise<GeoMap>> = {
-  world: () =>
-    import("../geo-data/world.json", { with: { type: "json" } }).then(
-      (module) => module.default as unknown as GeoMap,
-    ),
-  peru: () =>
-    import("../geo-data/peru.json", { with: { type: "json" } }).then(
-      (module) => module.default as unknown as GeoMap,
-    ),
+  world: () => import("../geo-data/world.js").then((module) => module.default),
+  peru: () => import("../geo-data/peru.js").then((module) => module.default),
 };
 
 /** The bundled map ids, without loading any topology. */
