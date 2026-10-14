@@ -13,6 +13,7 @@ import {
 import type { CellEditor, CellValue, EditContext, GridColumn } from "@jcsoftdev/ui-core/grid/model";
 import type { UiDataGrid } from "./data-grid.js";
 import css from "./edit.css.js";
+import { announce, isEditable } from "./shared.js";
 
 /** What the grid hands over so this chunk shares no module with the grid's eager graph. */
 export interface EditDeps {
@@ -214,23 +215,6 @@ interface Ctx {
   label: string;
 }
 
-function writable(grid: UiDataGrid, column: Col, row: Row): boolean {
-  if (grid.getAttribute("edit-mode") === "emit" || column.setter) return true;
-  return typeof (column.accessor ?? column.id) !== "function" && !Object.isFrozen(row);
-}
-
-/** Whether the cell can be edited and, in `mutate` mode, written back. */
-function isEditable(grid: UiDataGrid, column: Col, row: Row): boolean {
-  const editable = column.editable;
-  return (
-    row != null &&
-    (typeof editable === "function"
-      ? editable(row)
-      : (editable ?? grid.hasAttribute("editable"))) &&
-    writable(grid, column, row)
-  );
-}
-
 /** The row object for a key, for a cell that is not mounted. */
 function rowByKey(grid: UiDataGrid, key: string): Row {
   const keyOf = grid.rowKey;
@@ -322,16 +306,6 @@ function leave(grid: UiDataGrid, step: 1 | -1): void {
     !!(grid.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
   const next = step > 0 ? stops.find(after) : stops.filter((el) => !after(el)).pop();
   next?.focus();
-}
-
-/** Announces through the grid's status region. */
-function announce(grid: UiDataGrid, message: string): void {
-  const region = grid.querySelector<HTMLElement>("[data-ui-part=status]");
-  if (!region) return;
-  region.textContent = "";
-  queueMicrotask(() => {
-    region.textContent = message;
-  });
 }
 
 /** Opens the editor of a cell, after the cancelable `beforecelledit`. */
