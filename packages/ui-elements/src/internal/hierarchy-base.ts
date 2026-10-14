@@ -16,7 +16,7 @@ import {
   type HierarchyDatum,
   type HierarchyNode,
 } from "@jcsoftdev/ui-core/chart/hierarchy";
-import { adoptStyles, byId, emit, rootOf } from "./base.js";
+import { adoptStyles, emit, rootOf } from "./base.js";
 import {
   CHART_ATTRIBUTES,
   CHART_EVENT,
@@ -43,7 +43,7 @@ import {
   pruneTree,
   shareOf,
 } from "./hierarchy-model.js";
-import type { Zoom, ZoomHost } from "./hierarchy-zoom.js";
+import type { Zoom, ZoomChart } from "./hierarchy-zoom.js";
 
 export { fitLabel } from "./chart-text.js";
 export { numberAttr as num } from "./e5-forms.js";
@@ -137,34 +137,13 @@ export abstract class HierarchyChart extends ChartElement {
     | undefined;
   #pruned: { key: string; root: HierarchyNode; byId: Map<string, HierarchyNode> } | undefined;
   #model: HierarchyModel | undefined;
-  #touch = false;
+  /** The last pointer was a finger or a pen (the zoom module sets it). */
+  protected touched = false;
   #focusId: string | null = null;
-  #refocus: string | null = null;
-  #last: DrawResult | undefined;
+  /** The result of the last draw (the zoom module hits against it). */
+  protected last: DrawResult | undefined;
   #zoom: Zoom | undefined;
   #zoomLoad: Promise<void> | undefined;
-  /** What the zoom module asks of this chart. */
-  readonly #host: ZoomHost = {
-    zoomTo: (id) => this.zoomTo(id),
-    zoomOut: () => this.zoomOut(),
-    drillable: () => this.drillable,
-    canExit: () => !!this.model().focus.parent,
-    pinned: () => this.selected !== null,
-    center: (x, y) => this.isCenter(x, y),
-    tapTarget: (x, y, el) => {
-      const index = this.#last?.hit?.(x, y, el, 44) ?? -1;
-      const node = this.nodes[index];
-      const target = node && this.drillTarget(node);
-      return index >= 0 && index === this.selected && target && target.children.length > 0
-        ? target.id
-        : null;
-    },
-    touch: (on) => {
-      this.#touch = on;
-    },
-    animate: () => this.tweening,
-    redraw: () => this.requestDraw("transient"),
-  };
 
   constructor() {
     super();
@@ -173,7 +152,7 @@ export abstract class HierarchyChart extends ChartElement {
       const node = this.nodes[index];
       const target = node && this.drillTarget(node);
       if (!target || !this.drillable || target.children.length === 0) return;
-      this.#keepFocus(target.children[0]?.id ?? null);
+      this.#withZoom((zoom) => zoom.keep(target.children[0]?.id));
       this.zoomTo(target.id);
     });
     this.addEventListener(CHART_EVENT.hover, (event) =>
@@ -208,13 +187,9 @@ export abstract class HierarchyChart extends ChartElement {
 
   /**
    * The node behind mark `index` of the last draw (what `chart-select` and `chart-drill` report as
-   * `detail.index`), or `undefined`. `path` runs from the root to the node.
+   * `detail.index`), or `undefined`.
    */
-  nodeAt(
-    index: number,
-  ):
-    | { id: string; name: string; depth: number; value: number; path: readonly string[] }
-    | undefined {
+  nodeAt(index: number): { id: string; name: string; depth: number; value: number } | undefined {
     const node = this.nodes[index];
     return (
       node && {
@@ -222,7 +197,6 @@ export abstract class HierarchyChart extends ChartElement {
         name: node.name,
         depth: node.depth,
         value: node.value,
-        path: ancestors(node).map((n) => n.name),
       }
     );
   }
@@ -293,29 +267,20 @@ export abstract class HierarchyChart extends ChartElement {
 
   /** Base color of `node`: its own, else the palette slot of its branch (stable when a branch is hidden). */
   protected tone(node: HierarchyNode, model: HierarchyModel, ctx: DrawContext): string {
-    const { tones, byId } = model;
-    const climb: HierarchyNode[] = [];
-    let color = "";
-    let current: HierarchyNode = byId.get(node.id) ?? node;
-    for (;;) {
-      const known = tones.get(current);
-      if (known !== undefined) {
-        color = known;
-        break;
-      }
-      const parent: HierarchyNode | null = current.parent;
-      if (current.color) color = current.color;
-      else if (!parent) color = ctx.color(0);
-      else if (parent.id === model.focus.id) color = ctx.color(current.index);
-      else {
-        climb.push(current);
-        current = parent;
-        continue;
-      }
-      tones.set(current, color);
-      break;
+    const { tones, byId, focus } = model;
+    const whole = byId.get(node.id) ?? node;
+    let color = tones.get(whole);
+    if (color === undefined) {
+      const { parent } = whole;
+      color =
+        whole.color ??
+        (!parent
+          ? ctx.color(0)
+          : parent.id === focus.id
+            ? ctx.color(whole.index)
+            : this.tone(parent, model, ctx));
+      tones.set(whole, color);
     }
-    for (const passed of climb) tones.set(passed, color);
     return color;
   }
 
@@ -346,7 +311,7 @@ export abstract class HierarchyChart extends ChartElement {
   zoomOut(): boolean {
     const { focus } = this.model();
     if (!focus.parent) return false;
-    this.#keepFocus(focus.id);
+    this.#withZoom((zoom) => zoom.keep(focus.id));
     return this.zoomTo(focus.parent.id);
   }
 
@@ -384,7 +349,7 @@ export abstract class HierarchyChart extends ChartElement {
       rows: nodeTooltipRows(node, focus, ctx.format, this.strings, this.tone(node, model, ctx), {
         total: model.total,
         drill: this.drillable,
-        touch: this.#touch,
+        touch: this.touched,
       }),
       x,
       y,
@@ -448,31 +413,12 @@ export abstract class HierarchyChart extends ChartElement {
     const model = this.model();
     this.#syncCrumb();
     const result = this.render(ctx, model);
-    this.#last = result;
+    this.last = result;
     queueMicrotask(() => {
-      this.#settleFocus(result);
+      this.#zoom?.settle(result);
       this.#light(this.hover);
     });
     return result;
-  }
-
-  /** Remember to focus node `id` after the next draw, when the keyboard is what moved. */
-  #keepFocus(id: string | null): void {
-    const active = document.activeElement;
-    if (id && active && this.drawing.contains(active)) this.#refocus = id;
-  }
-
-  /** A redraw restores focus by mark index; the open node changed, so put it on the right node. */
-  #settleFocus(result: DrawResult): void {
-    const id = this.#refocus;
-    if (!id || result !== this.#last) return;
-    this.#refocus = null;
-    const marks = result.marks;
-    const index = this.nodes.findIndex((node) => node.id === id);
-    const mark = marks && !("count" in marks) ? marks[index] : undefined;
-    const active = document.activeElement;
-    if (!mark || (active !== document.body && !this.drawing.contains(active))) return;
-    if (active !== mark.el) (mark.el as SVGElement & HTMLElement).focus({ preventScroll: true });
   }
 
   /** Lights the path from the root to the hovered mark and fades the rest. */
@@ -492,22 +438,13 @@ export abstract class HierarchyChart extends ChartElement {
       return;
     }
     this.#zoomLoad ??= import("./hierarchy-zoom.js").then((mod) => {
-      this.#zoom = new mod.Zoom(this.#host);
+      this.#zoom = new mod.Zoom(this as unknown as ZoomChart);
     });
     this.#zoomLoad.then(() => this.#zoom && use(this.#zoom));
   }
 
-  /** Gives the breadcrumb (named by `breadcrumb`, or the one inside the chart) the open path. */
   #syncCrumb(): void {
-    const id = this.crumbId;
-    const el =
-      id === "off"
-        ? null
-        : id
-          ? byId(this, id)
-          : this.querySelector<HTMLElement>('[data-ui="chart-breadcrumb"]');
-    if (!el && !this.#zoom) return;
-    this.#withZoom((zoom) => zoom.crumb(el, this.model().path, this.strings.breadcrumb));
+    this.#withZoom((zoom) => zoom.sync());
   }
 
   protected override setup(svg: SVGSVGElement, signal: AbortSignal): void {
@@ -530,7 +467,7 @@ export abstract class HierarchyChart extends ChartElement {
 
   override disconnectedCallback(): void {
     this.#zoom?.cancel();
-    this.#zoom?.crumb(null, [], "");
+    this.#zoom?.unwire();
     super.disconnectedCallback();
   }
 

@@ -12,7 +12,13 @@ import {
 } from "@jcsoftdev/ui-core/chart/shape-morph";
 import { treemapLayout } from "@jcsoftdev/ui-core/chart/treemap";
 import { adoptStyles, type DefineOptions, defineElement, emit, rootOf } from "../internal/base.js";
-import { type DrawContext, type DrawResult, join, svg } from "../internal/chart-base.js";
+import {
+  ChartElement,
+  type DrawContext,
+  type DrawResult,
+  join,
+  svg,
+} from "../internal/chart-base.js";
 import {
   flag,
   HierarchyChart,
@@ -94,9 +100,9 @@ const sectorRoom = (angle: number, arc: number, thick: number) => {
 export class UiHierarchyMorph extends HierarchyChart {
   // It shows the whole tree and cannot zoom: no `focus-id`, `drill-down` or `breadcrumb`.
   static override observedAttributes = [
-    ...HierarchyChart.observedAttributes.filter(
-      (name) => name !== "focus-id" && name !== "drill-down" && name !== "breadcrumb",
-    ),
+    ...ChartElement.observedAttributes,
+    "data",
+    "sort",
     "mode",
     "levels",
     "gap",
@@ -226,8 +232,11 @@ export class UiHierarchyMorph extends HierarchyChart {
           const sector = sectorRing(cx, cy, r0, r1, a0, Math.max(a0 + 1e-3, a1));
           const cell = cellOf.get(child.id);
           // Too small to see in either view: not drawn, and not a tab stop.
-          const seen = cell ? Math.min(cell.x1 - cell.x0, cell.y1 - cell.y0) >= MIN_SEEN : false;
-          if (!seen && (a1 - a0) * mid < MIN_SEEN / 2) {
+          const room = Math.max(
+            cell ? Math.min(cell.x1 - cell.x0, cell.y1 - cell.y0) : 0,
+            (a1 - a0) * mid,
+          );
+          if (room < MIN_SEEN) {
             visit(child);
             continue;
           }

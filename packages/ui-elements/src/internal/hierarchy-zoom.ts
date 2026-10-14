@@ -4,26 +4,28 @@
  * chart that is only looked at never pays for them.
  */
 import type { HierarchyNode } from "@jcsoftdev/ui-core/chart/hierarchy";
+import { byId } from "./base.js";
 import { easeOutCubic } from "./chart-text.js";
 
-/** What the zoom parts ask of the chart. */
-export interface ZoomHost {
+/** The members of a hierarchy chart the zoom parts use (some are protected there). */
+export interface ZoomChart extends HTMLElement {
   zoomTo(id: string): boolean;
   zoomOut(): boolean;
-  drillable(): boolean;
-  /** The open node has a parent to go back to. */
-  canExit(): boolean;
-  /** A mark is pinned. */
-  pinned(): boolean;
-  /** (x, y), in drawing units, is in the hole of a sunburst. */
-  center(x: number, y: number): boolean;
-  /** Id of the node a tap at (x, y) opens: the pinned node under the pointer, if it has children. */
-  tapTarget(x: number, y: number, target: Element): string | null;
-  /** The last pointer was a finger or a pen. */
-  touch(on: boolean): void;
-  /** Whether a zoom may be animated now. */
-  animate(): boolean;
-  redraw(): void;
+  readonly drillable: boolean;
+  readonly tweening: boolean;
+  readonly selected: number | null;
+  readonly nodes: readonly HierarchyNode[];
+  readonly last:
+    | { hit?: (x: number, y: number, target: Element, radius: number) => number }
+    | undefined;
+  touched: boolean;
+  readonly drawing: HTMLElement;
+  model(): { focus: HierarchyNode; path: HierarchyNode[] };
+  readonly crumbId: string | null;
+  readonly strings: { breadcrumb: string };
+  isCenter(x: number, y: number): boolean;
+  drillTarget(node: HierarchyNode): HierarchyNode;
+  requestDraw(kind: "transient"): void;
 }
 
 /** A pointer that moves farther than this (px) between down and up is a swipe, not a tap. */
@@ -34,10 +36,33 @@ export class Zoom {
   #down: { x: number; y: number } | undefined;
   #crumb: { el: HTMLElement; stop: AbortController } | undefined;
   #items: unknown;
-  readonly #host: ZoomHost;
+  #refocus: string | undefined;
+  readonly #host: ZoomChart;
 
-  constructor(host: ZoomHost) {
+  constructor(host: ZoomChart) {
     this.#host = host;
+  }
+
+  /** Remember to focus node `id` after the next draw, when the keyboard is what moved. */
+  keep(id: string | undefined): void {
+    const active = document.activeElement;
+    if (id && active && this.#host.drawing.contains(active)) this.#refocus = id;
+  }
+
+  /** A redraw restores focus by mark index; the open node changed, so put it on the right node. */
+  settle(result: { marks?: unknown } & object): void {
+    const host = this.#host;
+    const id = this.#refocus;
+    if (!id || result !== host.last) return;
+    this.#refocus = undefined;
+    const marks = (result as { marks?: ReadonlyArray<{ el: Element }> | { count: number } }).marks;
+    const mark =
+      marks && !("count" in marks)
+        ? marks[host.nodes.findIndex((node) => node.id === id)]
+        : undefined;
+    const active = document.activeElement;
+    if (!mark || (active !== document.body && !host.drawing.contains(active))) return;
+    if (active !== mark.el) (mark.el as HTMLElement).focus({ preventScroll: true });
   }
 
   cancel(): void {
@@ -51,7 +76,7 @@ export class Zoom {
     const tick = (now: number) => {
       const t = Math.min(1, Math.max(0, (now - start) / duration));
       step(easeOutCubic(t));
-      this.#host.redraw();
+      this.#host.requestDraw("transient");
       if (t < 1) this.#frame = requestAnimationFrame(tick);
     };
     this.#frame = requestAnimationFrame(tick);
@@ -61,6 +86,24 @@ export class Zoom {
    * Wires the breadcrumb `el` (`null` unwires) and gives it `path`. A breadcrumb that is not
    * defined yet gets the path once it is, whichever was defined first.
    */
+  sync(): void {
+    const host = this.#host;
+    const id = host.crumbId;
+    this.crumb(
+      id === "off"
+        ? null
+        : id
+          ? byId(host, id)
+          : host.querySelector<HTMLElement>('[data-ui="chart-breadcrumb"]'),
+      host.model().path,
+      host.strings.breadcrumb,
+    );
+  }
+
+  unwire(): void {
+    this.crumb(null, [], "");
+  }
+
   crumb(el: HTMLElement | null, path: readonly HierarchyNode[], label: string): void {
     if (el !== this.#crumb?.el) {
       this.#crumb?.stop.abort();
@@ -79,7 +122,7 @@ export class Zoom {
         );
         if (el.localName.includes("-") && !customElements.get(el.localName))
           customElements.whenDefined(el.localName).then(() => {
-            if (this.#crumb?.el === el) this.crumb(el, path, label);
+            if (this.#crumb?.el === el) this.sync();
           });
       }
     }
@@ -111,9 +154,9 @@ export class Zoom {
     svg.addEventListener(
       "click",
       (event) => {
-        if (!host.drillable() || event.detail === 0) return;
+        if (!host.drillable || event.detail === 0) return;
         const [x, y] = this.#local(svg, event);
-        if (!host.center(x, y)) return;
+        if (!host.isCenter(x, y)) return;
         event.preventDefault();
         host.zoomOut();
       },
@@ -122,7 +165,7 @@ export class Zoom {
     svg.addEventListener(
       "pointerdown",
       (event) => {
-        host.touch(event.pointerType !== "mouse");
+        host.touched = event.pointerType !== "mouse";
         this.#down = { x: event.clientX, y: event.clientY };
       },
       opts,
@@ -133,13 +176,15 @@ export class Zoom {
       (event) => {
         const down = this.#down;
         this.#down = undefined;
-        if (event.pointerType === "mouse" || !host.drillable()) return;
+        if (event.pointerType === "mouse" || !host.drillable) return;
         if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > TAP_SLOP) return;
         const [x, y] = this.#local(svg, event);
-        const id = host.tapTarget(x, y, event.target as Element);
-        if (!id) return;
+        const index = host.last?.hit?.(x, y, event.target as Element, 44) ?? -1;
+        const node = host.nodes[index];
+        const target = node && host.drillTarget(node);
+        if (index < 0 || index !== host.selected || !target || target.children.length === 0) return;
         event.preventDefault();
-        host.zoomTo(id);
+        host.zoomTo(target.id);
       },
       opts,
     );
@@ -147,7 +192,8 @@ export class Zoom {
     svg.addEventListener(
       "keydown",
       (event) => {
-        if (event.key !== "Escape" || host.pinned() || !host.drillable() || !host.canExit()) return;
+        if (event.key !== "Escape" || host.selected !== null || !host.drillable) return;
+        if (!host.model().focus.parent) return;
         event.preventDefault();
         host.zoomOut();
       },
