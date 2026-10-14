@@ -8,6 +8,10 @@ on:
       - "packages/ui-tokens/scripts/build-theme.mjs"
       - "packages/ui-tokens/bin/ui-theme.mjs"
       - "packages/ui/icons/**"
+      - "packages/ui/src/charts/**"
+      - "packages/ui-core/src/chart/**"
+      - "scripts/chart-fixtures.test.mjs"
+      - ".nvmrc"
       - ".github/workflows/ui-compose.yml"
   pull_request:
     paths:
@@ -16,6 +20,10 @@ on:
       - "packages/ui-tokens/scripts/build-theme.mjs"
       - "packages/ui-tokens/bin/ui-theme.mjs"
       - "packages/ui/icons/**"
+      - "packages/ui/src/charts/**"
+      - "packages/ui-core/src/chart/**"
+      - "scripts/chart-fixtures.test.mjs"
+      - ".nvmrc"
       - ".github/workflows/ui-compose.yml"
 
 concurrency:
@@ -30,8 +38,32 @@ defaults:
     working-directory: packages/ui-compose
 
 jobs:
+  # The web chart sources also trigger this workflow (for the fixture drift check); only a Compose change needs Gradle, and above
+  # all macOS minutes.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      compose: ${{ steps.diff.outputs.compose }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        working-directory: .
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          pattern='^(packages/ui-compose/|packages/ui-tokens/tokens/|packages/ui-tokens/scripts/build-theme.mjs|packages/ui-tokens/bin/ui-theme.mjs|packages/ui/icons/|\.github/workflows/ui-compose.yml)'
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null || git diff --name-only "$BASE" HEAD | grep -qE "$pattern"; then
+            echo "compose=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "compose=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Linux covers everything except the Apple targets and costs a tenth of a macOS minute.
   check:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,16 +76,24 @@ jobs:
           node-version: 22
       - uses: gradle/actions/setup-gradle@v4
       # verifyRoborazziJvm re-runs the screenshot tests against the committed goldens in kit/screenshots.
-      - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+      # `verifyRoborazziJvm` unqualified runs in every module that has the task: the kit and each chart module, so a batch that adds goldens never edits this workflow.
+      - run: ./gradlew spotlessCheck apiCheck :kit:allTests verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+      # The chart artifacts (see odd/tasks/compose-charts.md): the tests include ChartModuleGraphTest, the module-graph guard.
+      - run: ./gradlew :chart-core:allTests :chart:allTests :chart-cartesian:allTests :chart-race:allTests :chart-distribution:allTests :chart-plots:allTests :chart-polar:allTests :chart-hierarchy:allTests :chart-units:allTests :chart-gantt:allTests :chart-stock:allTests :chart-crossfilter:allTests :chart-geo:allTests :chart-geo-world:allTests :chart-geo-peru:allTests :chart-export:allTests
+      # R8 dex delta per artifact (size-probe), AAR classes.jar and the budgets in charts/<module>/size-budget.json.
+      - run: ./gradlew :size-probe:assembleRelease :chart-core:assembleRelease :chart:assembleRelease :chart-cartesian:assembleRelease :chart-race:assembleRelease :chart-distribution:assembleRelease :chart-plots:assembleRelease :chart-polar:assembleRelease :chart-hierarchy:assembleRelease :chart-units:assembleRelease :chart-gantt:assembleRelease :chart-stock:assembleRelease :chart-crossfilter:assembleRelease :chart-geo:assembleRelease :chart-geo-world:assembleRelease :chart-geo-peru:assembleRelease :chart-export:assembleRelease
+      - run: node scripts/check-chart-size.mjs --dex --aar
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: roborazzi-diffs
-          path: packages/ui-compose/kit/build/outputs/roborazzi
+          path: packages/ui-compose/**/build/outputs/roborazzi
           if-no-files-found: ignore
 
   # Kotlin/Native iOS compilation needs Xcode, so it gets its own macOS job limited to the compile task.
   ios-compile:
+    needs: changes
+    if: needs.changes.outputs.compose == 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,3 +106,25 @@ jobs:
           node-version: 22
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew :kit:compileKotlinIosSimulatorArm64
+      # Every chart module compiles for iOS, and the klib sizes stay inside their size-budget.json.
+      - run: ./gradlew compileKotlinIosArm64 compileKotlinIosSimulatorArm64
+      - run: node scripts/check-chart-size.mjs --klib
+      # Runs the commonTest sources on the iOS simulator; the shared fixture decoder is plain Kotlin, resource-reading tests are jvmTest.
+      - run: ./gradlew :chart-core:iosSimulatorArm64Test :chart:iosSimulatorArm64Test :chart-cartesian:iosSimulatorArm64Test :chart-race:iosSimulatorArm64Test :chart-distribution:iosSimulatorArm64Test :chart-plots:iosSimulatorArm64Test :chart-polar:iosSimulatorArm64Test :chart-hierarchy:iosSimulatorArm64Test :chart-units:iosSimulatorArm64Test :chart-gantt:iosSimulatorArm64Test :chart-stock:iosSimulatorArm64Test :chart-crossfilter:iosSimulatorArm64Test :chart-geo:iosSimulatorArm64Test :chart-geo-world:iosSimulatorArm64Test :chart-geo-peru:iosSimulatorArm64Test :chart-export:iosSimulatorArm64Test
+
+  # The Compose chart goldens come from the React chart math; regenerate them and fail on drift.
+  chart-fixtures:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:chart-fixtures
+      - run: node --test scripts/chart-fixtures.test.mjs

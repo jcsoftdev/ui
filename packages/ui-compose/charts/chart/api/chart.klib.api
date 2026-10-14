@@ -1,0 +1,17 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart>
+final object com.jcsoftdev.ui.chart/ChartModule { // com.jcsoftdev.ui.chart/ChartModule|null[0]
+    final val id // com.jcsoftdev.ui.chart/ChartModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart/ChartModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart/com_jcsoftdev_ui_chart_ChartModule$stableprop // com.jcsoftdev.ui.chart/com_jcsoftdev_ui_chart_ChartModule$stableprop|#static{}com_jcsoftdev_ui_chart_ChartModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart/ChartPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart/ChartPlaceholder|ChartPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart/com_jcsoftdev_ui_chart_ChartModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart/com_jcsoftdev_ui_chart_ChartModule$stableprop_getter|com_jcsoftdev_ui_chart_ChartModule$stableprop_getter(){}[0]

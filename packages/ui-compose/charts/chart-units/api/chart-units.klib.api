@@ -1,0 +1,17 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-units>
+final object com.jcsoftdev.ui.chart.units/UnitsModule { // com.jcsoftdev.ui.chart.units/UnitsModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.units/UnitsModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.units/UnitsModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.units/com_jcsoftdev_ui_chart_units_UnitsModule$stableprop // com.jcsoftdev.ui.chart.units/com_jcsoftdev_ui_chart_units_UnitsModule$stableprop|#static{}com_jcsoftdev_ui_chart_units_UnitsModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.units/UnitsPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.units/UnitsPlaceholder|UnitsPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.units/com_jcsoftdev_ui_chart_units_UnitsModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.units/com_jcsoftdev_ui_chart_units_UnitsModule$stableprop_getter|com_jcsoftdev_ui_chart_units_UnitsModule$stableprop_getter(){}[0]
