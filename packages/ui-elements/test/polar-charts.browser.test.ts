@@ -258,3 +258,102 @@ describe("fill gauge", () => {
     expect(clip?.getAttribute("d")).not.toContain("M12 1.8c3.9");
   });
 });
+
+describe("bad values and large inputs", () => {
+  it("polar area and radar take 200k entries without a spread overflow", async () => {
+    const many = Array.from({ length: 200_000 }, (_, i) => ({
+      id: `s${i}`,
+      name: `S${i}`,
+      value: i < 3 ? 10 + i : 0,
+    }));
+    const area = await make(SPECS["polar-area"] as Spec);
+    (area as unknown as { data: unknown }).data = many;
+    await settle();
+    expect(marks(area)).toHaveLength(3);
+    const radar = await make(SPECS.radar as Spec);
+    (radar as unknown as { series: unknown }).series = [
+      { id: "a", name: "A", data: Array.from({ length: 200_000 }, (_, i) => i % 90) },
+    ];
+    await settle();
+    expect(marks(radar)).toHaveLength(5);
+  });
+
+  it("NaN and Infinity leave no NaN geometry or text", async () => {
+    const bad = [
+      { id: "a", name: "A", value: Number.NaN },
+      { id: "b", name: "B", value: Number.POSITIVE_INFINITY },
+      { id: "c", name: "C", value: 40 },
+    ];
+    for (const name of ["polar-area", "radial-bar"]) {
+      const c = await make(SPECS[name] as Spec);
+      (c as unknown as { data: unknown }).data = bad;
+      await settle();
+      expect(c.querySelector("svg")?.outerHTML).not.toContain("NaN");
+      expect(JSON.stringify(c.chartSnapshot)).not.toContain("NaN");
+    }
+    const radar = await make(SPECS.radar as Spec);
+    (radar as unknown as { series: unknown }).series = [
+      { id: "a", name: "A", data: [Number.NaN, Number.POSITIVE_INFINITY, 3, null, 2] },
+    ];
+    await settle();
+    expect(radar.querySelector("svg")?.outerHTML).not.toContain("NaN");
+  });
+});
+
+describe("radial bar geometry", () => {
+  it("hits when the end angle is before the start angle", async () => {
+    const c = await make(SPECS["radial-bar"] as Spec, 'start-angle="0" end-angle="-270"');
+    await awake(c);
+    const events = record(c, "chart-hover") as Array<{ index: number } | null>;
+    const svg = svgOf(c);
+    const cx = Number(svg.getAttribute("width")) / 2;
+    const cy = Number(svg.getAttribute("height")) / 2;
+    const ring = marks(c)[0]
+      ?.getAttribute("d")
+      ?.match(/A(\d+(?:\.\d+)?)/)?.[1];
+    const radius = Number(ring);
+    const at = (degrees: number) => {
+      const a = (degrees * Math.PI) / 180;
+      return { x: cx + Math.sin(a) * radius, y: cy - Math.cos(a) * radius };
+    };
+    // 270 degrees counter-clockwise from 12 o'clock: -45 is inside the sweep, +45 is not.
+    pointer(c, "pointermove", at(-45).x, at(-45).y);
+    await frame();
+    expect(events.at(-1)?.index).toBe(0);
+    pointer(c, "pointermove", at(45).x, at(45).y);
+    await frame();
+    expect(events.at(-1)).toBeNull();
+  });
+
+  it("keeps every ring on screen with many items", async () => {
+    const c = await make(SPECS["radial-bar"] as Spec);
+    (c as unknown as { data: unknown }).data = Array.from({ length: 60 }, (_, i) => ({
+      id: `r${i}`,
+      name: `R${i}`,
+      value: i + 1,
+    }));
+    await settle();
+    expect(marks(c)).toHaveLength(60);
+    const html = c.querySelector("svg")?.outerHTML ?? "";
+    expect(html).not.toContain("NaN");
+    expect(html).not.toMatch(/A-\d/);
+  });
+});
+
+describe("parliament seat cap", () => {
+  it("draws a sample of a huge chamber and keeps the exact numbers", async () => {
+    const c = await make(SPECS.parliament as Spec);
+    (c as unknown as { data: unknown }).data = [
+      { id: "a", name: "A", value: 6000 },
+      { id: "b", name: "B", value: 4000 },
+    ];
+    await settle();
+    expect(c.querySelectorAll("svg circle").length).toBeLessThanOrEqual(2000);
+    await awake(c);
+    const p = inside(marks(c)[0] as SVGElement);
+    pointer(c, "pointermove", p.x, p.y);
+    await frame();
+    expect(c.hover?.index).toBe(0);
+    expect(c.chartSnapshot?.series[0]?.text[0]).toBe("6,000");
+  });
+});

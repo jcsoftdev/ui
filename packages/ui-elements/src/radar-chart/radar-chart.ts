@@ -25,19 +25,19 @@ import {
 } from "../internal/chart-base.js";
 import {
   adoptPolar,
-  clamp,
   EASE,
   fadeIn,
   jsonAttr,
-  listAttr,
   numberAttr,
+  paint,
   round2,
   SideKeeper,
-  seedHidden,
   text,
   truncate,
   valueFormatOf,
+  warnDuplicates,
 } from "../internal/e20-polar.js";
+import radarCss from "../internal/e20-radar.css.js";
 
 export interface RadarSeries {
   /** Stable identity, used for the legend and for hiding the series. */
@@ -50,6 +50,8 @@ export interface RadarSeries {
   format?: ValueFormat;
 }
 
+const finite = (value: number | null | undefined): value is number =>
+  typeof value === "number" && Number.isFinite(value);
 const off = (host: Element, name: string) =>
   host.getAttribute(name) === "off" || host.getAttribute(name) === "false";
 
@@ -84,7 +86,6 @@ export class UiRadarChart extends ChartElement {
   ];
   #axes: readonly string[] | undefined;
   #series: readonly RadarSeries[] | undefined;
-  #seeded = false;
   readonly #keeper = new SideKeeper();
 
   constructor() {
@@ -110,19 +111,16 @@ export class UiRadarChart extends ChartElement {
 
   override connectedCallback(): void {
     this.dataset.ui = "radar-chart";
-    adoptPolar(this);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", "340");
+    adoptPolar(this, radarCss);
+    // TODO(E20): default height 340 through the base natural-height hook (no host writes);
+    // seed `initial-hidden` with the base hook once it lands.
     super.connectedCallback();
-    if (!this.#seeded) {
-      this.#seeded = true;
-      seedHidden(this, listAttr(this, "initial-hidden"));
-    }
   }
 
   protected override isEmpty(): boolean {
     return (
-      this.axes.length < 3 || this.series.every((item) => item.data.every((value) => value == null))
+      this.axes.length < 3 ||
+      this.series.every((item) => item.data.every((value) => !finite(value)))
     );
   }
 
@@ -147,6 +145,10 @@ export class UiRadarChart extends ChartElement {
     const min = numberAttr(this, "min", 0);
     const currency = this.getAttribute("currency") || undefined;
     const axisFormat = resolveAxisFormat(valueFormatOf(this), { locale, currency });
+    warnDuplicates(
+      this,
+      this.series.map((item) => item.id),
+    );
     const items = this.series.map((item, index) => ({
       ...item,
       color: ctx.color(index, item.color),
@@ -158,11 +160,15 @@ export class UiRadarChart extends ChartElement {
     const maxChars = compact ? 10 : 18;
     const shownAxes = axes.map((axis) => truncate(axis, maxChars));
 
-    const top = Math.max(0, ...visible.flatMap((item) => item.data.map((value) => value ?? 0)));
+    let top = 0;
+    for (const item of visible)
+      for (const value of item.data) if (finite(value) && value > top) top = value;
     const max = this.hasAttribute("max")
-      ? numberAttr(this, "max", 0)
+      ? numberAttr(this, "max", 1)
       : niceRadarMax(top - Math.min(0, min), levels) + Math.min(0, min);
-    const labelWidth = Math.max(...shownAxes.map((axis) => estimateTextWidth(axis, fontSize)), 0);
+    let labelWidth = 0;
+    for (const axis of shownAxes)
+      labelWidth = Math.max(labelWidth, estimateTextWidth(axis, fontSize));
     const radius = Math.max(
       36,
       Math.min(width / 2 - Math.min(labelWidth, width * 0.24) - 16, height / 2 - 26),
@@ -170,7 +176,8 @@ export class UiRadarChart extends ChartElement {
     const cx = width / 2;
     const cy = height / 2;
     const scale = (value: number) =>
-      (radius * (Math.min(max, Math.max(min, value)) - min)) / (max - min || 1);
+      (radius * (Math.min(max, Math.max(min, finite(value) ? value : min)) - min)) /
+      (max - min || 1);
     const angleAt = (i: number) => startAngle + (TAU * i) / count;
     const pt = (r: number, angle: number) => {
       const p = polarPoint(cx, cy, r, angle);
@@ -228,27 +235,39 @@ export class UiRadarChart extends ChartElement {
         style: `transform-origin:${cx}px ${cy}px`,
       });
       group.append(
-        svg("path", {
-          d: `${points.map((p, i) => `${i === 0 ? "M" : "L"}${round2(p.x)} ${round2(p.y)}`).join("")}Z`,
-          "stroke-width": 2,
-          "stroke-linejoin": "round",
-          style: `stroke:${item.color};fill:${fill ? item.color : "none"};fill-opacity:${fillOpacity}`,
-        }),
+        paint(
+          paint(
+            svg("path", {
+              d: `${points.map((p, i) => `${i === 0 ? "M" : "L"}${round2(p.x)} ${round2(p.y)}`).join("")}Z`,
+              "stroke-width": 2,
+              "stroke-linejoin": "round",
+              style: `fill-opacity:${fillOpacity}`,
+            }),
+            "stroke",
+            item.color,
+          ),
+          "fill",
+          fill ? item.color : "none",
+        ),
       );
       if (markers)
         points.forEach(
           (p, i) =>
             void group.append(
-              svg("circle", {
-                "data-marker": "",
-                "data-axis": i,
-                "data-on": activeIndex === i ? "" : undefined,
-                cx: p.x,
-                cy: p.y,
-                r: 3.5,
-                "stroke-width": 2,
-                style: `fill:${item.color};stroke:var(--surface)`,
-              }),
+              paint(
+                svg("circle", {
+                  "data-marker": "",
+                  "data-axis": i,
+                  "data-on": activeIndex === i ? "" : undefined,
+                  cx: p.x,
+                  cy: p.y,
+                  r: 3.5,
+                  "stroke-width": 2,
+                  style: "stroke:var(--surface)",
+                }),
+                "fill",
+                item.color,
+              ),
             ),
         );
       shapes.push(group);
@@ -313,7 +332,7 @@ export class UiRadarChart extends ChartElement {
 
     const valueAt = (item: (typeof items)[number], i: number) => {
       const value = item.data[i];
-      return value == null ? "–" : item.fmt(value);
+      return finite(value) ? item.fmt(value) : "–";
     };
     const title = this.getAttribute("label") ?? "";
     return {
@@ -364,18 +383,16 @@ export class UiRadarChart extends ChartElement {
           name: item.name,
           color: item.color,
           shape: "square" as const,
-          values: axes.map((_, i) => item.data[i] ?? null),
+          values: axes.map((_, i) => (finite(item.data[i]) ? (item.data[i] as number) : null)),
           text: axes.map((_, i) => {
             const value = item.data[i];
-            return value == null ? "" : item.fmt(value);
+            return finite(value) ? item.fmt(value) : "";
           }),
         })),
       }),
     };
   }
 }
-
-void clamp;
 
 /** Registers `<ui-radar-chart>` (or `<prefix>-radar-chart`) and returns the tag. */
 export function defineRadarChart(options?: DefineOptions): string {

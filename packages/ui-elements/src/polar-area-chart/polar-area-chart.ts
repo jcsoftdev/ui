@@ -29,14 +29,15 @@ import {
   EASE,
   fadeIn,
   jsonAttr,
-  listAttr,
   numberAttr,
+  paint,
   SideKeeper,
-  seedHidden,
   text,
   truncate,
   valueFormatOf,
+  warnDuplicates,
 } from "../internal/e20-polar.js";
+import slices from "../internal/e20-slices.css.js";
 
 export interface PolarAreaDatum {
   id: string;
@@ -77,7 +78,6 @@ export class UiPolarAreaChart extends ChartElement {
     "monochrome",
   ];
   #data: readonly PolarAreaDatum[] | undefined;
-  #seeded = false;
   readonly #keeper = new SideKeeper();
 
   get data(): readonly PolarAreaDatum[] {
@@ -90,14 +90,10 @@ export class UiPolarAreaChart extends ChartElement {
 
   override connectedCallback(): void {
     this.dataset.ui = "polar-area-chart";
-    adoptPolar(this);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", "340");
+    adoptPolar(this, slices);
+    // TODO(E20): default height 340 through the base natural-height hook (no host writes);
+    // seed `initial-hidden` with the base hook once it lands.
     super.connectedCallback();
-    if (!this.#seeded) {
-      this.#seeded = true;
-      seedHidden(this, listAttr(this, "initial-hidden"));
-    }
   }
 
   protected override isEmpty(): boolean {
@@ -119,7 +115,13 @@ export class UiPolarAreaChart extends ChartElement {
       mono === null || mono === "false" ? false : mono === "" || mono === "true" ? true : mono;
     const axisFormat = resolveAxisFormat(valueFormatOf(this), { locale, currency });
 
-    const data = this.data;
+    const data = this.data.map((datum) =>
+      Number.isFinite(datum.value) ? datum : { ...datum, value: 0 },
+    );
+    warnDuplicates(
+      this,
+      data.map((datum) => datum.id),
+    );
     const shades = monochrome
       ? monochromeByValue(
           data.map((datum) => Math.max(0, datum.value || 0)),
@@ -142,15 +144,14 @@ export class UiPolarAreaChart extends ChartElement {
 
     const compact = width < 420;
     const rim = showLabels && !compact;
-    const top = Math.max(0, ...visible.map((index) => items[index]?.datum.value ?? 0));
+    let top = 0;
+    for (const index of visible) top = Math.max(top, items[index]?.datum.value ?? 0);
     const ceiling = niceRadarMax(top, levels);
-    const labelRoom = rim
-      ? Math.min(
-          130,
-          Math.max(0, ...items.map((item) => estimateTextWidth(truncate(item.datum.name, 16)))) +
-            14,
-        )
-      : 0;
+    let widest = 0;
+    if (rim)
+      for (const item of items)
+        widest = Math.max(widest, estimateTextWidth(truncate(item.datum.name, 16)));
+    const labelRoom = rim ? Math.min(130, widest + 14) : 0;
     const radius = Math.max(
       36,
       Math.min(width / 2 - labelRoom - EXPLODE - 4, height / 2 - EXPLODE - (rim ? 18 : 6)),
@@ -213,8 +214,9 @@ export class UiPolarAreaChart extends ChartElement {
           endAngle: startAngle + slot * (sector.position + 1) - pad / 2,
           cornerRadius,
         }),
-        style: `fill:${sector.item.color};fill-opacity:.9;--ui-dx:${shift.x.toFixed(2)}px;--ui-dy:${shift.y.toFixed(2)}px;transform-origin:${cx}px ${cy}px`,
+        style: `fill-opacity:.9;--ui-dx:${shift.x.toFixed(2)}px;--ui-dy:${shift.y.toFixed(2)}px;transform-origin:${cx}px ${cy}px`,
       });
+      paint(path, "fill", sector.item.color);
       sectorEls.push(path);
       group.append(path);
     }

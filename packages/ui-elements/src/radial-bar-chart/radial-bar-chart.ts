@@ -22,13 +22,14 @@ import {
   fadeIn,
   flagOrText,
   jsonAttr,
-  listAttr,
   numberAttr,
+  paint,
   SideKeeper,
-  seedHidden,
   text,
   truncate,
+  warnDuplicates,
 } from "../internal/e20-polar.js";
+import ringsCss from "../internal/e20-rings.css.js";
 
 export interface RadialBarDatum {
   id: string;
@@ -94,7 +95,6 @@ export class UiRadialBarChart extends ChartElement {
   #data: readonly RadialBarDatum[] | undefined;
   #view: View | undefined;
   #lit: string | null = null;
-  #seeded = false;
   readonly #keeper = new SideKeeper();
   readonly #uid = uid("radial");
 
@@ -120,14 +120,10 @@ export class UiRadialBarChart extends ChartElement {
 
   override connectedCallback(): void {
     this.dataset.ui = "radial-bar-chart";
-    adoptPolar(this);
-    if (!this.hasAttribute("height") && !this.hasAttribute("aspect-ratio"))
-      this.setAttribute("height", "320");
+    adoptPolar(this, ringsCss);
+    // TODO(E20): default height 320 through the base natural-height hook (no host writes);
+    // seed `initial-hidden` with the base hook once it lands.
     super.connectedCallback();
-    if (!this.#seeded) {
-      this.#seeded = true;
-      seedHidden(this, listAttr(this, "initial-hidden"));
-    }
   }
 
   protected override teardown(): void {
@@ -180,8 +176,15 @@ export class UiRadialBarChart extends ChartElement {
         ? true
         : undefined;
     const currency = this.getAttribute("currency") || undefined;
-    const items: Item[] = this.data.map((datum, index) => {
-      const full = datum.max ?? max;
+    const data = this.data.map((datum) =>
+      Number.isFinite(datum.value) ? datum : { ...datum, value: 0 },
+    );
+    warnDuplicates(
+      this,
+      data.map((datum) => datum.id),
+    );
+    const items: Item[] = data.map((datum, index) => {
+      const full = Number.isFinite(datum.max) ? (datum.max as number) : max;
       const fraction = full > 0 ? clamp(datum.value / full, 0, 1) : 0;
       return {
         datum,
@@ -199,25 +202,30 @@ export class UiRadialBarChart extends ChartElement {
     const count = Math.max(1, visible.length);
     const hole = outer * 0.26;
     const thickness = this.hasAttribute("thickness") ? numberAttr(this, "thickness", 0) : undefined;
-    const band = thickness || Math.max(8, Math.min(28, (outer - hole - gap * (count - 1)) / count));
+    // Many rings share the room: the gap shrinks with the step and no radius goes below zero.
+    const step = Math.max(1, (outer - hole) / count);
+    const gapAt = Math.min(Math.max(0, gap), step * 0.4);
+    const band = thickness || clamp((outer - hole - gapAt * (count - 1)) / count, 1, 28);
+    const pitch = band + gapAt;
     const a0 = degToRad(startAngle);
     const span = degToRad(endAngle) - a0;
+    const dir = span < 0 ? -1 : 1;
     const showLabels =
       (ringLabels ?? true) &&
       width >= 360 &&
       (ringLabels === true || (Math.abs(endAngle - startAngle) <= 280 && startAngle === 0));
 
     const rings = visible.map((index, position) => {
-      const radius = outer - band / 2 - position * (band + gap);
+      const radius = Math.max(band / 2, outer - band / 2 - position * pitch);
       const cap = roundedCaps ? band / 2 / Math.max(radius, 1) : 0;
-      const from = a0 + cap;
-      const room = span - 2 * cap;
+      const from = a0 + dir * cap;
+      const room = span - 2 * dir * cap;
       const fraction = items[index]?.fraction ?? 0;
-      const to = fraction > 0 ? from + Math.max(room * fraction, 1e-3) : from;
+      const to = fraction > 0 ? from + dir * Math.max(Math.abs(room) * fraction, 1e-3) : from;
       return {
         index,
         radius,
-        trackPath: arcLine(cx, cy, radius, from, a0 + span - cap),
+        trackPath: arcLine(cx, cy, radius, from, a0 + span - dir * cap),
         valuePath: fraction > 0 ? arcLine(cx, cy, radius, from, to) : "",
       };
     });
@@ -237,11 +245,12 @@ export class UiRadialBarChart extends ChartElement {
               x2: cx - outer,
               y2: cy + outer,
             },
-            svg("stop", {
-              offset: 0,
-              style: `stop-color:color-mix(in oklab, ${color}, white 42%)`,
-            }),
-            svg("stop", { offset: 1, style: `stop-color:${color}` }),
+            paint(
+              svg("stop", { offset: 0 }),
+              "stop-color",
+              `color-mix(in oklab, ${color}, white 42%)`,
+            ),
+            paint(svg("stop", { offset: 1 }), "stop-color", color),
           ),
         );
       }
@@ -274,8 +283,8 @@ export class UiRadialBarChart extends ChartElement {
           fill: "none",
           "stroke-width": band,
           "stroke-linecap": cap,
-          style: `stroke:${gradient ? `url(#${this.#uid}-g${ring.index})` : item.color}`,
         });
+        paint(value, "stroke", gradient ? `url(#${this.#uid}-g${ring.index})` : item.color);
         valueEls.push(value);
         one.append(value);
       }
@@ -390,23 +399,17 @@ export class UiRadialBarChart extends ChartElement {
         const dx = x - cx;
         const dy = y - cy;
         const r = Math.hypot(dx, dy);
-        // The nearest ring wins, so the gap between two rings belongs to one of them.
-        let best = -1;
-        let distance = Number.POSITIVE_INFINITY;
-        rings.forEach((ring, position) => {
-          const d = Math.abs(r - ring.radius);
-          if (d < distance) {
-            distance = d;
-            best = position;
-          }
-        });
-        if (distance > band / 2 + gap / 2 + (pointerRadius > 12 ? 8 : 0)) return -1;
+        // The nearest ring wins, so the gap between two rings belongs to one of them. Rings are
+        // evenly spaced, so it is found by arithmetic, however many there are.
+        const best = clamp(Math.round((outer - band / 2 - r) / pitch), 0, rings.length - 1);
         const ringAt = rings[best] as (typeof rings)[number];
+        if (Math.abs(r - ringAt.radius) > band / 2 + gapAt / 2 + (pointerRadius > 12 ? 8 : 0))
+          return -1;
         const tolerance = (band / 2 / Math.max(ringAt.radius, 1)) * (roundedCaps ? 1 : 0.5);
-        const rel = normalizeAngle(angleOf(0, 0, dx, dy) - a0);
+        const angle = angleOf(0, 0, dx, dy);
+        const rel = normalizeAngle(dir * (angle - a0));
         const sweep = Math.abs(span);
-        const inside =
-          span >= 0 ? rel <= sweep + tolerance || rel >= 2 * Math.PI - tolerance : false;
+        const inside = rel <= sweep + tolerance || rel >= 2 * Math.PI - tolerance;
         return inside || sweep >= 2 * Math.PI - 1e-3 ? best : -1;
       },
       hover: (position) => {
