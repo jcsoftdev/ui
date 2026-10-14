@@ -6,7 +6,17 @@
 //     run: (mod) => ({ ... }) }                          // JSON-serialisable, seeded, no Date.now or Math.random
 // Non-finite numbers and -0 are written as {"$f": "NaN" | "Infinity" | "-Infinity" | "-0"}; Kotlin decodes them with
 // chart-testing/common/FixtureJson.kt (compiled into every module's tests). Ship the generated JSON in the same commit.
+import { cases } from "./fixture-src/cases.mjs";
+
+const SCALES = "packages/ui-compose/charts/chart-core/fixture-src/entries/core-scales.ts";
+
 export const fixtures = [
+  { name: "ticks", source: SCALES, run: cases.ticks },
+  { name: "scales", source: SCALES, run: cases.scales },
+  { name: "time", source: SCALES, run: cases.time },
+  { name: "format", source: SCALES, run: cases.format },
+  { name: "axis", source: SCALES, run: cases.axis },
+  { name: "time-range", source: SCALES, run: cases.timeRange },
   {
     // Pins the encoding itself: FixtureJsonTest decodes this file, so a change on either side fails a test.
     name: "encoding",

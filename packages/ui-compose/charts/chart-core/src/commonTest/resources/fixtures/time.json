@@ -1,0 +1,3206 @@
+{
+  "names": {
+    "es-PE": {
+      "months": [
+        "Ene.",
+        "Feb.",
+        "Mar.",
+        "Abr.",
+        "May.",
+        "Jun.",
+        "Jul.",
+        "Ago.",
+        "Set.",
+        "Oct.",
+        "Nov.",
+        "Dic."
+      ],
+      "weekdays": [
+        "dom",
+        "lun",
+        "mar",
+        "mié",
+        "jue",
+        "vie",
+        "sáb"
+      ]
+    },
+    "es": {
+      "months": [
+        "ene",
+        "feb",
+        "mar",
+        "abr",
+        "may",
+        "jun",
+        "jul",
+        "ago",
+        "sept",
+        "oct",
+        "nov",
+        "dic"
+      ],
+      "weekdays": [
+        "dom",
+        "lun",
+        "mar",
+        "mié",
+        "jue",
+        "vie",
+        "sáb"
+      ]
+    },
+    "en-US": {
+      "months": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
+      "weekdays": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ]
+    }
+  },
+  "ticks": [
+    {
+      "start": 1792818000000,
+      "end": 1792828800000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": []
+    },
+    {
+      "start": 1793478600000,
+      "end": 1793565000000,
+      "count": 3,
+      "zone": "UTC",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1793491200000,
+          "unit": "day",
+          "label": "dom 1"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1709175600000,
+      "count": 12,
+      "zone": "UTC",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1709078400000,
+          "unit": "day",
+          "label": "wed 28"
+        },
+        {
+          "value": 1709164800000,
+          "unit": "day",
+          "label": "thu 29"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 947030400000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 946512000000,
+          "unit": "day",
+          "label": "jue 30"
+        },
+        {
+          "value": 946598400000,
+          "unit": "day",
+          "label": "vie 31"
+        },
+        {
+          "value": 946684800000,
+          "unit": "day",
+          "label": "sáb 1"
+        },
+        {
+          "value": 946771200000,
+          "unit": "day",
+          "label": "dom 2"
+        },
+        {
+          "value": 946857600000,
+          "unit": "day",
+          "label": "lun 3"
+        },
+        {
+          "value": 946944000000,
+          "unit": "day",
+          "label": "mar 4"
+        },
+        {
+          "value": 947030400000,
+          "unit": "day",
+          "label": "mié 5"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1768089600000,
+      "count": 3,
+      "zone": "UTC",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1767571200000,
+          "unit": "week",
+          "label": "5 ene"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1774612800000,
+      "count": 12,
+      "zone": "UTC",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1772928000000,
+          "unit": "day",
+          "label": "8 mar"
+        },
+        {
+          "value": 1773100800000,
+          "unit": "day",
+          "label": "10 mar"
+        },
+        {
+          "value": 1773273600000,
+          "unit": "day",
+          "label": "12 mar"
+        },
+        {
+          "value": 1773446400000,
+          "unit": "day",
+          "label": "14 mar"
+        },
+        {
+          "value": 1773619200000,
+          "unit": "day",
+          "label": "16 mar"
+        },
+        {
+          "value": 1773792000000,
+          "unit": "day",
+          "label": "18 mar"
+        },
+        {
+          "value": 1773964800000,
+          "unit": "day",
+          "label": "20 mar"
+        },
+        {
+          "value": 1774137600000,
+          "unit": "day",
+          "label": "22 mar"
+        },
+        {
+          "value": 1774310400000,
+          "unit": "day",
+          "label": "24 mar"
+        },
+        {
+          "value": 1774483200000,
+          "unit": "day",
+          "label": "26 mar"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1778191200000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1774828800000,
+          "unit": "week",
+          "label": "30 mar"
+        },
+        {
+          "value": 1775433600000,
+          "unit": "week",
+          "label": "6 abr"
+        },
+        {
+          "value": 1776038400000,
+          "unit": "week",
+          "label": "13 abr"
+        },
+        {
+          "value": 1776643200000,
+          "unit": "week",
+          "label": "20 abr"
+        },
+        {
+          "value": 1777248000000,
+          "unit": "week",
+          "label": "27 abr"
+        },
+        {
+          "value": 1777852800000,
+          "unit": "week",
+          "label": "4 may"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 1801458000000,
+      "count": 3,
+      "zone": "UTC",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798761600000,
+          "unit": "month",
+          "label": "ene 2027"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 1810758600000,
+      "count": 12,
+      "zone": "UTC",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1793491200000,
+          "unit": "month",
+          "label": "nov 2026"
+        },
+        {
+          "value": 1796083200000,
+          "unit": "month",
+          "label": "dec"
+        },
+        {
+          "value": 1798761600000,
+          "unit": "month",
+          "label": "jan 2027"
+        },
+        {
+          "value": 1801440000000,
+          "unit": "month",
+          "label": "feb"
+        },
+        {
+          "value": 1803859200000,
+          "unit": "month",
+          "label": "mar"
+        },
+        {
+          "value": 1806537600000,
+          "unit": "month",
+          "label": "apr"
+        },
+        {
+          "value": 1809129600000,
+          "unit": "month",
+          "label": "may"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1743562800000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1711929600000,
+          "unit": "month",
+          "label": "abr 2024"
+        },
+        {
+          "value": 1719792000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1727740800000,
+          "unit": "month",
+          "label": "oct"
+        },
+        {
+          "value": 1735689600000,
+          "unit": "month",
+          "label": "ene 2025"
+        },
+        {
+          "value": 1743465600000,
+          "unit": "month",
+          "label": "abr"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 1015632000000,
+      "count": 3,
+      "zone": "UTC",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 946684800000,
+          "unit": "year",
+          "label": "2000"
+        },
+        {
+          "value": 978307200000,
+          "unit": "year",
+          "label": "2001"
+        },
+        {
+          "value": 1009843200000,
+          "unit": "year",
+          "label": "2002"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1924905600000,
+      "count": 12,
+      "zone": "UTC",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1767225600000,
+          "unit": "month",
+          "label": "jan 2026"
+        },
+        {
+          "value": 1782864000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1798761600000,
+          "unit": "month",
+          "label": "jan 2027"
+        },
+        {
+          "value": 1814400000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1830297600000,
+          "unit": "month",
+          "label": "jan 2028"
+        },
+        {
+          "value": 1846022400000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1861920000000,
+          "unit": "month",
+          "label": "jan 2029"
+        },
+        {
+          "value": 1877558400000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1893456000000,
+          "unit": "month",
+          "label": "jan 2030"
+        },
+        {
+          "value": 1909094400000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 2718964800000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1798761600000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1956528000000,
+          "unit": "year",
+          "label": "2032"
+        },
+        {
+          "value": 2114380800000,
+          "unit": "year",
+          "label": "2037"
+        },
+        {
+          "value": 2272147200000,
+          "unit": "year",
+          "label": "2042"
+        },
+        {
+          "value": 2429913600000,
+          "unit": "year",
+          "label": "2047"
+        },
+        {
+          "value": 2587680000000,
+          "unit": "year",
+          "label": "2052"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 11235535200000,
+      "count": 3,
+      "zone": "UTC",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798761600000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 4954435200000,
+          "unit": "year",
+          "label": "2127"
+        },
+        {
+          "value": 8110108800000,
+          "unit": "year",
+          "label": "2227"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1709013600000,
+      "count": 6,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1709010000000,
+          "unit": "day",
+          "label": "mar 27"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 946598400000,
+      "count": 3,
+      "zone": "America/Lima",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 946530000000,
+          "unit": "day",
+          "label": "jue 30"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1767398400000,
+      "count": 12,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1767243600000,
+          "unit": "day",
+          "label": "thu 1"
+        },
+        {
+          "value": 1767330000000,
+          "unit": "day",
+          "label": "fri 2"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1773403200000,
+      "count": 6,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1772946000000,
+          "unit": "day",
+          "label": "dom 8"
+        },
+        {
+          "value": 1773032400000,
+          "unit": "day",
+          "label": "lun 9"
+        },
+        {
+          "value": 1773118800000,
+          "unit": "day",
+          "label": "mar 10"
+        },
+        {
+          "value": 1773205200000,
+          "unit": "day",
+          "label": "mié 11"
+        },
+        {
+          "value": 1773291600000,
+          "unit": "day",
+          "label": "jue 12"
+        },
+        {
+          "value": 1773378000000,
+          "unit": "day",
+          "label": "vie 13"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1775599200000,
+      "count": 3,
+      "zone": "America/Lima",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1774846800000,
+          "unit": "week",
+          "label": "30 mar"
+        },
+        {
+          "value": 1775451600000,
+          "unit": "week",
+          "label": "6 abr"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 1794546000000,
+      "count": 12,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1792818000000,
+          "unit": "day",
+          "label": "24 oct"
+        },
+        {
+          "value": 1792990800000,
+          "unit": "day",
+          "label": "26 oct"
+        },
+        {
+          "value": 1793163600000,
+          "unit": "day",
+          "label": "28 oct"
+        },
+        {
+          "value": 1793336400000,
+          "unit": "day",
+          "label": "30 oct"
+        },
+        {
+          "value": 1793509200000,
+          "unit": "day",
+          "label": "1 nov"
+        },
+        {
+          "value": 1793682000000,
+          "unit": "day",
+          "label": "3 nov"
+        },
+        {
+          "value": 1793854800000,
+          "unit": "day",
+          "label": "5 nov"
+        },
+        {
+          "value": 1794027600000,
+          "unit": "day",
+          "label": "7 nov"
+        },
+        {
+          "value": 1794200400000,
+          "unit": "day",
+          "label": "9 nov"
+        },
+        {
+          "value": 1794373200000,
+          "unit": "day",
+          "label": "11 nov"
+        },
+        {
+          "value": 1794546000000,
+          "unit": "day",
+          "label": "13 nov"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 1796934600000,
+      "count": 6,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1793595600000,
+          "unit": "week",
+          "label": "2 nov"
+        },
+        {
+          "value": 1794200400000,
+          "unit": "week",
+          "label": "9 nov"
+        },
+        {
+          "value": 1794805200000,
+          "unit": "week",
+          "label": "16 nov"
+        },
+        {
+          "value": 1795410000000,
+          "unit": "week",
+          "label": "23 nov"
+        },
+        {
+          "value": 1796014800000,
+          "unit": "week",
+          "label": "30 nov"
+        },
+        {
+          "value": 1796619600000,
+          "unit": "week",
+          "label": "7 dic"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1717642800000,
+      "count": 3,
+      "zone": "America/Lima",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1711947600000,
+          "unit": "month",
+          "label": "abr 2024"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 963792000000,
+      "count": 12,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 946702800000,
+          "unit": "month",
+          "label": "jan 2000"
+        },
+        {
+          "value": 949381200000,
+          "unit": "month",
+          "label": "feb"
+        },
+        {
+          "value": 951886800000,
+          "unit": "month",
+          "label": "mar"
+        },
+        {
+          "value": 954565200000,
+          "unit": "month",
+          "label": "apr"
+        },
+        {
+          "value": 957157200000,
+          "unit": "month",
+          "label": "may"
+        },
+        {
+          "value": 959835600000,
+          "unit": "month",
+          "label": "jun"
+        },
+        {
+          "value": 962427600000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1801785600000,
+      "count": 6,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1767243600000,
+          "unit": "month",
+          "label": "ene 2026"
+        },
+        {
+          "value": 1775019600000,
+          "unit": "month",
+          "label": "abr"
+        },
+        {
+          "value": 1782882000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1790830800000,
+          "unit": "month",
+          "label": "oct"
+        },
+        {
+          "value": 1798779600000,
+          "unit": "month",
+          "label": "ene 2027"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1842004800000,
+      "count": 3,
+      "zone": "America/Lima",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798779600000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1830315600000,
+          "unit": "year",
+          "label": "2028"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1932415200000,
+      "count": 12,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1782882000000,
+          "unit": "month",
+          "label": "jul 2026"
+        },
+        {
+          "value": 1798779600000,
+          "unit": "month",
+          "label": "jan 2027"
+        },
+        {
+          "value": 1814418000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1830315600000,
+          "unit": "month",
+          "label": "jan 2028"
+        },
+        {
+          "value": 1846040400000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1861938000000,
+          "unit": "month",
+          "label": "jan 2029"
+        },
+        {
+          "value": 1877576400000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1893474000000,
+          "unit": "month",
+          "label": "jan 2030"
+        },
+        {
+          "value": 1909112400000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1925010000000,
+          "unit": "month",
+          "label": "jan 2031"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 2738898000000,
+      "count": 6,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1798779600000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1956546000000,
+          "unit": "year",
+          "label": "2032"
+        },
+        {
+          "value": 2114398800000,
+          "unit": "year",
+          "label": "2037"
+        },
+        {
+          "value": 2272165200000,
+          "unit": "year",
+          "label": "2042"
+        },
+        {
+          "value": 2429931600000,
+          "unit": "year",
+          "label": "2047"
+        },
+        {
+          "value": 2587698000000,
+          "unit": "year",
+          "label": "2052"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 11254278600000,
+      "count": 3,
+      "zone": "America/Lima",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798779600000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 4954453200000,
+          "unit": "year",
+          "label": "2127"
+        },
+        {
+          "value": 8110126800000,
+          "unit": "year",
+          "label": "2227"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1774746000000,
+      "count": 6,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "ticks": []
+    },
+    {
+      "start": 1792818000000,
+      "end": 1792904400000,
+      "count": 3,
+      "zone": "America/New_York",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1792900800000,
+          "unit": "day",
+          "label": "dom 25"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 1793651400000,
+      "count": 12,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1793505600000,
+          "unit": "day",
+          "label": "sun 1"
+        },
+        {
+          "value": 1793595600000,
+          "unit": "day",
+          "label": "mon 2"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1709521200000,
+      "count": 6,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1709010000000,
+          "unit": "day",
+          "label": "mar 27"
+        },
+        {
+          "value": 1709096400000,
+          "unit": "day",
+          "label": "mié 28"
+        },
+        {
+          "value": 1709182800000,
+          "unit": "day",
+          "label": "jue 29"
+        },
+        {
+          "value": 1709269200000,
+          "unit": "day",
+          "label": "vie 1"
+        },
+        {
+          "value": 1709355600000,
+          "unit": "day",
+          "label": "sáb 2"
+        },
+        {
+          "value": 1709442000000,
+          "unit": "day",
+          "label": "dom 3"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 947376000000,
+      "count": 3,
+      "zone": "America/New_York",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 946875600000,
+          "unit": "week",
+          "label": "3 ene"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1768953600000,
+      "count": 12,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1767243600000,
+          "unit": "day",
+          "label": "1 jan"
+        },
+        {
+          "value": 1767416400000,
+          "unit": "day",
+          "label": "3 jan"
+        },
+        {
+          "value": 1767589200000,
+          "unit": "day",
+          "label": "5 jan"
+        },
+        {
+          "value": 1767762000000,
+          "unit": "day",
+          "label": "7 jan"
+        },
+        {
+          "value": 1767934800000,
+          "unit": "day",
+          "label": "9 jan"
+        },
+        {
+          "value": 1768107600000,
+          "unit": "day",
+          "label": "11 jan"
+        },
+        {
+          "value": 1768280400000,
+          "unit": "day",
+          "label": "13 jan"
+        },
+        {
+          "value": 1768453200000,
+          "unit": "day",
+          "label": "15 jan"
+        },
+        {
+          "value": 1768626000000,
+          "unit": "day",
+          "label": "17 jan"
+        },
+        {
+          "value": 1768798800000,
+          "unit": "day",
+          "label": "19 jan"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1776340800000,
+      "count": 6,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1773028800000,
+          "unit": "week",
+          "label": "9 mar"
+        },
+        {
+          "value": 1773633600000,
+          "unit": "week",
+          "label": "16 mar"
+        },
+        {
+          "value": 1774238400000,
+          "unit": "week",
+          "label": "23 mar"
+        },
+        {
+          "value": 1774843200000,
+          "unit": "week",
+          "label": "30 mar"
+        },
+        {
+          "value": 1775448000000,
+          "unit": "week",
+          "label": "6 abr"
+        },
+        {
+          "value": 1776052800000,
+          "unit": "week",
+          "label": "13 abr"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1783375200000,
+      "count": 3,
+      "zone": "America/New_York",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1775016000000,
+          "unit": "month",
+          "label": "abr 2026"
+        },
+        {
+          "value": 1782878400000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 1810098000000,
+      "count": 12,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1793505600000,
+          "unit": "month",
+          "label": "nov 2026"
+        },
+        {
+          "value": 1796101200000,
+          "unit": "month",
+          "label": "dec"
+        },
+        {
+          "value": 1798779600000,
+          "unit": "month",
+          "label": "jan 2027"
+        },
+        {
+          "value": 1801458000000,
+          "unit": "month",
+          "label": "feb"
+        },
+        {
+          "value": 1803877200000,
+          "unit": "month",
+          "label": "mar"
+        },
+        {
+          "value": 1806552000000,
+          "unit": "month",
+          "label": "apr"
+        },
+        {
+          "value": 1809144000000,
+          "unit": "month",
+          "label": "may"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 1828038600000,
+      "count": 6,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1798779600000,
+          "unit": "month",
+          "label": "ene 2027"
+        },
+        {
+          "value": 1806552000000,
+          "unit": "month",
+          "label": "abr"
+        },
+        {
+          "value": 1814414400000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1822363200000,
+          "unit": "month",
+          "label": "oct"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1778122800000,
+      "count": 3,
+      "zone": "America/New_York",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1735707600000,
+          "unit": "year",
+          "label": "2025"
+        },
+        {
+          "value": 1767243600000,
+          "unit": "year",
+          "label": "2026"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 1104192000000,
+      "count": 12,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 946702800000,
+          "unit": "month",
+          "label": "jan 2000"
+        },
+        {
+          "value": 962424000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 978325200000,
+          "unit": "month",
+          "label": "jan 2001"
+        },
+        {
+          "value": 993960000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1009861200000,
+          "unit": "month",
+          "label": "jan 2002"
+        },
+        {
+          "value": 1025496000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1041397200000,
+          "unit": "month",
+          "label": "jan 2003"
+        },
+        {
+          "value": 1057032000000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1072933200000,
+          "unit": "month",
+          "label": "jan 2004"
+        },
+        {
+          "value": 1088654400000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 2713305600000,
+      "count": 6,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1767243600000,
+          "unit": "year",
+          "label": "2026"
+        },
+        {
+          "value": 1925010000000,
+          "unit": "year",
+          "label": "2031"
+        },
+        {
+          "value": 2082776400000,
+          "unit": "year",
+          "label": "2036"
+        },
+        {
+          "value": 2240629200000,
+          "unit": "year",
+          "label": "2041"
+        },
+        {
+          "value": 2398395600000,
+          "unit": "year",
+          "label": "2046"
+        },
+        {
+          "value": 2556162000000,
+          "unit": "year",
+          "label": "2051"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 11233684800000,
+      "count": 3,
+      "zone": "America/New_York",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798779600000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 4954453200000,
+          "unit": "year",
+          "label": "2127"
+        },
+        {
+          "value": 8110126800000,
+          "unit": "year",
+          "label": "2227"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 946522800000,
+      "count": 6,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "ticks": []
+    },
+    {
+      "start": 1767225600000,
+      "end": 1767312000000,
+      "count": 3,
+      "zone": "Europe/Madrid",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1767308400000,
+          "unit": "day",
+          "label": "vie 2"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1773057600000,
+      "count": 12,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1772924400000,
+          "unit": "day",
+          "label": "sun 8"
+        },
+        {
+          "value": 1773010800000,
+          "unit": "day",
+          "label": "mon 9"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1775253600000,
+      "count": 6,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1774738800000,
+          "unit": "day",
+          "label": "dom 29"
+        },
+        {
+          "value": 1774821600000,
+          "unit": "day",
+          "label": "lun 30"
+        },
+        {
+          "value": 1774908000000,
+          "unit": "day",
+          "label": "mar 31"
+        },
+        {
+          "value": 1774994400000,
+          "unit": "day",
+          "label": "mié 1"
+        },
+        {
+          "value": 1775080800000,
+          "unit": "day",
+          "label": "jue 2"
+        },
+        {
+          "value": 1775167200000,
+          "unit": "day",
+          "label": "vie 3"
+        },
+        {
+          "value": 1775253600000,
+          "unit": "day",
+          "label": "sáb 4"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 1793682000000,
+      "count": 3,
+      "zone": "Europe/Madrid",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1792969200000,
+          "unit": "week",
+          "label": "26 oct"
+        },
+        {
+          "value": 1793574000000,
+          "unit": "week",
+          "label": "2 nov"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 1795206600000,
+      "count": 12,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1793487600000,
+          "unit": "day",
+          "label": "1 nov"
+        },
+        {
+          "value": 1793660400000,
+          "unit": "day",
+          "label": "3 nov"
+        },
+        {
+          "value": 1793833200000,
+          "unit": "day",
+          "label": "5 nov"
+        },
+        {
+          "value": 1794006000000,
+          "unit": "day",
+          "label": "7 nov"
+        },
+        {
+          "value": 1794178800000,
+          "unit": "day",
+          "label": "9 nov"
+        },
+        {
+          "value": 1794351600000,
+          "unit": "day",
+          "label": "11 nov"
+        },
+        {
+          "value": 1794524400000,
+          "unit": "day",
+          "label": "13 nov"
+        },
+        {
+          "value": 1794697200000,
+          "unit": "day",
+          "label": "15 nov"
+        },
+        {
+          "value": 1794870000000,
+          "unit": "day",
+          "label": "17 nov"
+        },
+        {
+          "value": 1795042800000,
+          "unit": "day",
+          "label": "19 nov"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1712458800000,
+      "count": 6,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1709506800000,
+          "unit": "week",
+          "label": "4 mar"
+        },
+        {
+          "value": 1710111600000,
+          "unit": "week",
+          "label": "11 mar"
+        },
+        {
+          "value": 1710716400000,
+          "unit": "week",
+          "label": "18 mar"
+        },
+        {
+          "value": 1711321200000,
+          "unit": "week",
+          "label": "25 mar"
+        },
+        {
+          "value": 1711922400000,
+          "unit": "week",
+          "label": "1 abr"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 955152000000,
+      "count": 3,
+      "zone": "Europe/Madrid",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 946681200000,
+          "unit": "month",
+          "label": "ene 2000"
+        },
+        {
+          "value": 954540000000,
+          "unit": "month",
+          "label": "abr"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1784505600000,
+      "count": 12,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1769900400000,
+          "unit": "month",
+          "label": "feb 2026"
+        },
+        {
+          "value": 1772319600000,
+          "unit": "month",
+          "label": "mar"
+        },
+        {
+          "value": 1774994400000,
+          "unit": "month",
+          "label": "apr"
+        },
+        {
+          "value": 1777586400000,
+          "unit": "month",
+          "label": "may"
+        },
+        {
+          "value": 1780264800000,
+          "unit": "month",
+          "label": "jun"
+        },
+        {
+          "value": 1782856800000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1807444800000,
+      "count": 6,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1774994400000,
+          "unit": "month",
+          "label": "abr 2026"
+        },
+        {
+          "value": 1782856800000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1790805600000,
+          "unit": "month",
+          "label": "oct"
+        },
+        {
+          "value": 1798758000000,
+          "unit": "month",
+          "label": "ene 2027"
+        },
+        {
+          "value": 1806530400000,
+          "unit": "month",
+          "label": "abr"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1843855200000,
+      "count": 3,
+      "zone": "Europe/Madrid",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798758000000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1830294000000,
+          "unit": "year",
+          "label": "2028"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 1950498000000,
+      "count": 12,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1798758000000,
+          "unit": "month",
+          "label": "jan 2027"
+        },
+        {
+          "value": 1814392800000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1830294000000,
+          "unit": "month",
+          "label": "jan 2028"
+        },
+        {
+          "value": 1846015200000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1861916400000,
+          "unit": "month",
+          "label": "jan 2029"
+        },
+        {
+          "value": 1877551200000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1893452400000,
+          "unit": "month",
+          "label": "jan 2030"
+        },
+        {
+          "value": 1909087200000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1924988400000,
+          "unit": "month",
+          "label": "jan 2031"
+        },
+        {
+          "value": 1940623200000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 2739558600000,
+      "count": 6,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1798758000000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1956524400000,
+          "unit": "year",
+          "label": "2032"
+        },
+        {
+          "value": 2114377200000,
+          "unit": "year",
+          "label": "2037"
+        },
+        {
+          "value": 2272143600000,
+          "unit": "year",
+          "label": "2042"
+        },
+        {
+          "value": 2429910000000,
+          "unit": "year",
+          "label": "2047"
+        },
+        {
+          "value": 2587676400000,
+          "unit": "year",
+          "label": "2052"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 11169802800000,
+      "count": 3,
+      "zone": "Europe/Madrid",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1735686000000,
+          "unit": "year",
+          "label": "2025"
+        },
+        {
+          "value": 4891359600000,
+          "unit": "year",
+          "label": "2125"
+        },
+        {
+          "value": 8047033200000,
+          "unit": "year",
+          "label": "2225"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1709013600000,
+      "count": 6,
+      "zone": "Asia/Kolkata",
+      "locale": "es-PE",
+      "ticks": []
+    },
+    {
+      "start": 946512000000,
+      "end": 946598400000,
+      "count": 3,
+      "zone": "Asia/Kolkata",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 946578600000,
+          "unit": "day",
+          "label": "vie 31"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1767398400000,
+      "count": 12,
+      "zone": "Asia/Kolkata",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1767292200000,
+          "unit": "day",
+          "label": "fri 2"
+        },
+        {
+          "value": 1767378600000,
+          "unit": "day",
+          "label": "sat 3"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1773403200000,
+      "count": 6,
+      "zone": "Asia/Kolkata",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1772908200000,
+          "unit": "day",
+          "label": "dom 8"
+        },
+        {
+          "value": 1772994600000,
+          "unit": "day",
+          "label": "lun 9"
+        },
+        {
+          "value": 1773081000000,
+          "unit": "day",
+          "label": "mar 10"
+        },
+        {
+          "value": 1773167400000,
+          "unit": "day",
+          "label": "mié 11"
+        },
+        {
+          "value": 1773253800000,
+          "unit": "day",
+          "label": "jue 12"
+        },
+        {
+          "value": 1773340200000,
+          "unit": "day",
+          "label": "vie 13"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1775599200000,
+      "count": 3,
+      "zone": "Asia/Kolkata",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1774809000000,
+          "unit": "week",
+          "label": "30 mar"
+        },
+        {
+          "value": 1775413800000,
+          "unit": "week",
+          "label": "6 abr"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 1794546000000,
+      "count": 12,
+      "zone": "Asia/Kolkata",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1792866600000,
+          "unit": "day",
+          "label": "25 oct"
+        },
+        {
+          "value": 1793039400000,
+          "unit": "day",
+          "label": "27 oct"
+        },
+        {
+          "value": 1793212200000,
+          "unit": "day",
+          "label": "29 oct"
+        },
+        {
+          "value": 1793385000000,
+          "unit": "day",
+          "label": "31 oct"
+        },
+        {
+          "value": 1793557800000,
+          "unit": "day",
+          "label": "2 nov"
+        },
+        {
+          "value": 1793730600000,
+          "unit": "day",
+          "label": "4 nov"
+        },
+        {
+          "value": 1793903400000,
+          "unit": "day",
+          "label": "6 nov"
+        },
+        {
+          "value": 1794076200000,
+          "unit": "day",
+          "label": "8 nov"
+        },
+        {
+          "value": 1794249000000,
+          "unit": "day",
+          "label": "10 nov"
+        },
+        {
+          "value": 1794421800000,
+          "unit": "day",
+          "label": "12 nov"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 1796934600000,
+      "count": 6,
+      "zone": "Asia/Kolkata",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1793557800000,
+          "unit": "week",
+          "label": "2 nov"
+        },
+        {
+          "value": 1794162600000,
+          "unit": "week",
+          "label": "9 nov"
+        },
+        {
+          "value": 1794767400000,
+          "unit": "week",
+          "label": "16 nov"
+        },
+        {
+          "value": 1795372200000,
+          "unit": "week",
+          "label": "23 nov"
+        },
+        {
+          "value": 1795977000000,
+          "unit": "week",
+          "label": "30 nov"
+        },
+        {
+          "value": 1796581800000,
+          "unit": "week",
+          "label": "7 dic"
+        }
+      ]
+    },
+    {
+      "start": 1709002800000,
+      "end": 1717642800000,
+      "count": 3,
+      "zone": "Asia/Kolkata",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1711909800000,
+          "unit": "month",
+          "label": "abr 2024"
+        }
+      ]
+    },
+    {
+      "start": 946512000000,
+      "end": 963792000000,
+      "count": 12,
+      "zone": "Asia/Kolkata",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 946665000000,
+          "unit": "month",
+          "label": "jan 2000"
+        },
+        {
+          "value": 949343400000,
+          "unit": "month",
+          "label": "feb"
+        },
+        {
+          "value": 951849000000,
+          "unit": "month",
+          "label": "mar"
+        },
+        {
+          "value": 954527400000,
+          "unit": "month",
+          "label": "apr"
+        },
+        {
+          "value": 957119400000,
+          "unit": "month",
+          "label": "may"
+        },
+        {
+          "value": 959797800000,
+          "unit": "month",
+          "label": "jun"
+        },
+        {
+          "value": 962389800000,
+          "unit": "month",
+          "label": "jul"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1801785600000,
+      "count": 6,
+      "zone": "Asia/Kolkata",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1774981800000,
+          "unit": "month",
+          "label": "abr 2026"
+        },
+        {
+          "value": 1782844200000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1790793000000,
+          "unit": "month",
+          "label": "oct"
+        },
+        {
+          "value": 1798741800000,
+          "unit": "month",
+          "label": "ene 2027"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1842004800000,
+      "count": 3,
+      "zone": "Asia/Kolkata",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798741800000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1830277800000,
+          "unit": "year",
+          "label": "2028"
+        }
+      ]
+    },
+    {
+      "start": 1774735200000,
+      "end": 1932415200000,
+      "count": 12,
+      "zone": "Asia/Kolkata",
+      "locale": "en-US",
+      "ticks": [
+        {
+          "value": 1782844200000,
+          "unit": "month",
+          "label": "jul 2026"
+        },
+        {
+          "value": 1798741800000,
+          "unit": "month",
+          "label": "jan 2027"
+        },
+        {
+          "value": 1814380200000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1830277800000,
+          "unit": "month",
+          "label": "jan 2028"
+        },
+        {
+          "value": 1846002600000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1861900200000,
+          "unit": "month",
+          "label": "jan 2029"
+        },
+        {
+          "value": 1877538600000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1893436200000,
+          "unit": "month",
+          "label": "jan 2030"
+        },
+        {
+          "value": 1909074600000,
+          "unit": "month",
+          "label": "jul"
+        },
+        {
+          "value": 1924972200000,
+          "unit": "month",
+          "label": "jan 2031"
+        }
+      ]
+    },
+    {
+      "start": 1792818000000,
+      "end": 2738898000000,
+      "count": 6,
+      "zone": "Asia/Kolkata",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1798741800000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 1956508200000,
+          "unit": "year",
+          "label": "2032"
+        },
+        {
+          "value": 2114361000000,
+          "unit": "year",
+          "label": "2037"
+        },
+        {
+          "value": 2272127400000,
+          "unit": "year",
+          "label": "2042"
+        },
+        {
+          "value": 2429893800000,
+          "unit": "year",
+          "label": "2047"
+        },
+        {
+          "value": 2587660200000,
+          "unit": "year",
+          "label": "2052"
+        }
+      ]
+    },
+    {
+      "start": 1793478600000,
+      "end": 11254278600000,
+      "count": 3,
+      "zone": "Asia/Kolkata",
+      "locale": "es",
+      "ticks": [
+        {
+          "value": 1798741800000,
+          "unit": "year",
+          "label": "2027"
+        },
+        {
+          "value": 4954415400000,
+          "unit": "year",
+          "label": "2127"
+        },
+        {
+          "value": 8110089000000,
+          "unit": "year",
+          "label": "2227"
+        }
+      ]
+    },
+    {
+      "start": 1767225600000,
+      "end": 1767225600000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1767225600000,
+          "unit": "day",
+          "label": "jue 1"
+        }
+      ]
+    },
+    {
+      "start": 1767657600000,
+      "end": 1767225600000,
+      "count": 6,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "ticks": [
+        {
+          "value": 1767225600000,
+          "unit": "day",
+          "label": "jue 1"
+        },
+        {
+          "value": 1767312000000,
+          "unit": "day",
+          "label": "vie 2"
+        },
+        {
+          "value": 1767398400000,
+          "unit": "day",
+          "label": "sáb 3"
+        },
+        {
+          "value": 1767484800000,
+          "unit": "day",
+          "label": "dom 4"
+        },
+        {
+          "value": 1767571200000,
+          "unit": "day",
+          "label": "lun 5"
+        },
+        {
+          "value": 1767657600000,
+          "unit": "day",
+          "label": "mar 6"
+        }
+      ]
+    },
+    {
+      "start": 1772884800000,
+      "end": 1772884800001,
+      "count": 6,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "ticks": []
+    }
+  ],
+  "formats": [
+    {
+      "value": 1767253983000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "jue 1 ene 2026",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "lun 16 feb 2026",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "mar 23 nov 2027",
+      "month": "nov",
+      "weekday": "mar",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "jue 28 set 2028",
+      "month": "set",
+      "weekday": "jue",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "jue 8 abr 2027",
+      "month": "abr",
+      "weekday": "jue",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "sáb 7 mar 2026",
+      "month": "mar",
+      "weekday": "sáb",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "sáb 30 may 2026",
+      "month": "may",
+      "weekday": "sáb",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "jue 25 ene 2029",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "lun 12 feb 2029",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "mar 27 jun 2028",
+      "month": "jun",
+      "weekday": "mar",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "mié 6 feb 2030",
+      "month": "feb",
+      "weekday": "mié",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "UTC",
+      "locale": "es-PE",
+      "text": "mar 24 set 2030",
+      "month": "set",
+      "weekday": "mar",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "thu 1 jan 2026",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "mon 16 feb 2026",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "tue 23 nov 2027",
+      "month": "nov",
+      "weekday": "tue",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "thu 28 sep 2028",
+      "month": "sep",
+      "weekday": "thu",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "thu 8 apr 2027",
+      "month": "apr",
+      "weekday": "thu",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "sat 7 mar 2026",
+      "month": "mar",
+      "weekday": "sat",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "sat 30 may 2026",
+      "month": "may",
+      "weekday": "sat",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "thu 25 jan 2029",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "mon 12 feb 2029",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "tue 27 jun 2028",
+      "month": "jun",
+      "weekday": "tue",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "wed 6 feb 2030",
+      "month": "feb",
+      "weekday": "wed",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "UTC",
+      "locale": "en-US",
+      "text": "tue 24 sep 2030",
+      "month": "sep",
+      "weekday": "tue",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "jue 1 ene 2026",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "lun 16 feb 2026",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "mar 23 nov 2027",
+      "month": "nov",
+      "weekday": "mar",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "jue 28 set 2028",
+      "month": "set",
+      "weekday": "jue",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "jue 8 abr 2027",
+      "month": "abr",
+      "weekday": "jue",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "sáb 7 mar 2026",
+      "month": "mar",
+      "weekday": "sáb",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "sáb 30 may 2026",
+      "month": "may",
+      "weekday": "sáb",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "jue 25 ene 2029",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "lun 12 feb 2029",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "mar 27 jun 2028",
+      "month": "jun",
+      "weekday": "mar",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "mié 6 feb 2030",
+      "month": "feb",
+      "weekday": "mié",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "America/Lima",
+      "locale": "es-PE",
+      "text": "mar 24 set 2030",
+      "month": "set",
+      "weekday": "mar",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "thu 1 jan 2026",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "mon 16 feb 2026",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "tue 23 nov 2027",
+      "month": "nov",
+      "weekday": "tue",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "thu 28 sep 2028",
+      "month": "sep",
+      "weekday": "thu",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "thu 8 apr 2027",
+      "month": "apr",
+      "weekday": "thu",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "sat 7 mar 2026",
+      "month": "mar",
+      "weekday": "sat",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "sat 30 may 2026",
+      "month": "may",
+      "weekday": "sat",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "thu 25 jan 2029",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "mon 12 feb 2029",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "tue 27 jun 2028",
+      "month": "jun",
+      "weekday": "tue",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "wed 6 feb 2030",
+      "month": "feb",
+      "weekday": "wed",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "America/Lima",
+      "locale": "en-US",
+      "text": "tue 24 sep 2030",
+      "month": "sep",
+      "weekday": "tue",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "jue 1 ene 2026",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "lun 16 feb 2026",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "mar 23 nov 2027",
+      "month": "nov",
+      "weekday": "mar",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "jue 28 set 2028",
+      "month": "set",
+      "weekday": "jue",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "jue 8 abr 2027",
+      "month": "abr",
+      "weekday": "jue",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "sáb 7 mar 2026",
+      "month": "mar",
+      "weekday": "sáb",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "sáb 30 may 2026",
+      "month": "may",
+      "weekday": "sáb",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "jue 25 ene 2029",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "lun 12 feb 2029",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "mar 27 jun 2028",
+      "month": "jun",
+      "weekday": "mar",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "mié 6 feb 2030",
+      "month": "feb",
+      "weekday": "mié",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "America/New_York",
+      "locale": "es-PE",
+      "text": "mar 24 set 2030",
+      "month": "set",
+      "weekday": "mar",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "thu 1 jan 2026",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "mon 16 feb 2026",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "tue 23 nov 2027",
+      "month": "nov",
+      "weekday": "tue",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "thu 28 sep 2028",
+      "month": "sep",
+      "weekday": "thu",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "thu 8 apr 2027",
+      "month": "apr",
+      "weekday": "thu",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "sat 7 mar 2026",
+      "month": "mar",
+      "weekday": "sat",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "sat 30 may 2026",
+      "month": "may",
+      "weekday": "sat",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "thu 25 jan 2029",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "mon 12 feb 2029",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "tue 27 jun 2028",
+      "month": "jun",
+      "weekday": "tue",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "wed 6 feb 2030",
+      "month": "feb",
+      "weekday": "wed",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "America/New_York",
+      "locale": "en-US",
+      "text": "tue 24 sep 2030",
+      "month": "sep",
+      "weekday": "tue",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "jue 1 ene 2026",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "lun 16 feb 2026",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "mar 23 nov 2027",
+      "month": "nov",
+      "weekday": "mar",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "jue 28 set 2028",
+      "month": "set",
+      "weekday": "jue",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "jue 8 abr 2027",
+      "month": "abr",
+      "weekday": "jue",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "sáb 7 mar 2026",
+      "month": "mar",
+      "weekday": "sáb",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "sáb 30 may 2026",
+      "month": "may",
+      "weekday": "sáb",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "jue 25 ene 2029",
+      "month": "ene",
+      "weekday": "jue",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "lun 12 feb 2029",
+      "month": "feb",
+      "weekday": "lun",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "mar 27 jun 2028",
+      "month": "jun",
+      "weekday": "mar",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "mié 6 feb 2030",
+      "month": "feb",
+      "weekday": "mié",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "Europe/Madrid",
+      "locale": "es-PE",
+      "text": "mar 24 set 2030",
+      "month": "set",
+      "weekday": "mar",
+      "day": 24
+    },
+    {
+      "value": 1767253983000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "thu 1 jan 2026",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 1
+    },
+    {
+      "value": 1771225803000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "mon 16 feb 2026",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 16
+    },
+    {
+      "value": 1826974085000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "tue 23 nov 2027",
+      "month": "nov",
+      "weekday": "tue",
+      "day": 23
+    },
+    {
+      "value": 1853784514000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "thu 28 sep 2028",
+      "month": "sep",
+      "weekday": "thu",
+      "day": 28
+    },
+    {
+      "value": 1807220573000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "thu 8 apr 2027",
+      "month": "apr",
+      "weekday": "thu",
+      "day": 8
+    },
+    {
+      "value": 1772911743000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "sat 7 mar 2026",
+      "month": "mar",
+      "weekday": "sat",
+      "day": 7
+    },
+    {
+      "value": 1780159486000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "sat 30 may 2026",
+      "month": "may",
+      "weekday": "sat",
+      "day": 30
+    },
+    {
+      "value": 1864023536000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "thu 25 jan 2029",
+      "month": "jan",
+      "weekday": "thu",
+      "day": 25
+    },
+    {
+      "value": 1865589117000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "mon 12 feb 2029",
+      "month": "feb",
+      "weekday": "mon",
+      "day": 12
+    },
+    {
+      "value": 1845740244000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "tue 27 jun 2028",
+      "month": "jun",
+      "weekday": "tue",
+      "day": 27
+    },
+    {
+      "value": 1896609574000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "wed 6 feb 2030",
+      "month": "feb",
+      "weekday": "wed",
+      "day": 6
+    },
+    {
+      "value": 1916481791000,
+      "zone": "Europe/Madrid",
+      "locale": "en-US",
+      "text": "tue 24 sep 2030",
+      "month": "sep",
+      "weekday": "tue",
+      "day": 24
+    }
+  ],
+  "scale": {
+    "domain": [
+      1767225600000,
+      1769817600000
+    ],
+    "flatDomain": [
+      1767225600000,
+      1767312000000
+    ],
+    "map": [
+      [
+        1767225600000,
+        10
+      ],
+      [
+        1768521600000,
+        210
+      ],
+      [
+        1770681600000,
+        543.3333333333333
+      ]
+    ],
+    "invert": [
+      [
+        10,
+        1767225600000
+      ],
+      [
+        210,
+        1768521600000
+      ],
+      [
+        410,
+        1769817600000
+      ],
+      [
+        500,
+        1770400800000
+      ]
+    ]
+  }
+}
