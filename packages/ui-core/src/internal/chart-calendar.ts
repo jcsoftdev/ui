@@ -57,6 +57,8 @@ export const localCalendar: Calendar = {
   setYear: (d, value) => void d.setFullYear(value),
 };
 
+const DAY = 86_400_000;
+
 export function zonedCalendar(timeZone: string): Calendar {
   const parts = dateFormat(
     {
@@ -87,10 +89,16 @@ export function zonedCalendar(timeZone: string): Calendar {
   return {
     wall: (ms) => new Date(shifted(Math.floor(ms / 1000) * 1000) + (((ms % 1000) + 1000) % 1000)),
     instant: (d) => {
+      // The offsets two days either side of the wall time bracket any daylight saving change near it. A wall time
+      // that falls in a spring-forward gap resolves forward with the earlier offset, and one that repeats in a
+      // fall-back overlap takes its first occurrence, the same as java.time.
       const wall = +d;
-      let ms = wall - (shifted(wall) - wall);
-      ms = wall - (shifted(ms) - ms);
-      return ms;
+      const before = shifted(wall - 2 * DAY) - (wall - 2 * DAY);
+      const after = shifted(wall + 2 * DAY) - (wall + 2 * DAY);
+      const first = wall - before;
+      if (before === after || shifted(first) - first === before) return first;
+      const second = wall - after;
+      return shifted(second) - second === after ? second : first;
     },
     year: (d) => d.getUTCFullYear(),
     month: (d) => d.getUTCMonth(),
