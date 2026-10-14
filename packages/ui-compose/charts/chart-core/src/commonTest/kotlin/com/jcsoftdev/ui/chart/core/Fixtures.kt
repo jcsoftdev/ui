@@ -75,23 +75,33 @@ internal fun assertCloseArray(
     for (i in expected.indices) assertClose(expected[i], actual[i], tolerance, "$message[$i]")
 }
 
-/** A locale whose symbols, names and affixes come from a fixture, so shared-code output is compared without platform ICU noise. */
+/** A locale answering from what Intl reported for it, so the shared formatting code is compared with the same inputs on every platform. */
 internal class FixtureLocale(
     override val tag: String,
     override val decimalSeparator: String,
     override val groupSeparator: String,
     override val minusSign: String,
-    private val percent: String,
-    private val currencies: Map<String, String>,
+    override val zeroDigit: Char,
+    override val groupingSize: Int,
+    override val secondaryGroupingSize: Int,
+    private val styles: JsonObject,
     private val months: List<String>,
     private val weekdays: List<String>,
-) : ChartLocale {
+) : ChartLocale() {
     private val offsets = ChartLocales.forTag("en-US")
 
     override fun styleSample(
         style: NumberStyle,
         currency: String?,
-    ): String = if (style == NumberStyle.Percent) percent else currencies.getValue(currency!!)
+        negative: Boolean,
+    ): String {
+        val sign = if (negative) "neg" else "pos"
+        return when (style) {
+            NumberStyle.Decimal -> styles.getObj("decimal").getStr(sign)
+            NumberStyle.Percent -> styles.getObj("percent").getStr(sign)
+            NumberStyle.Currency -> styles.getObj("currency").getObj(currency!!).getStr(sign)
+        }
+    }
 
     override fun monthShort(month: Int): String = months[month]
 
@@ -105,14 +115,18 @@ internal class FixtureLocale(
 
 internal fun fixtureLocale(tag: String): FixtureLocale {
     val symbols = fixture("format").getObj("symbols").getObj(tag)
-    val names = fixture("time").getObj("names").getObj(tag)
+    val allNames = fixture("time").getObj("names")
+    // Number-only locales (en-IN, nl, ...) have no month names; they are never used for dates.
+    val names = (allNames[tag] ?: allNames.getValue("en-US")).obj()
     return FixtureLocale(
         tag,
         symbols.getStr("decimal"),
         symbols.getStr("group"),
         symbols.getStr("minus"),
-        symbols.getStr("percent"),
-        symbols.getObj("currency").mapValues { it.value.str() },
+        symbols.getStr("zero").first(),
+        symbols.getValue("primaryGroup").int(),
+        symbols.getValue("secondaryGroup").int(),
+        symbols.getObj("styles"),
         names.getList("months").map { it.str() },
         names.getList("weekdays").map { it.str() },
     )

@@ -34,32 +34,35 @@ private const val MAX_TIME_TICKS = 500
 
 private fun shortName(name: String): String = name.replace(".", "").lowercase()
 
-/** Short month without the period some locales append ("oct", not "oct."). */
+/** Short month without the period some locales append ("oct", not "oct."); empty for a non-finite instant. */
 public fun shortMonth(
     epochMillis: Double,
     locale: ChartLocale,
     timeZone: String? = null,
 ): String {
+    if (!epochMillis.isFinite()) return ""
     val cal = WallCalendar(locale, timeZone)
     return shortName(locale.monthShort(cal.month(cal.wall(epochMillis))))
 }
 
-/** Short weekday without the trailing period ("lun"). */
+/** Short weekday without the trailing period ("lun"); empty for a non-finite instant. */
 public fun shortWeekday(
     epochMillis: Double,
     locale: ChartLocale,
     timeZone: String? = null,
 ): String {
+    if (!epochMillis.isFinite()) return ""
     val cal = WallCalendar(locale, timeZone)
     return shortName(locale.weekdayShort(cal.day(cal.wall(epochMillis))))
 }
 
-/** Day of the month of [epochMillis] in [timeZone]. */
+/** Day of the month of [epochMillis] in [timeZone], or -1 for a non-finite instant. */
 public fun dayOfMonth(
     epochMillis: Double,
     locale: ChartLocale,
     timeZone: String? = null,
 ): Int {
+    if (!epochMillis.isFinite()) return -1
     val cal = WallCalendar(locale, timeZone)
     return cal.date(cal.wall(epochMillis))
 }

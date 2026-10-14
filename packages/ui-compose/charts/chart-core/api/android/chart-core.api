@@ -48,19 +48,25 @@ public final class com/jcsoftdev/ui/chart/core/CategoryAxisMode : java/lang/Enum
 	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/CategoryAxisMode;
 }
 
-public abstract interface class com/jcsoftdev/ui/chart/core/ChartLocale {
+public abstract class com/jcsoftdev/ui/chart/core/ChartLocale {
+	public fun <init> ()V
 	public abstract fun getDecimalSeparator ()Ljava/lang/String;
 	public abstract fun getGroupSeparator ()Ljava/lang/String;
+	public fun getGroupingSize ()I
 	public abstract fun getMinusSign ()Ljava/lang/String;
+	public fun getSecondaryGroupingSize ()I
 	public abstract fun getTag ()Ljava/lang/String;
+	public fun getZeroDigit ()C
 	public abstract fun monthShort (I)Ljava/lang/String;
-	public abstract fun styleSample (Lcom/jcsoftdev/ui/chart/core/NumberStyle;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun styleSample (Lcom/jcsoftdev/ui/chart/core/NumberStyle;Ljava/lang/String;Z)Ljava/lang/String;
+	public static synthetic fun styleSample$default (Lcom/jcsoftdev/ui/chart/core/ChartLocale;Lcom/jcsoftdev/ui/chart/core/NumberStyle;Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
 	public abstract fun weekdayShort (I)Ljava/lang/String;
 	public abstract fun zoneOffsetMillis (Ljava/lang/String;D)D
 }
 
 public final class com/jcsoftdev/ui/chart/core/ChartLocales {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/core/ChartLocales;
+	public final fun current ()Lcom/jcsoftdev/ui/chart/core/ChartLocale;
 	public final fun forTag (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/ChartLocale;
 	public final fun getSystem ()Lcom/jcsoftdev/ui/chart/core/ChartLocale;
 }
@@ -113,6 +119,7 @@ public final class com/jcsoftdev/ui/chart/core/NumberRange {
 
 public final class com/jcsoftdev/ui/chart/core/NumberStyle : java/lang/Enum {
 	public static final field Currency Lcom/jcsoftdev/ui/chart/core/NumberStyle;
+	public static final field Decimal Lcom/jcsoftdev/ui/chart/core/NumberStyle;
 	public static final field Percent Lcom/jcsoftdev/ui/chart/core/NumberStyle;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/NumberStyle;

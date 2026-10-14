@@ -20,6 +20,7 @@ final enum class com.jcsoftdev.ui.chart.core/CategoryAxisMode : kotlin/Enum<com.
 
 final enum class com.jcsoftdev.ui.chart.core/NumberStyle : kotlin/Enum<com.jcsoftdev.ui.chart.core/NumberStyle> { // com.jcsoftdev.ui.chart.core/NumberStyle|null[0]
     enum entry Currency // com.jcsoftdev.ui.chart.core/NumberStyle.Currency|null[0]
+    enum entry Decimal // com.jcsoftdev.ui.chart.core/NumberStyle.Decimal|null[0]
     enum entry Percent // com.jcsoftdev.ui.chart.core/NumberStyle.Percent|null[0]
 
     final val entries // com.jcsoftdev.ui.chart.core/NumberStyle.entries|#static{}entries[0]
@@ -101,22 +102,6 @@ abstract interface com.jcsoftdev.ui.chart.core/BandScale { // com.jcsoftdev.ui.c
     abstract fun start(kotlin/Int): kotlin/Double // com.jcsoftdev.ui.chart.core/BandScale.start|start(kotlin.Int){}[0]
 }
 
-abstract interface com.jcsoftdev.ui.chart.core/ChartLocale { // com.jcsoftdev.ui.chart.core/ChartLocale|null[0]
-    abstract val decimalSeparator // com.jcsoftdev.ui.chart.core/ChartLocale.decimalSeparator|{}decimalSeparator[0]
-        abstract fun <get-decimalSeparator>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.decimalSeparator.<get-decimalSeparator>|<get-decimalSeparator>(){}[0]
-    abstract val groupSeparator // com.jcsoftdev.ui.chart.core/ChartLocale.groupSeparator|{}groupSeparator[0]
-        abstract fun <get-groupSeparator>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.groupSeparator.<get-groupSeparator>|<get-groupSeparator>(){}[0]
-    abstract val minusSign // com.jcsoftdev.ui.chart.core/ChartLocale.minusSign|{}minusSign[0]
-        abstract fun <get-minusSign>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.minusSign.<get-minusSign>|<get-minusSign>(){}[0]
-    abstract val tag // com.jcsoftdev.ui.chart.core/ChartLocale.tag|{}tag[0]
-        abstract fun <get-tag>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.tag.<get-tag>|<get-tag>(){}[0]
-
-    abstract fun monthShort(kotlin/Int): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.monthShort|monthShort(kotlin.Int){}[0]
-    abstract fun styleSample(com.jcsoftdev.ui.chart.core/NumberStyle, kotlin/String?): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.styleSample|styleSample(com.jcsoftdev.ui.chart.core.NumberStyle;kotlin.String?){}[0]
-    abstract fun weekdayShort(kotlin/Int): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.weekdayShort|weekdayShort(kotlin.Int){}[0]
-    abstract fun zoneOffsetMillis(kotlin/String?, kotlin/Double): kotlin/Double // com.jcsoftdev.ui.chart.core/ChartLocale.zoneOffsetMillis|zoneOffsetMillis(kotlin.String?;kotlin.Double){}[0]
-}
-
 abstract interface com.jcsoftdev.ui.chart.core/ContinuousScale { // com.jcsoftdev.ui.chart.core/ContinuousScale|null[0]
     abstract val domain // com.jcsoftdev.ui.chart.core/ContinuousScale.domain|{}domain[0]
         abstract fun <get-domain>(): com.jcsoftdev.ui.chart.core/NumberRange // com.jcsoftdev.ui.chart.core/ContinuousScale.domain.<get-domain>|<get-domain>(){}[0]
@@ -134,6 +119,30 @@ abstract interface com.jcsoftdev.ui.chart.core/ContinuousScale { // com.jcsoftde
 
 abstract interface com.jcsoftdev.ui.chart.core/TimeScale : com.jcsoftdev.ui.chart.core/ContinuousScale { // com.jcsoftdev.ui.chart.core/TimeScale|null[0]
     abstract fun timeTicks(kotlin/Int = ...): kotlin.collections/List<com.jcsoftdev.ui.chart.core/TimeTick> // com.jcsoftdev.ui.chart.core/TimeScale.timeTicks|timeTicks(kotlin.Int){}[0]
+}
+
+abstract class com.jcsoftdev.ui.chart.core/ChartLocale { // com.jcsoftdev.ui.chart.core/ChartLocale|null[0]
+    constructor <init>() // com.jcsoftdev.ui.chart.core/ChartLocale.<init>|<init>(){}[0]
+
+    abstract val decimalSeparator // com.jcsoftdev.ui.chart.core/ChartLocale.decimalSeparator|{}decimalSeparator[0]
+        abstract fun <get-decimalSeparator>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.decimalSeparator.<get-decimalSeparator>|<get-decimalSeparator>(){}[0]
+    abstract val groupSeparator // com.jcsoftdev.ui.chart.core/ChartLocale.groupSeparator|{}groupSeparator[0]
+        abstract fun <get-groupSeparator>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.groupSeparator.<get-groupSeparator>|<get-groupSeparator>(){}[0]
+    abstract val minusSign // com.jcsoftdev.ui.chart.core/ChartLocale.minusSign|{}minusSign[0]
+        abstract fun <get-minusSign>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.minusSign.<get-minusSign>|<get-minusSign>(){}[0]
+    abstract val tag // com.jcsoftdev.ui.chart.core/ChartLocale.tag|{}tag[0]
+        abstract fun <get-tag>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.tag.<get-tag>|<get-tag>(){}[0]
+    open val groupingSize // com.jcsoftdev.ui.chart.core/ChartLocale.groupingSize|{}groupingSize[0]
+        open fun <get-groupingSize>(): kotlin/Int // com.jcsoftdev.ui.chart.core/ChartLocale.groupingSize.<get-groupingSize>|<get-groupingSize>(){}[0]
+    open val secondaryGroupingSize // com.jcsoftdev.ui.chart.core/ChartLocale.secondaryGroupingSize|{}secondaryGroupingSize[0]
+        open fun <get-secondaryGroupingSize>(): kotlin/Int // com.jcsoftdev.ui.chart.core/ChartLocale.secondaryGroupingSize.<get-secondaryGroupingSize>|<get-secondaryGroupingSize>(){}[0]
+    open val zeroDigit // com.jcsoftdev.ui.chart.core/ChartLocale.zeroDigit|{}zeroDigit[0]
+        open fun <get-zeroDigit>(): kotlin/Char // com.jcsoftdev.ui.chart.core/ChartLocale.zeroDigit.<get-zeroDigit>|<get-zeroDigit>(){}[0]
+
+    abstract fun monthShort(kotlin/Int): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.monthShort|monthShort(kotlin.Int){}[0]
+    abstract fun styleSample(com.jcsoftdev.ui.chart.core/NumberStyle, kotlin/String?, kotlin/Boolean = ...): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.styleSample|styleSample(com.jcsoftdev.ui.chart.core.NumberStyle;kotlin.String?;kotlin.Boolean){}[0]
+    abstract fun weekdayShort(kotlin/Int): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.weekdayShort|weekdayShort(kotlin.Int){}[0]
+    abstract fun zoneOffsetMillis(kotlin/String?, kotlin/Double): kotlin/Double // com.jcsoftdev.ui.chart.core/ChartLocale.zoneOffsetMillis|zoneOffsetMillis(kotlin.String?;kotlin.Double){}[0]
 }
 
 final class com.jcsoftdev.ui.chart.core/AxisTick { // com.jcsoftdev.ui.chart.core/AxisTick|null[0]
@@ -218,6 +227,7 @@ final object com.jcsoftdev.ui.chart.core/ChartLocales { // com.jcsoftdev.ui.char
     final val system // com.jcsoftdev.ui.chart.core/ChartLocales.system|{}system[0]
         final fun <get-system>(): com.jcsoftdev.ui.chart.core/ChartLocale // com.jcsoftdev.ui.chart.core/ChartLocales.system.<get-system>|<get-system>(){}[0]
 
+    final fun current(): com.jcsoftdev.ui.chart.core/ChartLocale // com.jcsoftdev.ui.chart.core/ChartLocales.current|current(){}[0]
     final fun forTag(kotlin/String): com.jcsoftdev.ui.chart.core/ChartLocale // com.jcsoftdev.ui.chart.core/ChartLocales.forTag|forTag(kotlin.String){}[0]
 }
 
