@@ -1,8 +1,8 @@
 import { estimateTextWidth } from "@jcsoftdev/ui-core/chart/axis";
 import { attachIndexBrush, type IndexBrush } from "@jcsoftdev/ui-core/chart/brush";
+import { calendarFor } from "@jcsoftdev/ui-core/chart/calendar";
 import { lttbIndices } from "@jcsoftdev/ui-core/chart/downsample";
-import { formatPercent, resolveAxisFormat } from "@jcsoftdev/ui-core/chart/format";
-import { DIRECTION_COLORS, TONE_COLORS } from "@jcsoftdev/ui-core/chart/palette";
+import { DIRECTION_COLORS } from "@jcsoftdev/ui-core/chart/palette";
 import { attachPanZoom, type PanZoom, type PanZoomView } from "@jcsoftdev/ui-core/chart/pan-zoom";
 import { linearScale } from "@jcsoftdev/ui-core/chart/scale";
 import {
@@ -26,19 +26,15 @@ import {
   svg,
   type TooltipRow,
 } from "../internal/chart-base.js";
+import { upgradeProperties } from "../internal/e10.js";
 import {
   appendBars,
-  bollingerMiddle,
-  heikinAshi,
   type IndicatorSeries,
   indexAtTime,
   isCandleLike,
   type OscillatorModel,
   type OverlayLine,
-  oscillatorModel,
-  overlayLines,
   rebaseFrom,
-  renko,
   type StockAnchor,
   type StockBar,
   type StockComparison,
@@ -52,6 +48,7 @@ import {
 } from "../internal/e23-stock.js";
 import type { BarPaint, Column } from "../internal/e23-stock-canvas.js";
 import type { DrawingGeometry } from "../internal/e23-stock-drawings.js";
+import { isMidnight, toWallDate } from "../internal/e23-wall.js";
 import css from "./stock.css.js";
 
 export type {
@@ -64,15 +61,6 @@ export type {
   StockSeriesType,
   StockTool,
 } from "../internal/e23-stock.js";
-export {
-  appendBars,
-  fibLevels,
-  heikinAshi,
-  measureRange,
-  renko,
-  stockStats,
-} from "../internal/e23-stock.js";
-
 /** A bar as authors give it: the date may be a `Date`, a timestamp or an ISO string. */
 export interface StockInputBar extends Omit<StockBar, "date"> {
   date: Date | number | string;
@@ -91,6 +79,15 @@ export interface StockTexts {
   navigator: string;
   /** Read after the chart name: how to move, zoom and draw with the keyboard. */
   keyboardHint: string;
+  /** Toolbar (optional; the defaults are English): group names and button labels. */
+  ranges?: string;
+  seriesTypes?: string;
+  seriesTypeNames?: Partial<Record<StockSeriesType, string>>;
+  tools?: string;
+  toolNames?: Partial<Record<StockTool, string>>;
+  deleteDrawing?: string;
+  /** Names of the range presets by id (`1w`, `1m`, ... `all`). */
+  rangeNames?: Record<string, string>;
 }
 
 const DEFAULT_TEXTS: StockTexts = {
@@ -116,6 +113,21 @@ const MIN_BARS = 8;
 const SVG_BARS_MAX = 700;
 const DAY = 86_400_000;
 const ZOOM_STEP = 1.25;
+const percentFormats = new Map<string, Intl.NumberFormat>();
+/** A fraction as a percent in `locale` (the full number formatter would be a chunk of its own). */
+function formatPercent(
+  value: number,
+  { locale, decimals }: { locale: string; decimals: number },
+): string {
+  const key = `${locale}|${decimals}`;
+  let format = percentFormats.get(key);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: decimals });
+    percentFormats.set(key, format);
+  }
+  return format.format(value);
+}
+
 const IDENTITY: PanZoomView = { k: 1, x: 0, y: 0 };
 const TYPES = new Set<StockSeriesType>([
   "candle",
@@ -128,6 +140,7 @@ const TYPES = new Set<StockSeriesType>([
 ]);
 const TOOLS = new Set<StockTool>(["cursor", "trend", "horizontal", "range", "fib", "measure"]);
 
+type ExtrasModule = typeof import("./stock-extras.js");
 type CanvasModule = typeof import("../internal/e23-stock-canvas.js");
 type DrawingsModule = typeof import("../internal/e23-stock-drawings.js");
 
@@ -144,11 +157,8 @@ function rangeDays(range: string): number | null {
   return n * ({ d: 1, w: 7, m: 30.4, y: 365 }[match[2] as "d"] as number);
 }
 
-const toDate = (value: Date | number | string): Date =>
-  value instanceof Date ? value : new Date(value);
-
-function normalize(data: readonly StockInputBar[]): StockBar[] {
-  return data.map((bar) => ({ ...bar, date: toDate(bar.date) }));
+function normalize(data: readonly StockInputBar[], timeZone: string | undefined): StockBar[] {
+  return data.map((bar) => ({ ...bar, date: toWallDate(bar.date, timeZone) }));
 }
 
 interface Model {
@@ -173,6 +183,8 @@ interface Layout {
   invert: (pixel: number) => number;
   percent: boolean;
   closeAt: (index: number) => number;
+  /** Formats a price (a fraction in percent mode) in the chart's locale and currency. */
+  price: (value: number) => string;
 }
 
 interface Parts {
@@ -217,7 +229,15 @@ interface Draft {
  * `all`), `tool`, `volume="off"`, `navigator="off"`, `last-price="off"`, `grid="off"`, `name`,
  * `max-bars`, `oscillator` (`rsi`, `macd`), plus the chart attributes. Properties: `data`,
  * `overlays`, `oscillator`, `comparisons`, `flags`, `drawings`, `texts`, `window`, and the
- * `pushBars(bars)` method for live data. Events: `stock-window`, `stock-drawings`, `stock-tool`.
+ * `pushBars(bars)` method for live data. Events: `stock-window`, `stock-drawings`, `stock-tool`,
+ * `stock-select`.
+ * Toolbar (a lazy part, on unless `toolbar="off"`): range presets (`ranges`), series types
+ * (`series-types`) and drawing tools (`tools`, none unless set; `all` offers every one).
+ * Indicators, the oscillator pane, Heikin-Ashi/Renko and flags are lazy chunks too. The maths is
+ * in `@jcsoftdev/ui-core/chart/indicators`.
+ * Tab order: the navigator slider lives inside the SVG and the base appends the bars' listbox
+ * after the SVG, so the slider is the first tab stop and the bars the second; `navigator="off"`
+ * leaves only the bars.
  */
 export class UiStock extends ChartElement {
   static override retain = true;
@@ -234,6 +254,10 @@ export class UiStock extends ChartElement {
     "name",
     "max-bars",
     "oscillator",
+    "toolbar",
+    "ranges",
+    "series-types",
+    "tools",
   ];
 
   #data: StockBar[] = [];
@@ -264,7 +288,13 @@ export class UiStock extends ChartElement {
   #selectedDrawing: string | null = null;
   #canvasMod: CanvasModule | undefined;
   #drawingsMod: DrawingsModule | undefined;
+  #extras: ExtrasModule | undefined;
+  #extrasLoading = false;
+  #toolbar: { element: HTMLElement; update(): void } | undefined;
+  #toolbarLoading = false;
   #emitted = "";
+  /** The series colours of the last draw: one source for the plot, the tooltip and the table. */
+  #color: DrawContext["color"] = (_index, override) => override ?? "var(--chart-cat-1)";
   #autoHeight = false;
   #fmtTick: Intl.DateTimeFormat | undefined;
   #fmtKey = "";
@@ -283,7 +313,7 @@ export class UiStock extends ChartElement {
     return this.#data;
   }
   set data(value: readonly StockInputBar[] | null | undefined) {
-    const next = normalize(value ?? []);
+    const next = normalize(value ?? [], this.timeZone);
     const old = this.#data;
     const same =
       old.length > 0 &&
@@ -371,18 +401,29 @@ export class UiStock extends ChartElement {
   pushBars(incoming: StockInputBar | readonly StockInputBar[]): void {
     const list = ("date" in incoming ? [incoming] : incoming) as readonly StockInputBar[];
     const max = Number(this.getAttribute("max-bars")) || Number.POSITIVE_INFINITY;
-    this.#data = appendBars(this.#data, normalize(list), max);
+    this.#data = appendBars(this.#data, normalize(list, this.timeZone), max);
     this.#changed();
   }
 
   override connectedCallback(): void {
     this.dataset.ui = "stock";
     adoptStyles(rootOf(this), css);
+    upgradeProperties(this, [
+      "data",
+      "overlays",
+      "oscillator",
+      "comparisons",
+      "flags",
+      "drawings",
+      "texts",
+      "window",
+    ]);
     if (!this.hasAttribute("height")) {
       this.#autoHeight = true;
       this.setAttribute("height", this.getAttribute("navigator") === "off" ? "420" : "476");
     }
     super.connectedCallback();
+    this.#syncToolbar();
   }
 
   override attributeChangedCallback(name: string): void {
@@ -398,6 +439,11 @@ export class UiStock extends ChartElement {
     if (name === "navigator" && this.#autoHeight)
       this.setAttribute("height", this.getAttribute("navigator") === "off" ? "420" : "476");
     super.attributeChangedCallback(name);
+    if (
+      this.isConnected &&
+      ["toolbar", "ranges", "series-types", "tools", "range", "series-type", "tool"].includes(name)
+    )
+      this.#syncToolbar();
   }
 
   protected override isEmpty(): boolean {
@@ -405,6 +451,53 @@ export class UiStock extends ChartElement {
   }
 
   /** The canvas painter and the drawing tools are chunks: fetched the first time a chart needs them. */
+  get #toolbarOn(): boolean {
+    return !["off", "false"].includes(this.getAttribute("toolbar") ?? "");
+  }
+
+  /** The toolbar (ranges, series types, tools) is on unless `toolbar="off"`; its code loads on demand. */
+  #syncToolbar(): void {
+    const toolbar = this.#toolbar;
+    if (!this.#toolbarOn) {
+      toolbar?.element.remove();
+      return;
+    }
+    if (toolbar) {
+      if (this.firstChild !== toolbar.element) this.prepend(toolbar.element);
+      toolbar.update();
+      return;
+    }
+    if (this.#toolbarLoading) return;
+    this.#toolbarLoading = true;
+    import("./stock-toolbar.js").then(({ mountStockToolbar }) => {
+      this.#toolbarLoading = false;
+      if (this.#toolbar || !this.#toolbarOn) return;
+      this.#toolbar = mountStockToolbar(this);
+      if (this.isConnected) this.prepend(this.#toolbar.element);
+    });
+  }
+
+  /** Indicators, the oscillator pane, Heikin-Ashi/Renko and flags load on demand. */
+  #loadExtras(): void {
+    if (this.#extras || this.#extrasLoading) return;
+    const type = this.seriesType;
+    const wanted =
+      this.#overlays.length > 0 ||
+      this.oscillator != null ||
+      this.#flags.length > 0 ||
+      type === "heikin-ashi" ||
+      type === "renko";
+    if (!wanted) return;
+    this.#extrasLoading = true;
+    import("./stock-extras.js").then((module) => {
+      this.#extras = module;
+      adoptStyles(rootOf(this), module.styles);
+      this.#rev++;
+      this.#reset = true;
+      this.requestDraw("data");
+    });
+  }
+
   #loadCanvas(): void {
     if (this.#canvasMod) return;
     import("../internal/e23-stock-canvas.js").then((module) => {
@@ -417,6 +510,7 @@ export class UiStock extends ChartElement {
     if (this.#drawingsMod) return;
     import("../internal/e23-stock-drawings.js").then((module) => {
       this.#drawingsMod = module;
+      adoptStyles(rootOf(this), module.styles);
       this.requestDraw("transient");
     });
   }
@@ -435,13 +529,15 @@ export class UiStock extends ChartElement {
   #series(): Model {
     const type = this.seriesType;
     const brick = Number(this.getAttribute("renko-brick-size")) || undefined;
-    const key = `${this.#rev}|${type}|${brick}`;
+    const key = `${this.#rev}|${type}|${brick}|${this.#extras ? 1 : 0}`;
     if (this.#model?.key === key) return this.#model;
+    const extras = this.#extras;
+    // Until the transforms load, the raw bars are drawn (the chunk is fetched on first need).
     const bars =
-      type === "heikin-ashi"
-        ? heikinAshi(this.#data)
-        : type === "renko"
-          ? renko(this.#data, brick)
+      extras && type === "heikin-ashi"
+        ? extras.heikinAshi(this.#data)
+        : extras && type === "renko"
+          ? extras.renko(this.#data, brick)
           : this.#data;
     this.#model = { key, bars, times: bars.map((bar) => +bar.date) };
     return this.#model;
@@ -453,8 +549,10 @@ export class UiStock extends ChartElement {
     let from = 0;
     const last = model.times[n - 1] ?? 0;
     if (range === "ytd") {
-      const year = new Date(last).getFullYear();
-      from = indexAtTime(model.times, +new Date(year, 0, 1));
+      const zone = this.timeZone;
+      const calendar = calendarFor(zone);
+      const year = String(calendar.year(calendar.wall(last))).padStart(4, "0");
+      from = indexAtTime(model.times, +toWallDate(`${year}-01-01`, zone));
     } else {
       const days = rangeDays(range);
       if (days != null) from = indexAtTime(model.times, last - days * DAY);
@@ -489,17 +587,17 @@ export class UiStock extends ChartElement {
       this.#lines = {
         key,
         overlays: this.#overlays,
-        value: overlayLines(model.bars, this.#overlays, vwapFrom),
+        value: this.#extras?.overlayLines(model.bars, this.#overlays, vwapFrom) ?? [],
       };
     return this.#lines.value;
   }
 
   #oscillatorOf(model: Model): OscillatorModel | null {
     const config = this.oscillator;
-    if (!config) return null;
+    if (!config || !this.#extras) return null;
     const key = `${model.key}|${JSON.stringify(config)}`;
     if (this.#oscModel?.key !== key)
-      this.#oscModel = { key, value: oscillatorModel(model.bars, config) };
+      this.#oscModel = { key, value: this.#extras.oscillatorModel(model.bars, config) };
     return this.#oscModel.value;
   }
 
@@ -613,10 +711,10 @@ export class UiStock extends ChartElement {
     if (hit) {
       event.preventDefault();
       this.#gesture = "drawing";
-      this.#selectedDrawing = hit;
+      this.#select(hit);
       this.requestDraw("transient");
     } else if (this.#selectedDrawing) {
-      this.#selectedDrawing = null;
+      this.#select(null);
       this.requestDraw("transient");
     }
   }
@@ -663,7 +761,7 @@ export class UiStock extends ChartElement {
 
   #commitDrawing(drawing: StockDrawing): void {
     this.#drawings = [...this.#drawings, drawing];
-    this.#selectedDrawing = drawing.id;
+    this.#select(drawing.id);
     emit(this, "stock-drawings", { drawings: this.#drawings });
     this.#toolDone();
     this.requestDraw("transient");
@@ -672,6 +770,32 @@ export class UiStock extends ChartElement {
   #toolDone(): void {
     this.setAttribute("tool", "cursor");
     emit(this, "stock-tool", { tool: "cursor" });
+  }
+
+  #select(id: string | null): void {
+    if (this.#selectedDrawing === id) return;
+    this.#selectedDrawing = id;
+    emit(this, "stock-select", { id });
+  }
+
+  /** Id of the selected drawing, or `null`. */
+  get selectedDrawing(): string | null {
+    return this.#selectedDrawing;
+  }
+
+  /** Removes the selected drawing (the Delete key does the same). */
+  removeSelectedDrawing(): void {
+    const id = this.#selectedDrawing;
+    if (id == null) return;
+    this.#drawings = this.#drawings.filter((drawing) => drawing.id !== id);
+    this.#select(null);
+    emit(this, "stock-drawings", { drawings: this.#drawings });
+    this.requestDraw("transient");
+  }
+
+  /** The texts in use: the defaults with the `texts` property on top. */
+  get resolvedTexts(): StockTexts {
+    return this.#t();
   }
 
   #cancelDraft(): void {
@@ -695,14 +819,11 @@ export class UiStock extends ChartElement {
       this.#setWindow(this.#start + (key === "PageUp" ? -1 : 1) * this.#span * 0.8, this.#span);
     } else if (key === "Delete" && this.#selectedDrawing) {
       event.preventDefault();
-      this.#drawings = this.#drawings.filter((drawing) => drawing.id !== this.#selectedDrawing);
-      this.#selectedDrawing = null;
-      emit(this, "stock-drawings", { drawings: this.#drawings });
-      this.requestDraw("transient");
+      this.removeSelectedDrawing();
     } else if (key === "Escape" && (this.#draft || this.#measure || this.#selectedDrawing)) {
       this.#cancelDraft();
       this.#measure = null;
-      this.#selectedDrawing = null;
+      this.#select(null);
       this.requestDraw("transient");
     }
   }
@@ -787,6 +908,8 @@ export class UiStock extends ChartElement {
   protected override draw(context: DrawContext): DrawResult {
     const { svg: root, width, height, locale, timeZone } = context;
     const texts = this.#t();
+    this.#color = context.color;
+    this.#loadExtras();
     const model = this.#series();
     const bars = model.bars;
     const n = bars.length;
@@ -867,10 +990,7 @@ export class UiStock extends ChartElement {
     });
     const priceFormat = percent
       ? (value: number) => formatPercent(value, { locale, decimals: 1 })
-      : resolveAxisFormat(this.valueFormat, {
-          locale,
-          currency: this.getAttribute("currency") ?? undefined,
-        });
+      : (value: number) => context.format(value);
     const ticks = yScale.ticks();
     const widest = Math.max(
       ...ticks.map((t) => estimateTextWidth(priceFormat(t))),
@@ -898,6 +1018,7 @@ export class UiStock extends ChartElement {
       invert: (pixel) => yScale.invert(pixel),
       percent,
       closeAt,
+      price: priceFormat,
     };
     this.#layout = layout;
 
@@ -906,7 +1027,7 @@ export class UiStock extends ChartElement {
     const first = bars[lo] as StockBar;
     const lastBar = bars[hi] as StockBar;
     const spanMs = +lastBar.date - +first.date;
-    const intraday = bars.some((bar) => bar.date.getHours() !== 0 || bar.date.getMinutes() !== 0);
+    const intraday = bars.some((bar) => !isMidnight(+bar.date, timeZone));
     const dateFormat = this.#dateFormatter(locale, timeZone, spanMs, intraday);
     const longDate = new Intl.DateTimeFormat(locale, {
       dateStyle: "medium",
@@ -953,9 +1074,12 @@ export class UiStock extends ChartElement {
     // ---- main series
     const canvasWanted = !percent && count > SVG_BARS_MAX && (candle || type === "column");
     const volH = Math.round((priceBottom - TOP) * 0.18);
-    const maxVolume = hasVolume
-      ? Math.max(...Array.from({ length: count }, (_, k) => (bars[lo + k] as StockBar).volume ?? 0))
-      : 0;
+    let maxVolume = 0;
+    if (hasVolume)
+      for (let k = 0; k < count; k += 1) {
+        const volume = (bars[lo + k] as StockBar).volume ?? 0;
+        if (volume > maxVolume) maxVolume = volume;
+      }
     const canvasMode = canvasWanted && !!this.#canvasMod;
     if (canvasWanted && !this.#canvasMod) this.#loadCanvas();
     const paintSvg = !canvasWanted;
@@ -1045,7 +1169,7 @@ export class UiStock extends ChartElement {
           svg("path", {
             class: "cmp",
             d: this.#linePath(series, innerW),
-            style: `stroke:${context.color(index + 1, c.color)}`,
+            style: `stroke:${this.#color(index + 1, c.color)}`,
           }),
         );
       });
@@ -1072,7 +1196,9 @@ export class UiStock extends ChartElement {
         const index = this.#overlays.findIndex(
           (_, k) => `${this.#overlays[k]?.type}-${k}` === line.id,
         );
-        const middle = series(bollingerMiddle(bars, this.#overlays[index] as StockOverlay));
+        const middle = series(
+          this.#extras?.bollingerMiddle(bars, this.#overlays[index] as StockOverlay) ?? [],
+        );
         overlay.push(
           svg("path", {
             class: "ov dashed",
@@ -1100,55 +1226,27 @@ export class UiStock extends ChartElement {
 
     // oscillator pane
     parts.osc.replaceChildren(
-      ...this.#paintOscillator(
-        oscModel,
-        lo,
-        hi,
-        xOf,
-        plotBottom - oscH,
-        plotBottom,
-        innerW,
-        step,
-        locale,
-        axis,
-      ),
+      ...(oscModel && this.#extras
+        ? this.#extras.paintOscillator(
+            oscModel,
+            lo,
+            hi,
+            xOf,
+            plotBottom - oscH,
+            plotBottom,
+            innerW,
+            step,
+            axis,
+            (points) => this.#linePath(points, innerW),
+          )
+        : []),
     );
 
     // flags
-    const flags: SVGElement[] = [];
-    for (const flag of this.#flags) {
-      let at = -1;
-      for (let i = lo; i <= hi; i += 1) {
-        if (sameDay((bars[i] as StockBar).date, flag.date)) {
-          at = i;
-          break;
-        }
-      }
-      if (at < 0) continue;
-      const px = xOf(at);
-      const py = Math.max(TOP + 14, y(candle ? (bars[at] as StockBar).high : closeAt(at)) - 18);
-      const tone = TONE_COLORS[flag.tone ?? "accent"];
-      flags.push(
-        svg(
-          "g",
-          { class: "flag", "aria-hidden": "true" },
-          svg("line", { x1: px, x2: px, y1: py + 8, y2: py + 16, style: `stroke:${tone.ink}` }),
-          svg("rect", {
-            x: px - 9,
-            y: py - 8,
-            width: 18,
-            height: 16,
-            rx: 4,
-            style: `fill:${tone.soft};stroke:${tone.ink}`,
-          }),
-          svg(
-            "text",
-            { x: px, y: py, dy: "0.34em", "text-anchor": "middle", style: `fill:${tone.ink}` },
-            flag.label,
-          ),
-        ),
-      );
-    }
+    const flags =
+      this.#extras && this.#flags.length
+        ? this.#extras.flagNodes(this.#flags, bars, lo, hi, xOf, y, candle, closeAt, TOP)
+        : [];
     parts.flags.replaceChildren(...flags);
 
     // last price tag
@@ -1414,90 +1512,6 @@ export class UiStock extends ChartElement {
     );
   }
 
-  #paintOscillator(
-    model: OscillatorModel | null,
-    lo: number,
-    hi: number,
-    xOf: (i: number) => number,
-    top: number,
-    bottom: number,
-    innerW: number,
-    step: number,
-    locale: string,
-    axis: SVGElement[],
-  ): SVGElement[] {
-    if (!model) return [];
-    const out: SVGElement[] = [];
-    const values = (series: IndicatorSeries | undefined) => {
-      const list: Array<number | null> = [];
-      if (series) for (let i = lo; i <= hi; i += 1) list.push(series[i] ?? null);
-      return list;
-    };
-    const main = values(model.main);
-    let min = 0;
-    let max = 100;
-    if (model.type === "macd") {
-      const all = [...main, ...values(model.signal), ...values(model.histogram)].filter(
-        (v): v is number => v != null,
-      );
-      min = Math.min(0, ...all);
-      max = Math.max(0, ...all);
-      if (min === max) max = min + 1;
-    }
-    const scale = linearScale({ domain: [min, max], range: [bottom - 2, top + 4], nice: false });
-    out.push(svg("line", { class: "gl", x1: 0, x2: innerW, y1: top - 7, y2: top - 7 }));
-    const path = (list: Array<number | null>) =>
-      this.#linePath(
-        list.map((v, k) => (v == null ? null : { x: xOf(lo + k), y: scale.map(v) })),
-        innerW,
-      );
-    if (model.type === "rsi") {
-      for (const level of [30, 70])
-        out.push(
-          svg("line", {
-            class: "guide",
-            x1: 0,
-            x2: innerW,
-            y1: scale.map(level),
-            y2: scale.map(level),
-          }),
-        );
-      out.push(svg("path", { class: "osc-line", d: path(main) }));
-      for (const level of [30, 70])
-        axis.push(
-          svg(
-            "text",
-            { class: "yt", x: innerW + 8, y: scale.map(level), dy: "0.32em" },
-            `${level}`,
-          ),
-        );
-    } else {
-      const hist = values(model.histogram);
-      const zero = scale.map(0);
-      const bw = Math.max(1, Math.min(step * 0.6, 12));
-      hist.forEach((v, k) => {
-        if (v == null) return;
-        const py = scale.map(v);
-        out.push(
-          svg("rect", {
-            class: "hist",
-            "data-dir": v >= 0 ? "up" : "down",
-            x: (xOf(lo + k) - bw / 2).toFixed(1),
-            width: bw.toFixed(1),
-            y: Math.min(py, zero).toFixed(1),
-            height: Math.max(1, Math.abs(py - zero)).toFixed(1),
-          }),
-        );
-      });
-      out.push(svg("line", { class: "guide", x1: 0, x2: innerW, y1: zero, y2: zero }));
-      out.push(svg("path", { class: "osc-line", d: path(main) }));
-      out.push(svg("path", { class: "osc-line signal", d: path(values(model.signal)) }));
-    }
-    out.push(svg("text", { class: "pane-name", x: 6, y: top + 6 }, model.name));
-    void locale;
-    return out;
-  }
-
   #paintNavigator(
     parts: Parts,
     bars: readonly StockBar[],
@@ -1638,9 +1652,7 @@ export class UiStock extends ChartElement {
     parts.hline.setAttribute("y2", `${py}`);
     parts.dot.setAttribute("cx", `${px}`);
     parts.dot.setAttribute("cy", `${py}`);
-    const label = layout.percent
-      ? formatPercent(layout.closeAt(index), { decimals: 1 })
-      : `${bar.close}`;
+    const label = layout.price(layout.percent ? layout.closeAt(index) : bar.close);
     const tag = (
       group: SVGGElement,
       x: number,
@@ -1707,7 +1719,7 @@ export class UiStock extends ChartElement {
             id: c.id,
             name: c.name,
             value: formatPercent(v, { locale, decimals: 2 }),
-            color: seriesOf(k + 1, c.color),
+            color: this.#color(k + 1, c.color),
           });
       });
     } else {
@@ -1788,11 +1800,11 @@ export class UiStock extends ChartElement {
       column("open", texts.open, "var(--ink-3)", (b) => b.open),
       column("high", texts.high, "var(--ink-3)", (b) => b.high),
       column("low", texts.low, "var(--ink-3)", (b) => b.low),
-      column("close", texts.close, "var(--chart-1)", (b) => b.close),
+      column("close", texts.close, this.#color(0), (b) => b.close),
       column("volume", texts.volume, "var(--ink-3)", (b) => b.volume),
       ...lines.map((line) => column(line.id, line.name, line.color, (_, i) => line.values[i])),
       ...comparisons.map((c, k) =>
-        column(c.id, c.name, seriesOf(k + 1, c.color), (_, i) => c.values[i]),
+        column(c.id, c.name, this.#color(k + 1, c.color), (_, i) => c.values[i]),
       ),
     ];
     return {
@@ -1811,17 +1823,13 @@ export class UiStock extends ChartElement {
         ...comparisons.map((c, k) => ({
           id: c.id,
           name: c.name,
-          color: seriesOf(k + 1, c.color),
+          color: this.#color(k + 1, c.color),
           shape: "line" as const,
         })),
       ],
     };
   }
 }
-
-import { seriesColor } from "@jcsoftdev/ui-core/chart/palette";
-
-const seriesOf = (index: number, override?: string) => override ?? seriesColor(index);
 
 /** Registers `<ui-stock>` (or `<prefix>-stock`) and returns the tag. */
 export function defineStock(options?: DefineOptions): string {
