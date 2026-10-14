@@ -1,0 +1,10 @@
+public final class com/jcsoftdev/ui/chart/stock/StockModule {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/stock/StockModule;
+	public final fun getId ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/chart/stock/StockModuleKt {
+	public static final fun StockPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

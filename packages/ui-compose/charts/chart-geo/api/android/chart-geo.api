@@ -1,0 +1,10 @@
+public final class com/jcsoftdev/ui/chart/geo/GeoModule {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/geo/GeoModule;
+	public final fun getId ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/chart/geo/GeoModuleKt {
+	public static final fun GeoPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

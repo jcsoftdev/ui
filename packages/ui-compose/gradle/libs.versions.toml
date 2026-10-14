@@ -13,9 +13,16 @@ uiautomator = "2.3.0"
 androidxTestExtJunit = "1.3.0"
 profileInstaller = "1.4.1"
 mavenPublish = "0.34.0"
+kotlinxCoroutines = "1.10.2"
+kotlinxSerialization = "1.8.1"
+kotlinxDatetime = "0.6.2"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+# Pre-added for the chart batches (geo topology, export, time axes); a batch that needs another entry adds exactly that one line.
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 roborazzi-compose-desktop = { module = "io.github.takahirom.roborazzi:roborazzi-compose-desktop", version.ref = "roborazzi" }
 
 androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmarkMacro" }

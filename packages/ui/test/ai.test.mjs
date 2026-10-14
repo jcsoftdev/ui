@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { assertScalesLinearly } from "./helpers/scaling.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -168,14 +169,18 @@ test("chat list grouping by date", () => {
 
 test("groupByDate stays linear on a large list", () => {
   const now = new Date(2026, 2, 15, 12);
-  const items = Array.from({ length: 60_000 }, (_, i) => ({
-    id: i,
-    updatedAt: new Date(2026, 2, 15, 1 + (i % 10)),
-  }));
-  const start = performance.now();
-  const groups = group.groupByDate(items, now);
-  assert.ok(performance.now() - start < 1500, "grouping 60k items must not be quadratic");
-  assert.equal(groups[0].items.length, 60_000);
+  const makeItems = (length) =>
+    Array.from({ length }, (_, i) => ({
+      id: i,
+      updatedAt: new Date(2026, 2, 15, 1 + (i % 10)),
+    }));
+  assertScalesLinearly("groupByDate", {
+    make: makeItems,
+    run: (items) => group.groupByDate(items, now),
+    small: 15_000,
+    sizeOf: (items) => items.length,
+  });
+  assert.equal(group.groupByDate(makeItems(60_000), now)[0].items.length, 60_000);
 });
 
 test("prompt input submit key", () => {
@@ -187,16 +192,14 @@ test("prompt input submit key", () => {
 
 test("markdown: pathological nesting and link scans stay bounded", () => {
   const cases = {
-    quotes: `${">".repeat(20000)}x`,
-    lists: Array.from({ length: 2000 }, (_, n) => `${"  ".repeat(n)}- item`).join("\n"),
-    links: "[](".repeat(10000),
-    brackets: "[".repeat(20000),
+    quotes: (n) => `${">".repeat(n * 4)}x`,
+    lists: (n) => Array.from({ length: n }, (_, k) => `${"  ".repeat(k)}- item`).join("\n"),
+    links: (n) => "[](".repeat(n * 2),
+    brackets: (n) => "[".repeat(n * 4),
   };
-  for (const [name, src] of Object.entries(cases)) {
-    const start = performance.now();
-    assert.doesNotThrow(() => md.parseMarkdown(src), name);
-    const elapsed = performance.now() - start;
-    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  for (const [name, make] of Object.entries(cases)) {
+    assert.doesNotThrow(() => md.parseMarkdown(make(500)), name);
+    assertScalesLinearly(name, { make, run: md.parseMarkdown, small: 500 });
   }
 });
 
@@ -215,18 +218,13 @@ test("markdown: nesting beyond the cap degrades to literal text", () => {
 });
 
 test("markdown: whitespace-heavy lines do not trigger quadratic regexes", () => {
-  const n = 80_000;
-  const sp = " ".repeat(n);
   const cases = {
-    trailingSpaces: `a${sp}b\nc`,
-    heading: `# a${sp}b`,
-    tableRule: `a|b\n${sp}-x`,
+    trailingSpaces: (n) => `a${" ".repeat(n)}b\nc`,
+    heading: (n) => `# a${" ".repeat(n)}b`,
+    tableRule: (n) => `a|b\n${" ".repeat(n)}-x`,
   };
-  for (const [name, src] of Object.entries(cases)) {
-    const start = performance.now();
-    md.parseMarkdown(src);
-    const elapsed = performance.now() - start;
-    assert.ok(elapsed < 200, `${name} took ${elapsed.toFixed(0)}ms`);
+  for (const [name, make] of Object.entries(cases)) {
+    assertScalesLinearly(name, { make, run: md.parseMarkdown, small: 20_000 });
   }
 });
 
@@ -241,24 +239,21 @@ test("markdown: heading closing run and table rules keep their meaning", () => {
 });
 
 test("markdown: wide tables are capped and list/heading scans stay linear", () => {
-  const table = `${"|".repeat(10000)}\n${"-|".repeat(10000)}\n${"x|\n".repeat(13000)}`;
-  let start = performance.now();
-  const [block] = md.parseMarkdown(table);
-  let elapsed = performance.now() - start;
+  const makeTable = (n) =>
+    `${"|".repeat(n)}\n${"-|".repeat(n)}\n${"x|\n".repeat(Math.round(n * 1.3))}`;
+  const [block] = md.parseMarkdown(makeTable(10000));
   assert.equal(block.t, "table");
   assert.ok(block.head.length <= 64 && block.align.length <= 64);
   assert.ok(block.rows.every((row) => row.length <= 64));
-  assert.ok(elapsed < 200, `table took ${elapsed.toFixed(0)}ms`);
+  assertScalesLinearly("table", { make: makeTable, run: md.parseMarkdown, small: 2500 });
 
-  for (const src of [
-    `- ${" ".repeat(100000)}x y`,
-    `# ${" ".repeat(100000)}x y`,
-    `-${"\t".repeat(50000)}x\u2028y`,
-  ]) {
-    start = performance.now();
-    md.parseMarkdown(src);
-    elapsed = performance.now() - start;
-    assert.ok(elapsed < 200, `${JSON.stringify(src.slice(0, 8))} took ${elapsed.toFixed(0)}ms`);
+  const scans = {
+    listSpaces: (n) => `- ${" ".repeat(n)}x y`,
+    headingSpaces: (n) => `# ${" ".repeat(n)}x y`,
+    listTabs: (n) => `-${"\t".repeat(n)}x\u2028y`,
+  };
+  for (const [name, make] of Object.entries(scans)) {
+    assertScalesLinearly(name, { make, run: md.parseMarkdown, small: 25_000 });
   }
 });
 

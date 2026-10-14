@@ -38,7 +38,12 @@ jobs:
         with:
           node-version: 22
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew spotlessCheck apiCheck :kit:allTests :kit:verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+      - run: ./gradlew spotlessCheck apiCheck :kit:allTests verifyRoborazziJvm :kit:assembleRelease :sample:assembleRelease
+      # The same chart gates as ui-compose.yml. The chart artifacts are not published yet (see the publish job), but a tag must not
+      # ship a kit next to a chart graph, size budget or ABI that fails.
+      - run: ./gradlew :chart-core:allTests :chart:allTests :chart-cartesian:allTests :chart-race:allTests :chart-distribution:allTests :chart-plots:allTests :chart-polar:allTests :chart-hierarchy:allTests :chart-units:allTests :chart-gantt:allTests :chart-stock:allTests :chart-crossfilter:allTests :chart-geo:allTests :chart-geo-world:allTests :chart-geo-peru:allTests :chart-export:allTests
+      - run: ./gradlew :size-probe:assembleRelease :chart-core:assembleRelease :chart:assembleRelease :chart-cartesian:assembleRelease :chart-race:assembleRelease :chart-distribution:assembleRelease :chart-plots:assembleRelease :chart-polar:assembleRelease :chart-hierarchy:assembleRelease :chart-units:assembleRelease :chart-gantt:assembleRelease :chart-stock:assembleRelease :chart-crossfilter:assembleRelease :chart-geo:assembleRelease :chart-geo-world:assembleRelease :chart-geo-peru:assembleRelease :chart-export:assembleRelease
+      - run: node scripts/check-chart-size.mjs --dex --aar
 
   # Kotlin/Native only builds the Apple klibs on macOS; publishing from Linux would release
   # ui-compose without its iosarm64/iossimulatorarm64 artifacts, and Central releases are immutable.
@@ -57,7 +62,13 @@ jobs:
         with:
           node-version: 22
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+      # The iOS half of the chart gates (klib sizes, compile). Needs macOS, so it runs where the kit is published from.
+      - run: ./gradlew compileKotlinIosArm64 compileKotlinIosSimulatorArm64
+      - run: node scripts/check-chart-size.mjs --klib
+      # Only the kit until KZ: the chart modules and the BOM are placeholders now, Central releases are immutable, and
+      # the unqualified task would publish all 17 of them. KZ replaces this line with the unqualified task, in the first
+      # chart release, together with the BOM.
+      - run: ./gradlew :kit:publishAndReleaseToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}

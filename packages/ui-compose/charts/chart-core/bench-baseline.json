@@ -1,0 +1,20 @@
+{
+  "//": "Lower-quartile time / calibration loop. Raise only in a commit that says why.",
+  "benchmarks": {
+    "lttb-100k-to-2000": {
+      "normalized": 0.05113
+    },
+    "minmax-100k-800-columns": {
+      "normalized": 0.05201
+    },
+    "line-path-100k-sampled": {
+      "normalized": 0.05818
+    },
+    "stack-20x20000": {
+      "normalized": 0.1543
+    },
+    "point-index-100k-build-and-1000-hits": {
+      "normalized": 0.2739
+    }
+  }
+}

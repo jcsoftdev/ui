@@ -1,0 +1,20 @@
+[data-ui-chart][data-polar] [data-band] {
+  opacity: 0.92;
+  transition: opacity 150ms;
+}
+[data-ui-chart][data-polar] [data-band][data-quiet] {
+  opacity: 0;
+}
+[data-ui-chart][data-polar] [data-band][data-quiet][data-active] {
+  opacity: 0.32;
+}
+[data-ui-chart][data-polar]
+  [data-bands]:has([data-active])
+  > [data-band]:not([data-quiet], [data-active]) {
+  opacity: 0.46;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-chart][data-polar] [data-band] {
+    transition: none;
+  }
+}

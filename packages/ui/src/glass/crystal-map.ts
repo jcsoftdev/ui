@@ -50,7 +50,10 @@ export interface CrystalMapOptions {
   height: number;
   /** Source offset at the silhouette, in px, from {@link crystalAmplitude}; sets the margin. */
   amplitude: number;
-  /** Device pixel ratio the map is rasterised at. Default 1, capped at 2. */
+  /**
+   * Map pixels per CSS pixel. Default 1, between 0.5 and 2: the field is smooth and most of it lies
+   * in the margin the layer clips away, so a large lens can go below one.
+   */
   dpr?: number;
   /** Margin past the surface, in px. Default {@link crystalMargin} of `amplitude`. */
   margin?: number;
@@ -86,7 +89,7 @@ export function computeCrystalField({
   room,
   reach = 1,
 }: CrystalMapOptions): DisplacementField {
-  const ratio = clamp(dpr, 1, 2);
+  const ratio = clamp(dpr, 0.5, 2);
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const m = margin ?? crystalMargin(amplitude);

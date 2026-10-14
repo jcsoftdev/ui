@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { assertScalesLinearly } from "./helpers/scaling.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const bundle = await build({
@@ -100,8 +101,10 @@ test("ranking sorts a list best first and keeps ties in input order", () => {
 });
 
 test("a long candidate with repeated letters scores in reasonable time", () => {
-  const text = "a".repeat(400);
-  const start = performance.now();
-  commandScore(text, "aaaaaaaaab");
-  assert.ok(performance.now() - start < 500);
+  assertScalesLinearly("commandScore", {
+    make: (n) => "a".repeat(n),
+    run: (text) => commandScore(text, "aaaaaaaaab"),
+    small: 100,
+    degree: 2, // memoised O(n^2 * m) by design; the guard is against exponential blow-up
+  });
 });
