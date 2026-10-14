@@ -1,0 +1,96 @@
+[data-ui-geo] > [data-ui-part="drawing"] {
+  overflow: clip;
+}
+[data-ui-geo] > [data-ui-part="drawing"] > svg {
+  cursor: default;
+}
+[data-ui-geo][data-zoomable] > [data-ui-part="drawing"] > svg {
+  cursor: grab;
+}
+[data-ui-geo][data-dragging] > [data-ui-part="drawing"] > svg {
+  cursor: grabbing;
+}
+[data-ui-geo] path[data-region] {
+  stroke: var(--surface);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: fill 150ms;
+}
+[data-ui-geo] path[data-hl] {
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+[data-ui-geo] [data-layer="labels"] {
+  pointer-events: none;
+}
+[data-ui-geo] [data-layer="labels"] text {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+[data-ui-geo] [role="img"][tabindex]:focus-visible {
+  outline: none;
+}
+[data-ui-geo] [data-region][tabindex]:focus-visible {
+  stroke: var(--focus-ring-color);
+  stroke-width: 2.5;
+}
+[data-ui-part="geo-controls"] {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-event);
+  background: var(--float);
+  box-shadow: var(--shadow-overlay);
+}
+[data-ui-part="geo-controls"][hidden] {
+  display: none;
+}
+[data-ui-part="geo-controls"] > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background-color 120ms,
+    color 120ms;
+}
+[data-ui-part="geo-controls"] > button:last-child {
+  border-bottom: 0;
+}
+[data-ui-part="geo-controls"] > button:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+[data-ui-part="geo-controls"] > button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+[data-ui-part="geo-controls"] > button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-width) * -1);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-geo] path[data-region],
+  [data-ui-part="geo-controls"] > button {
+    transition: none;
+  }
+}
