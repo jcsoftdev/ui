@@ -36,3 +36,21 @@ tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
     environment("CHART_FIXTURES_DIR", fixtures)
     environment("SIMCTL_CHILD_CHART_FIXTURES_DIR", fixtures)
 }
+
+// JVM micro-benchmarks of the 100k-point paths; compared with bench-baseline.json by scripts/check-chart-bench.mjs.
+val chartBench by tasks.registering(Test::class) {
+    group = "verification"
+    description = "Runs the chart-core micro-benchmarks and writes build/chart-bench.json."
+    val jvmTest = tasks.named<Test>("jvmTest")
+    testClassesDirs = jvmTest.get().testClassesDirs
+    classpath = jvmTest.get().classpath
+    filter { includeTestsMatching("*ChartCoreBenchmark") }
+    systemProperty(
+        "chart.bench.out",
+        layout.buildDirectory
+            .file("chart-bench.json")
+            .get()
+            .asFile.absolutePath,
+    )
+    outputs.upToDateWhen { false }
+}

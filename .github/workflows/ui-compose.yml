@@ -11,6 +11,7 @@ on:
       - "packages/ui/src/charts/**"
       - "packages/ui-core/src/chart/**"
       - "scripts/chart-fixtures.test.mjs"
+      - "scripts/chart-bench.test.mjs"
       - ".nvmrc"
       - ".github/workflows/ui-compose.yml"
   pull_request:
@@ -23,6 +24,7 @@ on:
       - "packages/ui/src/charts/**"
       - "packages/ui-core/src/chart/**"
       - "scripts/chart-fixtures.test.mjs"
+      - "scripts/chart-bench.test.mjs"
       - ".nvmrc"
       - ".github/workflows/ui-compose.yml"
 
@@ -83,6 +85,9 @@ jobs:
       # R8 dex delta per artifact (size-probe), AAR classes.jar and the budgets in charts/<module>/size-budget.json.
       - run: ./gradlew :size-probe:assembleRelease :chart-core:assembleRelease :chart:assembleRelease :chart-cartesian:assembleRelease :chart-race:assembleRelease :chart-distribution:assembleRelease :chart-plots:assembleRelease :chart-polar:assembleRelease :chart-hierarchy:assembleRelease :chart-units:assembleRelease :chart-gantt:assembleRelease :chart-stock:assembleRelease :chart-crossfilter:assembleRelease :chart-geo:assembleRelease :chart-geo-world:assembleRelease :chart-geo-peru:assembleRelease :chart-export:assembleRelease
       - run: node scripts/check-chart-size.mjs --dex --aar
+      # chart-core micro-benchmarks, normalised by a calibration loop; fails on a 50% regression (CI runners are noisy) against bench-baseline.json.
+      - run: ./gradlew :chart-core:chartBench
+      - run: node scripts/check-chart-bench.mjs
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -127,4 +132,4 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:chart-fixtures
-      - run: node --test scripts/chart-fixtures.test.mjs
+      - run: node --test scripts/chart-fixtures.test.mjs scripts/chart-bench.test.mjs
