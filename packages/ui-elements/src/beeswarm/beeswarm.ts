@@ -119,7 +119,14 @@ export class UiBeeswarm extends ChartElement {
   #parts: { axes: SVGGElement; dots: SVGGElement; rings: SVGGElement } | undefined;
   /** The last layout, reused while the size, the data and every attribute stay the same. */
   #last:
-    | { key: string; layout: CategoryLayout; points: Placed[]; series: unknown; categories: unknown; hidden: string }
+    | {
+        key: string;
+        layout: CategoryLayout;
+        points: Placed[];
+        series: unknown;
+        categories: unknown;
+        hidden: string;
+      }
     | undefined;
 
   constructor() {
@@ -414,14 +421,20 @@ export class UiBeeswarm extends ChartElement {
       },
       snapshot: () => {
         // A canvas-sized swarm lists its first rows only: a table of every dot would defeat the canvas.
-        const flat: Array<{ item: BeeswarmSeries; seriesIndex: number; point: BeeswarmPoint; index: number }> = [];
+        const flat: Array<{
+          item: BeeswarmSeries;
+          seriesIndex: number;
+          point: BeeswarmPoint;
+          index: number;
+        }> = [];
         const limit = this.#canvas ? TABLE_ROWS : Number.POSITIVE_INFINITY;
-        all.forEach((item, seriesIndex) =>
-          item.points.forEach((point, index) => {
-            if (flat.length < limit && Number.isFinite(point.value))
-              flat.push({ item, seriesIndex, point, index });
-          }),
-        );
+        for (let seriesIndex = 0; seriesIndex < all.length; seriesIndex += 1) {
+          const item = all[seriesIndex] as BeeswarmSeries;
+          for (let index = 0; index < item.points.length && flat.length < limit; index += 1) {
+            const point = item.points[index] as BeeswarmPoint;
+            if (Number.isFinite(point.value)) flat.push({ item, seriesIndex, point, index });
+          }
+        }
         const column = (
           id: string,
           name: string,
@@ -551,7 +564,9 @@ export class UiBeeswarm extends ChartElement {
       return seen ? `${item.id}~${seen}` : item.id;
     });
     if (taken.size < all.length || new Set(categories).size < categories.length)
-      this.#warnOnce("duplicate series ids or categories: dots stay separate, but ids should be unique");
+      this.#warnOnce(
+        "duplicate series ids or categories: dots stay separate, but ids should be unique",
+      );
     members.forEach((row, category) => {
       if (row.length === 0) return;
       const slot = layout.slot(category, 0);
