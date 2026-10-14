@@ -4,6 +4,7 @@ import {
   DEFAULT_SCALE_COLORS,
   inkOn,
   rangeColor,
+  rangeIndex,
   type ScaleColors,
   tint,
 } from "@jcsoftdev/ui-core/chart/color-scale";
@@ -38,7 +39,8 @@ const DEFAULT_TEXT: HeatmapLabels = { noData: "No data", category: "Row" };
 const TOP = 22;
 /** Continuous colors are quantised to this many steps so the canvas resolves each CSS color once. */
 const STEPS = 96;
-/** The data table of a canvas matrix would defeat the canvas: it lists this much of it. */
+/** Up to this many cells the data table lists them all; a denser matrix lists a corner of it. */
+const TABLE_CELLS = 5000;
 const TABLE_ROWS = 60;
 const TABLE_COLUMNS = 40;
 const EMPTY = "var(--surface-2)";
@@ -51,12 +53,27 @@ interface Cell {
   range: number;
 }
 
+/** Date columns are rare: their calendar labels are a chunk of their own, loaded on first use. */
+type DateLabels = typeof import("./heatmap-dates.js");
+let dateLabels: Promise<DateLabels> | undefined;
+let dateLabelsReady: DateLabels | undefined;
+const loadDateLabels = (): Promise<DateLabels> =>
+  (dateLabels ??= import("./heatmap-dates.js").then((loaded) => (dateLabelsReady = loaded)));
+
+/** A numeric attribute, or the default when it is missing or not a number. */
+const number = (text: string | null, fallback: number): number => {
+  const value = text === null || text.trim() === "" ? Number.NaN : Number(text);
+  return Number.isFinite(value) ? value : fallback;
+};
+
 const pair = (text: string | null): [number, number] | undefined => {
   const parts = text
     ?.split(/[\s,]+/)
     .filter(Boolean)
     .map(Number);
-  return parts?.length === 2 && parts.every(Number.isFinite) ? [parts[0]!, parts[1]!] : undefined;
+  return parts?.length === 2 && parts.every(Number.isFinite)
+    ? [parts[0] as number, parts[1] as number]
+    : undefined;
 };
 
 /**
@@ -133,7 +150,11 @@ export class UiHeatmap extends ChartElement {
   }
 
   protected override isEmpty(): boolean {
-    return !this.#values.some((row) => row.some((v) => typeof v === "number" && Number.isFinite(v)));
+    return (
+      this.#rows.length === 0 ||
+      this.#columns.length === 0 ||
+      !this.#values.some((row) => row.some((v) => typeof v === "number" && Number.isFinite(v)))
+    );
   }
 
   #layers(root: SVGSVGElement) {
@@ -145,17 +166,30 @@ export class UiHeatmap extends ChartElement {
   }
 
   protected draw(context: DrawContext): DrawResult {
-    const { svg: root, width, height, format, locale } = context;
+    const { svg: root, width, height, format, locale, timeZone } = context;
     const text: HeatmapLabels = { ...DEFAULT_TEXT, ...this.labels };
     const rowNames = this.#rows;
     const rows = rowNames.length;
     const columns = this.#columns.length;
-    const dates = new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" });
-    const columnNames = this.#columns.map((c) => (c instanceof Date ? dates.format(c) : c));
+    const zone = { locale, timeZone };
+    const dated = columns > 0 && this.#columns.every((c) => c instanceof Date);
+    if (dated && !dateLabelsReady) void loadDateLabels().then(() => this.requestDraw());
+    const plain = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone });
+    const columnNames = this.#columns.map((c) =>
+      c instanceof Date ? (dateLabelsReady?.formatDate(c, zone) ?? plain.format(c)) : c,
+    );
+    const headers: Array<string | null> =
+      dated && dateLabelsReady
+        ? dateLabelsReady.datetimeColumnLabels(
+            this.#columns as Date[],
+            Math.max(2, Math.floor(width / 72)),
+            zone,
+          )
+        : columnNames;
     const kind = this.getAttribute("scale") === "diverging" ? "diverging" : "sequential";
-    const center = Number(this.getAttribute("center")) || 0;
-    const gap = this.getAttribute("gap") === null ? 3 : Number(this.getAttribute("gap"));
-    const radius = this.getAttribute("radius") === null ? 4 : Number(this.getAttribute("radius"));
+    const center = number(this.getAttribute("center"), 0);
+    const gap = Math.max(0, number(this.getAttribute("gap"), 3));
+    const radius = Math.max(0, number(this.getAttribute("radius"), 4));
     const hex = this.getAttribute("shape") === "hex";
     const ranges = this.#ranges?.length ? this.#ranges : undefined;
     const parts = this.#layers(root);
@@ -180,20 +214,15 @@ export class UiHeatmap extends ChartElement {
         const v = this.#values[row]?.[column];
         if (v === undefined) continue;
         const value = typeof v === "number" && Number.isFinite(v) ? v : null;
-        let range = -1;
-        if (ranges && value !== null)
-          range = ranges.findIndex(
-            (r) => (r.from == null || value >= r.from) && (r.to == null || value < r.to),
-          );
+        const range = ranges && value !== null ? rangeIndex(value, ranges) : -1;
         at[row * columns + column] = cells.length;
         cells.push({ row, column, value, range });
       }
 
     // Geometry.
-    const gutter = Math.min(
-      width < 420 ? 52 : 120,
-      Math.max(0, ...rowNames.map((label) => estimateTextWidth(label, 11))) + 10,
-    );
+    let widest = 0;
+    for (const label of rowNames) widest = Math.max(widest, estimateTextWidth(label, 11));
+    const gutter = Math.min(width < 420 ? 52 : 120, widest + 10);
     const areaW = Math.max(0, width - gutter);
     const areaH = Math.max(0, height - TOP);
     const w = columns ? areaW / columns : 0;
@@ -231,7 +260,7 @@ export class UiHeatmap extends ChartElement {
       labels.append(el);
     });
     let lastEnd = Number.NEGATIVE_INFINITY;
-    columnNames.forEach((name, column) => {
+    headers.forEach((name, column) => {
       if (!name) return;
       const x = centerOf(0, column).x;
       const textWidth = estimateTextWidth(name, 11);
@@ -249,6 +278,8 @@ export class UiHeatmap extends ChartElement {
     });
 
     // Cells on the canvas layer. Continuous colors take one of STEPS stops, resolved once each.
+    // TODO(theme): the canvas keeps the colours resolved here; repaint on a theme change once the
+    // base chart exposes its theme hook.
     const resolved = new Map<string, string>();
     const resolve = (value: string) => {
       let out = resolved.get(value);
@@ -299,7 +330,6 @@ export class UiHeatmap extends ChartElement {
         }
         g.closePath();
         cw = hexRadius * 1.6;
-        ch = 16;
       } else {
         const x = gutter + cell.column * w + pad / 2;
         const y = TOP + cell.row * h + pad / 2;
@@ -314,7 +344,10 @@ export class UiHeatmap extends ChartElement {
       g.fill();
       if (showText && stop && cell.value !== null) {
         const label = format(cell.value);
-        if (cw >= estimateTextWidth(label, 11) + 6 && ch >= 16) {
+        const room = honey
+          ? cw >= estimateTextWidth(label, 11)
+          : cw >= estimateTextWidth(label, 11) + 6 && ch >= 16;
+        if (room) {
           g.fillStyle = inkOn(stop.strength).includes("surface") ? surface : ink;
           g.fillText(label, cx, cy);
         }
@@ -356,8 +389,7 @@ export class UiHeatmap extends ChartElement {
       return ring;
     };
 
-    const title = (cell: Cell) =>
-      `${rowNames[cell.row] ?? ""} · ${columnNames[cell.column] ?? ""}`;
+    const title = (cell: Cell) => `${rowNames[cell.row] ?? ""} · ${columnNames[cell.column] ?? ""}`;
     const valueText = (cell: Cell) => (cell.value === null ? text.noData : format(cell.value));
     const colorOf = (cell: Cell) => stopOf(cell)?.color ?? EMPTY;
 
@@ -440,8 +472,9 @@ export class UiHeatmap extends ChartElement {
       },
       maxHoverRows: 1,
       snapshot: () => {
-        const tableRows = Math.min(rows, TABLE_ROWS);
-        const tableColumns = Math.min(columns, TABLE_COLUMNS);
+        const dense = rows * columns > TABLE_CELLS;
+        const tableRows = dense ? Math.min(rows, TABLE_ROWS) : rows;
+        const tableColumns = dense ? Math.min(columns, TABLE_COLUMNS) : columns;
         const series = Array.from({ length: tableColumns }, (_, column) => {
           const values = Array.from({ length: tableRows }, (_, row) => {
             const v = this.#values[row]?.[column];
@@ -478,6 +511,11 @@ export class UiHeatmap extends ChartElement {
             min: lo,
             max: hi,
             colors: kind === "diverging" ? [low, mid, high] : [tint(high, 12, mid), high],
+            // The neutral colour sits at the centre value, not at the middle of the bar.
+            stops:
+              kind === "diverging"
+                ? [0, hi > lo ? Math.min(1, Math.max(0, (center - lo) / (hi - lo))) : 0.5, 1]
+                : undefined,
             format,
             label: this.getAttribute("label") ?? undefined,
           },

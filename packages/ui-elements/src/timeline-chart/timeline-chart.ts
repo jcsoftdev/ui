@@ -4,6 +4,7 @@ import {
   clockTicks,
   fitLaneHeight,
   formatClock,
+  hourEdge,
 } from "@jcsoftdev/ui-core/chart/lanes";
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
 import {
@@ -272,8 +273,8 @@ export class UiTimelineChart extends ChartElement {
       t1 = Math.max(t1, +item.end);
     }
     const domain = this.#domain;
-    const start = domain ? +domain[0] : Number.isFinite(t0) ? Math.floor(t0 / HOUR) * HOUR : 0;
-    const end = domain ? +domain[1] : Number.isFinite(t1) ? Math.ceil(t1 / HOUR) * HOUR : HOUR;
+    const start = domain ? +domain[0] : Number.isFinite(t0) ? hourEdge(t0, "floor", timeZone) : 0;
+    const end = domain ? +domain[1] : Number.isFinite(t1) ? hourEdge(t1, "ceil", timeZone) : HOUR;
 
     const narrow = width < 440;
     const left = Math.min(

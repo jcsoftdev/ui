@@ -1,7 +1,6 @@
 // Timeline layout: packing overlapping intervals into lanes, round clock ticks and the lane height
 // that fills a given room. Pure; labels follow the locale and time zone of the options.
-import { calendarFor, type DateLocaleOptions, dateFormat } from "../internal/chart-calendar.ts";
-import { shortMonth } from "./scale-time.ts";
+import { calendarFor, type DateLocaleOptions } from "../internal/chart-calendar.ts";
 
 export type { DateLocaleOptions };
 
@@ -48,12 +47,39 @@ export function assignLanes(items: ReadonlyArray<Interval>): LaneAssignment {
 }
 
 const MINUTE = 60_000;
-const DAY = 1440 * MINUTE;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
 const STEPS = [15, 30, 60, 120, 180, 360, 720, 1440].map((m) => m * MINUTE);
+
+const formats = new Map<string, Intl.DateTimeFormat>();
+/** A formatter in the locale of the options, or the browser's own when none is given. */
+function format(options: Intl.DateTimeFormatOptions, { locale, timeZone }: DateLocaleOptions) {
+  const key = `${locale ?? ""}|${timeZone ?? ""}|${JSON.stringify(options)}`;
+  let found = formats.get(key);
+  if (!found) {
+    found = new Intl.DateTimeFormat(locale, timeZone ? { ...options, timeZone } : options);
+    formats.set(key, found);
+  }
+  return found;
+}
 
 /** "09:30" in 24-hour time. */
 export function formatClock(value: number | Date, options: DateLocaleOptions = {}): string {
-  return dateFormat({ hour: "2-digit", minute: "2-digit", hour12: false }, options).format(value);
+  return format({ hour: "2-digit", minute: "2-digit", hour12: false }, options).format(value);
+}
+
+/** The whole hour at or before (`floor`) or after (`ceil`) `ms` on the clock of the zone, so a +05:30 zone rounds to its own hours. */
+export function hourEdge(ms: number, edge: "floor" | "ceil", timeZone?: string): number {
+  if (!timeZone) {
+    const d = new Date(ms);
+    d.setMinutes(0, 0, 0);
+    if (edge === "ceil" && +d < ms) d.setHours(d.getHours() + 1);
+    return +d;
+  }
+  const cal = calendarFor(timeZone);
+  const wall = +cal.wall(ms);
+  const floor = Math.floor(wall / HOUR) * HOUR;
+  return cal.instant(new Date(edge === "ceil" && floor < wall ? floor + HOUR : floor));
 }
 
 export interface ClockTick {
@@ -62,8 +88,8 @@ export interface ClockTick {
 }
 
 /**
- * Round clock ticks (every 15 min ... 1 day, aligned to midnight of the zone) for a span of
- * hours, at most about `count` of them.
+ * Round clock ticks (every 15 min ... 1 day, on the wall clock of the zone, so a daylight-saving
+ * change does not shift the ticks after it) for a span of hours, at most about `count` of them.
  */
 export function clockTicks(
   start: number,
@@ -75,20 +101,35 @@ export function clockTicks(
   const step =
     STEPS.find((candidate) => span / candidate <= count) ?? STEPS[STEPS.length - 1] ?? DAY;
   const cal = calendarFor(options.timeZone);
-  const origin = cal.wall(start);
-  cal.midnight(origin);
-  const midnight = cal.instant(origin);
-  const first = midnight + Math.ceil((start - midnight) / step) * step;
+  const minutes = step / MINUTE;
+  const day = cal.wall(start);
+  cal.midnight(day);
   const out: ClockTick[] = [];
-  for (let t = first; t <= end && out.length < 200; t += step) {
-    const date = new Date(t);
-    out.push({
-      value: t,
-      label:
-        step >= DAY
-          ? `${cal.date(cal.wall(t))} ${shortMonth(date, options)}`
-          : formatClock(date, options),
-    });
+  let previous = Number.NEGATIVE_INFINITY;
+  for (let days = 0; days < 400 && out.length < 200; days += 1) {
+    let finished = false;
+    for (let at = 0; at < 1440; at += minutes) {
+      const wall = new Date(+day);
+      if (options.timeZone) wall.setUTCMinutes(wall.getUTCMinutes() + at);
+      else wall.setMinutes(wall.getMinutes() + at);
+      const t = cal.instant(wall);
+      if (t > end) {
+        finished = true;
+        break;
+      }
+      if (t >= start && t > previous) {
+        previous = t;
+        out.push({
+          value: t,
+          label:
+            step >= DAY
+              ? format({ day: "numeric", month: "short" }, options).format(t).replace(".", "")
+              : formatClock(t, options),
+        });
+      }
+    }
+    if (finished) break;
+    cal.setDate(day, cal.date(day) + 1);
   }
   return out;
 }

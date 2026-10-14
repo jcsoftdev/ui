@@ -67,8 +67,13 @@ export function mountBrush(host: HTMLElement, initial: BrushState): CandleBrush 
       closes.map((y, i) => ({ x: i, y })),
       OVERVIEW_POINTS,
     );
-    const lo = Math.min(0, ...closes);
-    const span = Math.max(...closes) - lo || 1;
+    let lo = 0;
+    let top = Number.NEGATIVE_INFINITY;
+    for (const close of closes) {
+      if (close < lo) lo = close;
+      if (close > top) top = close;
+    }
+    const span = top - lo || 1;
     const y = (value: number) => BRUSH_HEIGHT - 6 - ((value - lo) / span) * (BRUSH_HEIGHT - 14);
     const points: Point[] = sampled.map((p) => ({ x: x.center(p.x), y: y(p.y) }));
     const bottom = points.map((p) => ({ x: p.x, y: BRUSH_HEIGHT - 6 }));

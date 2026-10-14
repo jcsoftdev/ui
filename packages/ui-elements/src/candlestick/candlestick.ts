@@ -27,6 +27,7 @@ import {
   EASE,
   gridLines,
 } from "../internal/e19-axes.js";
+import { type Bar, merge } from "../internal/e19-candles.js";
 import css from "./candlestick.css.js";
 import type { CandleBrush } from "./candlestick-brush.js";
 
@@ -71,41 +72,6 @@ const MARGIN = { top: 12, bottom: 30 };
 const VOLUME_GAP = 16;
 /** Above this many candles in view they are painted on the canvas layer instead of as SVG nodes. */
 const CANVAS_AT = 400;
-
-/** A candle in view: several source candles merge into one when there are more than pixels. */
-interface Bar extends Candle {
-  until?: XValue;
-}
-
-/** `n` buckets of consecutive candles merged into open-high-low-close-volume bars. */
-function merge(view: readonly Candle[], buckets: number): Bar[] {
-  if (view.length <= buckets) return view as Bar[];
-  const size = Math.ceil(view.length / buckets);
-  const out: Bar[] = [];
-  for (let at = 0; at < view.length; at += size) {
-    const group = view.slice(at, at + size);
-    const first = group[0] as Candle;
-    const last = group[group.length - 1] as Candle;
-    let volume: number | undefined;
-    let high = Number.NEGATIVE_INFINITY;
-    let low = Number.POSITIVE_INFINITY;
-    for (const c of group) {
-      if (c.high > high) high = c.high;
-      if (c.low < low) low = c.low;
-      if (c.volume != null) volume = (volume ?? 0) + c.volume;
-    }
-    out.push({
-      date: first.date,
-      until: group.length > 1 ? last.date : undefined,
-      open: first.open,
-      close: last.close,
-      high,
-      low,
-      volume,
-    });
-  }
-  return out;
-}
 
 /**
  * `<ui-candlestick>`: open-high-low-close candles with up and down colors, optional volume bars on
@@ -154,8 +120,9 @@ export class UiCandlestick extends ChartElement {
     return this.#data;
   }
   set data(value: readonly Candle[]) {
+    // The zoom survives new data of the same length (a live update) and resets when the series changes size.
+    if (value.length !== this.#data.length) this.#range = undefined;
     this.#data = value;
-    this.#range = undefined;
     this.requestDraw();
   }
   /** The zoomed window as inclusive indices of `data`; the whole data when unset. */
@@ -236,8 +203,9 @@ export class UiCandlestick extends ChartElement {
     const volumeTop = priceHeight + VOLUME_GAP;
     const volumeHeight = innerHeight - volumeTop;
 
-    const slice = data.slice(from, to + 1).filter((c) => !this.isHidden(dirOf(c)));
-    // The y axis fits the candles in view, before any merging, so a bucket never clips.
+    const slice = data.slice(from, to + 1);
+    // The y axis fits every candle in view, before any merging, so a bucket never clips and
+    // hiding a direction does not rescale the chart.
     let lo = Number.POSITIVE_INFINITY;
     let hi = Number.NEGATIVE_INFINITY;
     for (const c of slice) {
@@ -260,7 +228,10 @@ export class UiCandlestick extends ChartElement {
       .map((tick) => ({ key: tick, position: y.map(tick), label: axisFormat(tick) }));
     const left = Math.max(...yTicks.map((tick) => estimateTextWidth(tick.label)), 16) + 18;
     const innerWidth = Math.max(60, width - left - tagRoom);
-    const view = merge(slice, Math.max(1, Math.floor(innerWidth / 1.5)));
+    // A bucket takes its direction from its merged open and close, then the hidden ones leave.
+    const view = merge(slice, Math.max(1, Math.floor(innerWidth / 1.5))).filter(
+      (c) => !this.isHidden(dirOf(c)),
+    );
     const axis = buildCategoryAxis(
       view.map((c) => c.date),
       innerWidth,
@@ -339,6 +310,8 @@ export class UiCandlestick extends ChartElement {
     if (canvasMode) {
       layers.candles.replaceChildren();
       const g = context.canvas();
+      // TODO(theme): repaint on a theme change once the base chart exposes its theme hook; these
+      // colours are resolved now.
       const surface = cssColor(this, "var(--surface)");
       const up = cssColor(this, upColor);
       const down = cssColor(this, downColor);

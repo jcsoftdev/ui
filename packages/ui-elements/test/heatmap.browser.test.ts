@@ -181,4 +181,39 @@ describe("ui-heatmap", () => {
     await settle();
     expect(c.textContent).toContain("No data");
   });
+
+  it("labels date columns at calendar boundaries in the requested time zone", async () => {
+    const days = Array.from({ length: 60 }, (_, i) => new Date(Date.UTC(2026, 0, 1 + i)));
+    const c = await map('time-zone="UTC" label="Days"', "", 640);
+    c.rows = ["A", "B"];
+    c.columns = days;
+    c.values = [days.map((_, i) => i), days.map((_, i) => 60 - i)];
+    await settle();
+    const header = [...c.querySelectorAll("text[data-label]")].map((t) => t.textContent);
+    expect(header.filter((t) => /jan|feb|mar|1/i.test(t ?? "")).length).toBeGreaterThan(1);
+    expect(header.length).toBeLessThan(20);
+    const table = c.chartSnapshot;
+    expect(table?.series).toHaveLength(60);
+    expect(table?.series[0]?.name).toMatch(/2026/);
+  });
+
+  it("keeps every column of a 12 x 52 matrix in the data table", async () => {
+    const c = await map("", "", 900);
+    c.rows = Array.from({ length: 12 }, (_, i) => `R${i}`);
+    c.columns = Array.from({ length: 52 }, (_, i) => `W${i + 1}`);
+    c.values = c.rows.map((_, r) => c.columns.map((_, k) => r + k));
+    await settle();
+    expect(c.chartSnapshot?.series).toHaveLength(52);
+    expect(c.chartSnapshot?.categories).toHaveLength(12);
+  });
+
+  it("falls back on a bad gap, shows the empty state for no rows, and centres the diverging scale", async () => {
+    const c = await map('gap="abc" scale="diverging" center="20" domain="0,100"');
+    expect(c.querySelector("canvas")).not.toBeNull();
+    const stops = c.chartSnapshot?.scale?.stops;
+    expect(stops?.[1]).toBeCloseTo(0.2);
+    c.rows = [];
+    await settle();
+    expect(c.textContent).toContain("No data");
+  });
 });

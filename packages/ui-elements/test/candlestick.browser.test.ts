@@ -3,6 +3,7 @@ import { userEvent } from "vitest/browser";
 import { defineCandlestick, type UiCandlestick } from "../src/candlestick/candlestick.ts";
 import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
+import { merge } from "../src/internal/e19-candles.ts";
 import {
   awake,
   chartOf,
@@ -179,5 +180,47 @@ describe("ui-candlestick", () => {
     c.data = [];
     await settle();
     expect(c.textContent).toContain("No data");
+  });
+
+  it("keeps the zoom for new data of the same length and resets it when the length changes", async () => {
+    const c = await chart(candles(40), "brush");
+    c.range = [5, 24];
+    await settle();
+    c.data = candles(40, 120);
+    await settle();
+    expect(c.range).toEqual([5, 24]);
+    expect(nodes(c)).toHaveLength(20);
+    c.data = candles(41);
+    await settle();
+    expect(c.range).toEqual([0, 40]);
+  });
+
+  it("draws the overview of 150k candles without spreading them", async () => {
+    const c = await chart(candles(150_000), "brush", 800);
+    await wait(150);
+    expect(c.querySelector("[data-ui-part=brush]")).not.toBeNull();
+  });
+
+  it("merges buckets with their own open and close, and decides the direction after merging", async () => {
+    const day = (i: number, open: number, close: number) => ({
+      date: new Date(Date.UTC(2026, 0, 1 + i)),
+      open,
+      close,
+      high: Math.max(open, close) + 1,
+      low: Math.min(open, close) - 1,
+      volume: 10,
+    });
+    const bars = merge([day(0, 10, 14), day(1, 14, 9), day(2, 9, 12), day(3, 12, 8)], 2);
+    expect(bars).toHaveLength(2);
+    expect([bars[0]?.open, bars[0]?.close, bars[0]?.high, bars[0]?.low]).toEqual([10, 9, 15, 8]);
+    expect([bars[1]?.open, bars[1]?.close, bars[1]?.volume]).toEqual([9, 8, 20]);
+    expect(merge([day(0, 1, 2)], 5)).toHaveLength(1);
+    // Two merged buckets: the first falls overall (open 10 -> close 9), so hiding "down" drops it
+    // even though it holds rising candles.
+    const data = [day(0, 10, 14), day(1, 14, 9), day(2, 9, 12), day(3, 12, 15)];
+    const c = await chart(data as ReturnType<typeof candles>, "volume=off", 120);
+    c.toggleSeries("down");
+    await settle();
+    expect(nodes(c).length).toBeLessThanOrEqual(4);
   });
 });

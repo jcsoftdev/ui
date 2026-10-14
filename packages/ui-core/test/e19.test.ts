@@ -1,6 +1,7 @@
 // Golden parity of the E19 chart maths with the React kit: the React sources are imported at run
 // time by path (never statically), and every ui-core entry must agree with them value for value.
 import { describe, expect, it } from "vitest";
+import { datetimeColumnLabels } from "../src/chart/datetime-columns.ts";
 import { categoryLayout } from "../src/chart/distribution-layout.ts";
 import { heatmapScale } from "../src/chart/heatmap-scale.ts";
 import { hexLayout, hexPath } from "../src/chart/hex-layout.ts";
@@ -160,6 +161,9 @@ describe("robustness and cost", () => {
     const t1 = performance.now();
     expect(beeswarm(cluster, { gap: 1 }).every(Number.isFinite)).toBe(true);
     expect(performance.now() - t1).toBeLessThan(3000);
+  });
+});
+
 describe("timeline lanes", () => {
   it("matches the React lanes, clock ticks and lane fit", async () => {
     const lanes = await import("../src/chart/lanes.ts");
@@ -193,6 +197,42 @@ describe("timeline lanes", () => {
     expect(lanes.fitLaneHeight({ ...fit, counts: [] })).toBe(
       theirs.fitLaneHeight({ ...fit, counts: [] }),
     );
+  });
+
+  it("keeps the ticks on the wall clock across a daylight-saving change", async () => {
+    const { clockTicks } = await import("../src/chart/lanes.ts");
+    const zone = { locale: "en-US", timeZone: "America/New_York" };
+    // 2026-03-08 loses an hour at 02:00; every 6-hour tick must still read 00, 06, 12 or 18.
+    const ticks = clockTicks(Date.UTC(2026, 2, 7, 12), Date.UTC(2026, 2, 10, 12), 12, zone);
+    expect(ticks.length).toBeGreaterThan(8);
+    for (const tick of ticks) expect(tick.label).toMatch(/^(00|06|12|18):00$/);
+    expect(new Set(ticks.map((t) => t.value)).size).toBe(ticks.length);
+    expect(ticks.map((t) => t.value)).toEqual([...ticks.map((t) => t.value)].sort((a, b) => a - b));
+  });
+
+  it("rounds to the hours of a +05:30 or +05:45 zone and labels days in the locale", async () => {
+    const { hourEdge, clockTicks } = await import("../src/chart/lanes.ts");
+    for (const timeZone of ["Asia/Kolkata", "Asia/Kathmandu", "UTC"]) {
+      const at = Date.UTC(2026, 0, 10, 8, 20);
+      const clock = (ms: number) =>
+        new Intl.DateTimeFormat("en-US", { timeZone, hour12: false, minute: "2-digit" }).format(ms);
+      expect(clock(hourEdge(at, "floor", timeZone))).toMatch(/^0+$/);
+      expect(clock(hourEdge(at, "ceil", timeZone))).toMatch(/^0+$/);
+      expect(hourEdge(at, "ceil", timeZone) - hourEdge(at, "floor", timeZone)).toBe(3_600_000);
+      expect(hourEdge(hourEdge(at, "floor", timeZone), "ceil", timeZone)).toBe(
+        hourEdge(at, "floor", timeZone),
+      );
+    }
+    const days = clockTicks(Date.UTC(2026, 2, 1), Date.UTC(2026, 2, 12), 12, {
+      locale: "de-DE",
+      timeZone: "UTC",
+    });
+    expect(days[0]?.label).toBe(
+      new Intl.DateTimeFormat("de-DE", { day: "numeric", month: "short", timeZone: "UTC" })
+        .format(days[0]?.value)
+        .replace(".", ""),
+    );
+    expect(days[0]?.label).toMatch(/M(ä|a)r/);
   });
 
   it("aligns ticks to midnight of the requested zone and labels them in its locale", async () => {
@@ -258,5 +298,38 @@ describe("heatmap scale and honeycomb", () => {
         expect(a.center(rows - 1, columns - 1)).toEqual(b.center(rows - 1, columns - 1));
     }
     expect(hexPath(10, 20, 8)).toBe(reactHex.hexPath(10, 20, 8));
+  });
+});
+
+describe("heatmap date columns", () => {
+  it("matches the React labels for hourly, daily and monthly columns", async () => {
+    const theirs = (await react("heatmap-chart/datetime-columns.ts")) as {
+      datetimeColumnLabels: typeof datetimeColumnLabels;
+    };
+    const series = (count: number, every: number) =>
+      Array.from({ length: count }, (_, i) => new Date(2026, 0, 1, 0, 0).getTime() + i * every);
+    for (const [count, every, max] of [
+      [24, 3_600_000, 8],
+      [52, 7 * 86_400_000, 6],
+      [90, 86_400_000, 8],
+      [60, 86_400_000, 3],
+      [1, 1, 8],
+    ] as const) {
+      const dates = series(count, every);
+      expect(datetimeColumnLabels(dates, max, { locale: "es-PE" })).toEqual(
+        theirs.datetimeColumnLabels(dates, max),
+      );
+    }
+    expect(datetimeColumnLabels([], 8)).toEqual([]);
+  });
+
+  it("reads the clock and the boundaries in the requested time zone", () => {
+    const hours = Array.from({ length: 6 }, (_, i) => Date.UTC(2026, 0, 10, 3 + i));
+    expect(
+      datetimeColumnLabels(hours, 8, { locale: "en-US", timeZone: "America/Lima" })[0],
+    ).toMatch(/10:00 PM|22:00/);
+    const days = Array.from({ length: 40 }, (_, i) => Date.UTC(2026, 0, 1 + i, 12));
+    const lima = datetimeColumnLabels(days, 6, { locale: "en-US", timeZone: "America/Lima" });
+    expect(lima.filter(Boolean).length).toBeGreaterThan(1);
   });
 });
