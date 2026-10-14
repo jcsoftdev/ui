@@ -26,12 +26,12 @@ imports them, so it never pays for them.
 
 | Tag | What it is | Eager gzip |
 | --- | --- | --- |
-| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.7 KB |
-| `ui-sparkline` | the smallest real chart on the base | 6.5 KB |
+| `ui-chart-frame` | the base as an element, with a `render(ctx)` property | 4.9 KB |
+| `ui-sparkline` | the smallest real chart on the base | 6.7 KB |
 | `ui-chart-legend` | toggle buttons per series, hover dims the rest | 2.6 KB |
 | `ui-chart-tooltip` | floating card or docked panel | 4.2 KB |
 | `ui-chart-data-table` | the snapshot as a real `<table>` | 1.8 KB |
-| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.5 KB |
+| `ui-chart-export-menu` | menu button (ui-core `menu`); SVG, PNG, CSV, XLSX | 6.7 KB |
 | `ui-chart-breadcrumb` | drill-down path, `nav` with `aria-current` | 1.5 KB |
 
 A chart adds only its own geometry and the ui-core modules it uses (`chart/scale`, `chart/path`,
@@ -189,6 +189,15 @@ carries `{ revision }` (or `null` for the loading and empty states).
   `height="fill"` (use it with a CSS height on the host) or `aspect-ratio` always wins.
   **Never write attributes (or inline styles) on the host, in `connectedCallback` or anywhere
   else; use the hook.** Writing `height` there mutates the consumer's DOM and fights their own value.
+- **Stable marks (`markKey`).** Return `markKey: (i) => id` from `draw()` when marks can reorder
+  between draws (a bar race, a re-sorted list). The base remaps the pinned mark, the keyboard hover,
+  the roving tab stop and focus to the same entity by key, and a remap caused only by reordering does
+  not fire `chart-select` again. Keys must be unique; a key that vanished keeps its index. Without
+  `markKey` everything stays by index.
+- **Hidden series from the start.** `initial-hidden='["b","c"]'` (a JSON array of series ids) or the
+  `initialHidden` property, set before the element connects, seeds the hidden set before the first
+  draw. Read it in `draw()` with `this.isHidden(id)`. No `chart-series` event fires for the seed; the
+  legend and the snapshot see it like any toggle. It is read once, on connect.
 - **Theme.** SVG marks that use CSS variables repaint on their own and pay nothing. A painter that
   caches resolved colors (a canvas cannot use `var()`) opts in: calling `context.canvas()` does it,
   or set `static themeAware = true`. The base then lazy-loads one shared `MutationObserver` and one

@@ -406,3 +406,38 @@ class TestCanvas extends ChartElement {
   }
 }
 export const defineTestCanvas = () => defineElement("test-canvas", TestCanvas);
+
+/** Keyed bars: `names` can be reordered, `markKey` is the name. `series` is read through `isHidden` like a real chart. */
+class TestKeyed extends ChartElement {
+  names = ["a", "b", "c", "d"];
+  drawn: string[] = [];
+  protected override draw({ svg: root, width, height }: DrawContext): DrawResult {
+    const names = this.names;
+    const band = bandScale({ count: names.length, range: [0, width] });
+    this.drawn = this.isHidden("hid") ? ["no-hid"] : ["hid-visible"];
+    const marks = names.map((name, i) => {
+      const el = svg("rect", {
+        x: band.start(i),
+        y: 0,
+        width: band.step,
+        height,
+        fill: "transparent",
+      });
+      root.append(el);
+      return { el, label: name };
+    });
+    return {
+      marks,
+      markKey: (i) => names[i] as string,
+      hit: (x) => band.indexAt(x),
+      hover: (i) => ({ title: names[i] as string, rows: [], x: band.center(i), y: 0 }),
+      snapshot: () => ({
+        title: "k",
+        categoryHeader: "k",
+        categories: names,
+        series: [{ id: "hid", name: "Hid", color: "red", values: names.map(() => 1), text: names }],
+      }),
+    };
+  }
+}
+export const defineTestKeyed = () => defineElement("test-keyed", TestKeyed);

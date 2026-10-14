@@ -45,6 +45,8 @@ export interface Interact {
   reset(): void;
   /** A redraw replaced the focused mark: give focus to its successor, silently. */
   restoreFocus(index: number): void;
+  /** A redraw reordered the marks: move the pinned and keyboard-hovered index to the same entity, silently. */
+  remap(map: (index: number) => number): void;
   info(): HoverInfo | null;
   selected(): number | null;
   select(index: number | null, source: HoverSource): void;
@@ -402,6 +404,10 @@ export function attach(api: InteractApi): Interact {
         hoverIndex = hitAt(last.x, last.y, under(last.x, last.y), last.type);
       publish();
       if (api.virtual() && api.proxy() === document.activeElement) renderOption(api.active);
+    },
+    remap(map) {
+      if (selected !== null) selected = map(selected);
+      if (hoverIndex >= 0 && hoverSource !== "pointer") hoverIndex = map(hoverIndex);
     },
     reset() {
       hoverIndex = -1;

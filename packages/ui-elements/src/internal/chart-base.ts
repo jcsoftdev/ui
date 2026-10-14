@@ -114,6 +114,12 @@ export interface DrawResult {
    * the host: return it here, or set `static defaultHeight`.
    */
   naturalHeight?: number;
+  /**
+   * Identity of mark `index`, unique per mark and stable across draws. When both the previous and the
+   * new draw have it, a redraw that reorders the marks keeps the selection, the keyboard hover, the
+   * roving tab stop and focus on the same entity (no `chart-select`). Without it they stay by index.
+   */
+  markKey?(index: number): string;
   /** Accessible name when the element has no `label` attribute. */
   label?: string;
   /** One sentence for screen readers (first, last, min, max...). Becomes the description. */
@@ -206,6 +212,8 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
    */
   static defaultHeight: number | ((element: never) => number) = DEFAULT_HEIGHT;
 
+  /** Series ids hidden before the first draw (attribute `initial-hidden`, a JSON array). Seeds silently: no `chart-series`. */
+  initialHidden: readonly string[] | undefined;
   /** Property forms of the matching attributes. */
   valueFormat: ValueFormat | undefined;
   palette: readonly string[] | undefined;
@@ -372,6 +380,12 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       this.getAttribute("touch-action") ?? (this.constructor as typeof ChartElement).touchAction;
     for (const type of WAKE) this.drawing.addEventListener(type, this.#onWake);
     this.#syncFill();
+    if (!this.#result) {
+      try {
+        const raw = this.getAttribute("initial-hidden");
+        for (const id of this.initialHidden ?? JSON.parse(raw || "[]")) this.#hidden.add(`${id}`);
+      } catch {}
+    }
     if ((this.constructor as typeof ChartElement).themeAware || this.#themed) this.#watchTheme();
     this.#width = Math.floor(this.drawing.getBoundingClientRect().width);
     this.#observer = new ResizeObserver(([entry]) => {
@@ -534,7 +548,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#busy = true;
     const active = document.activeElement;
     const hadFocus = !!active && drawing.contains(active);
-    const focused = hadFocus ? this.#indexOf(active) : -1;
+    let focused = hadFocus ? this.#indexOf(active) : -1;
     const transient = this.#transient;
     this.#transient = false;
     const phase: DrawPhase = !this.#result
@@ -582,7 +596,13 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (!this.#canvasUsed) this.#canvas?.remove();
     const dataChanged = this.#dirty || phase === "enter";
     if (dataChanged) this.#revision++;
+    const previous = this.#result;
     this.#result = result;
+    const remap = this.#remapper(previous, result);
+    if (remap) {
+      this.#active = remap(this.#active);
+      if (focused >= 0) focused = remap(focused);
+    }
     this.#settleNatural(result?.naturalHeight, height);
     this.#mount(root, result);
     if (!this.#setup) {
@@ -592,6 +612,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (hadFocus && !drawing.contains(document.activeElement))
       this.#interact?.restoreFocus(focused);
     this.#busy = false;
+    if (remap) this.#interact?.remap(remap);
     this.#interact?.refresh();
     if (dataChanged) {
       this.#dirty = false;
@@ -606,6 +627,15 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     this.#natural = fixed ? 0 : Math.round(wanted || 0);
     if (this.#natural && this.#natural !== height && this.#naturalPasses++ < 2)
       this.requestDraw("size");
+  }
+
+  /** Old mark index to new mark index by `markKey`, or undefined when either draw has no keys. */
+  #remapper(a: DrawResult | undefined, b: DrawResult | undefined) {
+    if (!a?.markKey || !b?.markKey) return undefined;
+    const marks = b.marks;
+    const count = !marks ? 0 : isVirtual(marks) ? marks.count : marks.length;
+    const at = new Map(Array.from({ length: count }, (_, i) => [b.markKey?.(i), i]));
+    return (i: number) => at.get(a.markKey?.(i)) ?? i;
   }
 
   #attrPalette(): string[] | undefined {
