@@ -120,9 +120,14 @@ describe("ui-gantt", () => {
     expect(proxyOf(el).getAttribute("role")).toBe("listbox");
     expect(el.getAttribute("height")).toBe("276");
     // The headings of the table and the hint are there for assistive tech.
-    await expect
-      .poll(() => el.chartSnapshot?.categories)
-      .toEqual(["Discovery", "· Interviews", "· Workshop", "Build", "· API", "Launch"]);
+    expect(el.chartSnapshot?.categories).toEqual([
+      "Discovery",
+      "· Interviews",
+      "· Workshop",
+      "Build",
+      "· API",
+      "Launch",
+    ]);
   });
 
   it("hover: one event per row in order, none per pixel, and the tooltip shows the dates", async () => {
@@ -314,9 +319,7 @@ describe("ui-gantt", () => {
     await settle();
     expect(svgOf(el).querySelectorAll(".baseline")).toHaveLength(1);
     expect(svgOf(el).textContent).toContain("Freeze");
-    await expect
-      .poll(() => el.chartSnapshot?.legend?.map((item) => item.id))
-      .toEqual(["critical", "baseline"]);
+    expect(el.chartSnapshot?.legend?.map((item) => item.id)).toEqual(["critical", "baseline"]);
     el.toggleSeries("baseline");
     await expect.poll(() => svgOf(el).querySelectorAll(".baseline").length).toBe(0);
   });
@@ -373,7 +376,7 @@ describe("ui-gantt", () => {
         { id: "a", name: "Two", start: day(6), end: day(9) },
         { id: "bad", name: "Broken", start: new Date("nope"), end: day(9) },
       ]);
-      await expect.poll(() => el.chartSnapshot?.categories).toEqual(["One", "Two"]);
+      expect(el.chartSnapshot?.categories).toEqual(["One", "Two"]);
       expect(svgOf(el).querySelectorAll("[data-task]")).toHaveLength(2);
       expect(warned.some((m) => m.includes('"bad"'))).toBe(true);
       expect(warned.some((m) => m.includes('"a"'))).toBe(true);
