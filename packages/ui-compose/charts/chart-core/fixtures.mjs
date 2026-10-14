@@ -7,8 +7,10 @@
 // Non-finite numbers and -0 are written as {"$f": "NaN" | "Infinity" | "-Infinity" | "-0"}; Kotlin decodes them with
 // chart-testing/common/FixtureJson.kt (compiled into every module's tests). Ship the generated JSON in the same commit.
 import { cases } from "./fixture-src/cases.mjs";
+import { geometryCases } from "./fixture-src/cases-geometry.mjs";
 
 const SCALES = "packages/ui-compose/charts/chart-core/fixture-src/entries/core-scales.ts";
+const GEOMETRY = "packages/ui-compose/charts/chart-core/fixture-src/entries/core-geometry.ts";
 
 export const fixtures = [
   { name: "ticks", source: SCALES, run: cases.ticks },
@@ -17,6 +19,12 @@ export const fixtures = [
   { name: "format", source: SCALES, run: cases.format },
   { name: "axis", source: SCALES, run: cases.axis },
   { name: "time-range", source: SCALES, run: cases.timeRange },
+  { name: "path", source: GEOMETRY, run: geometryCases.path },
+  { name: "downsample", source: GEOMETRY, run: geometryCases.downsample },
+  { name: "stack", source: GEOMETRY, run: geometryCases.stack },
+  { name: "color", source: GEOMETRY, run: geometryCases.color },
+  { name: "brush", source: GEOMETRY, run: geometryCases.brush },
+  { name: "hit-test", source: GEOMETRY, run: geometryCases.hitTest },
   {
     // Pins the encoding itself: FixtureJsonTest decodes this file, so a change on either side fails a test.
     name: "encoding",
