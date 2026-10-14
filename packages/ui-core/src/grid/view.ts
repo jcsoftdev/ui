@@ -1,6 +1,23 @@
 /** What a view row is: a source `data` row, or a `group` header that grouping inserts. */
 export type ViewRowKind = "data" | "group";
 
+/** What a `group` row knows about its group (set by the `grid/group` stage). */
+export interface GroupInfo {
+  /** Column the group level is built on. */
+  columnId: string;
+  /** The raw value shared by the group's rows. */
+  value: string | number | boolean | Date | null | undefined;
+  /** Text of the group header: the formatted value. */
+  label: string;
+  /** Data rows in the group, nested groups included, whether it is expanded or not. */
+  count: number;
+  expanded: boolean;
+  /** Group path, outermost level first; `key` is its JSON form. */
+  path: readonly string[];
+  /** Aggregates over all rows of the group, by column id. */
+  aggregates: Readonly<Record<string, string | number | boolean | Date | null | undefined>>;
+}
+
 /** One row of the view. A `group` row has no source row (`source` is `-1`). */
 export interface ViewRow {
   kind: ViewRowKind;
@@ -10,6 +27,8 @@ export interface ViewRow {
   source: number;
   /** Nesting level: `0` for top-level rows. */
   depth: number;
+  /** Present on `group` rows built by `grid/group`. */
+  group?: GroupInfo;
 }
 
 /**
@@ -34,6 +53,10 @@ export interface GridView {
   dataIndexOf(key: string): number;
   /** Key of the `i`-th data row. */
   dataKeyAt(i: number): string;
+  /** Source rows after filter and sort, before grouping: every row, collapsed groups included. */
+  sourceOrder(): readonly number[];
+  /** Key of source row `source`. */
+  sourceKey(source: number): string;
 }
 
 export interface ViewInput {
@@ -93,13 +116,20 @@ export function uniqueKeys(count: number, keyOf: (index: number) => string): Uni
 /** Builds the view with the pipeline filter, then sort, then group. */
 export function buildView({ keys, filter, sort, group }: ViewInput): GridView {
   const total = keys.length;
-  const identity = () => Array.from({ length: total }, (_, i) => i);
+  let ident: number[] | undefined;
+  const identity = () => {
+    if (!ident) {
+      ident = new Array<number>(total);
+      for (let i = 0; i < total; i += 1) ident[i] = i;
+    }
+    return ident;
+  };
   let order: number[] | null = null;
   if (filter) {
     order = [];
     for (let i = 0; i < total; i += 1) if (filter(i)) order.push(i);
   }
-  if (sort) order = sort(order ?? identity());
+  if (sort) order = sort(order ?? identity().slice());
   const finalOrder = order;
   const dataRow = (source: number): ViewRow => ({
     kind: "data",
@@ -159,5 +189,7 @@ export function buildView({ keys, filter, sort, group }: ViewInput): GridView {
       return -1;
     },
     dataKeyAt: (i) => (grouped ? keyAt(data()[i] as number) : keyAt(i)),
+    sourceOrder: () => finalOrder ?? identity(),
+    sourceKey: (source) => keys[source] ?? "",
   };
 }
