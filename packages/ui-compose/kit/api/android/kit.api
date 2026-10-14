@@ -473,6 +473,19 @@ public final class com/jcsoftdev/ui/forms/InputColors {
 	public final fun getText-0d7_KjU ()J
 }
 
+public final class com/jcsoftdev/ui/forms/InputContentType : java/lang/Enum {
+	public static final field Email Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field NewPassword Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field NewUsername Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field OneTimeCode Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Password Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Phone Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Username Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static fun values ()[Lcom/jcsoftdev/ui/forms/InputContentType;
+}
+
 public final class com/jcsoftdev/ui/forms/InputDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/forms/InputDefaults;
@@ -485,8 +498,8 @@ public final class com/jcsoftdev/ui/forms/InputDefaults {
 }
 
 public final class com/jcsoftdev/ui/forms/InputKt {
-	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
-	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/forms/NumberStepperDefaults {
@@ -1491,6 +1504,7 @@ public final class com/jcsoftdev/ui/navigation/SegmentedDefaults {
 	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
 	public final fun getTrackPadding-D9Ej5fM ()F
+	public final fun getWrapWidth-D9Ej5fM ()F
 	public final fun textStyle (ZLandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 

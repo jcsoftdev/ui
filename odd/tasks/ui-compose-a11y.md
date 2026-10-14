@@ -25,7 +25,7 @@ ask-on-risk, single PR into main with work-unit commits.
 ## Tasks
 - [x] A1 Tokens: distinct `danger-soft` (light and dark) from `accent-soft`, `count` text style 12/1.2, contrast test over the soft/ink pairs. Route: inline (tokens json, generated outputs, one test).
 - [x] A2 Large font scale: `Button`, `Chip`, `Segmented` wrap to 2 lines when `fontScale > 1.3`. Route: inline.
-- [ ] A3 `Input`/`PasswordInput` content type (`InputContentType`), placeholder kept consistent. Route: inline.
+- [x] A3 `Input`/`PasswordInput` content type (`InputContentType`), placeholder kept consistent. Route: inline.
 - [ ] A4 Disabled treatment for buttons (legible label, no alpha dim) and stronger card border (`CardDefaults.colors(outlined)`, high contrast). Route: inline.
 - [ ] A5 `FloatingActionButton` (extended and icon-only, 56dp, role, reduced motion). Route: inline.
 - [ ] A6 `BottomActionBar` (pinned above a dock, insets). Route: inline.
