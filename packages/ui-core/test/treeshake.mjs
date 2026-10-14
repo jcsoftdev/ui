@@ -59,6 +59,7 @@ const independent = new Set([
 const chartDeps = {
   "chart/brush": ["chart/brush-rect"],
   "chart/color-scale": ["chart/palette"],
+  "chart/distribution": ["chart/axis", "chart/format", "chart/scale"],
   "chart/distribution-layout": ["chart/axis", "chart/scale"],
   "chart/datetime-columns": ["chart/scale-time"],
   "chart/heatmap-scale": ["chart/color-scale", "chart/palette"],

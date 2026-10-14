@@ -1,0 +1,14 @@
+[data-ui="raincloud-chart"] [data-row] [data-cloud] {
+  transition:
+    fill-opacity 150ms,
+    stroke-width 150ms;
+}
+[data-ui="raincloud-chart"] [data-row]:has([data-active]) [data-cloud] {
+  fill-opacity: 0.4;
+  stroke-width: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="raincloud-chart"] [data-row] [data-cloud] {
+    transition: none;
+  }
+}

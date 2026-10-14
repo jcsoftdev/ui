@@ -1,0 +1,14 @@
+[data-ui="violin-chart"] [data-violin] {
+  transition:
+    fill-opacity 150ms,
+    stroke-width 150ms;
+}
+[data-ui="violin-chart"] [data-row]:is(:has([data-active]), :has([data-selected])) [data-violin] {
+  fill-opacity: 0.42;
+  stroke-width: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="violin-chart"] [data-violin] {
+    transition: none;
+  }
+}
