@@ -1,0 +1,72 @@
+[data-ui="crossfilter-bar"],
+[data-ui="crossfilter-histogram"],
+[data-ui="crossfilter-scatter"] {
+  min-width: 0;
+}
+[data-ui-part="xf-header"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-width: 0;
+  margin-bottom: 4px;
+}
+[data-ui-part="xf-header"] h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+[data-ui-part="xf-header"] > div {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+[data-ui-part="xf-header"] button,
+[data-ui="crossfilter-summary"] button {
+  cursor: pointer;
+  border: 0;
+  border-radius: var(--radius-button);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+[data-ui-part="xf-header"] button:hover,
+[data-ui="crossfilter-summary"] button:hover {
+  color: var(--ink);
+}
+[data-ui-part="xf-header"] button:focus-visible,
+[data-ui="crossfilter-summary"] button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="crossfilter-summary"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+[data-ui="crossfilter-summary"] p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+[data-ui="crossfilter-summary"] button {
+  padding: 4px 12px;
+  font-size: 12px;
+}
