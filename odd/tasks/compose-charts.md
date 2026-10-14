@@ -85,7 +85,7 @@ TDD mode: off. Implement first, then the tests that protect the change in the sa
 I = direct inline. Batches KC3..KC10, KC13, KC14 run in parallel (file-disjoint modules); KC11 needs KC6, KC12 needs KC3a.
 
 - [x] KC0  build-logic, empty modules, BOM, size probe, fixture script, reachability test (route D, ~900 lines)
-- [ ] KC1  chart-core: scales, ticks, axis, format, path, stack, palette, color-scale, downsample, nearest, time-range, brush/pan-zoom + fixtures (D, ~2500)
+- [x] KC1  chart-core: scales, ticks, axis, format, path, stack, palette, color-scale, downsample, nearest, time-range, brush/pan-zoom + fixtures (D, ~4200 in two stacked PRs: KC1a scales/format/axes, KC1b geometry/sampling/colour/hit-test/bench)
 - [ ] KC2  chart foundation, Sparkline, dock/tooltip/legend/table, a11y, bench screen (D, ~2400)
 - [ ] KC3a cartesian: first set (D, ~2200)
 - [ ] KC3b cartesian: second set (D, ~1800)
@@ -120,6 +120,14 @@ I = direct inline. Batches KC3..KC10, KC13, KC14 run in parallel (file-disjoint 
 
 ## Progress
 - KC0 done on `feat/compose-charts-kc0`; verification evidence is in the pull request.
+- KC1 done on `feat/compose-charts-kc1` (KC1a) and `feat/compose-charts-kc1-geometry` (KC1b), both unmerged.
+  Evidence: `:chart-core:check` (jvm + android unit tests, 52 tests), `apiCheck`, `spotlessCheck`, iOS arm64/simulator main and test
+  compile, `check-chart-size.mjs` (chart-core dex 7196 B of the 25 KB cap, aar classes 145489 B, klib 366753 B), `pnpm check:chart-fixtures`
+  (13 fixtures, Node 22), `:chart:jvmTest` module guard, `:chart-core:chartBench` + `check-chart-bench.mjs` within 20%.
+  Not run locally: `iosSimulatorArm64Test` (no simulator SDK). Fixtures include NaN/Infinity, empty, single-point and 1e6-point cases.
+  Notes for KC2: formatting goes through `ChartLocale` (`ChartLocales.system` / `forTag`; no es-PE default), geometry is emitted through
+  `PathCommands` (`toSvg()` byte-matches the web), non-finite input is a gap, selection helpers are keyed. Fixtures that use Intl
+  must be regenerated on Node 22 (V8 `10**n` differs on other versions).
 
 ## Next step
 KC1 (chart-core), then KC2 (foundation). KC3..KC14 start only after KC2 merges.
