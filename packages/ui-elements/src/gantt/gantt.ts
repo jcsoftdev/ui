@@ -57,6 +57,8 @@ import {
 import css from "./gantt.css.js";
 import type * as ExtrasModule from "./gantt-extras.js";
 import type { CriticalPath, Draft, DragState } from "./gantt-extras.js";
+import type * as SnapshotModule from "./gantt-snapshot.js";
+import type { SnapshotInput } from "./gantt-snapshot.js";
 
 export type { GanttZoom } from "../internal/e23-gantt.js";
 export type { GanttAnnotation, GanttTask } from "../internal/e23-gantt-layout.js";
@@ -224,6 +226,9 @@ export class UiGantt extends ChartElement {
 
   #extras: Extras | undefined;
   #extrasLoading = false;
+  #snapshotModule: typeof SnapshotModule | undefined;
+  #snapshotLoading = false;
+  #snapshotStale = false;
   #toolbar: { element: HTMLElement; update(): void } | undefined;
   #toolbarLoading = false;
   #tasks: readonly GanttTask[] = [];
@@ -328,6 +333,34 @@ export class UiGantt extends ChartElement {
     import("./gantt-extras.js").then((module) => {
       this.#extras = module;
       adoptStyles(rootOf(this), module.styles);
+      this.#rev++;
+      this.requestDraw("data");
+    });
+  }
+
+  /**
+   * The data table is built by a lazy module, fetched when the table is first read or just after
+   * the first paint. Until it lands the table holds the title only; arrival refreshes it.
+   */
+  #snapshotFor(input: SnapshotInput): ChartSnapshot {
+    if (this.#snapshotModule) return this.#snapshotModule.snapshotOf(input);
+    this.#loadSnapshot();
+    this.#snapshotStale = true;
+    return {
+      title: input.label ?? input.texts.tasks,
+      categoryHeader: "",
+      categories: [],
+      series: [],
+    };
+  }
+
+  #loadSnapshot(): void {
+    if (this.#snapshotModule || this.#snapshotLoading) return;
+    this.#snapshotLoading = true;
+    import("./gantt-snapshot.js").then((module) => {
+      this.#snapshotModule = module;
+      if (!this.#snapshotStale) return;
+      this.#snapshotStale = false;
       this.#rev++;
       this.requestDraw("data");
     });
@@ -492,6 +525,8 @@ export class UiGantt extends ChartElement {
   protected override setup(root: SVGSVGElement, signal: AbortSignal): void {
     const drawing = this.drawing;
     const opts = { signal };
+    // Fetch the data-table module once the first frame is out, off the paint path.
+    (globalThis.requestIdleCallback ?? setTimeout)(() => this.#loadSnapshot());
     this.#panZoom = attachPanZoom(drawing, {
       minZoom: 0.01,
       maxZoom: 100,
@@ -1167,17 +1202,20 @@ export class UiGantt extends ChartElement {
       },
       nav: (index, intent) => this.#nav(index, intent),
       snapshot: () =>
-        this.#snapshot(
-          locale,
+        this.#snapshotFor({
+          tasks: this.#tasks,
+          label: this.getAttribute("label"),
+          baselines: model.baselines,
           timeZone,
           texts,
-          model,
+          critical: model.critical,
+          hasBaselineTasks: this.hasAttribute("baselines"),
           format,
-          duration,
           span,
           percent,
-          context.color,
-        ),
+          displayEnd,
+          color: context.color,
+        }),
     };
   }
 
@@ -1640,108 +1678,6 @@ export class UiGantt extends ChartElement {
     }
     if (editable && this.#extras) out.push(this.#extras.handleNodes(box, row.progress, top, h, cy));
     return out;
-  }
-
-  #snapshot(
-    locale: string,
-    timeZone: string | undefined,
-    texts: GanttTexts,
-    model: Model,
-    format: (time: number) => string,
-    _duration: (ms: number) => string,
-    span: (start: number, end: number) => string,
-    percent: (value: number) => string,
-    color: DrawContext["color"],
-  ): ChartSnapshot {
-    const all = ganttRows(this.#tasks);
-    const names = new Map(this.#tasks.map((task) => [task.id, task.name]));
-    const column = (id: string, name: string, text: string[]) => ({
-      id,
-      name,
-      color: color(0),
-      values: text,
-      text,
-    });
-    void locale;
-    void timeZone;
-    const series = [
-      column(
-        "start",
-        texts.start,
-        all.map((row) => format(row.start)),
-      ),
-      column(
-        "end",
-        texts.end,
-        all.map((row) => format(displayEnd(row.start, row.end, timeZone))),
-      ),
-      column(
-        "duration",
-        texts.duration,
-        all.map((row) => span(row.start, row.end)),
-      ),
-      column(
-        "progress",
-        texts.progress,
-        all.map((row) =>
-          row.task.milestone && !row.parent ? texts.milestone : percent(row.progress),
-        ),
-      ),
-      column(
-        "dependsOn",
-        texts.dependsOn,
-        all.map((row) => (row.task.dependencies ?? []).map((id) => names.get(id) ?? id).join(", ")),
-      ),
-    ];
-    if (model.baselines)
-      series.push(
-        column(
-          "baseline",
-          texts.baseline,
-          all.map((row) =>
-            row.task.baseline
-              ? `${format(+row.task.baseline.start)} - ${format(+row.task.baseline.end)}`
-              : "",
-          ),
-        ),
-      );
-    const critical = model.critical;
-    if (critical)
-      series.push(
-        column(
-          "critical",
-          texts.criticalPath,
-          all.map((row) => (critical.tasks.has(row.task.id) ? texts.critical : "")),
-        ),
-      );
-    return {
-      title: this.getAttribute("label") ?? texts.tasks,
-      categoryHeader: texts.tasks,
-      categories: all.map((row) => `${"· ".repeat(row.depth)}${row.task.name}`),
-      series,
-      legend: [
-        ...(critical
-          ? [
-              {
-                id: "critical",
-                name: texts.criticalPath,
-                color: "var(--danger)",
-                shape: "square" as const,
-              },
-            ]
-          : []),
-        ...(this.hasAttribute("baselines")
-          ? [
-              {
-                id: "baseline",
-                name: texts.baseline,
-                color: "var(--ink-3)",
-                shape: "square" as const,
-              },
-            ]
-          : []),
-      ],
-    };
   }
 }
 
