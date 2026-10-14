@@ -8,9 +8,8 @@ import {
   rootOf,
   uid,
 } from "../internal/base.js";
-import { swatch } from "../internal/chart-dom.js";
-import type { MarkShape } from "../internal/chart-protocol.js";
 import css from "./chart-grid.css.js";
+import type { LegendItem } from "./chart-grid-legend.js";
 
 export type { Extent };
 
@@ -43,12 +42,13 @@ export interface ChartGridContext {
   highlight: string | null;
 }
 
-export interface ChartGridLegendItem {
-  id: string;
-  name: string;
-  color: string;
-  shape?: MarkShape;
-}
+export type ChartGridLegendItem = LegendItem;
+
+/**
+ * Fired by a chart inside a panel (bubbling, composed) to ask for its context: the grid answers
+ * with a `chart-grid-context` on the requesting element. Use it from `connectedCallback`.
+ */
+export const CHART_GRID_CONTEXT_REQUEST = "chart-grid-context-request";
 
 /** Fired on the content of a panel (not bubbling) each time its context changes. */
 export const CHART_GRID_CONTEXT = "chart-grid-context";
@@ -68,7 +68,22 @@ const pair = (text: string | undefined): Extent | undefined => {
     : undefined;
 };
 
-type Cell = { panel: ChartGridPanel; article: HTMLElement; content: Node | null };
+type Cell = {
+  panel: ChartGridPanel;
+  article: HTMLElement;
+  heading: HTMLElement;
+  subtitle: HTMLElement | undefined;
+  header: HTMLElement;
+  content: Node | null;
+  /** Context last delivered, to deliver only changes. */
+  last: ChartGridContext | undefined;
+  sent: string;
+  /** Tags of undefined custom elements in the content that a redelivery is waiting for. */
+  waiting: Set<string>;
+};
+
+const flag = (value: string | null, fallback = false): boolean =>
+  value === null ? fallback : !/^(false|off|0|no)$/i.test(value.trim());
 
 /**
  * `<ui-chart-grid>`: small multiples (a trellis). The same chart repeated per category over shared
@@ -105,6 +120,7 @@ export class UiChartGrid extends ElementBase {
     "include-zero",
     "bordered",
     "empty-label",
+    "heading-level",
   ];
   #panels: readonly ChartGridPanel[] | undefined;
   #render:
@@ -122,6 +138,8 @@ export class UiChartGrid extends ElementBase {
   #mutations: MutationObserver | undefined;
   #list: HTMLElement | undefined;
   #legendEl: HTMLElement | undefined;
+  #legendKey = 0;
+  #abort: AbortController | undefined;
   #empty: HTMLElement | undefined;
   readonly #uid = uid("grid");
 
@@ -169,6 +187,17 @@ export class UiChartGrid extends ElementBase {
       this.#schedule();
     });
     this.#observer.observe(this);
+    this.#abort = new AbortController();
+    this.addEventListener(
+      CHART_GRID_CONTEXT_REQUEST,
+      (event) => {
+        const target = event.target as Element | null;
+        const cell = this.#cells.find((entry) => target && entry.article.contains(target));
+        if (target && cell?.last)
+          target.dispatchEvent(new CustomEvent(CHART_GRID_CONTEXT, { detail: cell.last }));
+      },
+      { signal: this.#abort.signal },
+    );
     this.#mutations = new MutationObserver(() => {
       if (this.#collect()) this.#schedule();
     });
@@ -181,6 +210,7 @@ export class UiChartGrid extends ElementBase {
     this.#frame = 0;
     this.#observer?.disconnect();
     this.#mutations?.disconnect();
+    this.#abort?.abort();
   }
 
   attributeChangedCallback(name: string): void {
@@ -203,7 +233,7 @@ export class UiChartGrid extends ElementBase {
       const data = (child as HTMLElement).dataset;
       this.#declared.set(
         {
-          id: data.id ?? child.id ?? `${this.#declared.size}`,
+          id: data.id || child.id || `${this.#declared.size}`,
           title: data.title ?? "",
           subtitle: data.subtitle,
           extent: pair(data.extent),
@@ -243,14 +273,14 @@ export class UiChartGrid extends ElementBase {
       Math.round(ratio > 0 ? each / ratio : fixed > 0 ? fixed : Math.max(180, each / 1.4)),
     );
     const tickCount = Math.min(6, Math.max(3, Math.round((height - 60) / 42)));
-    const shared = this.getAttribute("shared-value-domain") !== "off";
+    const shared = flag(this.getAttribute("shared-value-domain"), true);
     const valueDomain = shared
       ? (sharedDomain(
           panels.map((panel) => panel.extent),
-          { includeZero: this.hasAttribute("include-zero"), tickCount },
+          { includeZero: flag(this.getAttribute("include-zero")), tickCount },
         ) ?? undefined)
       : undefined;
-    const xDomain = this.hasAttribute("shared-x-domain")
+    const xDomain = flag(this.getAttribute("shared-x-domain"))
       ? (sharedDomain(
           panels.map((panel) => panel.xExtent),
           { nice: false },
@@ -268,7 +298,7 @@ export class UiChartGrid extends ElementBase {
       xDomain,
       highlight: this.#highlight,
     });
-    const key = `${panels.map((panel) => panel.id).join("\n")}|${this.#bordered()}`;
+    const key = `${panels.map((panel) => panel.id).join("\n")}|${this.#level()}`;
     if (key !== this.#key || this.#cells.length !== panels.length) {
       this.#key = key;
       this.#build(panels, context);
@@ -283,17 +313,69 @@ export class UiChartGrid extends ElementBase {
     }
     this.#cells.forEach((cell, index) => {
       const ctx = context(index);
+      const panel = panels[index];
+      if (panel) this.#label(cell, panel);
       cell.article.toggleAttribute("data-compact", ctx.compact);
-      const content = cell.content;
-      if (!(content instanceof Element)) return;
-      if (content.hasAttribute("data-ui-chart") && !content.hasAttribute("data-keep-height"))
-        content.setAttribute("height", `${height}`);
-      content.dispatchEvent(new CustomEvent(CHART_GRID_CONTEXT, { detail: ctx }));
+      cell.article.toggleAttribute("data-bordered", flag(this.getAttribute("bordered")));
+      this.#deliver(cell, ctx);
     });
   }
 
-  #bordered(): boolean {
-    return this.hasAttribute("bordered");
+  #level(): number {
+    const level = Math.floor(num(this.getAttribute("heading-level"), 3));
+    return level >= 1 && level <= 6 ? level : 3;
+  }
+
+  /** Keeps the heading and subtitle of a panel in step with its title and subtitle. */
+  #label(cell: Cell, panel: ChartGridPanel): void {
+    cell.panel = panel;
+    if (cell.heading.textContent !== panel.title) cell.heading.textContent = panel.title;
+    if (!panel.subtitle) {
+      cell.subtitle?.remove();
+      cell.subtitle = undefined;
+      return;
+    }
+    if (!cell.subtitle) {
+      cell.subtitle = document.createElement("span");
+      cell.header.append(cell.subtitle);
+    }
+    if (cell.subtitle.textContent !== panel.subtitle) cell.subtitle.textContent = panel.subtitle;
+  }
+
+  /**
+   * Gives the content of a panel, and every chart inside it, its context, only when it changed.
+   * Custom elements that are not defined yet are waited for and get the context once they are.
+   */
+  #deliver(cell: Cell, ctx: ChartGridContext, force = false): void {
+    const sent = JSON.stringify(ctx);
+    const content = cell.content;
+    if (!(content instanceof Element)) {
+      cell.last = ctx;
+      cell.sent = sent;
+      return;
+    }
+    const changed = force || sent !== cell.sent;
+    for (const name of new Set(
+      [...content.querySelectorAll(":not(:defined)"), content]
+        .filter((node) => node.localName.includes("-") && !customElements.get(node.localName))
+        .map((node) => node.localName),
+    )) {
+      if (cell.waiting.has(name)) continue;
+      cell.waiting.add(name);
+      customElements.whenDefined(name).then(() => {
+        cell.waiting.delete(name);
+        if (this.#cells.includes(cell) && cell.last) this.#deliver(cell, cell.last, true);
+      });
+    }
+    if (!changed) return;
+    cell.last = ctx;
+    cell.sent = sent;
+    const targets = new Set<Element>([content, ...content.querySelectorAll("[data-ui-chart]")]);
+    for (const target of targets) {
+      if (target.hasAttribute("data-ui-chart") && !target.hasAttribute("data-keep-height"))
+        target.setAttribute("height", `${ctx.height}`);
+      target.dispatchEvent(new CustomEvent(CHART_GRID_CONTEXT, { detail: ctx }));
+    }
   }
 
   #build(panels: readonly ChartGridPanel[], context: (index: number) => ChartGridContext): void {
@@ -304,35 +386,20 @@ export class UiChartGrid extends ElementBase {
     this.#empty = undefined;
     this.#legendEl = undefined;
     this.#cells = [];
-    if (this.#legend?.length) {
-      const legend = document.createElement("div");
-      legend.dataset.uiPart = "legend";
-      for (const item of this.#legend) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.dataset.id = item.id;
-        const name = document.createElement("span");
-        name.textContent = item.name;
-        button.append(swatch(item.color, item.shape), name);
-        legend.append(button);
-      }
-      const set = (id: string | null) => {
-        if (this.#highlight === id) return;
-        this.#highlight = id;
-        emit(this, CHART_GRID_HIGHLIGHT, { id });
-        this.#schedule();
-      };
-      legend.addEventListener("pointerover", (event) =>
-        set((event.target as Element).closest<HTMLElement>("button")?.dataset.id ?? null),
-      );
-      legend.addEventListener("pointerleave", () => set(null));
-      legend.addEventListener("focusin", (event) =>
-        set((event.target as Element).closest<HTMLElement>("button")?.dataset.id ?? null),
-      );
-      legend.addEventListener("focusout", () => set(null));
-      this.#legendEl = legend;
-      this.append(legend);
-    }
+    const items = this.#legend;
+    const stamp = ++this.#legendKey;
+    if (items?.length)
+      import("./chart-grid-legend.js").then(({ buildLegend }) => {
+        if (stamp !== this.#legendKey || !this.isConnected) return;
+        this.#legendEl?.remove();
+        this.#legendEl = buildLegend(items, (id) => {
+          if (this.#highlight === id) return;
+          this.#highlight = id;
+          emit(this, CHART_GRID_HIGHLIGHT, { id });
+          this.#schedule();
+        });
+        this.prepend(this.#legendEl);
+      });
     if (!panels.length) {
       const empty = document.createElement("p");
       empty.dataset.uiPart = "empty";
@@ -345,24 +412,30 @@ export class UiChartGrid extends ElementBase {
     list.dataset.uiPart = "panels";
     panels.forEach((panel, index) => {
       const article = document.createElement("article");
-      const heading = document.createElement("h3");
+      const heading = document.createElement(`h${this.#level()}`);
       heading.id = `${this.#uid}-${index}`;
-      heading.textContent = panel.title;
       article.setAttribute("aria-labelledby", heading.id);
       const header = document.createElement("header");
       header.append(heading);
-      if (panel.subtitle) {
-        const sub = document.createElement("span");
-        sub.textContent = panel.subtitle;
-        header.append(sub);
-      }
       const body = document.createElement("div");
       body.dataset.uiPart = "body";
       const content = this.#declared.get(panel) ?? this.#render?.(panel, context(index)) ?? null;
       if (content) body.append(content);
       article.append(header, body);
       list.append(article);
-      this.#cells.push({ panel, article, content });
+      const cell: Cell = {
+        panel,
+        article,
+        heading,
+        header,
+        subtitle: undefined,
+        content,
+        last: undefined,
+        sent: "",
+        waiting: new Set(),
+      };
+      this.#label(cell, panel);
+      this.#cells.push(cell);
     });
     this.#list = list;
     this.append(list);

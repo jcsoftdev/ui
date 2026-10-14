@@ -5,6 +5,7 @@ import { defineWaffleChart } from "../src/waffle-chart/waffle-chart.ts";
 import { ax, wait } from "./setup.ts";
 import {
   awake,
+  focusFirst,
   hoverLog,
   keys,
   marksOf,
@@ -67,9 +68,7 @@ describe("ui-waffle-chart", () => {
 
   it("navigates in two dimensions: left and right walk the categories, up and down the rows", async () => {
     const c = await waffle();
-    await userEvent.tab();
-    await wait(80);
-    expect(c.hover?.index).toBe(0);
+    await focusFirst(c);
     expect(await keys(c, ["{ArrowDown}", "{ArrowDown}", "{ArrowDown}", "{ArrowUp}"])).toEqual([
       1, 2, 2, 1,
     ]);
@@ -111,5 +110,32 @@ describe("ui-waffle-chart", () => {
   it("passes axe", async () => {
     const c = await waffle();
     expect(await violations(c)).toEqual([]);
+  });
+
+  it("shows nothing over an empty cell, never pins it and leaves nothing held", async () => {
+    const c = await waffle('total="200"');
+    await awake(c);
+    const cells = [...c.querySelectorAll<SVGElement>("svg [data-unit]")].filter(
+      (cell) => !cell.closest("[data-cat]"),
+    );
+    expect(cells.length).toBeGreaterThan(0);
+    const origin = svgOf(c).getBoundingClientRect();
+    const box = (cells.at(-1) as SVGElement).getBoundingClientRect();
+    const x = box.left - origin.left + box.width / 2;
+    const y = box.top - origin.top + box.height / 2;
+    const seen = hoverLog(c);
+    pointer(c, "pointermove", x, y);
+    expect(c.hover).toBeNull();
+    tap(c, x, y);
+    expect(c.selected).toBeNull();
+    expect(c.hover).toBeNull();
+    expect(seen.filter((index) => index !== null)).toEqual([]);
+  });
+
+  it("caps rows and columns so a giant grid stays cheap", async () => {
+    const start = performance.now();
+    const c = await waffle('rows="500" columns="500"');
+    expect(c.querySelectorAll("svg [data-unit]").length).toBeLessThanOrEqual(2000);
+    expect(performance.now() - start).toBeLessThan(3000);
   });
 });

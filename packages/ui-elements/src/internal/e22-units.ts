@@ -2,7 +2,7 @@
 // animation, a gap-free lattice hit test and 2D keyboard navigation over the categories.
 import type { NavIntent } from "./chart-base.js";
 import { svg } from "./chart-dom.js";
-import type { ResolvedUnitShape } from "./e22-unit-icons.js";
+import type { ResolvedUnitShape } from "./unit-shapes.js";
 
 const EASE_OUT = "cubic-bezier(.22,1,.36,1)";
 
@@ -42,18 +42,21 @@ export function glyph(
           : svg("rect", { x: 0, y: 0, width: shape.width * amount, height: shape.height }),
       ),
     );
-  if (track && amount < 1)
-    inner.append(
-      svg("path", { d: shape.path, style: `fill:var(--track);fill-rule:${shape.fillRule}` }),
-    );
-  if (amount > 0)
-    inner.append(
-      svg("path", {
-        d: shape.path,
-        "clip-path": partial ? `url(#${clipId})` : undefined,
-        style: `fill:${color};fill-rule:${shape.fillRule}`,
-      }),
-    );
+  const rule = shape.fillRule;
+  if (track && amount < 1) {
+    const rest = svg("path", { d: shape.path, "fill-rule": rule });
+    rest.style.setProperty("fill", "var(--track)");
+    inner.append(rest);
+  }
+  if (amount > 0) {
+    const body = svg("path", {
+      d: shape.path,
+      "fill-rule": rule,
+      "clip-path": partial ? `url(#${clipId})` : undefined,
+    });
+    body.style.setProperty("fill", paint(color));
+    inner.append(body);
+  }
   return svg(
     "g",
     { "data-unit": "", style: "transform-box:fill-box;transform-origin:center" },
@@ -107,25 +110,20 @@ export function latticeCell(lattice: Lattice, px: number, py: number): number {
 }
 
 /**
- * A gap-free `hit` over a lattice. Over a unit it answers that unit's mark; over a cell that
- * belongs to nobody (an empty slot, a hidden category) it keeps the mark already shown, so the
- * hover clears only when the pointer reaches another mark or leaves the lattice. `shown` is the
- * mark whose details are on screen when the pointer arrives (`DrawContext.hover`).
+ * A gap-free `hit` over a lattice: over a unit it answers that unit's mark, over a gutter the mark
+ * of the cell it borders. An empty cell (a free slot, a hidden category) or a point beyond the
+ * lattice answers -1, so the details close there and nowhere else.
  */
-export function latticeHit(
-  lattice: Lattice,
-  shown: number | null,
-): (x: number, y: number) => number {
-  let held = shown ?? -1;
-  return (x, y) => {
-    const owner = latticeCell(lattice, x, y);
-    if (owner === OUTSIDE) {
-      held = -1;
-      return -1;
-    }
-    if (owner >= 0) held = owner;
-    return held;
-  };
+export function latticeHit(lattice: Lattice): (x: number, y: number) => number {
+  return (x, y) => Math.max(-1, latticeCell(lattice, x, y));
+}
+
+/**
+ * A color safe to write into a style: anything that is not a plain CSS color (a `url()`, an
+ * `image-set()`, a smuggled declaration) is dropped for `fallback`. `var()` references pass.
+ */
+export function paint(color: string, fallback = "var(--ink-3)"): string {
+  return typeof CSS !== "undefined" && CSS.supports("color", color) ? color : fallback;
 }
 
 /**
@@ -191,7 +189,7 @@ export function setUnitKey(
   const mark = svg(
     "svg",
     { "aria-hidden": "true", width: 14, height: 14, viewBox: "0 0 24 24" },
-    svg("path", { d: key.shape.path, style: `fill:var(--ink-3);fill-rule:${key.shape.fillRule}` }),
+    svg("path", { d: key.shape.path, "fill-rule": key.shape.fillRule, style: "fill:var(--ink-3)" }),
   );
   const text = document.createElement("span");
   text.textContent = key.text;
@@ -209,3 +207,7 @@ export function fitText(text: string, width: number, fontSize: number): string {
   const room = Math.max(1, Math.floor(width / (fontSize * 0.58)));
   return text.length <= room ? text : `${text.slice(0, Math.max(1, room - 1))}…`;
 }
+
+/** A boolean attribute: absent is `fallback`, present is on unless its value is `false`, `off`, `0` or `no`. */
+export const flag = (value: string | null, fallback = false): boolean =>
+  value === null ? fallback : !/^(false|off|0|no)$/i.test(value.trim());

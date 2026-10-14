@@ -1,5 +1,6 @@
 // Shared by the browser tests of the unit charts (waffle, pictogram, isotype rows, progress units).
 import axe from "axe-core";
+import { expect, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { frame, mount, wait } from "./setup.ts";
 
@@ -67,12 +68,29 @@ export const tap = (c: Element, x: number, y: number) => {
   pointer(c, "pointerup", x, y, "touch");
 };
 
-/** Loads the interaction chunk the way a pointer arriving would, without hovering any mark. */
+/**
+ * Loads the interaction chunk the way a pointer arriving would, and waits until it is live: a probe
+ * move over the first mark must show its details, then the pointer leaves.
+ */
 export const awake = async (c: Element) => {
-  drawingOf(c).dispatchEvent(
-    new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
-  );
-  await wait(60);
+  const probe = c.querySelector("svg [data-cat]") as SVGElement;
+  const at = (probe.querySelector("[data-unit]") ?? probe).getBoundingClientRect();
+  const origin = svgOf(c).getBoundingClientRect();
+  const x = at.left - origin.left + at.width / 2;
+  const y = at.top - origin.top + at.height / 2;
+  pointer(c, "pointerenter", x, y);
+  await vi.waitFor(() => {
+    pointer(c, "pointermove", x, y);
+    expect((c as UnitChart).hover).not.toBeNull();
+  });
+  pointer(c, "pointerleave", 0, 0);
+  expect((c as UnitChart).hover).toBeNull();
+};
+
+/** Tabs into the chart and waits for the first mark's details. */
+export const focusFirst = async (c: UnitChart) => {
+  await userEvent.tab();
+  await vi.waitFor(() => expect(c.hover?.index).toBe(0));
 };
 
 /** The mark index of every `chart-hover` event (null when the details close). */
@@ -84,19 +102,22 @@ export const hoverLog = (c: Element) => {
   return seen;
 };
 
-export const violations = async (root: Element) =>
-  (
+/** axe, after the screen-reader table (built a quarter of a second after the data) exists. */
+export const violations = async (root: Element) => {
+  await wait(350);
+  return (
     await axe.run(root, {
       rules: { "color-contrast": { enabled: false }, region: { enabled: false } },
     })
   ).violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`);
+};
 
 /** Keys pressed one by one, returning the mark index shown after each. */
 export const keys = async (c: UnitChart, sequence: string[]) => {
   const shown: Array<number | undefined> = [];
   for (const key of sequence) {
     await userEvent.keyboard(key);
-    await wait(10);
+    await frame();
     shown.push(c.hover?.index);
   }
   return shown;

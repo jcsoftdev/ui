@@ -47,4 +47,19 @@ describe("ui-progress-units", () => {
   it("passes axe", async () => {
     expect(await violations(await progress('value="3.5"'))).toEqual([]);
   });
+
+  it("caps a huge count and drops a hostile colour", async () => {
+    const start = performance.now();
+    const c = await progress('value="5" max="10" count="120000" variant="segments"');
+    expect(svgOf(c).querySelectorAll("[data-unit]").length).toBeLessThanOrEqual(2000);
+    expect(performance.now() - start).toBeLessThan(3000);
+    const hostile = await progress('value="3" color="url(https://evil.test/x.png)"');
+    expect(hostile.innerHTML).not.toContain("evil.test");
+  });
+
+  it("treats an unknown tone like toString as no tone and false as off", async () => {
+    const c = await progress('value="3" tone="toString" show-value="false"');
+    expect(svgOf(c).querySelectorAll("[data-unit]")).toHaveLength(5);
+    expect(svgOf(c).querySelector("[data-unit-value]")).toBeNull();
+  });
 });

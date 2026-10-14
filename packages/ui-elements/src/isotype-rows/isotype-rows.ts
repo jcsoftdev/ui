@@ -1,4 +1,4 @@
-import { unitFractions } from "@jcsoftdev/ui-core/chart/units";
+import { unitRuns } from "@jcsoftdev/ui-core/chart/units";
 import { type DefineOptions, defineElement, uid } from "../internal/base.js";
 import { type DrawContext, type DrawResult, svg } from "../internal/chart-base.js";
 import {
@@ -6,15 +6,17 @@ import {
   type UnitCategory,
   UnitChartElement,
 } from "../internal/e22-unit-chart.js";
-import { resolveUnitShape, type UnitIcon } from "../internal/e22-unit-icons.js";
 import {
   fitText,
+  flag,
   glyph,
   navigate,
+  paint,
   popUnits,
   setUnitKey,
   textWidth,
 } from "../internal/e22-units.js";
+import { resolveUnitShape, type UnitIcon } from "../internal/unit-shapes.js";
 
 const LABEL_GAP = 12;
 const FONT = 12;
@@ -56,6 +58,7 @@ export class UiIsotypeRows extends UnitChartElement {
   protected readonly kind = "isotype-rows";
   readonly #clips = uid("isotype");
   #icon: UnitIcon | undefined;
+  readonly #redraw = () => this.requestDraw();
 
   get icon(): UnitIcon {
     return this.#icon ?? this.getAttribute("icon") ?? "scissors";
@@ -101,8 +104,8 @@ export class UiIsotypeRows extends UnitChartElement {
     const perIcon = number(this.getAttribute("per-icon"), 1);
     const icon = this.icon;
     const gap = Math.max(0, number(this.getAttribute("gap"), 0.18));
-    const track = this.hasAttribute("track") && this.getAttribute("track") !== "off";
-    const showValues = this.getAttribute("show-values") !== "off";
+    const track = flag(this.getAttribute("track"));
+    const showValues = flag(this.getAttribute("show-values"), true);
     const unitLabel = this.unitLabel;
     const rowHeight =
       this.getAttribute("height") === "fill"
@@ -111,10 +114,16 @@ export class UiIsotypeRows extends UnitChartElement {
     const byCategory = this.getAttribute("color-mode") === "category";
     const single = this.getAttribute("color");
     const colors = data.map((item, index) =>
-      byCategory ? color(index, item.color) : (item.color ?? single ?? color(0)),
+      paint(
+        byCategory ? color(index, item.color) : (item.color ?? single ?? color(0)),
+        color(index),
+      ),
     );
 
-    const runs = data.map((item) => unitFractions(item.value, perIcon));
+    const runs = unitRuns(
+      data.map((item) => item.value),
+      perIcon,
+    );
     const longest = Math.max(1, ...runs.map((run) => run.length));
     const longestName = Math.max(0, ...data.map((item) => textWidth(item.name, FONT)));
     const labelWidth = Math.min(Math.ceil(longestName) + 4, Math.max(64, width * 0.3));
@@ -129,7 +138,7 @@ export class UiIsotypeRows extends UnitChartElement {
 
     const anchors: Array<{ x: number; y: number }> = [];
     const marks = data.map((item, index) => {
-      const shape = resolveUnitShape(item.icon ?? icon);
+      const shape = resolveUnitShape(item.icon ?? icon, this.#redraw);
       const run = runs[index] ?? [];
       const top = index * rowHeight + (rowHeight - size) / 2;
       const center = index * rowHeight + rowHeight / 2;
@@ -153,6 +162,9 @@ export class UiIsotypeRows extends UnitChartElement {
             "aria-hidden": "true",
           },
           fitText(item.name, labelWidth, FONT),
+          ...(fitText(item.name, labelWidth, FONT) === item.name
+            ? []
+            : [svg("title", {}, item.name)]),
         ),
       );
       const slots = track ? longest : run.length;
@@ -193,12 +205,14 @@ export class UiIsotypeRows extends UnitChartElement {
     });
     if (animate) popUnits(root);
 
-    const keyed =
-      this.getAttribute("show-key") !== "off" && (this.hasAttribute("show-key") || perIcon !== 1);
+    const keyed = flag(this.getAttribute("show-key"), perIcon !== 1);
     setUnitKey(
       this,
       keyed
-        ? { shape: resolveUnitShape(icon), text: `= ${this.number(ctx, perIcon)} ${unitLabel}` }
+        ? {
+            shape: resolveUnitShape(icon, this.#redraw),
+            text: `= ${this.key(ctx, perIcon)} ${unitLabel}`,
+          }
         : null,
     );
 

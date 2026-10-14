@@ -1,5 +1,6 @@
 import {
   assignUnits,
+  capGrid,
   type GridOrder,
   gridCell,
   waffleCounts,
@@ -8,7 +9,7 @@ import type { DefineOptions } from "../internal/base.js";
 import { defineElement } from "../internal/base.js";
 import { type DrawContext, type DrawResult, svg } from "../internal/chart-base.js";
 import { UNIT_ATTRIBUTES, UnitChartElement } from "../internal/e22-unit-chart.js";
-import { type Lattice, latticeHit, navigate, popUnits } from "../internal/e22-units.js";
+import { type Lattice, latticeHit, navigate, paint, popUnits } from "../internal/e22-units.js";
 
 type CellShape = "square" | "rounded" | "circle";
 
@@ -18,20 +19,21 @@ const number = (value: string | null, fallback: number): number => {
 };
 
 function cell(x: number, y: number, size: number, shape: CellShape, color: string): SVGGElement {
-  const style = `fill:${color}`;
-  return svg(
-    "g",
-    { "data-unit": "", style: "transform-box:fill-box;transform-origin:center" },
+  const mark =
     shape === "circle"
-      ? svg("circle", { cx: x + size / 2, cy: y + size / 2, r: size / 2, style })
+      ? svg("circle", { cx: x + size / 2, cy: y + size / 2, r: size / 2 })
       : svg("rect", {
           x,
           y,
           width: size,
           height: size,
           rx: shape === "rounded" ? size * 0.28 : Math.min(2, size * 0.08),
-          style,
-        }),
+        });
+  mark.style.setProperty("fill", color);
+  return svg(
+    "g",
+    { "data-unit": "", style: "transform-box:fill-box;transform-origin:center" },
+    mark,
   );
 }
 
@@ -67,8 +69,10 @@ export class UiWaffleChart extends UnitChartElement {
     const { svg: root, width, height, color, animate } = ctx;
     const data = this.data;
     const format = this.unitFormat(ctx);
-    const rows = Math.max(1, Math.floor(number(this.getAttribute("rows"), 10)));
-    const columns = Math.max(1, Math.floor(number(this.getAttribute("columns"), 10)));
+    const [rows, columns] = capGrid(
+      Math.max(1, Math.floor(number(this.getAttribute("rows"), 10))),
+      Math.max(1, Math.floor(number(this.getAttribute("columns"), 10))),
+    );
     const gap = Math.max(0, number(this.getAttribute("gap"), 0.14));
     const attr = this.getAttribute("cell-shape");
     const shape: CellShape = attr === "square" || attr === "circle" ? attr : "rounded";
@@ -83,7 +87,7 @@ export class UiWaffleChart extends UnitChartElement {
       total != null && Number.isFinite(total) ? total : undefined,
     );
     const owners = assignUnits(counts);
-    const colors = data.map((item, index) => color(index, item.color));
+    const colors = data.map((item, index) => paint(color(index, item.color), color(index)));
     const share = (value: number) => this.percent(ctx, whole ? value / whole : 0);
 
     const across = columns + (columns - 1) * gap;
@@ -142,7 +146,7 @@ export class UiWaffleChart extends UnitChartElement {
     });
     if (animate) popUnits(root, { duration: 360, budget: 700 });
 
-    const pick = latticeHit(lattice, ctx.hover);
+    const pick = latticeHit(lattice);
     const dot = shape === "circle" ? "dot" : "square";
     return {
       summary: data.map((item) => `${item.name} ${share(item.value)}`).join(", "),

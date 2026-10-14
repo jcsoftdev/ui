@@ -1,9 +1,14 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { userEvent } from "vitest/browser";
-import { definePictogramChart } from "../src/pictogram-chart/pictogram-chart.ts";
+import {
+  BARBER_SILHOUETTES,
+  definePictogramChart,
+  PICTOGRAM_SILHOUETTES,
+} from "../src/pictogram-chart/pictogram-chart.ts";
 import { ax, wait } from "./setup.ts";
 import {
   awake,
+  focusFirst,
   hoverLog,
   keys,
   marksOf,
@@ -57,31 +62,36 @@ describe("ui-pictogram-chart", () => {
     expect(seen).toEqual([0, 1, null]);
   });
 
-  it("holds the category over the empty slots of a row, and moves to the next category by row", async () => {
+  it("closes the details over the empty slots of a row, and moves to the next category by row", async () => {
     const c = await pictogram('per-unit="5" layout="rows" columns="6"');
     await awake(c);
     const seen = hoverLog(c);
     const units = unitBoxes(c);
     const first = units[0] as (typeof units)[number];
     const pitch = (units[1]?.x ?? 0) - first.x;
-    // Row 1 (adults) has five icons in six columns: the sixth slot is empty and still adults.
+    // Row 1 (adults) has five icons in six columns: the sixth slot is empty and shows nothing.
     pointer(c, "pointermove", first.cx, first.cy);
     pointer(c, "pointermove", first.cx + 5 * pitch, first.cy);
-    expect(seen).toEqual([0]);
+    expect(seen).toEqual([0, null]);
+    expect(c.hover).toBeNull();
     pointer(c, "pointermove", first.cx + 5 * pitch, first.cy + pitch);
-    expect(seen).toEqual([0, 1]);
+    expect(seen).toEqual([0, null]);
+    pointer(c, "pointermove", first.cx, first.cy + pitch);
+    expect(seen).toEqual([0, null, 1]);
+    // Leaving the plot never leaves a held category behind.
+    pointer(c, "pointerleave", 0, 0);
+    expect(c.hover).toBeNull();
   });
 
   it("navigates in two dimensions over the rows", async () => {
     const c = await pictogram('per-unit="5" layout="rows"');
-    await userEvent.tab();
-    await wait(80);
+    await focusFirst(c);
     expect(await keys(c, ["{ArrowDown}", "{ArrowUp}", "{ArrowRight}", "{Home}", "{End}"])).toEqual([
       1, 0, 1, 0, 1,
     ]);
   });
 
-  it("keeps capacity as empty icons that do not leave the category", async () => {
+  it("keeps capacity as empty icons that show nothing", async () => {
     const c = await pictogram('per-unit="5" total="60"');
     expect(unitBoxes(c)).toHaveLength(12);
     const kid = unitBoxes(c, "svg [data-cat='1'] [data-unit]")[0] as ReturnType<
@@ -94,7 +104,11 @@ describe("ui-pictogram-chart", () => {
     const seen = hoverLog(c);
     pointer(c, "pointermove", kid.cx, kid.cy);
     pointer(c, "pointermove", empty.cx, empty.cy);
-    expect(seen).toEqual([1]);
+    expect(seen).toEqual([1, null]);
+    // A tap on an empty slot does not pin anything.
+    tap(c, empty.cx, empty.cy);
+    expect(c.selected).toBeNull();
+    expect(c.hover).toBeNull();
   });
 
   it("pins a category on a tap", async () => {
@@ -108,5 +122,46 @@ describe("ui-pictogram-chart", () => {
 
   it("passes axe", async () => {
     expect(await violations(await pictogram())).toEqual([]);
+  });
+
+  it("never lets a url() colour reach the network, and drops it", async () => {
+    const asked: string[] = [];
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) asked.push(entry.name);
+    });
+    observer.observe({ type: "resource", buffered: false });
+    const payload = "url(https://evil.test/leak.png)";
+    const c = await pictogram('per-unit="5"', [
+      { id: "a", name: "Adults", value: 23, color: payload },
+      { id: "b", name: "Kids", value: 12 },
+    ]);
+    await wait(150);
+    observer.disconnect();
+    expect(asked.filter((name) => name.includes("evil.test"))).toEqual([]);
+    expect(c.innerHTML).not.toContain("evil.test");
+    const fill = (c.querySelector("svg [data-cat='0'] [data-unit] path") as SVGElement).style.fill;
+    expect(fill).not.toContain("url");
+  });
+
+  it("caps a huge value at 2000 icons and still draws quickly", async () => {
+    const start = performance.now();
+    const c = await pictogram('per-unit="1"', [{ id: "a", name: "Adults", value: 120000 }]);
+    expect(unitBoxes(c).length).toBeLessThanOrEqual(2000);
+    expect(unitBoxes(c).length).toBeGreaterThan(0);
+    expect(performance.now() - start).toBeLessThan(3000);
+  });
+
+  it("shows a fractional unit exactly in the key, loads other icons lazily and exports the names", async () => {
+    const c = await pictogram('per-unit="0.25" show-key="false"');
+    expect(c.querySelector("[data-ui-part=unit-key]")).toBeNull();
+    const keyed = await pictogram('per-unit="0.25" icon="heart"');
+    expect(keyed.querySelector("[data-ui-part=unit-key]")?.textContent).toBe("= 0.25 clients");
+    await vi.waitFor(() =>
+      expect(keyed.querySelector("svg [data-unit] path")?.getAttribute("d")).not.toBe(
+        c.querySelector("svg [data-unit] path")?.getAttribute("d"),
+      ),
+    );
+    expect(PICTOGRAM_SILHOUETTES).toContain("heart");
+    expect(BARBER_SILHOUETTES).toContain("scissors");
   });
 });

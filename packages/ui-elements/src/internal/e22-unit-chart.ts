@@ -8,8 +8,8 @@ import {
 } from "@jcsoftdev/ui-core/chart/format";
 import { adoptStyles, rootOf } from "./base.js";
 import { CHART_ATTRIBUTES, ChartElement, type DrawContext } from "./chart-base.js";
-import type { UnitIcon } from "./e22-unit-icons.js";
 import css from "./e22-units.css.js";
+import type { UnitIcon } from "./unit-shapes.js";
 
 /** A category of a unit chart: one color, optionally its own icon. */
 export interface UnitCategory {
@@ -91,6 +91,11 @@ export abstract class UnitChartElement extends ChartElement {
 
   protected percent({ locale }: DrawContext, fraction: number): string {
     return formatPercent(fraction, { locale });
+  }
+
+  /** A plain count, up to two decimals (the key line: 0.25 stays 0.25). */
+  protected key({ locale }: DrawContext, value: number): string {
+    return formatNumber(value, { locale });
   }
 
   protected number({ locale }: DrawContext, value: number): string {

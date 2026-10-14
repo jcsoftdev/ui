@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import * as grid from "../src/chart/grid.ts";
 import * as units from "../src/chart/units.ts";
 
-let reactUnits: typeof units;
+let reactUnits: Omit<typeof units, "capUnits" | "capGrid" | "unitRuns" | "MAX_UNITS">;
 let reactGrid: typeof grid;
 beforeAll(async () => {
   reactUnits = await import("../../ui/src/charts/core/units.ts");
@@ -106,5 +106,19 @@ describe("small multiples maths", () => {
         reactGrid.panelWidth(width, columns, layout.gap),
       );
     }
+  });
+});
+
+describe("unit cap", () => {
+  it("caps counts, grids and a shared run budget", () => {
+    expect(units.capUnits(5)).toBe(5);
+    expect(units.capUnits(120000)).toBe(units.MAX_UNITS);
+    const [rows, cols] = units.capGrid(500, 500);
+    expect(rows * cols).toBeLessThanOrEqual(units.MAX_UNITS);
+    expect(units.capGrid(10, 10)).toEqual([10, 10]);
+    expect(units.unitFractions(120000, 1)).toHaveLength(units.MAX_UNITS);
+    const runs = units.unitRuns([1500, 1500], 1);
+    expect(runs.reduce((sum, run) => sum + run.length, 0)).toBeLessThanOrEqual(units.MAX_UNITS);
+    expect(units.unitRuns([2.5, 1], 1)).toEqual([[1, 1, 0.5], [1]]);
   });
 });

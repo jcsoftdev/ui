@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { type ChartGridContext, defineChartGrid } from "../src/chart-grid/chart-grid.ts";
 import { ax, frame, mount, wait } from "./setup.ts";
 import { violations } from "./unit-chart-helpers.ts";
@@ -135,5 +135,62 @@ describe("ui-chart-grid", () => {
   it("passes axe", async () => {
     const el = await grid("bordered", 720, withCharts);
     expect(await violations(el)).toEqual([]);
+  });
+
+  it("updates a panel title and subtitle on every change", async () => {
+    const el = await grid("", 720, withCharts);
+    el.panels = PANELS.map((panel) => ({ ...panel, title: `${panel.title}!`, subtitle: "new" }));
+    await settle();
+    expect(el.querySelector("article h3")?.textContent).toBe("Ana!");
+    expect(el.querySelector("article header span")?.textContent).toBe("new");
+  });
+
+  it("reaches charts defined late and descendants, answers a request and skips unchanged context", async () => {
+    const seen: ChartGridContext[] = [];
+    const el = await grid("", 720, (g) => {
+      g.panels = PANELS;
+      g.render = () => {
+        const wrap = document.createElement("div");
+        wrap.setAttribute("data-ui-chart", "");
+        const inner = document.createElement("ui-late-chart");
+        inner.setAttribute("data-ui-chart", "");
+        inner.addEventListener("chart-grid-context", (event) =>
+          seen.push((event as CustomEvent<ChartGridContext>).detail),
+        );
+        wrap.append(inner);
+        return wrap;
+      };
+    });
+    const before = seen.length;
+    customElements.define("ui-late-chart", class extends HTMLElement {});
+    await settle();
+    // Defining the element late delivers the context again, to the descendant chart.
+    expect(seen.length).toBeGreaterThan(before);
+    const count = seen.length;
+    el.setAttribute("label", "By barber again");
+    await settle();
+    expect(seen).toHaveLength(count);
+    const late = el.querySelector("ui-late-chart") as Element;
+    const answers: ChartGridContext[] = [];
+    late.addEventListener("chart-grid-context", (event) =>
+      answers.push((event as CustomEvent<ChartGridContext>).detail),
+    );
+    late.dispatchEvent(
+      new CustomEvent("chart-grid-context-request", { bubbles: true, composed: true }),
+    );
+    expect(answers).toHaveLength(1);
+  });
+
+  it("toggles legend buttons with aria-pressed and sets the heading level", async () => {
+    const el = await grid('heading-level="2"', 720, (g) => {
+      withCharts(g);
+      g.legend = [{ id: "cuts", name: "Cuts", color: "var(--chart-cat-1)" }];
+    });
+    await vi.waitFor(() => expect(el.querySelector("[data-ui-part=legend] button")).not.toBeNull());
+    const button = el.querySelector("[data-ui-part=legend] button") as HTMLElement;
+    expect(button.getAttribute("aria-pressed")).toBe("false");
+    button.click();
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    expect(el.querySelector("article h2")?.textContent).toBe("Ana");
   });
 });

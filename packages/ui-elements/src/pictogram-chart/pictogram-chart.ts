@@ -1,21 +1,29 @@
-import { fitUnitGrid, unitCount, unitFractions } from "@jcsoftdev/ui-core/chart/units";
+import {
+  capUnits,
+  fitUnitGrid,
+  MAX_UNITS,
+  unitCount,
+  unitRuns,
+} from "@jcsoftdev/ui-core/chart/units";
 import { type DefineOptions, defineElement, uid } from "../internal/base.js";
 import { type DrawContext, type DrawResult, svg } from "../internal/chart-base.js";
 import { UNIT_ATTRIBUTES, UnitChartElement } from "../internal/e22-unit-chart.js";
 import {
-  type ResolvedUnitShape,
-  resolveUnitShape,
-  type UnitIcon,
-} from "../internal/e22-unit-icons.js";
-import {
+  flag,
   glyph,
   type Lattice,
   latticeHit,
   MIXED_KEY,
   navigate,
+  paint,
   popUnits,
   setUnitKey,
 } from "../internal/e22-units.js";
+import {
+  type ResolvedUnitShape,
+  resolveUnitShape,
+  type UnitIcon,
+} from "../internal/unit-shapes.js";
 
 interface Placed {
   key: string;
@@ -30,6 +38,8 @@ const number = (value: string | null, fallback: number): number => {
   const parsed = value === null || value.trim() === "" ? Number.NaN : Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 };
+
+export { BARBER_SILHOUETTES, PICTOGRAM_SILHOUETTES } from "../internal/unit-shapes.js";
 
 /**
  * `<ui-pictogram-chart>`: an isotype pictogram. Every icon stands for `per-unit` of something
@@ -62,6 +72,7 @@ export class UiPictogramChart extends UnitChartElement {
   protected readonly kind = "pictogram-chart";
   readonly #clips = uid("pictogram");
   #icon: UnitIcon | undefined;
+  readonly #redraw = () => this.requestDraw();
 
   get icon(): UnitIcon {
     return this.#icon ?? this.getAttribute("icon") ?? "person";
@@ -84,14 +95,17 @@ export class UiPictogramChart extends UnitChartElement {
     const gap = Math.max(0, number(this.getAttribute("gap"), 0.25));
     const unitLabel = this.unitLabel;
     const sum = this.total();
-    const colors = data.map((item, index) => color(index, item.color));
+    const colors = data.map((item, index) => paint(color(index, item.color), color(index)));
     const share = (value: number) => this.percent(ctx, sum ? value / sum : 0);
 
-    const runs = data.map((item) => unitFractions(item.value, perUnit));
+    const runs = unitRuns(
+      data.map((item) => item.value),
+      perUnit,
+    );
     const used = runs.reduce((acc, run) => acc + run.length, 0);
     const spare =
       layout === "grid" && Number.isFinite(totalAttr)
-        ? Math.max(0, unitCount(totalAttr, perUnit).units - used)
+        ? capUnits(Math.max(0, unitCount(totalAttr, perUnit).units - used), MAX_UNITS - used)
         : 0;
     const count = used + spare;
     const rowsFor =
@@ -129,13 +143,13 @@ export class UiPictogramChart extends UnitChartElement {
       slot += 1;
     };
     runs.forEach((run, category) => {
-      const shape = resolveUnitShape(data[category]?.icon ?? icon);
+      const shape = resolveUnitShape(data[category]?.icon ?? icon, this.#redraw);
       run.forEach((fill, index) => {
         place(category, fill, shape, index);
       });
       if (layout === "rows") row += Math.ceil(run.length / fit.columns);
     });
-    const spareShape = resolveUnitShape(icon);
+    const spareShape = resolveUnitShape(icon, this.#redraw);
     for (let index = 0; index < spare; index += 1) place(-1, 0, spareShape, used + index);
 
     const visible = data.flatMap((item, index) =>
@@ -146,16 +160,6 @@ export class UiPictogramChart extends UnitChartElement {
     const owners = Array.from({ length: Math.max(1, fit.columns * lines) }, () => -1);
     for (const unit of placed)
       owners[unit.line * fit.columns + unit.column] = markOf.get(unit.category) ?? -1;
-    if (layout === "rows")
-      for (let line = 0; line < lines; line += 1) {
-        const first = owners
-          .slice(line * fit.columns, (line + 1) * fit.columns)
-          .find((o) => o >= 0);
-        if (first === undefined) continue;
-        for (let column = 0; column < fit.columns; column += 1)
-          if (owners[line * fit.columns + column] === -1)
-            owners[line * fit.columns + column] = first;
-      }
     const lattice: Lattice = { x: 0, y: 0, pitch, size, columns: fit.columns, rows: lines, owners };
 
     const at = (unit: Placed) => ({ x: unit.column * pitch, y: unit.line * pitch });
@@ -190,19 +194,18 @@ export class UiPictogramChart extends UnitChartElement {
     if (animate) popUnits(root);
 
     const mixed = new Set(data.map((item) => JSON.stringify(item.icon ?? icon))).size > 1;
-    const keyed =
-      this.getAttribute("show-key") !== "off" && (this.hasAttribute("show-key") || perUnit !== 1);
+    const keyed = flag(this.getAttribute("show-key"), perUnit !== 1);
     setUnitKey(
       this,
       keyed
         ? {
-            shape: resolveUnitShape(mixed ? MIXED_KEY : icon),
-            text: `= ${this.number(ctx, perUnit)} ${unitLabel}`,
+            shape: resolveUnitShape(mixed ? MIXED_KEY : icon, this.#redraw),
+            text: `= ${this.key(ctx, perUnit)} ${unitLabel}`,
           }
         : null,
     );
 
-    const pick = latticeHit(lattice, ctx.hover);
+    const pick = latticeHit(lattice);
     return {
       summary: data.map((item) => `${item.name} ${format(item.value)}`).join(", "),
       marks,
@@ -244,7 +247,7 @@ export class UiPictogramChart extends UnitChartElement {
           },
           {
             id: "units",
-            name: `÷ ${this.number(ctx, perUnit)}`,
+            name: `÷ ${this.key(ctx, perUnit)}`,
             color: color(0),
             values: data.map((item) => item.value / perUnit),
             text: data.map((item) => this.number(ctx, item.value / perUnit)),

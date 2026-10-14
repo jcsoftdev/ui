@@ -6,6 +6,32 @@ export { assignUnits };
 
 const EPSILON = 1e-9;
 
+/** Most units any unit chart draws; past it the chart shows the first ones and warns (see `per-unit`). */
+export const MAX_UNITS = 2000;
+
+let warned = false;
+function warnCapped(): void {
+  if (warned) return;
+  warned = true;
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") return;
+  console.warn(
+    `ui-core: a unit chart is capped at ${MAX_UNITS} units; raise \`per-unit\` so each icon stands for more.`,
+  );
+}
+
+/** `count` units, at most `max` of them; warns once when it cuts. */
+export function capUnits(count: number, max = MAX_UNITS): number {
+  if (count <= max) return Math.max(0, count);
+  warnCapped();
+  return Math.max(0, max);
+}
+
+/** Rows and columns of a waffle, cut so the grid never holds more than `MAX_UNITS` cells. */
+export function capGrid(rows: number, columns: number): [number, number] {
+  const cols = Math.max(1, Math.min(columns, MAX_UNITS));
+  return [Math.max(1, Math.min(rows, Math.floor(capUnits(rows * cols) / cols) || 1)), cols];
+}
+
 export interface UnitCount {
   /** Completely filled units. */
   full: number;
@@ -27,11 +53,25 @@ export function unitCount(value: number, perUnit = 1): UnitCount {
 }
 
 /** Fill of every unit a value takes: `unitFractions(23, 5)` -> `[1, 1, 1, 1, 0.6]`. */
-export function unitFractions(value: number, perUnit = 1): number[] {
-  const { full, partial } = unitCount(value, perUnit);
+export function unitFractions(value: number, perUnit = 1, max = MAX_UNITS): number[] {
+  const { full, partial, units } = unitCount(value, perUnit);
+  if (units > max) {
+    warnCapped();
+    return Array.from({ length: Math.max(0, max) }, () => 1);
+  }
   const fractions: number[] = Array.from({ length: full }, () => 1);
   if (partial > 0) fractions.push(partial);
   return fractions;
+}
+
+/** `unitFractions` of every value, all of them sharing one budget of `MAX_UNITS` units. */
+export function unitRuns(values: readonly number[], perUnit = 1, budget = MAX_UNITS): number[][] {
+  let left = budget;
+  return values.map((value) => {
+    const run = unitFractions(value, perUnit, left);
+    left -= run.length;
+    return run;
+  });
 }
 
 /** Rounds to the nearest multiple of `step` (e.g. 0.5 for half stars). No step, no rounding. */
@@ -45,7 +85,7 @@ export function roundToStep(value: number, step?: number): number {
  * `[1, 1, 1, 1, 0.5]`. The value is clamped to `[0, max]` and rounded to `step`.
  */
 export function progressFractions(value: number, max: number, count: number, step?: number) {
-  const units = Math.max(0, Math.floor(count));
+  const units = capUnits(Math.max(0, Math.floor(count)));
   if (!units || !(max > 0) || !Number.isFinite(value))
     return Array.from({ length: units }, () => 0);
   const clamped = Math.min(max, Math.max(0, roundToStep(value, step)));
@@ -130,7 +170,7 @@ export function fitUnitGrid({
   rowsFor,
   columns: fixed,
 }: UnitGridOptions): UnitGridFit {
-  const limit = Math.max(1, Math.floor(maxColumns));
+  const limit = Math.min(MAX_UNITS, Math.max(1, Math.floor(maxColumns)));
   if (fixed && fixed > 0) {
     const rows = rowsFor(fixed);
     return {

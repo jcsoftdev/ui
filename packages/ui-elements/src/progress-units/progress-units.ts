@@ -9,13 +9,13 @@ import {
   type DrawResult,
   svg,
 } from "../internal/chart-base.js";
+import css from "../internal/e22-units.css.js";
+import { flag, glyph, paint, popUnits, textWidth } from "../internal/e22-units.js";
 import {
   type ResolvedUnitShape,
   resolveUnitShape,
   type UnitIcon,
-} from "../internal/e22-unit-icons.js";
-import css from "../internal/e22-units.css.js";
-import { glyph, popUnits, textWidth } from "../internal/e22-units.js";
+} from "../internal/unit-shapes.js";
 
 const number = (value: string | null, fallback: number): number => {
   const parsed = value === null || value.trim() === "" ? Number.NaN : Number(value);
@@ -113,15 +113,16 @@ export class UiProgressUnits extends ChartElement {
     const unitsCount = Math.max(1, Math.floor(number(this.getAttribute("count"), 5)));
     const segments = this.getAttribute("variant") === "segments";
     const gap = Math.max(0, number(this.getAttribute("gap"), 0.18));
-    const showValue = this.getAttribute("show-value") !== "off";
+    const showValue = flag(this.getAttribute("show-value"), true);
     const format: ValueFormatter =
       this.valueFormat || this.hasAttribute("value-format")
         ? ctx.format
         : (n) => formatNumber(n, { locale, maximumFractionDigits: 1 });
     const tone = this.getAttribute("tone") as ChartTone | null;
-    const paint =
+    const raw =
       this.getAttribute("color") ??
-      (tone && tone in TONE_COLORS ? TONE_COLORS[tone].ink : color(0));
+      (tone && Object.hasOwn(TONE_COLORS, tone) ? TONE_COLORS[tone].ink : color(0));
+    const ink = paint(raw, color(0));
     const shown = Math.min(max, Math.max(0, roundToStep(value, step)));
     const text = `${format(shown)} / ${format(max)}`;
     const fractions = progressFractions(value, max, unitsCount, step);
@@ -139,7 +140,7 @@ export class UiProgressUnits extends ChartElement {
       spacing = pitchGap / unitWidth;
     } else {
       unitWidth = Math.max(4, Math.min(height, area / (count + (count - 1) * spacing)));
-      shape = resolveUnitShape(this.icon);
+      shape = resolveUnitShape(this.icon, () => this.requestDraw());
     }
     const pitch = unitWidth * (1 + spacing);
     const used = count ? (count - 1) * pitch + unitWidth : 0;
@@ -152,7 +153,7 @@ export class UiProgressUnits extends ChartElement {
           (height - unitWidth) / 2,
           unitWidth,
           amount,
-          paint,
+          ink,
           `${this.#clips}-${index}`,
         ),
       );
@@ -178,9 +179,9 @@ export class UiProgressUnits extends ChartElement {
       summary: text,
       snapshot: () => ({
         title: this.getAttribute("label") ?? this.resolvedLabels.chart,
-        categoryHeader: "",
+        categoryHeader: "Item",
         categories: [this.getAttribute("label") ?? this.resolvedLabels.chart],
-        series: [{ id: "value", name: "", color: paint, values: [shown], text: [text] }],
+        series: [{ id: "value", name: "Value", color: ink, values: [shown], text: [text] }],
       }),
     };
   }

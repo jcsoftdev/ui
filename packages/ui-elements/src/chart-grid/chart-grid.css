@@ -51,7 +51,7 @@
   gap: 6px;
   min-width: 0;
 }
-[data-ui="chart-grid"][bordered] article {
+[data-ui="chart-grid"] article[data-bordered] {
   padding: 12px;
   border: var(--border-width-divider) solid var(--border-color-divider);
   border-radius: var(--radius-tile);
@@ -63,7 +63,12 @@
   gap: 8px;
   min-width: 0;
 }
-[data-ui="chart-grid"] h3 {
+[data-ui="chart-grid"] h1,
+[data-ui="chart-grid"] h2,
+[data-ui="chart-grid"] h3,
+[data-ui="chart-grid"] h4,
+[data-ui="chart-grid"] h5,
+[data-ui="chart-grid"] h6 {
   overflow: hidden;
   margin: 0;
   color: var(--ink-2);

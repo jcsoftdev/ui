@@ -4,6 +4,7 @@ import { defineIsotypeRows } from "../src/isotype-rows/isotype-rows.ts";
 import { ax, wait } from "./setup.ts";
 import {
   awake,
+  focusFirst,
   hoverLog,
   keys,
   marksOf,
@@ -62,8 +63,7 @@ describe("ui-isotype-rows", () => {
 
   it("navigates in two dimensions: up and down are the rows above and below", async () => {
     const c = await rows();
-    await userEvent.tab();
-    await wait(80);
+    await focusFirst(c);
     expect(await keys(c, ["{ArrowDown}", "{ArrowDown}", "{ArrowDown}", "{ArrowUp}"])).toEqual([
       1, 2, 2, 1,
     ]);
@@ -80,5 +80,21 @@ describe("ui-isotype-rows", () => {
 
   it("passes axe", async () => {
     expect(await violations(await rows())).toEqual([]);
+  });
+
+  it("caps a huge value and names a truncated label in full", async () => {
+    const start = performance.now();
+    const c = await rows('per-icon="1"', [
+      {
+        id: "a",
+        name: "An extremely long service name that cannot fit the label gutter",
+        value: 120000,
+      },
+    ]);
+    expect(unitBoxes(c).length).toBeLessThanOrEqual(2000);
+    expect(performance.now() - start).toBeLessThan(3000);
+    expect(c.innerHTML).toContain(
+      "An extremely long service name that cannot fit the label gutter",
+    );
   });
 });
