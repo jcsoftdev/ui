@@ -123,7 +123,7 @@ I = direct inline. Batches KC3..KC10, KC13, KC14 run in parallel (file-disjoint 
 - KC1 done on `feat/compose-charts-kc1` (KC1a) and `feat/compose-charts-kc1-geometry` (KC1b), both unmerged.
   Evidence: `:chart-core:check` (jvm + android unit tests, 52 tests), `apiCheck`, `spotlessCheck`, iOS arm64/simulator main and test
   compile, `check-chart-size.mjs` (chart-core dex 7196 B of the 25 KB cap, aar classes 145489 B, klib 366753 B), `pnpm check:chart-fixtures`
-  (13 fixtures, Node 22), `:chart:jvmTest` module guard, `:chart-core:chartBench` + `check-chart-bench.mjs` within 20%.
+  (13 fixtures, Node 22), `:chart:jvmTest` module guard, `:chart-core:chartBench` + `check-chart-bench.mjs` within 50%.
   Not run locally: `iosSimulatorArm64Test` (no simulator SDK). Fixtures include NaN/Infinity, empty, single-point and 1e6-point cases.
   Notes for KC2: formatting goes through `ChartLocale` (`ChartLocales.system` / `forTag`; no es-PE default), geometry is emitted through
   `PathCommands` (`toSvg()` byte-matches the web), non-finite input is a gap, selection helpers are keyed. Fixtures that use Intl

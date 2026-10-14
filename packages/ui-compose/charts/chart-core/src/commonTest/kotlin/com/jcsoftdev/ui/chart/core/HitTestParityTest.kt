@@ -82,6 +82,18 @@ class HitTestParityTest {
         assertEquals(1, index.nearest(1e9, 1e9, 5.0))
     }
 
+    @Test fun aFlatWideCloudDoesNotAllocateAHugeGrid() {
+        // All y equal and x over 1e10 once asked for hundreds of millions of columns.
+        val index = PointIndex(doubleArrayOf(0.0, 5e9, 1e10), doubleArrayOf(3.0, 3.0, 3.0))
+        assertEquals(1, index.nearest(5e9 + 2.0, 3.0, 10.0))
+        assertEquals(-1, index.nearest(2.5e9, 3.0, 10.0))
+    }
+
+    @Test fun equidistantPointsTieLikeTheWebGridAnchoredAtZero() {
+        val index = PointIndex(doubleArrayOf(30.0, 20.0), doubleArrayOf(0.0, 10.0))
+        assertEquals(1, index.nearest(25.0, 5.0, 16.0))
+    }
+
     @Test fun selectionSurvivesReorderByKeyAndDropsWhenTheKeyDisappears() {
         val before = listOf("a", "b", "c")
         val after = listOf("c", "a", "z")

@@ -54,14 +54,17 @@ public class PointIndex(
             starts = IntArray(1)
             items = IntArray(0)
         } else {
-            // Keep the grid within a few million cells however spread out the points are.
+            // Keep the grid within about four million cells however spread out the points are: by area, and by span so a flat but
+            // wide cloud (all y equal, x over 1e10) cannot ask for hundreds of millions of columns.
             val area = (hiX - loX + 1) * (hiY - loY + 1)
             size = max(size, sqrt(area / MAX_CELLS))
-            originX = loX
-            originY = loY
+            size = max(size, max(hiX - loX, hiY - loY) / MAX_SPAN)
+            // Cells sit on multiples of the cell size, as on the web, so a tie between equidistant points breaks the same way.
+            originX = floor(loX / size) * size
+            originY = floor(loY / size) * size
             cell = size
-            cols = floor((hiX - loX) / size).toInt() + 1
-            rows = floor((hiY - loY) / size).toInt() + 1
+            cols = floor((hiX - originX) / size).toInt() + 1
+            rows = floor((hiY - originY) / size).toInt() + 1
             starts = IntArray(cols * rows + 1)
             val cellOf = IntArray(n) { -1 }
             for (i in 0 until n) {
@@ -120,6 +123,7 @@ public class PointIndex(
 
     private companion object {
         const val MAX_CELLS = 4_000_000.0
+        const val MAX_SPAN = 2_000.0
     }
 }
 

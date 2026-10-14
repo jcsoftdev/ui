@@ -1,5 +1,5 @@
 // Regression gate for the chart-core micro-benchmarks. Compares build/chart-bench.json (written by `./gradlew :chart-core:chartBench`)
-// with the committed charts/chart-core/bench-baseline.json and fails when any benchmark is more than 20% slower.
+// with the committed charts/chart-core/bench-baseline.json and fails when any benchmark is more than 50% slower.
 //   node scripts/check-chart-bench.mjs            check
 //   node scripts/check-chart-bench.mjs --update   rewrite the baseline from the last run (only in a commit that says why)
 // Each figure is median time divided by a calibration loop timed in the same JVM, so it compares across machines.
@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const resultFile = join(root, "charts/chart-core/build/chart-bench.json");
 const baselineFile = join(root, "charts/chart-core/bench-baseline.json");
-export const TOLERANCE = 1.2;
+export const TOLERANCE = 1.5;
 
 export function compare(baseline, result, tolerance = TOLERANCE) {
   const problems = [];

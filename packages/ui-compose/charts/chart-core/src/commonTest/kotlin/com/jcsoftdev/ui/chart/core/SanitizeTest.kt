@@ -80,6 +80,12 @@ class SanitizeTest {
         assertEquals("0", formatNumber(-0.0, locale))
     }
 
+    @Test fun aNonFiniteCornerRadiusIsZeroNotNaN() {
+        val path = roundedRectPath(0.0, 0.0, 20.0, 10.0, Double.NaN, 4.0, Double.POSITIVE_INFINITY, -3.0)
+        assertTrue(!path.toSvg().contains("NaN") && !path.toSvg().contains("Infinity"), path.toSvg())
+        assertEquals(roundedRectPath(0.0, 0.0, 20.0, 10.0, 0.0, 4.0, 0.0, 0.0).toSvg(), path.toSvg())
+    }
+
     @Test fun timeAxisIgnoresNonFiniteTimes() {
         val locale = ChartLocales.forTag("en-US")
         val day = 86_400_000.0

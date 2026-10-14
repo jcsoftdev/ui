@@ -396,6 +396,9 @@ public fun areaPath(
     return out
 }
 
+/** A corner radius, or zero when it is not a finite number (a NaN radius must not reach the path). */
+private fun radius(value: Double): Double = if (value.isFinite()) max(0.0, value) else 0.0
+
 /** Rectangle with an independent radius per corner, clamped to fit. */
 public fun roundedRectPath(
     x: Double,
@@ -412,10 +415,10 @@ public fun roundedRectPath(
     val w = max(0.0, width)
     val h = max(0.0, height)
     val cap = min(w, h) / 2
-    val tl = min(topLeft, cap)
-    val tr = min(topRight, cap)
-    val br = min(bottomRight, cap)
-    val bl = min(bottomLeft, cap)
+    val tl = min(radius(topLeft), cap)
+    val tr = min(radius(topRight), cap)
+    val br = min(radius(bottomRight), cap)
+    val bl = min(radius(bottomLeft), cap)
     out.moveTo(x + tl, y)
     out.horizontalTo(x + w - tr)
     if (tr != 0.0) out.arcTo(tr, x + w, y + tr)
