@@ -13,6 +13,7 @@ import {
   type HoverInfo,
   type HoverSource,
 } from "./chart-protocol.js";
+import { watchTheme } from "./chart-theme.js";
 
 export { join, svg } from "./chart-dom.js";
 export * from "./chart-protocol.js";
@@ -79,6 +80,12 @@ export interface DrawContext {
   animate: boolean;
   /** False when the user prefers reduced motion or the chart has `animate="off"`: tween data-to-data changes only if true. */
   motion: boolean;
+  /**
+   * Bumps every time the page theme changes (`data-theme`, `class` or `style` on the root or the
+   * nearest themed ancestor, or `prefers-color-scheme`); the chart redraws as `update`. A painter
+   * that caches resolved colors (a canvas) drops its cache when this differs from the last draw.
+   */
+  themeVersion: number;
   /** True for a frame asked for with `requestDraw("transient")`: nothing about the data changed. */
   transient: boolean;
   /**
@@ -102,6 +109,12 @@ export interface DrawContext {
 }
 
 export interface DrawResult {
+  /**
+   * The height in px this content needs (rows, a tree depth). The base applies it to the drawing part
+   * and redraws once, unless the consumer set `height`, `height="fill"` or `aspect-ratio`. Never write
+   * the host: return it here, or set `static defaultHeight`.
+   */
+  naturalHeight?: number;
   /** Accessible name when the element has no `label` attribute. */
   label?: string;
   /** One sentence for screen readers (first, last, min, max...). Becomes the description. */
@@ -185,6 +198,12 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   static retain = false;
   /** CSS `touch-action` of the drawing (the attribute of the same name overrides it). */
   static touchAction = "pan-y";
+  /**
+   * Height in px when the consumer sets no `height` and no `aspect-ratio`: a number, or a function of
+   * the element (read its attributes, e.g. `orientation`). Applied to the inner drawing part, never to
+   * the host, and re-read on every draw.
+   */
+  static defaultHeight: number | ((element: never) => number) = DEFAULT_HEIGHT;
 
   /** Property forms of the matching attributes. */
   valueFormat: ValueFormat | undefined;
@@ -208,6 +227,10 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   #stateKind: "loading" | "empty" | undefined;
   #width = 0;
   #measured = 0;
+  #natural = 0;
+  #themeVersion = 0;
+  #unwatch: (() => void) | undefined;
+  #naturalPasses = 0;
   #result: DrawResult | undefined;
   #revision = 0;
   #snapshot: { revision: number; value: ChartSnapshot | null } | undefined;
@@ -330,6 +353,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
    * the revision stays, the table does not sync and no `chart-data` fires. `"size"` re-lays out.
    */
   requestDraw(kind: "data" | "size" | "transient" = "data"): void {
+    if (kind !== "size") this.#naturalPasses = 0;
     if (kind === "data") this.#dirty = true;
     else if (kind === "transient") this.#transient = true;
     if (!this.#frame && this.isConnected)
@@ -346,6 +370,10 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       this.getAttribute("touch-action") ?? (this.constructor as typeof ChartElement).touchAction;
     for (const type of WAKE) this.drawing.addEventListener(type, this.#onWake);
     this.#syncFill();
+    this.#unwatch = watchTheme(this, () => {
+      this.#themeVersion++;
+      this.requestDraw("transient");
+    });
     this.#width = Math.floor(this.drawing.getBoundingClientRect().width);
     this.#observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
@@ -367,6 +395,8 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     cancelAnimationFrame(this.#frame);
     this.#frame = 0;
     this.#observer?.disconnect();
+    this.#unwatch?.();
+    this.#unwatch = undefined;
     for (const type of WAKE) this.drawing.removeEventListener(type, this.#onWake);
     this.#interact?.detach();
     this.#interact = undefined;
@@ -382,6 +412,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
   attributeChangedCallback(name: string): void {
     if (!this.isConnected) return;
     if (name === "height") this.#syncFill();
+    this.#naturalPasses = 0;
     this.requestDraw(name === "height" || name === "aspect-ratio" ? "size" : "data");
   }
 
@@ -394,7 +425,20 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     if (attr === "fill") return this.#measured || FALLBACK_HEIGHT;
     const ratio = Number(this.getAttribute("aspect-ratio"));
     if (ratio > 0) return Math.max(1, Math.round(width / ratio));
-    return Number(attr) > 0 ? Number(attr) : DEFAULT_HEIGHT;
+    if (Number(attr) > 0) return Number(attr);
+    if (this.#natural > 0) return this.#natural;
+    const base = (this.constructor as typeof ChartElement).defaultHeight;
+    const value = typeof base === "function" ? (base as (el: ChartElement) => number)(this) : base;
+    return value > 0 ? Math.round(value) : DEFAULT_HEIGHT;
+  }
+
+  /** True when the consumer fixed the height (`height`, `fill` or `aspect-ratio`), so the chart must not size itself. */
+  #sized(): boolean {
+    return (
+      Number(this.getAttribute("height")) > 0 ||
+      this.getAttribute("height") === "fill" ||
+      Number(this.getAttribute("aspect-ratio")) > 0
+    );
   }
 
   /** Loading and empty: the previous result is gone, the SVG object is kept for the next `enter`. */
@@ -521,6 +565,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       animate: phase === "enter" && motion,
       motion,
       transient,
+      themeVersion: this.#themeVersion,
       hover: this.#interact?.info()?.index ?? null,
       color: (index, override) =>
         override ?? palette?.[index % palette.length] ?? seriesColor(index),
@@ -533,6 +578,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     const dataChanged = this.#dirty || phase === "enter";
     if (dataChanged) this.#revision++;
     this.#result = result;
+    this.#settleNatural(result, height);
     this.#mount(root, result);
     if (!this.#setup) {
       this.#setup = new AbortController();
@@ -547,6 +593,15 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       this.#syncTable();
       emit(this, CHART_EVENT.data, { revision: this.#revision });
     }
+  }
+
+  /** Adopts `DrawResult.naturalHeight` and re-lays out, at most twice in a row (a height that tracks `context.height` cannot loop). */
+  #settleNatural(result: DrawResult | undefined, height: number): void {
+    const wanted = result?.naturalHeight;
+    this.#natural = !this.#sized() && wanted && wanted > 0 ? Math.round(wanted) : 0;
+    if (!this.#natural || this.#natural === height || this.#naturalPasses >= 2) return;
+    this.#naturalPasses++;
+    this.requestDraw("size");
   }
 
   #attrPalette(): string[] | undefined {

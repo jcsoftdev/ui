@@ -683,3 +683,13 @@ describe("currency has no default", () => {
     expect(text).not.toContain("S/");
   });
 });
+
+describe("funnelStages with large input", () => {
+  it("handles 200k stages without overflowing the stack", async () => {
+    const { funnelStages } = await import("../src/chart/funnel.ts");
+    const values = Array.from({ length: 200_000 }, (_, i) => 200_000 - i);
+    const stages = funnelStages(values, { length: 1000, thickness: 100 });
+    expect(stages).toHaveLength(200_000);
+    expect(stages[0]?.widthFrom).toBe(100);
+  });
+});

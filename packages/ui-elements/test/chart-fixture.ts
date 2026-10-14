@@ -374,3 +374,35 @@ export const defineTestDots = () => {
   defineElement("test-dots", dots(true));
   defineElement("test-dots-fresh", dots(false));
 };
+
+/** Sizes itself: `rows` rows of 20px, or 100px when `orientation="wide"`; `natural="N"` returns `naturalHeight` N instead. */
+export const sizing = { draws: 0 };
+class TestNatural extends ChartElement {
+  static override observedAttributes = [...CHART_ATTRIBUTES, "orientation", "natural"];
+  static override defaultHeight = (el: HTMLElement) =>
+    el.getAttribute("orientation") === "wide" ? 100 : 60;
+  protected override draw({ svg: root }: DrawContext): DrawResult {
+    sizing.draws++;
+    root.append(svg("rect", { width: 4, height: 4 }));
+    const natural = Number(this.getAttribute("natural"));
+    return { naturalHeight: natural > 0 ? natural : undefined };
+  }
+}
+export const defineTestNatural = () => defineElement("test-natural", TestNatural);
+
+/** Paints a canvas with the resolved `color` of the SVG; the cached color is dropped when `themeVersion` moves. */
+class TestCanvas extends ChartElement {
+  #seen = -1;
+  #paint = "";
+  protected override draw({ svg: root, canvas, themeVersion }: DrawContext): DrawResult {
+    if (themeVersion !== this.#seen) {
+      this.#seen = themeVersion;
+      this.#paint = getComputedStyle(root).color;
+    }
+    const g = canvas();
+    g.fillStyle = this.#paint;
+    g.fillRect(0, 0, 20, 20);
+    return {};
+  }
+}
+export const defineTestCanvas = () => defineElement("test-canvas", TestCanvas);
