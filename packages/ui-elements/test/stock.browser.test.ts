@@ -48,11 +48,6 @@ const settle = async () => {
   await wait(30);
 };
 
-/** Waits (up to two seconds) for a lazy part of the chart to load and draw. */
-const until = async (check: () => unknown) => {
-  for (let i = 0; i < 40 && !check(); i += 1) await wait(50);
-};
-
 const stock = async (attrs = "", bars: StockInputBar[] = walk(120), width = 800) => {
   const host = mount(
     `<div style="width:${width}px"><ui-stock label="ACME" ${attrs.includes("locale") ? "" : 'locale="en-US"'} ${attrs.includes("toolbar") ? "" : 'toolbar="off"'} ${attrs}><ui-chart-tooltip></ui-chart-tooltip></ui-stock></div>`,
@@ -93,13 +88,16 @@ const awake = async (el: Element) => {
   drawingOf(el).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
-  await wait(60);
+  // Awaiting the module runs after the chart's own continuation, which attaches the layer.
+  await import("../src/internal/chart-interact.ts");
+  await frame();
+  await frame();
 };
 /** Tab stops: the navigator slider comes first in the DOM, then the bars. */
 const focusBars = async (el: UiStock) => {
   await userEvent.tab();
   if (document.activeElement !== proxyOf(el)) await userEvent.tab();
-  await wait(80);
+  await expect.poll(() => document.activeElement === proxyOf(el)).toBe(true);
 };
 const barX = (el: UiStock, offset: number) => {
   const w = el.window;
@@ -118,8 +116,8 @@ describe("ui-stock", () => {
       "Visible range",
     );
     expect(el.getAttribute("height")).toBe("476");
-    expect(el.chartSnapshot?.series.map((s) => s.id)).toContain("close");
-    expect(el.chartSnapshot?.categories).toHaveLength(120);
+    await expect.poll(() => el.chartSnapshot?.series.map((s) => s.id)).toContain("close");
+    await expect.poll(() => el.chartSnapshot?.categories).toHaveLength(120);
   });
 
   it("hover: one event per bar in order, none per pixel, and the tooltip shows OHLC", async () => {
@@ -133,8 +131,7 @@ describe("ui-stock", () => {
     const step = Number(svgOf(el).querySelector("[data-track]")?.getAttribute("width")) / 120;
     for (let bar = 10; bar < 14; bar += 1)
       for (const dx of [0.2, 0.5, 0.8]) pointer(el, "pointermove", (bar + dx) * step, 120);
-    await wait(30);
-    expect(seen).toEqual([10, 11, 12, 13]);
+    await expect.poll(() => seen).toEqual([10, 11, 12, 13]);
     const tip = el.querySelector("ui-chart-tooltip") as HTMLElement;
     expect(tip.textContent).toContain("Open");
     expect(tip.textContent).toContain("Close");
@@ -173,10 +170,9 @@ describe("ui-stock", () => {
     const el = await stock('range="3m"');
     pointer(el, "pointerdown", barX(el, 20), 120, "touch");
     pointer(el, "pointerup", barX(el, 20), 120, "touch");
-    await wait(80);
-    expect(Math.abs((el.selected ?? -9) - 20)).toBeLessThanOrEqual(1);
+    await expect.poll(() => Math.abs((el.selected ?? -9) - 20)).toBeLessThanOrEqual(1);
     el.select(null);
-    await wait(20);
+    await expect.poll(() => el.selected).toBeNull();
     const selects: unknown[] = [];
     el.addEventListener("chart-select", (e) => selects.push((e as CustomEvent).detail));
     const before = el.window.start;
@@ -239,7 +235,9 @@ describe("ui-stock", () => {
     el.tool = "trend";
     await settle();
     // The drawing tools are a lazy chunk: let it land before the gesture starts.
-    await wait(200);
+    await import("../src/internal/e23-stock-drawings.ts");
+    await frame();
+    await frame();
     const before = el.window.start;
     pointer(el, "pointerdown", 200, 150);
     for (const [x, y] of [
@@ -266,12 +264,14 @@ describe("ui-stock", () => {
     const el = await stock('oscillator="rsi"', bars);
     el.overlays = [{ type: "sma", period: 10 }, { type: "bollinger" }];
     el.flags = [{ date: bars[60]?.date as Date, label: "P", text: "Product launch" }];
-    await until(() => svgOf(el).querySelector(".flag"));
+    await expect.poll(() => svgOf(el).querySelector(".flag")).toBeTruthy();
     await settle();
     expect(svgOf(el).querySelectorAll(".overlays .ov").length).toBeGreaterThanOrEqual(4);
     expect(svgOf(el).querySelectorAll(".flag")).toHaveLength(1);
     expect(svgOf(el).querySelector(".osc .osc-line")).toBeTruthy();
-    expect(el.chartSnapshot?.legend?.map((l) => l.name)).toEqual(["SMA 10", "Bollinger 20, 2"]);
+    await expect
+      .poll(() => el.chartSnapshot?.legend?.map((l) => l.name))
+      .toEqual(["SMA 10", "Bollinger 20, 2"]);
     el.comparisons = [{ id: "idx", name: "Index", values: bars.map((b) => b.close * 0.9) }];
     await settle();
     expect(svgOf(el).querySelector(".cmp")).toBeTruthy();
@@ -280,17 +280,14 @@ describe("ui-stock", () => {
 
   it("a long series paints on the canvas layer and the series types switch", async () => {
     const el = await stock('range="all"', walk(5000), 800);
-    expect(el.querySelector("canvas")).toBeTruthy();
+    await expect.poll(() => el.querySelector("canvas")).toBeTruthy();
     expect(svgOf(el).querySelectorAll(".bars .bar")).toHaveLength(0);
     el.setAttribute("range", "1m");
-    await settle();
-    expect(el.querySelector("canvas")).toBeNull();
-    expect(svgOf(el).querySelectorAll(".bars .bar").length).toBeGreaterThan(20);
+    await expect.poll(() => el.querySelector("canvas")).toBeNull();
+    await expect.poll(() => svgOf(el).querySelectorAll(".bars .bar").length).toBeGreaterThan(20);
     for (const type of ["ohlc", "line", "area", "column", "heikin-ashi", "renko"]) {
       el.setAttribute("series-type", type);
-      await wait(120);
-      await settle();
-      expect(svgOf(el).querySelector("[role=slider]")).toBeTruthy();
+      await expect.poll(() => svgOf(el).querySelector("[role=slider]")).toBeTruthy();
     }
     el.setAttribute("series-type", "line");
     await settle();
@@ -334,7 +331,7 @@ describe("ui-stock", () => {
 
   it("200 000 bars render with the volume strip and a MACD pane (no argument-spread crash)", async () => {
     const el = await stock('oscillator="macd"', walk(200_000), 800);
-    await until(() => svgOf(el).querySelector(".osc path"));
+    await expect.poll(() => svgOf(el).querySelector(".osc path")).toBeTruthy();
     expect(el.data).toHaveLength(200_000);
     expect(svgOf(el).querySelector(".osc path")).toBeTruthy();
     expect(svgOf(el).querySelectorAll(".osc .hist").length).toBeLessThan(500);
@@ -351,9 +348,9 @@ describe("ui-stock", () => {
     expect(el.data[0]?.date.getDate()).toBe(1);
     expect(el.data[0]?.date.getHours()).toBe(0);
     // Not read as intraday: the dates carry no clock.
-    expect(el.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
+    await expect.poll(() => el.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
     const zoned = await stock('time-zone="America/New_York"', bars);
-    expect(zoned.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
+    await expect.poll(() => zoned.chartSnapshot?.categories[0]).toBe("Mar 1, 2026");
   });
 
   it("the crosshair price tag follows the chart locale", async () => {
@@ -362,9 +359,9 @@ describe("ui-stock", () => {
     await awake(el);
     const step = Number(svgOf(el).querySelector("[data-track]")?.getAttribute("width")) / 60;
     pointer(el, "pointermove", 20.5 * step, 120);
-    await wait(40);
-    const tags = [...svgOf(el).querySelectorAll(".cross .tag text")].map((t) => t.textContent);
-    expect(tags[0]).toContain("1.23");
+    await expect
+      .poll(() => svgOf(el).querySelector(".cross .tag text")?.textContent ?? "")
+      .toContain("1.23");
   });
 
   it("a property set before the element upgrades is not lost", async () => {
@@ -381,7 +378,7 @@ describe("ui-stock", () => {
 
   it("toolbar: ranges, series types and tools, on by default", async () => {
     const el = await stock('toolbar="on" tools="all" range="all"');
-    await wait(150);
+    await expect.poll(() => el.querySelector("[data-ui-part=toolbar]")).not.toBeNull();
     const bar = el.querySelector("[data-ui-part=toolbar]") as HTMLElement;
     expect(bar).toBeTruthy();
     expect(bar.nextElementSibling).toBe(drawingOf(el));

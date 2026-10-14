@@ -101,7 +101,10 @@ const awake = async (el: Element) => {
   drawingOf(el).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
-  await wait(60);
+  // Awaiting the module runs after the chart's own continuation, which attaches the layer.
+  await import("../src/internal/chart-interact.ts");
+  await frame();
+  await frame();
 };
 const ROW = 36;
 const HEAD = 48;
@@ -117,14 +120,9 @@ describe("ui-gantt", () => {
     expect(proxyOf(el).getAttribute("role")).toBe("listbox");
     expect(el.getAttribute("height")).toBe("276");
     // The headings of the table and the hint are there for assistive tech.
-    expect(el.chartSnapshot?.categories).toEqual([
-      "Discovery",
-      "· Interviews",
-      "· Workshop",
-      "Build",
-      "· API",
-      "Launch",
-    ]);
+    await expect
+      .poll(() => el.chartSnapshot?.categories)
+      .toEqual(["Discovery", "· Interviews", "· Workshop", "Build", "· API", "Launch"]);
   });
 
   it("hover: one event per row in order, none per pixel, and the tooltip shows the dates", async () => {
@@ -137,8 +135,7 @@ describe("ui-gantt", () => {
     });
     for (let row = 0; row < TASKS.length; row += 1)
       for (const x of [20, 24, 28]) pointer(el, "pointermove", x, listY(row));
-    await wait(30);
-    expect(seen).toEqual([0, 1, 2, 3, 4, 5]);
+    await expect.poll(() => seen).toEqual([0, 1, 2, 3, 4, 5]);
     const tip = el.querySelector("ui-chart-tooltip") as HTMLElement;
     expect(tip.textContent).toContain("Launch");
     expect(tip.textContent).toContain("Milestone");
@@ -147,7 +144,9 @@ describe("ui-gantt", () => {
   it("keyboard: rows are one tab stop; arrows move, left collapses or goes to the parent, Enter toggles", async () => {
     const el = await gantt();
     await userEvent.tab();
-    await wait(80);
+    await expect
+      .poll(() => document.activeElement === proxyOf(el) && el.hover?.index === 0)
+      .toBe(true);
     expect(document.activeElement).toBe(proxyOf(el));
     const hover = () => el.hover?.index;
     expect(hover()).toBe(0);
@@ -177,12 +176,11 @@ describe("ui-gantt", () => {
     const el = await gantt();
     pointer(el, "pointerdown", 30, listY(2), "touch");
     pointer(el, "pointerup", 30, listY(2), "touch");
-    await wait(80);
-    expect(el.selected).toBe(2);
+    await expect.poll(() => el.selected).toBe(2);
     const selects: unknown[] = [];
     el.addEventListener("chart-select", (e) => selects.push((e as CustomEvent).detail));
     el.select(null);
-    await wait(20);
+    await expect.poll(() => el.selected).toBeNull();
     selects.length = 0;
     const before = pane(el).getAttribute("transform");
     pointer(el, "pointerdown", 600, listY(1), "touch", 7);
@@ -209,8 +207,7 @@ describe("ui-gantt", () => {
     expect(el.selected).toBeNull();
     // A plain click on the list still selects.
     await userEvent.click(drawingOf(el), { position: { x: 30, y: listY(3) } });
-    await wait(30);
-    expect(el.selected).toBe(3);
+    await expect.poll(() => el.selected).toBe(3);
   });
 
   it("zoom: the attribute, the keys and Ctrl+wheel change the level and report it", async () => {
@@ -219,7 +216,9 @@ describe("ui-gantt", () => {
     el.addEventListener("gantt-zoom", (e) => levels.push((e as CustomEvent).detail.zoom));
     expect(el.zoom).toBe("week");
     await userEvent.tab();
-    await wait(80);
+    await expect
+      .poll(() => document.activeElement === proxyOf(el) && el.hover?.index === 0)
+      .toBe(true);
     await userEvent.keyboard("]"); // zoom in: week to day
     await userEvent.keyboard("[[[[");
     expect(levels).toEqual(["day", "week", "month"]);
@@ -243,7 +242,9 @@ describe("ui-gantt", () => {
       [];
     el.addEventListener("gantt-change", (e) => changes.push((e as CustomEvent).detail));
     await userEvent.tab();
-    await wait(80);
+    await expect
+      .poll(() => document.activeElement === proxyOf(el) && el.hover?.index === 0)
+      .toBe(true);
     await userEvent.keyboard("{ArrowDown}{Alt>}{ArrowRight}{/Alt}");
     await userEvent.keyboard("{Shift>}{ArrowRight}{/Shift}");
     await userEvent.keyboard("{+}");
@@ -313,11 +314,11 @@ describe("ui-gantt", () => {
     await settle();
     expect(svgOf(el).querySelectorAll(".baseline")).toHaveLength(1);
     expect(svgOf(el).textContent).toContain("Freeze");
-    expect(el.chartSnapshot?.legend?.map((item) => item.id)).toEqual(["critical", "baseline"]);
+    await expect
+      .poll(() => el.chartSnapshot?.legend?.map((item) => item.id))
+      .toEqual(["critical", "baseline"]);
     el.toggleSeries("baseline");
-    await wait(60);
-    await settle();
-    expect(svgOf(el).querySelectorAll(".baseline")).toHaveLength(0);
+    await expect.poll(() => svgOf(el).querySelectorAll(".baseline").length).toBe(0);
   });
 
   it("uses the locale of the page, never a hard-wired one", async () => {
@@ -372,7 +373,7 @@ describe("ui-gantt", () => {
         { id: "a", name: "Two", start: day(6), end: day(9) },
         { id: "bad", name: "Broken", start: new Date("nope"), end: day(9) },
       ]);
-      expect(el.chartSnapshot?.categories).toEqual(["One", "Two"]);
+      await expect.poll(() => el.chartSnapshot?.categories).toEqual(["One", "Two"]);
       expect(svgOf(el).querySelectorAll("[data-task]")).toHaveLength(2);
       expect(warned.some((m) => m.includes('"bad"'))).toBe(true);
       expect(warned.some((m) => m.includes('"a"'))).toBe(true);
@@ -396,7 +397,7 @@ describe("ui-gantt", () => {
 
   it("toolbar: on by default, switches the zoom level and goes to today", async () => {
     const el = await gantt('toolbar="on" zoom="week"');
-    await wait(120);
+    await expect.poll(() => el.querySelector("[data-ui-part=toolbar]")).not.toBeNull();
     const bar = el.querySelector("[data-ui-part=toolbar]") as HTMLElement;
     expect(bar).toBeTruthy();
     expect(bar.nextElementSibling).toBe(drawingOf(el));
@@ -458,8 +459,9 @@ describe("ui-gantt", () => {
       const el = await mountTall('editable zoom="week"', TASKS);
       const changes: unknown[] = [];
       el.addEventListener("gantt-change", (e) => changes.push((e as CustomEvent).detail));
-      const bar = svgOf(el).querySelector('[data-task="c"] [data-handle="move"]') as Element;
-      const { x, y } = center(bar);
+      const handle = '[data-task="c"] [data-handle="move"]';
+      await expect.poll(() => svgOf(el).querySelector(handle)).not.toBeNull();
+      const { x, y } = center(svgOf(el).querySelector(handle) as Element);
       const pinch = async (from: number, to: number) => {
         const at = (gap: number) => [
           { x: x - gap / 2, y, id: 0 },
@@ -491,7 +493,7 @@ describe("ui-gantt", () => {
   it("has no accessibility violations", async () => {
     const el = await gantt("editable critical-path");
     await userEvent.tab();
-    await wait(80);
+    await expect.poll(() => document.activeElement === proxyOf(el)).toBe(true);
     const result = await axe.run(el, {
       rules: { "color-contrast": { enabled: false }, region: { enabled: false } },
     });
