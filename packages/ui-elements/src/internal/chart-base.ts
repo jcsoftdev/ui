@@ -383,6 +383,11 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
       });
   }
 
+  /** Fetches the canvas chunk with the next draw, so a chart that is about to call `ctx.canvas()` draws once. */
+  protected preloadCanvas(): void {
+    if (!canvasMod) this.#wait = Promise.all([this.#wait, loadCanvas()]);
+  }
+
   connectedCallback(): void {
     this.setAttribute(CHART_MARKER, "");
     adoptStyles(rootOf(this), css);
@@ -394,7 +399,7 @@ export abstract class ChartElement extends ElementBase implements ChartHost {
     const own = this.constructor as typeof ChartElement;
     this.#seed ??= this.initialHidden || this.hasAttribute("initial-hidden") ? 1 : 0;
     if (this.#seed === 1) this.#wait = import("./chart-late.js").then((m) => (lateMod = m));
-    if (own.canvas) this.#wait = Promise.all([this.#wait, loadCanvas()]);
+    if (own.canvas) this.preloadCanvas();
     if (own.themeAware || this.#unwatch) this.#watchTheme();
     this.#width = Math.floor(this.drawing.getBoundingClientRect().width);
     this.#observer = new ResizeObserver(([entry]) => {
