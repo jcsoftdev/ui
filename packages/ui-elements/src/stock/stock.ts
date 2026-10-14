@@ -1,5 +1,5 @@
 import { estimateTextWidth } from "@jcsoftdev/ui-core/chart/axis";
-import { attachIndexBrush, type IndexBrush } from "@jcsoftdev/ui-core/chart/brush";
+import type { IndexBrush } from "@jcsoftdev/ui-core/chart/brush";
 import { calendarFor } from "@jcsoftdev/ui-core/chart/calendar";
 import { lttbIndices } from "@jcsoftdev/ui-core/chart/downsample";
 import { DIRECTION_COLORS } from "@jcsoftdev/ui-core/chart/palette";
@@ -50,6 +50,8 @@ import type { BarPaint, Column } from "../internal/e23-stock-canvas.js";
 import type { DrawingGeometry } from "../internal/e23-stock-drawings.js";
 import { isMidnight, toWallDate } from "../internal/e23-wall.js";
 import css from "./stock.css.js";
+import type * as SnapshotModule from "./stock-snapshot.js";
+import type { SnapshotInput } from "./stock-snapshot.js";
 
 export type {
   StockBar,
@@ -280,6 +282,14 @@ export class UiStock extends ChartElement {
   #signal: AbortSignal | undefined;
   #panZoom: PanZoom | undefined;
   #brush: IndexBrush | undefined;
+  #brushLoading = false;
+  #navTrack: Element | undefined;
+  #navOptions:
+    | Parameters<typeof import("@jcsoftdev/ui-core/chart/brush").attachIndexBrush>[1]
+    | undefined;
+  #snapshotModule: typeof SnapshotModule | undefined;
+  #snapshotLoading = false;
+  #snapshotStale = false;
   #resetting = false;
   #navDrag = false;
   #gesture: "none" | "tool" | "drawing" = "none";
@@ -603,7 +613,31 @@ export class UiStock extends ChartElement {
 
   // ---- interaction -----------------------------------------------------------------------------
 
+  /**
+   * The data table is built by a lazy module, fetched when the table is first read or just after
+   * the first paint. Until it lands the table holds the title only; arrival refreshes it.
+   */
+  #snapshotFor(input: SnapshotInput): ChartSnapshot {
+    if (this.#snapshotModule) return this.#snapshotModule.snapshotOf(input);
+    this.#loadSnapshot();
+    this.#snapshotStale = true;
+    return { title: input.name, categoryHeader: "", categories: [], series: [] };
+  }
+
+  #loadSnapshot(): void {
+    if (this.#snapshotModule || this.#snapshotLoading) return;
+    this.#snapshotLoading = true;
+    import("./stock-snapshot.js").then((module) => {
+      this.#snapshotModule = module;
+      if (!this.#snapshotStale) return;
+      this.#snapshotStale = false;
+      this.requestDraw("data");
+    });
+  }
+
   protected override setup(root: SVGSVGElement, signal: AbortSignal): void {
+    // Fetch the data-table module once the first frame is out, off the paint path.
+    (globalThis.requestIdleCallback ?? setTimeout)(() => this.#loadSnapshot());
     this.#signal = signal;
     const drawing = this.drawing;
     const opts = { signal };
@@ -1335,7 +1369,17 @@ export class UiStock extends ChartElement {
     return {
       label: name,
       summary: `${name}: ${n} ${texts.bars}, ${longDate.format(first.date)} to ${longDate.format(lastBar.date)}, ${texts.close} ${fmt(first.close)} to ${fmt(lastBar.close)} (${formatPercent(change, { locale, decimals: 1 })}). ${texts.keyboardHint}`,
-      snapshot: () => this.#snapshot(bars, lines, comparisons, name, texts, longDate, fmt),
+      snapshot: () =>
+        this.#snapshotFor({
+          bars,
+          lines,
+          comparisons,
+          name,
+          texts,
+          longDate,
+          fmt,
+          color: (index, override) => this.#color(index, override),
+        }),
       marks: { count, label, element: () => parts.vline },
       maxHoverRows: 5 + visibleLines.length + comparisons.length + (oscModel ? 1 : 0) + 1,
       hit: (px, py) => {
@@ -1610,8 +1654,22 @@ export class UiStock extends ChartElement {
       },
     };
     if (this.#brush) this.#brush.update(options);
-    else if (this.#signal && !this.#signal.aborted)
-      this.#brush = attachIndexBrush(track as unknown as HTMLElement, options);
+    else if (this.#signal && !this.#signal.aborted && !this.#brushLoading) {
+      // The strip is already drawn; only its drag and keyboard behavior is fetched, right after.
+      this.#brushLoading = true;
+      const signal = this.#signal;
+      import("@jcsoftdev/ui-core/chart/brush").then(({ attachIndexBrush }) => {
+        this.#brushLoading = false;
+        const target = this.#navTrack;
+        if (signal.aborted || this.#brush || !target?.isConnected) return;
+        this.#brush = attachIndexBrush(
+          target as unknown as HTMLElement,
+          this.#navOptions ?? options,
+        );
+      });
+    }
+    this.#navTrack = track;
+    this.#navOptions = options;
   }
 
   #emitWindow(lo: number, hi: number, n: number, bars: readonly StockBar[]): void {
@@ -1775,58 +1833,6 @@ export class UiStock extends ChartElement {
       x: (index + 0.5 - layout.start) * layout.step,
       y: layout.y(layout.closeAt(index)),
       side: "right",
-    };
-  }
-
-  #snapshot(
-    bars: readonly StockBar[],
-    lines: readonly OverlayLine[],
-    comparisons: readonly StockComparison[],
-    name: string,
-    texts: StockTexts,
-    longDate: Intl.DateTimeFormat,
-    fmt: (value: number) => string,
-  ): ChartSnapshot {
-    const column = (
-      id: string,
-      label: string,
-      color: string,
-      get: (bar: StockBar, i: number) => number | null | undefined,
-    ) => {
-      const values = bars.map((bar, i) => get(bar, i) ?? null);
-      return { id, name: label, color, values, text: values.map((v) => (v == null ? "" : fmt(v))) };
-    };
-    const series = [
-      column("open", texts.open, "var(--ink-3)", (b) => b.open),
-      column("high", texts.high, "var(--ink-3)", (b) => b.high),
-      column("low", texts.low, "var(--ink-3)", (b) => b.low),
-      column("close", texts.close, this.#color(0), (b) => b.close),
-      column("volume", texts.volume, "var(--ink-3)", (b) => b.volume),
-      ...lines.map((line) => column(line.id, line.name, line.color, (_, i) => line.values[i])),
-      ...comparisons.map((c, k) =>
-        column(c.id, c.name, this.#color(k + 1, c.color), (_, i) => c.values[i]),
-      ),
-    ];
-    return {
-      title: name,
-      categoryHeader: texts.date,
-      categories: bars.map((bar) => longDate.format(bar.date)),
-      categoryValues: bars.map((bar) => bar.date),
-      series,
-      legend: [
-        ...lines.map((line) => ({
-          id: line.id,
-          name: line.name,
-          color: line.color,
-          shape: "line" as const,
-        })),
-        ...comparisons.map((c, k) => ({
-          id: c.id,
-          name: c.name,
-          color: this.#color(k + 1, c.color),
-          shape: "line" as const,
-        })),
-      ],
     };
   }
 }
