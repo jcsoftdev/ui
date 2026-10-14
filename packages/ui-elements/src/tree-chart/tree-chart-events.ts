@@ -62,6 +62,9 @@ export function bindEvents(
         dragged = false;
       });
     }
+    // Without `selectable` a tap only expands or collapses, as a click does: it never pins.
+    else if (!chart.selectable() && (event as PointerEvent).pointerType !== "mouse")
+      event.preventDefault();
     press = undefined;
     host.removeAttribute("data-panning");
   };

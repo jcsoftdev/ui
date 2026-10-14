@@ -75,6 +75,7 @@ const pointer = (c: Element, type: string, clientX: number, clientY: number, kin
   drawingOf(c).dispatchEvent(
     new PointerEvent(type, {
       bubbles: type !== "pointerleave",
+      cancelable: true,
       clientX,
       clientY,
       pointerType: kind,
@@ -175,8 +176,20 @@ describe("ui-tree-chart", () => {
     expect(label()).toBe("Ana Rojas");
   });
 
-  it("a tap pins a node, a drag pans and never pins, and a press on a toggle expands or collapses", async () => {
+  it("a touch tap only toggles without selectable, as a click does, and never pins", async () => {
     const c = await make();
+    await awake(c);
+    const kevin = center(cards(c)[4] as Element);
+    pointer(c, "pointerdown", kevin.x, kevin.y, "touch");
+    pointer(c, "pointerup", kevin.x, kevin.y, "touch");
+    expect(c.selected).toBeNull();
+    expect((c as unknown as { hover: { pinned: boolean } | null }).hover?.pinned ?? false).toBe(
+      false,
+    );
+  });
+
+  it("with selectable a tap pins a node, a drag pans and never pins, and a press on a toggle expands or collapses", async () => {
+    const c = await make("selectable");
     await awake(c);
     const kevin = center(cards(c)[4] as Element);
     pointer(c, "pointerdown", kevin.x, kevin.y, "touch");
@@ -380,8 +393,8 @@ describe("ui-tree-chart", () => {
     const lit = (c: Element) => c.querySelectorAll("[data-card][data-path]").length;
     for (const [attrs, expected] of [
       ['selectable highlight-path="off"', 3],
-      ["", 3],
-      ['highlight-path="off"', 0],
+      ["selectable", 3],
+      ["", 0],
     ] as const) {
       const c = await make(attrs);
       await awake(c);
