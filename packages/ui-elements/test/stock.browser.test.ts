@@ -238,6 +238,8 @@ describe("ui-stock", () => {
     );
     el.tool = "trend";
     await settle();
+    // The drawing tools are a lazy chunk: let it land before the gesture starts.
+    await wait(200);
     const before = el.window.start;
     pointer(el, "pointerdown", 200, 150);
     for (const [x, y] of [
