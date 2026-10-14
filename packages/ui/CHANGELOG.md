@@ -7,14 +7,22 @@
 - **Cheaper lens maps.** The displacement and specular maps are rasterised at no more than 1.5
   pixels per CSS pixel (they are smooth fields that `feImage` stretches), and a large surface drops
   toward one, so a 3x phone no longer builds a map 4x the size of the surface on the main thread.
-  The crystal map, which mostly covers the margin its layer clips away, is held near 48,000 pixels
-  and may go down to half a pixel per CSS pixel. `computeCrystalField` now accepts a `dpr` from 0.5.
-  The whole-surface field computes its per-column terms once, with the same output.
-- **No long task from several lenses at once.** The per-frame pass that installs and resizes lenses
-  stops after about 12 ms and leaves the rest for the next frame.
+  The specular map (contour and glint) keeps up to 1.5 even where the large-surface cap has taken
+  the refraction map down to one. The crystal map, which mostly covers the margin its layer clips
+  away, is lowered toward 48,000 pixels but never below half a pixel per CSS pixel (so a very
+  large layer can still exceed that). `computeCrystalField` now accepts a `dpr` from 0.5. The
+  whole-surface field computes its per-column terms once, with the same output. Sample positions use
+  the effective ratio after rounding the map size, so a fractional size no longer drifts.
+- **Lens work is spread over frames.** The per-frame pass that installs and resizes lenses stops
+  after about 12 ms and leaves the rest for the next frame, so several lenses built at once no
+  longer land in one task. A single lens build still runs whole (the budget is checked between
+  tasks, not inside one), the leftover tasks run first in the next pass so one slow task cannot
+  starve the others, and a lens that is undone drops its pending work.
 - **A crystal lens no longer drops while an ancestor changes.** `<LiquidGlass />` read the crystal
   surface (whose backdrop filter moves to its own layer) as not painting one, so any class, style or
-  `data-*` change above it, such as dragging, released and rebuilt the lens.
+  `data-*` change above it, such as dragging, released and rebuilt the lens. The lens is kept only
+  while the surface itself still resolves to a backdrop filter, so a crystal surface whose own
+  liquid class stops applying (`data-[state=open]:liquid` closing) under a lensed ancestor releases.
 
 ### Liquid Glass is opt-in (breaking for the 0.3.0 previews)
 

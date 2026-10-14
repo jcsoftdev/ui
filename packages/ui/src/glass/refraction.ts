@@ -114,6 +114,16 @@ function mapRatio(width: number, height: number, dpr = window.devicePixelRatio |
   return Math.max(1, Math.min(dpr, MAX_MAP_RATIO, room));
 }
 
+/**
+ * The specular map is not capped by area: only a thin rim of it is shaded, but the one-pixel
+ * contour and the glint are drawn in it, and at one pixel per CSS pixel on a dense screen they
+ * come out soft. It keeps the full ratio (up to {@link MAX_MAP_RATIO}) where the refraction map
+ * above has dropped to 1.
+ */
+function specularRatio(dpr = window.devicePixelRatio || 1): number {
+  return Math.max(1, Math.min(dpr, MAX_MAP_RATIO));
+}
+
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
 
@@ -181,7 +191,8 @@ function visibility(): IntersectionObserver | undefined {
 /**
  * Size changes are coalesced into one pass per frame, whatever the number of surfaces. A pass that
  * has used its share of the frame leaves the rest for the next one, so the maps of several surfaces
- * built at once (at load, on a slow phone) never add up to one long task.
+ * built at once (at load, on a slow phone) are spread over frames instead of one long task. A single
+ * task still runs whole: the budget is checked between tasks, not inside one.
  */
 const dirty = new Set<() => void>();
 let frame = 0;
@@ -189,16 +200,18 @@ const FRAME_BUDGET_MS = 12;
 function flush() {
   frame = 0;
   const batch = [...dirty];
-  dirty.clear();
   const started = performance.now();
-  for (let i = 0; i < batch.length; i++) {
-    if (i > 0 && performance.now() - started > FRAME_BUDGET_MS) {
-      for (const task of batch.slice(i)) dirty.add(task);
-      if (!frame) frame = requestAnimationFrame(flush);
-      return;
-    }
-    (batch[i] as () => void)();
+  let ran = 0;
+  for (const task of batch) {
+    if (ran > 0 && performance.now() - started > FRAME_BUDGET_MS) break;
+    // A task cancelled by an earlier one in this pass (a lens undone) is no longer in the set.
+    if (!dirty.delete(task)) continue;
+    ran++;
+    task();
   }
+  // What is left keeps its place at the front, ahead of anything the tasks rescheduled (those are
+  // re-added at the end), so a task that always overruns the budget cannot starve the others.
+  if (dirty.size && !frame) frame = requestAnimationFrame(flush);
 }
 function schedule(run: () => void) {
   dirty.add(run);
@@ -316,6 +329,8 @@ export type LensOwner = "manual" | "auto";
 interface Controller {
   /** Adds or updates the owner's claim; returns its release. The manual options win. */
   claim(owner: LensOwner, options: GlassRefractionOptions): () => void;
+  /** The computed `backdrop-filter` of the surface without the engine's own inline writes. */
+  ownBackdropFilter(): string;
 }
 
 /** One controller per element, so applying twice never stacks a second `url()` filter. */
@@ -724,7 +739,13 @@ function createController(element: HTMLElement): Controller {
         specularImage.setAttribute("height", String(height));
         specularImage.setAttribute(
           "href",
-          createSpecularMap({ width, height, radius, dpr, angle: runtime.angle }),
+          createSpecularMap({
+            width,
+            height,
+            radius,
+            dpr: specularRatio(),
+            angle: runtime.angle,
+          }),
         );
       }
     };
@@ -777,10 +798,27 @@ function createController(element: HTMLElement): Controller {
       cancel: () => {
         clearTimeout(timer);
         timer = undefined;
+        dirty.delete(update);
         motion?.dispose();
       },
     };
     active++;
+  };
+
+  /**
+   * What the surface's own CSS resolves `backdrop-filter` to. While the lens is on, the inline
+   * value is the engine's (a url filter, or `none` for a crystal lens, whose filter is on its
+   * layer), so the author's inline value is put back for a moment to read the cascade.
+   */
+  const ownBackdropFilter = () => {
+    if (!installed) return getComputedStyle(element).backdropFilter;
+    const css = element.style.cssText;
+    element.style.backdropFilter = original;
+    if (originalPrefixed) element.style.setProperty("-webkit-backdrop-filter", originalPrefixed);
+    else element.style.removeProperty("-webkit-backdrop-filter");
+    const own = getComputedStyle(element).backdropFilter;
+    element.style.cssText = css;
+    return own;
   };
 
   /** Bring the element in line with the current preferences, engine and tokens. */
@@ -879,6 +917,8 @@ function createController(element: HTMLElement): Controller {
     configObserver?.disconnect();
     mutations?.disconnect();
     waiting.delete(sync);
+    dirty.delete(sync);
+    dirty.delete(refresh);
     sizeWatch?.disconnect();
     sizeWatch = undefined;
     viewport?.unobserve(element);
@@ -902,6 +942,7 @@ function createController(element: HTMLElement): Controller {
     sync();
   };
   return {
+    ownBackdropFilter,
     claim(owner, next) {
       if (!claims[owner]) generation[owner]++;
       const claimed = generation[owner];
@@ -935,6 +976,16 @@ export function applyGlassRefraction(
   options: GlassRefractionOptions = {},
 ): () => void {
   return claimLens(element, "manual", options);
+}
+
+/**
+ * The `backdrop-filter` the surface's own styles resolve to, as if no lens were on it (the engine
+ * replaces the inline value, and a crystal lens moves the filter to its layer). It is how the
+ * watcher tells a lensed surface that still paints a backdrop from one that merely inherits the
+ * `--glass-lens` flag after its own liquid class stopped applying.
+ */
+export function ownBackdropFilter(element: HTMLElement): string {
+  return controllers.get(element)?.ownBackdropFilter() ?? getComputedStyle(element).backdropFilter;
 }
 
 /**

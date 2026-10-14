@@ -137,6 +137,16 @@ function mapRatio(width: number, height: number, dpr = window.devicePixelRatio |
   return Math.max(1, Math.min(dpr, MAX_MAP_RATIO, room));
 }
 
+/**
+ * The specular map is not capped by area: only a thin rim of it is shaded, but the one-pixel
+ * contour and the glint are drawn in it, and at one pixel per CSS pixel on a dense screen they
+ * come out soft. It keeps the full ratio (up to {@link MAX_MAP_RATIO}) where the refraction map
+ * above has dropped to 1.
+ */
+function specularRatio(dpr = window.devicePixelRatio || 1): number {
+  return Math.max(1, Math.min(dpr, MAX_MAP_RATIO));
+}
+
 /** Minimum time between two rebuilds of the displacement map of one surface. */
 const REBUILD_MS = 90;
 
@@ -148,7 +158,8 @@ const waiting = new Set<() => void>();
 /**
  * Size changes are coalesced into one pass per frame, whatever the number of surfaces. A pass that
  * has used its share of the frame leaves the rest for the next one, so the maps of several surfaces
- * built at once (at load, on a slow phone) never add up to one long task.
+ * built at once (at load, on a slow phone) are spread over frames instead of one long task. A single
+ * task still runs whole: the budget is checked between tasks, not inside one.
  */
 const dirty = new Set<() => void>();
 let frame = 0;
@@ -156,16 +167,18 @@ const FRAME_BUDGET_MS = 12;
 function flush() {
   frame = 0;
   const batch = [...dirty];
-  dirty.clear();
   const started = performance.now();
-  for (let i = 0; i < batch.length; i++) {
-    if (i > 0 && performance.now() - started > FRAME_BUDGET_MS) {
-      for (const task of batch.slice(i)) dirty.add(task);
-      if (!frame) frame = requestAnimationFrame(flush);
-      return;
-    }
-    (batch[i] as () => void)();
+  let ran = 0;
+  for (const task of batch) {
+    if (ran > 0 && performance.now() - started > FRAME_BUDGET_MS) break;
+    // A task cancelled by an earlier one in this pass (a lens undone) is no longer in the set.
+    if (!dirty.delete(task)) continue;
+    ran++;
+    task();
   }
+  // What is left keeps its place at the front, ahead of anything the tasks rescheduled (those are
+  // re-added at the end), so a task that always overruns the budget cannot starve the others.
+  if (dirty.size && !frame) frame = requestAnimationFrame(flush);
 }
 function schedule(run: () => void) {
   dirty.add(run);
@@ -624,7 +637,13 @@ function createController(element: HTMLElement, initial: LensOptions): Controlle
         specularImage.setAttribute("height", String(height));
         specularImage.setAttribute(
           "href",
-          light.createSpecularMap({ width, height, radius, dpr, angle: runtime.angle }),
+          light.createSpecularMap({
+            width,
+            height,
+            radius,
+            dpr: specularRatio(),
+            angle: runtime.angle,
+          }),
         );
       }
     };
@@ -680,6 +699,7 @@ function createController(element: HTMLElement, initial: LensOptions): Controlle
       cancel: () => {
         clearTimeout(timer);
         timer = undefined;
+        dirty.delete(update);
         motion?.dispose();
       },
     };
@@ -782,6 +802,8 @@ function createController(element: HTMLElement, initial: LensOptions): Controlle
     configObserver?.disconnect();
     mutations?.disconnect();
     waiting.delete(sync);
+    dirty.delete(sync);
+    dirty.delete(refresh);
     sizeWatch?.disconnect();
     sizeWatch = undefined;
     const was = installed !== undefined;

@@ -2,8 +2,9 @@ import { createCrystalMap, crystalAmplitude, crystalMargin } from "./crystal-map
 
 /**
  * The crystal map covers the surface and its margin (often several times the surface), and every
- * pixel of it is computed on the main thread: past this many it is rasterised coarser, down to half
- * a pixel per CSS pixel, which the smooth field and the bilinear `feImage` scaling do not show.
+ * pixel of it is computed on the main thread. The ratio is lowered to hold the map near this many
+ * pixels, but never below half a pixel per CSS pixel (which the smooth field and the bilinear
+ * `feImage` scaling do not show), so a layer larger than twice this at 0.5 still exceeds it.
  */
 const CRYSTAL_MAP_PIXELS = 48_000;
 

@@ -3,8 +3,9 @@ import { cached } from "./raster.js";
 
 /**
  * The crystal map covers the surface and its margin (often several times the surface), and every
- * pixel of it is computed on the main thread: past this many it is rasterised coarser, down to half
- * a pixel per CSS pixel, which the smooth field and the bilinear `feImage` scaling do not show.
+ * pixel of it is computed on the main thread. The ratio is lowered to hold the map near this many
+ * pixels, but never below half a pixel per CSS pixel (which the smooth field and the bilinear
+ * `feImage` scaling do not show), so a layer larger than twice this at 0.5 still exceeds it.
  */
 const CRYSTAL_MAP_PIXELS = 48_000;
 
@@ -105,6 +106,8 @@ export function computeCrystalField({
   const [left, right, top, bottom] = [free("left"), free("right"), free("top"), free("bottom")];
   const pw = Math.max(1, Math.round((w + left + right) * ratio));
   const ph = Math.max(1, Math.round((h + top + bottom) * ratio));
+  const rx = pw / (w + left + right);
+  const ry = ph / (h + top + bottom);
   const data = new Uint8ClampedArray(pw * ph * 4);
   const hx = w / 2;
   const hy = h / 2;
@@ -122,9 +125,9 @@ export function computeCrystalField({
   const within = (p: number, offset: number, lo: number, hi: number) =>
     clamp((bounded ? clamp(offset, (lo - p) / f, (hi - p) / f) : offset) / unit, -1, 1);
   for (let j = 0; j < ph; j++) {
-    const py = (j + 0.5) / ratio - top - hy;
+    const py = (j + 0.5) / ry - top - hy;
     for (let i = 0; i < pw; i++) {
-      const px = (i + 0.5) / ratio - left - hx;
+      const px = (i + 0.5) / rx - left - hx;
       const s = crystalShape(crystalRadius(px, py, hx, hy));
       const o = (j * pw + i) * 4;
       data[o] = 128 + within(px, (s * px * amplitude) / half, minX, maxX) * 127;

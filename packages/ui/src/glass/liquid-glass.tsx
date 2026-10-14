@@ -99,13 +99,18 @@ function watch(): () => void {
   const wants = (element: HTMLElement) => {
     if (!element.isConnected || element.closest('[data-glass-lens="off"]')) return false;
     const style = getComputedStyle(element);
-    // A descendant that only inherits the flag paints no backdrop: it is not a surface. A crystal
-    // lens moves the surface's backdrop filter to its own layer, so a surface this watcher lensed
-    // still counts as one (otherwise any attribute change above it would drop and rebuild the lens).
+    // A descendant that only inherits the flag paints no backdrop: it is not a surface. The lens
+    // replaces the surface's inline backdrop filter (a crystal lens moves it to its own layer), so
+    // for a surface this watcher lensed the computed value says nothing; the engine reads what the
+    // surface's own styles resolve to. The inherited flag alone never keeps a lens alive, or a
+    // surface whose own `liquid` stopped applying (`data-[state=open]:liquid` closing) under a
+    // lensed ancestor would keep it, while an attribute change above a live one still leaves it.
     const lensedHere = lensed.has(element) && element.dataset.glassRefraction === "on";
+    const backdrop =
+      lensedHere && engine ? engine.ownBackdropFilter(element) : style.backdropFilter;
     return (
       style.getPropertyValue("--glass-lens").trim() === "1" &&
-      (lensedHere || style.backdropFilter !== "none") &&
+      backdrop !== "none" &&
       style.visibility !== "hidden"
     );
   };
@@ -195,7 +200,8 @@ function watch(): () => void {
   };
 
   const scan = (node: Element) => {
-    if (node.matches(CANDIDATES)) check(node as HTMLElement);
+    // A lensed surface whose class changed to something that no longer matches is still checked.
+    if (node.matches(CANDIDATES) || known.has(node as HTMLElement)) check(node as HTMLElement);
     for (const element of node.querySelectorAll<HTMLElement>(CANDIDATES)) check(element);
   };
 

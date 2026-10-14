@@ -37,6 +37,8 @@ export function computeSpecularField({
   const r = clamp(radius, 0, Math.min(w, h) / 2);
   const pw = Math.max(1, Math.round(w * ratio));
   const ph = Math.max(1, Math.round(h * ratio));
+  const rx = pw / w;
+  const ry = ph / h;
   const data = new Uint8ClampedArray(pw * ph * 4);
   new Uint32Array(data.buffer).fill(0xff000000);
   const lx = Math.cos((angle * Math.PI) / 180);
@@ -45,11 +47,11 @@ export function computeSpecularField({
   const hy = h / 2;
   const band = Math.min(pw, Math.ceil(SHADE_DEPTH * ratio) + 1);
   for (let j = 0; j < ph; j++) {
-    const py = (j + 0.5) / ratio - hy;
+    const py = (j + 0.5) / ry - hy;
     const inner = Math.abs(py) < hy - SHADE_DEPTH;
     for (let i = 0; i < pw; i++) {
       if (inner && i === band) i = Math.max(band, pw - band);
-      const px = (i + 0.5) / ratio - hx;
+      const px = (i + 0.5) / rx - hx;
       const qx = Math.abs(px) - (hx - r);
       const qy = Math.abs(py) - (hy - r);
       const out = Math.hypot(Math.max(qx, 0), Math.max(qy, 0));

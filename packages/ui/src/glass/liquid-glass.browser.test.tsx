@@ -133,6 +133,27 @@ describe("the watcher decides from the computed flag", () => {
     expect(element.querySelector("[data-glass-lens-layer]")).toBe(layer);
   });
 
+  test("a crystal surface whose own liquid stops applying is released although an ancestor still lenses", async () => {
+    host ??= document.body.appendChild(document.createElement("div"));
+    const scope = host.appendChild(document.createElement("div"));
+    // The inherited flag is on for the whole subtree, whatever the surface's own classes do.
+    scope.style.cssText = "--glass-lens:1;position:absolute;inset:0";
+    const element = scope.appendChild(document.createElement("div"));
+    element.className = "data-[state=open]:liquid";
+    element.dataset.state = "open";
+    element.style.cssText =
+      "position:absolute;top:8px;left:8px;width:160px;height:96px;--liquid-profile:crystal";
+    stops.push(startLiquidGlass());
+    await vi.waitFor(() => expect(element.querySelector("[data-glass-lens-layer]")).not.toBeNull());
+    expect(element.dataset.glassRefraction).toBe("on");
+    element.dataset.state = "closed";
+    await vi.waitFor(() => expect(element.dataset.glassRefraction).toBeUndefined());
+    expect(element.querySelector("[data-glass-lens-layer]")).toBeNull();
+    expect(getComputedStyle(element).getPropertyValue("--glass-lens").trim()).toBe("1");
+    element.dataset.state = "open";
+    await vi.waitFor(() => expect(element.dataset.glassRefraction).toBe("on"));
+  });
+
   test("a descendant that only inherits --glass-lens gets no lens claim", async () => {
     const claimed: Element[] = [];
     setLiquidEngineLoader(async () => {
