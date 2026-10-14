@@ -105,24 +105,7 @@ export function paintObservations(
   g.globalAlpha = 1;
 }
 
-/**
- * Turns any CSS color (`var(--chart-cat-1)` included) into the computed `rgb()` a canvas accepts,
- * once per distinct color: the returned function caches by input.
- */
-export function colorResolver(host: Element): (color: string) => string {
-  const cache = new Map<string, string>();
-  return (color) => {
-    const known = cache.get(color);
-    if (known !== undefined) return known;
-    const probe = document.createElement("span");
-    probe.style.color = color;
-    host.append(probe);
-    const resolved = getComputedStyle(probe).color;
-    probe.remove();
-    cache.set(color, resolved);
-    return resolved;
-  };
-}
+export { colorResolver } from "./e18-canvas-color.js";
 
 export interface RainOptions {
   values: readonly number[];
