@@ -22,7 +22,7 @@ class ComposeFreeTest {
     private fun coreClasses(): List<Pair<String, ByteArray>> {
         val root =
             File(
-                CoreModule::class.java.protectionDomain.codeSource.location
+                NumberRange::class.java.protectionDomain.codeSource.location
                     .toURI(),
             )
         return if (root.isDirectory) {

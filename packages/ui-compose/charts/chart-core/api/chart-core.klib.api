@@ -6,7 +6,264 @@
 // - Show declarations: true
 
 // Library unique name: <com.jcsoftdev:chart-core>
-final object com.jcsoftdev.ui.chart.core/CoreModule { // com.jcsoftdev.ui.chart.core/CoreModule|null[0]
-    final val id // com.jcsoftdev.ui.chart.core/CoreModule.id|{}id[0]
-        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.core/CoreModule.id.<get-id>|<get-id>(){}[0]
+final enum class com.jcsoftdev.ui.chart.core/CategoryAxisMode : kotlin/Enum<com.jcsoftdev.ui.chart.core/CategoryAxisMode> { // com.jcsoftdev.ui.chart.core/CategoryAxisMode|null[0]
+    enum entry Band // com.jcsoftdev.ui.chart.core/CategoryAxisMode.Band|null[0]
+    enum entry Point // com.jcsoftdev.ui.chart.core/CategoryAxisMode.Point|null[0]
+    enum entry Time // com.jcsoftdev.ui.chart.core/CategoryAxisMode.Time|null[0]
+
+    final val entries // com.jcsoftdev.ui.chart.core/CategoryAxisMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.chart.core/CategoryAxisMode> // com.jcsoftdev.ui.chart.core/CategoryAxisMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.chart.core/CategoryAxisMode // com.jcsoftdev.ui.chart.core/CategoryAxisMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.chart.core/CategoryAxisMode> // com.jcsoftdev.ui.chart.core/CategoryAxisMode.values|values#static(){}[0]
 }
+
+final enum class com.jcsoftdev.ui.chart.core/NumberStyle : kotlin/Enum<com.jcsoftdev.ui.chart.core/NumberStyle> { // com.jcsoftdev.ui.chart.core/NumberStyle|null[0]
+    enum entry Currency // com.jcsoftdev.ui.chart.core/NumberStyle.Currency|null[0]
+    enum entry Decimal // com.jcsoftdev.ui.chart.core/NumberStyle.Decimal|null[0]
+    enum entry Percent // com.jcsoftdev.ui.chart.core/NumberStyle.Percent|null[0]
+
+    final val entries // com.jcsoftdev.ui.chart.core/NumberStyle.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.chart.core/NumberStyle> // com.jcsoftdev.ui.chart.core/NumberStyle.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.chart.core/NumberStyle // com.jcsoftdev.ui.chart.core/NumberStyle.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.chart.core/NumberStyle> // com.jcsoftdev.ui.chart.core/NumberStyle.values|values#static(){}[0]
+}
+
+final enum class com.jcsoftdev.ui.chart.core/ScaleType : kotlin/Enum<com.jcsoftdev.ui.chart.core/ScaleType> { // com.jcsoftdev.ui.chart.core/ScaleType|null[0]
+    enum entry Linear // com.jcsoftdev.ui.chart.core/ScaleType.Linear|null[0]
+    enum entry Log // com.jcsoftdev.ui.chart.core/ScaleType.Log|null[0]
+    enum entry Time // com.jcsoftdev.ui.chart.core/ScaleType.Time|null[0]
+
+    final val entries // com.jcsoftdev.ui.chart.core/ScaleType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.chart.core/ScaleType> // com.jcsoftdev.ui.chart.core/ScaleType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.chart.core/ScaleType // com.jcsoftdev.ui.chart.core/ScaleType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.chart.core/ScaleType> // com.jcsoftdev.ui.chart.core/ScaleType.values|values#static(){}[0]
+}
+
+final enum class com.jcsoftdev.ui.chart.core/TimeRangeUnit : kotlin/Enum<com.jcsoftdev.ui.chart.core/TimeRangeUnit> { // com.jcsoftdev.ui.chart.core/TimeRangeUnit|null[0]
+    enum entry All // com.jcsoftdev.ui.chart.core/TimeRangeUnit.All|null[0]
+    enum entry Day // com.jcsoftdev.ui.chart.core/TimeRangeUnit.Day|null[0]
+    enum entry Month // com.jcsoftdev.ui.chart.core/TimeRangeUnit.Month|null[0]
+    enum entry Week // com.jcsoftdev.ui.chart.core/TimeRangeUnit.Week|null[0]
+    enum entry Year // com.jcsoftdev.ui.chart.core/TimeRangeUnit.Year|null[0]
+
+    final val entries // com.jcsoftdev.ui.chart.core/TimeRangeUnit.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.chart.core/TimeRangeUnit> // com.jcsoftdev.ui.chart.core/TimeRangeUnit.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.chart.core/TimeRangeUnit // com.jcsoftdev.ui.chart.core/TimeRangeUnit.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.chart.core/TimeRangeUnit> // com.jcsoftdev.ui.chart.core/TimeRangeUnit.values|values#static(){}[0]
+}
+
+final enum class com.jcsoftdev.ui.chart.core/TimeUnit : kotlin/Enum<com.jcsoftdev.ui.chart.core/TimeUnit> { // com.jcsoftdev.ui.chart.core/TimeUnit|null[0]
+    enum entry Day // com.jcsoftdev.ui.chart.core/TimeUnit.Day|null[0]
+    enum entry Month // com.jcsoftdev.ui.chart.core/TimeUnit.Month|null[0]
+    enum entry Week // com.jcsoftdev.ui.chart.core/TimeUnit.Week|null[0]
+    enum entry Year // com.jcsoftdev.ui.chart.core/TimeUnit.Year|null[0]
+
+    final val entries // com.jcsoftdev.ui.chart.core/TimeUnit.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.chart.core/TimeUnit> // com.jcsoftdev.ui.chart.core/TimeUnit.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.chart.core/TimeUnit // com.jcsoftdev.ui.chart.core/TimeUnit.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.chart.core/TimeUnit> // com.jcsoftdev.ui.chart.core/TimeUnit.values|values#static(){}[0]
+}
+
+final enum class com.jcsoftdev.ui.chart.core/ValuePreset : kotlin/Enum<com.jcsoftdev.ui.chart.core/ValuePreset> { // com.jcsoftdev.ui.chart.core/ValuePreset|null[0]
+    enum entry Compact // com.jcsoftdev.ui.chart.core/ValuePreset.Compact|null[0]
+    enum entry Currency // com.jcsoftdev.ui.chart.core/ValuePreset.Currency|null[0]
+    enum entry Integer // com.jcsoftdev.ui.chart.core/ValuePreset.Integer|null[0]
+    enum entry Number // com.jcsoftdev.ui.chart.core/ValuePreset.Number|null[0]
+    enum entry Percent // com.jcsoftdev.ui.chart.core/ValuePreset.Percent|null[0]
+
+    final val entries // com.jcsoftdev.ui.chart.core/ValuePreset.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.chart.core/ValuePreset> // com.jcsoftdev.ui.chart.core/ValuePreset.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.chart.core/ValuePreset // com.jcsoftdev.ui.chart.core/ValuePreset.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.chart.core/ValuePreset> // com.jcsoftdev.ui.chart.core/ValuePreset.values|values#static(){}[0]
+}
+
+abstract fun interface com.jcsoftdev.ui.chart.core/ValueFormatter { // com.jcsoftdev.ui.chart.core/ValueFormatter|null[0]
+    abstract fun format(kotlin/Double): kotlin/String // com.jcsoftdev.ui.chart.core/ValueFormatter.format|format(kotlin.Double){}[0]
+}
+
+abstract interface com.jcsoftdev.ui.chart.core/BandScale { // com.jcsoftdev.ui.chart.core/BandScale|null[0]
+    abstract val bandwidth // com.jcsoftdev.ui.chart.core/BandScale.bandwidth|{}bandwidth[0]
+        abstract fun <get-bandwidth>(): kotlin/Double // com.jcsoftdev.ui.chart.core/BandScale.bandwidth.<get-bandwidth>|<get-bandwidth>(){}[0]
+    abstract val count // com.jcsoftdev.ui.chart.core/BandScale.count|{}count[0]
+        abstract fun <get-count>(): kotlin/Int // com.jcsoftdev.ui.chart.core/BandScale.count.<get-count>|<get-count>(){}[0]
+    abstract val range // com.jcsoftdev.ui.chart.core/BandScale.range|{}range[0]
+        abstract fun <get-range>(): com.jcsoftdev.ui.chart.core/NumberRange // com.jcsoftdev.ui.chart.core/BandScale.range.<get-range>|<get-range>(){}[0]
+    abstract val step // com.jcsoftdev.ui.chart.core/BandScale.step|{}step[0]
+        abstract fun <get-step>(): kotlin/Double // com.jcsoftdev.ui.chart.core/BandScale.step.<get-step>|<get-step>(){}[0]
+
+    abstract fun center(kotlin/Int): kotlin/Double // com.jcsoftdev.ui.chart.core/BandScale.center|center(kotlin.Int){}[0]
+    abstract fun indexAt(kotlin/Double): kotlin/Int // com.jcsoftdev.ui.chart.core/BandScale.indexAt|indexAt(kotlin.Double){}[0]
+    abstract fun start(kotlin/Int): kotlin/Double // com.jcsoftdev.ui.chart.core/BandScale.start|start(kotlin.Int){}[0]
+}
+
+abstract interface com.jcsoftdev.ui.chart.core/ContinuousScale { // com.jcsoftdev.ui.chart.core/ContinuousScale|null[0]
+    abstract val domain // com.jcsoftdev.ui.chart.core/ContinuousScale.domain|{}domain[0]
+        abstract fun <get-domain>(): com.jcsoftdev.ui.chart.core/NumberRange // com.jcsoftdev.ui.chart.core/ContinuousScale.domain.<get-domain>|<get-domain>(){}[0]
+    abstract val range // com.jcsoftdev.ui.chart.core/ContinuousScale.range|{}range[0]
+        abstract fun <get-range>(): com.jcsoftdev.ui.chart.core/NumberRange // com.jcsoftdev.ui.chart.core/ContinuousScale.range.<get-range>|<get-range>(){}[0]
+    abstract val tickCount // com.jcsoftdev.ui.chart.core/ContinuousScale.tickCount|{}tickCount[0]
+        abstract fun <get-tickCount>(): kotlin/Int // com.jcsoftdev.ui.chart.core/ContinuousScale.tickCount.<get-tickCount>|<get-tickCount>(){}[0]
+    abstract val type // com.jcsoftdev.ui.chart.core/ContinuousScale.type|{}type[0]
+        abstract fun <get-type>(): com.jcsoftdev.ui.chart.core/ScaleType // com.jcsoftdev.ui.chart.core/ContinuousScale.type.<get-type>|<get-type>(){}[0]
+
+    abstract fun invert(kotlin/Double): kotlin/Double // com.jcsoftdev.ui.chart.core/ContinuousScale.invert|invert(kotlin.Double){}[0]
+    abstract fun map(kotlin/Double): kotlin/Double // com.jcsoftdev.ui.chart.core/ContinuousScale.map|map(kotlin.Double){}[0]
+    abstract fun ticks(kotlin/Int): kotlin/DoubleArray // com.jcsoftdev.ui.chart.core/ContinuousScale.ticks|ticks(kotlin.Int){}[0]
+}
+
+abstract interface com.jcsoftdev.ui.chart.core/TimeScale : com.jcsoftdev.ui.chart.core/ContinuousScale { // com.jcsoftdev.ui.chart.core/TimeScale|null[0]
+    abstract fun timeTicks(kotlin/Int = ...): kotlin.collections/List<com.jcsoftdev.ui.chart.core/TimeTick> // com.jcsoftdev.ui.chart.core/TimeScale.timeTicks|timeTicks(kotlin.Int){}[0]
+}
+
+abstract class com.jcsoftdev.ui.chart.core/ChartLocale { // com.jcsoftdev.ui.chart.core/ChartLocale|null[0]
+    constructor <init>() // com.jcsoftdev.ui.chart.core/ChartLocale.<init>|<init>(){}[0]
+
+    abstract val decimalSeparator // com.jcsoftdev.ui.chart.core/ChartLocale.decimalSeparator|{}decimalSeparator[0]
+        abstract fun <get-decimalSeparator>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.decimalSeparator.<get-decimalSeparator>|<get-decimalSeparator>(){}[0]
+    abstract val groupSeparator // com.jcsoftdev.ui.chart.core/ChartLocale.groupSeparator|{}groupSeparator[0]
+        abstract fun <get-groupSeparator>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.groupSeparator.<get-groupSeparator>|<get-groupSeparator>(){}[0]
+    abstract val minusSign // com.jcsoftdev.ui.chart.core/ChartLocale.minusSign|{}minusSign[0]
+        abstract fun <get-minusSign>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.minusSign.<get-minusSign>|<get-minusSign>(){}[0]
+    abstract val tag // com.jcsoftdev.ui.chart.core/ChartLocale.tag|{}tag[0]
+        abstract fun <get-tag>(): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.tag.<get-tag>|<get-tag>(){}[0]
+    open val groupingSize // com.jcsoftdev.ui.chart.core/ChartLocale.groupingSize|{}groupingSize[0]
+        open fun <get-groupingSize>(): kotlin/Int // com.jcsoftdev.ui.chart.core/ChartLocale.groupingSize.<get-groupingSize>|<get-groupingSize>(){}[0]
+    open val secondaryGroupingSize // com.jcsoftdev.ui.chart.core/ChartLocale.secondaryGroupingSize|{}secondaryGroupingSize[0]
+        open fun <get-secondaryGroupingSize>(): kotlin/Int // com.jcsoftdev.ui.chart.core/ChartLocale.secondaryGroupingSize.<get-secondaryGroupingSize>|<get-secondaryGroupingSize>(){}[0]
+    open val zeroDigit // com.jcsoftdev.ui.chart.core/ChartLocale.zeroDigit|{}zeroDigit[0]
+        open fun <get-zeroDigit>(): kotlin/Char // com.jcsoftdev.ui.chart.core/ChartLocale.zeroDigit.<get-zeroDigit>|<get-zeroDigit>(){}[0]
+
+    abstract fun monthShort(kotlin/Int): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.monthShort|monthShort(kotlin.Int){}[0]
+    abstract fun styleSample(com.jcsoftdev.ui.chart.core/NumberStyle, kotlin/String?, kotlin/Boolean = ...): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.styleSample|styleSample(com.jcsoftdev.ui.chart.core.NumberStyle;kotlin.String?;kotlin.Boolean){}[0]
+    abstract fun weekdayShort(kotlin/Int): kotlin/String // com.jcsoftdev.ui.chart.core/ChartLocale.weekdayShort|weekdayShort(kotlin.Int){}[0]
+    abstract fun zoneOffsetMillis(kotlin/String?, kotlin/Double): kotlin/Double // com.jcsoftdev.ui.chart.core/ChartLocale.zoneOffsetMillis|zoneOffsetMillis(kotlin.String?;kotlin.Double){}[0]
+}
+
+final class com.jcsoftdev.ui.chart.core/AxisTick { // com.jcsoftdev.ui.chart.core/AxisTick|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/String) // com.jcsoftdev.ui.chart.core/AxisTick.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.String){}[0]
+
+    final val key // com.jcsoftdev.ui.chart.core/AxisTick.key|{}key[0]
+        final fun <get-key>(): kotlin/Double // com.jcsoftdev.ui.chart.core/AxisTick.key.<get-key>|<get-key>(){}[0]
+    final val label // com.jcsoftdev.ui.chart.core/AxisTick.label|{}label[0]
+        final fun <get-label>(): kotlin/String // com.jcsoftdev.ui.chart.core/AxisTick.label.<get-label>|<get-label>(){}[0]
+    final val position // com.jcsoftdev.ui.chart.core/AxisTick.position|{}position[0]
+        final fun <get-position>(): kotlin/Double // com.jcsoftdev.ui.chart.core/AxisTick.position.<get-position>|<get-position>(){}[0]
+}
+
+final class com.jcsoftdev.ui.chart.core/CategoryAxis { // com.jcsoftdev.ui.chart.core/CategoryAxis|null[0]
+    constructor <init>(com.jcsoftdev.ui.chart.core/CategoryAxisMode, kotlin/DoubleArray, kotlin/Double, kotlin/Double, kotlin.collections/List<com.jcsoftdev.ui.chart.core/AxisTick>, kotlin/Function1<kotlin/Double, kotlin/Int>) // com.jcsoftdev.ui.chart.core/CategoryAxis.<init>|<init>(com.jcsoftdev.ui.chart.core.CategoryAxisMode;kotlin.DoubleArray;kotlin.Double;kotlin.Double;kotlin.collections.List<com.jcsoftdev.ui.chart.core.AxisTick>;kotlin.Function1<kotlin.Double,kotlin.Int>){}[0]
+
+    final val bandwidth // com.jcsoftdev.ui.chart.core/CategoryAxis.bandwidth|{}bandwidth[0]
+        final fun <get-bandwidth>(): kotlin/Double // com.jcsoftdev.ui.chart.core/CategoryAxis.bandwidth.<get-bandwidth>|<get-bandwidth>(){}[0]
+    final val mode // com.jcsoftdev.ui.chart.core/CategoryAxis.mode|{}mode[0]
+        final fun <get-mode>(): com.jcsoftdev.ui.chart.core/CategoryAxisMode // com.jcsoftdev.ui.chart.core/CategoryAxis.mode.<get-mode>|<get-mode>(){}[0]
+    final val positions // com.jcsoftdev.ui.chart.core/CategoryAxis.positions|{}positions[0]
+        final fun <get-positions>(): kotlin/DoubleArray // com.jcsoftdev.ui.chart.core/CategoryAxis.positions.<get-positions>|<get-positions>(){}[0]
+    final val step // com.jcsoftdev.ui.chart.core/CategoryAxis.step|{}step[0]
+        final fun <get-step>(): kotlin/Double // com.jcsoftdev.ui.chart.core/CategoryAxis.step.<get-step>|<get-step>(){}[0]
+    final val ticks // com.jcsoftdev.ui.chart.core/CategoryAxis.ticks|{}ticks[0]
+        final fun <get-ticks>(): kotlin.collections/List<com.jcsoftdev.ui.chart.core/AxisTick> // com.jcsoftdev.ui.chart.core/CategoryAxis.ticks.<get-ticks>|<get-ticks>(){}[0]
+
+    final fun indexAt(kotlin/Double): kotlin/Int // com.jcsoftdev.ui.chart.core/CategoryAxis.indexAt|indexAt(kotlin.Double){}[0]
+}
+
+final class com.jcsoftdev.ui.chart.core/IndexWindow { // com.jcsoftdev.ui.chart.core/IndexWindow|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.chart.core/IndexWindow.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+    final val from // com.jcsoftdev.ui.chart.core/IndexWindow.from|{}from[0]
+        final fun <get-from>(): kotlin/Int // com.jcsoftdev.ui.chart.core/IndexWindow.from.<get-from>|<get-from>(){}[0]
+    final val to // com.jcsoftdev.ui.chart.core/IndexWindow.to|{}to[0]
+        final fun <get-to>(): kotlin/Int // com.jcsoftdev.ui.chart.core/IndexWindow.to.<get-to>|<get-to>(){}[0]
+}
+
+final class com.jcsoftdev.ui.chart.core/NumberRange { // com.jcsoftdev.ui.chart.core/NumberRange|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double) // com.jcsoftdev.ui.chart.core/NumberRange.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
+
+    final val first // com.jcsoftdev.ui.chart.core/NumberRange.first|{}first[0]
+        final fun <get-first>(): kotlin/Double // com.jcsoftdev.ui.chart.core/NumberRange.first.<get-first>|<get-first>(){}[0]
+    final val high // com.jcsoftdev.ui.chart.core/NumberRange.high|{}high[0]
+        final fun <get-high>(): kotlin/Double // com.jcsoftdev.ui.chart.core/NumberRange.high.<get-high>|<get-high>(){}[0]
+    final val low // com.jcsoftdev.ui.chart.core/NumberRange.low|{}low[0]
+        final fun <get-low>(): kotlin/Double // com.jcsoftdev.ui.chart.core/NumberRange.low.<get-low>|<get-low>(){}[0]
+    final val second // com.jcsoftdev.ui.chart.core/NumberRange.second|{}second[0]
+        final fun <get-second>(): kotlin/Double // com.jcsoftdev.ui.chart.core/NumberRange.second.<get-second>|<get-second>(){}[0]
+
+    final fun toString(): kotlin/String // com.jcsoftdev.ui.chart.core/NumberRange.toString|toString(){}[0]
+}
+
+final class com.jcsoftdev.ui.chart.core/TimeRangePreset { // com.jcsoftdev.ui.chart.core/TimeRangePreset|null[0]
+    constructor <init>(kotlin/String, kotlin/String, com.jcsoftdev.ui.chart.core/TimeRangeUnit, kotlin/Int = ..., kotlin/String? = ...) // com.jcsoftdev.ui.chart.core/TimeRangePreset.<init>|<init>(kotlin.String;kotlin.String;com.jcsoftdev.ui.chart.core.TimeRangeUnit;kotlin.Int;kotlin.String?){}[0]
+
+    final val count // com.jcsoftdev.ui.chart.core/TimeRangePreset.count|{}count[0]
+        final fun <get-count>(): kotlin/Int // com.jcsoftdev.ui.chart.core/TimeRangePreset.count.<get-count>|<get-count>(){}[0]
+    final val description // com.jcsoftdev.ui.chart.core/TimeRangePreset.description|{}description[0]
+        final fun <get-description>(): kotlin/String? // com.jcsoftdev.ui.chart.core/TimeRangePreset.description.<get-description>|<get-description>(){}[0]
+    final val id // com.jcsoftdev.ui.chart.core/TimeRangePreset.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.core/TimeRangePreset.id.<get-id>|<get-id>(){}[0]
+    final val label // com.jcsoftdev.ui.chart.core/TimeRangePreset.label|{}label[0]
+        final fun <get-label>(): kotlin/String // com.jcsoftdev.ui.chart.core/TimeRangePreset.label.<get-label>|<get-label>(){}[0]
+    final val unit // com.jcsoftdev.ui.chart.core/TimeRangePreset.unit|{}unit[0]
+        final fun <get-unit>(): com.jcsoftdev.ui.chart.core/TimeRangeUnit // com.jcsoftdev.ui.chart.core/TimeRangePreset.unit.<get-unit>|<get-unit>(){}[0]
+}
+
+final class com.jcsoftdev.ui.chart.core/TimeTick { // com.jcsoftdev.ui.chart.core/TimeTick|null[0]
+    constructor <init>(kotlin/Double, com.jcsoftdev.ui.chart.core/TimeUnit, kotlin/String) // com.jcsoftdev.ui.chart.core/TimeTick.<init>|<init>(kotlin.Double;com.jcsoftdev.ui.chart.core.TimeUnit;kotlin.String){}[0]
+
+    final val label // com.jcsoftdev.ui.chart.core/TimeTick.label|{}label[0]
+        final fun <get-label>(): kotlin/String // com.jcsoftdev.ui.chart.core/TimeTick.label.<get-label>|<get-label>(){}[0]
+    final val unit // com.jcsoftdev.ui.chart.core/TimeTick.unit|{}unit[0]
+        final fun <get-unit>(): com.jcsoftdev.ui.chart.core/TimeUnit // com.jcsoftdev.ui.chart.core/TimeTick.unit.<get-unit>|<get-unit>(){}[0]
+    final val value // com.jcsoftdev.ui.chart.core/TimeTick.value|{}value[0]
+        final fun <get-value>(): kotlin/Double // com.jcsoftdev.ui.chart.core/TimeTick.value.<get-value>|<get-value>(){}[0]
+}
+
+final object com.jcsoftdev.ui.chart.core/ChartLocales { // com.jcsoftdev.ui.chart.core/ChartLocales|null[0]
+    final val system // com.jcsoftdev.ui.chart.core/ChartLocales.system|{}system[0]
+        final fun <get-system>(): com.jcsoftdev.ui.chart.core/ChartLocale // com.jcsoftdev.ui.chart.core/ChartLocales.system.<get-system>|<get-system>(){}[0]
+
+    final fun current(): com.jcsoftdev.ui.chart.core/ChartLocale // com.jcsoftdev.ui.chart.core/ChartLocales.current|current(){}[0]
+    final fun forTag(kotlin/String): com.jcsoftdev.ui.chart.core/ChartLocale // com.jcsoftdev.ui.chart.core/ChartLocales.forTag|forTag(kotlin.String){}[0]
+}
+
+final const val com.jcsoftdev.ui.chart.core/NON_FINITE_LABEL // com.jcsoftdev.ui.chart.core/NON_FINITE_LABEL|{}NON_FINITE_LABEL[0]
+    final fun <get-NON_FINITE_LABEL>(): kotlin/String // com.jcsoftdev.ui.chart.core/NON_FINITE_LABEL.<get-NON_FINITE_LABEL>|<get-NON_FINITE_LABEL>(){}[0]
+
+final fun (com.jcsoftdev.ui.chart.core/ContinuousScale).com.jcsoftdev.ui.chart.core/ticks(): kotlin/DoubleArray // com.jcsoftdev.ui.chart.core/ticks|ticks@com.jcsoftdev.ui.chart.core.ContinuousScale(){}[0]
+final fun com.jcsoftdev.ui.chart.core/bandScale(kotlin/Int, kotlin/Double, kotlin/Double, kotlin/Double = ..., kotlin/Double = ...): com.jcsoftdev.ui.chart.core/BandScale // com.jcsoftdev.ui.chart.core/bandScale|bandScale(kotlin.Int;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/categoryAxis(kotlin.collections/List<kotlin/String>, kotlin/Double, com.jcsoftdev.ui.chart.core/CategoryAxisMode, kotlin/Double = ..., kotlin/Double? = ...): com.jcsoftdev.ui.chart.core/CategoryAxis // com.jcsoftdev.ui.chart.core/categoryAxis|categoryAxis(kotlin.collections.List<kotlin.String>;kotlin.Double;com.jcsoftdev.ui.chart.core.CategoryAxisMode;kotlin.Double;kotlin.Double?){}[0]
+final fun com.jcsoftdev.ui.chart.core/cleanNumber(kotlin/Double): kotlin/Double // com.jcsoftdev.ui.chart.core/cleanNumber|cleanNumber(kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/dayOfMonth(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): kotlin/Int // com.jcsoftdev.ui.chart.core/dayOfMonth|dayOfMonth(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/estimateTextWidth(kotlin/String, kotlin/Double = ...): kotlin/Double // com.jcsoftdev.ui.chart.core/estimateTextWidth|estimateTextWidth(kotlin.String;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/extent(kotlin/DoubleArray): com.jcsoftdev.ui.chart.core/NumberRange? // com.jcsoftdev.ui.chart.core/extent|extent(kotlin.DoubleArray){}[0]
+final fun com.jcsoftdev.ui.chart.core/formatCompact(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale = ..., kotlin/Int = ..., kotlin/String = ...): kotlin/String // com.jcsoftdev.ui.chart.core/formatCompact|formatCompact(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.Int;kotlin.String){}[0]
+final fun com.jcsoftdev.ui.chart.core/formatCurrency(kotlin/Double, kotlin/String?, com.jcsoftdev.ui.chart.core/ChartLocale = ..., kotlin/Int = ...): kotlin/String // com.jcsoftdev.ui.chart.core/formatCurrency|formatCurrency(kotlin.Double;kotlin.String?;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/formatDate(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): kotlin/String // com.jcsoftdev.ui.chart.core/formatDate|formatDate(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/formatNumber(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale = ..., kotlin/Int = ..., kotlin/Int = ...): kotlin/String // com.jcsoftdev.ui.chart.core/formatNumber|formatNumber(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/formatPercent(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale = ..., kotlin/Int = ..., kotlin/Boolean = ...): kotlin/String // com.jcsoftdev.ui.chart.core/formatPercent|formatPercent(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.Int;kotlin.Boolean){}[0]
+final fun com.jcsoftdev.ui.chart.core/linearScale(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Boolean = ..., kotlin/Int = ...): com.jcsoftdev.ui.chart.core/ContinuousScale // com.jcsoftdev.ui.chart.core/linearScale|linearScale(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Boolean;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/linearTicks(kotlin/Double, kotlin/Double, kotlin/Int = ...): kotlin/DoubleArray // com.jcsoftdev.ui.chart.core/linearTicks|linearTicks(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/logScale(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double): com.jcsoftdev.ui.chart.core/ContinuousScale // com.jcsoftdev.ui.chart.core/logScale|logScale(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/nearestIndex(kotlin/DoubleArray, kotlin/Double): kotlin/Int // com.jcsoftdev.ui.chart.core/nearestIndex|nearestIndex(kotlin.DoubleArray;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/nearestSortedIndex(kotlin/DoubleArray, kotlin/Double): kotlin/Int // com.jcsoftdev.ui.chart.core/nearestSortedIndex|nearestSortedIndex(kotlin.DoubleArray;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/niceDomain(kotlin/Double, kotlin/Double, kotlin/Int = ...): com.jcsoftdev.ui.chart.core/NumberRange // com.jcsoftdev.ui.chart.core/niceDomain|niceDomain(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/pointScale(kotlin/Int, kotlin/Double, kotlin/Double, kotlin/Double = ...): com.jcsoftdev.ui.chart.core/BandScale // com.jcsoftdev.ui.chart.core/pointScale|pointScale(kotlin.Int;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/rangeWindow(kotlin/DoubleArray, com.jcsoftdev.ui.chart.core/TimeRangePreset, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): com.jcsoftdev.ui.chart.core/IndexWindow // com.jcsoftdev.ui.chart.core/rangeWindow|rangeWindow(kotlin.DoubleArray;com.jcsoftdev.ui.chart.core.TimeRangePreset;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/rangeWindow(kotlin/DoubleArray, com.jcsoftdev.ui.chart.core/TimeRangeUnit, kotlin/Int, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): com.jcsoftdev.ui.chart.core/IndexWindow // com.jcsoftdev.ui.chart.core/rangeWindow|rangeWindow(kotlin.DoubleArray;com.jcsoftdev.ui.chart.core.TimeRangeUnit;kotlin.Int;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/resolveAxisFormat(com.jcsoftdev.ui.chart.core/ValuePreset, com.jcsoftdev.ui.chart.core/ChartLocale = ..., kotlin/String? = ...): com.jcsoftdev.ui.chart.core/ValueFormatter // com.jcsoftdev.ui.chart.core/resolveAxisFormat|resolveAxisFormat(com.jcsoftdev.ui.chart.core.ValuePreset;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/resolveFormat(com.jcsoftdev.ui.chart.core/ValuePreset, com.jcsoftdev.ui.chart.core/ChartLocale = ..., kotlin/String? = ...): com.jcsoftdev.ui.chart.core/ValueFormatter // com.jcsoftdev.ui.chart.core/resolveFormat|resolveFormat(com.jcsoftdev.ui.chart.core.ValuePreset;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/shiftDate(kotlin/Double, com.jcsoftdev.ui.chart.core/TimeRangeUnit, kotlin/Int, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): kotlin/Double // com.jcsoftdev.ui.chart.core/shiftDate|shiftDate(kotlin.Double;com.jcsoftdev.ui.chart.core.TimeRangeUnit;kotlin.Int;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/shortDateLabel(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): kotlin/String // com.jcsoftdev.ui.chart.core/shortDateLabel|shortDateLabel(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/shortMonth(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): kotlin/String // com.jcsoftdev.ui.chart.core/shortMonth|shortMonth(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/shortWeekday(kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): kotlin/String // com.jcsoftdev.ui.chart.core/shortWeekday|shortWeekday(kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/thinTicks(kotlin.collections/List<com.jcsoftdev.ui.chart.core/AxisTick>, kotlin/Double = ...): kotlin.collections/List<com.jcsoftdev.ui.chart.core/AxisTick> // com.jcsoftdev.ui.chart.core/thinTicks|thinTicks(kotlin.collections.List<com.jcsoftdev.ui.chart.core.AxisTick>;kotlin.Double){}[0]
+final fun com.jcsoftdev.ui.chart.core/tickStep(kotlin/Double, kotlin/Double, kotlin/Int): kotlin/Double // com.jcsoftdev.ui.chart.core/tickStep|tickStep(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/timeCategoryAxis(kotlin/DoubleArray, kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ..., kotlin/Int? = ...): com.jcsoftdev.ui.chart.core/CategoryAxis // com.jcsoftdev.ui.chart.core/timeCategoryAxis|timeCategoryAxis(kotlin.DoubleArray;kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?;kotlin.Int?){}[0]
+final fun com.jcsoftdev.ui.chart.core/timeScale(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ...): com.jcsoftdev.ui.chart.core/TimeScale // com.jcsoftdev.ui.chart.core/timeScale|timeScale(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?){}[0]
+final fun com.jcsoftdev.ui.chart.core/timeTicks(kotlin/Double, kotlin/Double, com.jcsoftdev.ui.chart.core/ChartLocale, kotlin/String? = ..., kotlin/Int = ...): kotlin.collections/List<com.jcsoftdev.ui.chart.core/TimeTick> // com.jcsoftdev.ui.chart.core/timeTicks|timeTicks(kotlin.Double;kotlin.Double;com.jcsoftdev.ui.chart.core.ChartLocale;kotlin.String?;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.core/valueTicks(com.jcsoftdev.ui.chart.core/ContinuousScale, kotlin/Int, com.jcsoftdev.ui.chart.core/ValueFormatter): kotlin.collections/List<com.jcsoftdev.ui.chart.core/AxisTick> // com.jcsoftdev.ui.chart.core/valueTicks|valueTicks(com.jcsoftdev.ui.chart.core.ContinuousScale;kotlin.Int;com.jcsoftdev.ui.chart.core.ValueFormatter){}[0]
