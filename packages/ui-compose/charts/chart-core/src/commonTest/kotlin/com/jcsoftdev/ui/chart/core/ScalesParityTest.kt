@@ -15,19 +15,19 @@ class ScalesParityTest {
             val c = case.obj()
             val (min, max, count) = Triple(c.getNum("min"), c.getNum("max"), c.getValue("count").int())
             val label = "[$min, $max] x $count"
-            assertClose(c.getNum("step"), tickStep(min, max, count), message = "step $label")
+            assertEquals(c.getNum("step"), tickStep(min, max, count), "step $label")
             val nice = niceDomain(min, max, count)
             val expected = c.getList("nice").doubles()
-            assertClose(expected[0], nice.first, message = "nice lo $label")
-            assertClose(expected[1], nice.second, message = "nice hi $label")
-            assertCloseArray(c.getValue("ticks").doubles(), linearTicks(min, max, count), message = "ticks $label")
+            assertEquals(expected[0], nice.first, "nice lo $label")
+            assertEquals(expected[1], nice.second, "nice hi $label")
+            assertEquals(c.getValue("ticks").doubles().toList(), linearTicks(min, max, count).toList(), "ticks $label")
         }
     }
 
     @Test fun cleanRoundsToTwelveSignificantDigits() {
         for (case in fixture("ticks").getList("clean")) {
             val c = case.obj()
-            assertClose(c.getNum("clean"), cleanNumber(c.getNum("value")), 1e-11, "clean ${c.getNum("value")}")
+            assertEquals(c.getNum("clean"), cleanNumber(c.getNum("value")), "clean ${c.getNum("value")}")
         }
     }
 

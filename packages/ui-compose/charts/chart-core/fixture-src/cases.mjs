@@ -37,7 +37,7 @@ const ticks = (mod) => {
     if (exactTickStep(min, max, count) !== mod.tickStep(min, max, count)) return [];
     return [{ min, max, count, step: mod.tickStep(min, max, count), nice: mod.niceDomain(min, max, count), ticks: mod.linearTicks(min, max, count) }];
   });
-  const clean = [0, 1, -1, 0.1 + 0.2, 1 / 3, 2 / 3, 1e-7 * 3, 123456.78901234567, 1e21, 1.5e-10, -4.35, 1.0000000000005, 9.9999999999995, 4503599627370496.5]
+  const clean = [0, 1, -1, 0.1 + 0.2, 1 / 3, 2 / 3, 1e-7 * 3, 123456.78901234567, 1e21, 1.5e-10, -4.35, 1.0000000000005, 9.9999999999995, 4503599627370496.5, 1e-12, -1e-12, -0, 0.5e-13, -1.0000000000005, -9.9999999999995, 2.5, -2.5, 1e-300, 1e300, 123456789012.5, -123456789012.5]
     .concat(times(80, () => between(rand, -1e6, 1e6) / 7)).map((value) => ({ value, clean: mod.clean(value) }));
   return { cases: out, clean };
 };
@@ -120,14 +120,19 @@ const scales = (mod) => {
 };
 
 const LOCALES = ["es-PE", "es", "en-US"];
-const ZONES = [null, "UTC", "America/Lima", "America/New_York", "Europe/Madrid", "Asia/Kolkata"];
+// The null zone is the machine's local zone, so its output depends on where the generator runs and cannot be a committed fixture.
+const ZONES = ["UTC", "America/Lima", "America/New_York", "Europe/Madrid", "Asia/Kolkata", "America/Santiago"];
+// Number formatting also covers locales with other grouping, digits and sign placement. Compact notation exists for es and en only.
+const FORMAT_LOCALES = [...LOCALES, "en-IN", "nl", "de-CH", "ar-EG"];
+// Short month and weekday names, which the platform supplies; ca and fi differ between their format and standalone forms.
+const NAME_LOCALES = [...LOCALES, "ca", "fi", "de"];
 
 const time = (mod) => {
   const rand = lehmer(23);
   const spans = [3 * 3_600_000, DAY, 2 * DAY, 6 * DAY, 10 * DAY, 20 * DAY, 40 * DAY, 100 * DAY, 200 * DAY, 400 * DAY, 800 * DAY, 5 * 365 * DAY, 30 * 365 * DAY, 300 * 365 * DAY];
   const starts = [utc(2026, 1, 1), utc(2026, 3, 7, 12), utc(2026, 3, 28, 22), utc(2026, 10, 24, 5), utc(2026, 10, 31, 20, 30), utc(2024, 2, 27, 3), utc(1999, 12, 30)];
   const tickCases = [];
-  for (const zone of ZONES.filter(Boolean)) {
+  for (const zone of ZONES) {
     for (const [si, span] of spans.entries()) {
       const start = starts[(si + zone.length) % starts.length];
       const locale = LOCALES[si % LOCALES.length];
@@ -136,11 +141,14 @@ const time = (mod) => {
       tickCases.push({ start, end: start + span, count, zone, locale, ticks: mod.timeTicks(start, start + span, count, options) });
     }
   }
+  // America/Santiago skips 2026-09-06 00:00 to 01:00: midnight of the 6th does not exist and must resolve forward, not to the 5th.
+  tickCases.push({ start: utc(2026, 9, 3), end: utc(2026, 9, 9), count: 6, zone: "America/Santiago", locale: "es-PE", ticks: mod.timeTicks(utc(2026, 9, 3), utc(2026, 9, 9), 6, { locale: "es-PE", timeZone: "America/Santiago" }) });
+  tickCases.push({ start: utc(2026, 11, 1), end: utc(2026, 11, 3), count: 6, zone: "America/New_York", locale: "en-US", ticks: mod.timeTicks(utc(2026, 11, 1), utc(2026, 11, 3), 6, { locale: "en-US", timeZone: "America/New_York" }) });
   for (const [start, end, zone] of [[starts[0], starts[0], "UTC"], [starts[0] + 5 * DAY, starts[0], "UTC"], [starts[1], starts[1] + 1, "America/New_York"]]) {
     tickCases.push({ start, end, count: 6, zone, locale: "es-PE", ticks: mod.timeTicks(start, end, 6, { locale: "es-PE", timeZone: zone }) });
   }
   const dates = times(40, () => starts[0] + Math.floor(rand() * 5 * 365 * 24 * 3600) * 1000);
-  const formats = ["UTC", "America/Lima", "America/New_York", "Europe/Madrid"].flatMap((zone) =>
+  const formats = ["UTC", "America/Lima", "America/New_York", "Europe/Madrid", "America/Santiago"].flatMap((zone) =>
     ["es-PE", "en-US"].flatMap((locale) => dates.slice(0, 12).map((value) => ({ value, zone, locale, text: mod.formatDate(value, { locale, timeZone: zone }), month: mod.shortMonth(new Date(value), { locale, timeZone: zone }), weekday: mod.shortWeekday(new Date(value), { locale, timeZone: zone }), day: mod.dayOfMonth(new Date(value), { locale, timeZone: zone }) }))),
   );
   const scale = mod.timeScale({ domain: [starts[0], starts[0] + 30 * DAY], range: [10, 410], timeZone: "UTC" });
@@ -152,7 +160,7 @@ const time = (mod) => {
   };
   // Month and weekday names per locale, as the platform formatter has to supply them.
   const names = Object.fromEntries(
-    LOCALES.map((locale) => [
+    NAME_LOCALES.map((locale) => [
       locale,
       {
         months: times(12, (m) => new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(Date.UTC(2026, m, 5))),
@@ -166,21 +174,28 @@ const time = (mod) => {
 const format = (mod) => {
   const symbols = {};
   const currencies = ["PEN", "USD", "EUR"];
-  for (const locale of LOCALES) {
+  for (const locale of FORMAT_LOCALES) {
     const parts = new Intl.NumberFormat(locale, { minimumFractionDigits: 1 }).formatToParts(-1234567.5);
     const part = (type) => parts.find((p) => p.type === type)?.value ?? "";
-    const sample = (opts) => new Intl.NumberFormat(locale, { ...opts, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(1);
+    const sample = (opts, value) => new Intl.NumberFormat(locale, { ...opts, minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+    const groups = new Intl.NumberFormat(locale, { useGrouping: "always" }).formatToParts(123456789).filter((p) => p.type === "integer").map((p) => p.value.length);
+    const styles = { decimal: {}, percent: {}, currency: Object.fromEntries(currencies.map((code) => [code, {}])) };
+    for (const [key, value] of [["pos", 1], ["neg", -1]]) {
+      styles.decimal[key] = sample({}, value);
+      styles.percent[key] = sample({ style: "percent" }, value);
+      for (const code of currencies) styles.currency[code][key] = sample({ style: "currency", currency: code }, value);
+    }
     symbols[locale] = {
       decimal: part("decimal"), group: part("group"), minus: part("minusSign"),
-      percent: sample({ style: "percent" }),
-      currency: Object.fromEntries(currencies.map((code) => [code, sample({ style: "currency", currency: code })])),
+      zero: new Intl.NumberFormat(locale).format(0), primaryGroup: groups.at(-1), secondaryGroup: groups.at(-2) ?? groups.at(-1),
+      percent: styles.percent.pos, currency: Object.fromEntries(currencies.map((code) => [code, styles.currency[code].pos])), styles,
     };
   }
   const numbers = [0, 0.5, 1, -1, 7, 42.42, 999, 999.994, 1000, 1234.5, -1234.5, 12345.678, 99999.5, 123456.789, 1234567.891, -9876543.21, 0.005, 0.015, 1.005, 2.675, 0.1 + 0.2, 1e-7, 0.000123, 123456789.125, 1e15, 1e21, 99.995, 9.9995];
-  const compact = [0, 0.4, 5, 123.456, 999.44, 999.96, 1000, 1049, 1050, 12345, 999949, 999950, 999999, 1e6, 1.05e6, 99.96e6, 1e9, 1.5e9, 1e12, 1.5e15, 1e16, -1500, 25e5, 3e9, 4e12];
+  const compact = [1e10, 2.5e11, 9.99e9, 9.9995e10, 1e11, 999.96e9, 0, 0.4, 5, 123.456, 999.44, 999.96, 1000, 1049, 1050, 12345, 999949, 999950, 999999, 1e6, 1.05e6, 99.96e6, 1e9, 1.5e9, 1e12, 1.5e15, 1e16, -1500, 25e5, 3e9, 4e12];
   const percents = [0, 0.125, 0.1255, 1.5, -0.5, 0.00049, 0.999, 0.5, 12, 0.0001];
   const out = [];
-  for (const locale of LOCALES) {
+  for (const locale of FORMAT_LOCALES) {
     for (const value of numbers) {
       out.push({ locale, kind: "number", value, args: {}, text: mod.formatNumber(value, { locale }) });
       out.push({ locale, kind: "integer", value, args: {}, text: mod.formatNumber(value, { locale, maximumFractionDigits: 0 }) });
@@ -192,7 +207,7 @@ const format = (mod) => {
     }
     // Compact suffixes come from a shared table for es and en. CLDR's es-419 family (es-PE included) switches between "K" and "k" by
     // magnitude; that quirk is not modelled, so es-PE has no compact cases (its default compact locale on the web is "es" anyway).
-    for (const value of locale === "es-PE" ? [] : compact) {
+    for (const value of locale === "es" || locale === "en-US" ? compact : []) {
       out.push({ locale, kind: "compact", value, args: { decimals: 1, prefix: "" }, text: mod.formatCompact(value, { locale }) });
       out.push({ locale, kind: "compact", value, args: { decimals: 0, prefix: "S/ " }, text: mod.formatCompact(value, { locale, decimals: 0, prefix: "S/ " }) });
     }
@@ -202,7 +217,7 @@ const format = (mod) => {
         out.push({ locale, kind: "currency", value, args: { currency, decimals: 0 }, text: mod.formatCurrency(value, { locale, currency, decimals: 0 }) });
       }
       for (const preset of ["currency", "percent", "number", "compact"]) {
-        for (const value of locale === "es-PE" ? [0, 12, 950, 1234.5, 9999, 0.5] : [0, 12, 950, 1234.5, 9999, 10000, 25000, 1.5e6, -42000, 0.5]) {
+        for (const value of locale !== "es" && locale !== "en-US" ? [0, 12, 950, 1234.5, 9999, -950, 0.5] : [0, 12, 950, 1234.5, 9999, 10000, 25000, 1.5e6, -42000, 0.5]) {
           out.push({ locale, kind: `axis-${preset}`, value, args: { currency }, text: mod.resolveAxisFormat(preset, { locale, currency })(value) });
         }
       }

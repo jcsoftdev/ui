@@ -18,7 +18,7 @@ private fun daysFromCivil(
     return era * 146_097 + doe - 719_468
 }
 
-/** Year, month (1..12) and day of month of a day number, packed so no object is allocated. */
+/** Year, month (1..12) and day of month of a day number, as a three-element array. */
 private fun civilFromDays(days: Long): LongArray {
     val z = days + 719_468
     val era = z.floorDiv(146_097L)
@@ -44,11 +44,18 @@ internal class WallCalendar(
 
     fun wall(epochMillis: Double): Double = epochMillis + offset(epochMillis)
 
-    /** The instant whose wall clock reads [wall]; two passes settle the offset around a daylight saving change. */
+    /**
+     * The instant whose wall clock reads [wall]. The offsets two days either side bracket any daylight saving change near it: a wall
+     * time inside a spring-forward gap resolves forward with the earlier offset, and one repeated by a fall-back takes its first
+     * occurrence, the same as java.time.
+     */
     fun instant(wall: Double): Double {
-        var ms = wall - offset(wall)
-        ms = wall - offset(ms)
-        return ms
+        val before = offset(wall - 2 * DAY_MS)
+        val after = offset(wall + 2 * DAY_MS)
+        val first = wall - before
+        if (before == after || offset(first) == before) return first
+        val second = wall - after
+        return if (offset(second) == after) second else first
     }
 
     private fun days(wall: Double): Long = floor(wall / DAY_MS).toLong()

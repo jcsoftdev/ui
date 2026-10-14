@@ -50,7 +50,8 @@ class PlatformLocaleTest {
     }
 
     @Test fun monthAndWeekdayNamesMatchIntlByTheirFirstLetters() {
-        for (tag in listOf("es-PE", "en-US")) {
+        // ca and fi write the month differently in a date ("d\u2019oct.", "lokak.") than on its own; the chart wants the standalone form.
+        for (tag in listOf("es-PE", "en-US", "ca", "fi", "de")) {
             val expected = names.getObj(tag)
             val locale = ChartLocales.forTag(tag)
             expected.getList("months").forEachIndexed {

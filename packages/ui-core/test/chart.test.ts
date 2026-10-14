@@ -23,6 +23,7 @@ import * as scale from "../src/chart/scale.ts";
 import * as scaleTime from "../src/chart/scale-time.ts";
 import * as stack from "../src/chart/stack.ts";
 import * as timeRange from "../src/chart/time-range.ts";
+import { zonedCalendar } from "../src/internal/chart-calendar.ts";
 
 let seed = 7;
 const rand = () => {
@@ -681,5 +682,38 @@ describe("currency has no default", () => {
     const text = format.formatCurrency(1, { locale: "es-PE", currency: "USD" });
     expect(text).toMatch(/US\$|USD/);
     expect(text).not.toContain("S/");
+  });
+});
+
+describe("funnelStages with large input", () => {
+  it("handles 200k stages without overflowing the stack", async () => {
+    const { funnelStages } = await import("../src/chart/funnel.ts");
+    const values = Array.from({ length: 200_000 }, (_, i) => 200_000 - i);
+    const stages = funnelStages(values, { length: 1000, thickness: 100 });
+    expect(stages).toHaveLength(200_000);
+    expect(stages[0]?.widthFrom).toBe(100);
+  });
+});
+
+describe("zoned calendar around daylight saving changes", () => {
+  it("resolves a wall time inside a spring-forward gap forward, like java.time", () => {
+    // America/Santiago jumps from 2026-09-06 00:00 to 01:00 (-04:00 to -03:00).
+    const cal = zonedCalendar("America/Santiago");
+    const gap = new Date(Date.UTC(2026, 8, 6, 0, 0));
+    expect(new Date(cal.instant(gap)).toISOString()).toBe("2026-09-06T04:00:00.000Z");
+    expect(cal.wall(cal.instant(gap)).toISOString()).toBe("2026-09-06T01:00:00.000Z");
+  });
+
+  it("takes the first occurrence of a wall time repeated by a fall-back", () => {
+    // America/New_York repeats 2026-11-01 01:30 (EDT then EST).
+    const cal = zonedCalendar("America/New_York");
+    const repeated = new Date(Date.UTC(2026, 10, 1, 1, 30));
+    expect(new Date(cal.instant(repeated)).toISOString()).toBe("2026-11-01T05:30:00.000Z");
+  });
+
+  it("keeps ordinary wall times exact", () => {
+    const cal = zonedCalendar("America/Lima");
+    const noon = new Date(Date.UTC(2026, 5, 15, 12, 0));
+    expect(new Date(cal.instant(noon)).toISOString()).toBe("2026-06-15T17:00:00.000Z");
   });
 });

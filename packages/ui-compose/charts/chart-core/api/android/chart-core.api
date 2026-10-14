@@ -29,63 +29,6 @@ public abstract interface class com/jcsoftdev/ui/chart/core/BandScale {
 	public abstract fun start (I)D
 }
 
-public final class com/jcsoftdev/ui/chart/core/BarEnd : java/lang/Enum {
-	public static final field All Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static final field Bottom Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static final field Left Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static final field None Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static final field Right Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static final field Top Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/BarEnd;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/BarEnd;
-}
-
-public final class com/jcsoftdev/ui/chart/core/BrushKey : java/lang/Enum {
-	public static final field Down Lcom/jcsoftdev/ui/chart/core/BrushKey;
-	public static final field Left Lcom/jcsoftdev/ui/chart/core/BrushKey;
-	public static final field Right Lcom/jcsoftdev/ui/chart/core/BrushKey;
-	public static final field Up Lcom/jcsoftdev/ui/chart/core/BrushKey;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/BrushKey;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/BrushKey;
-}
-
-public final class com/jcsoftdev/ui/chart/core/BrushKt {
-	public static final field TOUCH_BRUSH_DELAY D
-	public static final fun clampIndexRange (III)Lcom/jcsoftdev/ui/chart/core/IndexRange;
-	public static final fun clampRect (Lcom/jcsoftdev/ui/chart/core/BrushRect;Lcom/jcsoftdev/ui/chart/core/NumberRange;Lcom/jcsoftdev/ui/chart/core/NumberRange;)Lcom/jcsoftdev/ui/chart/core/BrushRect;
-	public static final fun defaultBrush (Lcom/jcsoftdev/ui/chart/core/NumberRange;Lcom/jcsoftdev/ui/chart/core/NumberRange;)Lcom/jcsoftdev/ui/chart/core/BrushRect;
-	public static final fun dragIndexRange (Lcom/jcsoftdev/ui/chart/core/IndexDrag;ILcom/jcsoftdev/ui/chart/core/IndexRange;I)Lcom/jcsoftdev/ui/chart/core/IndexRange;
-	public static final fun isClick (DDDDD)Z
-	public static synthetic fun isClick$default (DDDDDILjava/lang/Object;)Z
-	public static final fun pickIndexDrag (DDDLkotlin/jvm/functions/Function1;ID)Lcom/jcsoftdev/ui/chart/core/IndexDrag;
-	public static synthetic fun pickIndexDrag$default (DDDLkotlin/jvm/functions/Function1;IDILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/IndexDrag;
-	public static final fun rangesToRect (Lcom/jcsoftdev/ui/chart/core/NumberRange;Lcom/jcsoftdev/ui/chart/core/NumberRange;)Lcom/jcsoftdev/ui/chart/core/BrushRect;
-	public static final fun rectFromCorners (DDDD)Lcom/jcsoftdev/ui/chart/core/BrushRect;
-	public static final fun rectToRanges (Lcom/jcsoftdev/ui/chart/core/BrushRect;)Lcom/jcsoftdev/ui/chart/core/BrushRanges;
-	public static final fun stepBrush (Lcom/jcsoftdev/ui/chart/core/BrushRect;Lcom/jcsoftdev/ui/chart/core/BrushKey;ZLcom/jcsoftdev/ui/chart/core/NumberRange;Lcom/jcsoftdev/ui/chart/core/NumberRange;D)Lcom/jcsoftdev/ui/chart/core/BrushRect;
-	public static synthetic fun stepBrush$default (Lcom/jcsoftdev/ui/chart/core/BrushRect;Lcom/jcsoftdev/ui/chart/core/BrushKey;ZLcom/jcsoftdev/ui/chart/core/NumberRange;Lcom/jcsoftdev/ui/chart/core/NumberRange;DILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/BrushRect;
-	public static final fun stepIndexRange (Lcom/jcsoftdev/ui/chart/core/IndexRange;Lcom/jcsoftdev/ui/chart/core/IndexKey;ZI)Lcom/jcsoftdev/ui/chart/core/IndexRange;
-	public static final fun touchIntent (DDDDDDD)Lcom/jcsoftdev/ui/chart/core/TouchIntent;
-	public static synthetic fun touchIntent$default (DDDDDDDILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/TouchIntent;
-}
-
-public final class com/jcsoftdev/ui/chart/core/BrushRanges {
-	public fun <init> (Lcom/jcsoftdev/ui/chart/core/NumberRange;Lcom/jcsoftdev/ui/chart/core/NumberRange;)V
-	public final fun getX ()Lcom/jcsoftdev/ui/chart/core/NumberRange;
-	public final fun getY ()Lcom/jcsoftdev/ui/chart/core/NumberRange;
-}
-
-public final class com/jcsoftdev/ui/chart/core/BrushRect {
-	public fun <init> (DDDD)V
-	public final fun contains (DD)Z
-	public final fun getX0 ()D
-	public final fun getX1 ()D
-	public final fun getY0 ()D
-	public final fun getY1 ()D
-}
-
 public final class com/jcsoftdev/ui/chart/core/CategoryAxis {
 	public fun <init> (Lcom/jcsoftdev/ui/chart/core/CategoryAxisMode;[DDDLjava/util/List;Lkotlin/jvm/functions/Function1;)V
 	public final fun getBandwidth ()D
@@ -105,104 +48,27 @@ public final class com/jcsoftdev/ui/chart/core/CategoryAxisMode : java/lang/Enum
 	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/CategoryAxisMode;
 }
 
-public final class com/jcsoftdev/ui/chart/core/ChartColor {
-	public static final field Companion Lcom/jcsoftdev/ui/chart/core/ChartColor$Companion;
-	public static final synthetic fun box-impl (I)Lcom/jcsoftdev/ui/chart/core/ChartColor;
-	public static fun constructor-impl (I)I
-	public fun equals (Ljava/lang/Object;)Z
-	public static fun equals-impl (ILjava/lang/Object;)Z
-	public static final fun equals-impl0 (II)Z
-	public static final fun getAlpha-impl (I)I
-	public final fun getArgb ()I
-	public static final fun getBlue-impl (I)I
-	public static final fun getGreen-impl (I)I
-	public static final fun getRed-impl (I)I
-	public fun hashCode ()I
-	public static fun hashCode-impl (I)I
-	public static final fun toHex-impl (I)Ljava/lang/String;
-	public fun toString ()Ljava/lang/String;
-	public static fun toString-impl (I)Ljava/lang/String;
-	public final synthetic fun unbox-impl ()I
-}
-
-public final class com/jcsoftdev/ui/chart/core/ChartColor$Companion {
-	public final fun parse-F5i6eM4 (Ljava/lang/String;)I
-	public final fun rgb-zGqywWc (IIII)I
-	public static synthetic fun rgb-zGqywWc$default (Lcom/jcsoftdev/ui/chart/core/ChartColor$Companion;IIIIILjava/lang/Object;)I
-}
-
-public final class com/jcsoftdev/ui/chart/core/ChartDirection : java/lang/Enum {
-	public static final field Down Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-	public static final field Flat Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-	public static final field Up Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-}
-
-public abstract interface class com/jcsoftdev/ui/chart/core/ChartLocale {
+public abstract class com/jcsoftdev/ui/chart/core/ChartLocale {
+	public fun <init> ()V
 	public abstract fun getDecimalSeparator ()Ljava/lang/String;
 	public abstract fun getGroupSeparator ()Ljava/lang/String;
+	public fun getGroupingSize ()I
 	public abstract fun getMinusSign ()Ljava/lang/String;
+	public fun getSecondaryGroupingSize ()I
 	public abstract fun getTag ()Ljava/lang/String;
+	public fun getZeroDigit ()C
 	public abstract fun monthShort (I)Ljava/lang/String;
-	public abstract fun styleSample (Lcom/jcsoftdev/ui/chart/core/NumberStyle;Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun styleSample (Lcom/jcsoftdev/ui/chart/core/NumberStyle;Ljava/lang/String;Z)Ljava/lang/String;
+	public static synthetic fun styleSample$default (Lcom/jcsoftdev/ui/chart/core/ChartLocale;Lcom/jcsoftdev/ui/chart/core/NumberStyle;Ljava/lang/String;ZILjava/lang/Object;)Ljava/lang/String;
 	public abstract fun weekdayShort (I)Ljava/lang/String;
 	public abstract fun zoneOffsetMillis (Ljava/lang/String;D)D
 }
 
 public final class com/jcsoftdev/ui/chart/core/ChartLocales {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/core/ChartLocales;
+	public final fun current ()Lcom/jcsoftdev/ui/chart/core/ChartLocale;
 	public final fun forTag (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/ChartLocale;
 	public final fun getSystem ()Lcom/jcsoftdev/ui/chart/core/ChartLocale;
-}
-
-public final class com/jcsoftdev/ui/chart/core/ChartTone : java/lang/Enum {
-	public static final field Accent Lcom/jcsoftdev/ui/chart/core/ChartTone;
-	public static final field Danger Lcom/jcsoftdev/ui/chart/core/ChartTone;
-	public static final field Neutral Lcom/jcsoftdev/ui/chart/core/ChartTone;
-	public static final field Success Lcom/jcsoftdev/ui/chart/core/ChartTone;
-	public static final field Warning Lcom/jcsoftdev/ui/chart/core/ChartTone;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/ChartTone;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/ChartTone;
-}
-
-public final class com/jcsoftdev/ui/chart/core/ColorKt {
-	public static final field SCALE_FLOOR D
-	public static final fun directionOf (DD)Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-	public static synthetic fun directionOf$default (DDILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/ChartDirection;
-	public static final fun divergingColor-UVMzf3U (DDDDIII)Lcom/jcsoftdev/ui/chart/core/ColorStop;
-	public static final fun divergingPosition (DDDD)D
-	public static synthetic fun divergingPosition$default (DDDDILjava/lang/Object;)D
-	public static final fun monochromeShare (II)I
-	public static final fun monochromeSharesByValue ([D)[I
-	public static final fun normalize (DDD)D
-	public static final fun paletteSlot (I)Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final fun rangeColor-UVMzf3U (Lcom/jcsoftdev/ui/chart/core/ColorRange;IILkotlin/jvm/functions/Function1;III)Lcom/jcsoftdev/ui/chart/core/ColorStop;
-	public static final fun rangeIndex (DLjava/util/List;)I
-	public static final fun rangeStrength (II)D
-	public static final fun sequentialColor-VRE6JYU (DDDII)Lcom/jcsoftdev/ui/chart/core/ColorStop;
-	public static final fun sequentialStrength (DDD)D
-	public static final fun surfaceInkOn (D)Z
-	public static final fun tint-g0cpJoM (IDI)I
-	public static final fun tintPercent (D)I
-}
-
-public final class com/jcsoftdev/ui/chart/core/ColorRange {
-	public synthetic fun <init> (Ljava/lang/String;DDLcom/jcsoftdev/ui/chart/core/ChartColor;Lcom/jcsoftdev/ui/chart/core/ChartTone;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Ljava/lang/String;DDLcom/jcsoftdev/ui/chart/core/ChartColor;Lcom/jcsoftdev/ui/chart/core/ChartTone;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getColor-ObUrvGc ()Lcom/jcsoftdev/ui/chart/core/ChartColor;
-	public final fun getFrom ()D
-	public final fun getLabel ()Ljava/lang/String;
-	public final fun getTo ()D
-	public final fun getTone ()Lcom/jcsoftdev/ui/chart/core/ChartTone;
-}
-
-public final class com/jcsoftdev/ui/chart/core/ColorStop {
-	public synthetic fun <init> (IDLkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getColor-z9A-jSA ()I
-	public final fun getStrength ()D
 }
 
 public abstract interface class com/jcsoftdev/ui/chart/core/ContinuousScale {
@@ -213,23 +79,6 @@ public abstract interface class com/jcsoftdev/ui/chart/core/ContinuousScale {
 	public abstract fun invert (D)D
 	public abstract fun map (D)D
 	public abstract fun ticks (I)[D
-}
-
-public final class com/jcsoftdev/ui/chart/core/Curve : java/lang/Enum {
-	public static final field Linear Lcom/jcsoftdev/ui/chart/core/Curve;
-	public static final field Smooth Lcom/jcsoftdev/ui/chart/core/Curve;
-	public static final field Step Lcom/jcsoftdev/ui/chart/core/Curve;
-	public static final field StepAfter Lcom/jcsoftdev/ui/chart/core/Curve;
-	public static final field StepBefore Lcom/jcsoftdev/ui/chart/core/Curve;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/Curve;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/Curve;
-}
-
-public final class com/jcsoftdev/ui/chart/core/DownsampleKt {
-	public static final fun lttbIndices ([D[DI)[I
-	public static final fun minMaxIndices ([D[DDDI)[I
-	public static final fun sharedSampleIndices ([[DI)[I
 }
 
 public final class com/jcsoftdev/ui/chart/core/FormatKt {
@@ -246,59 +95,6 @@ public final class com/jcsoftdev/ui/chart/core/FormatKt {
 	public static synthetic fun resolveAxisFormat$default (Lcom/jcsoftdev/ui/chart/core/ValuePreset;Lcom/jcsoftdev/ui/chart/core/ChartLocale;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/ValueFormatter;
 	public static final fun resolveFormat (Lcom/jcsoftdev/ui/chart/core/ValuePreset;Lcom/jcsoftdev/ui/chart/core/ChartLocale;Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/ValueFormatter;
 	public static synthetic fun resolveFormat$default (Lcom/jcsoftdev/ui/chart/core/ValuePreset;Lcom/jcsoftdev/ui/chart/core/ChartLocale;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/ValueFormatter;
-}
-
-public final class com/jcsoftdev/ui/chart/core/HitTestKt {
-	public static final field GUTTER_SNAP D
-	public static final fun boxAt ([D[D[D[DDDD)I
-	public static synthetic fun boxAt$default ([D[D[D[DDDDILjava/lang/Object;)I
-	public static final fun indexOfKey (Ljava/util/List;Ljava/lang/Object;)I
-	public static final fun retainKey (Ljava/util/List;Ljava/lang/Object;)Ljava/lang/Object;
-}
-
-public abstract interface class com/jcsoftdev/ui/chart/core/IndexDrag {
-}
-
-public final class com/jcsoftdev/ui/chart/core/IndexDrag$End : com/jcsoftdev/ui/chart/core/IndexDrag {
-	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/core/IndexDrag$End;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/jcsoftdev/ui/chart/core/IndexDrag$Move : com/jcsoftdev/ui/chart/core/IndexDrag {
-	public fun <init> (I)V
-	public final fun getOffset ()I
-}
-
-public final class com/jcsoftdev/ui/chart/core/IndexDrag$New : com/jcsoftdev/ui/chart/core/IndexDrag {
-	public fun <init> (I)V
-	public final fun getAnchor ()I
-}
-
-public final class com/jcsoftdev/ui/chart/core/IndexDrag$Start : com/jcsoftdev/ui/chart/core/IndexDrag {
-	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/core/IndexDrag$Start;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/jcsoftdev/ui/chart/core/IndexKey : java/lang/Enum {
-	public static final field Down Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static final field End Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static final field Home Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static final field Left Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static final field Right Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static final field Up Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/IndexKey;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/IndexKey;
-}
-
-public final class com/jcsoftdev/ui/chart/core/IndexRange {
-	public fun <init> (II)V
-	public final fun getFrom ()I
-	public final fun getTo ()I
 }
 
 public final class com/jcsoftdev/ui/chart/core/IndexWindow {
@@ -323,104 +119,11 @@ public final class com/jcsoftdev/ui/chart/core/NumberRange {
 
 public final class com/jcsoftdev/ui/chart/core/NumberStyle : java/lang/Enum {
 	public static final field Currency Lcom/jcsoftdev/ui/chart/core/NumberStyle;
+	public static final field Decimal Lcom/jcsoftdev/ui/chart/core/NumberStyle;
 	public static final field Percent Lcom/jcsoftdev/ui/chart/core/NumberStyle;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/NumberStyle;
 	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/NumberStyle;
-}
-
-public final class com/jcsoftdev/ui/chart/core/PaletteSlot : java/lang/Enum {
-	public static final field Accent Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat1 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat2 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat3 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat4 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat5 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat6 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static final field Cat7 Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/PaletteSlot;
-}
-
-public final class com/jcsoftdev/ui/chart/core/PanZoomKey : java/lang/Enum {
-	public static final field Down Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static final field Left Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static final field Right Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static final field Up Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static final field ZoomIn Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static final field ZoomOut Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/PanZoomKey;
-}
-
-public final class com/jcsoftdev/ui/chart/core/PanZoomKt {
-	public static final field PAN_STEP D
-	public static final field ZOOM_STEP D
-	public static final fun fitView (DDDDDDD)Lcom/jcsoftdev/ui/chart/core/PanZoomView;
-	public static synthetic fun fitView$default (DDDDDDDILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/PanZoomView;
-	public static final fun panZoomKey (Lcom/jcsoftdev/ui/chart/core/PanZoomView;Lcom/jcsoftdev/ui/chart/core/PanZoomKey;DDDDDDZ)Lcom/jcsoftdev/ui/chart/core/PanZoomView;
-	public static synthetic fun panZoomKey$default (Lcom/jcsoftdev/ui/chart/core/PanZoomView;Lcom/jcsoftdev/ui/chart/core/PanZoomKey;DDDDDDZILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/PanZoomView;
-	public static final fun wheelFactor (DZ)D
-	public static synthetic fun wheelFactor$default (DZILjava/lang/Object;)D
-	public static final fun zoomAround (Lcom/jcsoftdev/ui/chart/core/PanZoomView;DDDDD)Lcom/jcsoftdev/ui/chart/core/PanZoomView;
-}
-
-public final class com/jcsoftdev/ui/chart/core/PanZoomView {
-	public static final field Companion Lcom/jcsoftdev/ui/chart/core/PanZoomView$Companion;
-	public fun <init> (DDD)V
-	public final fun getK ()D
-	public final fun getX ()D
-	public final fun getY ()D
-}
-
-public final class com/jcsoftdev/ui/chart/core/PanZoomView$Companion {
-	public final fun getIdentity ()Lcom/jcsoftdev/ui/chart/core/PanZoomView;
-}
-
-public final class com/jcsoftdev/ui/chart/core/PathCommands {
-	public static final field ARC I
-	public static final field CLOSE I
-	public static final field CUBIC I
-	public static final field HORIZONTAL I
-	public static final field LINE I
-	public static final field MOVE I
-	public static final field VERTICAL I
-	public fun <init> ()V
-	public final fun getCommandCount ()I
-	public final fun isEmpty ()Z
-	public final fun toSvg ()Ljava/lang/String;
-	public final fun visit (Lcom/jcsoftdev/ui/chart/core/PathVisitor;)V
-}
-
-public final class com/jcsoftdev/ui/chart/core/PathKt {
-	public static final fun areaPath ([D[D[D[DLcom/jcsoftdev/ui/chart/core/Curve;)Lcom/jcsoftdev/ui/chart/core/PathCommands;
-	public static synthetic fun areaPath$default ([D[D[D[DLcom/jcsoftdev/ui/chart/core/Curve;ILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/PathCommands;
-	public static final fun barPath (DDDDDLcom/jcsoftdev/ui/chart/core/BarEnd;)Lcom/jcsoftdev/ui/chart/core/PathCommands;
-	public static final fun linePath ([D[DLcom/jcsoftdev/ui/chart/core/Curve;)Lcom/jcsoftdev/ui/chart/core/PathCommands;
-	public static synthetic fun linePath$default ([D[DLcom/jcsoftdev/ui/chart/core/Curve;ILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/PathCommands;
-	public static final fun monotoneTangents ([D[DII)[D
-	public static synthetic fun monotoneTangents$default ([D[DIIILjava/lang/Object;)[D
-	public static final fun roundedRectPath (DDDDDDDD)Lcom/jcsoftdev/ui/chart/core/PathCommands;
-}
-
-public abstract interface class com/jcsoftdev/ui/chart/core/PathVisitor {
-	public abstract fun arcTo (DDD)V
-	public abstract fun close ()V
-	public abstract fun cubicTo (DDDDDD)V
-	public abstract fun horizontalTo (D)V
-	public abstract fun lineTo (DD)V
-	public abstract fun moveTo (DD)V
-	public abstract fun verticalTo (D)V
-}
-
-public final class com/jcsoftdev/ui/chart/core/PointIndex {
-	public static final field MAX_CELLS D
-	public fun <init> ([D[D[DD)V
-	public synthetic fun <init> ([D[D[DDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun nearest (DDD)I
-	public static synthetic fun nearest$default (Lcom/jcsoftdev/ui/chart/core/PointIndex;DDDILjava/lang/Object;)I
 }
 
 public final class com/jcsoftdev/ui/chart/core/ScaleType : java/lang/Enum {
@@ -442,26 +145,6 @@ public final class com/jcsoftdev/ui/chart/core/ScalesKt {
 	public static final fun pointScale (IDDD)Lcom/jcsoftdev/ui/chart/core/BandScale;
 	public static synthetic fun pointScale$default (IDDDILjava/lang/Object;)Lcom/jcsoftdev/ui/chart/core/BandScale;
 	public static final fun ticks (Lcom/jcsoftdev/ui/chart/core/ContinuousScale;)[D
-}
-
-public final class com/jcsoftdev/ui/chart/core/StackKt {
-	public static final fun stackLayers ([[DLcom/jcsoftdev/ui/chart/core/StackMode;)Ljava/util/List;
-}
-
-public final class com/jcsoftdev/ui/chart/core/StackLayer {
-	public fun <init> ([D[D[D)V
-	public final fun getValues ()[D
-	public final fun getY0 ()[D
-	public final fun getY1 ()[D
-}
-
-public final class com/jcsoftdev/ui/chart/core/StackMode : java/lang/Enum {
-	public static final field None Lcom/jcsoftdev/ui/chart/core/StackMode;
-	public static final field Normal Lcom/jcsoftdev/ui/chart/core/StackMode;
-	public static final field Percent Lcom/jcsoftdev/ui/chart/core/StackMode;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/StackMode;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/StackMode;
 }
 
 public final class com/jcsoftdev/ui/chart/core/TicksKt {
@@ -541,15 +224,6 @@ public final class com/jcsoftdev/ui/chart/core/TimeUnit : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/TimeUnit;
 	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/TimeUnit;
-}
-
-public final class com/jcsoftdev/ui/chart/core/TouchIntent : java/lang/Enum {
-	public static final field Brush Lcom/jcsoftdev/ui/chart/core/TouchIntent;
-	public static final field Scroll Lcom/jcsoftdev/ui/chart/core/TouchIntent;
-	public static final field Wait Lcom/jcsoftdev/ui/chart/core/TouchIntent;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/chart/core/TouchIntent;
-	public static fun values ()[Lcom/jcsoftdev/ui/chart/core/TouchIntent;
 }
 
 public abstract interface class com/jcsoftdev/ui/chart/core/ValueFormatter {

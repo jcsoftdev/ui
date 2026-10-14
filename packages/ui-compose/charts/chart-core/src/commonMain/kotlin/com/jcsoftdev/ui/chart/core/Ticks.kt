@@ -21,18 +21,23 @@ public class NumberRange(
 
 internal fun pow10(exponent: Int): Double = 10.0.pow(exponent)
 
-/** Rounds away binary noise such as 0.30000000000000004 by keeping 12 significant digits. */
+/**
+ * Rounds away binary noise such as 0.30000000000000004 by keeping 12 significant digits, like JavaScript's `toPrecision(12)`.
+ * The rounding acts on the shortest decimal the number prints as, half away from zero, and never returns -0. It differs from
+ * `toPrecision` only for a number whose 13-digit shortest form ends in 5 while its binary value sits just below the tie.
+ */
 public fun cleanNumber(value: Double): Double {
-    if (value == 0.0 || !value.isFinite()) return value
-    val exponent = floor(log10(abs(value))).toInt()
-    if (exponent < -280 || exponent > 280) return value
-    val shift = 11 - exponent
-    return if (shift >= 0) {
-        val p = pow10(shift)
-        floor(value * p + 0.5) / p
+    if (!value.isFinite()) return value
+    if (value == 0.0) return 0.0
+    val decimal = decimalOf(abs(value))
+    val rounded = decimal.rounded(12 - decimal.pointExp)
+    val result = rounded.toDouble()
+    return if (result == 0.0) {
+        0.0
+    } else if (value < 0) {
+        -result
     } else {
-        val p = pow10(-shift)
-        floor(value / p + 0.5) * p
+        result
     }
 }
 
