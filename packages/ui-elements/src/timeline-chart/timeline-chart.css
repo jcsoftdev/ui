@@ -1,0 +1,23 @@
+[data-ui="timeline-chart"] [data-bar] {
+  transition: opacity 150ms;
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+[data-ui="timeline-chart"] [data-bar] > rect {
+  fill-opacity: 0.88;
+  stroke: var(--ink);
+  stroke-width: 0;
+}
+[data-ui="timeline-chart"] [data-bar][data-active] > rect,
+[data-ui="timeline-chart"] [data-bar][data-selected] > rect {
+  fill-opacity: 1;
+  stroke-width: 2px;
+}
+[data-ui="timeline-chart"]:has([data-bar][data-active]) [data-bar]:not([data-active]) {
+  opacity: 0.35;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="timeline-chart"] [data-bar] {
+    transition: none;
+  }
+}
