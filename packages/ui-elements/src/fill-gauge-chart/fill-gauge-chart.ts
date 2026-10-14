@@ -8,8 +8,11 @@ import {
   svg,
 } from "../internal/chart-base.js";
 import { clamp, EASE, jsonAttr, numberAttr, paint, text, truncate } from "../internal/e20-polar.js";
-import type * as Shapes from "../internal/e20-unit-shapes.js";
-import type { ResolvedUnitShape, UnitIcon } from "../internal/e20-unit-shapes.js";
+import {
+  type ResolvedUnitShape,
+  resolveUnitShape,
+  type UnitIcon,
+} from "../internal/unit-shapes.js";
 
 /** The default silhouette ships with the chart; the others load on demand. */
 const DROPLET: ResolvedUnitShape = {
@@ -84,41 +87,17 @@ export class UiFillGaugeChart extends ChartElement {
   }
   set data(value: readonly FillGaugeItem[]) {
     this.#data = value;
-    this.#load();
     this.requestDraw();
-  }
-
-  #shapes: typeof Shapes | undefined;
-  #loading: Promise<void> | undefined;
-
-  #wanted(): boolean {
-    const named = this.getAttribute("shape");
-    return (!!named && named !== "droplet") || this.data.some((item) => item.shape !== undefined);
-  }
-  #load(): Promise<void> | undefined {
-    if (this.#shapes || !this.#wanted()) return undefined;
-    this.#loading ??= import("../internal/e20-unit-shapes.js").then((module) => {
-      this.#shapes = module;
-      if (this.isConnected) this.requestDraw();
-    });
-    return this.#loading;
-  }
-
-  override attributeChangedCallback(name: string): void {
-    super.attributeChangedCallback(name);
-    if (this.isConnected) this.#load();
   }
 
   override connectedCallback(): void {
     this.dataset.ui = "fill-gauge-chart";
     // TODO(E20): default height 200 once the base has a natural-height hook (no host writes).
-    const pending = this.#load();
-    if (pending) void pending.then(() => this.isConnected && super.connectedCallback());
-    else super.connectedCallback();
+    super.connectedCallback();
   }
 
   #shape(icon: UnitIcon): ResolvedUnitShape {
-    return icon === "droplet" ? DROPLET : (this.#shapes?.resolveUnitShape(icon) ?? DROPLET);
+    return icon === "droplet" ? DROPLET : resolveUnitShape(icon, () => this.requestDraw());
   }
 
   protected override isEmpty(): boolean {
