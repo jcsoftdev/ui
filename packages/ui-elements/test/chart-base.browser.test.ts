@@ -80,6 +80,11 @@ const awake = async (c: Element) => {
   drawingOf(c).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
+  // The chunk is fetched once per page: its resource entry says it arrived. Attaching to this chart
+  // has no observable signal, so a short grace follows.
+  await expect
+    .poll(() => performance.getEntriesByType("resource").some((e) => /chart-interact/.test(e.name)))
+    .toBe(true);
   await wait(60);
 };
 
@@ -133,15 +138,13 @@ describe("chart base: sizing", () => {
 
   it("shows the loading and empty states instead of the drawing, from a lazy chunk", async () => {
     const c = await chart("loading");
-    expect(await ax("status", "Loading chart")).toBeTruthy();
+    await expect.poll(() => ax("status", "Loading chart")).toBeTruthy();
     expect(c.querySelector("svg")).toBeNull();
     c.removeAttribute("loading");
     c.setAttribute("empty", "");
-    await settle();
-    expect(c.textContent).toContain("No data to show");
+    await expect.poll(() => c.textContent).toContain("No data to show");
     c.removeAttribute("empty");
-    await settle();
-    expect(c.querySelector("svg")).not.toBeNull();
+    await expect.poll(() => c.querySelector("svg")).not.toBeNull();
   });
 });
 
