@@ -14,7 +14,7 @@ import {
   type TooltipRow,
   type VirtualMarks,
 } from "../internal/chart-base.js";
-import { CANVAS_HEIGHT, CANVAS_MARKS, colorResolver } from "../internal/e18-canvas.js";
+import { CANVAS_HEIGHT, CANVAS_MARKS, lazyModule } from "../internal/e18-canvas.js";
 import {
   AutoHeight,
   adoptPlot,
@@ -32,6 +32,8 @@ import {
   numAttr,
   text,
 } from "../internal/e18-plot.js";
+
+const bigChunk = lazyModule(() => import("./big.js"));
 
 export interface BulletItem {
   id?: string;
@@ -279,68 +281,34 @@ export class UiBulletChart extends ChartElement {
       }${level ? `, ${level}` : ""}`;
     };
 
+    // Above the threshold the lazy `big.js` paints the rows; until it arrives the plot shows its
+    // frame and axes, and the chunk's arrival redraws.
+    let bandAt: ((index: number) => SVGElement) | undefined;
     const canvasMarks = (): VirtualMarks => {
-      const resolve = colorResolver(this.drawing);
-      const g = ctx.canvas();
-      g.save();
-      g.translate(left, top);
-      const bands: Path2D[] = Array.from({ length: bandCount }, () => new Path2D());
-      const bars = new Path2D();
-      const ticks = new Path2D();
-      const barThick = Math.max(1, thick * 0.34);
-      const bandThick = Math.max(1, thick);
-      items.forEach((item, i) => {
-        const centre = i * slot + slot / 2;
-        for (const band of bulletBands(item.ranges)) {
-          const a = toPx(item, band.from);
-          const b = toPx(item, band.to);
-          const path = bands[band.index] as Path2D;
-          if (vertical)
-            path.rect(centre - bandThick / 2, Math.min(a, b), bandThick, Math.abs(a - b));
-          else path.rect(Math.min(a, b), centre - bandThick / 2, Math.abs(a - b), bandThick);
-        }
-        const actual = toPx(item, item.actual);
-        if (vertical)
-          bars.rect(centre - barThick / 2, actual, barThick, Math.max(1, innerHeight - actual));
-        else bars.rect(0, centre - barThick / 2, Math.max(1, actual), barThick);
-        if (item.target != null) {
-          const target = toPx(item, item.target);
-          const half = Math.max(1, thick * 0.36);
-          if (vertical) {
-            ticks.moveTo(centre - half, target);
-            ticks.lineTo(centre + half, target);
-          } else {
-            ticks.moveTo(target, centre - half);
-            ticks.lineTo(target, centre + half);
-          }
-        }
-      });
-      bands.forEach((path, index) => {
-        g.fillStyle = resolve(bandFill(index, bandCount));
-        g.fill(path);
-      });
-      g.fillStyle = resolve(color);
-      g.fill(bars);
-      g.strokeStyle = resolve("var(--ink)");
-      g.lineWidth = Math.max(1, Math.min(3, thick * 0.3));
-      g.stroke(ticks);
-      g.restore();
-
-      // One row-shaped band, moved to the mark that has focus or hover.
-      const bandNode = svg("rect", { rx: 4, "data-band": "", style: "fill:var(--chart-grid)" });
-      plot.prepend(svg("g", { "data-row": "", "aria-hidden": "true" }, bandNode));
+      const module = bigChunk.get();
+      if (module)
+        bandAt = module.paintBullet({
+          ctx,
+          drawing: this.drawing,
+          plot,
+          items,
+          vertical,
+          left,
+          top,
+          slot,
+          thick,
+          innerWidth,
+          innerHeight,
+          bandCount,
+          color,
+          toPx,
+          bandFill,
+        });
+      else bigChunk.ensure(() => this.requestDraw("size"));
       return {
         count,
         label: (i) => describe(items[i] as BulletItem),
-        element: (i) => {
-          const size = Math.max(2, slot);
-          const start = i * slot - (size - slot) / 2;
-          bandNode.setAttribute("x", String(vertical ? start : 0));
-          bandNode.setAttribute("y", String(vertical ? 0 : start));
-          bandNode.setAttribute("width", String(vertical ? size : innerWidth));
-          bandNode.setAttribute("height", String(vertical ? innerHeight : size));
-          return bandNode;
-        },
+        element: (i) => bandAt?.(i) ?? null,
       };
     };
 
