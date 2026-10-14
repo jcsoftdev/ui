@@ -13,7 +13,7 @@ import {
   type TooltipRow,
   type VirtualMarks,
 } from "../internal/chart-base.js";
-import { CANVAS_HEIGHT, CANVAS_MARKS, colorResolver } from "../internal/e18-canvas.js";
+import { CANVAS_HEIGHT, CANVAS_MARKS, lazyModule } from "../internal/e18-canvas.js";
 import {
   AutoHeight,
   adoptPlot,
@@ -35,6 +35,8 @@ import {
   type ValueAxis,
 } from "../internal/e18-plot.js";
 
+const bigChunk = lazyModule(() => import("./big.js"));
+
 export interface DumbbellItem {
   id?: string;
   label: string;
@@ -54,7 +56,7 @@ export interface DumbbellMeasure {
 
 export type DumbbellSort = "none" | "delta" | "abs-delta" | "to";
 
-interface Row {
+export interface Row {
   id: string;
   label: string;
   values: readonly number[];
@@ -350,74 +352,35 @@ export class UiDumbbellChart extends ChartElement {
     const rowLabel = (row: Row) =>
       `${row.label}. ${measureText(row)}, ${deltaLabel} ${changeText(row, mode)}`;
 
+    // Above the threshold the marks are painted by the lazy `big.js`; until it arrives the plot
+    // shows its frame and axes, and the chunk's arrival redraws.
+    let bandAt: ((index: number) => SVGElement | null) | undefined;
     const canvasMarks = (): VirtualMarks => {
-      const resolve = colorResolver(this.drawing);
-      const g = ctx.canvas();
-      g.save();
-      g.translate(left, top);
-      const radius = Math.max(0.75, Math.min(6, (vertical ? column : rowHeight) / 2));
-      const pointAt = (row: Row, index: number, i: number): [number, number] => {
-        const cross = (vertical ? column : rowHeight) * i + (vertical ? column : rowHeight) / 2;
-        const p = scale.map(row.values[index] as number);
-        return vertical ? [cross, p] : [p, cross];
-      };
-      g.lineCap = "round";
-      g.lineWidth = Math.max(1, Math.min(4, along * 0.4));
-      g.strokeStyle = resolve("var(--line-strong)");
-      g.beginPath();
-      rows.forEach((row, i) => {
-        const [x0, y0] = pointAt(row, 0, i);
-        const [x1, y1] = pointAt(row, row.values.length - 1, i);
-        g.moveTo(x0, y0);
-        g.lineTo(x1, y1);
-      });
-      g.stroke();
-      for (const [index, measure] of measures.entries()) {
-        g.fillStyle = resolve(measure.color);
-        g.beginPath();
-        rows.forEach((row, i) => {
-          if (row.values[index] === undefined) return;
-          const [x, y] = pointAt(row, index, i);
-          if (radius < 2) g.rect(x - radius, y - radius, radius * 2, radius * 2);
-          else {
-            g.moveTo(x + radius, y);
-            g.arc(x, y, radius, 0, Math.PI * 2);
-          }
+      const module = bigChunk.get();
+      if (module)
+        bandAt = module.paintDumbbell({
+          ctx,
+          drawing: this.drawing,
+          plot,
+          rows,
+          measures,
+          vertical,
+          left,
+          top,
+          column,
+          rowHeight,
+          along,
+          innerWidth,
+          innerHeight,
+          scale,
+          labelsFit,
+          labelSkip,
         });
-        g.fill();
-      }
-      g.restore();
-
-      if (!vertical && labelsFit) {
-        const names = svg("g", { "aria-hidden": "true" });
-        for (let i = 0; i < rows.length; i += labelSkip)
-          names.append(
-            text(
-              fitLabel((rows[i] as Row).label, left - 14),
-              { x: -12, y: i * rowHeight + rowHeight / 2, dy: "0.34em", "text-anchor": "end" },
-              "fill:var(--ink-2);font-size:12px;font-weight:600",
-            ),
-          );
-        plot.append(names);
-      }
-
-      // One row-shaped band, moved to the mark that has focus or hover.
-      const bandNode = svg("rect", { rx: 4, "data-band": "", style: "fill:var(--chart-grid)" });
-      plot.prepend(svg("g", { "data-row": "", "aria-hidden": "true" }, bandNode));
+      else bigChunk.ensure(() => this.requestDraw("size"));
       return {
         count: rows.length,
         label: (i) => rowLabel(rows[i] as Row),
-        element: (i) => {
-          const thick = Math.max(2, vertical ? column : rowHeight);
-          bandNode.setAttribute("x", String(vertical ? i * column : 0));
-          bandNode.setAttribute(
-            "y",
-            String(vertical ? 0 : i * rowHeight - (thick - rowHeight) / 2),
-          );
-          bandNode.setAttribute("width", String(vertical ? thick : innerWidth));
-          bandNode.setAttribute("height", String(vertical ? innerHeight : thick));
-          return bandNode;
-        },
+        element: (i) => bandAt?.(i) ?? null,
       };
     };
 

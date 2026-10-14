@@ -203,6 +203,11 @@ export class UiRangeAreaChart extends ChartElement {
   protected override draw(ctx: DrawContext): DrawResult {
     const { svg: root, width, height, locale, timeZone, animate } = ctx;
     const categories = this.categories;
+    // Date categories wait for the time-axis chunk: drawing now would flash a point axis.
+    if (!timeAxis && categories.some((value) => value instanceof Date)) {
+      loadTimeAxis().then(() => this.requestDraw());
+      return {};
+    }
     const bands = this.bands;
     const visible = bands.filter((band) => !this.isHidden(band.id));
     const curveAttr = this.getAttribute("curve") ?? "smooth";
@@ -223,8 +228,6 @@ export class UiRangeAreaChart extends ChartElement {
         ? timeAxis.fullCategoryLabel(value, dateOptions)
         : String(value);
     const titleOf = (index: number) => labelOf(categories[index] as XValue);
-    if (!timeAxis && categories.some((value) => value instanceof Date))
-      loadTimeAxis().then(() => this.requestDraw());
 
     // Value scale: the domain follows the visible bands only.
     let lo = Number.POSITIVE_INFINITY;

@@ -1,6 +1,7 @@
 // Slope, waterfall and bullet layout maths are ports: each export is pinned to the
 // React kit's source value for value. The React modules are imported at runtime, by path.
 import { describe, expect, it } from "vitest";
+import * as timeAxis from "../src/chart/category-axis-time.ts";
 import * as bullet from "../src/chart/bullet.ts";
 import { spreadSlopeLabels } from "../src/chart/slope.ts";
 import * as waterfall from "../src/chart/waterfall.ts";
@@ -116,5 +117,16 @@ describe("bullet layout", () => {
       for (let i = 0; i < count; i += 1)
         expect(bullet.bandOpacity(i, count)).toBe(react.bandOpacity(i, count));
     }
+  });
+});
+
+describe("category-axis-time", () => {
+  it("builds a time axis for 300k dates without spreading them", () => {
+    const base = Date.UTC(2020, 0, 1);
+    const dates = Array.from({ length: 300_000 }, (_, i) => new Date(base + i * 60_000));
+    const axis = timeAxis.buildCategoryAxis(dates, 600, { mode: "time" });
+    expect(axis.mode).toBe("time");
+    expect(axis.positions[0]).toBe(0);
+    expect(axis.positions[299_999]).toBeCloseTo(600, 6);
   });
 });

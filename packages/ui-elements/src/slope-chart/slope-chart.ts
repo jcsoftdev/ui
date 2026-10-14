@@ -14,7 +14,7 @@ import {
   type TooltipRow,
   type VirtualMarks,
 } from "../internal/chart-base.js";
-import { CANVAS_HEIGHT, CANVAS_MARKS, colorResolver } from "../internal/e18-canvas.js";
+import { CANVAS_HEIGHT, CANVAS_MARKS, lazyModule } from "../internal/e18-canvas.js";
 import {
   AutoHeight,
   adoptPlot,
@@ -30,6 +30,8 @@ import {
 } from "../internal/e18-plot.js";
 import css from "./slope-chart.css.js";
 
+const bigChunk = lazyModule(() => import("./big.js"));
+
 export interface SlopeItem {
   id?: string;
   label: string;
@@ -43,21 +45,6 @@ const MARGIN = { top: 34, bottom: 14 };
 const LABEL_GAP = 17;
 const LABEL_STYLE = "font-weight:600;font-variant-numeric:tabular-nums";
 const HEADER_STYLE = "fill:var(--ink-3);font-size:11px;font-weight:700";
-
-/** Columns of the sorted lookup behind `hit` on the canvas layer. */
-const COLUMNS = 32;
-
-/** First index of `sorted` whose value is at least `target`. */
-function lowerBound(sorted: Float64Array, target: number): number {
-  let lo = 0;
-  let hi = sorted.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if ((sorted[mid] as number) < target) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
 
 /** Index of the value closest to `target`, or -1 when there are none. */
 function nearest(values: readonly number[], target: number): number {
@@ -244,86 +231,30 @@ export class UiSlopeChart extends ChartElement {
     const describe = (item: SlopeItem) =>
       `${item.label}. ${fromLabel} ${format(item.from)}, ${toLabel} ${format(item.to)}, ${deltaLabel} ${change(item)}`;
 
-    // Thousands of lines: one canvas stroke per color, a highlight line for the focused one.
+    // Thousands of lines: the lazy `big.js` paints them and answers `hit`; until it arrives the
+    // plot shows its frame and the chunk's arrival redraws.
+    let painted: ReturnType<typeof import("./big.js").paintSlope> | undefined;
     const canvasMarks = (): VirtualMarks => {
-      const resolve = colorResolver(this.drawing);
-      const g = ctx.canvas();
-      g.save();
-      g.translate(0, MARGIN.top);
-      const paths = new Map<string, Path2D>();
-      items.forEach((_, i) => {
-        const color = colors[i] as string;
-        const path = paths.get(color) ?? new Path2D();
-        paths.set(color, path);
-        path.moveTo(xL, ysFrom[i] as number);
-        path.lineTo(xR, ysTo[i] as number);
-      });
-      g.lineWidth = 1;
-      g.globalAlpha = 0.55;
-      for (const [color, path] of paths) {
-        g.strokeStyle = resolve(color);
-        g.stroke(path);
-      }
-      g.restore();
-      const focus = svg("line", {
-        "data-line": "",
-        "stroke-linecap": "round",
-        "stroke-width": 2.25,
-        "aria-hidden": "true",
-      });
-      plot.append(svg("g", { "data-row": "", "aria-hidden": "true" }, focus));
+      const module = bigChunk.get();
+      if (module)
+        painted = module.paintSlope({
+          ctx,
+          drawing: this.drawing,
+          plot,
+          items,
+          colors,
+          xL,
+          xR,
+          ysFrom,
+          ysTo,
+          top: MARGIN.top,
+        });
+      else bigChunk.ensure(() => this.requestDraw("size"));
       return {
         count: items.length,
         label: (i) => describe(items[i] as SlopeItem),
-        element: (i) => {
-          focus.setAttribute("x1", String(xL));
-          focus.setAttribute("x2", String(xR));
-          focus.setAttribute("y1", String(ysFrom[i]));
-          focus.setAttribute("y2", String(ysTo[i]));
-          focus.style.stroke = colors[i] as string;
-          return focus;
-        },
+        element: (i) => painted?.element(i) ?? null,
       };
-    };
-
-    // Items sorted by their height at each of COLUMNS + 1 positions between the axes, built lazily.
-    const columns: Array<{ order: Uint32Array; ys: Float64Array } | undefined> = [];
-    let steepest = 0;
-    if (big)
-      for (let i = 0; i < items.length; i += 1)
-        steepest = Math.max(steepest, Math.abs((ysTo[i] as number) - (ysFrom[i] as number)));
-    const heightAt = (i: number, t: number) =>
-      (ysFrom[i] as number) + ((ysTo[i] as number) - (ysFrom[i] as number)) * t;
-    const column = (k: number) => {
-      const cached = columns[k];
-      if (cached) return cached;
-      const t = k / COLUMNS;
-      const at = Float64Array.from(items, (_, i) => heightAt(i, t));
-      const order = Uint32Array.from(items, (_, i) => i).sort(
-        (a, b) => (at[a] as number) - (at[b] as number),
-      );
-      const ys = Float64Array.from(order, (i) => at[i] as number);
-      const built = { order, ys };
-      columns[k] = built;
-      return built;
-    };
-    /** The line closest to height `ly` at `t` (0 at the first axis, 1 at the second), within `reach`. */
-    const closest = (t: number, ly: number, reach: number): number => {
-      const k = Math.round(t * COLUMNS);
-      const { order, ys } = column(k);
-      const slack = steepest * Math.abs(t - k / COLUMNS);
-      let best = -1;
-      let gap = Number.POSITIVE_INFINITY;
-      const end = Math.min(ys.length, lowerBound(ys, ly + reach + slack) + 1);
-      for (let at = Math.max(0, lowerBound(ys, ly - reach - slack) - 1); at < end; at += 1) {
-        const i = order[at] as number;
-        const d = Math.abs(heightAt(i, t) - ly);
-        if (d < gap) {
-          gap = d;
-          best = i;
-        }
-      }
-      return gap <= reach ? best : -1;
     };
 
     const marks: ChartMark[] | VirtualMarks = big
@@ -435,7 +366,7 @@ export class UiSlopeChart extends ChartElement {
         const ly = py - MARGIN.top;
         if (big) {
           const t = Math.min(1, Math.max(0, (x - xL) / (xR - xL)));
-          return closest(t, ly, x <= xL || x >= xR ? Number.POSITIVE_INFINITY : 16);
+          return painted?.closest(t, ly, x <= xL || x >= xR ? Number.POSITIVE_INFINITY : 16) ?? -1;
         }
         if (x <= xL) return nearest(labelFrom, ly);
         if (x >= xR) return nearest(labelTo, ly);

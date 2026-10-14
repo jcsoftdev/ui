@@ -104,6 +104,30 @@ describe("ui-range-area-chart", () => {
     expect(marks(c)[0]?.getAttribute("aria-label")).not.toContain("Chair time");
   });
 
+  it("never draws date categories on the point axis while the time chunk loads", async () => {
+    const texts: string[] = [];
+    const record = (node: Node) => {
+      if (node instanceof Element)
+        for (const label of node.querySelectorAll("text")) texts.push(label.textContent ?? "");
+      if (node.nodeType === Node.TEXT_NODE) texts.push(node.textContent ?? "");
+    };
+    const observer = new MutationObserver((records) => {
+      for (const entry of records) {
+        for (const added of entry.addedNodes) record(added);
+        if (entry.type === "characterData") record(entry.target);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    const c = await mountChart('locale="en-US" time-zone="UTC"');
+    c.categories = [new Date("2026-03-02T00:00:00Z"), new Date("2026-03-03T00:00:00Z")];
+    c.bands = [{ id: "a", name: "A", min: [1, 2], max: [3, 4] }];
+    await settle();
+    await settle();
+    observer.disconnect();
+    expect(svgOf(c).querySelectorAll("text").length).toBeGreaterThan(0);
+    expect(texts.filter((label) => /GMT|\d{4} \d\d:\d\d/.test(label))).toEqual([]);
+  });
+
   it("uses a real time axis for dates, in the locale and time zone", async () => {
     const c = await mountChart('locale="de-DE" time-zone="UTC"');
     c.categories = [new Date("2026-03-02T00:00:00Z"), new Date("2026-03-03T00:00:00Z")];

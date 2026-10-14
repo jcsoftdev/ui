@@ -36,8 +36,14 @@ export function buildCategoryAxis(
   const { mode, locale, timeZone, tickCount } = options;
   if (mode === "time" && allDates(categories)) {
     const times = categories.map((value) => +(value as Date));
+    let lo = Number.POSITIVE_INFINITY;
+    let hi = Number.NEGATIVE_INFINITY;
+    for (const time of times) {
+      if (time < lo) lo = time;
+      if (time > hi) hi = time;
+    }
     const scale = timeScale({
-      domain: [Math.min(...times), Math.max(...times)],
+      domain: [lo, hi],
       range: [0, width],
       locale,
       timeZone,
