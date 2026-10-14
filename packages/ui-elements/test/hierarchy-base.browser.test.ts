@@ -44,8 +44,7 @@ describe("hierarchy charts: breadcrumb", () => {
     c.data = (await mountChart(TAG)).data;
     await settle();
     defineChartBreadcrumb();
-    await settle();
-    expect(crumbItems("late-crumb")).toEqual(["root"]);
+    await expect.poll(() => crumbItems("late-crumb")).toEqual(["root"]);
     c.zoomTo("root/Engineering");
     // No draw has run yet: the path is pushed by the zoom itself.
     expect(crumbItems("late-crumb")).toEqual(["root", "root/Engineering"]);
