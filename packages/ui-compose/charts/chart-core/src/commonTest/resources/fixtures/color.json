@@ -1,0 +1,2923 @@
+{
+  "sequential": [
+    {
+      "value": -50,
+      "min": 0,
+      "max": 10,
+      "strength": 12,
+      "percent": 12
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 10,
+      "strength": 12,
+      "percent": 12
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 10,
+      "strength": 12,
+      "percent": 12
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 10,
+      "strength": 20.8,
+      "percent": 21
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 10,
+      "strength": 34,
+      "percent": 34
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 10,
+      "strength": 56,
+      "percent": 56
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 10,
+      "strength": 99.912,
+      "percent": 100
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 10,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 10,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 10,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 10,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 10,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 0,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": -50,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": -10,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 0,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 2.5,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 5,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 9.99,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 10,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 40,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 100,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 150,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1000000000,
+      "min": 5,
+      "max": 5,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": -50,
+      "min": -100,
+      "max": 100,
+      "strength": 34,
+      "percent": 34
+    },
+    {
+      "value": -10,
+      "min": -100,
+      "max": 100,
+      "strength": 51.6,
+      "percent": 52
+    },
+    {
+      "value": 0,
+      "min": -100,
+      "max": 100,
+      "strength": 56,
+      "percent": 56
+    },
+    {
+      "value": 1,
+      "min": -100,
+      "max": 100,
+      "strength": 56.44,
+      "percent": 56
+    },
+    {
+      "value": 2.5,
+      "min": -100,
+      "max": 100,
+      "strength": 57.099999999999994,
+      "percent": 57
+    },
+    {
+      "value": 5,
+      "min": -100,
+      "max": 100,
+      "strength": 58.2,
+      "percent": 58
+    },
+    {
+      "value": 9.99,
+      "min": -100,
+      "max": 100,
+      "strength": 60.395599999999995,
+      "percent": 60
+    },
+    {
+      "value": 10,
+      "min": -100,
+      "max": 100,
+      "strength": 60.400000000000006,
+      "percent": 60
+    },
+    {
+      "value": 40,
+      "min": -100,
+      "max": 100,
+      "strength": 73.6,
+      "percent": 74
+    },
+    {
+      "value": 100,
+      "min": -100,
+      "max": 100,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 150,
+      "min": -100,
+      "max": 100,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1000000000,
+      "min": -100,
+      "max": 100,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": -50,
+      "min": -3,
+      "max": 20,
+      "strength": 12,
+      "percent": 12
+    },
+    {
+      "value": -10,
+      "min": -3,
+      "max": 20,
+      "strength": 12,
+      "percent": 12
+    },
+    {
+      "value": 0,
+      "min": -3,
+      "max": 20,
+      "strength": 23.47826086956522,
+      "percent": 23
+    },
+    {
+      "value": 1,
+      "min": -3,
+      "max": 20,
+      "strength": 27.304347826086957,
+      "percent": 27
+    },
+    {
+      "value": 2.5,
+      "min": -3,
+      "max": 20,
+      "strength": 33.04347826086956,
+      "percent": 33
+    },
+    {
+      "value": 5,
+      "min": -3,
+      "max": 20,
+      "strength": 42.608695652173914,
+      "percent": 43
+    },
+    {
+      "value": 9.99,
+      "min": -3,
+      "max": 20,
+      "strength": 61.700869565217396,
+      "percent": 62
+    },
+    {
+      "value": 10,
+      "min": -3,
+      "max": 20,
+      "strength": 61.7391304347826,
+      "percent": 62
+    },
+    {
+      "value": 40,
+      "min": -3,
+      "max": 20,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 100,
+      "min": -3,
+      "max": 20,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 150,
+      "min": -3,
+      "max": 20,
+      "strength": 100,
+      "percent": 100
+    },
+    {
+      "value": 1000000000,
+      "min": -3,
+      "max": 20,
+      "strength": 100,
+      "percent": 100
+    }
+  ],
+  "diverging": [
+    {
+      "value": -50,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 10,
+      "percent": 10,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 25,
+      "percent": 25,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 50,
+      "percent": 50,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 99.9,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 10,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 11.11111111111111,
+      "percent": 11,
+      "side": "low"
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 16.666666666666664,
+      "percent": 17,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 44.44444444444444,
+      "percent": 44,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 99.8888888888889,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 10,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 66.66666666666666,
+      "percent": 67,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 16.666666666666664,
+      "percent": 17,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 25,
+      "percent": 25,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 37.5,
+      "percent": 38,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 58.333333333333336,
+      "percent": 58,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 99.91666666666667,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 10,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 0,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 0,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 0,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 20,
+      "percent": 20,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 50,
+      "percent": 50,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 5,
+      "max": 5,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 25,
+      "percent": 25,
+      "side": "low"
+    },
+    {
+      "value": 1,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 37.5,
+      "percent": 38,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 5,
+      "max": 5,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 28.57142857142857,
+      "percent": 29,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 42.857142857142854,
+      "percent": 43,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 64.28571428571429,
+      "percent": 64,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": 5,
+      "max": 5,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 50,
+      "percent": 50,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 10,
+      "percent": 10,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 1,
+      "percent": 1,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 2.5,
+      "percent": 3,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 5,
+      "percent": 5,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 9.99,
+      "percent": 10,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 10,
+      "percent": 10,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 40,
+      "percent": 40,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": -100,
+      "max": 100,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 50.495049504950494,
+      "percent": 50,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 10.891089108910892,
+      "percent": 11,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 0.9900990099009901,
+      "percent": 1,
+      "side": "low"
+    },
+    {
+      "value": 1,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 1.4851485148514851,
+      "percent": 1,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 3.9603960396039604,
+      "percent": 4,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 8.900990099009901,
+      "percent": 9,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 8.91089108910891,
+      "percent": 9,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 38.613861386138616,
+      "percent": 39,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 98.01980198019803,
+      "percent": 98,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": -100,
+      "max": 100,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 47.05882352941176,
+      "percent": 47,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 7.8431372549019605,
+      "percent": 8,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 1.9607843137254901,
+      "percent": 2,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 2.941176470588235,
+      "percent": 3,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 4.411764705882353,
+      "percent": 4,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 6.862745098039216,
+      "percent": 7,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 11.754901960784315,
+      "percent": 12,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 11.76470588235294,
+      "percent": 12,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 41.17647058823529,
+      "percent": 41,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": -100,
+      "max": 100,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 50,
+      "percent": 50,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 5,
+      "percent": 5,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 12.5,
+      "percent": 13,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 25,
+      "percent": 25,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 49.95,
+      "percent": 50,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 50,
+      "percent": 50,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": -3,
+      "max": 20,
+      "center": 0,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 57.89473684210527,
+      "percent": 58,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 5.263157894736842,
+      "percent": 5,
+      "side": "low"
+    },
+    {
+      "value": 1,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 0,
+      "percent": 0,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 7.894736842105263,
+      "percent": 8,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 21.052631578947366,
+      "percent": 21,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 47.31578947368421,
+      "percent": 47,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 47.368421052631575,
+      "percent": 47,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": -3,
+      "max": 20,
+      "center": 1,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": -50,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "low"
+    },
+    {
+      "value": -10,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 36.36363636363637,
+      "percent": 36,
+      "side": "low"
+    },
+    {
+      "value": 0,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 9.090909090909092,
+      "percent": 9,
+      "side": "high"
+    },
+    {
+      "value": 1,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 13.636363636363635,
+      "percent": 14,
+      "side": "high"
+    },
+    {
+      "value": 2.5,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 20.454545454545457,
+      "percent": 20,
+      "side": "high"
+    },
+    {
+      "value": 5,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 31.818181818181817,
+      "percent": 32,
+      "side": "high"
+    },
+    {
+      "value": 9.99,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 54.50000000000001,
+      "percent": 55,
+      "side": "high"
+    },
+    {
+      "value": 10,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 54.54545454545454,
+      "percent": 55,
+      "side": "high"
+    },
+    {
+      "value": 40,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 100,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 150,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    },
+    {
+      "value": 1000000000,
+      "min": -3,
+      "max": 20,
+      "center": -2,
+      "strength": 100,
+      "percent": 100,
+      "side": "high"
+    }
+  ],
+  "normalize": [
+    {
+      "value": -50,
+      "min": 0,
+      "max": 10,
+      "result": 0
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 10,
+      "result": 0
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 10,
+      "result": 0
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 10,
+      "result": 0.1
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 10,
+      "result": 0.25
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 10,
+      "result": 0.5
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 10,
+      "result": 0.999
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 10,
+      "result": 1
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 10,
+      "result": 1
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 10,
+      "result": 1
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 10,
+      "result": 1
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 10,
+      "result": 1
+    },
+    {
+      "value": -50,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": -10,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 0,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 1,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 2.5,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 5,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 9.99,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 10,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 40,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 100,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 150,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": 1000000000,
+      "min": 0,
+      "max": 0,
+      "result": 1
+    },
+    {
+      "value": -50,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": -10,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 0,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 1,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 2.5,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 5,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 9.99,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 10,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 40,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 100,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 150,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": 1000000000,
+      "min": 5,
+      "max": 5,
+      "result": 1
+    },
+    {
+      "value": -50,
+      "min": -100,
+      "max": 100,
+      "result": 0.25
+    },
+    {
+      "value": -10,
+      "min": -100,
+      "max": 100,
+      "result": 0.45
+    },
+    {
+      "value": 0,
+      "min": -100,
+      "max": 100,
+      "result": 0.5
+    },
+    {
+      "value": 1,
+      "min": -100,
+      "max": 100,
+      "result": 0.505
+    },
+    {
+      "value": 2.5,
+      "min": -100,
+      "max": 100,
+      "result": 0.5125
+    },
+    {
+      "value": 5,
+      "min": -100,
+      "max": 100,
+      "result": 0.525
+    },
+    {
+      "value": 9.99,
+      "min": -100,
+      "max": 100,
+      "result": 0.5499499999999999
+    },
+    {
+      "value": 10,
+      "min": -100,
+      "max": 100,
+      "result": 0.55
+    },
+    {
+      "value": 40,
+      "min": -100,
+      "max": 100,
+      "result": 0.7
+    },
+    {
+      "value": 100,
+      "min": -100,
+      "max": 100,
+      "result": 1
+    },
+    {
+      "value": 150,
+      "min": -100,
+      "max": 100,
+      "result": 1
+    },
+    {
+      "value": 1000000000,
+      "min": -100,
+      "max": 100,
+      "result": 1
+    },
+    {
+      "value": -50,
+      "min": -3,
+      "max": 20,
+      "result": 0
+    },
+    {
+      "value": -10,
+      "min": -3,
+      "max": 20,
+      "result": 0
+    },
+    {
+      "value": 0,
+      "min": -3,
+      "max": 20,
+      "result": 0.13043478260869565
+    },
+    {
+      "value": 1,
+      "min": -3,
+      "max": 20,
+      "result": 0.17391304347826086
+    },
+    {
+      "value": 2.5,
+      "min": -3,
+      "max": 20,
+      "result": 0.2391304347826087
+    },
+    {
+      "value": 5,
+      "min": -3,
+      "max": 20,
+      "result": 0.34782608695652173
+    },
+    {
+      "value": 9.99,
+      "min": -3,
+      "max": 20,
+      "result": 0.5647826086956522
+    },
+    {
+      "value": 10,
+      "min": -3,
+      "max": 20,
+      "result": 0.5652173913043478
+    },
+    {
+      "value": 40,
+      "min": -3,
+      "max": 20,
+      "result": 1
+    },
+    {
+      "value": 100,
+      "min": -3,
+      "max": 20,
+      "result": 1
+    },
+    {
+      "value": 150,
+      "min": -3,
+      "max": 20,
+      "result": 1
+    },
+    {
+      "value": 1000000000,
+      "min": -3,
+      "max": 20,
+      "result": 1
+    }
+  ],
+  "rangeIdx": [
+    {
+      "value": -5,
+      "index": 0
+    },
+    {
+      "value": 0,
+      "index": 1
+    },
+    {
+      "value": 5,
+      "index": 1
+    },
+    {
+      "value": 9.99,
+      "index": 1
+    },
+    {
+      "value": 10,
+      "index": 2
+    },
+    {
+      "value": 49,
+      "index": 2
+    },
+    {
+      "value": 50,
+      "index": 3
+    },
+    {
+      "value": 1000000,
+      "index": 3
+    }
+  ],
+  "rangeStrengths": [
+    {
+      "index": 0,
+      "count": 1,
+      "strength": 100
+    },
+    {
+      "index": 0,
+      "count": 2,
+      "strength": 56
+    },
+    {
+      "index": 1,
+      "count": 2,
+      "strength": 100
+    },
+    {
+      "index": 0,
+      "count": 3,
+      "strength": 41.33333333333333
+    },
+    {
+      "index": 1,
+      "count": 3,
+      "strength": 70.66666666666666
+    },
+    {
+      "index": 2,
+      "count": 3,
+      "strength": 100
+    },
+    {
+      "index": 0,
+      "count": 4,
+      "strength": 34
+    },
+    {
+      "index": 1,
+      "count": 4,
+      "strength": 56
+    },
+    {
+      "index": 2,
+      "count": 4,
+      "strength": 78
+    },
+    {
+      "index": 3,
+      "count": 4,
+      "strength": 100
+    },
+    {
+      "index": 0,
+      "count": 7,
+      "strength": 24.57142857142857
+    },
+    {
+      "index": 1,
+      "count": 7,
+      "strength": 37.14285714285714
+    },
+    {
+      "index": 2,
+      "count": 7,
+      "strength": 49.714285714285715
+    },
+    {
+      "index": 3,
+      "count": 7,
+      "strength": 62.285714285714285
+    },
+    {
+      "index": 4,
+      "count": 7,
+      "strength": 74.85714285714286
+    },
+    {
+      "index": 5,
+      "count": 7,
+      "strength": 87.42857142857143
+    },
+    {
+      "index": 6,
+      "count": 7,
+      "strength": 100
+    }
+  ],
+  "shades": [
+    {
+      "step": -1,
+      "count": 1,
+      "percent": 100
+    },
+    {
+      "step": 0,
+      "count": 1,
+      "percent": 100
+    },
+    {
+      "step": 1,
+      "count": 1,
+      "percent": 40
+    },
+    {
+      "step": -1,
+      "count": 2,
+      "percent": 100
+    },
+    {
+      "step": 0,
+      "count": 2,
+      "percent": 100
+    },
+    {
+      "step": 1,
+      "count": 2,
+      "percent": 40
+    },
+    {
+      "step": 2,
+      "count": 2,
+      "percent": 40
+    },
+    {
+      "step": -1,
+      "count": 3,
+      "percent": 100
+    },
+    {
+      "step": 0,
+      "count": 3,
+      "percent": 100
+    },
+    {
+      "step": 1,
+      "count": 3,
+      "percent": 70
+    },
+    {
+      "step": 2,
+      "count": 3,
+      "percent": 40
+    },
+    {
+      "step": 3,
+      "count": 3,
+      "percent": 40
+    },
+    {
+      "step": -1,
+      "count": 5,
+      "percent": 100
+    },
+    {
+      "step": 0,
+      "count": 5,
+      "percent": 100
+    },
+    {
+      "step": 1,
+      "count": 5,
+      "percent": 85
+    },
+    {
+      "step": 2,
+      "count": 5,
+      "percent": 70
+    },
+    {
+      "step": 3,
+      "count": 5,
+      "percent": 55
+    },
+    {
+      "step": 4,
+      "count": 5,
+      "percent": 40
+    },
+    {
+      "step": 5,
+      "count": 5,
+      "percent": 40
+    },
+    {
+      "step": -1,
+      "count": 8,
+      "percent": 100
+    },
+    {
+      "step": 0,
+      "count": 8,
+      "percent": 100
+    },
+    {
+      "step": 1,
+      "count": 8,
+      "percent": 91
+    },
+    {
+      "step": 2,
+      "count": 8,
+      "percent": 83
+    },
+    {
+      "step": 3,
+      "count": 8,
+      "percent": 74
+    },
+    {
+      "step": 4,
+      "count": 8,
+      "percent": 66
+    },
+    {
+      "step": 5,
+      "count": 8,
+      "percent": 57
+    },
+    {
+      "step": 6,
+      "count": 8,
+      "percent": 49
+    },
+    {
+      "step": 7,
+      "count": 8,
+      "percent": 40
+    },
+    {
+      "step": 8,
+      "count": 8,
+      "percent": 40
+    }
+  ],
+  "byValue": [
+    {
+      "values": [
+        5
+      ],
+      "percents": [
+        100
+      ]
+    },
+    {
+      "values": [
+        0,
+        1,
+        1,
+        5,
+        2,
+        2,
+        3
+      ],
+      "percents": [
+        40,
+        60,
+        50,
+        100,
+        80,
+        70,
+        90
+      ]
+    },
+    {
+      "values": [
+        1,
+        5,
+        4,
+        2,
+        5,
+        4,
+        3,
+        4
+      ],
+      "percents": [
+        40,
+        100,
+        83,
+        49,
+        91,
+        74,
+        57,
+        66
+      ]
+    },
+    {
+      "values": [
+        3,
+        0,
+        4,
+        1,
+        1
+      ],
+      "percents": [
+        85,
+        40,
+        100,
+        70,
+        55
+      ]
+    },
+    {
+      "values": [
+        3,
+        1,
+        3,
+        1,
+        3,
+        1,
+        4
+      ],
+      "percents": [
+        90,
+        60,
+        80,
+        50,
+        70,
+        40,
+        100
+      ]
+    },
+    {
+      "values": [
+        0,
+        1,
+        3,
+        4,
+        1,
+        2,
+        3,
+        3,
+        5
+      ],
+      "percents": [
+        40,
+        55,
+        85,
+        93,
+        48,
+        63,
+        78,
+        70,
+        100
+      ]
+    },
+    {
+      "values": [
+        0,
+        0,
+        2,
+        2,
+        3
+      ],
+      "percents": [
+        55,
+        40,
+        85,
+        70,
+        100
+      ]
+    },
+    {
+      "values": [
+        3,
+        3
+      ],
+      "percents": [
+        100,
+        40
+      ]
+    }
+  ],
+  "direction": [
+    {
+      "delta": 1,
+      "epsilon": 0,
+      "result": "up"
+    },
+    {
+      "delta": -1,
+      "epsilon": 0,
+      "result": "down"
+    },
+    {
+      "delta": 0,
+      "epsilon": 0,
+      "result": "flat"
+    },
+    {
+      "delta": 0.4,
+      "epsilon": 0.5,
+      "result": "flat"
+    },
+    {
+      "delta": -0.6,
+      "epsilon": 0.5,
+      "result": "down"
+    },
+    {
+      "delta": 0.5,
+      "epsilon": 0.5,
+      "result": "flat"
+    },
+    {
+      "delta": 3,
+      "epsilon": 1,
+      "result": "up"
+    }
+  ],
+  "slots": [
+    {
+      "index": 0,
+      "color": "var(--accent-word)"
+    },
+    {
+      "index": 1,
+      "color": "var(--chart-cat-1)"
+    },
+    {
+      "index": 7,
+      "color": "var(--chart-cat-7)"
+    },
+    {
+      "index": 8,
+      "color": "var(--accent-word)"
+    },
+    {
+      "index": 9,
+      "color": "var(--chart-cat-1)"
+    },
+    {
+      "index": 15,
+      "color": "var(--chart-cat-7)"
+    },
+    {
+      "index": 16,
+      "color": "var(--accent-word)"
+    }
+  ],
+  "tints": [
+    {
+      "percent": -5,
+      "text": "B"
+    },
+    {
+      "percent": 0,
+      "text": "B"
+    },
+    {
+      "percent": 0.4,
+      "text": "B"
+    },
+    {
+      "percent": 0.5,
+      "text": "color-mix(in oklab, C 1%, B)"
+    },
+    {
+      "percent": 12.5,
+      "text": "color-mix(in oklab, C 13%, B)"
+    },
+    {
+      "percent": 49.5,
+      "text": "color-mix(in oklab, C 50%, B)"
+    },
+    {
+      "percent": 99.4,
+      "text": "color-mix(in oklab, C 99%, B)"
+    },
+    {
+      "percent": 99.5,
+      "text": "C"
+    },
+    {
+      "percent": 100,
+      "text": "C"
+    },
+    {
+      "percent": 140,
+      "text": "C"
+    }
+  ]
+}

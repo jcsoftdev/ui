@@ -1,0 +1,18 @@
+[data-ui="sunburst-chart"] [data-node] {
+  cursor: pointer;
+}
+[data-ui="sunburst-chart"] [data-hole] {
+  fill: var(--surface);
+  transition: fill 150ms ease-out;
+}
+[data-ui="sunburst-chart"] [data-hole][data-drill] {
+  cursor: pointer;
+}
+[data-ui="sunburst-chart"] [data-hole][data-drill]:hover {
+  fill: var(--surface-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="sunburst-chart"] [data-hole] {
+    transition: none;
+  }
+}

@@ -16,6 +16,8 @@
     "check:docs-examples": "pnpm --filter @jcsoftdev/ui check:docs-examples",
     "check:pack": "pnpm --filter @jcsoftdev/ui check:pack && pnpm --filter @jcsoftdev/ui-core check:pack && pnpm --filter @jcsoftdev/ui-elements check:pack",
     "check:size": "node scripts/check-size.mjs",
+    "chart:fixtures": "node packages/ui-compose/scripts/chart-fixtures.mjs",
+    "check:chart-fixtures": "node packages/ui-compose/scripts/chart-fixtures.mjs --check",
     "test:browser": "pnpm --filter @jcsoftdev/ui-core test:browser && pnpm --filter @jcsoftdev/ui-elements test:browser"
   }
 }

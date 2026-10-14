@@ -194,7 +194,7 @@ describe("ui-slope-chart", () => {
     const elapsed = performance.now() - started;
     console.info(`slope 70k lines: ${Math.round(elapsed)} ms`);
     expect(elapsed).toBeLessThan(1500);
-    expect(c.querySelector("canvas")).toBeTruthy();
+    await expect.poll(() => c.querySelector("canvas")).toBeTruthy();
     expect(svgOf(c).querySelectorAll("*").length).toBeLessThan(100);
     expect(c.querySelector("[role=listbox]")).toBeTruthy();
 

@@ -47,6 +47,9 @@ export async function chart(
   );
   const c = host.querySelector(tag) as E18Chart;
   setup?.(c);
+  // A chart that asked for the canvas layer loads it lazily: awaiting the module runs after the
+  // chart's own continuation, so the layer is drawn by the time the frames below pass.
+  await import("../src/internal/chart-canvas.ts");
   await settle();
   return c;
 }
@@ -86,7 +89,10 @@ export const awake = async (c: Element) => {
   drawingOf(c).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
-  await wait(80);
+  // Awaiting the module runs after the chart's own continuation, which attaches the layer.
+  await import("../src/internal/chart-interact.ts");
+  await frame();
+  await frame();
 };
 
 /**

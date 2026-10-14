@@ -1,0 +1,37 @@
+{
+  "numbers": [
+    {
+      "$f": "NaN"
+    },
+    {
+      "$f": "Infinity"
+    },
+    {
+      "$f": "-Infinity"
+    },
+    {
+      "$f": "-0"
+    },
+    0,
+    1.5,
+    -2
+  ],
+  "strings": [
+    "NaN",
+    "Infinity",
+    "-Infinity",
+    "-0"
+  ],
+  "nested": {
+    "values": [
+      {
+        "$f": "NaN"
+      },
+      {
+        "deep": {
+          "$f": "-Infinity"
+        }
+      }
+    ]
+  }
+}

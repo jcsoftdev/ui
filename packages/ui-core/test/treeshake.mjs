@@ -57,8 +57,13 @@ const independent = new Set([
 ]);
 // Chart entries may build on each other only as listed; everything else stays separate.
 const chartDeps = {
+  "chart/brush": ["chart/brush-rect"],
   "chart/color-scale": ["chart/palette"],
   "chart/distribution": ["chart/axis", "chart/format", "chart/scale"],
+  "chart/distribution-layout": ["chart/axis", "chart/scale"],
+  "chart/datetime-columns": ["chart/scale-time"],
+  "chart/heatmap-scale": ["chart/color-scale", "chart/palette"],
+  "chart/tree-edge": ["chart/tree-edge-box", "chart/tree-edge-radial"],
   "chart/category-axis": ["chart/axis", "chart/scale"],
   "chart/category-axis-time": [
     "chart/axis",
@@ -89,7 +94,7 @@ const behaviours = [];
 for (const item of readdirSync(join(dist, "..", "src"), { withFileTypes: true })) {
   if (item.isFile() && item.name.endsWith(".ts") && !item.name.endsWith(".d.ts"))
     behaviours.push(item.name.slice(0, -3));
-  else if (item.isDirectory() && item.name !== "liquid")
+  else if (item.isDirectory() && item.name !== "liquid" && item.name !== "geo-data")
     for (const part of readdirSync(join(dist, "..", "src", item.name)))
       if (part.endsWith(".ts")) behaviours.push(`${item.name}/${part.slice(0, -3)}`);
 }

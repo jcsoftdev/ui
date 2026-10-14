@@ -1,0 +1,5 @@
+public final class com/jcsoftdev/ui/chart/geo/peru/GeoPeruModule {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/geo/peru/GeoPeruModule;
+	public final fun getId ()Ljava/lang/String;
+}
+

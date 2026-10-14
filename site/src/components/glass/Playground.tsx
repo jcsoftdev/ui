@@ -483,6 +483,7 @@ export default function Playground() {
 
   return (
     <div className="pg">
+      <LiquidGlass />
       <div className="pg-stage-col">
         <div
           ref={stage}

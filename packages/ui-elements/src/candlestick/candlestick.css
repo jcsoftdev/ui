@@ -1,0 +1,13 @@
+[data-ui="candlestick"] [data-hl] {
+  display: none;
+  fill: var(--chart-grid);
+  pointer-events: none;
+}
+[data-ui="candlestick"] [data-hl][data-active],
+[data-ui="candlestick"] [data-hl][data-selected] {
+  display: inline;
+}
+[data-ui="candlestick"] [data-candle] {
+  transform-box: fill-box;
+  transform-origin: center center;
+}

@@ -57,6 +57,7 @@ export const lastDraw = () => ({ animate: log.animate.at(-1) });
  * side the tooltip prefers.
  */
 class TestBars extends ChartElement {
+  static override canvas = true;
   static override observedAttributes = [
     ...CHART_ATTRIBUTES,
     "rows",
@@ -374,3 +375,73 @@ export const defineTestDots = () => {
   defineElement("test-dots", dots(true));
   defineElement("test-dots-fresh", dots(false));
 };
+
+/** Sizes itself: `rows` rows of 20px, or 100px when `orientation="wide"`; `natural="N"` returns `naturalHeight` N instead. */
+export const sizing = { draws: 0 };
+class TestNatural extends ChartElement {
+  static override observedAttributes = [...CHART_ATTRIBUTES, "orientation", "natural"];
+  static override defaultHeight = (el: HTMLElement) =>
+    el.getAttribute("orientation") === "wide" ? 100 : 60;
+  protected override draw({ svg: root }: DrawContext): DrawResult {
+    sizing.draws++;
+    root.append(svg("rect", { width: 4, height: 4 }));
+    const natural = Number(this.getAttribute("natural"));
+    return { naturalHeight: natural > 0 ? natural : undefined };
+  }
+}
+export const defineTestNatural = () => defineElement("test-natural", TestNatural);
+
+/** Paints a canvas with the resolved `color` of the SVG; the cached color is dropped when `themeVersion` moves. */
+class TestCanvas extends ChartElement {
+  #seen = -1;
+  #paint = "";
+  protected override draw({ svg: root, canvas, themeVersion }: DrawContext): DrawResult {
+    if (themeVersion !== this.#seen) {
+      this.#seen = themeVersion;
+      this.#paint = getComputedStyle(root).color;
+    }
+    const g = canvas();
+    g.fillStyle = this.#paint;
+    g.fillRect(0, 0, 20, 20);
+    return {};
+  }
+}
+export const defineTestCanvas = () => defineElement("test-canvas", TestCanvas);
+
+/** Keyed bars: `names` can be reordered, `markKey` is the name. `series` is read through `isHidden` like a real chart. */
+class TestKeyed extends ChartElement {
+  names = ["a", "b", "c", "d"];
+  drawn: string[] = [];
+  protected override draw({ svg: root, width, height }: DrawContext): DrawResult {
+    const names = this.names;
+    const band = bandScale({ count: names.length, range: [0, width] });
+    this.drawn = this.isHidden("hid") ? ["no-hid"] : ["hid-visible"];
+    const marks = names.map((name, i) => {
+      const el = svg("rect", {
+        x: band.start(i),
+        y: 0,
+        width: band.step,
+        height,
+        fill: "transparent",
+      });
+      root.append(el);
+      return { el, label: name };
+    });
+    return {
+      marks,
+      markKey: (i) => names[i] as string,
+      hit: (x) => band.indexAt(x),
+      hover: (i) => ({ title: names[i] as string, rows: [], x: band.center(i), y: 0 }),
+      snapshot: () => ({
+        title: "k",
+        categoryHeader: "k",
+        categories: names,
+        series: [
+          { id: "hid", name: "Hid", color: "red", values: names.map(() => 1), text: names },
+          { id: "other", name: "Other", color: "blue", values: names.map(() => 2), text: names },
+        ],
+      }),
+    };
+  }
+}
+export const defineTestKeyed = () => defineElement("test-keyed", TestKeyed);

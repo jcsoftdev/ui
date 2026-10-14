@@ -1,5 +1,12 @@
 import { createCrystalMap, crystalAmplitude, crystalMargin } from "./crystal-map.js";
 
+/**
+ * The crystal map covers the surface and its margin (often several times the surface), and every
+ * pixel of it is computed on the main thread: past this many it is rasterised coarser, down to half
+ * a pixel per CSS pixel, which the smooth field and the bilinear `feImage` scaling do not show.
+ */
+const CRYSTAL_MAP_PIXELS = 48_000;
+
 /** Ancestors that cut the backdrop: whatever lies past their edge is not there for a backdrop filter. */
 function clippingAncestors(element: Element): Element[] {
   const found: Element[] = [];
@@ -189,7 +196,15 @@ export function installCrystal({
         target.setAttribute(name, value);
       image.setAttribute(
         "href",
-        createCrystalMap({ width, height, amplitude, dpr, margin, room, reach }),
+        createCrystalMap({
+          width,
+          height,
+          amplitude,
+          dpr: Math.max(0.5, Math.min(dpr, Math.sqrt(CRYSTAL_MAP_PIXELS / (wide * tall)))),
+          margin,
+          room,
+          reach,
+        }),
       );
       return (2 * Math.max(amplitude, 1) * 255) / 254;
     },

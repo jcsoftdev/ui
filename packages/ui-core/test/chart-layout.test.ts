@@ -544,3 +544,21 @@ describe("chord parity", () => {
     }
   });
 });
+
+describe("hierarchy ids", () => {
+  it("never collide when a name contains the separators", () => {
+    const root = hierarchy.buildHierarchy({
+      name: "root",
+      children: [
+        { name: "a", children: [{ name: "b", value: 1 }] },
+        { name: "a/b", value: 2 },
+        { name: "c~1", value: 3 },
+        { name: "c", value: 4 },
+        { name: "c", value: 5 },
+      ],
+    });
+    const ids = hierarchy.descendants(root).map((node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(hierarchy.findNode(root, "root/a%2Fb")?.value).toBe(2);
+  });
+});
