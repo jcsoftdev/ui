@@ -97,7 +97,10 @@ const awake = async (el: Element) => {
   drawingOf(el).dispatchEvent(
     new PointerEvent("pointerenter", { clientX: -1000, clientY: -1000, pointerType: "mouse" }),
   );
-  await wait(60);
+  // Awaiting the module runs after the chart's own continuation, which attaches the layer.
+  await import("../src/internal/chart-interact.ts");
+  await frame();
+  await frame();
 };
 
 describe("ui-crossfilter", () => {
@@ -143,8 +146,7 @@ describe("ui-crossfilter", () => {
   it("keyboard: arrows pick a bar, Enter filters, and Clear restores everything", async () => {
     const { xf, bar, summary } = await board();
     await userEvent.tab();
-    await wait(80);
-    expect(document.activeElement?.closest("ui-crossfilter-bar")).toBe(bar);
+    await expect.poll(() => document.activeElement?.closest("ui-crossfilter-bar")).toBe(bar);
     await userEvent.keyboard("{ArrowRight}{Enter}");
     await settle();
     expect(xf.filters.barber).toEqual({ kind: "set", values: ["Luis"] });
@@ -194,12 +196,8 @@ describe("ui-crossfilter", () => {
     const { xf, hist } = await board();
     (drawingOf(hist).querySelector("[data-ui-part=proxy]") as HTMLElement | null)?.focus();
     await userEvent.tab();
-    await wait(60);
-    const focused = document.activeElement;
-    if (!hist.contains(focused)) {
-      await userEvent.tab();
-      await wait(60);
-    }
+    if (!hist.contains(document.activeElement)) await userEvent.tab();
+    await expect.poll(() => hist.contains(document.activeElement)).toBe(true);
     await userEvent.keyboard("{ArrowRight}{ArrowRight}{Enter}");
     await settle();
     expect(xf.filters.price?.kind).toBe("range");
