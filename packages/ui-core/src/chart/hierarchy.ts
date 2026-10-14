@@ -41,6 +41,10 @@ export interface BuildHierarchyOptions {
   sort?: boolean;
 }
 
+/** Keeps `/` and `~` (the path and duplicate separators) out of a key so two paths never collide. */
+const escapeKey = (key: string): string =>
+  key.replace(/[%/~]/g, (char) => (char === "%" ? "%25" : char === "/" ? "%2F" : "%7E"));
+
 /**
  * Turns nested data into linked nodes with summed values. Zero, negative and
  * non-finite branches are dropped, since they have no area to draw.
@@ -70,7 +74,7 @@ export function buildHierarchy(
     if (item.children && item.children.length > 0) {
       const seen = new Map<string, number>();
       const children = item.children.map((child, position) => {
-        const key = child.id ?? child.name;
+        const key = escapeKey(child.id ?? child.name);
         const count = seen.get(key) ?? 0;
         seen.set(key, count + 1);
         return visit(child, node, `${id}/${count ? `${key}~${count}` : key}`, position);
