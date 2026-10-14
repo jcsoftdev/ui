@@ -1,5 +1,5 @@
 import { estimateTextWidth } from "@jcsoftdev/ui-core/chart/axis";
-import { DIRECTION_COLORS, directionOf, seriesColor } from "@jcsoftdev/ui-core/chart/palette";
+import { DIRECTION_COLORS, directionOf } from "@jcsoftdev/ui-core/chart/palette";
 import { linearScale } from "@jcsoftdev/ui-core/chart/scale";
 import { type DefineOptions, defineElement, uid } from "../internal/base.js";
 import {
@@ -11,7 +11,9 @@ import {
   type SnapshotSeries,
   svg,
   type TooltipRow,
+  type VirtualMarks,
 } from "../internal/chart-base.js";
+import { CANVAS_HEIGHT, CANVAS_MARKS, colorResolver } from "../internal/e18-canvas.js";
 import {
   AutoHeight,
   adoptPlot,
@@ -25,6 +27,8 @@ import {
   grow,
   hitRect,
   jsonAttr,
+  minMax,
+  numAttr,
   percentChange,
   resolveBound,
   text,
@@ -153,58 +157,63 @@ export class UiDumbbellChart extends ChartElement {
     return this.getAttribute("orientation") === "vertical";
   }
   get #rowHeight(): number {
-    return Number(this.getAttribute("row-height")) || 38;
+    return numAttr(this, "row-height", 38) || 38;
   }
 
   /** Rows size themselves unless the author fixed the height or an aspect ratio. */
   #fit(): void {
+    const rows = this.items.length;
+    const natural = Math.max(rows * this.#rowHeight + MARGIN.top + MARGIN.bottom, 120);
     this.#height.apply(
-      this.#vertical
-        ? 320
-        : Math.max(this.items.length * this.#rowHeight + MARGIN.top + MARGIN.bottom, 120),
+      this.#vertical ? 320 : rows > CANVAS_MARKS ? Math.min(natural, CANVAS_HEIGHT) : natural,
     );
   }
 
+  /** Rows with only finite numbers: a row with NaN or Infinity is left out of the plot and the snapshot. */
   #rows(): Row[] {
-    return sortRows(
-      this.items.map((item) => ({
-        id: item.id ?? item.label,
-        label: item.label,
-        values: item.values ?? [item.from ?? 0, item.to ?? 0],
-      })),
-      this.getAttribute("sort"),
-    );
+    const rows: Row[] = [];
+    for (const item of this.items) {
+      const values = item.values ?? [item.from ?? 0, item.to ?? 0];
+      let valid = values.length > 0;
+      for (const value of values) if (!Number.isFinite(value)) valid = false;
+      if (valid) rows.push({ id: item.id ?? item.label, label: String(item.label ?? ""), values });
+    }
+    return sortRows(rows, this.getAttribute("sort"));
   }
 
-  #measureList(rows: readonly Row[]): Array<Required<DumbbellMeasure>> {
-    const widest = Math.max(2, ...rows.map((row) => row.values.length));
+  #measureList(
+    rows: readonly Row[],
+    color: (index: number) => string,
+  ): Array<Required<DumbbellMeasure>> {
+    let widest = 2;
+    for (const row of rows) if (row.values.length > widest) widest = row.values.length;
     const given = this.#measures;
     if (given && given.length > 0)
       return Array.from({ length: Math.max(widest, given.length) }, (_, index) => ({
         name: given[index]?.name ?? `#${index + 1}`,
-        color: given[index]?.color ?? seriesColor(index),
+        color: given[index]?.color ?? color(index),
       }));
     if (widest === 2)
       return [
         {
           name: this.getAttribute("from-label") ?? "Before",
-          color: this.getAttribute("from-color") ?? seriesColor(6),
+          color: this.getAttribute("from-color") ?? color(6),
         },
         {
           name: this.getAttribute("to-label") ?? "After",
-          color: this.getAttribute("to-color") ?? seriesColor(0),
+          color: this.getAttribute("to-color") ?? color(0),
         },
       ];
     return Array.from({ length: widest }, (_, index) => ({
       name: `#${index + 1}`,
-      color: seriesColor(index),
+      color: color(index),
     }));
   }
 
   protected override draw(ctx: DrawContext): DrawResult {
     const { svg: root, width, format, locale, animate } = ctx;
     const rows = this.#rows();
-    const measures = this.#measureList(rows);
+    const measures = this.#measureList(rows, (index) => ctx.color(index));
     const vertical = this.#vertical;
     const modeAttr = this.getAttribute("delta");
     const delta: "absolute" | "percent" | false =
@@ -223,9 +232,18 @@ export class UiDumbbellChart extends ChartElement {
     const axis = this.#axis ?? {};
     const stretch = this.#height.author;
     const height = ctx.height;
-    const rowHeight = stretch
-      ? Math.max(20, (height - MARGIN.top - MARGIN.bottom) / Math.max(1, rows.length))
-      : this.#rowHeight;
+    // Above the threshold the marks are painted on the canvas layer, the rows squeezed into the box.
+    const big = rows.length > CANVAS_MARKS;
+    const fitted = (height - MARGIN.top - MARGIN.bottom) / Math.max(1, rows.length);
+    const rowHeight = big
+      ? Math.max(0.0001, fitted)
+      : stretch
+        ? Math.max(20, fitted)
+        : this.#rowHeight;
+    // Text on the canvas layer: a label for at most ~300 rows, and only when a row is tall enough.
+    const labelSkip = big ? Math.ceil(rows.length / 300) : 1;
+    const along = vertical ? Math.max(0.0001, (width - 24) / Math.max(1, rows.length)) : rowHeight;
+    const labelsFit = !big || along >= 14;
 
     const changeText = (row: Row, mode: "absolute" | "percent") => {
       const diff = diffOf(row);
@@ -236,9 +254,14 @@ export class UiDumbbellChart extends ChartElement {
     const mode = delta || "absolute";
 
     // Scale and plot box.
-    const all = rows.flatMap((row) => row.values);
-    const lo = all.length ? Math.min(...all) : 0;
-    const hi = all.length ? Math.max(...all) : 1;
+    let lo = Number.POSITIVE_INFINITY;
+    let hi = Number.NEGATIVE_INFINITY;
+    for (const row of rows) {
+      const [rowLo, rowHi] = minMax(row.values, [lo, hi]);
+      if (rowLo < lo) lo = rowLo;
+      if (rowHi > hi) hi = rowHi;
+    }
+    if (lo > hi) [lo, hi] = [0, 1];
     const domain: [number, number] = [
       resolveBound(axis.min, lo > 0 && lo < hi * 0.4 ? 0 : lo),
       resolveBound(axis.max, hi),
@@ -260,16 +283,19 @@ export class UiDumbbellChart extends ChartElement {
         tickCount: axis.tickCount ?? Math.max(3, Math.round(innerHeight / 52)),
       });
       const labels = scale.ticks().map((tick) => tickFormat(tick));
-      left = Math.max(...labels.map((label) => estimateTextWidth(label)), 16) + 18;
+      left = labels.reduce((wide, label) => Math.max(wide, estimateTextWidth(label)), 16) + 18;
       innerWidth = Math.max(60, width - left - 8);
       column = innerWidth / Math.max(1, rows.length);
     } else {
-      left = Math.min(
-        Math.max(72, width * (narrow ? 0.3 : 0.28)),
-        Math.max(...rows.map((row) => estimateTextWidth(row.label, 13)), 40) + 16,
-      );
+      let widest = 40;
+      if (labelsFit)
+        for (let i = 0; i < rows.length; i += labelSkip)
+          widest = Math.max(widest, estimateTextWidth((rows[i] as Row).label, 13));
+      left = labelsFit
+        ? Math.min(Math.max(72, width * (narrow ? 0.3 : 0.28)), widest + 16)
+        : Math.min(width * 0.2, 16);
       top = MARGIN.top;
-      innerWidth = Math.max(60, width - left - (delta ? deltaColumn : 8));
+      innerWidth = Math.max(60, width - left - (delta && !big ? deltaColumn : 8));
       innerHeight = rows.length * rowHeight;
       scale = linearScale({
         domain,
@@ -287,17 +313,17 @@ export class UiDumbbellChart extends ChartElement {
     root.append(plot);
     if (vertical) {
       if (grid) plot.append(gridLines(ticks, "horizontal", innerWidth));
-      plot.append(
-        axisLeft(ticks, 0, axis.title),
-        axisBottom(
-          rows.map((row, i) => ({
+      const labelTicks: Array<{ key: string; position: number; label: string }> = [];
+      if (labelsFit)
+        for (let i = 0; i < rows.length; i += labelSkip) {
+          const row = rows[i] as Row;
+          labelTicks.push({
             key: row.id,
             position: i * column + column / 2,
-            label: fitLabel(row.label, column - 6),
-          })),
-          innerHeight,
-        ),
-      );
+            label: fitLabel(row.label, column * labelSkip - 6),
+          });
+        }
+      plot.append(axisLeft(ticks, 0, axis.title), axisBottom(labelTicks, innerHeight));
     } else {
       if (grid) plot.append(gridLines(ticks, "vertical", innerHeight));
       plot.append(axisBottom(ticks, innerHeight));
@@ -309,7 +335,8 @@ export class UiDumbbellChart extends ChartElement {
       if (direction === "flat") return DIRECTION_COLORS.flat;
       return (direction === "up") === goodUp ? DIRECTION_COLORS.up : DIRECTION_COLORS.down;
     };
-    const showValues = flag(this, "value-labels", true) && (vertical ? column >= 64 : !narrow);
+    const showValues =
+      !big && flag(this, "value-labels", true) && (vertical ? column >= 64 : !narrow);
     const pixels = (row: Row) => row.values.map((value) => scale.map(value));
     const centerOf = (row: Row) => {
       const px = pixels(row);
@@ -320,150 +347,228 @@ export class UiDumbbellChart extends ChartElement {
         .map((measure, index) => `${measure.name} ${format(row.values[index] ?? 0)}`)
         .join(", ");
 
-    const marks: ChartMark[] = rows.map((row, i) => {
-      const px = pixels(row);
-      const group = svg("g", { "data-row": "" });
-      plot.append(group);
-      const cross = vertical ? i * column + column / 2 : i * rowHeight + rowHeight / 2;
-      const band = vertical
-        ? { x: i * column + 2, y: 0, width: column - 4, height: innerHeight }
-        : {
-            x: 0,
-            y: cross - (rowHeight - 4) / 2,
-            width: innerWidth + (delta ? deltaColumn : 0),
-            height: rowHeight - 4,
-          };
-      group.append(
-        svg("rect", { ...band, rx: 8, "data-band": "", style: "fill:var(--chart-grid)" }),
-      );
+    const rowLabel = (row: Row) =>
+      `${row.label}. ${measureText(row)}, ${deltaLabel} ${changeText(row, mode)}`;
 
-      // The bar and the dots; a gradient joins two measures, a neutral bar joins more.
-      const points = px.map((p) => (vertical ? { x: cross, y: p } : { x: p, y: cross }));
-      const a = points[0] ?? { x: 0, y: 0 };
-      const z = points[points.length - 1] ?? a;
-      const gradient = points.length === 2 ? uid("dumbbell") : null;
-      if (gradient)
-        group.append(
-          svg(
-            "defs",
-            {},
-            svg(
-              "linearGradient",
-              {
-                id: gradient,
-                gradientUnits: "userSpaceOnUse",
-                x1: a.x,
-                y1: a.y,
-                x2: z.x === a.x && z.y === a.y ? z.x + 1 : z.x,
-                y2: z.y,
-              },
-              svg("stop", { offset: "0%", style: `stop-color:${colors[0]}` }),
-              svg("stop", { offset: "100%", style: `stop-color:${colors[colors.length - 1]}` }),
-            ),
-          ),
-        );
-      const bar = svg("line", {
-        "data-bar": "",
-        x1: Math.min(...points.map((p) => p.x)),
-        x2: Math.max(...points.map((p) => p.x)),
-        y1: Math.min(...points.map((p) => p.y)),
-        y2: Math.max(...points.map((p) => p.y)),
-        "stroke-width": 4,
-        "stroke-linecap": "round",
-        "aria-hidden": "true",
-        style: `stroke:${gradient ? `url(#${gradient})` : "var(--line-strong)"};transform-box:fill-box;transform-origin:center`,
-      });
-      group.append(bar);
-      for (const [index, p] of points.entries())
-        group.append(
-          svg("circle", {
-            cx: p.x,
-            cy: p.y,
-            r: 6 + (index === points.length - 1 ? 0.5 : 0),
-            "stroke-width": 2,
-            "aria-hidden": "true",
-            style: `fill:${colors[index]};stroke:var(--surface)`,
-          }),
-        );
-      if (animate)
-        grow(bar, vertical ? "y" : "x", i, {
-          duration: 560,
-          step: Math.min(50, 400 / Math.max(1, rows.length)),
-        });
-
-      // Labels.
-      const fade = (node: Element) => {
-        if (animate) fadeIn(node, 360, 420);
-        return node;
+    const canvasMarks = (): VirtualMarks => {
+      const resolve = colorResolver(this.drawing);
+      const g = ctx.canvas();
+      g.save();
+      g.translate(left, top);
+      const radius = Math.max(0.75, Math.min(6, (vertical ? column : rowHeight) / 2));
+      const pointAt = (row: Row, index: number, i: number): [number, number] => {
+        const cross = (vertical ? column : rowHeight) * i + (vertical ? column : rowHeight) / 2;
+        const p = scale.map(row.values[index] as number);
+        return vertical ? [cross, p] : [p, cross];
       };
-      if (!vertical)
-        group.append(
-          text(
-            fitLabel(row.label, left - 14),
-            { x: -12, y: cross, dy: "0.34em", "text-anchor": "end" },
-            "fill:var(--ink-2);font-size:12px;font-weight:600",
-          ),
-        );
-      if (showValues) {
-        const values = svg("g", { "aria-hidden": "true" });
-        if (vertical)
-          for (const [index, value] of row.values.entries())
-            values.append(
-              text(
-                format(value),
-                { x: cross + 12, y: px[index] as number, dy: "0.34em", "text-anchor": "start" },
-                VALUE_STYLE,
-              ),
-            );
-        else if (row.values.length === 2) {
-          const [p0, p1] = px as [number, number];
-          const low = Math.min(p0, p1);
-          const high = Math.max(p0, p1);
-          const [v0, v1] = row.values as [number, number];
-          values.append(
+      g.lineCap = "round";
+      g.lineWidth = Math.max(1, Math.min(4, along * 0.4));
+      g.strokeStyle = resolve("var(--line-strong)");
+      g.beginPath();
+      rows.forEach((row, i) => {
+        const [x0, y0] = pointAt(row, 0, i);
+        const [x1, y1] = pointAt(row, row.values.length - 1, i);
+        g.moveTo(x0, y0);
+        g.lineTo(x1, y1);
+      });
+      g.stroke();
+      for (const [index, measure] of measures.entries()) {
+        g.fillStyle = resolve(measure.color);
+        g.beginPath();
+        rows.forEach((row, i) => {
+          if (row.values[index] === undefined) return;
+          const [x, y] = pointAt(row, index, i);
+          if (radius < 2) g.rect(x - radius, y - radius, radius * 2, radius * 2);
+          else {
+            g.moveTo(x + radius, y);
+            g.arc(x, y, radius, 0, Math.PI * 2);
+          }
+        });
+        g.fill();
+      }
+      g.restore();
+
+      if (!vertical && labelsFit) {
+        const names = svg("g", { "aria-hidden": "true" });
+        for (let i = 0; i < rows.length; i += labelSkip)
+          names.append(
             text(
-              format(p0 === low ? v0 : v1),
-              { x: low - 12, y: cross, dy: "0.34em", "text-anchor": "end" },
-              VALUE_STYLE,
-            ),
-            text(
-              format(p0 === low ? v1 : v0),
-              { x: high + 12, y: cross, dy: "0.34em", "text-anchor": "start" },
-              VALUE_STYLE,
+              fitLabel((rows[i] as Row).label, left - 14),
+              { x: -12, y: i * rowHeight + rowHeight / 2, dy: "0.34em", "text-anchor": "end" },
+              "fill:var(--ink-2);font-size:12px;font-weight:600",
             ),
           );
-        } else
-          for (const [index, value] of row.values.entries())
-            values.append(
-              text(
-                format(value),
-                { x: px[index] as number, y: cross - 12, "text-anchor": "middle" },
-                VALUE_STYLE,
+        plot.append(names);
+      }
+
+      // One row-shaped band, moved to the mark that has focus or hover.
+      const bandNode = svg("rect", { rx: 4, "data-band": "", style: "fill:var(--chart-grid)" });
+      plot.prepend(svg("g", { "data-row": "", "aria-hidden": "true" }, bandNode));
+      return {
+        count: rows.length,
+        label: (i) => rowLabel(rows[i] as Row),
+        element: (i) => {
+          const thick = Math.max(2, vertical ? column : rowHeight);
+          bandNode.setAttribute("x", String(vertical ? i * column : 0));
+          bandNode.setAttribute(
+            "y",
+            String(vertical ? 0 : i * rowHeight - (thick - rowHeight) / 2),
+          );
+          bandNode.setAttribute("width", String(vertical ? thick : innerWidth));
+          bandNode.setAttribute("height", String(vertical ? innerHeight : thick));
+          return bandNode;
+        },
+      };
+    };
+
+    const marks: ChartMark[] | VirtualMarks = big
+      ? canvasMarks()
+      : rows.map((row, i) => {
+          const px = pixels(row);
+          const group = svg("g", { "data-row": "" });
+          plot.append(group);
+          const cross = vertical ? i * column + column / 2 : i * rowHeight + rowHeight / 2;
+          const band = vertical
+            ? { x: i * column + 2, y: 0, width: column - 4, height: innerHeight }
+            : {
+                x: 0,
+                y: cross - (rowHeight - 4) / 2,
+                width: innerWidth + (delta ? deltaColumn : 0),
+                height: rowHeight - 4,
+              };
+          group.append(
+            svg("rect", { ...band, rx: 8, "data-band": "", style: "fill:var(--chart-grid)" }),
+          );
+
+          // The bar and the dots; a gradient joins two measures, a neutral bar joins more.
+          const points = px.map((p) => (vertical ? { x: cross, y: p } : { x: p, y: cross }));
+          const a = points[0] ?? { x: 0, y: 0 };
+          const z = points[points.length - 1] ?? a;
+          const gradient = points.length === 2 ? uid("dumbbell") : null;
+          if (gradient)
+            group.append(
+              svg(
+                "defs",
+                {},
+                svg(
+                  "linearGradient",
+                  {
+                    id: gradient,
+                    gradientUnits: "userSpaceOnUse",
+                    x1: a.x,
+                    y1: a.y,
+                    x2: z.x === a.x && z.y === a.y ? z.x + 1 : z.x,
+                    y2: z.y,
+                  },
+                  svg("stop", { offset: "0%", style: `stop-color:${colors[0]}` }),
+                  svg("stop", { offset: "100%", style: `stop-color:${colors[colors.length - 1]}` }),
+                ),
               ),
             );
-        group.append(fade(values));
-      }
-      if (delta)
-        group.append(
-          fade(
-            text(
-              changeText(row, delta),
-              vertical
-                ? { x: cross, y: -10, "text-anchor": "middle" }
-                : { x: innerWidth + deltaColumn - 4, y: cross, dy: "0.34em", "text-anchor": "end" },
-              `fill:${deltaColor(row)};font-size:12px;font-weight:700;font-variant-numeric:tabular-nums`,
-            ),
-          ),
-        );
+          const bar = svg("line", {
+            "data-bar": "",
+            x1: minMax(points.map((p) => p.x))[0],
+            x2: minMax(points.map((p) => p.x))[1],
+            y1: minMax(points.map((p) => p.y))[0],
+            y2: minMax(points.map((p) => p.y))[1],
+            "stroke-width": 4,
+            "stroke-linecap": "round",
+            "aria-hidden": "true",
+            style: `stroke:${gradient ? `url(#${gradient})` : "var(--line-strong)"};transform-box:fill-box;transform-origin:center`,
+          });
+          group.append(bar);
+          for (const [index, p] of points.entries())
+            group.append(
+              svg("circle", {
+                cx: p.x,
+                cy: p.y,
+                r: 6 + (index === points.length - 1 ? 0.5 : 0),
+                "stroke-width": 2,
+                "aria-hidden": "true",
+                style: `fill:${colors[index]};stroke:var(--surface)`,
+              }),
+            );
+          if (animate)
+            grow(bar, vertical ? "y" : "x", i, {
+              duration: 560,
+              step: Math.min(50, 400 / Math.max(1, rows.length)),
+            });
 
-      // The keyboard stop and hit area of the row.
-      const el = hitRect(band.x, band.y, band.width, band.height);
-      group.append(el);
-      return {
-        el,
-        label: `${row.label}. ${measureText(row)}, ${deltaLabel} ${changeText(row, mode)}`,
-      };
-    });
+          // Labels.
+          const fade = (node: Element) => {
+            if (animate) fadeIn(node, 360, 420);
+            return node;
+          };
+          if (!vertical)
+            group.append(
+              text(
+                fitLabel(row.label, left - 14),
+                { x: -12, y: cross, dy: "0.34em", "text-anchor": "end" },
+                "fill:var(--ink-2);font-size:12px;font-weight:600",
+              ),
+            );
+          if (showValues) {
+            const values = svg("g", { "aria-hidden": "true" });
+            if (vertical)
+              for (const [index, value] of row.values.entries())
+                values.append(
+                  text(
+                    format(value),
+                    { x: cross + 12, y: px[index] as number, dy: "0.34em", "text-anchor": "start" },
+                    VALUE_STYLE,
+                  ),
+                );
+            else if (row.values.length === 2) {
+              const [p0, p1] = px as [number, number];
+              const low = Math.min(p0, p1);
+              const high = Math.max(p0, p1);
+              const [v0, v1] = row.values as [number, number];
+              values.append(
+                text(
+                  format(p0 === low ? v0 : v1),
+                  { x: low - 12, y: cross, dy: "0.34em", "text-anchor": "end" },
+                  VALUE_STYLE,
+                ),
+                text(
+                  format(p0 === low ? v1 : v0),
+                  { x: high + 12, y: cross, dy: "0.34em", "text-anchor": "start" },
+                  VALUE_STYLE,
+                ),
+              );
+            } else
+              for (const [index, value] of row.values.entries())
+                values.append(
+                  text(
+                    format(value),
+                    { x: px[index] as number, y: cross - 12, "text-anchor": "middle" },
+                    VALUE_STYLE,
+                  ),
+                );
+            group.append(fade(values));
+          }
+          if (delta)
+            group.append(
+              fade(
+                text(
+                  changeText(row, delta),
+                  vertical
+                    ? { x: cross, y: -10, "text-anchor": "middle" }
+                    : {
+                        x: innerWidth + deltaColumn - 4,
+                        y: cross,
+                        dy: "0.34em",
+                        "text-anchor": "end",
+                      },
+                  `fill:${deltaColor(row)};font-size:12px;font-weight:700;font-variant-numeric:tabular-nums`,
+                ),
+              ),
+            );
+
+          // The keyboard stop and hit area of the row.
+          const el = hitRect(band.x, band.y, band.width, band.height);
+          group.append(el);
+          return { el, label: rowLabel(row) };
+        });
 
     const rowRows = (row: Row): TooltipRow[] => [
       ...measures.map((measure, index) => ({

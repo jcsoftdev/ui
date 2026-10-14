@@ -26,6 +26,8 @@ import {
   axisFormatter,
   axisLeft,
   fadeIn,
+  finite,
+  fitLabel,
   flag,
   gridLines,
   grow,
@@ -50,10 +52,9 @@ const FILL: Record<WaterfallKind, string> = {
   total: DIRECTION_COLORS.flat,
 };
 
-const LABEL_STYLE = "font-size:11px;font-weight:700;font-variant-numeric:tabular-nums";
+const ANIMATED_BARS = 300;
 
-const truncate = (label: string, maxChars: number): string =>
-  label.length <= maxChars ? label : `${label.slice(0, Math.max(1, maxChars - 1)).trimEnd()}…`;
+const LABEL_STYLE = "font-size:11px;font-weight:700;font-variant-numeric:tabular-nums";
 
 const labelFill = (kind: WaterfallKind): string =>
   kind === "increase"
@@ -123,9 +124,14 @@ export class UiWaterfallChart extends ChartElement {
   }
 
   protected override draw(ctx: DrawContext): DrawResult {
-    const { svg: root, width, height, format, animate } = ctx;
-    const layout = waterfallLayout(this.steps);
+    const { svg: root, width, height, format } = ctx;
+    const steps = Array.isArray(this.steps) ? this.steps : [];
+    const layout = waterfallLayout(
+      steps.map((step) => ({ ...step, label: String(step?.label ?? "") })),
+    );
     const bars = layout.bars;
+    // One Web Animation per bar costs seconds past a few thousand bars, and nobody can follow them.
+    const animate = ctx.animate && bars.length <= ANIMATED_BARS;
     const horizontal = this.getAttribute("orientation") === "horizontal";
     const increaseLabel = this.getAttribute("increase-label") ?? "Increase";
     const decreaseLabel = this.getAttribute("decrease-label") ?? "Decrease";
@@ -147,8 +153,8 @@ export class UiWaterfallChart extends ChartElement {
     const top = margin.top;
     const innerHeight = Math.max(40, height - margin.top - margin.bottom);
     const domain: [number, number] = [
-      resolveBound(axis.min, layout.min),
-      resolveBound(axis.max, layout.max),
+      finite(resolveBound(axis.min, layout.min), layout.min),
+      finite(resolveBound(axis.max, layout.max), layout.max),
     ];
 
     let left: number;
@@ -190,13 +196,11 @@ export class UiWaterfallChart extends ChartElement {
         ? { count: bars.length, range: [0, innerHeight], paddingInner: 0.3, paddingOuter: 0.1 }
         : { count: bars.length, range: [0, innerWidth], paddingInner: 0.32, paddingOuter: 0.16 },
     );
-    const maxChars = horizontal
-      ? Math.max(3, Math.floor((left - 14) / 6.6))
-      : Math.max(3, Math.floor(band.step / 6.4));
+    const labelRoom = horizontal ? left - 14 : band.step;
     const categoryTicks = bars.map((bar, i) => ({
       key: bar.id,
       position: band.center(i),
-      label: truncate(bar.label, maxChars),
+      label: fitLabel(bar.label, labelRoom, 11, 1),
     }));
 
     const shapes = bars.map((bar, i) => {

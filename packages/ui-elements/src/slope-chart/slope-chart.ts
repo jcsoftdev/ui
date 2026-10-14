@@ -1,5 +1,5 @@
 import { estimateTextWidth } from "@jcsoftdev/ui-core/chart/axis";
-import { DIRECTION_COLORS, directionOf, seriesColor } from "@jcsoftdev/ui-core/chart/palette";
+import { DIRECTION_COLORS, directionOf } from "@jcsoftdev/ui-core/chart/palette";
 import { linearScale } from "@jcsoftdev/ui-core/chart/scale";
 import { spreadSlopeLabels } from "@jcsoftdev/ui-core/chart/slope";
 import { adoptStyles, type DefineOptions, defineElement, rootOf } from "../internal/base.js";
@@ -12,11 +12,15 @@ import {
   type SnapshotSeries,
   svg,
   type TooltipRow,
+  type VirtualMarks,
 } from "../internal/chart-base.js";
+import { CANVAS_HEIGHT, CANVAS_MARKS, colorResolver } from "../internal/e18-canvas.js";
 import {
   AutoHeight,
   adoptPlot,
   fadeIn,
+  finite,
+  fitLabel,
   flag,
   grow,
   hitRect,
@@ -40,11 +44,19 @@ const LABEL_GAP = 17;
 const LABEL_STYLE = "font-weight:600;font-variant-numeric:tabular-nums";
 const HEADER_STYLE = "fill:var(--ink-3);font-size:11px;font-weight:700";
 
-/** Shortens `label` with an ellipsis to fit `room` pixels; empty when not even two characters fit. */
-function ellipsize(label: string, room: number, size = 12): string {
-  if (estimateTextWidth(label, size) <= room) return label;
-  const chars = Math.floor(room / (size * 0.58)) - 1;
-  return chars >= 2 ? `${label.slice(0, chars).trimEnd()}…` : "";
+/** Columns of the sorted lookup behind `hit` on the canvas layer. */
+const COLUMNS = 32;
+
+/** First index of `sorted` whose value is at least `target`. */
+function lowerBound(sorted: Float64Array, target: number): number {
+  let lo = 0;
+  let hi = sorted.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if ((sorted[mid] as number) < target) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
 }
 
 /** Index of the value closest to `target`, or -1 when there are none. */
@@ -119,14 +131,19 @@ export class UiSlopeChart extends ChartElement {
 
   /** The plot grows with the number of items unless the author fixed the height. */
   #fit(): void {
+    const natural = Math.max(260, this.items.length * (LABEL_GAP + 5) + MARGIN.top + MARGIN.bottom);
     this.#height.apply(
-      Math.max(260, this.items.length * (LABEL_GAP + 5) + MARGIN.top + MARGIN.bottom),
+      this.items.length > CANVAS_MARKS ? Math.min(natural, CANVAS_HEIGHT) : natural,
     );
   }
 
   protected override draw(ctx: DrawContext): DrawResult {
     const { svg: root, width, height, format, locale, animate } = ctx;
-    const items = this.items;
+    // An item with a NaN or infinite value cannot be placed: it is left out of the plot.
+    const items = this.items.filter(
+      (item) => Number.isFinite(item.from) && Number.isFinite(item.to),
+    );
+    const big = items.length > CANVAS_MARKS;
     const fromLabel = this.getAttribute("from-label") ?? "Before";
     const toLabel = this.getAttribute("to-label") ?? "After";
     const deltaLabel = this.getAttribute("delta-label") ?? "Change";
@@ -137,7 +154,7 @@ export class UiSlopeChart extends ChartElement {
 
     const colors = items.map((item, i) => {
       if (item.color) return item.color;
-      if (bySeries) return seriesColor(i);
+      if (bySeries) return ctx.color(i);
       const direction = directionOf(item.to - item.from);
       if (direction === "flat") return DIRECTION_COLORS.flat;
       return (direction === "up") === goodUp ? DIRECTION_COLORS.up : DIRECTION_COLORS.down;
@@ -155,14 +172,18 @@ export class UiSlopeChart extends ChartElement {
       return widest + 16;
     };
     const room = Math.min(width * (narrow ? 0.4 : 0.34), 230);
-    const leftWidth = Math.min(
-      room,
-      sideWidth((item) => item.from),
-    );
-    const rightWidth = Math.min(
-      room,
-      sideWidth((item) => item.to),
-    );
+    const leftWidth = big
+      ? 56
+      : Math.min(
+          room,
+          sideWidth((item) => item.from),
+        );
+    const rightWidth = big
+      ? 56
+      : Math.min(
+          room,
+          sideWidth((item) => item.to),
+        );
     const xL = leftWidth;
     const xR = Math.max(xL + 40, width - rightWidth);
     let lo = Number.POSITIVE_INFINITY;
@@ -171,16 +192,21 @@ export class UiSlopeChart extends ChartElement {
       lo = Math.min(lo, item.from, item.to);
       hi = Math.max(hi, item.from, item.to);
     }
-    const innerHeight = height - MARGIN.top - MARGIN.bottom;
+    // Every value equal: centre the lines instead of pinning them to an edge.
+    if (lo === hi) {
+      lo -= 1;
+      hi += 1;
+    }
+    const innerHeight = Math.max(1, height - MARGIN.top - MARGIN.bottom);
     const y = linearScale({
       domain: items.length ? [lo, hi] : [0, 1],
       range: [innerHeight, 0],
       nice: false,
     });
-    const ysFrom = items.map((item) => y.map(item.from));
-    const ysTo = items.map((item) => y.map(item.to));
-    const labelFrom = spreadSlopeLabels(ysFrom, LABEL_GAP, 0, innerHeight);
-    const labelTo = spreadSlopeLabels(ysTo, LABEL_GAP, 0, innerHeight);
+    const ysFrom = Float64Array.from(items, (item) => finite(y.map(item.from)));
+    const ysTo = Float64Array.from(items, (item) => finite(y.map(item.to)));
+    const labelFrom = big ? [] : spreadSlopeLabels(Array.from(ysFrom), LABEL_GAP, 0, innerHeight);
+    const labelTo = big ? [] : spreadSlopeLabels(Array.from(ysTo), LABEL_GAP, 0, innerHeight);
 
     // Column headers, the two axes.
     root.append(
@@ -188,12 +214,12 @@ export class UiSlopeChart extends ChartElement {
         "g",
         { "aria-hidden": "true" },
         text(
-          ellipsize(fromLabel, leftWidth + 40, 11),
+          fitLabel(fromLabel, leftWidth + 40, 11, 2),
           { x: xL, y: 12, "text-anchor": "middle" },
           HEADER_STYLE,
         ),
         text(
-          ellipsize(toLabel, rightWidth + 40, 11),
+          fitLabel(toLabel, rightWidth + 40, 11, 2),
           { x: xR, y: 12, "text-anchor": "middle" },
           HEADER_STYLE,
         ),
@@ -215,88 +241,172 @@ export class UiSlopeChart extends ChartElement {
       );
     plot.append(axes);
 
-    const marks: ChartMark[] = items.map((item, i) => {
-      const color = colors[i] as string;
-      const y1 = ysFrom[i] as number;
-      const y2 = ysTo[i] as number;
-      const group = svg("g", { "data-row": "" });
-      plot.append(group);
-      const line = svg("line", {
+    const describe = (item: SlopeItem) =>
+      `${item.label}. ${fromLabel} ${format(item.from)}, ${toLabel} ${format(item.to)}, ${deltaLabel} ${change(item)}`;
+
+    // Thousands of lines: one canvas stroke per color, a highlight line for the focused one.
+    const canvasMarks = (): VirtualMarks => {
+      const resolve = colorResolver(this.drawing);
+      const g = ctx.canvas();
+      g.save();
+      g.translate(0, MARGIN.top);
+      const paths = new Map<string, Path2D>();
+      items.forEach((_, i) => {
+        const color = colors[i] as string;
+        const path = paths.get(color) ?? new Path2D();
+        paths.set(color, path);
+        path.moveTo(xL, ysFrom[i] as number);
+        path.lineTo(xR, ysTo[i] as number);
+      });
+      g.lineWidth = 1;
+      g.globalAlpha = 0.55;
+      for (const [color, path] of paths) {
+        g.strokeStyle = resolve(color);
+        g.stroke(path);
+      }
+      g.restore();
+      const focus = svg("line", {
         "data-line": "",
-        x1: xL,
-        y1,
-        x2: xR,
-        y2,
         "stroke-linecap": "round",
         "stroke-width": 2.25,
         "aria-hidden": "true",
-        style: `stroke:${color};transform-box:fill-box;transform-origin:left center`,
       });
-      const dot = (cx: number, cy: number) =>
-        svg("circle", {
-          "data-dot": "",
-          cx,
-          cy,
-          r: 4.5,
-          "aria-hidden": "true",
-          style: `fill:${color};stroke:var(--surface);stroke-width:2`,
-        });
-      group.append(line, dot(xL, y1), dot(xR, y2));
-      if (animate)
-        grow(line, "x", i, {
-          duration: 620,
-          step: Math.min(40, 400 / Math.max(1, items.length)),
-        });
-
-      const fromText = format(item.from);
-      const toText = format(item.to);
-      const value = (content: string) =>
-        svg("tspan", { style: `fill:${color};font-weight:700` }, content);
-      const labels = svg("g", { "aria-hidden": "true", style: "pointer-events:none" });
-      labels.append(
-        svg(
-          "text",
-          {
-            "data-label": "",
-            x: xL - 12,
-            y: labelFrom[i] as number,
-            dy: "0.34em",
-            "text-anchor": "end",
-            "font-size": size,
-            style: LABEL_STYLE,
-          },
-          ellipsize(item.label, leftWidth - 16 - estimateTextWidth(fromText, size) - 8, size),
-          " ",
-          value(fromText),
-        ),
-        svg(
-          "text",
-          {
-            "data-label": "",
-            x: xR + 12,
-            y: labelTo[i] as number,
-            dy: "0.34em",
-            "text-anchor": "start",
-            "font-size": size,
-            style: LABEL_STYLE,
-          },
-          value(toText),
-          " ",
-          ellipsize(item.label, rightWidth - 16 - estimateTextWidth(toText, size) - 8, size),
-        ),
-      );
-      if (animate) fadeIn(labels, 380, 420);
-      group.append(labels);
-
-      // The keyboard stop: the box of the line.
-      const top = Math.min(y1, y2) - 8;
-      const el = hitRect(xL, top, xR - xL, Math.abs(y2 - y1) + 16);
-      group.append(el);
+      plot.append(svg("g", { "data-row": "", "aria-hidden": "true" }, focus));
       return {
-        el,
-        label: `${item.label}. ${fromLabel} ${fromText}, ${toLabel} ${toText}, ${deltaLabel} ${change(item)}`,
+        count: items.length,
+        label: (i) => describe(items[i] as SlopeItem),
+        element: (i) => {
+          focus.setAttribute("x1", String(xL));
+          focus.setAttribute("x2", String(xR));
+          focus.setAttribute("y1", String(ysFrom[i]));
+          focus.setAttribute("y2", String(ysTo[i]));
+          focus.style.stroke = colors[i] as string;
+          return focus;
+        },
       };
-    });
+    };
+
+    // Items sorted by their height at each of COLUMNS + 1 positions between the axes, built lazily.
+    const columns: Array<{ order: Uint32Array; ys: Float64Array } | undefined> = [];
+    let steepest = 0;
+    if (big)
+      for (let i = 0; i < items.length; i += 1)
+        steepest = Math.max(steepest, Math.abs((ysTo[i] as number) - (ysFrom[i] as number)));
+    const heightAt = (i: number, t: number) =>
+      (ysFrom[i] as number) + ((ysTo[i] as number) - (ysFrom[i] as number)) * t;
+    const column = (k: number) => {
+      const cached = columns[k];
+      if (cached) return cached;
+      const t = k / COLUMNS;
+      const at = Float64Array.from(items, (_, i) => heightAt(i, t));
+      const order = Uint32Array.from(items, (_, i) => i).sort(
+        (a, b) => (at[a] as number) - (at[b] as number),
+      );
+      const ys = Float64Array.from(order, (i) => at[i] as number);
+      const built = { order, ys };
+      columns[k] = built;
+      return built;
+    };
+    /** The line closest to height `ly` at `t` (0 at the first axis, 1 at the second), within `reach`. */
+    const closest = (t: number, ly: number, reach: number): number => {
+      const k = Math.round(t * COLUMNS);
+      const { order, ys } = column(k);
+      const slack = steepest * Math.abs(t - k / COLUMNS);
+      let best = -1;
+      let gap = Number.POSITIVE_INFINITY;
+      const end = Math.min(ys.length, lowerBound(ys, ly + reach + slack) + 1);
+      for (let at = Math.max(0, lowerBound(ys, ly - reach - slack) - 1); at < end; at += 1) {
+        const i = order[at] as number;
+        const d = Math.abs(heightAt(i, t) - ly);
+        if (d < gap) {
+          gap = d;
+          best = i;
+        }
+      }
+      return gap <= reach ? best : -1;
+    };
+
+    const marks: ChartMark[] | VirtualMarks = big
+      ? canvasMarks()
+      : items.map((item, i) => {
+          const color = colors[i] as string;
+          const y1 = ysFrom[i] as number;
+          const y2 = ysTo[i] as number;
+          const group = svg("g", { "data-row": "" });
+          plot.append(group);
+          const line = svg("line", {
+            "data-line": "",
+            x1: xL,
+            y1,
+            x2: xR,
+            y2,
+            "stroke-linecap": "round",
+            "stroke-width": 2.25,
+            "aria-hidden": "true",
+            style: `stroke:${color};transform-box:fill-box;transform-origin:left center`,
+          });
+          const dot = (cx: number, cy: number) =>
+            svg("circle", {
+              "data-dot": "",
+              cx,
+              cy,
+              r: 4.5,
+              "aria-hidden": "true",
+              style: `fill:${color};stroke:var(--surface);stroke-width:2`,
+            });
+          group.append(line, dot(xL, y1), dot(xR, y2));
+          if (animate)
+            grow(line, "x", i, {
+              duration: 620,
+              step: Math.min(40, 400 / Math.max(1, items.length)),
+            });
+
+          const fromText = format(item.from);
+          const toText = format(item.to);
+          const value = (content: string) =>
+            svg("tspan", { style: `fill:${color};font-weight:700` }, content);
+          const labels = svg("g", { "aria-hidden": "true", style: "pointer-events:none" });
+          labels.append(
+            svg(
+              "text",
+              {
+                "data-label": "",
+                x: xL - 12,
+                y: labelFrom[i] as number,
+                dy: "0.34em",
+                "text-anchor": "end",
+                "font-size": size,
+                style: LABEL_STYLE,
+              },
+              fitLabel(item.label, leftWidth - 16 - estimateTextWidth(fromText, size) - 8, size, 2),
+              " ",
+              value(fromText),
+            ),
+            svg(
+              "text",
+              {
+                "data-label": "",
+                x: xR + 12,
+                y: labelTo[i] as number,
+                dy: "0.34em",
+                "text-anchor": "start",
+                "font-size": size,
+                style: LABEL_STYLE,
+              },
+              value(toText),
+              " ",
+              fitLabel(item.label, rightWidth - 16 - estimateTextWidth(toText, size) - 8, size, 2),
+            ),
+          );
+          if (animate) fadeIn(labels, 380, 420);
+          group.append(labels);
+
+          // The keyboard stop: the box of the line.
+          const top = Math.min(y1, y2) - 8;
+          const el = hitRect(xL, top, xR - xL, Math.abs(y2 - y1) + 16);
+          group.append(el);
+          return { el, label: describe(item) };
+        });
 
     const rows = (item: SlopeItem, index: number): TooltipRow[] => [
       {
@@ -323,10 +433,14 @@ export class UiSlopeChart extends ChartElement {
       hit: (x, py) => {
         if (!items.length || x < 0 || x > width || py < 0 || py > height) return -1;
         const ly = py - MARGIN.top;
+        if (big) {
+          const t = Math.min(1, Math.max(0, (x - xL) / (xR - xL)));
+          return closest(t, ly, x <= xL || x >= xR ? Number.POSITIVE_INFINITY : 16);
+        }
         if (x <= xL) return nearest(labelFrom, ly);
         if (x >= xR) return nearest(labelTo, ly);
         const t = (x - xL) / (xR - xL);
-        const onLine = ysFrom.map((from, i) => from + ((ysTo[i] as number) - from) * t);
+        const onLine = Array.from(ysFrom, (from, i) => from + ((ysTo[i] as number) - from) * t);
         const best = nearest(onLine, ly);
         return Math.abs((onLine[best] as number) - ly) <= 16 ? best : -1;
       },

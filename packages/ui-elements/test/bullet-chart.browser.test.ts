@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { userEvent } from "vitest/browser";
 import { defineBulletChart } from "../src/bullet-chart/bullet-chart.ts";
 import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
 import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
@@ -13,7 +14,7 @@ import {
   violations,
   walkKeys,
 } from "./e18-fixture.ts";
-import { ax } from "./setup.ts";
+import { ax, wait } from "./setup.ts";
 
 const ITEMS = [
   { label: "Revenue", actual: 270, target: 300, ranges: [200, 260, 320] },
@@ -111,5 +112,89 @@ describe("ui-bullet-chart", () => {
     await settle();
     expect(c.chartSnapshot?.series[0]?.text[0]).toBe("1.234,5");
     expect(await violations(c)).toEqual([]);
+  });
+
+  it("keeps NaN, Infinity and missing values out of the markup", async () => {
+    const c = await mountChart();
+    c.items = [
+      { label: "Nan", actual: Number.NaN, target: Number.NaN, ranges: [10, Number.NaN] },
+      { label: "Inf", actual: Number.POSITIVE_INFINITY, target: Number.NEGATIVE_INFINITY },
+      { label: "Missing" } as unknown as (typeof ITEMS)[number],
+      { label: "Fine", actual: 5, target: 8, ranges: [4, 10] },
+    ];
+    for (const attrs of ["", 'orientation="vertical"', 'scale="shared"']) {
+      c.removeAttribute("orientation");
+      c.removeAttribute("scale");
+      for (const attr of attrs.split(" ").filter(Boolean)) {
+        const [name, value] = attr.split("=");
+        c.setAttribute(name as string, (value as string).replaceAll('"', ""));
+      }
+      await settle();
+      expect(marks(c)).toHaveLength(4);
+      expect(svgOf(c).outerHTML).not.toMatch(/NaN|Infinity/);
+    }
+    expect(c.chartSnapshot?.series[0]?.text[0]).toBe("0");
+  });
+
+  it("clamps a negative actual and target inside the plot", async () => {
+    const c = await mountChart();
+    c.items = [
+      { label: "Down", actual: -50, target: -20, ranges: [100] },
+      { label: "Up", actual: 400, target: 900, ranges: [100] },
+    ];
+    await settle();
+    const plotWidth = svgOf(c).getBoundingClientRect().width;
+    for (const bar of c.querySelectorAll("[data-bar]")) {
+      const x = Number(bar.getAttribute("x"));
+      const width = Number(bar.getAttribute("width"));
+      expect(width).toBeGreaterThanOrEqual(0);
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(x + width).toBeLessThanOrEqual(plotWidth);
+    }
+    for (const tick of c.querySelectorAll("g[data-row] line")) {
+      expect(Number(tick.getAttribute("x1"))).toBeGreaterThanOrEqual(0);
+    }
+    c.setAttribute("orientation", "vertical");
+    await settle();
+    for (const bar of c.querySelectorAll("[data-bar]")) {
+      expect(Number(bar.getAttribute("y"))).toBeGreaterThanOrEqual(0);
+      expect(Number(bar.getAttribute("height"))).toBeGreaterThan(0);
+    }
+    expect(svgOf(c).outerHTML).not.toMatch(/NaN|Infinity|(width|height)="-/);
+  });
+
+  it("draws 20k rows on the canvas layer with virtual marks", async () => {
+    const rows = Array.from({ length: 20_000 }, (_, i) => ({
+      label: `KPI ${i}`,
+      actual: (i * 13) % 100,
+      target: (i * 7) % 100,
+      ranges: [30, 60, 100],
+    }));
+    const started = performance.now();
+    const c = await chart("ui-bullet-chart", {
+      attrs: 'value-format="integer"',
+      inner: "<ui-chart-tooltip></ui-chart-tooltip>",
+      setup: (el) => {
+        el.items = rows;
+      },
+    });
+    const elapsed = performance.now() - started;
+    console.info(`bullet 20k rows: ${Math.round(elapsed)} ms`);
+    expect(elapsed).toBeLessThan(1500);
+    expect(c.querySelector("canvas")).toBeTruthy();
+    expect(svgOf(c).querySelectorAll("*").length).toBeLessThan(100);
+    expect(c.querySelector("[role=listbox]")).toBeTruthy();
+
+    // Height 640, top 8, inner 624: the middle of the plot is row 10000.
+    const seen = await sweep(c, [[200, 8 + 312]]);
+    expect(seen).toHaveLength(1);
+    expect(Math.abs((seen[0] as number) - 10_000)).toBeLessThanOrEqual(1);
+    expect(c.querySelector("ui-chart-tooltip")?.textContent).toContain(`KPI ${seen[0]}`);
+
+    await userEvent.tab();
+    await wait(80);
+    expect(c.hover?.index).toBe(0);
+    await userEvent.keyboard("{ArrowDown}");
+    expect(c.hover?.index).toBe(1);
   });
 });

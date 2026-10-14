@@ -1,9 +1,9 @@
 import { estimateTextWidth } from "@jcsoftdev/ui-core/chart/axis";
 import {
-  buildCategoryAxis,
-  fullCategoryLabel,
+  allDates,
+  buildCategoryAxis as buildPointAxis,
   type XValue,
-} from "@jcsoftdev/ui-core/chart/category-axis-time";
+} from "@jcsoftdev/ui-core/chart/category-axis";
 import { resolveFormat, type ValueFormat } from "@jcsoftdev/ui-core/chart/format";
 import { areaPath, type Curve, linePath, type Point } from "@jcsoftdev/ui-core/chart/path";
 import { linearScale } from "@jcsoftdev/ui-core/chart/scale";
@@ -36,6 +36,38 @@ import {
 } from "../internal/e18-plot.js";
 
 export type { XValue };
+
+/** The time-axis stack (calendar ticks, date formatting): fetched only when categories are dates. */
+type TimeAxis = typeof import("@jcsoftdev/ui-core/chart/category-axis-time");
+let timeAxis: TimeAxis | undefined;
+let timeAxisLoad: Promise<TimeAxis> | undefined;
+const loadTimeAxis = (): Promise<TimeAxis> =>
+  (timeAxisLoad ??= import("@jcsoftdev/ui-core/chart/category-axis-time").then(
+    (module) => (timeAxis = module),
+  ));
+
+const ISO_DATE =
+  /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+
+/** Dates when EVERY category is an ISO date string (the JSON attribute cannot carry a `Date`). */
+function isoDates(values: readonly XValue[]): Date[] | undefined {
+  if (!values.length) return undefined;
+  const dates: Date[] = [];
+  for (const value of values) {
+    if (typeof value !== "string" || !ISO_DATE.test(value)) return undefined;
+    const date = new Date(value.replace(" ", "T"));
+    if (Number.isNaN(date.getTime())) return undefined;
+    dates.push(date);
+  }
+  return dates;
+}
+
+const validDates = (values: readonly XValue[]): boolean =>
+  allDates(values) && values.every((value) => !Number.isNaN((value as Date).getTime()));
+
+/** `value` when it is a finite number; anything else leaves a gap. */
+const real = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
 
 export interface RangeBand {
   id: string;
@@ -97,6 +129,7 @@ export class UiRangeAreaChart extends ChartElement {
   #xFormat: ((value: XValue) => string) | undefined;
   readonly #height = new AutoHeight(this);
   #paint: ((index: number | null) => void) | undefined;
+  #parsed: { raw: string | null; value: readonly XValue[] } | undefined;
 
   constructor() {
     super();
@@ -106,10 +139,18 @@ export class UiRangeAreaChart extends ChartElement {
   }
 
   get categories(): readonly XValue[] {
-    return this.#categories ?? jsonAttr<XValue[]>(this, "categories") ?? [];
+    if (this.#categories) return this.#categories;
+    const raw = this.getAttribute("categories");
+    if (this.#parsed?.raw !== raw) {
+      const list = jsonAttr<XValue[]>(this, "categories");
+      const value = Array.isArray(list) ? list : [];
+      this.#parsed = { raw, value: isoDates(value) ?? value };
+    }
+    return (this.#parsed as { value: readonly XValue[] }).value;
   }
   set categories(value: readonly XValue[]) {
     this.#categories = value;
+    this.#prime();
     this.requestDraw();
   }
   get bands(): readonly RangeBand[] {
@@ -136,14 +177,26 @@ export class UiRangeAreaChart extends ChartElement {
 
   override connectedCallback(): void {
     this.#height.apply(300);
+    this.#prime();
     super.connectedCallback();
+  }
+
+  override attributeChangedCallback(name: string): void {
+    if (name === "categories") this.#prime();
+    super.attributeChangedCallback(name);
+  }
+
+  /** Starts fetching the time-axis chunk as soon as the categories turn out to be dates. */
+  #prime(): void {
+    if (timeAxis || !this.isConnected || !this.categories.some((c) => c instanceof Date)) return;
+    loadTimeAxis().then(() => this.requestDraw());
   }
 
   protected override isEmpty(): boolean {
     const { categories, bands } = this;
     for (const band of bands)
       for (let i = 0; i < categories.length; i += 1)
-        if (band.min[i] != null && band.max[i] != null) return false;
+        if (real(band.min?.[i]) != null && real(band.max?.[i]) != null) return false;
     return true;
   }
 
@@ -165,21 +218,27 @@ export class UiRangeAreaChart extends ChartElement {
     const fmt = (band: RangeBand) =>
       band.format ? resolveFormat(band.format, { locale, currency }) : ctx.format;
     const colorOf = (band: RangeBand) => ctx.color(bands.indexOf(band), band.color);
-    const titleOf = (index: number) => fullCategoryLabel(categories[index] as XValue, dateOptions);
+    const labelOf = (value: XValue) =>
+      timeAxis && value instanceof Date && !Number.isNaN(value.getTime())
+        ? timeAxis.fullCategoryLabel(value, dateOptions)
+        : String(value);
+    const titleOf = (index: number) => labelOf(categories[index] as XValue);
+    if (!timeAxis && categories.some((value) => value instanceof Date))
+      loadTimeAxis().then(() => this.requestDraw());
 
     // Value scale: the domain follows the visible bands only.
     let lo = Number.POSITIVE_INFINITY;
     let hi = Number.NEGATIVE_INFINITY;
     let seen = false;
-    const include = (value: number | null | undefined) => {
-      if (value == null) return;
+    const include = (value: unknown) => {
+      if (typeof value !== "number" || !Number.isFinite(value)) return;
       seen = true;
       if (value < lo) lo = value;
       if (value > hi) hi = value;
     };
     for (const band of visible)
       for (let i = 0; i < categories.length; i += 1) {
-        if (band.min[i] != null && band.max[i] != null) {
+        if (real(band.min?.[i]) != null && real(band.max?.[i]) != null) {
           include(band.min[i]);
           include(band.max[i]);
         }
@@ -205,12 +264,23 @@ export class UiRangeAreaChart extends ChartElement {
     for (const tick of yTicks) widest = Math.max(widest, estimateTextWidth(tick.label));
     const left = widest + 18;
     const innerWidth = Math.max(40, width - left - MARGIN.right);
-    const axis = buildCategoryAxis(categories, innerWidth, {
-      mode: xScale === "point" ? "point" : "time",
-      format: this.#xFormat,
-      locale,
-      timeZone,
-    });
+    const axis =
+      timeAxis && xScale !== "point" && validDates(categories)
+        ? timeAxis.buildCategoryAxis(categories, innerWidth, {
+            mode: "time",
+            format: this.#xFormat,
+            locale,
+            timeZone,
+          })
+        : buildPointAxis(categories, innerWidth, {
+            mode: "point",
+            format:
+              this.#xFormat ??
+              ((value) =>
+                timeAxis && value instanceof Date && !Number.isNaN(value.getTime())
+                  ? timeAxis.defaultCategoryLabel(value, dateOptions)
+                  : String(value)),
+          });
 
     // Geometry of every visible band.
     const geometry = visible.map((band) => {
@@ -219,8 +289,8 @@ export class UiRangeAreaChart extends ChartElement {
       const mean: Array<Point | null> = [];
       for (let i = 0; i < categories.length; i += 1) {
         const x = axis.positions[i] as number;
-        const min = band.min[i];
-        const max = band.max[i];
+        const min = real(band.min?.[i]);
+        const max = real(band.max?.[i]);
         if (min == null || max == null) {
           top.push(null);
           bottom.push({ x, y: innerHeight });
@@ -228,7 +298,7 @@ export class UiRangeAreaChart extends ChartElement {
           top.push({ x, y: y.map(max) });
           bottom.push({ x, y: y.map(min) });
         }
-        const m = band.mean?.[i];
+        const m = real(band.mean?.[i]);
         mean.push(m == null ? null : { x, y: y.map(m) });
       }
       return { band, color: colorOf(band), top, bottom, mean: band.mean ? mean : null };
@@ -333,10 +403,10 @@ export class UiRangeAreaChart extends ChartElement {
     const rangeText = (index: number) => {
       const parts = visible.map((band) => {
         const f = fmt(band);
-        const min = band.min[index];
-        const max = band.max[index];
+        const min = real(band.min?.[index]);
+        const max = real(band.max?.[index]);
         if (min == null || max == null) return `${band.name}: -`;
-        const m = band.mean?.[index];
+        const m = real(band.mean?.[index]);
         return `${band.name}: ${minLabel} ${f(min)}, ${maxLabel} ${f(max)}${
           showMean && m != null ? `, ${meanLabel} ${f(m)}` : ""
         }`;
@@ -372,11 +442,11 @@ export class UiRangeAreaChart extends ChartElement {
         const rows: TooltipRow[] = [];
         let anchor = innerHeight;
         for (const band of visible) {
-          const min = band.min[index];
-          const max = band.max[index];
+          const min = real(band.min?.[index]);
+          const max = real(band.max?.[index]);
           if (min == null || max == null) continue;
           const f = fmt(band);
-          const m = band.mean?.[index];
+          const m = real(band.mean?.[index]);
           anchor = Math.min(anchor, y.map(max));
           rows.push({
             id: band.id,
@@ -405,8 +475,11 @@ export class UiRangeAreaChart extends ChartElement {
               name: `${band.name} ${label}`,
               color: colorOf(band),
               shape: "square",
-              values: categories.map((_, i) => data?.[i] ?? null),
-              text: categories.map((_, i) => (data?.[i] == null ? "" : f(data[i] as number))),
+              values: categories.map((_, i) => real(data?.[i])),
+              text: categories.map((_, i) => {
+                const v = real(data?.[i]);
+                return v == null ? "" : f(v);
+              }),
             });
           column("min", minLabel, band.min);
           column("max", maxLabel, band.max);
@@ -415,7 +488,7 @@ export class UiRangeAreaChart extends ChartElement {
         return {
           title: this.getAttribute("label") ?? "Range area chart",
           categoryHeader: this.getAttribute("category-label") ?? "Category",
-          categories: categories.map((value) => fullCategoryLabel(value, dateOptions)),
+          categories: categories.map(labelOf),
           categoryValues: categories,
           series,
           legend: bands.map((band) => ({

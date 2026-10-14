@@ -45,6 +45,21 @@ const mountChart = (attrs = "", width = 560, steps: typeof STEPS | null = STEPS)
   });
 
 describe("ui-waterfall-chart", () => {
+  // First on purpose: once an earlier test reads the accessibility tree (`ax`), CDP crashes on 5000 marks.
+  it("draws 5k steps quickly", async () => {
+    const steps = Array.from({ length: 5000 }, (_, i) =>
+      i === 0
+        ? { label: "s0", value: 1000, type: "start" as const }
+        : { label: `s${i}`, value: (i % 7) - 3 },
+    );
+    const start = performance.now();
+    const c = await mountChart("", 560, steps as typeof STEPS);
+    const ms = performance.now() - start;
+    console.log(`waterfall 5k steps: ${Math.round(ms)} ms`);
+    expect(marks(c)).toHaveLength(5000);
+    expect(ms).toBeLessThan(2500);
+  });
+
   it("names each step with its change and running total, and publishes the key", async () => {
     const c = await mountChart();
     expect(await ax("group", "Test chart")).toBeTruthy();
@@ -113,5 +128,30 @@ describe("ui-waterfall-chart", () => {
     );
     expect(marks(c)).toHaveLength(2);
     expect(c.chartSnapshot?.series[1]?.text[1]).toBe("-200");
+  });
+  it("draws non-finite step values as zero-height deltas without NaN in the SVG", async () => {
+    const c = await mountChart("", 560, [
+      { label: "Open", value: 100, type: "start" },
+      { label: "Bad", value: Number.NaN },
+      { label: "Inf", value: Number.POSITIVE_INFINITY },
+      { label: "Missing", value: undefined },
+      { label: "Up", value: 20 },
+      { label: "End", type: "total" },
+    ] as typeof STEPS);
+    c.yAxis = { min: () => Number.NaN, max: () => Number.POSITIVE_INFINITY };
+    await settle();
+    expect(svgOf(c).outerHTML).not.toMatch(/NaN|Infinity/);
+    expect(marks(c)).toHaveLength(6);
+    expect(c.chartSnapshot?.series[1]?.text.at(-1)).toBe("120");
+  });
+
+  it("shortens long labels with an ellipsis that fits the band", async () => {
+    const c = await mountChart("", 300, [
+      { label: "A very long category name indeed", value: 10, type: "start" },
+      { label: "Another extremely long label here", value: 5 },
+      { label: "x", value: 5 },
+    ] as typeof STEPS);
+    const texts = [...svgOf(c).querySelectorAll("text")].map((t) => t.textContent ?? "");
+    expect(texts.some((t) => t.endsWith("…"))).toBe(true);
   });
 });

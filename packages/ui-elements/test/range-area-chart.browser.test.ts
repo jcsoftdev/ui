@@ -128,4 +128,79 @@ describe("ui-range-area-chart", () => {
     await settle();
     expect(c.querySelector("svg [data-series]")).toBeNull();
   });
+  it("never writes NaN or Infinity to the SVG, treating non-finite values as gaps", async () => {
+    const c = await mountChart();
+    c.categories = ["a", "b", "c", "d"];
+    c.bands = [
+      {
+        id: "a",
+        name: "A",
+        min: [1, Number.NaN, 3, Number.NEGATIVE_INFINITY],
+        max: [5, 6, Number.POSITIVE_INFINITY, 8],
+        mean: [3, Number.NaN, undefined as unknown as number, 5],
+      },
+      { id: "b", name: "B", min: [Number.NaN, Number.NaN], max: undefined as unknown as number[] },
+    ];
+    await settle();
+    const html = svgOf(c).outerHTML;
+    expect(html).not.toMatch(/NaN|Infinity/);
+    expect(svgOf(c).querySelector("[data-series] path")).not.toBeNull();
+    expect(JSON.stringify(c.chartSnapshot)).not.toMatch(/NaN|Infinity/);
+  });
+
+  it("reads ISO date strings from the categories attribute as a time axis", async () => {
+    const c = await chart("ui-range-area-chart", {
+      attrs: `locale="de-DE" time-zone="UTC" value-format="integer" categories='["2026-01-05","2026-01-06","2026-01-12"]' bands='[{"id":"a","name":"A","min":[1,2,3],"max":[4,5,6]}]'`,
+    });
+    await settle();
+    const labels = c.chartSnapshot?.categories ?? [];
+    const viaDates = await chart("ui-range-area-chart", {
+      attrs: 'locale="de-DE" time-zone="UTC" value-format="integer"',
+      setup: (d) => {
+        d.categories = ["2026-01-05", "2026-01-06", "2026-01-12"].map(
+          (v) => new Date(`${v}T00:00:00Z`),
+        );
+        d.bands = [{ id: "a", name: "A", min: [1, 2, 3], max: [4, 5, 6] }];
+      },
+    });
+    expect(labels).toHaveLength(3);
+    expect(labels).toEqual(viaDates.chartSnapshot?.categories);
+    expect(labels[0]).toMatch(/2026/);
+    const ticks = [...svgOf(c).querySelectorAll("g[aria-hidden] text")].map((t) => t.textContent);
+    expect(ticks.join(" ")).toMatch(/\d/);
+    // A time axis spaces 2026-01-12 further than 2026-01-06; a point axis would not.
+    const xs = marks(c).map((m) => m.getBoundingClientRect().left);
+    expect((xs[2] as number) - (xs[1] as number)).toBeGreaterThan(
+      ((xs[1] as number) - (xs[0] as number)) * 3,
+    );
+    expect(svgOf(c).outerHTML).not.toMatch(/NaN|Infinity/);
+  });
+
+  it("keeps plain strings that merely look similar as point categories", async () => {
+    const c = await chart("ui-range-area-chart", {
+      attrs: `categories='["2026-01-05","soon"]' bands='[{"id":"a","name":"A","min":[1,2],"max":[4,5]}]'`,
+    });
+    expect(c.chartSnapshot?.categories).toEqual(["2026-01-05", "soon"]);
+  });
+
+  it("draws 20k categories quickly", async () => {
+    const n = 20000;
+    const categories = Array.from({ length: n }, (_, i) => `c${i}`);
+    const c = await mountChart();
+    const start = performance.now();
+    c.categories = categories;
+    c.bands = [
+      {
+        id: "a",
+        name: "A",
+        min: categories.map((_, i) => i % 50),
+        max: categories.map((_, i) => 60 + (i % 50)),
+      },
+    ];
+    await settle();
+    const ms = performance.now() - start;
+    console.log(`range-area 20k categories: ${Math.round(ms)} ms`);
+    expect(svgOf(c).querySelector("[data-series]")).not.toBeNull();
+    expect(ms).toBeLessThan(2500);
+  });
 });
