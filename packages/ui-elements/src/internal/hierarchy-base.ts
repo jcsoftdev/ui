@@ -29,7 +29,6 @@ import {
   type HoverContent,
   type HoverInfo,
 } from "./chart-base.js";
-import { easeOutCubic } from "./chart-text.js";
 import { numberAttr } from "./e5-forms.js";
 import css from "./hierarchy.css.js";
 import {
@@ -44,6 +43,7 @@ import {
   pruneTree,
   shareOf,
 } from "./hierarchy-model.js";
+import type { Zoom, ZoomHost } from "./hierarchy-zoom.js";
 
 export { fitLabel } from "./chart-text.js";
 export { numberAttr as num } from "./e5-forms.js";
@@ -86,9 +86,6 @@ const parseData = (text: string | null): HierarchyDatum | undefined => {
     return undefined;
   }
 };
-
-/** A pointer that moves farther than this (px) between down and up is a swipe, not a tap. */
-const TAP_SLOP = 10;
 
 const EMPTY: HierarchyDatum = { name: "", children: [] };
 
@@ -144,10 +141,30 @@ export abstract class HierarchyChart extends ChartElement {
   #focusId: string | null = null;
   #refocus: string | null = null;
   #last: DrawResult | undefined;
-  #frame = 0;
-  #crumb: { el: HTMLElement; stop: AbortController } | undefined;
-  #crumbItems: unknown;
-  #down: { x: number; y: number } | undefined;
+  #zoom: Zoom | undefined;
+  #zoomLoad: Promise<void> | undefined;
+  /** What the zoom module asks of this chart. */
+  readonly #host: ZoomHost = {
+    zoomTo: (id) => this.zoomTo(id),
+    zoomOut: () => this.zoomOut(),
+    drillable: () => this.drillable,
+    canExit: () => !!this.model().focus.parent,
+    pinned: () => this.selected !== null,
+    center: (x, y) => this.isCenter(x, y),
+    tapTarget: (x, y, el) => {
+      const index = this.#last?.hit?.(x, y, el, 44) ?? -1;
+      const node = this.nodes[index];
+      const target = node && this.drillTarget(node);
+      return index >= 0 && index === this.selected && target && target.children.length > 0
+        ? target.id
+        : null;
+    },
+    touch: (on) => {
+      this.#touch = on;
+    },
+    animate: () => this.tweening,
+    redraw: () => this.requestDraw("transient"),
+  };
 
   constructor() {
     super();
@@ -346,19 +363,10 @@ export abstract class HierarchyChart extends ChartElement {
 
   /** Runs `step(t)` with `t` easing from 0 to 1 over `duration` ms, one transient frame each; at once when motion is off. */
   protected play(step: (t: number) => void, duration = 650): void {
-    cancelAnimationFrame(this.#frame);
     if (!this.tweening) {
+      this.#zoom?.cancel();
       step(1);
-      return;
-    }
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start) / duration));
-      step(easeOutCubic(t));
-      this.requestDraw("transient");
-      if (t < 1) this.#frame = requestAnimationFrame(tick);
-    };
-    this.#frame = requestAnimationFrame(tick);
+    } else this.#withZoom((zoom) => zoom.play(step, duration));
   }
 
   /** Details of `node` for the tooltip, anchored at (`x`, `y`). */
@@ -477,11 +485,15 @@ export abstract class HierarchyChart extends ChartElement {
       el.toggleAttribute("data-lit", !!ids?.has(el.getAttribute("data-node") ?? ""));
   }
 
-  /**
-   * Wires the breadcrumb (named by `breadcrumb`, or the one inside the chart) and gives it the path.
-   * Runs on connect, on every draw and on every zoom; a breadcrumb element that is not defined yet
-   * gets the path once it is, whichever was defined first.
-   */
+  /** Runs `use` with the zoom module (gestures, breadcrumb, tween), loading it the first time. */
+  #withZoom(use: (zoom: Zoom) => void): void {
+    if (this.#zoom) return use(this.#zoom);
+    (this.#zoomLoad ??= import("./hierarchy-zoom.js").then((mod) => {
+      this.#zoom = new mod.Zoom(this.#host);
+    })).then(() => this.#zoom && use(this.#zoom));
+  }
+
+  /** Gives the breadcrumb (named by `breadcrumb`, or the one inside the chart) the open path. */
   #syncCrumb(): void {
     const id = this.crumbId;
     const el =
@@ -490,99 +502,14 @@ export abstract class HierarchyChart extends ChartElement {
         : id
           ? byId(this, id)
           : this.querySelector<HTMLElement>('[data-ui="chart-breadcrumb"]');
-    if (el !== this.#crumb?.el) {
-      this.#crumb?.stop.abort();
-      this.#crumb = undefined;
-      this.#crumbItems = undefined;
-      if (el) {
-        const stop = new AbortController();
-        this.#crumb = { el, stop };
-        el.addEventListener(
-          "select",
-          (event) => {
-            const target = (event as CustomEvent<{ id?: string }>).detail?.id;
-            if (target && event.target === el) this.zoomTo(target);
-          },
-          { signal: stop.signal },
-        );
-        if (el.localName.includes("-") && !customElements.get(el.localName))
-          customElements.whenDefined(el.localName).then(() => {
-            if (this.#crumb?.el === el) this.#syncCrumb();
-          });
-      }
-    }
-    if (!el || !("items" in el)) return;
-    const items = this.model().path.map((node) => ({ id: node.id, name: node.name }));
-    const same =
-      this.#crumbItems === (el as HTMLElement & { items: unknown }).items &&
-      JSON.stringify(this.#crumbItems) === JSON.stringify(items);
-    if (same) return;
-    if (!el.hasAttribute("label")) el.setAttribute("label", this.strings.breadcrumb);
-    this.#crumbItems = items;
-    (el as HTMLElement & { items: unknown }).items = items;
-  }
-
-  /** Pointer position in drawing units. */
-  #local(svg: SVGSVGElement, event: PointerEvent | MouseEvent): [number, number] {
-    const box = svg.getBoundingClientRect();
-    const view = svg.viewBox.baseVal;
-    return [
-      (event.clientX - box.left) * (view.width / (box.width || 1)),
-      (event.clientY - box.top) * (view.height / (box.height || 1)),
-    ];
+    if (!el && !this.#zoom) return;
+    this.#withZoom((zoom) => zoom.crumb(el, this.model().path, this.strings.breadcrumb));
   }
 
   protected override setup(svg: SVGSVGElement, signal: AbortSignal): void {
-    const opts = { signal };
-    // The hole of a sunburst, or the first band of an icicle, zooms out (a click is not a selection).
-    svg.addEventListener(
-      "click",
-      (event) => {
-        if (!this.drillable || event.detail === 0) return;
-        const [x, y] = this.#local(svg, event);
-        if (!this.isCenter(x, y)) return;
-        event.preventDefault();
-        this.zoomOut();
-      },
-      opts,
-    );
-    svg.addEventListener(
-      "pointerdown",
-      (event) => {
-        this.#touch = event.pointerType !== "mouse";
-        this.#down = { x: event.clientX, y: event.clientY };
-      },
-      opts,
-    );
-    // A second tap on the pinned node opens it (the first tap pins). A swipe that ends on it does not.
-    svg.addEventListener(
-      "pointerup",
-      (event) => {
-        const down = this.#down;
-        this.#down = undefined;
-        if (event.pointerType === "mouse" || !this.drillable) return;
-        if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > TAP_SLOP) return;
-        const [x, y] = this.#local(svg, event);
-        const index = this.#last?.hit?.(x, y, event.target as Element, 44) ?? -1;
-        const node = this.nodes[index];
-        const target = node && this.drillTarget(node);
-        if (index < 0 || index !== this.selected || !target || target.children.length === 0) return;
-        event.preventDefault();
-        this.zoomTo(target.id);
-      },
-      opts,
-    );
-    // Escape goes up a level when no mark is pinned (a pinned mark takes Escape first).
-    svg.addEventListener(
-      "keydown",
-      (event) => {
-        if (event.key !== "Escape" || this.selected !== null || !this.drillable) return;
-        if (!this.model().focus.parent) return;
-        event.preventDefault();
-        this.zoomOut();
-      },
-      opts,
-    );
+    this.#withZoom((zoom) => {
+      if (!signal.aborted) zoom.gestures(svg, signal);
+    });
   }
 
   /** Called by `nav` when `parent` leaves the open node. */
@@ -598,9 +525,8 @@ export abstract class HierarchyChart extends ChartElement {
   }
 
   override disconnectedCallback(): void {
-    cancelAnimationFrame(this.#frame);
-    this.#crumb?.stop.abort();
-    this.#crumb = undefined;
+    this.#zoom?.cancel();
+    this.#zoom?.crumb(null, [], "");
     super.disconnectedCallback();
   }
 
