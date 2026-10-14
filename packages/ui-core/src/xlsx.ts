@@ -37,6 +37,11 @@ export interface XlsxSheet {
   rows: readonly (readonly XlsxCellValue[])[];
   /** Keeps the header row in view while scrolling (true by default). */
   freezeHeader?: boolean;
+  /**
+   * Outline level (0 to 7) of each row in `rows`, to group rows so Excel can collapse them. A group
+   * header row has the level of its group and the rows below it a deeper one.
+   */
+  outline?: readonly number[];
 }
 
 export interface XlsxWorkbook {
@@ -275,18 +280,26 @@ function sheetXml(sheet: XlsxSheet, styles: Styles, strings: SharedStrings): str
         );
       }
     }
-    return cells.length ? `<row r="${r}">${cells.join("")}</row>` : `<row r="${r}"/>`;
+    const level = Math.min(7, Math.max(0, Math.trunc(sheet.outline?.[index] ?? 0)));
+    const attr = level > 0 ? ` outlineLevel="${level}"` : "";
+    return cells.length ? `<row r="${r}"${attr}>${cells.join("")}</row>` : `<row r="${r}"${attr}/>`;
   });
 
   const pane = freeze
     ? '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/><selection pane="bottomLeft"/>'
     : "";
+  let maxLevel = 0;
+  for (const level of sheet.outline ?? [])
+    maxLevel = Math.max(maxLevel, Math.min(7, Math.trunc(level) || 0));
   const cellsRef = `A1:${columnName(Math.max(0, cols - 1))}${lastRow}`;
   return (
     `${XML_HEAD}<worksheet xmlns="${NS_MAIN}" xmlns:r="${NS_REL}">` +
+    (maxLevel > 0 ? '<sheetPr><outlinePr summaryBelow="0"/></sheetPr>' : "") +
     `<dimension ref="${cellsRef}"/>` +
     `<sheetViews><sheetView workbookViewId="0">${pane}</sheetView></sheetViews>` +
-    '<sheetFormatPr defaultRowHeight="15"/>' +
+    (maxLevel > 0
+      ? `<sheetFormatPr defaultRowHeight="15" outlineLevelRow="${maxLevel}"/>`
+      : '<sheetFormatPr defaultRowHeight="15"/>') +
     (cols
       ? `<cols>${widths.map((w, c) => `<col min="${c + 1}" max="${c + 1}" width="${w}" customWidth="1"/>`).join("")}</cols>`
       : "") +

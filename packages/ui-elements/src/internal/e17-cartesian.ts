@@ -3,7 +3,6 @@
 // a crosshair, drag-to-zoom and an overview brush. The four elements are presets of it, the way
 // the React kit's `BarChart`, `LineChart`, `AreaChart` and `ComboChart` are presets of
 // `CartesianChart`.
-import { sharedSampleIndices } from "@jcsoftdev/ui-core/chart/downsample";
 import {
   formatNumber,
   formatPercent,
@@ -12,8 +11,6 @@ import {
   type ValueFormat,
 } from "@jcsoftdev/ui-core/chart/format";
 import type { Curve } from "@jcsoftdev/ui-core/chart/path";
-import { pointScale } from "@jcsoftdev/ui-core/chart/scale";
-import { dayOfMonth, formatDate, shortMonth } from "@jcsoftdev/ui-core/chart/scale-time";
 import type { StackMode } from "@jcsoftdev/ui-core/chart/stack";
 import { adoptStyles, emit, rootOf, uid } from "./base.js";
 import {
@@ -40,16 +37,24 @@ import {
 import css from "./e17-chart.css.js";
 import {
   type AxisSpec,
+  type BarKit,
+  BRUSH_GAP,
+  BRUSH_HEIGHT,
   type CartesianLayout,
+  type ChartAnnotation,
   computeLayout,
+  type LineKit,
   type MarkKind,
   type ResolvedSeries,
   type SeriesGeometry,
   type ValueAxisOptions,
   type XValue,
 } from "./e17-layout.js";
+import type { TimeKit } from "./e17-time.js";
+import { cssColor, maxOf, minOf, numberAttr } from "./e17-util.js";
+import type { IndexRange, Zoom } from "./e17-zoom.js";
 
-export type { AxisSpec, MarkKind, ValueAxisOptions, XValue };
+export type { AxisSpec, ChartAnnotation, MarkKind, ValueAxisOptions, XValue };
 
 /** One series. Bar charts take `ranges` (floating bars), `colors` and `stackGroup`. */
 export interface CartesianSeries {
@@ -88,14 +93,18 @@ const DEFAULT_COPY: CartesianLabels = {
   category: "Category",
 };
 
-const BRUSH_HEIGHT = 52;
-const BRUSH_GAP = 12;
 const DEFAULT_MAX_POINTS = 2000;
 /** Above this many categories the marks are virtual (named on demand, no element each). */
 const VIRTUAL_MARKS = 150;
 const EASE = "cubic-bezier(.22,1,.36,1)";
 
-type IndexRange = readonly [number, number];
+const KINDS: ReadonlySet<string> = new Set<MarkKind>(["line", "area", "column"]);
+const warned = new Set<string>();
+const warnOnce = (message: string) => {
+  if (warned.has(message)) return;
+  warned.add(message);
+  console.warn(message);
+};
 
 const shapeOf = (kind: MarkKind, dashed: boolean): MarkShape =>
   kind === "line" ? (dashed ? "dashed" : "line") : "square";
@@ -138,8 +147,17 @@ export abstract class CartesianElement extends ChartElement {
   xFormat: ((value: XValue) => string) | undefined;
   copy: Partial<CartesianLabels> = {};
 
+  /** Column geometry and drawing; the bar and combo entries supply them, the others never load them. */
+  protected readonly barKit: BarKit | undefined = undefined;
+  /** Line and area geometry, drawing and downsampling; the line, area and combo entries supply it. */
+  protected readonly lineKit: LineKit | undefined = undefined;
+  protected paintBars(_plot: SVGGElement, _layout: CartesianLayout): SVGElement[] {
+    return [];
+  }
+
   #categories: readonly XValue[] = [];
   #series: readonly CartesianSeries[] = [];
+  #annotations: readonly ChartAnnotation[] = [];
   #range: IndexRange | null = null;
   #rangeTotal = 0;
   #layout: CartesianLayout | undefined;
@@ -152,15 +170,16 @@ export abstract class CartesianElement extends ChartElement {
   } | null = null;
   #plot: SVGGElement | undefined;
   #defs: SVGDefsElement | undefined;
-  #mini: SVGGElement | undefined;
-  #selection: { from: number; to: number } | null = null;
-  #dragFrom: number | null = null;
-  #dragged = false;
-  #slider: HTMLElement | undefined;
-  #reset: HTMLButtonElement | undefined;
-  #brush: { update(patch: object): void; destroy(): void } | undefined;
-  #brushLoad = false;
-  #brushWanted = false;
+  #root: SVGSVGElement | undefined;
+  #signal: AbortSignal | undefined;
+  #zoom: Zoom | undefined;
+  #zoomLoad = false;
+  #claim = false;
+  #pendingZoom = false;
+  #time: TimeKit | undefined;
+  #timeLoad = false;
+  #notes: typeof import("./e17-annotations.js") | undefined;
+  #notesLoad = false;
 
   constructor() {
     super();
@@ -170,7 +189,7 @@ export abstract class CartesianElement extends ChartElement {
     });
     this.addEventListener(CHART_EVENT.data, (event) => {
       // A loading or empty screen replaced the drawing's children: put the overlays back.
-      if ((event as CustomEvent).detail) this.#restoreOverlays();
+      if ((event as CustomEvent).detail) this.#zoom?.restore();
     });
   }
 
@@ -186,6 +205,14 @@ export abstract class CartesianElement extends ChartElement {
   }
   set series(value: readonly CartesianSeries[]) {
     this.#series = value;
+    this.requestDraw();
+  }
+  /** Reference lines, ranges, points and text (the React `annotations`). */
+  get annotations(): readonly ChartAnnotation[] {
+    return this.#annotations;
+  }
+  set annotations(value: readonly ChartAnnotation[]) {
+    this.#annotations = value ?? [];
     this.requestDraw();
   }
   /** The zoomed window of category indices (inclusive), or `null` when the whole data shows. */
@@ -207,11 +234,14 @@ export abstract class CartesianElement extends ChartElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.#brush?.destroy();
-    this.#brush = undefined;
-    this.#brushLoad = false;
-    this.#slider?.remove();
-    this.#reset?.remove();
+    this.#zoom?.destroy();
+    this.#zoom = undefined;
+    this.#zoomLoad = false;
+  }
+
+  override attributeChangedCallback(name: string): void {
+    super.attributeChangedCallback(name);
+    if (name === "brush") this.#ensureZoom();
   }
 
   protected override isEmpty(): boolean {
@@ -222,64 +252,68 @@ export abstract class CartesianElement extends ChartElement {
   }
 
   protected override setup(root: SVGSVGElement, signal: AbortSignal): void {
-    const opts = { signal };
-    const local = (event: PointerEvent): number | null => {
-      const layout = this.#layout;
-      const box = root.getBoundingClientRect();
-      if (!layout || !box.width) return null;
-      const x = (event.clientX - box.left) * (layout.width / box.width) - layout.margin.left;
-      const y = (event.clientY - box.top) * (layout.height / box.height) - layout.margin.top;
-      return x < 0 || y < 0 || x > layout.innerWidth || y > layout.innerHeight ? null : x;
+    this.#root = root;
+    this.#signal = signal;
+    // A drag that drew a window is the chart's gesture: claim it so no selection follows. This
+    // stays here (not in the lazy zoom code) so it always runs before the base's own listeners.
+    const claim = (event: Event) => {
+      if (!this.#claim) return;
+      this.#claim = false;
+      event.preventDefault();
     };
-    root.addEventListener(
-      "pointerdown",
-      (event) => {
-        if (!this.hasAttribute("brush") || event.button !== 0 || event.pointerType === "touch")
-          return;
-        const x = local(event);
-        if (x === null || this.#layout?.horizontal) return;
-        this.#dragFrom = x;
-        this.#dragged = false;
-        root.setPointerCapture(event.pointerId);
-      },
-      opts,
-    );
-    root.addEventListener(
-      "pointermove",
-      (event) => {
-        const layout = this.#layout;
-        if (this.#dragFrom === null || !layout) return;
-        const box = root.getBoundingClientRect();
-        const raw = (event.clientX - box.left) * (layout.width / box.width) - layout.margin.left;
-        const x = Math.min(Math.max(raw, 0), layout.innerWidth);
-        if (!this.#dragged && Math.abs(x - this.#dragFrom) <= 4) return;
-        this.#dragged = true;
-        this.#selection = { from: Math.min(this.#dragFrom, x), to: Math.max(this.#dragFrom, x) };
-        this.requestDraw("transient");
-      },
-      opts,
-    );
-    const finish = (event: PointerEvent) => {
-      if (this.#dragFrom === null) return;
-      const layout = this.#layout;
-      const selection = this.#selection;
-      this.#dragFrom = null;
-      this.#selection = null;
-      if (root.hasPointerCapture(event.pointerId)) root.releasePointerCapture(event.pointerId);
-      if (this.#dragged) {
-        this.#dragged = false;
-        // The drag is the chart's gesture: claim it so no selection follows.
-        event.preventDefault();
-        if (layout && selection && event.type === "pointerup") {
-          const lo = layout.indexAt(selection.from);
-          const hi = layout.indexAt(selection.to);
-          if (hi - lo >= 1) this.#setRange([this.#source(lo), this.#source(hi)]);
-        }
-        this.requestDraw("transient");
-      }
-    };
-    root.addEventListener("pointerup", finish, opts);
-    root.addEventListener("pointercancel", finish, opts);
+    root.addEventListener("pointerup", claim, { signal });
+    root.addEventListener("pointercancel", claim, { signal });
+    this.#ensureZoom();
+  }
+
+  /** Loads the zoom code the first time `brush` is on, then draws the strip. */
+  #ensureZoom(): void {
+    const root = this.#root;
+    const signal = this.#signal;
+    if (!this.hasAttribute("brush") || this.#zoom || this.#zoomLoad || !root || !signal) return;
+    this.#zoomLoad = true;
+    import("./e17-zoom.js").then(({ createZoom }) => {
+      this.#zoomLoad = false;
+      if (signal.aborted || this.#zoom) return;
+      this.#zoom = createZoom(
+        {
+          drawing: this.drawing,
+          layout: () => this.#layout,
+          source: (index) => this.#source(index),
+          setRange: (range, live) => this.#setRange(range, live),
+          flush: () => this.#flushZoom(),
+          redraw: () => this.requestDraw("transient"),
+          adopt: (sheet) => adoptStyles(rootOf(this), sheet),
+          claim: () => {
+            this.#claim = true;
+          },
+          fullSeries: (context) => this.#resolve(context).filter((item) => !this.isHidden(item.id)),
+        },
+        root,
+        signal,
+        () => this.hasAttribute("brush"),
+      );
+      this.requestDraw("size");
+    });
+  }
+
+  /** Dates need the calendar helpers; they load once, then the chart draws again. */
+  #ensureTime(): void {
+    if (this.#time || this.#timeLoad) return;
+    this.#timeLoad = true;
+    import("./e17-time.js").then(({ timeKit }) => {
+      this.#time = timeKit;
+      this.requestDraw();
+    });
+  }
+
+  #ensureNotes(): void {
+    if (this.#notes || this.#notesLoad) return;
+    this.#notesLoad = true;
+    import("./e17-annotations.js").then((module) => {
+      this.#notes = module;
+      this.requestDraw();
+    });
   }
 
   /** Index in the full `categories` of mark `index` of the zoomed, sampled window. */
@@ -287,13 +321,24 @@ export abstract class CartesianElement extends ChartElement {
     return this.#windowStart + (this.#origin ? (this.#origin[index] as number) : index);
   }
 
-  #setRange(next: IndexRange | null): void {
+  /** `live`: part of a drag, so `zoom` is announced once by `#flushZoom` when it ends. */
+  #setRange(next: IndexRange | null, live = false): void {
     const total = this.#categories.length;
     const range = next && next[0] <= 0 && next[1] >= total - 1 ? null : next;
     if (range?.[0] === this.#range?.[0] && range?.[1] === this.#range?.[1]) return;
     this.#range = range;
-    emit(this, "zoom", range);
+    if (live) this.#pendingZoom = true;
+    else {
+      this.#pendingZoom = false;
+      emit(this, "zoom", range);
+    }
     this.requestDraw();
+  }
+
+  #flushZoom(): void {
+    if (!this.#pendingZoom) return;
+    this.#pendingZoom = false;
+    emit(this, "zoom", this.#range);
   }
 
   #copy(): CartesianLabels {
@@ -303,9 +348,12 @@ export abstract class CartesianElement extends ChartElement {
   #xLabel(context: DrawContext): (value: XValue) => string {
     if (this.xFormat) return this.xFormat;
     const options = { locale: context.locale, timeZone: context.timeZone };
+    const time = this.#time;
     return (value) =>
       value instanceof Date
-        ? `${dayOfMonth(value, options)} ${shortMonth(value, options)}`
+        ? time
+          ? `${time.dayOfMonth(value, options)} ${time.shortMonth(value, options)}`
+          : value.toISOString().slice(0, 10)
         : typeof value === "number"
           ? formatNumber(value, { locale: context.locale })
           : value;
@@ -315,11 +363,18 @@ export abstract class CartesianElement extends ChartElement {
     const categories = this.#categories;
     const distributed = this.hasAttribute("distributed");
     return this.#series.map((item, index) => {
-      const kind = this.kind ?? item.type ?? "line";
+      let kind = this.kind ?? item.type ?? "line";
+      if (!KINDS.has(kind)) {
+        const fallback: MarkKind = this.barKit ? "column" : "line";
+        warnOnce(
+          `ui-chart: series "${item.id}" has unknown type "${String(kind)}"; use line, area or column. It is drawn as a ${fallback}.`,
+        );
+        kind = fallback;
+      }
       const ranges = item.ranges;
       const data = ranges ? ranges.map((range) => (range ? range[1] : null)) : (item.data ?? []);
       const colors =
-        item.colors ??
+        item.colors?.map(cssColor) ??
         (distributed
           ? categories.map((_, position) => context.color(position + index))
           : undefined);
@@ -328,7 +383,7 @@ export abstract class CartesianElement extends ChartElement {
         name: item.name,
         kind,
         axis: item.axis ?? "left",
-        color: context.color(index, item.color),
+        color: context.color(index, cssColor(item.color)),
         dashed: item.dashed ?? false,
         format:
           item.format === undefined
@@ -364,16 +419,21 @@ export abstract class CartesianElement extends ChartElement {
     ) as StackMode;
     const curve = (this.getAttribute("curve") as Curve | null) ?? this.defaultCurve;
     const dataLabels = this.hasAttribute("data-labels");
+    const notes = this.#annotations;
+    if (notes.length) this.#ensureNotes();
     const markers = this.hasAttribute("markers");
     const gradient = this.getAttribute("gradient") !== "off";
     const showGrid = this.getAttribute("grid") !== "off";
-    const rotation = Number(this.getAttribute("category-label-rotation")) || 0;
-    const every = Number(this.getAttribute("category-tick-every")) || undefined;
+    const rotation = numberAttr(this.getAttribute("category-label-rotation"), 0);
+    const every = numberAttr(this.getAttribute("category-tick-every"), 0) || undefined;
     const xLabel = this.#xLabel(context);
     const custom = this.xFormat != null;
+    const first = categories[0];
+    if (first instanceof Date || categories[total - 1] instanceof Date) this.#ensureTime();
+    const calendar = this.#time;
     const titleOf = (value: XValue) =>
-      value instanceof Date && !custom
-        ? formatDate(value, { locale: context.locale, timeZone: context.timeZone })
+      value instanceof Date && !custom && calendar
+        ? calendar.formatDate(value, { locale: context.locale, timeZone: context.timeZone })
         : xLabel(value);
 
     const resolved = this.#resolve(context);
@@ -396,9 +456,12 @@ export abstract class CartesianElement extends ChartElement {
     const maxPointsAttr = this.getAttribute("max-points");
     const maxPoints = maxPointsAttr === "off" ? null : Number(maxPointsAttr) || DEFAULT_MAX_POINTS;
     const sample =
-      maxPoints === null || horizontal || resolved.some((item) => item.kind === "column")
+      maxPoints === null ||
+      horizontal ||
+      !this.lineKit ||
+      resolved.some((item) => item.kind === "column")
         ? null
-        : sharedSampleIndices(
+        : this.lineKit.sample(
             windowed.map((item) => item.data),
             maxPoints,
           );
@@ -423,7 +486,7 @@ export abstract class CartesianElement extends ChartElement {
       stack,
       curve,
       dataLabels,
-      barRadius: Number(this.getAttribute("bar-radius") ?? 6),
+      barRadius: numberAttr(this.getAttribute("bar-radius"), 6),
       xScale: (this.getAttribute("x-scale") as "auto" | "band" | "time" | null) ?? "auto",
       xLabel,
       axisFormat,
@@ -434,12 +497,22 @@ export abstract class CartesianElement extends ChartElement {
       axes: this.axes,
       labelRotation: rotation,
       categoryTickEvery: every,
+      bars: this.barKit,
+      lines: this.lineKit,
+      time: this.#time,
+      annotations: notes,
       locale: context.locale,
       timeZone: context.timeZone,
       reserveBottom: brushOn ? BRUSH_HEIGHT + BRUSH_GAP : 0,
     });
     this.#layout = layout;
     const { margin, innerWidth, innerHeight } = layout;
+    const marksOf =
+      this.#notes && notes.length ? this.#notes.annotationGeometry(layout, shown, notes) : [];
+    const noteLayer = (kind: "under" | "over") =>
+      marksOf.length
+        ? (this.#notes?.drawAnnotations(marksOf, innerWidth, innerHeight, kind) ?? null)
+        : null;
 
     // The persistent skeleton: the plot group is rebuilt, the rest of the svg is kept.
     this.#plot ??= svg("g");
@@ -461,27 +534,6 @@ export abstract class CartesianElement extends ChartElement {
     });
     defs.append(svg("clipPath", { id: clipId }, reveal));
     const stacked = stack !== "none";
-    const gradientIds = new Map<string, string>();
-    if (gradient)
-      for (const item of layout.geometry)
-        if (item.kind === "area") {
-          const id = uid("area");
-          gradientIds.set(item.id, id);
-          defs.append(
-            svg(
-              "linearGradient",
-              { id, x1: 0, y1: 0, x2: 0, y2: 1 },
-              svg("stop", {
-                offset: "0%",
-                style: `stop-color:${item.color};stop-opacity:${stacked ? 0.55 : 0.36}`,
-              }),
-              svg("stop", {
-                offset: "100%",
-                style: `stop-color:${item.color};stop-opacity:${stacked ? 0.22 : 0.02}`,
-              }),
-            ),
-          );
-        }
 
     if (showGrid)
       plot.append(
@@ -492,82 +544,28 @@ export abstract class CartesianElement extends ChartElement {
         ),
       );
 
+    const under = noteLayer("under");
+    if (under) plot.append(under);
+
     // Crosshair parts: the band sits under the marks, the line and the dots over them.
     const bandSize = layout.mode === "band" ? layout.step : 0;
     const crossOn = this.getAttribute("crosshair") !== "off";
     const band = svg("rect", { "data-e17": "band", rx: 8, display: "none", "aria-hidden": "true" });
     if (crossOn && bandSize > 0) plot.append(band);
 
-    const lineGroup = (item: SeriesGeometry, markersOn: boolean) => {
-      const group = svg("g", { "data-series": item.id });
-      if (item.area)
-        group.append(
-          svg("path", {
-            d: item.area,
-            style: gradientIds.has(item.id)
-              ? `fill:url(#${gradientIds.get(item.id)})`
-              : `fill:${item.color};fill-opacity:${stacked ? 0.42 : 0.16}`,
-          }),
-        );
-      if (item.line)
-        group.append(
-          svg("path", {
-            d: item.line,
-            fill: "none",
-            "stroke-width": item.kind === "area" ? 2 : 2.5,
-            "stroke-linecap": "round",
-            "stroke-linejoin": "round",
-            "stroke-dasharray": item.dashed ? "6 6" : undefined,
-            style: `stroke:${item.color}`,
-          }),
-        );
-      if (markersOn)
-        for (const point of item.points)
-          if (point)
-            group.append(
-              svg("circle", {
-                cx: point.x,
-                cy: point.y,
-                r: 3.25,
-                "stroke-width": 2,
-                style: `fill:var(--surface);stroke:${item.color}`,
-              }),
-            );
-      return group;
-    };
     const dense = count <= Math.max(2, innerWidth / 9);
-    const areas = svg("g", { "clip-path": `url(#${clipId})` });
-    for (const item of layout.geometry)
-      if (item.kind === "area") areas.append(lineGroup(item, markers && dense));
-    plot.append(areas);
+    const paintLines = (kind: "line" | "area") =>
+      this.lineKit?.paint(plot, defs, layout, {
+        kind,
+        clipId,
+        markers: markers && dense,
+        stacked,
+        gradient,
+      });
+    paintLines("area");
 
-    const bars: SVGElement[] = [];
-    for (const item of layout.geometry) {
-      if (item.kind !== "column") continue;
-      const group = svg("g", { "data-series": item.id });
-      for (const bar of item.bars ?? []) {
-        const path = svg("path", {
-          d: bar.d,
-          "data-bar": bar.index,
-          style: `fill:${bar.color ?? item.color};${item.dashed ? "fill-opacity:.35;" : ""}transform-box:fill-box;transform-origin:${
-            horizontal
-              ? bar.negative
-                ? "right center"
-                : "left center"
-              : bar.negative
-                ? "center top"
-                : "center bottom"
-          }`,
-        });
-        bars.push(path);
-        group.append(path);
-      }
-      plot.append(group);
-    }
-    const lines = svg("g", { "clip-path": `url(#${clipId})` });
-    for (const item of layout.geometry)
-      if (item.kind === "line") lines.append(lineGroup(item, markers && dense));
-    plot.append(lines);
+    const bars = this.paintBars(plot, layout);
+    paintLines("line");
 
     const hasBars = layout.geometry.some((item) => item.kind === "column");
     const [d0, d1] = layout.valueScale.domain;
@@ -620,6 +618,9 @@ export abstract class CartesianElement extends ChartElement {
       }
     }
 
+    const over = noteLayer("over");
+    if (over) plot.append(over);
+
     if (dataLabels) {
       const labelsGroup = svg("g", { "aria-hidden": "true" });
       for (const item of layout.geometry)
@@ -657,13 +658,14 @@ export abstract class CartesianElement extends ChartElement {
       });
     this.#cross = { band, line, dots };
 
-    if (this.#selection)
+    const drag = this.#zoom?.selection();
+    if (drag)
       plot.append(
         svg("rect", {
           "data-e17": "selection",
-          x: this.#selection.from,
+          x: drag.from,
           y: 0,
-          width: this.#selection.to - this.#selection.from,
+          width: drag.to - drag.from,
           height: innerHeight,
           rx: 6,
           "stroke-width": 1,
@@ -709,18 +711,20 @@ export abstract class CartesianElement extends ChartElement {
     }
 
     this.#paintCross(context.hover);
-    this.#syncOverlays(
-      root,
-      context,
-      layout,
-      brushOn,
-      total,
-      range,
-      copy,
-      series,
-      titleOf,
-      start,
-      end,
+    this.#zoom?.sync(
+      brushOn
+        ? {
+            context,
+            layout,
+            total,
+            range,
+            categories,
+            titleOf,
+            start,
+            end,
+            labels: copy,
+          }
+        : null,
     );
 
     const names = visibleAll.map((item) => item.name).join(", ");
@@ -744,7 +748,7 @@ export abstract class CartesianElement extends ChartElement {
           ? {
               title: details.title,
               rows: details.rows,
-              x: margin.left + (ends.length ? Math.max(...ends.map((p) => p.x)) : innerWidth / 2),
+              x: margin.left + (ends.length ? maxOf(ends.map((p) => p.x)) : innerWidth / 2),
               y: margin.top + position,
               category: sourceOf(index),
             }
@@ -755,7 +759,7 @@ export abstract class CartesianElement extends ChartElement {
               y:
                 margin.top +
                 Math.min(
-                  Math.max(ends.length ? Math.min(...ends.map((p) => p.y)) : innerHeight / 2, 28),
+                  Math.max(ends.length ? minOf(ends.map((p) => p.y)) : innerHeight / 2, 28),
                   innerHeight - 28,
                 ),
               category: sourceOf(index),
@@ -881,176 +885,5 @@ export abstract class CartesianElement extends ChartElement {
         dot.setAttribute("cy", `${point.y}`);
       }
     }
-  }
-
-  // ---- overlays: the overview brush and the reset button ---------------------------------------
-
-  #restoreOverlays(): void {
-    for (const el of [this.#slider, this.#reset])
-      if (el && !el.isConnected && this.#brushWanted) this.drawing.append(el);
-  }
-
-  #syncOverlays(
-    root: SVGSVGElement,
-    context: DrawContext,
-    layout: CartesianLayout,
-    brushOn: boolean,
-    total: number,
-    range: IndexRange | null,
-    copy: CartesianLabels,
-    _series: readonly ResolvedSeries[],
-    titleOf: (value: XValue) => string,
-    start: number,
-    end: number,
-  ): void {
-    const drawing = this.drawing;
-    this.#brushWanted = brushOn;
-    if (!brushOn) {
-      this.#mini?.remove();
-      this.#slider?.remove();
-      this.#reset?.remove();
-      this.#brush?.destroy();
-      this.#brush = undefined;
-      this.#brushLoad = false;
-      return;
-    }
-    const { margin, innerWidth } = layout;
-    const top = context.height - BRUSH_HEIGHT;
-    const track = pointScale({ count: total, range: [0, innerWidth] });
-    const current = range ?? [0, total - 1];
-    const x0 = track.center(current[0]);
-    const x1 = track.center(current[1]);
-
-    // The overview: every visible series in miniature, the window and its handles.
-    this.#mini ??= svg("g", { "aria-hidden": "true" });
-    const mini = this.#mini;
-    mini.replaceChildren();
-    mini.setAttribute("transform", `translate(${margin.left},${top})`);
-    mini.append(
-      svg("rect", {
-        "data-e17": "track",
-        x: 0,
-        y: 0.5,
-        width: innerWidth,
-        height: BRUSH_HEIGHT - 1,
-        rx: 10,
-      }),
-    );
-    const fullSeries = this.#fullSeries(context);
-    const values = fullSeries.flatMap((item) => item.data).filter((v): v is number => v != null);
-    const lo = Math.min(0, ...values);
-    const span = (values.length ? Math.max(...values) : 1) - lo || 1;
-    const y = (value: number) => BRUSH_HEIGHT - 6 - ((value - lo) / span) * (BRUSH_HEIGHT - 14);
-    fullSeries.forEach((item) => {
-      let d = "";
-      let open = false;
-      item.data.forEach((value, index) => {
-        if (value == null) {
-          open = false;
-          return;
-        }
-        d += `${open ? "L" : "M"}${track.center(index).toFixed(1)},${y(value).toFixed(1)}`;
-        open = true;
-      });
-      mini.append(
-        svg("path", {
-          d,
-          fill: "none",
-          "stroke-width": 1.25,
-          style: `stroke:${item.color};stroke-opacity:.85`,
-        }),
-      );
-    });
-    mini.append(
-      svg("rect", { "data-e17": "veil", x: 0, y: 0, width: Math.max(0, x0), height: BRUSH_HEIGHT }),
-      svg("rect", {
-        "data-e17": "veil",
-        x: x1,
-        y: 0,
-        width: Math.max(0, innerWidth - x1),
-        height: BRUSH_HEIGHT,
-      }),
-      svg("rect", {
-        "data-e17": "window",
-        x: x0,
-        y: 0.5,
-        width: Math.max(0, x1 - x0),
-        height: BRUSH_HEIGHT - 1,
-        rx: 8,
-        "stroke-width": 1.25,
-      }),
-    );
-    for (const x of [x0, x1])
-      mini.append(
-        svg("rect", {
-          "data-e17": "handle",
-          x: x - 4,
-          y: BRUSH_HEIGHT / 2 - 12,
-          width: 8,
-          height: 24,
-          rx: 4,
-          "stroke-width": 1.25,
-        }),
-      );
-    if (!mini.isConnected) root.append(mini);
-
-    this.#slider ??= document.createElement("div");
-    const slider = this.#slider;
-    slider.dataset.e17 = "slider";
-    slider.setAttribute("role", "slider");
-    slider.tabIndex = 0;
-    slider.setAttribute("aria-label", copy.brush);
-    slider.setAttribute("aria-valuemin", "0");
-    slider.setAttribute("aria-valuemax", `${total - 1}`);
-    slider.setAttribute("aria-valuenow", `${current[0]}`);
-    slider.setAttribute(
-      "aria-valuetext",
-      `${titleOf(this.#categories[start] as XValue)} – ${titleOf(this.#categories[end] as XValue)}`,
-    );
-    Object.assign(slider.style, {
-      position: "absolute",
-      left: `${margin.left}px`,
-      top: `${top}px`,
-      width: `${innerWidth}px`,
-      height: `${BRUSH_HEIGHT}px`,
-      touchAction: "none",
-      borderRadius: "10px",
-    });
-    if (!slider.isConnected) drawing.append(slider);
-
-    this.#reset ??= document.createElement("button");
-    const reset = this.#reset;
-    reset.type = "button";
-    reset.dataset.e17 = "reset";
-    reset.textContent = copy.resetZoom;
-    reset.hidden = !range;
-    if (!reset.dataset.bound) {
-      reset.dataset.bound = "";
-      reset.addEventListener("click", () => this.resetZoom());
-    }
-    if (!reset.isConnected) drawing.append(reset);
-
-    const patch = {
-      count: total,
-      range: current,
-      offset: 0,
-      indexAt: (pixel: number) => track.indexAt(pixel),
-      position: (index: number) => track.center(index),
-      onChange: (next: IndexRange) => this.#setRange(next),
-    };
-    if (this.#brush) this.#brush.update(patch);
-    else if (!this.#brushLoad) {
-      this.#brushLoad = true;
-      import("@jcsoftdev/ui-core/chart/brush").then(({ attachIndexBrush }) => {
-        if (!this.isConnected || !this.#brushWanted || this.#brush) return;
-        this.#brush = attachIndexBrush(slider, patch);
-        this.#brush.update(patch);
-      });
-    }
-  }
-
-  /** The visible series over the whole data (the overview ignores the zoom window). */
-  #fullSeries(context: DrawContext): ResolvedSeries[] {
-    return this.#resolve(context).filter((item) => !this.isHidden(item.id));
   }
 }

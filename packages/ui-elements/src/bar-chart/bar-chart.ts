@@ -1,9 +1,12 @@
 import { type DefineOptions, defineElement } from "../internal/base.js";
+import { barKit, drawBars } from "../internal/e17-bars.js";
 import { CartesianElement } from "../internal/e17-cartesian.js";
+import type { CartesianLayout } from "../internal/e17-layout.js";
 
 export type {
   AxisSpec,
   CartesianSeries,
+  ChartAnnotation,
   ValueAxisOptions,
   XValue,
 } from "../internal/e17-cartesian.js";
@@ -13,7 +16,10 @@ export type {
  * series group side by side, or pile up with `stack`; bars are rounded at their value end only and
  * negative values grow the other way. Hover or focus shows a crosshair band and the category's
  * details; arrows, Home and End walk the categories (one tab stop). Dragging on the plot zooms
- * (`brush`), a click, Enter or a tap pins a category, and `chart-select` / `chart-drill` report it.
+ * (`brush`, an extension: React's `BarChart` has no brush), a click, Enter or a tap pins a category, and `chart-select` / `chart-drill` report it.
+ *
+ * Properties also include `annotations` (reference `line` and `range` on either axis, `point` and
+ * `text`, as in React; `tone` picks the color family).
  *
  * Attributes: `orientation` (`vertical`, `horizontal`), `stack` (`none`, `normal`, `percent`),
  * `distributed` (one palette color per bar), `data-labels`, `bar-radius` (px, default 6), `grid="off"`,
@@ -25,6 +31,10 @@ export type {
  * `labels`. Events: `zoom` plus the chart events.
  */
 export class UiBarChart extends CartesianElement {
+  protected override readonly barKit = barKit;
+  protected override paintBars(plot: SVGGElement, layout: CartesianLayout): SVGElement[] {
+    return drawBars(plot, layout);
+  }
   protected readonly kind = "column" as const;
 }
 
