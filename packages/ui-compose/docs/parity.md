@@ -39,7 +39,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Button` | both | `atoms.Button`, `ButtonVariant`, `ButtonSize` | Loading state, `block`, 48dp touch target. |
 | (icon-only `Button`) | compose-only | `atoms.IconButton` | Description is required because it is icon-only. |
 | `Checkbox` | both | `atoms.Checkbox` | Boolean and tri-state overloads. |
-| `Chip` | both | `atoms.Chip`, `ChipTone` | |
+| `Chip` | both | `atoms.Chip`, `ChipTone` | `onRemove` and `removeLabel` append a remove button with a 48dp touch target. |
 | `Icon` and the icon set | both | `icons.Icon`, `icons.Icons.*` | Same SVG source (`packages/ui/icons`), same names; generated at build time, one nullable-backed property each. |
 | `Led`, `StatusDot` | web-only | none | The Compose LED is part of `StatusPill`. |
 | `StatusPill` | both | `atoms.StatusPill`, `LedStatus` | |

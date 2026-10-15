@@ -121,7 +121,7 @@ public final class com/jcsoftdev/ui/atoms/ChipDefaults {
 }
 
 public final class com/jcsoftdev/ui/atoms/ChipKt {
-	public static final fun Chip (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ChipTone;ZLcom/jcsoftdev/ui/atoms/ChipColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun Chip (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ChipTone;ZLcom/jcsoftdev/ui/atoms/ChipColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 	public static final fun StatusPill (Lcom/jcsoftdev/ui/atoms/LedStatus;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/StatusPillColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
@@ -2239,9 +2239,9 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 public final class com/jcsoftdev/ui/theme/UiStrings {
 	public static final field $stable I
 	public static final field Companion Lcom/jcsoftdev/ui/theme/UiStrings$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
-	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
 	public final fun getActionFailed ()Ljava/lang/String;
 	public final fun getActions ()Ljava/lang/String;
 	public final fun getBack ()Ljava/lang/String;
@@ -2257,6 +2257,7 @@ public final class com/jcsoftdev/ui/theme/UiStrings {
 	public final fun getNotifications ()Ljava/lang/String;
 	public final fun getOptional ()Ljava/lang/String;
 	public final fun getProcessing ()Ljava/lang/String;
+	public final fun getRemove ()Ljava/lang/String;
 	public final fun getRetry ()Ljava/lang/String;
 	public final fun getShowPassword ()Ljava/lang/String;
 	public final fun getSomethingWrong ()Ljava/lang/String;
