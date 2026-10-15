@@ -48,6 +48,9 @@ import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.atoms.dimWhenDisabled
 import com.jcsoftdev.ui.theme.UiTheme
 
+/** Height of an [Input]: `Lg` matches the large button. */
+public enum class InputSize { Md, Lg }
+
 /** Colors of the text-like controls ([Input], [PasswordInput], [TimeInput], [DateInput], [Select], [PinInput]); [selectedOption] colors the chosen option in the [Select] list. */
 @Immutable
 public class InputColors(
@@ -109,7 +112,7 @@ public object InputDefaults {
 /**
  * Single-line text input (a `BasicTextField` with `value` / `onValueChange`: the `TextFieldState` API is stable in
  * Compose Multiplatform 1.8.2, but its output transformations are still experimental, and the digit masks here need them).
- * Inside a [Field] it also reads the label, helper text and error. Minimum height 48dp, grows with the font scale.
+ * Inside a [Field] it also reads the label, helper text and error. Minimum height 48dp (the large button's height for [InputSize.Lg]), grows with the font scale.
  */
 @Composable
 public fun Input(
@@ -130,6 +133,7 @@ public fun Input(
     shape: Shape = InputDefaults.shape,
     contentPadding: PaddingValues = InputDefaults.contentPadding,
     textStyle: TextStyle = InputDefaults.textStyle,
+    size: InputSize = InputSize.Md,
 ) {
     InputFrame(
         value,
@@ -149,6 +153,7 @@ public fun Input(
         shape,
         contentPadding,
         textStyle,
+        size,
     )
 }
 
@@ -246,6 +251,7 @@ internal fun InputFrame(
     shape: Shape,
     contentPadding: PaddingValues,
     textStyle: TextStyle,
+    size: InputSize = InputSize.Md,
 ) {
     val sizes = UiTheme.sizes
     val info = LocalFieldInfo.current
@@ -284,7 +290,7 @@ internal fun InputFrame(
             Row(
                 Modifier
                     .dimWhenDisabled(enabled)
-                    .heightIn(min = sizes.minTouchTarget)
+                    .heightIn(min = if (size == InputSize.Lg) maxOf(sizes.minTouchTarget, sizes.controlHeightLg) else sizes.minTouchTarget)
                     .clip(shape)
                     .background(colors.container)
                     .border(if (focused || hasError) sizes.focusBorderWidth else sizes.borderWidth, line, shape)

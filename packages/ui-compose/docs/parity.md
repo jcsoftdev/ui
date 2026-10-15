@@ -56,7 +56,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | Web | Status | Compose | Notes |
 | --- | --- | --- | --- |
 | `Field`, `Label` | both | `forms.Field` | Label, description, error and required marker in one composable. |
-| `Input`, `InputIcon` | both | `forms.Input` | `leading` and `trailing` slots replace `InputIcon`. |
+| `Input`, `InputIcon` | both | `forms.Input` | `leading` and `trailing` slots replace `InputIcon`. `size = InputSize.Lg` matches the large button height. |
 | (password input) | compose-only | `forms.PasswordInput` | The web uses `Input` with a password type. |
 | `TimeInput` | both | `forms.TimeInput` | Number keyboard; stores digits and emits `HH:mm` when valid. |
 | (date input) | compose-only | `forms.DateInput` | Emits `dd/MM/yyyy` when valid. |
@@ -81,7 +81,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Cell`, `GenericRow` | both | `containers.ListRow` | Leading, title, subtitle, meta, trailing. |
 | `ActionBar`, `Toolbar` | web-only | none | |
 | `Carousel`, `Kanban`, `Scrolly`, `Resizable*`, `FileTree` | web-only | none | |
-| `Table*`, `DataGrid`, `ResponsiveList` | web-only | none | Out of scope for the Compose kit. |
+| `Table*`, `DataGrid`, `ResponsiveList` | web-only | none | Out of scope for the Compose kit; the web container-width switch has no counterpart. |
 | `Kpi`, `KpiGroup`, `HBars`, `Facts`, `HighlightLine`, `DescriptionList` | web-only | none | |
 | `Comment`, `Timeline`, `ItemCardGroup` | web-only | none | |
 | `ConfirmAction` | web-only | none | Compose callers build it from `Dialog`. |
@@ -139,7 +139,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 
 | Web | Status | Compose | Notes |
 | --- | --- | --- | --- |
-| `AppShell`, `Sidebar`, `Topbar` | n/a | none | Multi-pane desktop shell; apps own their navigation on phones. |
+| `AppShell`, `Sidebar`, `Topbar` | n/a | none | Multi-pane desktop shell; apps own their navigation on phones, so the web `collapsed` rail has no counterpart. |
 | `MonthView`, `WeekView`, `TimelineView`, `DayChip`, `EventBlock` | web-only | none | Out of scope for now. |
 | Charts (54 kinds: line, bar, area, pie, donut, scatter, heatmap, sankey, treemap, maps, gauges, sparkline and more) | web-only | none | Out of scope for now. |
 | `CommandPalette` | n/a | none | Keyboard-driven. |

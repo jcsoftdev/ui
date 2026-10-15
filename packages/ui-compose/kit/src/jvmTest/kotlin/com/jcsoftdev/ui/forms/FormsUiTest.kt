@@ -2,9 +2,14 @@
 
 package com.jcsoftdev.ui.forms
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -19,6 +24,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
+import com.jcsoftdev.ui.atoms.ButtonDefaults
+import com.jcsoftdev.ui.atoms.ButtonSize
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.navigation.TabItem
 import com.jcsoftdev.ui.navigation.Tabs
@@ -81,5 +88,24 @@ class FormsUiTest {
             assertEquals("b", selected)
             onNodeWithText("Clientes").assertIsSelected()
             onNodeWithText("Citas").assertIsNotSelected()
+        }
+
+    @Test
+    fun largeInputIsAsTallAsTheLargeButton() =
+        runComposeUiTest {
+            var md = 0
+            var lg = 0
+            var expected = 0
+            setContent(
+                themed {
+                    expected = with(LocalDensity.current) { ButtonDefaults.height(ButtonSize.Lg).roundToPx() }
+                    Column {
+                        Box(Modifier.onSizeChanged { md = it.height }) { Input("", {}) }
+                        Box(Modifier.onSizeChanged { lg = it.height }) { Input("", {}, size = InputSize.Lg) }
+                    }
+                },
+            )
+            waitForIdle()
+            assert(lg >= expected && lg > md) { "lg=$lg md=$md expected=$expected" }
         }
 }

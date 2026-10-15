@@ -485,8 +485,16 @@ public final class com/jcsoftdev/ui/forms/InputDefaults {
 }
 
 public final class com/jcsoftdev/ui/forms/InputKt {
-	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/forms/InputSize;Landroidx/compose/runtime/Composer;III)V
 	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/forms/InputSize : java/lang/Enum {
+	public static final field Lg Lcom/jcsoftdev/ui/forms/InputSize;
+	public static final field Md Lcom/jcsoftdev/ui/forms/InputSize;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/forms/InputSize;
+	public static fun values ()[Lcom/jcsoftdev/ui/forms/InputSize;
 }
 
 public final class com/jcsoftdev/ui/forms/NumberStepperDefaults {
