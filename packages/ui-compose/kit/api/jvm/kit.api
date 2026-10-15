@@ -1151,6 +1151,10 @@ public final class com/jcsoftdev/ui/icons/ItalicKt {
 	public static final fun getItalic (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
+public final class com/jcsoftdev/ui/icons/KeyKt {
+	public static final fun getKey (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/LandmarkKt {
 	public static final fun getLandmark (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -1425,6 +1429,10 @@ public final class com/jcsoftdev/ui/icons/VideoKt {
 
 public final class com/jcsoftdev/ui/icons/WalletKt {
 	public static final fun getWallet (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/WebhookKt {
+	public static final fun getWebhook (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
 public final class com/jcsoftdev/ui/icons/WrenchKt {
