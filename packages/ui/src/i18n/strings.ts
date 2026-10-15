@@ -18,6 +18,7 @@ export interface UiStrings {
   copy: string;
   copied: string;
   more: string;
+  remove: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -43,6 +44,7 @@ export const uiStrings = {
     copy: "Copy",
     copied: "Copied",
     more: "More",
+    remove: "Remove",
   },
   es: {
     retry: "Reintentar",
@@ -64,5 +66,6 @@ export const uiStrings = {
     copy: "Copiar",
     copied: "Copiado",
     more: "Más",
+    remove: "Quitar",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

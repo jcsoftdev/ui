@@ -122,7 +122,7 @@ public final class com/jcsoftdev/ui/atoms/ChipDefaults {
 }
 
 public final class com/jcsoftdev/ui/atoms/ChipKt {
-	public static final fun Chip (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ChipTone;ZLcom/jcsoftdev/ui/atoms/ChipColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun Chip (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ChipTone;ZLcom/jcsoftdev/ui/atoms/ChipColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 	public static final fun StatusPill (Lcom/jcsoftdev/ui/atoms/LedStatus;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/StatusPillColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
@@ -527,8 +527,16 @@ public final class com/jcsoftdev/ui/forms/InputDefaults {
 }
 
 public final class com/jcsoftdev/ui/forms/InputKt {
-	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/forms/InputSize;Landroidx/compose/runtime/Composer;III)V
 	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/forms/InputSize : java/lang/Enum {
+	public static final field Lg Lcom/jcsoftdev/ui/forms/InputSize;
+	public static final field Md Lcom/jcsoftdev/ui/forms/InputSize;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/forms/InputSize;
+	public static fun values ()[Lcom/jcsoftdev/ui/forms/InputSize;
 }
 
 public final class com/jcsoftdev/ui/forms/NumberStepperDefaults {
@@ -1197,6 +1205,10 @@ public final class com/jcsoftdev/ui/icons/ItalicKt {
 	public static final fun getItalic (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
+public final class com/jcsoftdev/ui/icons/KeyKt {
+	public static final fun getKey (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/LandmarkKt {
 	public static final fun getLandmark (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -1471,6 +1483,10 @@ public final class com/jcsoftdev/ui/icons/VideoKt {
 
 public final class com/jcsoftdev/ui/icons/WalletKt {
 	public static final fun getWallet (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/WebhookKt {
+	public static final fun getWebhook (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
 public final class com/jcsoftdev/ui/icons/WrenchKt {
@@ -2316,9 +2332,9 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 public final class com/jcsoftdev/ui/theme/UiStrings {
 	public static final field $stable I
 	public static final field Companion Lcom/jcsoftdev/ui/theme/UiStrings$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
-	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
 	public final fun getActionFailed ()Ljava/lang/String;
 	public final fun getActions ()Ljava/lang/String;
 	public final fun getBack ()Ljava/lang/String;
@@ -2334,6 +2350,7 @@ public final class com/jcsoftdev/ui/theme/UiStrings {
 	public final fun getNotifications ()Ljava/lang/String;
 	public final fun getOptional ()Ljava/lang/String;
 	public final fun getProcessing ()Ljava/lang/String;
+	public final fun getRemove ()Ljava/lang/String;
 	public final fun getRetry ()Ljava/lang/String;
 	public final fun getShowPassword ()Ljava/lang/String;
 	public final fun getSomethingWrong ()Ljava/lang/String;

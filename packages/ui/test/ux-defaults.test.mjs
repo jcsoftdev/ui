@@ -54,6 +54,11 @@ test("Chip adds a status glyph only for status tones and an explicit icon wins",
   assert.doesNotMatch(custom, /<svg/);
 });
 
+test("Chip onRemove renders a named remove button; without it there is none", () => {
+  assert.match(html.chipRemovable(), /<button[^>]*type="button"[^>]*aria-label="Remove"/);
+  assert.doesNotMatch(html.chipStatic(), /<button/);
+});
+
 test("Button loadingLabel replaces the label and is announced; plain buttons render as before", () => {
   const loading = html.buttonLoading();
   assert.match(loading, /aria-busy="true"/);
@@ -124,14 +129,14 @@ test("runConfirm folds returned failures and thrown errors into one outcome", as
   );
 });
 
-test("ResponsiveList renders a table from md up and stacked cards below it", () => {
+test("ResponsiveList renders a table from its container width up and stacked cards below it", () => {
   const markup = html.list(true);
   const [table, cards] = markup.split("<ul");
-  assert.match(table, /class="[^"]*hidden[^"]*md:block/);
+  assert.match(table, /class="[^"]*hidden[^"]*@min-\[42rem\]\/responsive-list:block/);
   assert.match(table, /<caption class="sr-only">Orders<\/caption>/);
   assert.match(table, /<th[^>]*scope="col"[^>]*>City</);
   assert.match(table, /<th[^>]*scope="col"[^>]*>Actions</);
-  assert.match(cards, /aria-label="Orders"[^>]*md:hidden/);
+  assert.match(cards, /aria-label="Orders"[^>]*@min-\[42rem\]\/responsive-list:hidden/);
 });
 
 test("ResponsiveList keys every row in both markups and applies rowClassName", () => {

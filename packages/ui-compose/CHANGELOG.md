@@ -18,6 +18,12 @@ Fixes the kit-level defaults an accessibility audit of a production app found in
 - All new components are separate files that no existing code refers to, so R8 drops them from apps that do not use them.
 - Binary note (pre-1.0): recompile. Changed signatures: `Button`, `IconButton` (new `disabledColors`), `Input`, `PasswordInput` (new `contentType`), `CardDefaults.colors`.
 
+### Web parity additions
+
+- `Chip` takes `onRemove` and `removeLabel` (default the new `UiStrings.remove`, "Remove" / "Quitar"): a remove button with a 48dp touch target.
+- `Input` takes `size: InputSize` (`Md`, `Lg`); `Lg` is the height of the large button.
+- Key and Webhook icons join the generated set.
+
 ### Opt-in Liquid features (breaking)
 
 Liquid Glass is now built from values the app passes, so an APK only contains the Liquid code it uses. R8 keeps a feature only when the app names it, because the kit reaches each feature's code through that value and nowhere else. `LiquidReachabilityTest` reads the compiled classes and fails if any kit class outside the Liquid files refers to Liquid code.
