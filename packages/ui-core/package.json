@@ -1,6 +1,6 @@
 {
   "name": "@jcsoftdev/ui-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Framework-agnostic UI behaviour (focus scope, roving focus, popper, dismiss layers, typeahead) and a granular, lazily loaded Liquid Glass engine. Zero dependencies.",
   "author": "jcsoftdev",
   "license": "MIT",
