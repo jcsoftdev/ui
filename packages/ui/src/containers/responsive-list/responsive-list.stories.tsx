@@ -68,7 +68,7 @@ export const HighlightedRow: Story = {
   },
 };
 
-/** Below `md` the same data renders as stacked cards. */
+/** Under 42rem of container width the same data renders as stacked cards. */
 export const Phone: Story = {
   args: { renderActions: (o: Order) => <Button size="sm">Ver {o.id}</Button> },
   decorators: [

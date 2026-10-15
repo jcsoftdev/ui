@@ -50,7 +50,7 @@ export interface ResponsiveListProps<T> {
   classNames?: ClassNames<ResponsiveListPart>;
 }
 
-/** A table from `md` up and a stack of cards below it, from one column definition. */
+/** A table once its own container is 42rem wide and a stack of cards below that, from one column definition. */
 export function ResponsiveList<T>({
   caption,
   items,
@@ -67,10 +67,10 @@ export function ResponsiveList<T>({
   const details = columns.filter((column) => column !== primary);
 
   return (
-    <div className={cn("min-w-0", classNames?.root, className)}>
+    <div className={cn("@container/responsive-list min-w-0", classNames?.root, className)}>
       <div
         className={cn(
-          "hidden rounded-card border-card shadow-card surface-card md:block",
+          "hidden rounded-card border-card shadow-card surface-card @min-[42rem]/responsive-list:block",
           classNames?.tableWrapper,
         )}
       >
@@ -116,7 +116,10 @@ export function ResponsiveList<T>({
       </div>
       <ul
         aria-label={caption}
-        className={cn("m-0 flex list-none flex-col gap-density p-0 md:hidden", classNames?.cards)}
+        className={cn(
+          "m-0 flex list-none flex-col gap-density p-0 @min-[42rem]/responsive-list:hidden",
+          classNames?.cards,
+        )}
       >
         {items.map((item) => (
           <li

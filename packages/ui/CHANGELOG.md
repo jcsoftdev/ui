@@ -4,6 +4,7 @@
 
 ### Components for app shells
 
+- **`ResponsiveList` follows its own width.** It is a container (`@container/responsive-list`) and swaps cards for the table at 42rem of its own width instead of the viewport `md`, so it stays right in a narrow column or beside a sidebar.
 - **`Input` `size="lg"`.** A thumb-friendly field at the height of the large `Button` (`h-control-lg`); `size` defaults to `md`. `size` is now the `md | lg` prop, no longer the native numeric attribute.
 - **Key and Webhook icons.** `Key` and `Webhook` join the icon set (Lucide sources in `icons/svg`), with their lazy `<ui-icon>` glyphs.
 ### Liquid Glass on phones
