@@ -20,7 +20,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.onFocusChanged
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -76,6 +79,32 @@ public class InputColors(
     ): InputColors = InputColors(container, border, focusedBorder, errorBorder, text, placeholder, cursor, selectedOption)
 }
 
+/**
+ * What an [Input] holds, so autofill and password managers can offer the right saved value (Compose `contentType` semantics).
+ * It only labels the field; it never changes the keyboard (use `keyboardOptions` for that) or the displayed text.
+ */
+public enum class InputContentType {
+    Username,
+    NewUsername,
+    Email,
+    Phone,
+    Password,
+    NewPassword,
+    OneTimeCode,
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+private fun InputContentType.toCompose(): ContentType =
+    when (this) {
+        InputContentType.Username -> ContentType.Username
+        InputContentType.NewUsername -> ContentType.NewUsername
+        InputContentType.Email -> ContentType.EmailAddress
+        InputContentType.Phone -> ContentType.PhoneNumber
+        InputContentType.Password -> ContentType.Password
+        InputContentType.NewPassword -> ContentType.NewPassword
+        InputContentType.OneTimeCode -> ContentType.SmsOtpCode
+    }
+
 /** Default colors, shape and metrics shared by the text-like controls; read the theme, so a custom [UiTheme] flows through. */
 public object InputDefaults {
     /** Colors in the active theme; focus uses the accent, errors the danger color. */
@@ -113,6 +142,9 @@ public object InputDefaults {
  * Single-line text input (a `BasicTextField` with `value` / `onValueChange`: the `TextFieldState` API is stable in
  * Compose Multiplatform 1.8.2, but its output transformations are still experimental, and the digit masks here need them).
  * Inside a [Field] it also reads the label, helper text and error. Minimum height 48dp (the large button's height for [InputSize.Lg]), grows with the font scale.
+ *
+ * [contentType] tells autofill and password managers what the field holds (username, e-mail, phone, one-time code...); it is
+ * semantics only, so pair it with matching `keyboardOptions`. [placeholder] shows while empty, in the placeholder color.
  */
 @Composable
 public fun Input(
@@ -124,6 +156,7 @@ public fun Input(
     isError: Boolean = false,
     placeholder: String? = null,
     contentDescription: String? = null,
+    contentType: InputContentType? = null,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -154,10 +187,15 @@ public fun Input(
         contentPadding,
         textStyle,
         size,
+        contentType,
     )
 }
 
-/** [Input] for secrets: masked by default, with a show/hide button whose labels the caller supplies. */
+/**
+ * [Input] for secrets: masked by default, with a show/hide button whose labels the caller supplies. [contentType] is
+ * [InputContentType.Password]; pass [InputContentType.NewPassword] on sign-up and change-password screens so the password manager
+ * offers to generate one instead of filling the saved one.
+ */
 @Composable
 public fun PasswordInput(
     value: String,
@@ -169,6 +207,7 @@ public fun PasswordInput(
     isError: Boolean = false,
     placeholder: String? = null,
     contentDescription: String? = null,
+    contentType: InputContentType = InputContentType.Password,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     colors: InputColors = InputDefaults.colors(),
     shape: Shape = InputDefaults.shape,
@@ -199,6 +238,7 @@ public fun PasswordInput(
         shape,
         contentPadding,
         textStyle,
+        contentType = contentType,
     )
 }
 
@@ -252,6 +292,7 @@ internal fun InputFrame(
     contentPadding: PaddingValues,
     textStyle: TextStyle,
     size: InputSize = InputSize.Md,
+    contentType: InputContentType? = null,
 ) {
     val sizes = UiTheme.sizes
     val info = LocalFieldInfo.current
@@ -269,6 +310,7 @@ internal fun InputFrame(
                 .semantics {
                     if (spoken != null) this.contentDescription = spoken
                     if (hasError) error(errorText ?: "")
+                    if (contentType != null) this.contentType = contentType.toCompose()
                 },
         enabled = enabled,
         readOnly = readOnly,

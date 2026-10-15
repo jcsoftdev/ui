@@ -29,6 +29,7 @@ import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.constrainHeight
@@ -37,6 +38,13 @@ import com.jcsoftdev.ui.foundation.pressScale
 import com.jcsoftdev.ui.theme.LocalSizes
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.math.max
+
+/** Font scale above which single-line labels may wrap, so a larger system font grows the control instead of cutting its label. */
+internal const val WRAP_FONT_SCALE: Float = 1.3f
+
+/** Lines a control label may use: 1 normally, 2 once the font scale is above [WRAP_FONT_SCALE]. */
+@Composable
+internal fun labelMaxLines(): Int = if (LocalDensity.current.fontScale > WRAP_FONT_SCALE) 2 else 1
 
 /** Dims the content to [com.jcsoftdev.ui.theme.ThemeSizes.disabledAlpha] (web `disabled:opacity-45`) unless [enabled]. */
 @Composable

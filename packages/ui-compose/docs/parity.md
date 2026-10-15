@@ -38,6 +38,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `BigDate` | web-only | none | |
 | `Button` | both | `atoms.Button`, `ButtonVariant`, `ButtonSize` | Loading state, `block`, 48dp touch target. |
 | (icon-only `Button`) | compose-only | `atoms.IconButton` | Description is required because it is icon-only. |
+| (floating action button) | compose-only | `atoms.FloatingActionButton`, `ExtendedFloatingActionButton`, `FabColors`, `FabDefaults` | 56dp, button role, collapses to the icon; reduced motion is a jump cut. |
 | `Checkbox` | both | `atoms.Checkbox` | Boolean and tri-state overloads. |
 | `Chip` | both | `atoms.Chip`, `ChipTone` | `onRemove` and `removeLabel` append a remove button with a 48dp touch target. |
 | `Icon` and the icon set | both | `icons.Icon`, `icons.Icons.*` | Same SVG source (`packages/ui/icons`), same names; generated at build time, one nullable-backed property each. |
@@ -58,6 +59,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Field`, `Label` | both | `forms.Field` | Label, description, error and required marker in one composable. |
 | `Input`, `InputIcon` | both | `forms.Input` | `leading` and `trailing` slots replace `InputIcon`. `size = InputSize.Lg` matches the large button height. |
 | (password input) | compose-only | `forms.PasswordInput` | The web uses `Input` with a password type. |
+| (autofill content type) | compose-only | `forms.InputContentType`, `Input(contentType)`, `PasswordInput(contentType)` | Maps to Compose `contentType` semantics; the web uses the `autocomplete` attribute. |
 | `TimeInput` | both | `forms.TimeInput` | Number keyboard; stores digits and emits `HH:mm` when valid. |
 | (date input) | compose-only | `forms.DateInput` | Emits `dd/MM/yyyy` when valid. |
 | `PinInput` | both | `forms.PinInput` | One hidden field, SMS autofill. |
@@ -107,6 +109,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | --- | --- | --- | --- |
 | `Dialog` | both | `overlays.Dialog` | Glass with `UiStyle.Glass`. |
 | `Drawer` | both | `overlays.Sheet` | The web drawer is a side panel; Compose is a bottom sheet with scrollable body and pinned footer. |
+| (full-screen sub-screen) | compose-only | `overlays.FullScreenModal`, `FullScreenModalColors`, `FullScreenModalDefaults` | A modal layer: hides the app from accessibility, focus to the header, back handling. |
 | `DropdownMenu` | both | `overlays.Menu` | Roles for items, checkbox and radio items; opens an anchored popup (no screenshot golden). |
 | `Toaster` / `toast` | both | `overlays.Toaster`, `primitives.ToastHostState` | Same `success`/`error`/`info` shape and queue of two. |
 | `ContextMenu` | web-only | none | |
@@ -121,6 +124,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Tabs` | both | `navigation.Tabs`, `TabItem` | Selected tab role, optional count. |
 | `Segmented` | both | `navigation.Segmented`, `SegmentedOption` | |
 | `Topbar` | both | `navigation.TopBar`, `BarColors`, `BarDefaults` | Chrome: glass with `UiStyle.Glass`. |
+| (pinned bottom actions) | compose-only | `navigation.BottomActionBar`, `BottomActionBarDefaults` | Insets, keyboard and an optional `dockHeight`. |
 | `ActionBar` | both | `navigation.ActionBar` | Floating capsule; chrome. |
 | `Stepper` | web-only | none | |
 | `FloatingToc` | n/a | none | |

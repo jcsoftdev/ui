@@ -25,7 +25,9 @@ import com.jcsoftdev.ui.forms.Field
 import com.jcsoftdev.ui.forms.Input
 import com.jcsoftdev.ui.forms.Select
 import com.jcsoftdev.ui.forms.SelectOption
+import com.jcsoftdev.ui.navigation.BottomActionBar
 import com.jcsoftdev.ui.overlays.Dialog
+import com.jcsoftdev.ui.overlays.FullScreenModal
 import com.jcsoftdev.ui.overlays.Menu
 import com.jcsoftdev.ui.overlays.Sheet
 import com.jcsoftdev.ui.overlays.Toaster
@@ -42,6 +44,7 @@ fun OverlaysGallery() {
         val toasts = remember { ToastHostState() }
         var sheet by remember { mutableStateOf(false) }
         var dialog by remember { mutableStateOf(false) }
+        var screen by remember { mutableStateOf(false) }
         var menu by remember { mutableStateOf(false) }
         var sort by remember { mutableStateOf("name") }
         var barber by remember { mutableStateOf<String?>(null) }
@@ -53,6 +56,7 @@ fun OverlaysGallery() {
                 Text("Overlays")
                 Button("Hoja con lista larga", { sheet = true }, block = true, size = ButtonSize.Lg, variant = ButtonVariant.Primary)
                 Button("Diálogo de confirmación", { dialog = true }, block = true)
+                Button("Pantalla completa", { screen = true }, block = true)
                 Button("Toast", { toasts.success("Cita guardada") }, block = true)
                 Button(
                     "Toast con acción",
@@ -71,6 +75,19 @@ fun OverlaysGallery() {
                         item("Eliminar", {}, destructive = true)
                     }
                 }
+                Field("Barbero") { Select(Barbers, barber, { barber = it }, placeholder = "Elige un barbero") }
+            }
+            FullScreenModal(
+                open = screen,
+                onDismiss = { screen = false },
+                title = "Editar cita",
+                footer = {
+                    BottomActionBar {
+                        Button("Cancelar", { screen = false })
+                        Button("Guardar", { screen = false }, variant = ButtonVariant.Primary, modifier = Modifier.weight(1f))
+                    }
+                },
+            ) {
                 Field("Barbero") { Select(Barbers, barber, { barber = it }, placeholder = "Elige un barbero") }
             }
             Sheet(

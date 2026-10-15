@@ -121,7 +121,7 @@ public fun Chip(
     ) {
         CompositionLocalProvider(LocalContentColor provides colors.content) {
             leading?.invoke()
-            Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = labelMaxLines(), overflow = TextOverflow.Ellipsis)
             trailing?.invoke()
             if (onRemove != null) RemoveGlyph(onRemove, removeLabel)
         }
@@ -224,6 +224,6 @@ public fun StatusPill(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(StatusPillDefaults.ledSize).background(colors.led, CircleShape))
-        Text(label, style = textStyle, color = colors.content, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = textStyle, color = colors.content, maxLines = labelMaxLines(), overflow = TextOverflow.Ellipsis)
     }
 }

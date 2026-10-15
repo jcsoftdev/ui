@@ -84,7 +84,7 @@ object UiColors {
         accentLine = Color(0xFFF6C2C1),
         accent2 = Color(0xFFFEC79E),
         danger = Color(0xFFC51F1C),
-        dangerSoft = Color(0xFFFFEBE8),
+        dangerSoft = Color(0xFFFFE0D4),
         warning = Color(0xFF865900),
         warningSoft = Color(0xFFFEEFCF),
         info = Color(0xFF0B5CAD),
@@ -133,7 +133,7 @@ object UiColors {
         accentLine = Color(0xFF5B2E2F),
         accent2 = Color(0xFFFEC79E),
         danger = Color(0xFFFF9689),
-        dangerSoft = Color(0xFF300F0B),
+        dangerSoft = Color(0xFF431608),
         warning = Color(0xFFEBC166),
         warningSoft = Color(0xFF241900),
         info = Color(0xFF8FC3F7),
@@ -243,7 +243,7 @@ object UiTypography {
     val overline = TextStyle(fontSize = 11.sp, fontWeight = FontWeight(700), lineHeight = 16.5.sp, letterSpacing = (0.08).em)
     val clock = TextStyle(fontSize = 17.sp, fontWeight = FontWeight(700), lineHeight = 17.sp)
     val data = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight(600), lineHeight = 20.sp)
-    val count = TextStyle(fontSize = 11.sp, fontWeight = FontWeight(700), lineHeight = 11.sp)
+    val count = TextStyle(fontSize = 12.sp, fontWeight = FontWeight(700), lineHeight = 14.4.sp)
     val mTitle = TextStyle(fontSize = 34.sp, fontWeight = FontWeight(800), lineHeight = 41.sp, letterSpacing = (-0.025).em)
     val mCardTitle = TextStyle(fontSize = 26.sp, fontWeight = FontWeight(800), lineHeight = 28.6.sp, letterSpacing = (-0.02).em)
     val mRowTitle = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight(700), lineHeight = 20.15.sp)
