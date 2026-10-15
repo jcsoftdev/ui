@@ -54,6 +54,11 @@ test("Chip adds a status glyph only for status tones and an explicit icon wins",
   assert.doesNotMatch(custom, /<svg/);
 });
 
+test("Chip onRemove renders a named remove button; without it there is none", () => {
+  assert.match(html.chipRemovable(), /<button[^>]*type="button"[^>]*aria-label="Remove"/);
+  assert.doesNotMatch(html.chipStatic(), /<button/);
+});
+
 test("Button loadingLabel replaces the label and is announced; plain buttons render as before", () => {
   const loading = html.buttonLoading();
   assert.match(loading, /aria-busy="true"/);

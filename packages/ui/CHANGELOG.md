@@ -4,6 +4,7 @@
 
 ### Components for app shells
 
+- **`Chip` `onRemove`.** Appends a remove button named from the new `remove` UI string ("Remove" / "Quitar", or `removeLabel`), keyboard operable, with a 44px hit area under touch density.
 - **`ResponsiveList` follows its own width.** It is a container (`@container/responsive-list`) and swaps cards for the table at 42rem of its own width instead of the viewport `md`, so it stays right in a narrow column or beside a sidebar.
 - **`Input` `size="lg"`.** A thumb-friendly field at the height of the large `Button` (`h-control-lg`); `size` defaults to `md`. `size` is now the `md | lg` prop, no longer the native numeric attribute.
 - **Key and Webhook icons.** `Key` and `Webhook` join the icon set (Lucide sources in `icons/svg`), with their lazy `<ui-icon>` glyphs.

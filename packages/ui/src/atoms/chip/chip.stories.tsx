@@ -57,6 +57,10 @@ export const StatusIcon: Story = {
   ),
 };
 
+export const Removable: Story = {
+  args: { tone: "accent", children: "Barba", onRemove: () => {} },
+};
+
 export const IconProp: Story = {
   args: { tone: "accent", icon: <Scissors aria-hidden />, children: "Corte clásico" },
 };

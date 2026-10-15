@@ -57,6 +57,7 @@ export const html = {
   switch: () => renderToStaticMarkup(<Switch />),
   radio: () => renderToStaticMarkup(<RadioGroup options={[{ value: "a", label: "A" }]} />),
   chipStatic: () => renderToStaticMarkup(<Chip>Paid</Chip>),
+  chipRemovable: () => renderToStaticMarkup(<Chip onRemove={() => {}}>Paid</Chip>),
   chipInteractive: () => renderToStaticMarkup(<Chip onClick={() => {}}>Paid</Chip>),
   fieldPlain: () =>
     renderToStaticMarkup(

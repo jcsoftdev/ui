@@ -1,4 +1,8 @@
+"use client";
+
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useUiStrings } from "../../i18n/index.js";
+import { X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { customToneStyle, isCustomTone } from "../../utils/tone.js";
 import { type StatusTone, statusIcon } from "../internal/status-icons.js";
@@ -36,6 +40,10 @@ export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
   icon?: ReactNode;
   /** Prefix `info`, `success`, `warning` and `danger` chips with their status glyph. */
   statusIcon?: boolean;
+  /** Appends a remove button that calls this. */
+  onRemove?: () => void;
+  /** Accessible name of the remove button. Defaults to the localized "Remove". */
+  removeLabel?: string;
 }
 
 const statusTones = new Set<string>(["info", "success", "warning", "danger"]);
@@ -46,11 +54,14 @@ export function Chip({
   square,
   icon,
   statusIcon: withStatusIcon,
+  onRemove,
+  removeLabel,
   className,
   style,
   children,
   ...props
 }: ChipProps) {
+  const strings = useUiStrings();
   const custom = isCustomTone(tone, builtinTones);
   const leading =
     icon ??
@@ -64,7 +75,8 @@ export function Chip({
         custom
           ? "bg-(--tone-c-soft) text-(--tone-c-ink)"
           : (chipToneClasses[tone as ChipBuiltinTone] ?? chipToneClasses.neutral),
-        interactive && "in-data-[density=touch]:min-h-11",
+        (interactive || onRemove) && "in-data-[density=touch]:min-h-11",
+        onRemove && "pr-1",
         className,
       )}
       style={customToneStyle(tone, builtinTones, style)}
@@ -72,6 +84,16 @@ export function Chip({
     >
       {leading}
       {children}
+      {onRemove ? (
+        <button
+          type="button"
+          aria-label={removeLabel ?? strings.remove}
+          onClick={onRemove}
+          className="grid size-4 shrink-0 cursor-pointer place-items-center self-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:focus-ring in-data-[density=touch]:size-11 in-data-[density=touch]:-mr-2"
+        >
+          <X aria-hidden="true" />
+        </button>
+      ) : null}
     </span>
   );
 }
