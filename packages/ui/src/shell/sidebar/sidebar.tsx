@@ -192,14 +192,26 @@ export function Sidebar({
                         >
                           {item.label}
                         </span>
-                        {item.badge !== undefined ? (
+                        {item.badge !== undefined && rail ? (
+                          <>
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "absolute top-1 right-1 size-2 rounded-full ring-2 ring-surface",
+                                item.badgeTone === "danger" ? "bg-danger" : "bg-accent",
+                                classNames?.badge,
+                              )}
+                            />
+                            <span className="sr-only">
+                              {item.badge}
+                              {item.badgeLabel ? ` ${item.badgeLabel}` : null}
+                            </span>
+                          </>
+                        ) : item.badge !== undefined ? (
                           <span
                             className={cn(
                               "ml-auto shrink-0 rounded-chip px-1.5 py-0.75 text-count",
                               badgeTone,
-                              rail &&
-                                "absolute top-1 right-1 m-0 size-2 overflow-hidden p-0 text-[0] ring-2 ring-surface",
-                              rail && (item.badgeTone === "danger" ? "bg-danger" : "bg-accent"),
                               classNames?.badge,
                             )}
                           >
