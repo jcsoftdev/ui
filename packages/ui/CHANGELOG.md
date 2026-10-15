@@ -2,6 +2,9 @@
 
 ## 0.3.0 (unreleased)
 
+### Components for app shells
+
+- **Key and Webhook icons.** `Key` and `Webhook` join the icon set (Lucide sources in `icons/svg`), with their lazy `<ui-icon>` glyphs.
 ### Liquid Glass on phones
 
 - **Cheaper lens maps.** The displacement and specular maps are rasterised at no more than 1.5
