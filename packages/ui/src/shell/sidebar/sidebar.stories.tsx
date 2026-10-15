@@ -55,6 +55,7 @@ const meta = {
     groups: { control: "object" },
     ariaLabel: { control: "text" },
     open: { control: "boolean" },
+    collapsed: { control: "boolean" },
     header: { control: false },
     footer: { control: false },
     renderLink: { control: false },
@@ -75,6 +76,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const WithoutHeaderAndFooter: Story = { args: { header: undefined, footer: undefined } };
+
+export const Rail: Story = { args: { collapsed: true } };
 
 export const CustomLink: Story = {
   args: {

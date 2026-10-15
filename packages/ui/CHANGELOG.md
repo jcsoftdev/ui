@@ -4,6 +4,7 @@
 
 ### Components for app shells
 
+- **`Sidebar` rail.** `collapsed` turns the sidebar into an icons-only rail (labels as `title` tooltips and screen-reader text, badges as dots). It is ignored while the sidebar is a drawer, so the default behavior is unchanged.
 - **`Chip` `onRemove`.** Appends a remove button named from the new `remove` UI string ("Remove" / "Quitar", or `removeLabel`), keyboard operable, with a 44px hit area under touch density.
 - **`ResponsiveList` follows its own width.** It is a container (`@container/responsive-list`) and swaps cards for the table at 42rem of its own width instead of the viewport `md`, so it stays right in a narrow column or beside a sidebar.
 - **`Input` `size="lg"`.** A thumb-friendly field at the height of the large `Button` (`h-control-lg`); `size` defaults to `md`. `size` is now the `md | lg` prop, no longer the native numeric attribute.
