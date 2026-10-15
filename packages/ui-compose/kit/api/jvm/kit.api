@@ -44,6 +44,7 @@ public final class com/jcsoftdev/ui/atoms/ButtonDefaults {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/atoms/ButtonDefaults;
 	public final fun colors (Lcom/jcsoftdev/ui/atoms/ButtonVariant;Landroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/atoms/ButtonColors;
 	public final fun contentPadding (Lcom/jcsoftdev/ui/atoms/ButtonSize;Landroidx/compose/runtime/Composer;II)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun disabledColors (Lcom/jcsoftdev/ui/atoms/ButtonVariant;Landroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/atoms/ButtonColors;
 	public final fun getIconSpacing-D9Ej5fM ()F
 	public final fun getLoadingIndicator ()Lkotlin/jvm/functions/Function3;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
@@ -52,7 +53,7 @@ public final class com/jcsoftdev/ui/atoms/ButtonDefaults {
 }
 
 public final class com/jcsoftdev/ui/atoms/ButtonKt {
-	public static final fun Button-ET9GhUo (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZZZLjava/lang/String;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Button-ipuLQCU (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZZZLjava/lang/String;Lcom/jcsoftdev/ui/atoms/ButtonColors;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/atoms/ButtonSize : java/lang/Enum {
@@ -156,8 +157,36 @@ public final class com/jcsoftdev/ui/atoms/DividerKt {
 	public static final fun VerticalDivider-aM-cp0Q (Landroidx/compose/ui/Modifier;JFLandroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/atoms/FabColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy--OWjLjI (JJ)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public static synthetic fun copy--OWjLjI$default (Lcom/jcsoftdev/ui/atoms/FabColors;JJILjava/lang/Object;)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getContent-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/atoms/FabDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/atoms/FabDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public final fun disabledColors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getElevation-D9Ej5fM ()F
+	public final fun getIconSpacing-D9Ej5fM ()F
+	public final fun getMargin-D9Ej5fM ()F
+	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getSize-D9Ej5fM ()F
+	public final fun getTextStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/atoms/FloatingActionButtonKt {
+	public static final fun ExtendedFloatingActionButton-wn8IZOc (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZZLcom/jcsoftdev/ui/atoms/FabColors;Lcom/jcsoftdev/ui/atoms/FabColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public static final fun FloatingActionButton-gMrHQkA (Lkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLcom/jcsoftdev/ui/atoms/FabColors;Lcom/jcsoftdev/ui/atoms/FabColors;Landroidx/compose/ui/graphics/Shape;FLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/atoms/IconButtonKt {
-	public static final fun IconButton (Lkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZLcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun IconButton (Lkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZLcom/jcsoftdev/ui/atoms/ButtonColors;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/atoms/LedStatus : java/lang/Enum {
@@ -329,7 +358,7 @@ public final class com/jcsoftdev/ui/containers/CardColors {
 public final class com/jcsoftdev/ui/containers/CardDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/CardDefaults;
-	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/containers/CardColors;
+	public final fun colors (ZLandroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/containers/CardColors;
 	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getFooterPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getHeaderMinHeight-D9Ej5fM ()F
@@ -345,13 +374,13 @@ public final class com/jcsoftdev/ui/containers/CardKt {
 public final class com/jcsoftdev/ui/containers/ComposableSingletons$BannerKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ComposableSingletons$BannerKt;
 	public fun <init> ()V
-	public final fun getLambda$-1192661801$kit ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1769506294$kit ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/jcsoftdev/ui/containers/ComposableSingletons$PageHeaderKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ComposableSingletons$PageHeaderKt;
 	public fun <init> ()V
-	public final fun getLambda$-143045464$kit ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$727776135$kit ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/jcsoftdev/ui/containers/ListRowColors {
@@ -473,6 +502,19 @@ public final class com/jcsoftdev/ui/forms/InputColors {
 	public final fun getText-0d7_KjU ()J
 }
 
+public final class com/jcsoftdev/ui/forms/InputContentType : java/lang/Enum {
+	public static final field Email Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field NewPassword Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field NewUsername Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field OneTimeCode Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Password Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Phone Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Username Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static fun values ()[Lcom/jcsoftdev/ui/forms/InputContentType;
+}
+
 public final class com/jcsoftdev/ui/forms/InputDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/forms/InputDefaults;
@@ -485,8 +527,8 @@ public final class com/jcsoftdev/ui/forms/InputDefaults {
 }
 
 public final class com/jcsoftdev/ui/forms/InputKt {
-	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
-	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/forms/NumberStepperDefaults {
@@ -1469,6 +1511,17 @@ public final class com/jcsoftdev/ui/navigation/BarsKt {
 	public static final fun TopBar-tJlDC5Y (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lcom/jcsoftdev/ui/navigation/BarColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/navigation/BottomActionBarDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/navigation/BottomActionBarDefaults;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getShape ()Landroidx/compose/ui/graphics/Shape;
+}
+
+public final class com/jcsoftdev/ui/navigation/BottomActionBarKt {
+	public static final fun BottomActionBar-Uww-Ezs (Landroidx/compose/ui/Modifier;FLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lcom/jcsoftdev/ui/navigation/BarColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/navigation/SegmentedColors {
 	public static final field $stable I
 	public synthetic fun <init> (JJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1487,6 +1540,7 @@ public final class com/jcsoftdev/ui/navigation/SegmentedDefaults {
 	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
 	public final fun getTrackPadding-D9Ej5fM ()F
+	public final fun getWrapWidth-D9Ej5fM ()F
 	public final fun textStyle (ZLandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 
@@ -1535,6 +1589,12 @@ public final class com/jcsoftdev/ui/navigation/TabsKt {
 	public static final fun Tabs-au3_HiA (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/navigation/TabsColors;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/overlays/ComposableSingletons$FullScreenModalKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/ComposableSingletons$FullScreenModalKt;
+	public fun <init> ()V
+	public final fun getLambda$1557053709$kit ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class com/jcsoftdev/ui/overlays/ComposableSingletons$OverlayHostKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/ComposableSingletons$OverlayHostKt;
 	public fun <init> ()V
@@ -1569,6 +1629,31 @@ public final class com/jcsoftdev/ui/overlays/DialogDefaults {
 
 public final class com/jcsoftdev/ui/overlays/DialogKt {
 	public static final fun Dialog-g4P7Ru4 (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;ZZLjava/lang/String;Lcom/jcsoftdev/ui/overlays/DialogColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/primitives/OverlayMotion;FLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getDivider-0d7_KjU ()J
+	public final fun getTitle-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/FullScreenModalDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getHeaderHeight-D9Ej5fM ()F
+	public final fun getHeaderPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getMotion ()Lcom/jcsoftdev/ui/primitives/OverlayMotion;
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalKt {
+	public static final fun FullScreenModal-uYRUAWA (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/primitives/OverlayMotion;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/overlays/MenuColors {

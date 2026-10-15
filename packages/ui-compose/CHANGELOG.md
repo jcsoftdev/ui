@@ -2,6 +2,22 @@
 
 ## 0.2.0 (Unreleased)
 
+### Accessibility and UX defaults
+
+Fixes the kit-level defaults an accessibility audit of a production app found in 0.1.0, and adds the app-level components it was missing.
+
+- **Status tones.** `danger-soft` was within 1.02:1 of `accent-soft` in both themes, so a danger chip and an accent chip looked the same. It now leans orange-red (light `#ffe0d4`, dark `#431608`); the danger text on it stays at 4.70:1 or more. `warning`, `info` and `success` already had their own soft and ink pairs. Two soft fills cannot be 3:1 apart while the text on them keeps 4.5:1, so the separation is hue and about 1.09:1 luminance; do not rely on the fill alone (the chip label and icons carry the meaning). `StatusToneContrastTest` pins the text contrast of every soft pair. The token source is shared with the web, so `--danger-soft` changes there too.
+- **Large font scales.** `Button`, `Chip`, `StatusPill` and `Segmented` labels use up to two lines above a font scale of 1.3 instead of being cut to one. `Segmented` caps a segment at `SegmentedDefaults.wrapWidth` (140dp) so the label wraps while the group keeps scrolling.
+- **`count` text style** goes from 11sp with an 11sp line to 12sp with a 14.4sp line, so accents and descenders no longer clip. The web token changes the same way.
+- **`Input` content type.** `InputContentType` (`Username`, `NewUsername`, `Email`, `Phone`, `Password`, `NewPassword`, `OneTimeCode`) is a new `contentType` parameter of `Input`; `PasswordInput` takes it too and defaults to `Password`. It maps to Compose `contentType` semantics so autofill and password managers offer the right value. It does not change the keyboard. `placeholder` was already a parameter of `Input`, `PasswordInput`, `TimeInput`, `DateInput` and `Select`.
+- **Disabled buttons.** `Button` and `IconButton` no longer dim to 0.45 alpha (a primary label fell to about 1.4:1). A disabled button uses the new `disabledColors` parameter, by default `ButtonDefaults.disabledColors(variant)`: a neutral fill with a label at 4.5:1 or more. Code that passed only `colors` to restyle a disabled button should also pass `disabledColors`.
+- **Card border.** `CardDefaults.colors(outlined)` draws the control border (about 3.6:1 against the surface) instead of the hairline; it is on by default when `UiTheme(highContrast)` is on.
+- **`FloatingActionButton` and `ExtendedFloatingActionButton`** (`atoms`): 56dp, button role, 48dp target, neutral disabled colors, and the extended one collapses to its icon (the label becomes the description) with the theme motion.
+- **`BottomActionBar`** (`navigation`): primary actions pinned to the bottom, padded by the side and bottom insets, above the keyboard, and above a bottom dock with `dockHeight`.
+- **`FullScreenModal`** (`overlays`): a full-window modal layer for sub-screens. It hides the app and lower layers from accessibility, moves focus to the header title, exposes it as the pane title and a heading, handles system back and a header back button, and slides up with the theme motion.
+- All new components are separate files that no existing code refers to, so R8 drops them from apps that do not use them.
+- Binary note (pre-1.0): recompile. Changed signatures: `Button`, `IconButton` (new `disabledColors`), `Input`, `PasswordInput` (new `contentType`), `CardDefaults.colors`.
+
 ### Opt-in Liquid features (breaking)
 
 Liquid Glass is now built from values the app passes, so an APK only contains the Liquid code it uses. R8 keeps a feature only when the app names it, because the kit reaches each feature's code through that value and nowhere else. `LiquidReachabilityTest` reads the compiled classes and fails if any kit class outside the Liquid files refers to Liquid code.

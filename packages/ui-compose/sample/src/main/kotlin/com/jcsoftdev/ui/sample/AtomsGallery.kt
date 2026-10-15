@@ -27,6 +27,8 @@ import com.jcsoftdev.ui.atoms.Checkbox
 import com.jcsoftdev.ui.atoms.Chip
 import com.jcsoftdev.ui.atoms.ChipTone
 import com.jcsoftdev.ui.atoms.Divider
+import com.jcsoftdev.ui.atoms.ExtendedFloatingActionButton
+import com.jcsoftdev.ui.atoms.FloatingActionButton
 import com.jcsoftdev.ui.atoms.IconButton
 import com.jcsoftdev.ui.atoms.LedStatus
 import com.jcsoftdev.ui.atoms.Progress
@@ -65,6 +67,11 @@ private fun Panel(dark: Boolean) {
                 Button("Loading", {}, variant = ButtonVariant.Primary, loading = true)
                 Button("Disabled", {}, variant = ButtonVariant.Primary, enabled = false)
                 IconButton({}, "Add") { Text("+") }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                FloatingActionButton({}, "Nueva cita") { Text("+", color = UiTheme.colors.onAccent) }
+                ExtendedFloatingActionButton("Nueva cita", {}, icon = { Text("+", color = UiTheme.colors.onAccent) })
+                FloatingActionButton({}, "Nueva cita", enabled = false) { Text("+") }
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ChipTone.entries.forEach { Chip(it.name, tone = it) }
