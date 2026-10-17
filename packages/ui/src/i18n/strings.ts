@@ -40,6 +40,8 @@ export interface UiStrings {
   steps: string;
   /** Default accessible name of an `Aside`. */
   aside: string;
+  /** Back action of a single-pane `ListDetail`. */
+  backToList: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -84,6 +86,7 @@ export const uiStrings = {
     stepOf: "Step {current} of {total}: {label}",
     steps: "Steps",
     aside: "Related information",
+    backToList: "Back to list",
   },
   es: {
     retry: "Reintentar",
@@ -124,5 +127,6 @@ export const uiStrings = {
     stepOf: "Paso {current} de {total}: {label}",
     steps: "Pasos",
     aside: "Información relacionada",
+    backToList: "Volver a la lista",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

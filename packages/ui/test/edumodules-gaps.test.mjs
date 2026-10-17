@@ -27,6 +27,7 @@ const dates = await load("../src/calendar/internal/date-utils.ts");
 const picker = await load("../src/forms/date-picker/model.ts");
 const listbox = await load("../src/forms/internal/listbox.ts");
 const wizard = await load("../src/navigation/wizard/model.ts");
+const feed = await load("../src/containers/feed/model.ts");
 
 const { html } = await loadCases("gaps-cases.tsx");
 
@@ -514,4 +515,101 @@ test("DescriptionList fills empty values with a placeholder, keeps 0 and picks l
     /@md\/dl:grid-cols-\[auto_minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/,
   );
   assert.match(html.descriptionList({ valueAlign: "start" }), /\[&amp;_dd\]:text-start/);
+});
+
+async function inZones(file, expression, zones) {
+  const out = await build({
+    entryPoints: [join(here, file)],
+    bundle: true,
+    format: "esm",
+    platform: "neutral",
+    write: false,
+  });
+  const code = `const m = await import("data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}");\nconsole.log(JSON.stringify(${expression}));`;
+  const results = zones.map((tz) =>
+    execFileSync(process.execPath, ["--input-type=module", "-e", code], {
+      env: { ...process.env, TZ: tz },
+      encoding: "utf8",
+    }),
+  );
+  return results;
+}
+
+const zones = ["UTC", "America/Lima", "Pacific/Kiritimati", "Pacific/Pago_Pago", "Asia/Kolkata"];
+
+test("feed time formats calendar dates in UTC so they never shift, in every zone", async () => {
+  const results = await inZones(
+    "../src/containers/feed/model.ts",
+    `[m.formatFeedTime("2026-03-03", { locale: "en-US" }), m.formatFeedTime("2026-03-03", { locale: "es-PE", timeZone: "Pacific/Kiritimati" }), m.isCalendarDate("2026-02-30")]`,
+    zones,
+  );
+  for (const result of results) assert.equal(result, results[0]);
+  assert.deepEqual(JSON.parse(results[0]), ["Mar 3, 2026", "3 mar. 2026", false]);
+});
+
+test("feed time shows an instant in the requested zone and falls back to the raw text when invalid", () => {
+  const instant = "2026-03-04T03:30:00Z";
+  assert.match(
+    feed.formatFeedTime(instant, { locale: "en-US", timeZone: "UTC" }),
+    /Mar 4, 2026.*3:30/,
+  );
+  assert.match(
+    feed.formatFeedTime(instant, { locale: "en-US", timeZone: "America/Lima" }),
+    /Mar 3, 2026.*10:30/,
+  );
+  assert.equal(feed.formatFeedTime("garbage"), "garbage");
+  assert.equal(
+    feed.toDateTimeAttribute(new Date("2026-03-04T03:30:00Z")),
+    "2026-03-04T03:30:00.000Z",
+  );
+  assert.equal(feed.toDateTimeAttribute("2026-03-03"), "2026-03-03");
+});
+
+test("feed relative time reads seconds, minutes, hours and days from the reference and then goes absolute", () => {
+  const now = "2026-03-04T15:30:00Z";
+  const rel = (value, locale = "en-US") =>
+    feed.formatFeedTime(value, { locale, relative: true, now, timeZone: "UTC" });
+  assert.equal(rel("2026-03-04T15:30:00Z"), "now");
+  assert.equal(rel("2026-03-04T15:25:00Z"), "5 minutes ago");
+  assert.equal(rel("2026-03-04T12:30:00Z"), "3 hours ago");
+  assert.equal(rel("2026-03-03T15:30:00Z"), "yesterday");
+  assert.equal(rel("2026-03-04T15:35:00Z"), "in 5 minutes");
+  assert.equal(rel("2026-03-04T15:25:00Z", "es-PE"), "hace 5 minutos");
+  assert.match(rel("2026-02-01T15:30:00Z"), /Feb 1, 2026/);
+});
+
+test("Feed renders time elements with machine values, a localized label and no inline padding", () => {
+  const markup = html.feed();
+  assert.match(markup, /<time dateTime="2026-03-04T15:30:00Z"[^>]*>Mar 4, 2026/);
+  assert.match(markup, /<time dateTime="2026-03-03"[^>]*>Mar 3, 2026<\/time>/);
+  assert.match(markup, /Ana/);
+  assert.equal(markup.split("<time").length - 1, 2);
+  assert.match(html.feedEs(), /<time dateTime="2026-03-03"[^>]*>3 mar\.? 2026<\/time>/);
+  assert.doesNotMatch(markup, /\bpx-|\bpl-|\bpr-/);
+});
+
+test("Shortcuts items are links, buttons or a slotted child with icon, count and key hint", () => {
+  const markup = html.shortcuts();
+  assert.match(markup, /^<ul /);
+  assert.match(markup, /<li><a href="#a"[^>]*>.*Alpha.*<kbd[^>]*>G A<\/kbd>/);
+  assert.match(markup, /<li><button type="button"[^>]*>.*Action/);
+  assert.match(markup, /<li><a [^>]*href="\/r"[^>]*data-router=""[^>]*>.*Routed.*<kbd[^>]*>G R/);
+  assert.equal(markup.split("<a ").length - 1, 2);
+  assert.doesNotMatch(markup, /\bpx-3|\bpl-/);
+});
+
+test("ListDetail collapses with container queries only and names its list", () => {
+  const markup = html.listDetail();
+  assert.match(markup, /@container\/list-detail/);
+  assert.match(markup, /@min-\[641px\]\/list-detail:grid-cols-2/);
+  assert.match(markup, /group-data-\[view=detail\]\/ld:@max-\[640px\]\/list-detail:hidden/);
+  assert.match(markup, /group-data-\[view=list\]\/ld:@max-\[640px\]\/list-detail:hidden/);
+  assert.match(markup, /<ul[^>]*aria-label="Students"/);
+  assert.match(markup, /data-view="list"/);
+  assert.match(
+    html.listDetail({ defaultValue: "a" }),
+    /data-view="detail"[^>]*>.*aria-current="true"/,
+  );
+  assert.match(html.listDetail({ defaultValue: "a" }), /Back to list/);
+  assert.doesNotMatch(markup, /class="[^"]*\b(?:sm|md|lg|xl):/);
 });

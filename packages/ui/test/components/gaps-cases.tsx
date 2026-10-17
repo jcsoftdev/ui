@@ -7,8 +7,11 @@ import {
   DescriptionList,
   DescriptionListItem,
 } from "../../src/containers/description-list/description-list.js";
+import { Feed, FeedEvent } from "../../src/containers/feed/feed.js";
+import { ListDetail, ListDetailDetail, ListDetailItem, ListDetailList } from "../../src/containers/list-detail/list-detail.js";
 import { Note } from "../../src/containers/note/note.js";
 import { Section } from "../../src/containers/section/section.js";
+import { Shortcuts, ShortcutsItem } from "../../src/containers/shortcuts/shortcuts.js";
 import { Combobox } from "../../src/forms/combobox/combobox.js";
 import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
 import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
@@ -123,6 +126,48 @@ export const html = {
         <DescriptionListItem term="Phone" emptyLabel="None" />
         <DescriptionListItem term="Zero">{0}</DescriptionListItem>
       </DescriptionList>,
+    ),
+  feed: () =>
+    renderToStaticMarkup(
+      <Feed>
+        <FeedEvent icon={<i>i</i>} time="2026-03-04T15:30:00Z" timeZone="UTC" meta="Ana">
+          Created
+        </FeedEvent>
+        <FeedEvent time="2026-03-03">Updated</FeedEvent>
+        <FeedEvent>No time</FeedEvent>
+      </Feed>,
+    ),
+  feedEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <Feed>
+          <FeedEvent time="2026-03-03">Actualizado</FeedEvent>
+        </Feed>
+      </UiStringsProvider>,
+    ),
+  shortcuts: () =>
+    renderToStaticMarkup(
+      <Shortcuts aria-label="Quick">
+        <ShortcutsItem href="#a" icon={<i>i</i>} kbd="G A" count={2}>
+          Alpha
+        </ShortcutsItem>
+        <ShortcutsItem>Action</ShortcutsItem>
+        <ShortcutsItem asChild kbd="G R">
+          <a href="/r" data-router="">
+            Routed
+          </a>
+        </ShortcutsItem>
+      </Shortcuts>,
+    ),
+  listDetail: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <ListDetail aria-label="Students" {...props}>
+        <ListDetailList>
+          <ListDetailItem value="a">Ana</ListDetailItem>
+          <ListDetailItem value="b">Bea</ListDetailItem>
+        </ListDetailList>
+        <ListDetailDetail>detail</ListDetailDetail>
+      </ListDetail>,
     ),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };

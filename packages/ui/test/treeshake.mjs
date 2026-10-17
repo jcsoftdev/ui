@@ -159,6 +159,9 @@ for (const [entry, component] of [
   ["containers/note", "Note"],
   ["containers/aside", "Aside"],
   ["containers/description-list", "DescriptionListItem"],
+  ["containers/list-detail", "ListDetail"],
+  ["containers/feed", "Feed"],
+  ["containers/shortcuts", "Shortcuts"],
 ]) {
   const block = await inputsFor(
     `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
