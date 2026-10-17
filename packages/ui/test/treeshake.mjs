@@ -61,6 +61,22 @@ for (const banned of [
 }
 console.log(`containers/confirm-action: ${confirm.bytes} bytes, ${confirm.files.length} modules`);
 
+for (const [entry, component] of [
+  ["atoms/spinner", "Spinner"],
+  ["atoms/kbd", "Kbd"],
+]) {
+  const small = await inputsFor(
+    `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
+  );
+  for (const banned of ["dialog", "primitives/", "popover", "dropdown-menu", "toaster", "icons/"]) {
+    assert.ok(
+      !small.files.some((f) => f.includes(banned)),
+      `${component} bundle must not include "${banned}"`,
+    );
+  }
+  console.log(`${entry}: ${small.bytes} bytes, ${small.files.length} modules`);
+}
+
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
   `atoms (group entry, only Chip used): ${group.bytes} bytes, ${group.files.length} modules`,
