@@ -201,7 +201,10 @@ test("SelectMenu follows the locale for its placeholder and honours an explicit 
 });
 
 test("SelectMenu disabled drops the hidden input from submission", () => {
-  assert.match(html.selectMenu({ name: "t", disabled: true }), /<input type="hidden"[^>]*disabled=""[^>]*name="t"/);
+  assert.match(
+    html.selectMenu({ name: "t", disabled: true }),
+    /<input type="hidden"[^>]*disabled=""[^>]*name="t"/,
+  );
 });
 
 test("Combobox renders a closed combobox input that shows the selected label and submits the value", () => {
