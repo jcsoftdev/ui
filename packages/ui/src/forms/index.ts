@@ -2,6 +2,7 @@ export * from "./accent-picker/index.js";
 export * from "./checkbox-button-group/index.js";
 export * from "./combobox/index.js";
 export * from "./copy-field/index.js";
+export * from "./date-picker/index.js";
 export * from "./dropzone/index.js";
 export * from "./emoji-picker/index.js";
 export * from "./emoji-reaction-button/index.js";

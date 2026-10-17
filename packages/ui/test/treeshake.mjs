@@ -120,6 +120,9 @@ console.log(
 for (const [entry, component] of [
   ["forms/select-menu", "SelectMenu"],
   ["forms/combobox", "Combobox"],
+  ["forms/date-picker", "DatePicker"],
+  ["forms/date-picker", "DateTimePicker"],
+  ["calendar/date-calendar", "DateCalendar"],
 ]) {
   const picker = await inputsFor(
     `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
@@ -137,7 +140,7 @@ for (const [entry, component] of [
       `${component} bundle must not include "${banned}"`,
     );
   }
-  console.log(`${entry}: ${picker.bytes} bytes, ${picker.files.length} modules`);
+  console.log(`${entry} (${component}): ${picker.bytes} bytes, ${picker.files.length} modules`);
 }
 
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);

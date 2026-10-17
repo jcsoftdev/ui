@@ -23,6 +23,7 @@ export interface UiStrings {
   clear: string;
   selectPlaceholder: string;
   openCalendar: string;
+  calendar: string;
   previousMonth: string;
   nextMonth: string;
   time: string;
@@ -61,6 +62,7 @@ export const uiStrings = {
     clear: "Clear",
     selectPlaceholder: "Select…",
     openCalendar: "Open calendar",
+    calendar: "Calendar",
     previousMonth: "Previous month",
     nextMonth: "Next month",
     time: "Time",
@@ -94,6 +96,7 @@ export const uiStrings = {
     clear: "Limpiar",
     selectPlaceholder: "Seleccionar…",
     openCalendar: "Abrir calendario",
+    calendar: "Calendario",
     previousMonth: "Mes anterior",
     nextMonth: "Mes siguiente",
     time: "Hora",

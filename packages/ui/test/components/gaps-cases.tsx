@@ -3,6 +3,8 @@ import { Kbd } from "../../src/atoms/kbd/kbd.js";
 import { Spinner } from "../../src/atoms/spinner/spinner.js";
 import { Banner } from "../../src/containers/banner/banner.js";
 import { Combobox } from "../../src/forms/combobox/combobox.js";
+import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
+import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
 import { SelectMenu } from "../../src/forms/select-menu/select-menu.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 
@@ -58,5 +60,15 @@ export const html = {
         {...props}
       />,
     ),
+  datePicker: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<DatePicker aria-label="Start" {...props} />),
+  datePickerEs: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <DatePicker aria-label="Inicio" {...props} />
+      </UiStringsProvider>,
+    ),
+  dateTimePicker: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<DateTimePicker aria-label="When" {...props} />),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };

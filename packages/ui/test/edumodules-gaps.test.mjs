@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -22,6 +23,8 @@ async function load(file) {
 
 const tooltip = await load("../src/overlays/tooltip/model.ts");
 const confirm = await load("../src/containers/confirm-action/model.ts");
+const dates = await load("../src/calendar/internal/date-utils.ts");
+const picker = await load("../src/forms/date-picker/model.ts");
 const listbox = await load("../src/forms/internal/listbox.ts");
 
 const { html } = await loadCases("gaps-cases.tsx");
@@ -225,4 +228,163 @@ test("Combobox renders a closed combobox input that shows the selected label and
 test("Combobox falls back to valueLabel while the value is not among the options", () => {
   assert.match(html.combobox({ value: "zzz", valueLabel: "Zelkova" }), /value="Zelkova"/);
   assert.doesNotMatch(html.combobox({ value: "zzz" }), /value="[^"]/);
+});
+
+const ES = picker.dateFormatFor("es-PE");
+const EN = picker.dateFormatFor("en-US");
+
+test("typed date format follows the locale: es-PE day first, en-US month first, sv-SE year first", () => {
+  assert.deepEqual(ES, { order: ["day", "month", "year"], separator: "/" });
+  assert.deepEqual(EN.order, ["month", "day", "year"]);
+  assert.deepEqual(picker.dateFormatFor("sv-SE").order, ["year", "month", "day"]);
+  assert.equal(picker.formatDisplay("2026-09-07", ES), "07/09/2026");
+  assert.equal(picker.formatDisplay("2026-09-07", EN), "09/07/2026");
+  assert.equal(picker.formatDisplay("2026-02-30", ES), "");
+  assert.equal(picker.formatDisplay("", ES), "");
+  assert.equal(
+    picker.displayPlaceholder(ES, { day: "dd", month: "mm", year: "aaaa" }),
+    "dd/mm/aaaa",
+  );
+});
+
+test("typed dates are masked per locale and only real dates parse", () => {
+  assert.equal(picker.maskDisplay("7", ES), "7");
+  assert.equal(picker.maskDisplay("0709", ES), "07/09");
+  assert.equal(picker.maskDisplay("07", ES), "07");
+  assert.equal(picker.maskDisplay("07/09/2026x99", ES), "07/09/2026");
+  assert.equal(picker.maskDisplay("20260907", picker.dateFormatFor("sv-SE")), "2026-09-07");
+  assert.equal(picker.parseDisplay("07/09/2026", ES), "2026-09-07");
+  assert.equal(picker.parseDisplay("7/9/2026", ES), "2026-09-07");
+  assert.equal(picker.parseDisplay("09/07/2026", EN), "2026-09-07");
+  assert.equal(picker.parseDisplay("31/02/2026", ES), null);
+  assert.equal(picker.parseDisplay("29/02/2028", ES), "2028-02-29");
+  assert.equal(picker.parseDisplay("29/02/2026", ES), null);
+  assert.equal(picker.parseDisplay("07/09/26", ES), null);
+  assert.equal(picker.parseDisplay("07/09", ES), null);
+});
+
+test("date-time values are zone-less wall-clock strings and anything else is rejected", () => {
+  assert.deepEqual(picker.splitDateTime("2026-09-07T09:30"), { date: "2026-09-07", time: "09:30" });
+  for (const bad of [
+    "2026-09-07T09:30Z",
+    "2026-09-07T09:30:00",
+    "2026-09-07T09:30-05:00",
+    "2026-09-07 09:30",
+    "2026-09-07T24:00",
+    "2026-02-30T09:30",
+    "",
+  ]) {
+    assert.equal(picker.splitDateTime(bad), null, bad);
+  }
+  assert.equal(picker.joinDateTime({ date: "2026-09-07", time: "09:30" }), "2026-09-07T09:30");
+  assert.equal(picker.joinDateTime({ date: "2026-09-07", time: "" }), "");
+});
+
+test("date-time min and max accept a whole day or an exact moment", () => {
+  const inRange = picker.dateTimeInRange;
+  assert.ok(inRange("2026-09-05T08:00", "2026-09-05T08:00"));
+  assert.ok(!inRange("2026-09-05T07:59", "2026-09-05T08:00"));
+  assert.ok(inRange("2026-09-05T00:00", "2026-09-05"));
+  assert.ok(inRange("2026-09-25T23:59", undefined, "2026-09-25"));
+  assert.ok(!inRange("2026-09-26T00:00", undefined, "2026-09-25"));
+  assert.ok(!inRange("2026-09-25T10:01", undefined, "2026-09-25T10:00"));
+});
+
+test("calendar date helpers validate, clamp month ends and start the week by locale", () => {
+  assert.ok(dates.isIsoDate("2026-09-07"));
+  assert.ok(!dates.isIsoDate("2026-9-7"));
+  assert.ok(!dates.isIsoDate("2026-02-29"));
+  assert.equal(dates.addMonths("2026-01-31", 1), "2026-02-28");
+  assert.equal(dates.addMonths("2028-01-31", 1), "2028-02-29");
+  assert.equal(dates.addMonths("2026-03-15", -3), "2025-12-15");
+  assert.equal(dates.clampDate("2026-01-01", "2026-02-01", "2026-03-01"), "2026-02-01");
+  assert.equal(dates.clampDate("2026-05-01", "2026-02-01", "2026-03-01"), "2026-03-01");
+  assert.equal(dates.weekStartFor("es-PE"), 1);
+  assert.equal(dates.weekStartFor("en-GB"), 1);
+  assert.equal(dates.weekStartFor("en-US"), 0);
+  assert.equal(dates.weekStartFor("es-MX"), 0);
+  assert.equal(dates.weekStartFor("es"), 1);
+  const weeks = dates.monthWeeks("2026-09-15", 1);
+  assert.equal(weeks.length, 6);
+  assert.equal(weeks[0][0], "2026-08-31");
+  assert.equal(dates.monthWeeks("2026-09-15", 0)[0][0], "2026-08-30");
+  assert.deepEqual(dates.weekdayNames("es-PE", 1).map((d) => d.long)[0], "lunes");
+});
+
+test("dates never shift with the time zone", () => {
+  const files = [
+    join(here, "../src/calendar/internal/date-utils.ts"),
+    join(here, "../src/forms/date-picker/model.ts"),
+  ];
+  const bundleOf = async (file, name) => {
+    const out = await build({
+      entryPoints: [file],
+      bundle: true,
+      format: "esm",
+      platform: "neutral",
+      write: false,
+    });
+    return `const ${name} = await import("data:text/javascript;base64,${Buffer.from(out.outputFiles[0].contents).toString("base64")}");`;
+  };
+  return Promise.all([bundleOf(files[0], "d"), bundleOf(files[1], "p")]).then(([d, p]) => {
+    const code = `${d}\n${p}\nconsole.log(JSON.stringify({
+      plus: d.addDays("2026-03-08", 1),
+      minus: d.addDays("2026-11-01", -1),
+      month: d.addMonths("2026-10-31", 4),
+      first: d.monthWeeks("2026-09-15", 1)[0][0],
+      title: d.formatMonthTitle("2026-09-07", "es-PE"),
+      full: d.formatFullDate("2026-09-07", "en-US"),
+      today: d.todayIso(new Date(2026, 8, 7, 23, 59)),
+      early: d.todayIso(new Date(2026, 8, 7, 0, 1)),
+      typed: p.parseDisplay("07/09/2026", p.dateFormatFor("es-PE")),
+      shown: p.formatDisplay("2026-09-07", p.dateFormatFor("es-PE")),
+      pair: p.splitDateTime("2026-09-07T09:30"),
+    }));`;
+    const run = (tz) =>
+      execFileSync(process.execPath, ["--input-type=module", "-e", code], {
+        env: { ...process.env, TZ: tz },
+        encoding: "utf8",
+      });
+    const baseline = run("UTC");
+    assert.equal(JSON.parse(baseline).today, "2026-09-07");
+    assert.equal(JSON.parse(baseline).early, "2026-09-07");
+    assert.equal(JSON.parse(baseline).typed, "2026-09-07");
+    for (const tz of [
+      "America/Lima",
+      "Pacific/Kiritimati",
+      "Pacific/Pago_Pago",
+      "Asia/Kolkata",
+      "America/Sao_Paulo",
+    ]) {
+      assert.equal(run(tz), baseline, tz);
+    }
+  });
+});
+
+test("DatePicker renders the ISO value in the locale's order with a calendar button and hidden input", () => {
+  const es = html.datePickerEs({ defaultValue: "2026-09-07", name: "start" });
+  assert.match(es, /value="07\/09\/2026"/);
+  assert.match(es, /aria-label="Abrir calendario"/);
+  assert.match(es, /aria-label="Limpiar"/);
+  assert.match(es, /<input type="hidden" name="start" value="2026-09-07"/);
+  assert.match(es, /inputMode="numeric"/);
+  assert.match(html.datePicker({ defaultValue: "2026-09-07" }), /value="09\/07\/2026"/);
+  assert.match(html.datePickerEs(), /placeholder="dd\/mm\/aaaa"/);
+  assert.doesNotMatch(html.datePickerEs(), /aria-label="Limpiar"/);
+  assert.match(html.datePicker({ defaultValue: "garbage" }), /value=""/);
+  assert.match(html.datePicker({ invalid: true }), /aria-invalid="true"/);
+  assert.doesNotMatch(
+    html.datePicker({ defaultValue: "2026-09-07", clearable: false }),
+    /aria-label="Clear"/,
+  );
+});
+
+test("DateTimePicker splits a zone-less value into date and time and keeps it for forms", () => {
+  const markup = html.dateTimePicker({ defaultValue: "2026-09-07T09:30", name: "when" });
+  assert.match(markup, /value="09\/07\/2026"/);
+  assert.match(markup, /value="09:30"/);
+  assert.match(markup, /<input type="hidden" name="when" value="2026-09-07T09:30"/);
+  const zoned = html.dateTimePicker({ defaultValue: "2026-09-07T09:30:00Z" });
+  assert.doesNotMatch(zoned, /value="09:30"/);
+  assert.match(zoned, /aria-label="Time"/);
 });

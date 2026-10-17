@@ -1,3 +1,4 @@
+export * from "./date-calendar/index.js";
 export * from "./day-chip/index.js";
 export * from "./event-block/index.js";
 export * from "./month-view/index.js";
