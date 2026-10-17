@@ -19,6 +19,17 @@ import { ListDetail, ListDetailDetail, ListDetailItem, ListDetailList } from "..
 import { Note } from "../../src/containers/note/note.js";
 import { Kpi } from "../../src/containers/kpi/kpi.js";
 import { Section } from "../../src/containers/section/section.js";
+import {
+  Table,
+  TableActionsCell,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  TableSelectAllCell,
+  TableSelectCell,
+} from "../../src/containers/table/table.js";
 import { Timeline } from "../../src/containers/timeline/timeline.js";
 import { Shortcuts, ShortcutsItem } from "../../src/containers/shortcuts/shortcuts.js";
 import { DateCalendar } from "../../src/calendar/date-calendar/date-calendar.js";
@@ -253,6 +264,45 @@ export const html = {
         </Timeline.Item>
         <Timeline.Item title="Decision" status="pending" group="April" />
       </Timeline>,
+    ),
+  table: (props: Record<string, unknown> = {}, menu?: boolean) =>
+    renderToStaticMarkup(
+      <Table {...props}>
+        <TableHead>
+          <TableRow>
+            {props.selectedKeys !== undefined || props.defaultSelectedKeys !== undefined ? (
+              <TableSelectAllCell rowKeys={["a", "b"]} />
+            ) : null}
+            <TableHeaderCell>Name</TableHeaderCell>
+            <TableHeaderCell />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {["a", "b"].map((key) => (
+            <TableRow key={key} rowKey={key}>
+              {props.selectedKeys !== undefined || props.defaultSelectedKeys !== undefined ? (
+                <TableSelectCell rowKey={key} label={`Row ${key}`} />
+              ) : null}
+              <TableCell>{key}</TableCell>
+              <TableActionsCell menu={menu ? <button type="button">more</button> : undefined}>
+                <a href="#x">Edit</a>
+              </TableActionsCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>,
+    ),
+  tableEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <Table defaultSelectedKeys={["a"]}>
+          <TableBody>
+            <TableRow rowKey="a">
+              <TableSelectCell rowKey="a" label="Ana" />
+            </TableRow>
+          </TableBody>
+        </Table>
+      </UiStringsProvider>,
     ),
   note: (props: Record<string, unknown> = {}) =>
     renderToStaticMarkup(<Note {...props}>Careful</Note>),

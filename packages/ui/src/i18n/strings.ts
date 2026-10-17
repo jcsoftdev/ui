@@ -50,6 +50,12 @@ export interface UiStrings {
   stepDone: string;
   /** Screen-reader state of a `Stepper` step that has an error. */
   stepError: string;
+  /** Name of a row checkbox in a `Table`; `{row}` is replaced by the row's label. */
+  selectRow: string;
+  /** Name of the select-all checkbox of a `Table`. */
+  selectAll: string;
+  /** Name of the overflow menu trigger of a `TableActionsCell`. */
+  rowActions: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -99,6 +105,9 @@ export const uiStrings = {
     dueSoon: "Due soon",
     stepDone: "Completed",
     stepError: "Has an error",
+    selectRow: "Select {row}",
+    selectAll: "Select all rows",
+    rowActions: "Row actions",
   },
   es: {
     retry: "Reintentar",
@@ -144,5 +153,8 @@ export const uiStrings = {
     dueSoon: "Vence pronto",
     stepDone: "Completado",
     stepError: "Tiene un error",
+    selectRow: "Seleccionar {row}",
+    selectAll: "Seleccionar todas las filas",
+    rowActions: "Acciones de la fila",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

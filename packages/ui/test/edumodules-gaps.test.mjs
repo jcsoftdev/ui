@@ -30,6 +30,7 @@ const wizard = await load("../src/navigation/wizard/model.ts");
 const feed = await load("../src/containers/feed/model.ts");
 const due = await load("../src/atoms/due-chip/model.ts");
 const stepper = await load("../src/forms/number-stepper/model.ts");
+const tableSelection = await load("../src/containers/table/selection.ts");
 
 const { html } = await loadCases("gaps-cases.tsx");
 
@@ -1089,4 +1090,60 @@ test("Timeline items carry a status: markers, spoken state, aria-current and the
   ]);
   assert.doesNotMatch(plain, /data-status|aria-current|sr-only/);
   assert.equal((plain.match(/<li/g) ?? []).length, 2);
+});
+
+test("table selection model toggles keys, selects many and reports the select-all state", () => {
+  const { toggleKey, setKeys, selectAllState, formatSelectRow } = tableSelection;
+  assert.deepEqual(toggleKey(["a"], "b"), ["a", "b"]);
+  assert.deepEqual(toggleKey(["a", "b"], "a"), ["b"]);
+  assert.deepEqual(setKeys(["a"], ["a", "b", "c"], true), ["a", "b", "c"]);
+  assert.deepEqual(setKeys(["a", "b", "z"], ["a", "b"], false), ["z"]);
+  assert.equal(selectAllState([], ["a", "b"]), false);
+  assert.equal(selectAllState(["a"], ["a", "b"]), "indeterminate");
+  assert.equal(selectAllState(["a", "b", "z"], ["a", "b"]), true);
+  assert.equal(selectAllState(["a"], []), false);
+  assert.equal(formatSelectRow("Select {row}", "Ana"), "Select Ana");
+});
+
+test("Table can drop the outer cell padding per edge, stick the header and cap its height", () => {
+  assert.doesNotMatch(html.table(), /first-child\]:pl-0|last-child\]:pr-0|sticky/);
+  const both = html.table({ flush: true });
+  assert.match(both, /first-child\]:pl-0/);
+  assert.match(both, /last-child\]:pr-0/);
+  assert.match(html.table({ flush: "start" }), /first-child\]:pl-0/);
+  assert.doesNotMatch(html.table({ flush: "start" }), /last-child\]:pr-0/);
+  assert.doesNotMatch(html.table({ flush: "end" }), /first-child\]:pl-0/);
+  assert.match(html.table({ stickyHeader: true }), /\[&amp;_thead_th\]:sticky/);
+  assert.match(html.table({ stickyHeader: true }), /\[&amp;_thead_th\]:top-0/);
+  const capped = html.table({ maxHeight: "20rem" });
+  assert.match(capped, /style="max-height:20rem"/);
+  assert.match(capped, /overflow-y-auto/);
+  assert.match(capped, /tabindex="0"/);
+  assert.doesNotMatch(html.table(), /tabindex/);
+  assert.doesNotMatch(html.table(), /max-height|overflow-y-auto/);
+});
+
+test("Table selection names its checkboxes, marks selected rows and follows the locale", () => {
+  const markup = html.table({ defaultSelectedKeys: ["a"] });
+  assert.match(markup, /aria-label="Select Row a"/);
+  assert.match(markup, /aria-label="Select all rows"/);
+  assert.match(markup, /aria-checked="mixed"/);
+  assert.equal((markup.match(/aria-selected="true"/g) ?? []).length, 1);
+  assert.equal((markup.match(/data-selected/g) ?? []).length, 1);
+  const all = html.table({ selectedKeys: ["a", "b"] });
+  assert.equal((all.match(/aria-selected="true"/g) ?? []).length, 2);
+  assert.doesNotMatch(all, /aria-checked="mixed"/);
+  assert.doesNotMatch(html.table(), /aria-selected|role="checkbox"/);
+  assert.match(html.tableEs(), /aria-label="Seleccionar Ana"/);
+});
+
+test("Table actions cell wraps inline actions, or swaps them for a menu under a narrow container", () => {
+  const wrap = html.table();
+  assert.match(wrap, /@max-3xl\/table:flex-wrap/);
+  assert.doesNotMatch(wrap, /@max-3xl\/table:hidden/);
+  const menu = html.table({}, true);
+  assert.match(menu, /@max-3xl\/table:hidden/);
+  assert.match(menu, /@max-3xl\/table:inline-flex/);
+  assert.match(menu, />more</);
+  assert.match(menu, /text-right/);
 });

@@ -227,6 +227,7 @@ for (const [entry, component] of [
   ["containers/feed", "Feed"],
   ["containers/shortcuts", "Shortcuts"],
   ["containers/kpi", "Kpi"],
+  ["containers/table", "Table"],
   ["containers/timeline", "Timeline"],
   ["navigation/stepper", "Stepper"],
 ]) {
