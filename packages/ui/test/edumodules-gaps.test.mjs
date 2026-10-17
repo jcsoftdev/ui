@@ -795,3 +795,53 @@ test("RadioGroup names every radio from its label and links the description", ()
   assert.match(radios[0], /aria-describedby="[^"]+-description"/);
   assert.doesNotMatch(radios[1], /aria-describedby/);
 });
+
+test("Skeleton list, kpis and key-value render N decorative items in one labelled status", () => {
+  for (const variant of ["list", "kpis", "key-value"]) {
+    const markup = html.skeleton({ variant, count: 3 });
+    assert.equal((markup.match(/role="status"/g) ?? []).length, 1, variant);
+    assert.match(markup, /aria-label="Loading"/);
+    assert.ok((markup.match(/aria-hidden="true"/g) ?? []).length >= 6, variant);
+  }
+  assert.equal((html.skeleton({ variant: "list", count: 3 }).match(/min-h-11/g) ?? []).length, 3);
+  assert.equal(
+    (html.skeleton({ variant: "kpis", count: 5 }).match(/rounded-card/g) ?? []).length,
+    5,
+  );
+  assert.equal(
+    (html.skeleton({ variant: "key-value", count: 2 }).match(/contents/g) ?? []).length,
+    2,
+  );
+});
+
+test("Skeleton variants never pad the inline edges and the list rows grow under touch", () => {
+  for (const variant of ["list", "key-value", "bar", "lines", "table", "card"]) {
+    assert.doesNotMatch(html.skeleton({ variant }), /(?:^|[\s"])(?:px|ps|pe|pl|pr)-\d/, variant);
+  }
+  // KPI cards pad their own content; the grid and the status root stay flush.
+  const kpis = html.skeleton({ variant: "kpis", count: 3 });
+  assert.equal((kpis.match(/(?:^|[\s"])px-4/g) ?? []).length, 3);
+  assert.match(html.skeleton({ variant: "list" }), /in-data-\[density=touch\]:min-h-14/);
+});
+
+test("Skeleton bar is one block sized by className and the label follows the locale", () => {
+  const bar = html.skeleton({ variant: "bar", className: "h-8 w-32" });
+  assert.match(bar, /role="status"/);
+  assert.match(bar, /h-8/);
+  assert.match(bar, /w-32/);
+  assert.doesNotMatch(bar, /h-3\b|w-full/);
+  assert.doesNotMatch(bar, /<div[^>]*>.*<div/);
+  assert.match(html.skeletonEs(), /aria-label="Cargando"/);
+});
+
+test("ErrorState actions render under the message, beside the retry button, and stay optional", () => {
+  const both = html.errorActions({ onRetry: () => {} });
+  assert.match(both, /Retry<\/button><a /);
+  assert.match(both, /data-act/);
+  assert.match(html.errorActions(), /<a href="\/home"/);
+  assert.doesNotMatch(html.errorActions(), /<button/);
+  const none = html.errorActions({ actions: undefined });
+  assert.doesNotMatch(none, /flex-wrap/);
+  const raw = html.errorActions({ actions: new Error("boom") });
+  assert.doesNotMatch(raw, /boom|flex-wrap/);
+});

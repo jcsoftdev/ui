@@ -131,7 +131,7 @@
       "id": "ui/states",
       "kind": "js",
       "file": "packages/ui/dist/states/index.js",
-      "maxGzip": 10500
+      "maxGzip": 11300
     },
     {
       "id": "ui/utils",

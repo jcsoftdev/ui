@@ -88,6 +88,22 @@ for (const banned of ["dialog", "primitives/", "popover", "dropdown-menu", "toas
 }
 console.log(`atoms/icon-button: ${iconButton.bytes} bytes, ${iconButton.files.length} modules`);
 
+for (const [entry, component] of [
+  ["states/skeleton", "Skeleton"],
+  ["states/error-state", "ErrorState"],
+]) {
+  const state = await inputsFor(
+    `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
+  );
+  for (const banned of ["dialog", "primitives/", "popover", "dropdown-menu", "toaster", "icons/"]) {
+    assert.ok(
+      !state.files.some((f) => f.includes(banned)),
+      `${component} bundle must not include "${banned}"`,
+    );
+  }
+  console.log(`${entry}: ${state.bytes} bytes, ${state.files.length} modules`);
+}
+
 const tooltipBundle = await inputsFor(
   `import { Tooltip } from "@jcsoftdev/ui/overlays/tooltip"; console.log(Tooltip);`,
 );

@@ -7,6 +7,8 @@ import { RadioGroup } from "../../src/atoms/radio-group/radio-group.js";
 import { Seal } from "../../src/atoms/seal/seal.js";
 import { Spinner } from "../../src/atoms/spinner/spinner.js";
 import { Aside, AsideHeader } from "../../src/containers/aside/aside.js";
+import { ErrorState } from "../../src/states/error-state/error-state.js";
+import { Skeleton } from "../../src/states/skeleton/skeleton.js";
 import { Banner } from "../../src/containers/banner/banner.js";
 import {
   DescriptionList,
@@ -72,6 +74,26 @@ export const html = {
           { value: "a", label: "Alpha", description: "First" },
           { value: "b", label: "Beta" },
         ]}
+      />,
+    ),
+  skeleton: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<Skeleton {...props} />),
+  skeletonEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <Skeleton variant="list" />
+      </UiStringsProvider>,
+    ),
+  errorActions: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <ErrorState
+        title="Could not load"
+        actions={
+          <a href="/home" data-act="">
+            Go home
+          </a>
+        }
+        {...props}
       />,
     ),
   bannerSoft: () => renderToStaticMarkup(<Banner tone="warning">Careful</Banner>),

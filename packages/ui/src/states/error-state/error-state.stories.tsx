@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { ErrorState } from "./error-state.js";
 
 const meta = {
@@ -51,3 +52,41 @@ export const Narrow: Story = {
 };
 
 export const Outlined: Story = { args: { variant: "outlined" } };
+
+export const WithActions: Story = {
+  args: {
+    onRetry: fn(),
+    actions: (
+      <>
+        <a
+          href="#home"
+          className="inline-flex h-control-sm items-center rounded-input px-3 font-semibold text-accent-ink text-fs-130"
+        >
+          Volver al inicio
+        </a>
+        <a
+          href="#support"
+          className="inline-flex h-control-sm items-center rounded-input px-3 font-semibold text-accent-ink text-fs-130"
+        >
+          Contactar a soporte
+        </a>
+      </>
+    ),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("link", { name: "Volver al inicio" })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Contactar a soporte" })).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: /reintentar|retry/i }));
+    await expect(args.onRetry).toHaveBeenCalledTimes(1);
+  },
+};
+
+export const ActionsWithoutRetry: Story = {
+  args: { onRetry: undefined, actions: <a href="#home">Volver al inicio</a> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("link", { name: "Volver al inicio" })).toBeVisible();
+    await expect(canvas.queryByRole("button")).toBeNull();
+  },
+};
