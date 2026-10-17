@@ -117,6 +117,29 @@ console.log(
   `overlays/alert-dialog: ${alertBundle.bytes} bytes, ${alertBundle.files.length} modules`,
 );
 
+for (const [entry, component] of [
+  ["forms/select-menu", "SelectMenu"],
+  ["forms/combobox", "Combobox"],
+]) {
+  const picker = await inputsFor(
+    `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
+  );
+  for (const banned of [
+    "primitives/dialog",
+    "primitives/menu",
+    "primitives/command",
+    "dropdown-menu",
+    "toaster",
+    "charts/",
+  ]) {
+    assert.ok(
+      !picker.files.some((f) => f.includes(banned)),
+      `${component} bundle must not include "${banned}"`,
+    );
+  }
+  console.log(`${entry}: ${picker.bytes} bytes, ${picker.files.length} modules`);
+}
+
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
   `atoms (group entry, only Chip used): ${group.bytes} bytes, ${group.files.length} modules`,

@@ -19,6 +19,18 @@ export interface UiStrings {
   copied: string;
   more: string;
   remove: string;
+  noResults: string;
+  clear: string;
+  selectPlaceholder: string;
+  openCalendar: string;
+  previousMonth: string;
+  nextMonth: string;
+  time: string;
+  /** BCP 47 locale used for date labels and the typed date format. */
+  locale: string;
+  dayPlaceholder: string;
+  monthPlaceholder: string;
+  yearPlaceholder: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -45,6 +57,17 @@ export const uiStrings = {
     copied: "Copied",
     more: "More",
     remove: "Remove",
+    noResults: "No results",
+    clear: "Clear",
+    selectPlaceholder: "Select…",
+    openCalendar: "Open calendar",
+    previousMonth: "Previous month",
+    nextMonth: "Next month",
+    time: "Time",
+    locale: "en-US",
+    dayPlaceholder: "dd",
+    monthPlaceholder: "mm",
+    yearPlaceholder: "yyyy",
   },
   es: {
     retry: "Reintentar",
@@ -67,5 +90,16 @@ export const uiStrings = {
     copied: "Copiado",
     more: "Más",
     remove: "Quitar",
+    noResults: "Sin resultados",
+    clear: "Limpiar",
+    selectPlaceholder: "Seleccionar…",
+    openCalendar: "Abrir calendario",
+    previousMonth: "Mes anterior",
+    nextMonth: "Mes siguiente",
+    time: "Hora",
+    locale: "es-PE",
+    dayPlaceholder: "dd",
+    monthPlaceholder: "mm",
+    yearPlaceholder: "aaaa",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

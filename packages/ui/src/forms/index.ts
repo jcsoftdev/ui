@@ -1,5 +1,6 @@
 export * from "./accent-picker/index.js";
 export * from "./checkbox-button-group/index.js";
+export * from "./combobox/index.js";
 export * from "./copy-field/index.js";
 export * from "./dropzone/index.js";
 export * from "./emoji-picker/index.js";
@@ -17,6 +18,7 @@ export * from "./pin-input/index.js";
 export * from "./radio-button-group/index.js";
 export * from "./rating/index.js";
 export * from "./select/index.js";
+export * from "./select-menu/index.js";
 export * from "./slider/index.js";
 export * from "./textarea/index.js";
 export * from "./time-input/index.js";

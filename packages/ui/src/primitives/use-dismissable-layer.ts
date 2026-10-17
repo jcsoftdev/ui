@@ -27,8 +27,13 @@ export interface DismissableLayerOptions {
   onDismiss: () => void;
 }
 
-/** Layers from libraries outside this stack that can be open inside a dialog (a third-party combobox listbox). */
-const FOREIGN_LAYER = "[role=listbox][data-state=open], [role=combobox][aria-expanded=true]";
+/**
+ * Layers from libraries outside this stack that can be open inside a dialog (a third-party combobox
+ * listbox). The library's own `SelectMenu` and `Combobox` carry `data-ui-layer` because their popup
+ * is a layer of this stack and Escape must reach it.
+ */
+const FOREIGN_LAYER =
+  "[role=listbox][data-state=open]:not([data-ui-layer]), [role=combobox][aria-expanded=true]:not([data-ui-layer])";
 
 /**
  * Elements carrying this attribute are branches of every layer: pointer and focus
