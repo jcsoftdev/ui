@@ -35,10 +35,40 @@ from `UiStringsProvider` (en/es), layout follows container queries, and hit area
 - **Toast tones.** `toast.info`, `toast.warning`, `toast.danger` and `toastToneClasses`.
 - **`resetToasts()`** in the new `@jcsoftdev/ui/overlays/testing` entry, for resetting the toast
   store between tests.
+- **Form gaps found while migrating an app.** `Input` takes `start` / `end` adornments, a
+  30px `size="xs"` and `variant="bare"`; `Dropzone` has `mode="field"` (a real labelled
+  `<input type="file">` with `accept`, `multiple`, `onChange` and removable selections);
+  `NumberStepper` has a string mode (`mode="string"`: empty state, caller-owned text, change event);
+  `Field` accepts a node `label` and several children.
+- **Table.** `flush` (`true`, `"start"`, `"end"`) drops the outer cell padding so the first and last
+  column sit on the container edge; `stickyHeader`; `maxHeight` (the capped wrapper is focusable);
+  row selection with `selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey` on
+  `TableRow` / `TableLinkRow` (`aria-selected`), `TableSelectCell` and `TableSelectAllCell` (checked,
+  mixed, unchecked); `TableActionsCell`, which wraps inline actions under a narrow table container
+  (a named container query) or swaps them for an overflow `menu` you pass.
+- **Section parts.** `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions` and `.Body`
+  next to the props API; a part as a direct child switches to composed rendering.
+- **Kpi parts and chrome.** `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`) and `.Description`;
+  `card` (border and radius); `trailing` (content at the end of the label row that stays exposed to
+  assistive tech, unlike the decorative `icon`).
+- **Timeline** `status` per item (`done`, `current`, `error`, `pending`) with a glyph, a spoken state
+  and `aria-current="step"`, and `Timeline.Item` children next to `items`.
+- **Stepper** `status` per step (`done`, `current`, `error`, `pending`) with a check or cross and a
+  spoken state; the default stays `current` for `currentStepId` and `pending` otherwise.
+- **AlertDialog** `confirmDisabled` and `cancelDisabled`, and a compound API: `AlertDialog.Root`,
+  `.Trigger`, `.Content`, `.Header`, `.Title`, `.Description`, `.Body`, `.Footer`, `.Cancel` and
+  `.Action`. Cancel and Action close the dialog after their `onClick` unless it calls
+  `preventDefault()`; use the props API for an async confirm with a pending state.
+- **ListDetail** `onBack`.
+- **DueChip** `state` forces `overdue`, `soon`, `ok` or `done` whatever the date says.
+- **Seal** `tone="institutional"` (strong neutral, ink frame) and any tone declared in
+  `tonePalettes`, by name, as `Kpi` does.
+- **DropdownMenu** `bare` content (layering and size limits only, so a custom menu draws its own
+  surface), `DropdownMenuAnchor`, and `dropdownMenuItemClasses` / `dropdownMenuSurfaceClasses`.
 - **UI strings** (en/es) for the new components: `noResults`, `clear`, `selectPlaceholder`,
   `calendar`, `openCalendar`, `previousMonth`, `nextMonth`, `time`, `locale`, the day, month and
-  year placeholders, `back`, `next`, `finish`, `stepOf`, `steps`, `aside`, `backToList`, `overdue`
-  and `dueSoon`.
+  year placeholders, `back`, `next`, `finish`, `stepOf`, `steps`, `aside`, `backToList`, `overdue`,
+  `dueSoon`, `stepDone`, `stepError`, `selectRow`, `selectAll` and `rowActions`.
 
 #### Changed (behavior to check when upgrading)
 
@@ -54,6 +84,23 @@ from `UiStringsProvider` (en/es), layout follows container queries, and hit area
   needs `divider`.
 - **`RadioGroup`** radios now carry `aria-labelledby` and `aria-describedby`, so they have
   accessible names without relying on `<label for>`.
+- **`theme.css` no longer emits self-referencing variables.** Entries such as
+  `--radius-input: var(--radius-input)` (radii, shadows, `--font-sans`) now sit in an
+  `@theme reference inline` block, so the utilities resolve to the raw token and nothing is declared
+  in Tailwind's theme layer. Consumers no longer need to reorder layers; verified on Tailwind 4.3.3.
+- **Locale reaches the date pickers.** `UiStringsProvider` ignores `undefined` and empty entries
+  instead of letting them overwrite the preset, so `strings={{ locale: undefined }}` no longer sends
+  Intl to the system locale; its context is shared across duplicate module copies.
+- **`Combobox` `required`** sets `aria-required` only and no longer blocks native submit before your
+  own validation; `nativeRequired` opts back in.
+- **`Section` and titleless wrappers.** A `Section` with no title no longer takes a heading level or
+  tightens the spacing of what it wraps, so a titled section inside a wrapper keeps the level it
+  would have had without it (it moves up one level compared with the earlier 0.3.0 previews).
+- **`ListDetail` back action.** It calls `onBack` and never `onValueChange(null)`; `onValueChange`
+  is typed `(value: string) => void`. Both only affect the earlier 0.3.0 previews, since `ListDetail`
+  is new in 0.3.0.
+- **`Table` selected rows.** A row with a `rowKey` in a table with selection props reports
+  `aria-selected` and highlights; tables without selection props render as before.
 - **Escape inside the library's own comboboxes.** The dismissable-layer primitive no longer treats
   the library's own open `role="combobox"` widgets as a foreign layer, so Escape closes them.
 

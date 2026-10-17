@@ -189,6 +189,16 @@ Additive props on existing components:
 | `ErrorState` | `actions` node, rendered in the same row as the retry button (the retry button now sits inside a wrapper `div`). |
 | `RadioGroup` | Each radio is named by its label and described by its description. |
 | `Checkbox`, `Switch` | The 44px touch target is an invisible `::after`; under touch density the layout box stays 40px. |
+| `Table` | `flush` (`true`, `"start"`, `"end"`), `stickyHeader`, `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (wraps, or swaps for your overflow `menu`, under a narrow table container). |
+| `Section` | Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` next to the props; a titleless wrapper takes no heading level. |
+| `Kpi` | Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`; `card` chrome; `trailing` slot. |
+| `Timeline` | `status` per item (`done`, `current`, `error`, `pending`) and `Timeline.Item` children. |
+| `Stepper` | `status` per step with a glyph and a spoken state. |
+| `AlertDialog` | `confirmDisabled`, `cancelDisabled`; compound `AlertDialog.Root`, `.Trigger`, `.Content`, `.Title`, `.Description`, `.Cancel`, `.Action`. |
+| `ListDetail` | `onBack` for the back action; `onValueChange` never receives `null`. |
+| `DueChip` | `state` forces `overdue`, `soon`, `ok` or `done`. |
+| `Seal` | `tone="institutional"` and any `tonePalettes` tone by name. |
+| `DropdownMenu` | `DropdownMenuContent bare` (no panel look), `DropdownMenuAnchor`, `dropdownMenuItemClasses`, `dropdownMenuSurfaceClasses` for custom menus. |
 | `toast` | `toast.info`, `toast.warning`, `toast.danger`; success, info, warning and error toasts are tinted with a glyph. |
 
 In tests, reset the toast store with `import { resetToasts } from "@jcsoftdev/ui/overlays/testing"`

@@ -9,6 +9,7 @@ import {
   DescriptionListItem,
   Feed,
   FeedEvent,
+  Kpi,
   ListDetail,
   ListDetailDetail,
   ListDetailDetailHeader,
@@ -19,10 +20,30 @@ import {
   Section,
   Shortcuts,
   ShortcutsItem,
+  Table,
+  TableActionsCell,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  TableSelectAllCell,
+  TableSelectCell,
+  Timeline,
 } from "@jcsoftdev/ui/containers";
 import { ChipGroup, Combobox, DatePicker, DateTimePicker, Field, SelectMenu } from "@jcsoftdev/ui/forms";
-import { TabsNav, TabsNavLink, Wizard } from "@jcsoftdev/ui/navigation";
-import { AlertDialog, toast, Tooltip } from "@jcsoftdev/ui/overlays";
+import { Stepper, TabsNav, TabsNavLink, Wizard } from "@jcsoftdev/ui/navigation";
+import {
+  AlertDialog,
+  DropdownMenu,
+  DropdownMenuAnchor,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  dropdownMenuItemClasses,
+  toast,
+  Tooltip,
+} from "@jcsoftdev/ui/overlays";
 import { ErrorState, Skeleton } from "@jcsoftdev/ui/states";
 import { DateCalendar } from "@jcsoftdev/ui/calendar";
 import { useState } from "react";
@@ -208,6 +229,131 @@ export function States({ onRetry }: { onRetry: () => void }) {
       <Skeleton variant="kpis" count={3} />
       <ErrorState onRetry={onRetry} actions={<Button variant="ghost">Contact support</Button>} />
     </>
+  );
+}
+// #endregion
+
+// #region table
+export function Students({ rows }: { rows: { id: string; name: string }[] }) {
+  const [selected, setSelected] = useState<string[]>([]);
+  return (
+    <Table aria-label="Students" flush stickyHeader maxHeight="20rem" selectedKeys={selected} onSelectedKeysChange={setSelected}>
+      <TableHead>
+        <TableRow>
+          <TableSelectAllCell rowKeys={rows.map((row) => row.id)} />
+          <TableHeaderCell>Name</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Actions</span>
+          </TableHeaderCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.id} rowKey={row.id}>
+            <TableSelectCell rowKey={row.id} label={row.name} />
+            <TableCell>{row.name}</TableCell>
+            <TableActionsCell menu={<Button size="sm" variant="ghost" aria-label="Row actions">...</Button>}>
+              <Button size="sm">Charge</Button>
+              <Button size="sm" variant="ghost">
+                Open file
+              </Button>
+            </TableActionsCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+// #endregion
+
+// #region parts
+export function Parts() {
+  return (
+    <>
+      <Section divider>
+        <Section.Header>
+          <Section.Title>Guardians</Section.Title>
+          <Section.Count>2</Section.Count>
+          <Section.Actions>
+            <Button size="sm">Add</Button>
+          </Section.Actions>
+        </Section.Header>
+        <Section.Body>
+          <Note>Contacts are verified yearly.</Note>
+        </Section.Body>
+      </Section>
+      <Kpi card tone="success" dot>
+        <Kpi.Label trailing={<Button size="sm" variant="ghost">Details</Button>}>Collected</Kpi.Label>
+        <Kpi.Value mono suffix="/ 1,200">
+          840
+        </Kpi.Value>
+        <Kpi.Description>3 pending</Kpi.Description>
+      </Kpi>
+      <Timeline aria-label="Admission">
+        <Timeline.Item title="Applied" status="done" />
+        <Timeline.Item title="Interview" status="current" />
+        <Timeline.Item title="Decision" status="pending" />
+      </Timeline>
+      <Stepper
+        aria-label="Steps"
+        currentStepId="docs"
+        steps={[
+          { id: "data", label: "Data", status: "done" },
+          { id: "docs", label: "Documents" },
+          { id: "pay", label: "Payment", status: "error" },
+        ]}
+      />
+    </>
+  );
+}
+// #endregion
+
+// #region custom-menu
+export function UserMenu() {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuAnchor asChild>
+        <div className="flex items-center gap-2 p-2">
+          <span>Ana Torres</span>
+          <DropdownMenuTrigger asChild>
+            <button type="button" aria-label="Account menu">
+              ...
+            </button>
+          </DropdownMenuTrigger>
+        </div>
+      </DropdownMenuAnchor>
+      <DropdownMenuContent bare side="top" align="start" className="w-64 rounded-lg border border-line bg-surface">
+        <div className="px-3 py-2.5">ana@school.test</div>
+        <DropdownMenuItem asChild>
+          <a href="/profile" className={dropdownMenuItemClasses}>
+            Profile
+          </a>
+        </DropdownMenuItem>
+        <DropdownMenuItem>Sign out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function RemoveStudent({ onRemove }: { onRemove: () => void }) {
+  return (
+    <AlertDialog.Root>
+      <AlertDialog.Trigger asChild>
+        <Button variant="danger">Remove</Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Content>
+        <AlertDialog.Header>
+          <AlertDialog.Title>Remove this student?</AlertDialog.Title>
+          <AlertDialog.Description>Their grades are archived.</AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+          <AlertDialog.Cancel />
+          <AlertDialog.Action tone="danger" onClick={onRemove}>
+            Remove
+          </AlertDialog.Action>
+        </AlertDialog.Footer>
+      </AlertDialog.Content>
+    </AlertDialog.Root>
   );
 }
 // #endregion
