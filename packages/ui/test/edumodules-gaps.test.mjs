@@ -229,6 +229,55 @@ test("Combobox renders a closed combobox input that shows the selected label and
   assert.doesNotMatch(html.combobox(), /aria-label="Clear"/);
 });
 
+test("Input stays a bare input without adornments and gains xs and bare", () => {
+  const plain = html.input({ className: "w-48" });
+  assert.match(plain, /^<input /);
+  assert.match(plain, /class="[^"]*w-48/);
+  assert.match(plain, /h-input/);
+  assert.match(html.input({ size: "xs" }), /h-control-sm[^"]*px-2\.5/);
+  const bare = html.input({ variant: "bare" });
+  assert.doesNotMatch(bare, /border-control|bg-surface-control/);
+  assert.match(bare, /bg-transparent/);
+});
+
+test("Input with adornments draws the field on a wrapper and moves className to it", () => {
+  const markup = html.input({ start: "S/", end: "PEN", className: "w-48" });
+  assert.match(
+    markup,
+    /^<span class="[^"]*w-48[^"]*border-control|^<span class="[^"]*border-control[^"]*w-48/,
+  );
+  assert.match(markup, /<span class="[^"]*text-ink-3[^"]*">S\/<\/span><input/);
+  assert.match(markup, /<\/span>PEN|>PEN<\/span><\/span>$/);
+  assert.doesNotMatch(markup, /<input[^>]*border-control/);
+  assert.match(
+    html.input({ end: "x", variant: "bare" }),
+    /^<span class="[^"]*has-\[input:focus-visible\]/,
+  );
+});
+
+test("Dropzone field mode makes the file input the labelled control and keeps zone mode as it was", () => {
+  const zone = html.dropzone();
+  assert.match(zone, /<button type="button"/);
+  assert.match(zone, /aria-hidden="true"[^>]*class="hidden"|class="hidden"[^>]*aria-hidden="true"/);
+  const field = html.dropzone({
+    mode: "field",
+    name: "docs",
+    id: "docs-input",
+    accept: ".pdf,image/*",
+    required: true,
+    "aria-label": "Docs",
+  });
+  assert.doesNotMatch(field, /<button/);
+  assert.match(field, /<input[^>]*id="docs-input"/);
+  assert.match(field, /<input[^>]*type="file"/);
+  assert.match(field, /<input[^>]*name="docs"/);
+  assert.match(field, /<input[^>]*accept="\.pdf,image\/\*"/);
+  assert.match(field, /<input[^>]*required=""/);
+  assert.match(field, /<input[^>]*aria-describedby="docs-input-title docs-input-hint"/);
+  assert.match(field, /class="sr-only"/);
+  assert.doesNotMatch(field, /tabindex="-1"/i);
+});
+
 test("Combobox required is aria-required by default and only native when asked", () => {
   const aria = html.combobox({ required: true });
   assert.match(aria, /aria-required="true"/);
