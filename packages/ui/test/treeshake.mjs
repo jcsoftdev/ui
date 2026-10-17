@@ -77,6 +77,46 @@ for (const [entry, component] of [
   console.log(`${entry}: ${small.bytes} bytes, ${small.files.length} modules`);
 }
 
+const tooltipBundle = await inputsFor(
+  `import { Tooltip } from "@jcsoftdev/ui/overlays/tooltip"; console.log(Tooltip);`,
+);
+for (const banned of [
+  "primitives/dialog",
+  "primitives/menu",
+  "primitives/command",
+  "dropdown-menu",
+  "toaster",
+]) {
+  assert.ok(
+    !tooltipBundle.files.some((f) => f.includes(banned)),
+    `Tooltip bundle must not include "${banned}"`,
+  );
+}
+console.log(
+  `overlays/tooltip: ${tooltipBundle.bytes} bytes, ${tooltipBundle.files.length} modules`,
+);
+
+const alertBundle = await inputsFor(
+  `import { AlertDialog } from "@jcsoftdev/ui/overlays/alert-dialog"; console.log(AlertDialog);`,
+);
+for (const banned of [
+  "primitives/popover",
+  "primitives/popper",
+  "primitives/menu",
+  "primitives/command",
+  "dropdown-menu",
+  "toaster",
+  "responsive-list",
+]) {
+  assert.ok(
+    !alertBundle.files.some((f) => f.includes(banned)),
+    `AlertDialog bundle must not include "${banned}"`,
+  );
+}
+console.log(
+  `overlays/alert-dialog: ${alertBundle.bytes} bytes, ${alertBundle.files.length} modules`,
+);
+
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
   `atoms (group entry, only Chip used): ${group.bytes} bytes, ${group.files.length} modules`,
