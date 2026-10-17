@@ -19,6 +19,7 @@ import { ListDetail, ListDetailDetail, ListDetailItem, ListDetailList } from "..
 import { Note } from "../../src/containers/note/note.js";
 import { Section } from "../../src/containers/section/section.js";
 import { Shortcuts, ShortcutsItem } from "../../src/containers/shortcuts/shortcuts.js";
+import { DateCalendar } from "../../src/calendar/date-calendar/date-calendar.js";
 import { Combobox } from "../../src/forms/combobox/combobox.js";
 import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
 import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
@@ -137,6 +138,22 @@ export const html = {
     renderToStaticMarkup(
       <UiStringsProvider locale="es">
         <DatePicker aria-label="Inicio" {...props} />
+      </UiStringsProvider>,
+    ),
+  datePickerPartialEs: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <UiStringsProvider strings={{ time: "hora", locale: undefined, dayPlaceholder: "" }}>
+          <DatePicker aria-label="Inicio" {...props} />
+        </UiStringsProvider>
+      </UiStringsProvider>,
+    ),
+  dateCalendar: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<DateCalendar onSelect={() => {}} today="2026-09-07" {...props} />),
+  dateCalendarEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <DateCalendar onSelect={() => {}} today="2026-09-07" />
       </UiStringsProvider>,
     ),
   dateTimePicker: (props: Record<string, unknown> = {}) =>

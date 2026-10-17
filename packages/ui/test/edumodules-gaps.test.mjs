@@ -382,6 +382,29 @@ test("DatePicker renders the ISO value in the locale's order with a calendar but
   );
 });
 
+test("date pickers and the calendar follow the provider locale, even through a partial nested value", () => {
+  const nested = html.datePickerPartialEs({ defaultValue: "2026-09-07" });
+  assert.match(nested, /value="07\/09\/2026"/);
+  assert.match(nested, /placeholder="dd\/mm\/aaaa"/);
+  assert.match(nested, /aria-label="Abrir calendario"/);
+  const en = html.dateCalendar();
+  const es = html.dateCalendarEs();
+  assert.match(en, /September 2026/);
+  assert.match(es, /septiembre de 2026|setiembre de 2026/);
+  // Monday first in es-PE, Sunday first in en-US.
+  assert.ok(en.indexOf("Sun") < en.indexOf("Mon"));
+  assert.ok(es.indexOf("lun") < es.indexOf("dom"));
+});
+
+test("the strings context is registered once per page, so a second module copy reuses it", async () => {
+  const key = Symbol.for("@jcsoftdev/ui/i18n/strings");
+  await load("../src/i18n/index.ts");
+  const first = globalThis[key];
+  assert.ok(first, "context is registered on globalThis");
+  await load("../src/i18n/index.ts");
+  assert.equal(globalThis[key], first);
+});
+
 test("DateTimePicker splits a zone-less value into date and time and keeps it for forms", () => {
   const markup = html.dateTimePicker({ defaultValue: "2026-09-07T09:30", name: "when" });
   assert.match(markup, /value="09\/07\/2026"/);

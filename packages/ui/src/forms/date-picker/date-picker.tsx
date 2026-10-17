@@ -97,7 +97,7 @@ export function DatePicker({
   ...props
 }: DatePickerProps) {
   const strings = useUiStrings();
-  const locale = localeProp ?? strings.locale;
+  const locale = localeProp || strings.locale;
   const format = useMemo(() => dateFormatFor(locale), [locale]);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const composedRef = useComposedRefs<HTMLInputElement>(ref, inputRef);

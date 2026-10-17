@@ -224,7 +224,7 @@ export const DateTime: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const date = canvas.getByRole("textbox", { name: "Appointment" });
-    const time = canvas.getByRole("textbox", { name: "Appointment, Hora" });
+    const time = canvas.getByRole("textbox", { name: "Appointment, hora" });
     await userEvent.type(date, "07092026");
     // One half is not a value yet.
     await expect(canvas.getByText("Value: none")).toBeVisible();
@@ -259,7 +259,7 @@ export const DateTimeInsideField: Story = {
     await expect(date).toHaveValue("07/09/2026");
     await expect(date).toHaveAttribute("aria-invalid", "true");
     await expect(date).toHaveAccessibleDescription("Pick a slot");
-    const time = await canvas.findByRole("textbox", { name: "Appointment, Hora" });
+    const time = await canvas.findByRole("textbox", { name: "Appointment, hora" });
     await expect(time).toHaveValue("09:30");
     await expect(time).toHaveAttribute("aria-invalid", "true");
   },

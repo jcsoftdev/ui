@@ -93,6 +93,8 @@ export function DateTimePicker({
   const [parts, setParts] = useState(() => splitDateTime(current) ?? EMPTY);
   const [synced, setSynced] = useState(current);
   const [timeLabel, setTimeLabel] = useState(strings.time);
+  // After a comma the word is lowercase in every locale ("Fecha, hora"); alone it keeps its capital.
+  const suffix = strings.time.toLowerCase();
 
   // Adopt a value set from outside (form reset, prefill) without losing a half-typed pair.
   if (synced !== current) {
@@ -112,8 +114,8 @@ export function DateTimePicker({
       (
         document.getElementById(dateId) as HTMLInputElement | null
       )?.labels?.[0]?.textContent?.trim();
-    setTimeLabel(label ? `${label}, ${strings.time}` : strings.time);
-  }, [ariaLabel, ariaLabelledBy, dateId, strings.time]);
+    setTimeLabel(label ? `${label}, ${suffix}` : strings.time);
+  }, [ariaLabel, ariaLabelledBy, dateId, strings.time, suffix]);
 
   const joined = joinDateTime(parts);
   const outOfRange = joined !== "" && !dateTimeInRange(joined, min, max);

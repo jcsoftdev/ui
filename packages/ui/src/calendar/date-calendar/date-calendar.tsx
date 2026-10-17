@@ -75,7 +75,7 @@ export function DateCalendar({
   classNames,
 }: DateCalendarProps) {
   const strings = useUiStrings();
-  const locale = localeProp ?? strings.locale;
+  const locale = localeProp || strings.locale;
   const weekStartsOn = weekStartProp ?? weekStartFor(locale);
   const titleId = useId();
   const gridRef = useRef<HTMLTableElement | null>(null);
