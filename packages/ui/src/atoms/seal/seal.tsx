@@ -1,16 +1,29 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { customToneStyle, isCustomTone } from "../../utils/tone.js";
 
-export type SealTone = "accent" | "success" | "warning" | "danger" | "neutral";
+export type SealBuiltinTone =
+  | "accent"
+  | "success"
+  | "warning"
+  | "danger"
+  | "neutral"
+  | "institutional";
 
-const toneClasses: Record<SealTone, { frame: string; title: string }> = {
+/** A built-in tone, or the name of a tone declared in `tonePalettes`. */
+export type SealTone = SealBuiltinTone | (string & {});
+
+const toneClasses: Record<SealBuiltinTone, { frame: string; title: string }> = {
   accent: { frame: "border-accent-ink", title: "text-accent-ink" },
   success: { frame: "border-success", title: "text-success" },
   warning: { frame: "border-warning", title: "text-warning" },
   danger: { frame: "border-danger", title: "text-danger" },
   neutral: { frame: "border-line-strong", title: "text-ink-2" },
+  institutional: { frame: "border-ink", title: "text-ink" },
 };
+
+const builtinTones = new Set<string>(Object.keys(toneClasses));
 
 export type SealPart = "root" | "icon" | "title" | "body";
 
@@ -19,6 +32,10 @@ export interface SealProps extends Omit<ComponentPropsWithoutRef<"div">, "title"
   title?: ReactNode;
   /** Decorative glyph before the title (`aria-hidden`). */
   icon?: ReactNode;
+  /**
+   * Frame and title colour. `institutional` is the strong neutral (ink frame) for official
+   * seals that must not read as a status; any other name resolves through `tonePalettes`.
+   */
   tone?: SealTone;
   /**
    * Accessible name. Set it and the seal becomes a labelled `group`; without it the seal is
@@ -44,7 +61,10 @@ export function Seal({
   children,
   ...props
 }: SealProps) {
-  const classes = toneClasses[tone];
+  const custom = isCustomTone(tone, builtinTones);
+  const classes = custom
+    ? { frame: "border-(--tone-c)", title: "text-(--tone-c-ink)" }
+    : (toneClasses[tone as SealBuiltinTone] ?? toneClasses.accent);
   return (
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is `group` exactly when `label` is set
     <div
@@ -52,6 +72,7 @@ export function Seal({
       aria-label={label}
       data-tone={tone}
       {...props}
+      style={customToneStyle(tone, builtinTones, props.style)}
       className={cn(
         "flex min-w-0 flex-col gap-0.5 rounded-card border-2 p-4 text-ink text-meta",
         classes.frame,

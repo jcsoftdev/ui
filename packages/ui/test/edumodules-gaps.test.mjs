@@ -972,3 +972,56 @@ test("ErrorState actions render under the message, beside the retry button, and 
   const raw = html.errorActions({ actions: new Error("boom") });
   assert.doesNotMatch(raw, /boom|flex-wrap/);
 });
+
+test("DueChip state forces the look whatever the date says, and wins over done", () => {
+  const hot = html.dueChip({ date: "2026-03-20", state: "overdue" });
+  assert.match(hot, /data-state="overdue"/);
+  assert.match(hot, /bg-danger-soft/);
+  assert.match(hot, /, Overdue/);
+  assert.match(html.dueChip({ date: "2026-03-01", state: "ok" }), /data-state="ok"/);
+  assert.match(html.dueChip({ date: "2026-03-01", state: "done" }), /data-state="done"/);
+  const forcedOverDone = html.dueChip({ date: "2026-03-20", done: true, state: "soon" });
+  assert.match(forcedOverDone, /data-state="soon"/);
+  assert.match(forcedOverDone, /, Due soon/);
+});
+
+test("Seal has an institutional strong-neutral tone and takes a tonePalettes tone by name", () => {
+  const institutional = html.seal({ tone: "institutional" });
+  assert.match(institutional, /border-ink\b/);
+  assert.match(institutional, /data-tone="institutional"/);
+  assert.doesNotMatch(institutional, /border-accent-ink/);
+  const custom = html.seal({ tone: "ministry" });
+  assert.match(custom, /border-\(--tone-c\)/);
+  assert.match(custom, /--tone-c:var\(--tone-ministry\)/);
+  assert.match(html.seal({ tone: "neutral" }), /border-line-strong/);
+});
+
+test("Stepper steps carry a status: done and error get a glyph and a spoken state, the rest stay numbered", () => {
+  const steps = [
+    { id: "a", label: "Data", status: "done" },
+    { id: "b", label: "Docs" },
+    { id: "c", label: "Pay", status: "error" },
+    { id: "d", label: "Review" },
+  ];
+  const markup = html.stepper(steps);
+  assert.match(markup, /data-status="done"/);
+  assert.match(markup, /data-status="current"/);
+  assert.match(markup, /data-status="error"/);
+  assert.match(markup, /data-status="pending"/);
+  assert.match(markup, /, Completed/);
+  assert.match(markup, /, Has an error/);
+  assert.equal((markup.match(/aria-current="step"/g) ?? []).length, 1);
+  assert.match(markup, />2<\/span>/);
+  assert.match(markup, /bg-success-soft/);
+  assert.match(markup, /bg-danger-soft/);
+  assert.match(html.stepper(steps, "b", "es"), /, Completado/);
+  const plain = html.stepper(
+    [
+      { id: "a", label: "A" },
+      { id: "b", label: "B" },
+    ],
+    "a",
+  );
+  assert.doesNotMatch(plain, /sr-only">,/);
+  assert.match(plain, /data-status="current"/);
+});

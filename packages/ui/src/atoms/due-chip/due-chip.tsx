@@ -25,6 +25,11 @@ export interface DueChipProps
   today?: string | undefined;
   /** Days ahead (inclusive of today) that count as `soon`. Defaults to 3. */
   soonDays?: number | undefined;
+  /**
+   * Forces the state regardless of the date, for a status the date alone cannot tell (a
+   * payment that is late by policy, a hold). `done` is the neutral finished look. Wins over `done`.
+   */
+  state?: DueState | "done" | undefined;
   /** A finished item is never overdue or soon: the chip stays neutral. */
   done?: boolean | undefined;
   /** Replaces the formatted date text. */
@@ -42,6 +47,7 @@ export function DueChip({
   today,
   soonDays,
   done = false,
+  state: forced,
   locale,
   children,
   ...props
@@ -52,12 +58,13 @@ export function DueChip({
   const status = day ? dueStatus(date, { today: reference, soonDays }) : null;
   if (!day || !status) return <Chip {...props}>{children ?? date}</Chip>;
 
-  const state: DueState = done ? "ok" : status.state;
+  const resolved: DueState | "done" = forced ?? (done ? "done" : status.state);
+  const state: DueState = resolved === "done" ? "ok" : resolved;
   const tone = toneFor[state];
   const stateText =
     state === "overdue" ? strings.overdue : state === "soon" ? strings.dueSoon : null;
   return (
-    <Chip tone={tone} statusIcon data-state={done ? "done" : state} {...props}>
+    <Chip tone={tone} statusIcon data-state={resolved} {...props}>
       <time dateTime={date}>
         {children ??
           formatDueDay(day, dueCalendarDate(reference) ?? reference, locale ?? strings.locale)}

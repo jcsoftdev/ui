@@ -31,6 +31,7 @@ import { NumberStepper } from "../../src/forms/number-stepper/number-stepper.js"
 import { SelectMenu } from "../../src/forms/select-menu/select-menu.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 import { TabsNav, TabsNavLink } from "../../src/navigation/tabs/tabs-nav.js";
+import { Stepper } from "../../src/navigation/stepper/stepper.js";
 import { Wizard } from "../../src/navigation/wizard/wizard.js";
 
 export const html = {
@@ -311,6 +312,12 @@ export const html = {
           </a>
         </TabsNavLink>
       </TabsNav>,
+    ),
+  stepper: (steps: Record<string, unknown>[], currentStepId = "b", locale: "en" | "es" = "en") =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale={locale}>
+        <Stepper aria-label="Steps" steps={steps as never} currentStepId={currentStepId} />
+      </UiStringsProvider>,
     ),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };

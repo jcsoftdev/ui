@@ -46,6 +46,10 @@ export interface UiStrings {
   overdue: string;
   /** Screen-reader state of a `DueChip` due within its `soonDays`. */
   dueSoon: string;
+  /** Screen-reader state of a completed `Stepper` step. */
+  stepDone: string;
+  /** Screen-reader state of a `Stepper` step that has an error. */
+  stepError: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -93,6 +97,8 @@ export const uiStrings = {
     backToList: "Back to list",
     overdue: "Overdue",
     dueSoon: "Due soon",
+    stepDone: "Completed",
+    stepError: "Has an error",
   },
   es: {
     retry: "Reintentar",
@@ -136,5 +142,7 @@ export const uiStrings = {
     backToList: "Volver a la lista",
     overdue: "Vencido",
     dueSoon: "Vence pronto",
+    stepDone: "Completado",
+    stepError: "Tiene un error",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

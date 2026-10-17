@@ -20,7 +20,7 @@ const meta = {
   argTypes: {
     tone: {
       control: "inline-radio",
-      options: ["accent", "success", "warning", "danger", "neutral"],
+      options: ["accent", "success", "warning", "danger", "neutral", "institutional"],
     },
     children: { control: false },
   },
@@ -59,9 +59,22 @@ export const Labelled: Story = {
 export const Tones: Story = {
   render: (args) => (
     <div className="flex flex-col gap-3">
-      {(["accent", "success", "warning", "danger", "neutral"] as const).map((tone) => (
-        <Seal key={tone} {...args} tone={tone} title={tone} />
-      ))}
+      {(["accent", "success", "warning", "danger", "neutral", "institutional"] as const).map(
+        (tone) => (
+          <Seal key={tone} {...args} tone={tone} title={tone} />
+        ),
+      )}
     </div>
   ),
+};
+
+export const Institutional: Story = {
+  args: { tone: "institutional", label: "Official seal" },
+  play: async ({ canvasElement }) => {
+    const root = within(canvasElement).getByRole("group", { name: "Official seal" });
+    await expect(root.dataset.tone).toBe("institutional");
+    await expect(getComputedStyle(root).borderTopColor).not.toBe(
+      getComputedStyle(root).backgroundColor,
+    );
+  },
 };

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Stepper } from "./stepper.js";
 
 const steps = [
@@ -48,4 +49,29 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const Statuses: Story = {
+  args: {
+    "aria-label": "Steps",
+    currentStepId: "horario",
+    steps: [
+      { id: "servicio", label: "Servicio", status: "done" },
+      { id: "barbero", label: "Barbero", status: "error" },
+      { id: "horario", label: "Horario" },
+      { id: "confirmar", label: "Confirmar" },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(", Completed")).toBeInTheDocument();
+    await expect(canvas.getByText(", Has an error")).toBeInTheDocument();
+    const items = canvasElement.querySelectorAll("li[data-status]");
+    await expect(Array.from(items).map((li) => li.getAttribute("data-status"))).toEqual([
+      "done",
+      "error",
+      "current",
+      "pending",
+    ]);
+  },
 };

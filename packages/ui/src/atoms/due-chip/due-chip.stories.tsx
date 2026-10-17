@@ -96,3 +96,13 @@ export const UnreadableDateIsShownAsGiven: Story = {
     await expect(canvasElement.querySelector("time")).toBeNull();
   },
 };
+
+export const ForcedState: Story = {
+  args: { date: "2026-03-20", today: "2026-03-04", state: "overdue" },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText(", Overdue")).toBeInTheDocument();
+    await expect(canvasElement.querySelector("[data-state]")?.getAttribute("data-state")).toBe(
+      "overdue",
+    );
+  },
+};
