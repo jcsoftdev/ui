@@ -1,3 +1,4 @@
+export type { ToastTone } from "./toast-store.js";
 export {
   type ToastAction,
   Toaster,
@@ -6,4 +7,5 @@ export {
   type ToasterProps,
   type ToastOptions,
   toast,
+  toastToneClasses,
 } from "./toaster.js";

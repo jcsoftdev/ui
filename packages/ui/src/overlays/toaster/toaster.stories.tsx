@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, screen, userEvent, waitFor } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
+import { resetToasts } from "../testing/index.js";
 import { reset } from "./toast-store.js";
 import { Toaster, toast } from "./toaster.js";
 
@@ -256,5 +257,33 @@ export const ReducedMotionRemovesImmediately: Story = {
     toast.dismiss(id);
     await waitFor(() => expect(screen.queryByText("Sin animación")).toBeNull());
     await expect(performance.now() - started).toBeLessThan(150);
+  },
+};
+
+export const TintedByTone: Story = {
+  render: withToaster({ duration: Number.POSITIVE_INFINITY, visibleToasts: 5 }),
+  play: async () => {
+    resetToasts();
+    toast("Neutral");
+    toast.success("Guardado");
+    toast.info("Sincronizando");
+    toast.warning("Cupo casi lleno");
+    toast.danger("No se pudo enviar");
+    const neutral = (await screen.findByText("Neutral")).closest("[data-type]") as HTMLElement;
+    await expect(neutral.querySelector("[data-slot=glyph]")).toBeNull();
+    const tones = {
+      Guardado: ["success", "status"],
+      Sincronizando: ["info", "status"],
+      "Cupo casi lleno": ["warning", "status"],
+      "No se pudo enviar": ["error", "alert"],
+    } as const;
+    const base = getComputedStyle(neutral).backgroundColor;
+    for (const [text, [type, role]] of Object.entries(tones)) {
+      const node = screen.getByText(text).closest("[data-type]") as HTMLElement;
+      await expect(node).toHaveAttribute("data-type", type);
+      await expect(node).toHaveAttribute("role", role);
+      await expect(node.querySelector("[data-slot=glyph] svg")).not.toBeNull();
+      await expect(getComputedStyle(node).backgroundColor).not.toBe(base);
+    }
   },
 };

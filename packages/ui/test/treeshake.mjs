@@ -104,6 +104,17 @@ for (const [entry, component] of [
   console.log(`${entry}: ${state.bytes} bytes, ${state.files.length} modules`);
 }
 
+const toastReset = await inputsFor(
+  `import { resetToasts } from "@jcsoftdev/ui/overlays/testing"; console.log(resetToasts);`,
+);
+for (const banned of ["toaster/toaster", "primitives/", "dialog", "popover", "atoms/", "icons/"]) {
+  assert.ok(
+    !toastReset.files.some((f) => f.includes(banned)),
+    `resetToasts bundle must not include "${banned}"`,
+  );
+}
+console.log(`overlays/testing: ${toastReset.bytes} bytes, ${toastReset.files.length} modules`);
+
 const tooltipBundle = await inputsFor(
   `import { Tooltip } from "@jcsoftdev/ui/overlays/tooltip"; console.log(Tooltip);`,
 );

@@ -8,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { type StatusTone, statusIcon } from "../../atoms/internal/status-icons.js";
 import { useUiStrings } from "../../i18n/ui-strings-provider.js";
 import { Portal } from "../../primitives/portal.js";
 import type { ClassNames } from "../../utils/class-names.js";
@@ -21,6 +22,7 @@ import {
   selectVisible,
   subscribe,
   type ToastRecord,
+  type ToastTone,
 } from "./toast-store.js";
 
 export type { ToastAction, ToastOptions } from "./toast.js";
@@ -55,6 +57,38 @@ export interface ToasterProps {
   /** Text direction of the region. Defaults to the `dir` of the `<html>` element. */
   dir?: "ltr" | "rtl";
 }
+
+/** Class map behind each tone. `default` is the inverted neutral toast; the others tint the surface. */
+export const toastToneClasses: Readonly<Record<ToastTone, string>> = {
+  default: "bg-toast-bg text-toast-ink",
+  success: "border border-success/40 bg-success-soft text-ink",
+  info: "border border-info/40 bg-info-soft text-ink",
+  warning: "border border-warning/40 bg-warning-soft text-ink",
+  error: "border border-danger/40 bg-danger-soft text-ink",
+};
+
+const toneActionClasses: Readonly<Record<ToastTone, string>> = {
+  default: "bg-toast-ink/18 text-toast-ink",
+  success: "bg-ink/10 text-ink hover:bg-ink/15",
+  info: "bg-ink/10 text-ink hover:bg-ink/15",
+  warning: "bg-ink/10 text-ink hover:bg-ink/15",
+  error: "bg-ink/10 text-ink hover:bg-ink/15",
+};
+
+const toneGlyph: Readonly<Record<ToastTone, StatusTone | null>> = {
+  default: null,
+  success: "success",
+  info: "info",
+  warning: "warning",
+  error: "danger",
+};
+
+const toneGlyphColor: Readonly<Record<StatusTone, string>> = {
+  success: "text-success",
+  info: "text-info",
+  warning: "text-warning",
+  danger: "text-danger",
+};
 
 const EXIT_MS = 200;
 const SWIPE_THRESHOLD = 60;
@@ -164,6 +198,7 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
   };
 
   const isError = tone === "error";
+  const glyph = toneGlyph[tone];
   const closed = state === "closed";
   const swiping = dragX !== 0;
 
@@ -193,7 +228,8 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
           : undefined
       }
       className={cn(
-        "pointer-events-auto flex min-h-11 w-max max-w-[min(92vw,26rem)] touch-pan-y items-center gap-3 rounded-button bg-toast-bg py-1.5 pr-2 pl-4 text-control text-toast-ink shadow-overlay",
+        "pointer-events-auto flex min-h-11 w-max max-w-[min(92vw,26rem)] touch-pan-y items-center gap-3 rounded-button py-1.5 pr-2 pl-4 text-control shadow-overlay",
+        toastToneClasses[tone],
         "transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
         !entered && "opacity-0 data-[state=open]:translate-y-2",
         closed && "opacity-0",
@@ -201,6 +237,11 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
         classNames?.toast,
       )}
     >
+      {glyph ? (
+        <span data-slot="glyph" className={cn("shrink-0", toneGlyphColor[glyph])}>
+          {statusIcon(glyph, "size-4")}
+        </span>
+      ) : null}
       <div className="min-w-0 flex-1">
         <div className={classNames?.title}>{record.message}</div>
         {record.description ? (
@@ -211,7 +252,8 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
         <button
           type="button"
           className={cn(
-            "h-8 shrink-0 rounded-button bg-toast-ink/18 px-3 font-bold text-toast-ink focus-ring",
+            "h-8 shrink-0 rounded-button px-3 font-bold focus-ring",
+            toneActionClasses[tone],
             classNames?.action,
           )}
           onClick={(event) => {

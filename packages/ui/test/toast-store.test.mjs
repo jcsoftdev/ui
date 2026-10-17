@@ -8,7 +8,7 @@ import { build } from "esbuild";
 const here = dirname(fileURLToPath(import.meta.url));
 const bundle = await build({
   stdin: {
-    contents: `export * as store from "./toast-store.ts"; export { toast } from "./toast.ts";`,
+    contents: `export * as store from "./toast-store.ts"; export { toast } from "./toast.ts"; export { resetToasts } from "../testing/index.ts";`,
     resolveDir: join(here, "../src/overlays/toaster"),
     loader: "ts",
   },
@@ -18,7 +18,7 @@ const bundle = await build({
   external: ["react"],
   write: false,
 });
-const { store, toast } = await import(
+const { store, toast, resetToasts } = await import(
   `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`
 );
 
@@ -110,4 +110,27 @@ test("subscribers are notified on change and stop after unsubscribe; server snap
 test("toasts published before anything subscribes are kept", () => {
   toast("early");
   assert.equal(store.getSnapshot().length, 1);
+});
+
+test("info, warning and danger toasts publish their tone; danger is the error toast", () => {
+  toast.info("i");
+  toast.warning("w");
+  toast.danger("d");
+  assert.deepEqual(
+    store.getSnapshot().map((t) => t.tone),
+    ["info", "warning", "error"],
+  );
+  assert.equal(toast.danger, toast.error);
+});
+
+test("resetToasts empties the store, restarts ids and notifies subscribers", () => {
+  toast("a");
+  toast.success("b");
+  let calls = 0;
+  const off = store.subscribe(() => calls++);
+  resetToasts();
+  off();
+  assert.equal(store.getSnapshot().length, 0);
+  assert.equal(calls, 1);
+  assert.equal(toast("again"), "toast-1");
 });

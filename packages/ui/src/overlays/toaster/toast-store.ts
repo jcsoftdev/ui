@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-export type ToastTone = "default" | "success" | "error";
+/** `error` is the danger toast (kept under its original name); `info` and `warning` are neutral-status additions. */
+export type ToastTone = "default" | "success" | "error" | "info" | "warning";
 
 export interface ToastAction {
   label: ReactNode;
@@ -93,7 +94,10 @@ export function selectVisible(list: readonly ToastRecord[], limit: number): Toas
   return list.filter((t) => t.state === "closed" || shown.has(t));
 }
 
-/** Test hook: empties the store without notifying callbacks. */
+/**
+ * Test hook: empties the store and resets the id counter. Mounted toasters clear at once;
+ * `onDismiss` callbacks do not run. Public as `resetToasts` from `@jcsoftdev/ui/overlays/testing`.
+ */
 export function reset() {
   counter = 0;
   commit(EMPTY);
