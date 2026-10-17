@@ -85,3 +85,22 @@ test("AlertDialog confirm outcome: void and ok close, a returned error or a thro
     { status: "failed", message: "Could not complete" },
   );
 });
+
+test("Banner outline appearance keeps the surface, tints the border and keeps the roles", () => {
+  const soft = html.bannerSoft();
+  assert.match(soft, /bg-warning-soft/);
+  assert.match(soft, /data-appearance="soft"/);
+  for (const [tone, role] of [
+    ["info", "status"],
+    ["success", "status"],
+    ["warning", "status"],
+    ["danger", "alert"],
+  ]) {
+    const markup = html.bannerOutline(tone);
+    assert.match(markup, new RegExp(`role="${role}"`), tone);
+    assert.match(markup, new RegExp(`border-${tone}/40`), tone);
+    assert.match(markup, /bg-surface/, tone);
+    assert.doesNotMatch(markup, new RegExp(`bg-${tone}-soft`), tone);
+    assert.match(markup, /<svg[^>]*aria-hidden="true"/, `${tone} keeps its glyph`);
+  }
+});

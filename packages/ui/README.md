@@ -147,7 +147,7 @@ older components already ship (NumberStepper, Carousel, AI set) are not routed t
 | --- | --- |
 | `Button` | `loadingLabel` (shown instead of the children while `loading`, announced through a status region), `block` (full width), `size="lg"` (52px at normal density, scaled like the other controls). |
 | `Field` | `optional` appends the localized "(optional)" marker to the label; `error` also accepts `null`. |
-| `Banner` | `title`; a default glyph per tone when `icon` is not passed (`icon={null}` hides it, so status never relies on color alone); only `danger` is `role="alert"`, the rest are `role="status"`; the `info` tone uses the `info` tokens. |
+| `Banner` | `appearance="outline"` (page surface, only the border carries the tone; default `soft`), `title`; a default glyph per tone when `icon` is not passed (`icon={null}` hides it, so status never relies on color alone); only `danger` is `role="alert"`, the rest are `role="status"`; the `info` tone uses the `info` tokens. |
 | `Chip` | `icon`, `statusIcon` (prefixes `info`, `success`, `warning`, `danger` chips with their glyph), and an `info` tone. |
 | `ErrorState` | `title` and `description` (`message` keeps working as the headline); an `Error` or any non-renderable value is never printed, a generic localized sentence is shown instead. |
 

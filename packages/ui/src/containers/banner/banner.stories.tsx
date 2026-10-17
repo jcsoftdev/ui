@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
 import { AlertTriangle, CheckCircle2, Info, XOctagon } from "../../icons/index.js";
 import { Banner } from "./banner.js";
@@ -98,4 +99,25 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const Outline: Story = {
+  args: { appearance: "outline", title: "Heads up", icon: undefined },
+  render: (args) => (
+    <div className="flex flex-col gap-3">
+      {(["info", "success", "warning", "danger"] as const).map((tone) => (
+        <Banner key={tone} {...args} tone={tone}>
+          The tone only colors the border; the glyph and the role carry the meaning.
+        </Banner>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const banners = within(canvasElement).getAllByRole("status");
+    await expect(banners).toHaveLength(3);
+    await expect(within(canvasElement).getByRole("alert")).toHaveAttribute(
+      "data-appearance",
+      "outline",
+    );
+  },
 };
