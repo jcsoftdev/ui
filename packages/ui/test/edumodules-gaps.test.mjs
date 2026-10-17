@@ -26,6 +26,7 @@ const confirm = await load("../src/containers/confirm-action/model.ts");
 const dates = await load("../src/calendar/internal/date-utils.ts");
 const picker = await load("../src/forms/date-picker/model.ts");
 const listbox = await load("../src/forms/internal/listbox.ts");
+const wizard = await load("../src/navigation/wizard/model.ts");
 
 const { html } = await loadCases("gaps-cases.tsx");
 
@@ -387,4 +388,84 @@ test("DateTimePicker splits a zone-less value into date and time and keeps it fo
   const zoned = html.dateTimePicker({ defaultValue: "2026-09-07T09:30:00Z" });
   assert.doesNotMatch(zoned, /value="09:30"/);
   assert.match(zoned, /aria-label="Time"/);
+});
+
+test("wizard gates run in order, stop at the first block and treat a throw as blocked", async () => {
+  const calls = [];
+  const ok = await wizard.evaluateGates([
+    undefined,
+    true,
+    async () => {
+      calls.push("a");
+      return true;
+    },
+  ]);
+  assert.deepEqual(ok, { ok: true, failed: false });
+  const blocked = await wizard.evaluateGates([
+    () => false,
+    () => {
+      calls.push("never");
+      return true;
+    },
+  ]);
+  assert.deepEqual(blocked, { ok: false, failed: false });
+  const thrown = await wizard.evaluateGates([
+    async () => {
+      throw new Error("x");
+    },
+  ]);
+  assert.deepEqual(thrown, { ok: false, failed: true });
+  assert.deepEqual(calls, ["a"]);
+});
+
+test("wizard step helpers clamp the index, fill the announcement and pick the Enter key", () => {
+  assert.equal(wizard.clampIndex(-1, 3), 0);
+  assert.equal(wizard.clampIndex(9, 3), 2);
+  assert.equal(wizard.clampIndex(Number.NaN, 3), 0);
+  assert.equal(wizard.clampIndex(1, 0), 0);
+  assert.equal(
+    wizard.formatStepOf("Paso {current} de {total}: {label}", {
+      current: 2,
+      total: 4,
+      label: "Pago",
+    }),
+    "Paso 2 de 4: Pago",
+  );
+  const key = (over = {}) => ({
+    key: "Enter",
+    defaultPrevented: false,
+    shiftKey: false,
+    altKey: false,
+    ctrlKey: false,
+    metaKey: false,
+    target: { tagName: "INPUT", type: "text" },
+    ...over,
+  });
+  assert.equal(wizard.isAdvanceKey(key()), true);
+  assert.equal(wizard.isAdvanceKey(key({ target: { tagName: "TEXTAREA" } })), false);
+  assert.equal(wizard.isAdvanceKey(key({ target: { tagName: "INPUT", type: "checkbox" } })), false);
+  assert.equal(wizard.isAdvanceKey(key({ target: { tagName: "BUTTON" } })), false);
+  assert.equal(wizard.isAdvanceKey(key({ nativeEvent: { isComposing: true } })), false);
+  assert.equal(wizard.isAdvanceKey(key({ shiftKey: true })), false);
+  assert.equal(wizard.isAdvanceKey(key({ key: "a" })), false);
+});
+
+test("Wizard renders the first step with Back disabled, the step announcement and localized labels", () => {
+  const markup = html.wizard();
+  assert.match(markup, /Step 1 of 2: Alpha/);
+  assert.match(markup, /aria-current="step"/);
+  assert.match(markup, /first/);
+  assert.doesNotMatch(markup, /second/);
+  assert.match(markup, /<button[^>]*disabled[^>]*>(?:<span[^>]*>)?Back/);
+  assert.match(markup, /Next/);
+  assert.match(html.wizard({ defaultValue: "b" }), /Finish/);
+  const es = html.wizardEs();
+  assert.match(es, /Paso 1 de 2: Alfa/);
+  assert.match(es, /Siguiente/);
+  assert.match(es, /Atr\u00e1s/);
+});
+
+test("Wizard uses container queries only", () => {
+  assert.doesNotMatch(html.wizard(), /class="[^"]*\b(?:sm|md|lg|xl):/);
+  assert.match(html.wizard(), /@container\/wizard/);
 });

@@ -143,6 +143,17 @@ for (const [entry, component] of [
   console.log(`${entry} (${component}): ${picker.bytes} bytes, ${picker.files.length} modules`);
 }
 
+const wiz = await inputsFor(
+  `import { Wizard } from "@jcsoftdev/ui/navigation/wizard"; console.log(Wizard);`,
+);
+for (const banned of ["primitives/", "dialog", "popover", "dropdown-menu", "toaster", "charts/"]) {
+  assert.ok(
+    !wiz.files.some((f) => f.includes(banned)),
+    `Wizard bundle must not include "${banned}"`,
+  );
+}
+console.log(`navigation/wizard: ${wiz.bytes} bytes, ${wiz.files.length} modules`);
+
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
   `atoms (group entry, only Chip used): ${group.bytes} bytes, ${group.files.length} modules`,

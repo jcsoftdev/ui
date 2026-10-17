@@ -7,6 +7,7 @@ import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
 import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
 import { SelectMenu } from "../../src/forms/select-menu/select-menu.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
+import { Wizard } from "../../src/navigation/wizard/wizard.js";
 
 export const html = {
   spinnerDefault: () => renderToStaticMarkup(<Spinner />),
@@ -70,5 +71,21 @@ export const html = {
     ),
   dateTimePicker: (props: Record<string, unknown> = {}) =>
     renderToStaticMarkup(<DateTimePicker aria-label="When" {...props} />),
+  wizard: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Wizard
+        steps={[
+          { id: "a", label: "Alpha", content: <p>first</p> },
+          { id: "b", label: "Beta", content: <p>second</p> },
+        ]}
+        {...props}
+      />,
+    ),
+  wizardEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <Wizard steps={[{ id: "a", label: "Alfa", content: "x" }, { id: "b", label: "Beta", content: "y" }]} />
+      </UiStringsProvider>,
+    ),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };

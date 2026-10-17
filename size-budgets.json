@@ -95,13 +95,13 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 900
+      "maxGzip": 1000
     },
     {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 12900
+      "maxGzip": 14700
     },
     {
       "id": "ui/overlays",

@@ -32,6 +32,12 @@ export interface UiStrings {
   dayPlaceholder: string;
   monthPlaceholder: string;
   yearPlaceholder: string;
+  back: string;
+  next: string;
+  finish: string;
+  /** Step announcement; `{current}`, `{total}` and `{label}` are replaced. */
+  stepOf: string;
+  steps: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -70,6 +76,11 @@ export const uiStrings = {
     dayPlaceholder: "dd",
     monthPlaceholder: "mm",
     yearPlaceholder: "yyyy",
+    back: "Back",
+    next: "Next",
+    finish: "Finish",
+    stepOf: "Step {current} of {total}: {label}",
+    steps: "Steps",
   },
   es: {
     retry: "Reintentar",
@@ -104,5 +115,10 @@ export const uiStrings = {
     dayPlaceholder: "dd",
     monthPlaceholder: "mm",
     yearPlaceholder: "aaaa",
+    back: "Atrás",
+    next: "Siguiente",
+    finish: "Finalizar",
+    stepOf: "Paso {current} de {total}: {label}",
+    steps: "Pasos",
   },
 } as const satisfies Record<UiLocale, UiStrings>;
