@@ -28,6 +28,7 @@ const picker = await load("../src/forms/date-picker/model.ts");
 const listbox = await load("../src/forms/internal/listbox.ts");
 const wizard = await load("../src/navigation/wizard/model.ts");
 const feed = await load("../src/containers/feed/model.ts");
+const due = await load("../src/atoms/due-chip/model.ts");
 
 const { html } = await loadCases("gaps-cases.tsx");
 
@@ -612,4 +613,90 @@ test("ListDetail collapses with container queries only and names its list", () =
   );
   assert.match(html.listDetail({ defaultValue: "a" }), /Back to list/);
   assert.doesNotMatch(markup, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
+test("due state is overdue before the reference day, soon through the window, ok beyond", () => {
+  const at = (value, options) => due.dueStatus(value, { today: "2026-03-04", ...options });
+  assert.deepEqual(at("2026-03-03"), { state: "overdue", days: -1 });
+  assert.deepEqual(at("2026-03-04"), { state: "soon", days: 0 });
+  assert.deepEqual(at("2026-03-07"), { state: "soon", days: 3 });
+  assert.deepEqual(at("2026-03-08"), { state: "ok", days: 4 });
+  assert.deepEqual(at("2026-03-08", { soonDays: 5 }), { state: "soon", days: 4 });
+  assert.deepEqual(at("2026-03-04", { soonDays: 0 }), { state: "soon", days: 0 });
+  assert.deepEqual(at("2026-03-05", { soonDays: 0 }), { state: "ok", days: 1 });
+  assert.equal(at("2026-02-30"), null);
+  assert.equal(at("soon"), null);
+  assert.equal(due.dueStatus("2026-03-04", { today: "nope" }), null);
+});
+
+test("due math crosses month, year and leap-day boundaries by calendar day", () => {
+  assert.equal(due.daysBetween("2026-02-28", "2026-03-01"), 1);
+  assert.equal(due.daysBetween("2028-02-28", "2028-03-01"), 2);
+  assert.equal(due.daysBetween("2026-12-31", "2027-01-01"), 1);
+  assert.equal(due.daysBetween("2026-03-08", "2026-03-09"), 1);
+  assert.equal(due.daysBetween("2026-11-01", "2026-11-02"), 1);
+});
+
+test("due reads dates and naive date-times as written and an instant on the viewer's day, in every zone", async () => {
+  const results = await inZones(
+    "../src/atoms/due-chip/model.ts",
+    `[m.dueCalendarDate("2026-03-04"), m.dueCalendarDate("2026-03-04T23:59"), m.dueCalendarDate("2026-03-04T00:01:30"), m.dueStatus("2026-03-04T23:59", { today: "2026-03-04" }).state, m.formatDueDay("2026-03-04", "2026-01-01", "en-US")]`,
+    zones,
+  );
+  for (const result of results) assert.equal(result, results[0]);
+  assert.deepEqual(JSON.parse(results[0]), [
+    "2026-03-04",
+    "2026-03-04",
+    "2026-03-04",
+    "soon",
+    "Mar 4",
+  ]);
+
+  const instants = await inZones(
+    "../src/atoms/due-chip/model.ts",
+    `m.dueCalendarDate("2026-03-04T02:00:00Z")`,
+    ["UTC", "America/Lima", "Pacific/Kiritimati"],
+  );
+  assert.deepEqual(
+    instants.map((r) => JSON.parse(r)),
+    ["2026-03-04", "2026-03-03", "2026-03-04"],
+  );
+});
+
+test("due day labels add the year only outside the reference year", () => {
+  assert.equal(due.formatDueDay("2026-03-04", "2026-01-01", "en-US"), "Mar 4");
+  assert.equal(due.formatDueDay("2027-01-05", "2026-12-31", "en-US"), "Jan 5, 2027");
+});
+
+test("DueChip carries its state as tone, glyph and screen-reader text, and a machine date", () => {
+  const ok = html.dueChip();
+  assert.match(ok, /data-state="ok"/);
+  assert.match(ok, /<time dateTime="2026-03-20">Mar 20<\/time>/);
+  assert.doesNotMatch(ok, /sr-only/);
+  const overdue = html.dueChip({ date: "2026-03-01" });
+  assert.match(overdue, /data-state="overdue"/);
+  assert.match(overdue, /bg-danger-soft/);
+  assert.match(overdue, /<svg/);
+  assert.match(overdue, /<span class="sr-only">, Overdue<\/span>/);
+  const soon = html.dueChip({ date: "2026-03-06" });
+  assert.match(soon, /bg-warning-soft/);
+  assert.match(soon, /, Due soon/);
+  const done = html.dueChip({ date: "2026-03-01", done: true });
+  assert.match(done, /data-state="done"/);
+  assert.doesNotMatch(done, /Overdue|bg-danger-soft/);
+  assert.match(html.dueChipEs(), /, Vencido/);
+  assert.doesNotMatch(html.dueChip({ date: "someday" }), /<time/);
+  assert.match(html.dueChip({ date: "someday" }), /someday/);
+});
+
+test("Seal is plain content unless labelled, then a named group, with a tone frame", () => {
+  const plain = html.seal();
+  assert.doesNotMatch(plain, /role=|aria-label/);
+  assert.match(plain, /border-accent-ink/);
+  assert.match(plain, />Receipt</);
+  const labelled = html.seal({ label: "Verified", tone: "danger" });
+  assert.match(labelled, /role="group"/);
+  assert.match(labelled, /aria-label="Verified"/);
+  assert.match(labelled, /border-danger/);
+  assert.match(labelled, /data-tone="danger"/);
 });

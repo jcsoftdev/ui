@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { DueChip } from "../../src/atoms/due-chip/due-chip.js";
 import { Kbd } from "../../src/atoms/kbd/kbd.js";
+import { Seal } from "../../src/atoms/seal/seal.js";
 import { Spinner } from "../../src/atoms/spinner/spinner.js";
 import { Aside, AsideHeader } from "../../src/containers/aside/aside.js";
 import { Banner } from "../../src/containers/banner/banner.js";
@@ -168,6 +170,20 @@ export const html = {
         </ListDetailList>
         <ListDetailDetail>detail</ListDetailDetail>
       </ListDetail>,
+    ),
+  dueChip: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<DueChip date="2026-03-20" today="2026-03-04" {...props} />),
+  dueChipEs: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <DueChip date="2026-03-01" today="2026-03-04" {...props} />
+      </UiStringsProvider>,
+    ),
+  seal: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Seal title="Receipt" {...props}>
+        <p>Issuer</p>
+      </Seal>,
     ),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };

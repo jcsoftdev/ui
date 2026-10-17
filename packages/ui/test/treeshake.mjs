@@ -143,6 +143,30 @@ for (const [entry, component] of [
   console.log(`${entry} (${component}): ${picker.bytes} bytes, ${picker.files.length} modules`);
 }
 
+for (const [entry, component] of [
+  ["atoms/seal", "Seal"],
+  ["atoms/due-chip", "DueChip"],
+]) {
+  const atom = await inputsFor(
+    `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
+  );
+  for (const banned of [
+    "primitives/",
+    "dialog",
+    "popover",
+    "dropdown-menu",
+    "toaster",
+    "charts/",
+    "responsive-list",
+  ]) {
+    assert.ok(
+      !atom.files.some((f) => f.includes(banned)),
+      `${component} bundle must not include "${banned}"`,
+    );
+  }
+  console.log(`${entry} (${component}): ${atom.bytes} bytes, ${atom.files.length} modules`);
+}
+
 const wiz = await inputsFor(
   `import { Wizard } from "@jcsoftdev/ui/navigation/wizard"; console.log(Wizard);`,
 );

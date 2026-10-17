@@ -42,6 +42,10 @@ export interface UiStrings {
   aside: string;
   /** Back action of a single-pane `ListDetail`. */
   backToList: string;
+  /** Screen-reader state of a `DueChip` past its date. */
+  overdue: string;
+  /** Screen-reader state of a `DueChip` due within its `soonDays`. */
+  dueSoon: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -87,6 +91,8 @@ export const uiStrings = {
     steps: "Steps",
     aside: "Related information",
     backToList: "Back to list",
+    overdue: "Overdue",
+    dueSoon: "Due soon",
   },
   es: {
     retry: "Reintentar",
@@ -128,5 +134,7 @@ export const uiStrings = {
     steps: "Pasos",
     aside: "Información relacionada",
     backToList: "Volver a la lista",
+    overdue: "Vencido",
+    dueSoon: "Vence pronto",
   },
 } as const satisfies Record<UiLocale, UiStrings>;
