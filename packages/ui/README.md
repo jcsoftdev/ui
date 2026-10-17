@@ -151,7 +151,48 @@ older components already ship (NumberStepper, Carousel, AI set) are not routed t
 | `Field` | `optional` appends the localized "(optional)" marker to the label; `error` also accepts `null`. |
 | `Banner` | `appearance="outline"` (page surface, only the border carries the tone; default `soft`), `title`; a default glyph per tone when `icon` is not passed (`icon={null}` hides it, so status never relies on color alone); only `danger` is `role="alert"`, the rest are `role="status"`; the `info` tone uses the `info` tokens. |
 | `Chip` | `icon`, `statusIcon` (prefixes `info`, `success`, `warning`, `danger` chips with their glyph), and an `info` tone. |
-| `ErrorState` | `title` and `description` (`message` keeps working as the headline); an `Error` or any non-renderable value is never printed, a generic localized sentence is shown instead. |
+| `ErrorState` | `title` and `description` (`message` keeps working as the headline), `actions`; an `Error` or any non-renderable value is never printed, a generic localized sentence is shown instead. |
+
+## Blocks for application screens (additive)
+
+New components, all zero-dependency, localized through `UiStringsProvider`, laid out with container
+queries and sized for touch density. Props, accessibility notes and type-checked examples:
+https://ui.jcsoftdev.com/docs/blocks/
+
+| Component | Entry | What it is |
+| --- | --- | --- |
+| `Spinner`, `Kbd` | `atoms` | Loading ring (`size`, `label`, `label={false}` for decorative) and a styled `<kbd>`. |
+| `IconButton` | `atoms` | Square `Button` with a required `label` (`aria-label`), `variant`, `size`, `loading`. |
+| `DueChip` | `atoms` | Due-date chip: overdue, soon (`soonDays`) and ok states with a glyph and sr-only suffix; time-zone safe. |
+| `Seal` | `atoms` | Stamp mark: `title`, `icon`, `tone`, optional named `label`. |
+| `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. |
+| `AlertDialog` | `overlays` | `role="alertdialog"` with cancel and confirm, `tone="danger"`, async `onConfirm` with a pending state. |
+| `SelectMenu` | `forms` | Custom listbox select over `options` (groups, disabled options, typeahead, hidden `name` input). |
+| `Combobox` | `forms` | Filterable, async-friendly (`onSearchChange`, `loading`), `clearable`, `emptyText`. |
+| `DatePicker`, `DateTimePicker` | `forms` | Typed masked input plus calendar popover; ISO values, `min`, `max`, `isDateDisabled`, locale week start. |
+| `DateCalendar` | `calendar` | Standalone keyboard date grid behind the pickers. |
+| `ChipGroup` | `forms` | Multi or single toggle chips (`aria-pressed`, roving focus, `count`, `name`). |
+| `Wizard` | `navigation` | `Stepper` plus Back/Next/Finish: `steps`, async `canAdvance`, `onBeforeNext`, `onComplete`. |
+| `TabsNav`, `TabsNavLink` | `navigation` | Link-mode sub-navigation strip (`aria-current="page"`, `renderLink` or `asChild`). |
+| `Section`, `Note`, `Aside` | `containers` | Titled block with `actions` and optional `divider`, a text note with a `tone`, and a complementary region. |
+| `ListDetail` | `containers` | Master-detail that collapses to one pane under 641px of its own width. |
+| `Feed`, `FeedEvent` | `containers` | Activity log with a mark, text and `<time>` (absolute or `relative`). |
+| `Shortcuts`, `ShortcutsItem` | `containers` | Link or button tiles with `icon`, `count`, `kbd`. |
+
+Additive props on existing components:
+
+| Component | Added |
+| --- | --- |
+| `DescriptionList` | `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3), `valueAlign` (`end`, `start`); `DescriptionListItem` with a dash placeholder for empty values. |
+| `Chip` | `size="sm"` (compact; a tag is `<Chip size="sm" square>`). |
+| `Skeleton` | `variant` `list`, `kpis`, `key-value`, `bar` and `count`. |
+| `ErrorState` | `actions` node, rendered in the same row as the retry button (the retry button now sits inside a wrapper `div`). |
+| `RadioGroup` | Each radio is named by its label and described by its description. |
+| `Checkbox`, `Switch` | The 44px touch target is an invisible `::after`; under touch density the layout box stays 40px. |
+| `toast` | `toast.info`, `toast.warning`, `toast.danger`; success, info, warning and error toasts are tinted with a glyph. |
+
+In tests, reset the toast store with `import { resetToasts } from "@jcsoftdev/ui/overlays/testing"`
+(kept off the `overlays` entry so production bundles never carry it).
 
 ## ConfirmAction and ResponsiveList
 

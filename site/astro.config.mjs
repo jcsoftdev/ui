@@ -48,6 +48,7 @@ export default defineConfig({
             { slug: "docs/subpaths" },
             { slug: "docs/container-queries" },
             { slug: "docs/accessibility" },
+            { slug: "docs/blocks" },
           ],
         },
         {

@@ -2,6 +2,61 @@
 
 ## 0.3.0 (unreleased)
 
+### Blocks for application screens
+
+New components, all additive and source compatible, with no new runtime dependency. Defaults come
+from `UiStringsProvider` (en/es), layout follows container queries, and hit areas follow
+`data-density="touch"`. Guide with examples: `/docs/blocks/`.
+
+#### Added
+
+- **Atoms.** `Spinner` (`size`, `label`, decorative `label={false}`), `Kbd`, `IconButton`
+  (required `label`, `variant`, `size`, `loading`, `asChild`, `iconButtonSizeClasses`), `DueChip`
+  (`date`, `today`, `soonDays`, `done`, `locale`) and `Seal` (`title`, `icon`, `tone`, `label`).
+- **Overlays.** `Tooltip` (`content`, `shortcut`, `side`, `align`, `openDelay`, `closeDelay`,
+  controlled `open`) and `AlertDialog` (`role="alertdialog"`, `tone`, async `onConfirm` with a
+  pending state and inline failure message, focus on Cancel).
+- **Forms.** `SelectMenu` (custom listbox select over `options`), `Combobox` (filter, async
+  `onSearchChange`, `loading`, `clearable`, `valueLabel`), `DatePicker` and `DateTimePicker` (ISO
+  values, `min`, `max`, `isDateDisabled`, locale-derived format and week start, time-zone safe) and
+  `ChipGroup` (multiple or single toggle chips with roving focus).
+- **Calendar.** `DateCalendar`, the standalone keyboard date grid behind the pickers.
+- **Navigation.** `Wizard` (`steps`, async `canAdvance`, `onBeforeNext`, `onComplete`) and
+  `TabsNav` / `TabsNavLink` (link strip with `aria-current="page"`, `renderLink`, `asChild`).
+- **Containers.** `Section`, `Note`, `Aside` / `AsideHeader`, `ListDetail` (with its parts and
+  `useListDetail`), `Feed` / `FeedEvent` and `Shortcuts` / `ShortcutsItem`.
+- **Banner `appearance="outline"`.** Page surface where only the border carries the tone (default
+  `soft`).
+- **`DescriptionList`** `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3), `valueAlign` and
+  `DescriptionListItem` (dash placeholder for `null`, `undefined`, `false` and `""`).
+- **`Chip` `size="sm"`** and `chipSizeClasses`; `ref` is a regular prop.
+- **`Skeleton` variants** `list`, `kpis`, `key-value` and `bar`, with `count`.
+- **`ErrorState` `actions`.**
+- **Toast tones.** `toast.info`, `toast.warning`, `toast.danger` and `toastToneClasses`.
+- **`resetToasts()`** in the new `@jcsoftdev/ui/overlays/testing` entry, for resetting the toast
+  store between tests.
+- **UI strings** (en/es) for the new components: `noResults`, `clear`, `selectPlaceholder`,
+  `calendar`, `openCalendar`, `previousMonth`, `nextMonth`, `time`, `locale`, the day, month and
+  year placeholders, `back`, `next`, `finish`, `stepOf`, `steps`, `aside`, `backToList`, `overdue`
+  and `dueSoon`.
+
+#### Changed (behavior to check when upgrading)
+
+- **`ErrorState` markup.** The retry button now sits inside a wrapper `div` that also holds
+  `actions`. Selectors or tests that expect the button as a direct child need updating.
+- **Toast tint.** Success and error toasts are tinted with their tone (`*-soft` surface, tone
+  border, status glyph) instead of the inverted neutral look. `default` is unchanged and roles are
+  unchanged (only error is an alert).
+- **`Checkbox` and `Switch` touch target.** The 44px target is an invisible `::after` of the control
+  instead of a larger root, so under touch density the layout box is 40px (it was 44px) and the hit
+  target can overlap a neighbour by 2px per side. Default density is unchanged.
+- **`Section` `divider` is off by default.** A kit whose section header always drew a hairline
+  needs `divider`.
+- **`RadioGroup`** radios now carry `aria-labelledby` and `aria-describedby`, so they have
+  accessible names without relying on `<label for>`.
+- **Escape inside the library's own comboboxes.** The dismissable-layer primitive no longer treats
+  the library's own open `role="combobox"` widgets as a foreign layer, so Escape closes them.
+
 ### Components for app shells
 
 - **`Sidebar` rail.** `collapsed` turns the sidebar into an icons-only rail (labels as `title` tooltips and screen-reader text, badges as dots). It is ignored while the sidebar is a drawer, so the default behavior is unchanged.
