@@ -1,15 +1,18 @@
 "use client";
 
 import {
+  type ComponentProps,
+  createContext,
   type ReactElement,
   type ReactNode,
   type RefObject,
   useCallback,
+  useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
-import { Button } from "../../atoms/button/button.js";
+import { Button, type ButtonProps } from "../../atoms/button/button.js";
 import type { ConfirmResult } from "../../containers/confirm-action/model.js";
 import { runConfirm } from "../../containers/confirm-action/model.js";
 import { useUiStrings } from "../../i18n/index.js";
@@ -45,6 +48,10 @@ export interface AlertDialogProps {
   onOpenChange?: (open: boolean) => void;
   /** Element that opens the dialog. Omit it to drive the dialog with `open`. */
   trigger?: ReactElement;
+  /** Disables the confirm button, e.g. until a reason is typed. A pending confirm disables it anyway. */
+  confirmDisabled?: boolean;
+  /** Disables the cancel button. Escape still cancels. A pending confirm disables it anyway. */
+  cancelDisabled?: boolean;
   /** What is being asked, as a question or a verb phrase ("Delete this appointment?"). */
   title: ReactNode;
   /** The consequence, said plainly. Linked to the dialog with `aria-describedby`. */
@@ -78,7 +85,8 @@ export interface AlertDialogProps {
 
 /**
  * Modal that interrupts to ask for a decision before something consequential
- * (WAI-ARIA `alertdialog`). There is no close button and a press outside does nothing:
+ * (WAI-ARIA `alertdialog`). Pass `title` and `onConfirm` for the props API, or compose
+ * `AlertDialog.Root` with `Trigger`, `Content`, `Title`, `Description`, `Cancel` and `Action`. There is no close button and a press outside does nothing:
  * the user answers with Cancel, Escape or Confirm. While `onConfirm` is pending, every way
  * out is disabled so the action runs exactly once.
  */
@@ -93,6 +101,8 @@ export function AlertDialog({
   tone = "default",
   confirmLabel,
   cancelLabel,
+  confirmDisabled = false,
+  cancelDisabled = false,
   onConfirm,
   onCancel,
   initialFocus = "cancel",
@@ -220,7 +230,7 @@ export function AlertDialog({
             <Button
               ref={cancelRef}
               variant="secondary"
-              disabled={pending}
+              disabled={pending || cancelDisabled}
               className={classNames?.cancel}
               onClick={cancel}
             >
@@ -230,6 +240,7 @@ export function AlertDialog({
               ref={confirmRef}
               variant={tone === "danger" ? "danger" : "primary"}
               loading={pending}
+              disabled={confirmDisabled}
               loadingLabel={strings.processing}
               className={classNames?.confirm}
               onClick={() => void confirm()}
@@ -289,3 +300,187 @@ function AlertDialogPanel({
     </DialogPrimitive.Portal>
   );
 }
+
+// ---------------------------------------------------------------------------------------------
+// Compound API: the same alertdialog, assembled from parts. Cancel and Action both close the
+// dialog after their `onClick`, which can call `event.preventDefault()` to keep it open. There is
+// no pending machine here; use the props API for an async confirm.
+
+const CancelRefContext = createContext<RefObject<HTMLButtonElement | null> | null>(null);
+
+export interface AlertDialogRootProps {
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** `AlertDialog.Trigger` and `AlertDialog.Content`. */
+  children?: ReactNode;
+}
+
+/** Root of a composed alert dialog; owns the open state and the focus return. */
+function AlertDialogRoot({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  children,
+}: AlertDialogRootProps) {
+  const [open, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen,
+    onChange: onOpenChange,
+  });
+  const cancelRef = useRef<HTMLButtonElement | null>(null);
+  const focusRef = useCapturePreviousFocus(open);
+  return (
+    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+      <PreviousFocusProvider focusRef={focusRef}>
+        <CancelRefContext.Provider value={cancelRef}>{children}</CancelRefContext.Provider>
+      </PreviousFocusProvider>
+    </DialogPrimitive.Root>
+  );
+}
+
+/** Element that opens the dialog; `asChild` merges onto your own button. */
+function AlertDialogTrigger(props: ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger {...props} />;
+}
+
+export interface AlertDialogContentProps {
+  children?: ReactNode;
+  material?: Material;
+  container?: HTMLElement | null;
+  className?: string;
+  /** Per-part classes: `overlay` and `root` apply here. */
+  classNames?: ClassNames<AlertDialogPart>;
+}
+
+/** The panel: `role="alertdialog"`, no close button, outside presses ignored, focus on Cancel. */
+function AlertDialogContent({
+  children,
+  material,
+  container,
+  className,
+  classNames,
+}: AlertDialogContentProps) {
+  const cancelRef = useContext(CancelRefContext);
+  const panelRef = useRef<HTMLDivElement>(null);
+  return (
+    <AlertDialogPanel
+      panelRef={panelRef}
+      material={material}
+      container={container}
+      className={className}
+      classNames={classNames}
+      onEscape={() => {}}
+      onOpenAutoFocus={(event) => {
+        if (!cancelRef?.current) return;
+        event.preventDefault();
+        cancelRef.current.focus();
+      }}
+    >
+      {children}
+    </AlertDialogPanel>
+  );
+}
+
+function AlertDialogHeader({ className, ...props }: ComponentProps<"div">) {
+  return <div {...props} className={cn("flex flex-col gap-1 px-4.5 pt-4 pb-2.5", className)} />;
+}
+
+function AlertDialogTitle({ className, ...props }: ComponentProps<"h2">) {
+  return (
+    <DialogPrimitive.Title
+      {...props}
+      className={cn("m-0 min-w-0 break-words text-dialog-title text-ink", className)}
+    />
+  );
+}
+
+function AlertDialogDescription({ className, ...props }: ComponentProps<"p">) {
+  return (
+    <DialogPrimitive.Description {...props} className={cn("m-0 text-body text-ink-2", className)} />
+  );
+}
+
+function AlertDialogBody({ className, ...props }: ComponentProps<"div">) {
+  return <div {...props} className={cn("flex flex-col gap-3 px-4.5 pb-3", className)} />;
+}
+
+function AlertDialogFooter({ className, ...props }: ComponentProps<"div">) {
+  return (
+    <div
+      {...props}
+      className={cn(
+        "flex flex-wrap items-center justify-end gap-2 border-t-divider px-4.5 py-3",
+        "@max-sm/dialog:flex-col-reverse @max-sm/dialog:items-stretch @max-sm/dialog:[&>*]:w-full",
+        className,
+      )}
+    />
+  );
+}
+
+/** Closes the dialog. Takes initial focus. Label defaults to the localized "Cancel". */
+function AlertDialogCancel({ children, variant = "secondary", ref, ...props }: ButtonProps) {
+  const strings = useUiStrings();
+  const cancelRef = useContext(CancelRefContext);
+  return (
+    <DialogPrimitive.Close asChild>
+      <Button
+        {...props}
+        variant={variant}
+        ref={(node) => {
+          if (cancelRef) cancelRef.current = node;
+          if (typeof ref === "function") ref(node);
+          else if (ref) ref.current = node;
+        }}
+      >
+        {children ?? strings.cancel}
+      </Button>
+    </DialogPrimitive.Close>
+  );
+}
+
+export interface AlertDialogActionProps extends ButtonProps {
+  /** `danger` styles the button as destructive; same as `variant="danger"`. */
+  tone?: AlertDialogTone;
+}
+
+/** The confirming button. Closes the dialog after `onClick` unless that calls `preventDefault()`. */
+function AlertDialogAction({
+  children,
+  tone = "default",
+  variant,
+  ...props
+}: AlertDialogActionProps) {
+  const strings = useUiStrings();
+  return (
+    <DialogPrimitive.Close asChild>
+      <Button {...props} variant={variant ?? (tone === "danger" ? "danger" : "primary")}>
+        {children ?? strings.confirm}
+      </Button>
+    </DialogPrimitive.Close>
+  );
+}
+
+AlertDialog.Root = AlertDialogRoot;
+AlertDialog.Trigger = AlertDialogTrigger;
+AlertDialog.Content = AlertDialogContent;
+AlertDialog.Header = AlertDialogHeader;
+AlertDialog.Title = AlertDialogTitle;
+AlertDialog.Description = AlertDialogDescription;
+AlertDialog.Body = AlertDialogBody;
+AlertDialog.Footer = AlertDialogFooter;
+AlertDialog.Cancel = AlertDialogCancel;
+AlertDialog.Action = AlertDialogAction;
+
+export {
+  AlertDialogAction,
+  AlertDialogBody,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogRoot,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+};

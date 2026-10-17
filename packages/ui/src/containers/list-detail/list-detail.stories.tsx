@@ -126,7 +126,7 @@ export const Controlled: Story = {
     return (
       <>
         <p data-testid="value">{String(value)}</p>
-        <Example value={value} onValueChange={setValue} />
+        <Example value={value} onValueChange={setValue} onBack={() => setValue(null)} />
       </>
     );
   },
@@ -159,5 +159,24 @@ export const SpanishBack: Story = {
     await expect(
       within(canvasElement).getByRole("button", { name: "Volver a la lista" }),
     ).toBeVisible();
+  },
+};
+
+/** Back calls `onBack` and never reports `null` to `onValueChange`; uncontrolled it still shows the list. */
+export const BackCallsOnBack: Story = {
+  decorators: inWidth("22rem"),
+  args: { onValueChange: fn(), onBack: fn() },
+  render: (args) => (
+    <Example defaultValue="ana" onValueChange={args.onValueChange} onBack={args.onBack} />
+  ),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Back to list" }));
+    await expect(canvas.getByRole("list", { name: "Students" })).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: /Luis/ }));
+    await userEvent.click(canvas.getByRole("button", { name: "Back to list" }));
+    await expect(args.onBack).toHaveBeenCalledTimes(2);
+    await expect(args.onValueChange).toHaveBeenCalledTimes(1);
+    await expect(args.onValueChange).toHaveBeenCalledWith("luis");
   },
 };

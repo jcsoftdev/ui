@@ -44,8 +44,16 @@ export interface ListDetailProps
   /** Controlled selected item id; `null` means none (the single-pane view then shows the list). */
   value?: string | null | undefined;
   defaultValue?: string | null | undefined;
-  /** Called with the new id, or `null` from the back action. */
-  onValueChange?: ((value: string | null) => void) | undefined;
+  /**
+   * Called with the id the user chose. It is never called with `null`: going back to the list
+   * calls `onBack` instead, so a handler that loads the selected record never sees "no record".
+   */
+  onValueChange?: ((value: string) => void) | undefined;
+  /**
+   * Called when the back action (or `select(null)` from `useListDetail`) clears the selection.
+   * Uncontrolled, the list shows again on its own; controlled, set `value` to `null` here.
+   */
+  onBack?: (() => void) | undefined;
   /** Names the list of items. */
   "aria-label": string;
   children: ReactNode;
@@ -60,6 +68,7 @@ export function ListDetail({
   value: valueProp,
   defaultValue = null,
   onValueChange,
+  onBack,
   "aria-label": label,
   className,
   children,
@@ -68,8 +77,19 @@ export function ListDetail({
   const [value, setValue] = useControllableState<string | null>({
     prop: valueProp,
     defaultProp: defaultValue,
-    onChange: onValueChange,
+    onChange: (next) => {
+      if (next !== null) onValueChange?.(next);
+    },
   });
+  const onBackRef = useRef(onBack);
+  onBackRef.current = onBack;
+  const select = useCallback(
+    (next: string | null) => {
+      setValue(next);
+      if (next === null) onBackRef.current?.();
+    },
+    [setValue],
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const previous = useRef<string | null>(value);
 
@@ -88,7 +108,7 @@ export function ListDetail({
     if (detail && back && back.getClientRects().length > 0) detail.focus();
   }, [value]);
 
-  const context = useMemo(() => ({ value, select: setValue, label }), [value, setValue, label]);
+  const context = useMemo(() => ({ value, select, label }), [value, select, label]);
 
   return (
     <ListDetailContext.Provider value={context}>

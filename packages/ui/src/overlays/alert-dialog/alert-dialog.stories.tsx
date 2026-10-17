@@ -194,3 +194,106 @@ export const InSpanish: Story = {
     await expect(within(panel).getByRole("button", { name: "Confirmar" })).toBeVisible();
   },
 };
+
+export const ConfirmDisabled: Story = {
+  args: { confirmDisabled: true, cancelDisabled: false },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Delete appointment" }),
+    );
+    const panel = await dialog();
+    await expect(within(panel).getByRole("button", { name: "Delete" })).toBeDisabled();
+    await expect(within(panel).getByRole("button", { name: "Cancel" })).toBeEnabled();
+  },
+};
+
+export const CancelDisabled: Story = {
+  args: { cancelDisabled: true },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "Delete appointment" }),
+    );
+    const panel = await dialog();
+    await expect(within(panel).getByRole("button", { name: "Cancel" })).toBeDisabled();
+    await expect(within(panel).getByRole("button", { name: "Delete" })).toBeEnabled();
+  },
+};
+
+function ComposedExample({ onRemove }: { onRemove: (event: { preventDefault(): void }) => void }) {
+  const [reason, setReason] = useState("");
+  return (
+    <AlertDialog.Root>
+      <AlertDialog.Trigger asChild>
+        <Button variant="danger">Remove student</Button>
+      </AlertDialog.Trigger>
+      <AlertDialog.Content>
+        <AlertDialog.Header>
+          <AlertDialog.Title>Remove this student?</AlertDialog.Title>
+          <AlertDialog.Description>Their grades are archived.</AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Body>
+          <input
+            aria-label="Reason"
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+          />
+        </AlertDialog.Body>
+        <AlertDialog.Footer>
+          <AlertDialog.Cancel />
+          <AlertDialog.Action tone="danger" disabled={reason === ""} onClick={onRemove}>
+            Remove
+          </AlertDialog.Action>
+        </AlertDialog.Footer>
+      </AlertDialog.Content>
+    </AlertDialog.Root>
+  );
+}
+
+export const Composed: StoryObj = {
+  render: () => <ComposedExample onRemove={() => {}} />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Remove student" }));
+    const panel = await screen.findByRole("alertdialog", { name: "Remove this student?" });
+    await expect(panel).toHaveAccessibleDescription("Their grades are archived.");
+    await waitFor(() =>
+      expect(within(panel).getByRole("button", { name: "Cancel" })).toHaveFocus(),
+    );
+    const action = within(panel).getByRole("button", { name: "Remove" });
+    await expect(action).toBeDisabled();
+    await userEvent.type(within(panel).getByRole("textbox", { name: "Reason" }), "left");
+    await expect(action).toBeEnabled();
+    await userEvent.click(action);
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+  },
+};
+
+export const ComposedEscapeAndOutside: StoryObj = {
+  render: () => <ComposedExample onRemove={() => {}} />,
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole("button", { name: "Remove student" });
+    await userEvent.click(trigger);
+    await screen.findByRole("alertdialog");
+    await userEvent.click(document.body);
+    await expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};
+
+export const ComposedActionCanKeepItOpen: StoryObj = {
+  render: () => (
+    <ComposedExample
+      onRemove={(event) => {
+        event.preventDefault();
+      }}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Remove student" }));
+    const panel = await screen.findByRole("alertdialog");
+    await userEvent.type(within(panel).getByRole("textbox", { name: "Reason" }), "x");
+    await userEvent.click(within(panel).getByRole("button", { name: "Remove" }));
+    await expect(screen.getByRole("alertdialog")).toBeInTheDocument();
+  },
+};
