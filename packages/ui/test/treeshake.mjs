@@ -145,6 +145,8 @@ for (const [entry, component] of [
 
 for (const [entry, component] of [
   ["atoms/seal", "Seal"],
+  ["forms/chip-group", "ChipGroup"],
+  ["navigation/tabs", "TabsNav"],
   ["atoms/due-chip", "DueChip"],
 ]) {
   const atom = await inputsFor(

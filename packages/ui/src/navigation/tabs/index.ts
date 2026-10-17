@@ -8,3 +8,10 @@ export {
   TabsTrigger,
   type TabsTriggerProps,
 } from "./tabs.js";
+export {
+  TabsNav,
+  TabsNavLink,
+  type TabsNavLinkProps,
+  type TabsNavLinkRenderProps,
+  type TabsNavProps,
+} from "./tabs-nav.js";

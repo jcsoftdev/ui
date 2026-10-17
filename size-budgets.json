@@ -89,7 +89,7 @@
       "id": "ui/forms",
       "kind": "js",
       "file": "packages/ui/dist/forms/index.js",
-      "maxGzip": 37300
+      "maxGzip": 38600
     },
     {
       "id": "ui/i18n",
@@ -101,7 +101,7 @@
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 14700
+      "maxGzip": 15600
     },
     {
       "id": "ui/overlays",

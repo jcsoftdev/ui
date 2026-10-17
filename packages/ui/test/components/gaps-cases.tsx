@@ -17,8 +17,11 @@ import { Shortcuts, ShortcutsItem } from "../../src/containers/shortcuts/shortcu
 import { Combobox } from "../../src/forms/combobox/combobox.js";
 import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
 import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
+import { ChipGroup } from "../../src/forms/chip-group/chip-group.js";
+import { Field } from "../../src/forms/field/field.js";
 import { SelectMenu } from "../../src/forms/select-menu/select-menu.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
+import { TabsNav, TabsNavLink } from "../../src/navigation/tabs/tabs-nav.js";
 import { Wizard } from "../../src/navigation/wizard/wizard.js";
 
 export const html = {
@@ -184,6 +187,40 @@ export const html = {
       <Seal title="Receipt" {...props}>
         <p>Issuer</p>
       </Seal>,
+    ),
+  chipGroup: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <ChipGroup
+        aria-label="Subjects"
+        options={[
+          { value: "m", label: "Math", count: 2 },
+          { value: "a", label: "Art" },
+          { value: "p", label: "PE", disabled: true },
+        ]}
+        {...props}
+      />,
+    ),
+  chipGroupInField: () =>
+    renderToStaticMarkup(
+      <Field label="Subjects" hint="Pick" error="Required">
+        <ChipGroup options={[{ value: "m", label: "Math" }]} />
+      </Field>,
+    ),
+  tabsNav: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <TabsNav aria-label="Sections" value="b" {...props}>
+        <TabsNavLink value="a" href="/a">
+          Alpha
+        </TabsNavLink>
+        <TabsNavLink value="b" href="/b" count={3}>
+          Beta
+        </TabsNavLink>
+        <TabsNavLink value="c" asChild>
+          <a href="/c" data-router="">
+            Gamma
+          </a>
+        </TabsNavLink>
+      </TabsNav>,
     ),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };

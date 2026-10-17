@@ -700,3 +700,42 @@ test("Seal is plain content unless labelled, then a named group, with a tone fra
   assert.match(labelled, /border-danger/);
   assert.match(labelled, /data-tone="danger"/);
 });
+
+test("ChipGroup renders toggle buttons in a named fieldset with hidden inputs for the selection", () => {
+  const markup = html.chipGroup({ defaultValue: ["m"], name: "subjects" });
+  assert.match(markup, /^<fieldset[^>]*aria-label="Subjects"/);
+  assert.match(markup, /data-type="multiple"/);
+  assert.match(
+    markup,
+    /aria-pressed="true"[^>]*>(?:<svg[\s\S]*?<\/svg>)?<span class="min-w-0">Math/,
+  );
+  assert.match(markup, /aria-pressed="false"[^>]*>(?:<span[^>]*>)?Art/);
+  assert.match(markup, /<button[^>]*disabled[^>]*>.*PE/);
+  assert.match(markup, /<input type="hidden" name="subjects" value="m"\/>/);
+  assert.equal(markup.split('type="hidden"').length - 1, 1);
+  assert.doesNotMatch(html.chipGroup(), /type="hidden"/);
+  assert.match(html.chipGroup({ type: "single", defaultValue: "a" }), /data-type="single"/);
+  assert.doesNotMatch(html.chipGroup({ type: "single", defaultValue: "a" }), /<svg/);
+});
+
+test("ChipGroup takes its id and description from Field and flags invalid without aria-invalid", () => {
+  const markup = html.chipGroupInField();
+  const id = /<label[^>]*for="([^"]+)"/.exec(markup)?.[1];
+  assert.ok(id);
+  assert.match(markup, new RegExp(`<fieldset[^>]*id="${id}"`));
+  assert.match(markup, /aria-describedby="[^"]*-hint [^"]*-error"/);
+  assert.match(markup, /data-invalid=""/);
+  assert.doesNotMatch(markup.slice(markup.indexOf("<fieldset")), /^<fieldset[^>]*aria-invalid/);
+});
+
+test("TabsNav is a labelled navigation of real links with aria-current on the current page", () => {
+  const markup = html.tabsNav();
+  assert.match(markup, /^<nav[^>]*aria-label="Sections"/);
+  assert.doesNotMatch(markup, /role="tab/);
+  assert.match(markup, /<a [^>]*href="\/b"[^>]*aria-current="page"[^>]*>.*Beta.*3/);
+  assert.equal(markup.split('aria-current="page"').length - 1, 1);
+  assert.match(markup, /<a [^>]*href="\/c"[^>]*data-router=""[^>]*>Gamma<\/a>/);
+  assert.equal(markup.split("<a ").length - 1, 3);
+  assert.doesNotMatch(markup, /<nav[^>]*class="[^"]*\bpx-/);
+  assert.match(markup, /@max-\[420px\]\/tabs-nav/);
+});
