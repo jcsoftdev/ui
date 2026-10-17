@@ -25,6 +25,8 @@ import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
 import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
 import { ChipGroup } from "../../src/forms/chip-group/chip-group.js";
 import { Field } from "../../src/forms/field/field.js";
+import { Input } from "../../src/forms/input/input.js";
+import { NumberStepper } from "../../src/forms/number-stepper/number-stepper.js";
 import { SelectMenu } from "../../src/forms/select-menu/select-menu.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 import { TabsNav, TabsNavLink } from "../../src/navigation/tabs/tabs-nav.js";
@@ -120,6 +122,15 @@ export const html = {
       <UiStringsProvider locale="es">
         <SelectMenu aria-label="Árbol" options={[{ value: "a", label: "A" }]} />
       </UiStringsProvider>,
+    ),
+  numberStepper: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<NumberStepper aria-label="Qty" {...props} />),
+  fieldNodeLabel: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Field label={<span data-node-label="">Name <em>*</em></span>} hint="Shown on invoices" {...props}>
+        <Input placeholder="Full name" />
+        <span data-extra="">extra</span>
+      </Field>,
     ),
   combobox: (props: Record<string, unknown> = {}) =>
     renderToStaticMarkup(

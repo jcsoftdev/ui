@@ -68,6 +68,12 @@ export interface ComboboxProps
   /** Submits the value (not the typed text) with a surrounding `<form>` through a hidden input. */
   name?: string;
   invalid?: boolean;
+  /**
+   * `required` always sets `aria-required`. The native attribute, which blocks form submission
+   * with the browser's own bubble before your validation can render, is added only when this is
+   * `true`. Default `false`.
+   */
+  nativeRequired?: boolean;
   size?: "sm" | "md";
   /** Portal target for the popup. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
@@ -99,6 +105,8 @@ export function Combobox({
   valueLabel,
   name,
   invalid,
+  required,
+  nativeRequired = false,
   size = "md",
   container,
   material,
@@ -237,6 +245,8 @@ export function Combobox({
             aria-label={ariaLabel}
             aria-labelledby={ariaLabelledBy}
             aria-invalid={ariaInvalid ?? (invalid || undefined)}
+            aria-required={required || undefined}
+            required={nativeRequired ? required : undefined}
             disabled={disabled}
             value={query ?? selectedLabel}
             onFocus={(event) => {

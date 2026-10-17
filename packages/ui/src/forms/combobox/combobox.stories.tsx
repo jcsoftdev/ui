@@ -271,3 +271,34 @@ export const Controlled: Story = {
     await expect(canvas.getByText("Chosen: none")).toBeVisible();
   },
 };
+
+export const RequiredLeavesValidationToTheApp: Story = {
+  render: (args) => (
+    <form data-testid="form" noValidate={false}>
+      <Combobox {...args} required />
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("combobox", { name: "School" });
+    await expect(input).toHaveAttribute("aria-required", "true");
+    await expect(input.hasAttribute("required")).toBe(false);
+    // The browser does not block submit, so the app can render its own error first.
+    await expect((canvas.getByTestId("form") as HTMLFormElement).checkValidity()).toBe(true);
+  },
+};
+
+export const NativeRequired: Story = {
+  render: (args) => (
+    <form data-testid="form">
+      <Combobox {...args} required nativeRequired />
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("combobox", { name: "School" });
+    await expect(input).toHaveAttribute("aria-required", "true");
+    await expect(input).toBeRequired();
+    await expect((canvas.getByTestId("form") as HTMLFormElement).checkValidity()).toBe(false);
+  },
+};

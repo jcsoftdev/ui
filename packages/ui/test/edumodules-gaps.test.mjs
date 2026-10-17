@@ -29,6 +29,7 @@ const listbox = await load("../src/forms/internal/listbox.ts");
 const wizard = await load("../src/navigation/wizard/model.ts");
 const feed = await load("../src/containers/feed/model.ts");
 const due = await load("../src/atoms/due-chip/model.ts");
+const stepper = await load("../src/forms/number-stepper/model.ts");
 
 const { html } = await loadCases("gaps-cases.tsx");
 
@@ -226,6 +227,60 @@ test("Combobox renders a closed combobox input that shows the selected label and
     /aria-label="Clear"/,
   );
   assert.doesNotMatch(html.combobox(), /aria-label="Clear"/);
+});
+
+test("Combobox required is aria-required by default and only native when asked", () => {
+  const aria = html.combobox({ required: true });
+  assert.match(aria, /aria-required="true"/);
+  assert.doesNotMatch(aria, /<input[^>]*\srequired(=|\s|>)/);
+  const native = html.combobox({ required: true, nativeRequired: true });
+  assert.match(native, /aria-required="true"/);
+  assert.match(native, /<input[^>]*\srequired=""/);
+  assert.doesNotMatch(html.combobox({ nativeRequired: true }), /required|aria-required/);
+});
+
+test("Field accepts a node label and several children without cloning them", () => {
+  const markup = html.fieldNodeLabel();
+  assert.match(
+    markup,
+    /<label[^>]*for="[^"]+"[^>]*><span data-node-label="">Name <em>\*<\/em><\/span><\/label>/,
+  );
+  assert.match(markup, /class="contents"/);
+  assert.match(markup, /data-extra=""/);
+  assert.match(markup, /Shown on invoices/);
+  assert.match(html.fieldNodeLabel({ controlId: "customer" }), /for="customer"/);
+});
+
+test("NumberStepper string mode keeps the caller's text, allows empty and has no value until it parses", () => {
+  const empty = html.numberStepper({ mode: "string", value: "", placeholder: "0", min: 1, max: 5 });
+  assert.match(empty, /value=""/);
+  assert.match(empty, /placeholder="0"/);
+  assert.doesNotMatch(empty, /aria-valuenow/);
+  const typed = html.numberStepper({ mode: "string", value: "2,5", step: 0.5 });
+  assert.match(typed, /value="2,5"/);
+  assert.match(typed, /aria-valuenow="2.5"/);
+  // Numeric mode is unchanged: the spinbutton always has a number.
+  assert.match(html.numberStepper({ defaultValue: 4 }), /aria-valuenow="4"/);
+  assert.match(html.numberStepper({ mode: "string", defaultValue: "7", id: "qty" }), /id="qty"/);
+});
+
+test("NumberStepper string stepping parses commas, snaps to the step grid and respects the limits", () => {
+  const limits = { min: 0, max: 10, step: 0.5 };
+  assert.equal(stepper.stepText("2,5", 1, limits), "3");
+  assert.equal(stepper.stepText("2.2", 1, limits), "2.5");
+  assert.equal(stepper.stepText("10", 1, limits), "10");
+  assert.equal(stepper.stepText("0", -1, limits), "0");
+  assert.equal(stepper.stepText("", 1, { min: 3, max: 10, step: 1 }), "3");
+  assert.equal(stepper.stepText("", 1, { min: Number.NEGATIVE_INFINITY, max: 10, step: 2 }), "2");
+  assert.equal(
+    stepper.stepText("-", -1, { min: Number.NEGATIVE_INFINITY, max: 10, step: 2 }),
+    "-2",
+  );
+  assert.equal(stepper.canStep("10", 1, limits), false);
+  assert.equal(stepper.canStep("", 1, limits), true);
+  assert.equal(stepper.canStep("0", -1, limits), false);
+  assert.ok(Number.isNaN(stepper.parseNumber("1.")) === false);
+  assert.ok(Number.isNaN(stepper.parseNumber("")));
 });
 
 test("Combobox falls back to valueLabel while the value is not among the options", () => {

@@ -89,7 +89,7 @@
       "id": "ui/forms",
       "kind": "js",
       "file": "packages/ui/dist/forms/index.js",
-      "maxGzip": 38600
+      "maxGzip": 39300
     },
     {
       "id": "ui/i18n",
