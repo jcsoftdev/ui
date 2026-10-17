@@ -7,6 +7,7 @@ import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { touchHitArea } from "../internal/hit-area.js";
 
 export type CheckedState = boolean | "indeterminate";
 
@@ -86,7 +87,8 @@ export function Checkbox({
         {...props}
         ref={composedRef}
         className={cn(
-          "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11 disabled:cursor-not-allowed disabled:opacity-50",
+          touchHitArea,
+          "group inline-flex size-10 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50",
           classNames?.root,
           className,
         )}

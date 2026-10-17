@@ -1,6 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { Chip } from "../../src/atoms/chip/chip.js";
 import { DueChip } from "../../src/atoms/due-chip/due-chip.js";
+import { IconButton } from "../../src/atoms/icon-button/icon-button.js";
 import { Kbd } from "../../src/atoms/kbd/kbd.js";
+import { RadioGroup } from "../../src/atoms/radio-group/radio-group.js";
 import { Seal } from "../../src/atoms/seal/seal.js";
 import { Spinner } from "../../src/atoms/spinner/spinner.js";
 import { Aside, AsideHeader } from "../../src/containers/aside/aside.js";
@@ -41,6 +44,36 @@ export const html = {
   spinnerLabel: () => renderToStaticMarkup(<Spinner label="Saving" size="lg" />),
   spinnerDecorative: () => renderToStaticMarkup(<Spinner label={false} />),
   spinnerPixels: () => renderToStaticMarkup(<Spinner size={40} style={{ color: "red" }} />),
+  iconButton: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <IconButton label="Delete row" {...props}>
+        <svg data-icon="" />
+      </IconButton>,
+    ),
+  iconButtonEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <IconButton label="Borrar" loading>
+          <svg data-icon="" />
+        </IconButton>
+      </UiStringsProvider>,
+    ),
+  chipTag: () =>
+    renderToStaticMarkup(
+      <Chip size="sm" square>
+        A-12
+      </Chip>,
+    ),
+  chipDefault: () => renderToStaticMarkup(<Chip>Plain</Chip>),
+  radioGroup: () =>
+    renderToStaticMarkup(
+      <RadioGroup
+        options={[
+          { value: "a", label: "Alpha", description: "First" },
+          { value: "b", label: "Beta" },
+        ]}
+      />,
+    ),
   bannerSoft: () => renderToStaticMarkup(<Banner tone="warning">Careful</Banner>),
   bannerOutline: (tone: "info" | "success" | "warning" | "danger") =>
     renderToStaticMarkup(

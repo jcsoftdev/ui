@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { Scissors } from "../../icons/index.js";
 import { Chip, type ChipTone } from "./chip.js";
 
@@ -20,6 +21,7 @@ const meta = {
   args: { children: "Corte clásico", tone: "neutral" },
   argTypes: {
     tone: { control: "select", options: tones },
+    size: { control: "inline-radio", options: ["sm", "md"] },
     square: { control: "boolean" },
     statusIcon: { control: "boolean" },
     icon: { control: false },
@@ -107,4 +109,13 @@ export const CustomTone: Story = {
       </div>
     ),
   ],
+};
+
+export const Tag: Story = {
+  args: { size: "sm", square: true, tone: "neutral", children: "A-12" },
+  play: async ({ canvasElement }) => {
+    const tag = canvasElement.querySelector("span") as HTMLElement;
+    await expect(getComputedStyle(tag).fontVariantNumeric).toContain("tabular-nums");
+    await expect(tag.getBoundingClientRect().height).toBeLessThan(24);
+  },
 };

@@ -97,3 +97,14 @@ export const FormSubmitAndReset: Story = {
     await expect(Object.fromEntries(new FormData(form))).toEqual({ metodo: "efectivo" });
   },
 };
+
+export const NamedFromLabel: Story = {
+  render: () => <RadioGroup aria-label="Método" options={options} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const option of options) {
+      const radio = canvas.getByRole("radio", { name: option.label });
+      await expect(radio).toHaveAccessibleDescription(option.description);
+    }
+  },
+};

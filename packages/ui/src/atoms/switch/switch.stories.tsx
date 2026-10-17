@@ -63,3 +63,18 @@ export const FormSubmitAndReset: Story = {
     await expect(Object.fromEntries(new FormData(form))).toEqual({ booking: "on" });
   },
 };
+
+export const TouchHitArea: Story = {
+  render: (args) => (
+    <div data-density="touch">
+      <Switch {...args} classNames={{ root: "h-6 w-9" }} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const control = within(canvasElement).getByRole("switch");
+    const hit = getComputedStyle(control, "::after");
+    await expect(hit.position).toBe("absolute");
+    await expect(Math.round(Number.parseFloat(hit.width))).toBe(44);
+    await expect(Math.round(Number.parseFloat(hit.height))).toBe(44);
+  },
+};

@@ -6,6 +6,7 @@ export * from "./checkbox/index.js";
 export * from "./chip/index.js";
 export * from "./due-chip/index.js";
 export * from "./icon/index.js";
+export * from "./icon-button/index.js";
 export * from "./kbd/index.js";
 export * from "./led/index.js";
 export * from "./number-value/index.js";

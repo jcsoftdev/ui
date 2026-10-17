@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
@@ -32,8 +32,21 @@ export const chipToneClasses: Readonly<Record<ChipBuiltinTone, string>> = {
   outline: "bg-transparent text-ink-2 shadow-[inset_0_0_0_1px_var(--line-strong)]",
 };
 
-export interface ChipProps extends ComponentPropsWithoutRef<"span"> {
+export type ChipSize = "sm" | "md";
+
+/** Class map behind each `size`; exported like `chipToneClasses`. */
+export const chipSizeClasses: Readonly<Record<ChipSize, string>> = {
+  md: "h-6 px-2.5 font-[650] text-fs-120",
+  sm: "h-auto min-h-5 px-1.5 py-px font-medium text-fs-115 tabular-nums",
+};
+
+export interface ChipProps extends ComponentPropsWithRef<"span"> {
   tone?: ChipTone;
+  /**
+   * `sm` is the compact tag: it grows with its content, tightens the padding and uses tabular
+   * numerals, so codes, counts and ids line up. Pair it with `square` and a neutral tone for a tag.
+   */
+  size?: ChipSize;
   /** Use the smaller chip radius instead of a full pill. */
   square?: boolean;
   /** Leading decorative icon; wins over `statusIcon`. */
@@ -51,6 +64,7 @@ const builtinTones = new Set<string>(Object.keys(chipToneClasses));
 
 export function Chip({
   tone = "neutral",
+  size = "md",
   square,
   icon,
   statusIcon: withStatusIcon,
@@ -70,7 +84,8 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex h-6 max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap px-2.5 font-[650] text-fs-120 leading-none [&_svg]:size-3",
+        "inline-flex max-w-full items-center gap-1.5 overflow-hidden whitespace-nowrap leading-none [&_svg]:size-3",
+        chipSizeClasses[size],
         square ? "rounded-chip" : "rounded-badge",
         custom
           ? "bg-(--tone-c-soft) text-(--tone-c-ink)"

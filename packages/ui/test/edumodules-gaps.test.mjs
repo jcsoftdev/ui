@@ -739,3 +739,59 @@ test("TabsNav is a labelled navigation of real links with aria-current on the cu
   assert.doesNotMatch(markup, /<nav[^>]*class="[^"]*\bpx-/);
   assert.match(markup, /@max-\[420px\]\/tabs-nav/);
 });
+
+test("IconButton is a square Button named by its required label", () => {
+  const markup = html.iconButton();
+  assert.match(markup, /^<button /);
+  assert.match(markup, /aria-label="Delete row"/);
+  assert.match(markup, /type="button"/);
+  assert.match(markup, /w-control/);
+  assert.match(markup, /h-control/);
+  assert.match(markup, /px-0/);
+  assert.doesNotMatch(markup, /px-control-x/);
+  assert.match(html.iconButton({ size: "sm" }), /w-control-sm/);
+  assert.match(html.iconButton({ size: "lg" }), /w-control-lg/);
+});
+
+test("IconButton takes the Button variants and merges className", () => {
+  assert.match(html.iconButton({ variant: "primary" }), /bg-accent/);
+  assert.match(html.iconButton({ variant: "danger" }), /bg-danger-soft/);
+  assert.match(
+    html.iconButton({ variant: "ghost", className: "extra" }),
+    /bg-transparent[^"]*extra|extra/,
+  );
+});
+
+test("IconButton loading swaps the icon for a spinner and announces the localized string", () => {
+  const markup = html.iconButtonEs();
+  assert.doesNotMatch(markup, /data-icon/);
+  assert.match(markup, /aria-busy="true"/);
+  assert.match(markup, /disabled=""/);
+  assert.match(markup, /role="status"[^>]*>Cargando/);
+  assert.match(html.iconButton(), /data-icon/);
+});
+
+test("Chip size sm is the compact tag: grows with content, tabular numerals, keeps square", () => {
+  const tag = html.chipTag();
+  assert.match(tag, /min-h-5/);
+  assert.match(tag, /tabular-nums/);
+  assert.match(tag, /rounded-chip/);
+  assert.match(tag, /bg-surface-2/);
+  assert.doesNotMatch(tag, /\bh-6\b/);
+  const plain = html.chipDefault();
+  assert.match(plain, /\bh-6\b/);
+  assert.doesNotMatch(plain, /min-h-5|tabular-nums/);
+});
+
+test("RadioGroup names every radio from its label and links the description", () => {
+  const markup = html.radioGroup();
+  const radios = [...markup.matchAll(/<button[^>]*role="radio"[^>]*>/g)].map((m) => m[0]);
+  assert.equal(radios.length, 2);
+  for (const radio of radios) {
+    const labelledby = radio.match(/aria-labelledby="([^"]+)"/)?.[1];
+    assert.ok(labelledby, "radio has aria-labelledby");
+    assert.match(markup, new RegExp(`<b id="${labelledby}"`));
+  }
+  assert.match(radios[0], /aria-describedby="[^"]+-description"/);
+  assert.doesNotMatch(radios[1], /aria-describedby/);
+});

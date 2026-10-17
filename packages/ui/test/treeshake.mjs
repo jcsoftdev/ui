@@ -77,6 +77,17 @@ for (const [entry, component] of [
   console.log(`${entry}: ${small.bytes} bytes, ${small.files.length} modules`);
 }
 
+const iconButton = await inputsFor(
+  `import { IconButton } from "@jcsoftdev/ui/atoms/icon-button"; console.log(IconButton);`,
+);
+for (const banned of ["dialog", "primitives/", "popover", "dropdown-menu", "toaster", "icons/"]) {
+  assert.ok(
+    !iconButton.files.some((f) => f.includes(banned)),
+    `IconButton bundle must not include "${banned}"`,
+  );
+}
+console.log(`atoms/icon-button: ${iconButton.bytes} bytes, ${iconButton.files.length} modules`);
+
 const tooltipBundle = await inputsFor(
   `import { Tooltip } from "@jcsoftdev/ui/overlays/tooltip"; console.log(Tooltip);`,
 );
