@@ -469,3 +469,49 @@ test("Wizard uses container queries only", () => {
   assert.doesNotMatch(html.wizard(), /class="[^"]*\b(?:sm|md|lg|xl):/);
   assert.match(html.wizard(), /@container\/wizard/);
 });
+
+test("Section is named by its title, steps headings down per nesting level and never pads inline edges", () => {
+  const markup = html.section();
+  const id = /<section[^>]*aria-labelledby="([^"]+)"/.exec(markup)?.[1];
+  assert.ok(id);
+  assert.match(markup, new RegExp(`<h2 id="${id.replace(/:/g, ":")}"[^>]*>Outer</h2>`));
+  assert.match(markup, /<h3 [^>]*>Inner<\/h3>/);
+  assert.match(markup, /data-depth="1"/);
+  assert.match(markup, /border-t-divider/);
+  assert.doesNotMatch(markup, /\bpx-|\bp-\d|\bpl-|\bpr-/);
+  assert.match(markup, /@max-\[560px\]\/section/);
+  assert.doesNotMatch(html.section({ as: "div" }), /<div[^>]*aria-labelledby/);
+  assert.match(html.section({ titleAs: "h4" }), /<h4 [^>]*>Outer<\/h4>/);
+});
+
+test("Note is flush, tone only recolors and the divider is opt-in", () => {
+  const plain = html.note();
+  assert.match(plain, /^<p /);
+  assert.doesNotMatch(plain, /border-t-divider|\bpx-/);
+  assert.match(html.note({ tone: "danger" }), /text-danger/);
+  assert.match(html.note({ divider: true }), /border-t-divider/);
+});
+
+test("Aside is a labelled complementary landmark that follows the locale", () => {
+  assert.match(html.aside(), /<aside[^>]*aria-label="Related information"/);
+  assert.match(html.asideEs(), /aria-label="Informaci\u00f3n relacionada"/);
+  assert.doesNotMatch(html.aside(), /\bpx-/);
+});
+
+test("DescriptionList fills empty values with a placeholder, keeps 0 and picks layout classes", () => {
+  const markup = html.descriptionList();
+  assert.match(
+    markup,
+    /<dd data-empty=""[^>]*><span aria-hidden="true">\u2014<\/span><span class="sr-only">None<\/span>/,
+  );
+  assert.match(markup, /<dd>0<\/dd>|<dd[^>]*>0<\/dd>/);
+  assert.equal(markup.split("data-empty").length - 1, 1);
+  assert.match(markup, /@max-sm\/dl:grid-cols-1/);
+  assert.doesNotMatch(html.descriptionList({ layout: "inline" }), /@max-sm\/dl:grid-cols-1/);
+  assert.match(html.descriptionList({ layout: "stacked" }), /grid-cols-1/);
+  assert.match(
+    html.descriptionList({ columns: 2 }),
+    /@md\/dl:grid-cols-\[auto_minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/,
+  );
+  assert.match(html.descriptionList({ valueAlign: "start" }), /\[&amp;_dd\]:text-start/);
+});

@@ -38,6 +38,8 @@ export interface UiStrings {
   /** Step announcement; `{current}`, `{total}` and `{label}` are replaced. */
   stepOf: string;
   steps: string;
+  /** Default accessible name of an `Aside`. */
+  aside: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -81,6 +83,7 @@ export const uiStrings = {
     finish: "Finish",
     stepOf: "Step {current} of {total}: {label}",
     steps: "Steps",
+    aside: "Related information",
   },
   es: {
     retry: "Reintentar",
@@ -120,5 +123,6 @@ export const uiStrings = {
     finish: "Finalizar",
     stepOf: "Paso {current} de {total}: {label}",
     steps: "Pasos",
+    aside: "Información relacionada",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

@@ -59,7 +59,7 @@
       "id": "ui/atoms",
       "kind": "js",
       "file": "packages/ui/dist/atoms/index.js",
-      "maxGzip": 19800
+      "maxGzip": 19900
     },
     {
       "id": "ui/brand",
@@ -131,7 +131,7 @@
       "id": "ui/states",
       "kind": "js",
       "file": "packages/ui/dist/states/index.js",
-      "maxGzip": 10400
+      "maxGzip": 10500
     },
     {
       "id": "ui/utils",

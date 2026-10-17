@@ -154,6 +154,32 @@ for (const banned of ["primitives/", "dialog", "popover", "dropdown-menu", "toas
 }
 console.log(`navigation/wizard: ${wiz.bytes} bytes, ${wiz.files.length} modules`);
 
+for (const [entry, component] of [
+  ["containers/section", "Section"],
+  ["containers/note", "Note"],
+  ["containers/aside", "Aside"],
+  ["containers/description-list", "DescriptionListItem"],
+]) {
+  const block = await inputsFor(
+    `import { ${component} } from "@jcsoftdev/ui/${entry}"; console.log(${component});`,
+  );
+  for (const banned of [
+    "primitives/",
+    "dialog",
+    "popover",
+    "dropdown-menu",
+    "toaster",
+    "charts/",
+    "responsive-list",
+  ]) {
+    assert.ok(
+      !block.files.some((f) => f.includes(banned)),
+      `${component} bundle must not include "${banned}"`,
+    );
+  }
+  console.log(`${entry} (${component}): ${block.bytes} bytes, ${block.files.length} modules`);
+}
+
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
   `atoms (group entry, only Chip used): ${group.bytes} bytes, ${group.files.length} modules`,

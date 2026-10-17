@@ -1,7 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { Kbd } from "../../src/atoms/kbd/kbd.js";
 import { Spinner } from "../../src/atoms/spinner/spinner.js";
+import { Aside, AsideHeader } from "../../src/containers/aside/aside.js";
 import { Banner } from "../../src/containers/banner/banner.js";
+import {
+  DescriptionList,
+  DescriptionListItem,
+} from "../../src/containers/description-list/description-list.js";
+import { Note } from "../../src/containers/note/note.js";
+import { Section } from "../../src/containers/section/section.js";
 import { Combobox } from "../../src/forms/combobox/combobox.js";
 import { DatePicker } from "../../src/forms/date-picker/date-picker.js";
 import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js";
@@ -86,6 +93,36 @@ export const html = {
       <UiStringsProvider locale="es">
         <Wizard steps={[{ id: "a", label: "Alfa", content: "x" }, { id: "b", label: "Beta", content: "y" }]} />
       </UiStringsProvider>,
+    ),
+  section: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Section title="Outer" actions={<b>act</b>} {...props}>
+        <Section title="Inner" divider>
+          body
+        </Section>
+      </Section>,
+    ),
+  note: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(<Note {...props}>Careful</Note>),
+  aside: () =>
+    renderToStaticMarkup(
+      <Aside>
+        <AsideHeader title="Pending" action={<a href="#a">All</a>} />
+      </Aside>,
+    ),
+  asideEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <Aside />
+      </UiStringsProvider>,
+    ),
+  descriptionList: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <DescriptionList {...props}>
+        <DescriptionListItem term="Name">Ana</DescriptionListItem>
+        <DescriptionListItem term="Phone" emptyLabel="None" />
+        <DescriptionListItem term="Zero">{0}</DescriptionListItem>
+      </DescriptionList>,
     ),
   kbd: () => renderToStaticMarkup(<Kbd className="extra">⌘K</Kbd>),
 };
