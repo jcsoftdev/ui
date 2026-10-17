@@ -52,6 +52,8 @@ npx ui-theme build my-tokens.json --out src/theme   # optional: your own look (d
 @source "../node_modules/@jcsoftdev/ui/dist"; /* lets Tailwind see the classes used by the components */
 ```
 
+Import order is free: `theme.css` declares nothing in Tailwind's `theme` layer that points back at itself (tokens such as `--radius-input` are mapped with `@theme reference inline`, so `rounded-input` reads the raw variable directly). `tokens.css` and `base.css` can sit unlayered, or in a layer of your own (`@import "…/tokens.css" layer(ui);`) declared before or after `theme`, with no `@layer` reordering and no re-declared names. Verified with Tailwind 4.3.3.
+
 ```tsx
 import { Button } from "@jcsoftdev/ui/atoms/button";
 <Button variant="primary">Save</Button>;

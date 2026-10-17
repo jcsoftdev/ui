@@ -21,6 +21,19 @@ The whole look comes from one tokens file, `tokens/default.json`. A build step t
 </html>
 ```
 
+## Import order
+
+`theme.css` has no self-referencing custom property in Tailwind's `theme` layer. Tokens whose utility name equals the raw variable (`--radius-input`, `--shadow-pop`, `--font-sans`, ...) are declared in a `@theme reference inline` block: the utilities exist and read `var(--radius-input)` directly, and nothing is emitted for them in the `theme` layer. So `tokens.css` and `base.css` can load unlayered or in any layer of yours, before or after `theme`:
+
+```css
+@import "tailwindcss";
+@import "@jcsoftdev/ui/styles/tokens.css" layer(ui);
+@import "@jcsoftdev/ui/styles/theme.css";
+@import "@jcsoftdev/ui/styles/base.css" layer(ui);
+```
+
+The build test (`test/theme-css.test.mjs`) compiles the theme with Tailwind and fails on any `--x: var(--x)` in the output. Verified with Tailwind 4.3.3 (`@theme reference`).
+
 ## Style presets
 
 Each preset changes shape, edge and elevation, not the palette:
