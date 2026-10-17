@@ -1025,3 +1025,68 @@ test("Stepper steps carry a status: done and error get a glyph and a spoken stat
   assert.doesNotMatch(plain, /sr-only">,/);
   assert.match(plain, /data-status="current"/);
 });
+
+test("Section heading depth and spacing skip titleless wrapper sections", () => {
+  const markup = html.sectionWrapped();
+  assert.match(markup, /<h2 [^>]*>Outer<\/h2>/);
+  assert.match(markup, /<h3 [^>]*>Inner<\/h3>/);
+  assert.doesNotMatch(markup, /<h4/);
+  assert.equal((markup.match(/aria-labelledby/g) ?? []).length, 2);
+});
+
+test("Section parts compose a header and body, with SSR-correct naming and nesting", () => {
+  const markup = html.sectionComposed();
+  const id = /<section[^>]*aria-labelledby="([^"]+)"/.exec(markup)?.[1];
+  assert.ok(id);
+  assert.match(markup, new RegExp(`<h2 id="${id}"[^>]*>Guardians</h2>`));
+  assert.match(markup, /<h3 [^>]*>Phones<\/h3>/);
+  assert.match(markup, />3<\/span>/);
+  assert.match(markup, /<p [^>]*>Pickup<\/p>/);
+  assert.match(markup, /@max-\[560px\]\/section/);
+  assert.match(markup, /py-4/);
+  assert.doesNotMatch(markup.slice(markup.indexOf("Phones")), /py-2[^"]*">numbers/);
+  assert.doesNotMatch(markup.replace(/<span[^>]*>3<\/span>/, ""), /\bpx-|\bpl-|\bpr-/);
+  const mixed = html.sectionComposed({ title: "Own title" });
+  assert.match(mixed, /<h2 [^>]*>Own title<\/h2>/);
+});
+
+test("Kpi composes label, value and description around the tile tone, with card chrome and a trailing slot", () => {
+  const markup = html.kpiComposed({ card: true });
+  assert.match(markup, /rounded-card border border-line/);
+  assert.match(markup, /bg-success/);
+  assert.match(markup, /text-success/);
+  assert.match(markup, /font-mono/);
+  assert.match(markup, /<button type="button">menu<\/button>/);
+  assert.doesNotMatch(markup, /aria-hidden="true"[^>]*><button/);
+  assert.match(markup, /\/ 12/);
+  assert.match(markup, /data-trend/);
+  assert.match(markup, /3 pending/);
+  assert.doesNotMatch(html.kpiComposed(), /rounded-card/);
+  const props = html.kpiComposed({ label: "Prop label", value: "1" });
+  assert.ok(props.indexOf("Prop label") < props.indexOf("Collected"));
+});
+
+test("Timeline items carry a status: markers, spoken state, aria-current and the connector", () => {
+  const markup = html.timelineComposed();
+  assert.match(markup, /aria-current="step"/);
+  assert.equal((markup.match(/aria-current="step"/g) ?? []).length, 1);
+  assert.match(markup, /data-status="done"/);
+  assert.match(markup, /bg-success-soft/);
+  assert.match(markup, /bg-success\/50/);
+  assert.match(markup, /, Completed/);
+  assert.match(markup, /ring-accent\/40/);
+  assert.match(markup, /border-dashed/);
+  assert.match(markup, /data-extra/);
+  assert.equal((markup.match(/<h4/g) ?? []).length, 2);
+  const error = html.timelineItems([{ id: "e", title: "Payment", status: "error" }]);
+  assert.match(error, /bg-danger-soft/);
+  assert.match(error, /, Has an error/);
+  const toneWins = html.timelineItems([{ id: "e", title: "X", status: "done", tone: "warning" }]);
+  assert.match(toneWins, /bg-warning-soft/);
+  const plain = html.timelineItems([
+    { id: "a", title: "A" },
+    { id: "b", title: "B", group: "Today" },
+  ]);
+  assert.doesNotMatch(plain, /data-status|aria-current|sr-only/);
+  assert.equal((plain.match(/<li/g) ?? []).length, 2);
+});

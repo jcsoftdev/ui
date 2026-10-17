@@ -17,7 +17,9 @@ import {
 import { Feed, FeedEvent } from "../../src/containers/feed/feed.js";
 import { ListDetail, ListDetailDetail, ListDetailItem, ListDetailList } from "../../src/containers/list-detail/list-detail.js";
 import { Note } from "../../src/containers/note/note.js";
+import { Kpi } from "../../src/containers/kpi/kpi.js";
 import { Section } from "../../src/containers/section/section.js";
+import { Timeline } from "../../src/containers/timeline/timeline.js";
 import { Shortcuts, ShortcutsItem } from "../../src/containers/shortcuts/shortcuts.js";
 import { DateCalendar } from "../../src/calendar/date-calendar/date-calendar.js";
 import { Combobox } from "../../src/forms/combobox/combobox.js";
@@ -200,6 +202,57 @@ export const html = {
           body
         </Section>
       </Section>,
+    ),
+  sectionWrapped: () =>
+    renderToStaticMarkup(
+      <Section title="Outer">
+        <Section>
+          <Section title="Inner">body</Section>
+        </Section>
+      </Section>,
+    ),
+  sectionComposed: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Section {...props}>
+        <Section.Header>
+          <Section.Title>Guardians</Section.Title>
+          <Section.Count>3</Section.Count>
+          <Section.Description>Pickup</Section.Description>
+          <Section.Actions>
+            <b>add</b>
+          </Section.Actions>
+        </Section.Header>
+        <Section.Body>
+          <Section>
+            <Section.Header>
+              <Section.Title>Phones</Section.Title>
+            </Section.Header>
+            <Section.Body padded={false}>numbers</Section.Body>
+          </Section>
+        </Section.Body>
+      </Section>,
+    ),
+  kpiComposed: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Kpi tone="success" dot {...props}>
+        <Kpi.Label trailing={<button type="button">menu</button>}>Collected</Kpi.Label>
+        <Kpi.Value mono suffix="/ 12" trend={<b data-trend />}>
+          840
+        </Kpi.Value>
+        <Kpi.Description>3 pending</Kpi.Description>
+      </Kpi>,
+    ),
+  timelineItems: (items: Record<string, unknown>[]) =>
+    renderToStaticMarkup(<Timeline aria-label="Admission" items={items as never} />),
+  timelineComposed: () =>
+    renderToStaticMarkup(
+      <Timeline aria-label="Admission">
+        <Timeline.Item title="Applied" status="done" group="March" />
+        <Timeline.Item title="Interview" status="current" group="March">
+          <i data-extra />
+        </Timeline.Item>
+        <Timeline.Item title="Decision" status="pending" group="April" />
+      </Timeline>,
     ),
   note: (props: Record<string, unknown> = {}) =>
     renderToStaticMarkup(<Note {...props}>Careful</Note>),

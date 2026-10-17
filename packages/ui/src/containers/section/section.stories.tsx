@@ -104,3 +104,47 @@ export const AsDivHasNoRegion: Story = {
     await expect(within(canvasElement).queryByRole("region")).toBeNull();
   },
 };
+
+export const Composed: Story = {
+  render: () => (
+    <Section divider>
+      <Section.Header>
+        <Section.Title>Guardians</Section.Title>
+        <Section.Count>3</Section.Count>
+        <Section.Description>People who can pick the student up.</Section.Description>
+        <Section.Actions>
+          <Button size="sm">Add guardian</Button>
+        </Section.Actions>
+      </Section.Header>
+      <Section.Body>
+        <Note>Primary first.</Note>
+      </Section.Body>
+    </Section>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const region = canvas.getByRole("region", { name: "Guardians" });
+    await expect(canvas.getByRole("heading", { level: 2, name: "Guardians" })).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "Add guardian" })).toBeVisible();
+    for (const el of [region, ...Array.from(region.children)] as HTMLElement[]) {
+      await expect(getComputedStyle(el).paddingInlineStart).toBe("0px");
+    }
+  },
+};
+
+export const TitlelessWrapperKeepsHeadingLevel: Story = {
+  render: () => (
+    <Section title="Student">
+      <Section>
+        <Section title="Contact" divider>
+          <Note>Primary first.</Note>
+        </Section>
+      </Section>
+    </Section>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { level: 2, name: "Student" })).toBeInTheDocument();
+    await expect(canvas.getByRole("heading", { level: 3, name: "Contact" })).toBeInTheDocument();
+  },
+};

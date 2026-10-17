@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Chip } from "../../atoms/chip/chip.js";
 import { CalendarCheck, Package, Star, Wallet, XCircle } from "../../icons/index.js";
 import { Timeline, type TimelineFeedItem } from "./timeline.js";
@@ -96,4 +97,41 @@ export const BrutalPreset: Story = {
       </div>
     ),
   ],
+};
+
+export const Statuses: Story = {
+  args: {
+    "aria-label": "Admission process",
+    items: [
+      { id: "a", title: "Application received", time: "Mar 1", status: "done" },
+      { id: "b", title: "Documents reviewed", time: "Mar 3", status: "done" },
+      { id: "c", title: "Interview", description: "Scheduled for Mar 12.", status: "current" },
+      { id: "d", title: "Payment failed", status: "error" },
+      { id: "e", title: "Decision", status: "pending" },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvasElement.querySelectorAll("[aria-current='step']")).toHaveLength(1);
+    await expect(canvas.getAllByText(", Completed")).toHaveLength(2);
+    await expect(canvas.getByText(", Has an error")).toBeInTheDocument();
+  },
+};
+
+export const Composed: Story = {
+  render: () => (
+    <Timeline aria-label="Admission process">
+      <Timeline.Item title="Applied" time="Mar 1" status="done" group="March" />
+      <Timeline.Item title="Interview" status="current" group="March">
+        <Chip tone="info">12:30</Chip>
+      </Timeline.Item>
+      <Timeline.Item title="Decision" status="pending" group="April" />
+    </Timeline>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { level: 4, name: "March" })).toBeInTheDocument();
+    await expect(canvas.getByRole("heading", { level: 4, name: "April" })).toBeInTheDocument();
+    await expect(canvas.getByText("12:30")).toBeVisible();
+  },
 };

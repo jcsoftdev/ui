@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { TrendChip } from "../../atoms/trend-chip/trend-chip.js";
 import { Wallet } from "../../icons/index.js";
 import { Kpi } from "./kpi.js";
@@ -67,5 +68,39 @@ export const ToneDotIconTrend: Story = {
     dot: true,
     icon: <Wallet aria-hidden="true" />,
     trend: <TrendChip value={12.5} />,
+  },
+};
+
+export const Card: Story = {
+  args: { card: true },
+  play: async ({ canvasElement }) => {
+    const root = canvasElement.querySelector("[class*='@container/kpi']") as HTMLElement;
+    await expect(getComputedStyle(root).borderTopWidth).not.toBe("0px");
+  },
+};
+
+export const Trailing: Story = {
+  args: { trailing: <button type="button">Options</button>, tone: "success", dot: true },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole("button", { name: "Options" })).toBeVisible();
+  },
+};
+
+export const Composed: Story = {
+  render: () => (
+    <Kpi card tone="accent" dot>
+      <Kpi.Label trailing={<button type="button">Details</button>}>Collected</Kpi.Label>
+      <Kpi.Value mono suffix="/ S/ 1 200" trend={<TrendChip value={4.2} />}>
+        S/ 840
+      </Kpi.Value>
+      <Kpi.Description>3 payments pending</Kpi.Description>
+    </Kpi>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("Collected")).toBeVisible();
+    await expect(canvas.getByText("S/ 840")).toBeVisible();
+    await expect(canvas.getByText("3 payments pending")).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Details" })).toBeVisible();
   },
 };
