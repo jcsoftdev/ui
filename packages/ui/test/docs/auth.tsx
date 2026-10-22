@@ -90,3 +90,16 @@ export function SolidPanelScreen() {
   );
 }
 // #endregion
+
+// #region looks
+export function BooksScreen() {
+  return (
+    <AuthLayout panel="solid">
+      <AuthLayout.Art variant="stack" />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion

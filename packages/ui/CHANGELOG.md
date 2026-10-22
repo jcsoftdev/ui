@@ -20,9 +20,21 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
   open form on the other side), `LoginForm` `appearance` (`card`, `open`), `LoginForm.Options`
   (remember me, reported as `remember`, plus a help slot) and `LoginForm.Providers` (a labelled slot,
   no providers included), and `AuthIllustration` `variant` as the plug-in point for further looks.
+- **Illustration motion.** Pointer parallax (fine pointers only, one CSS variable write per
+  frame), a hop per keystroke, an overshooting entrance, a cheer and burst on success, and an
+  error that settles back to the password state after `ERROR_HOLD_MS` (1.1s). Only `transform`
+  and `opacity` animate; reduced motion leaves every look still and assembled.
+- **`AuthIllustration variant="stack"`.** A tower of books that gains a book as the form fills,
+  wobbles on an error and plants a flag with the active portal's glyph on success; 4, 5 or 6
+  books by the width of its container.
 - **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
 - **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
 - **UI strings** (en/es) for the sign-in screen and `showPassword`.
+
+#### Fixed
+
+- **`Input`** with `start` or `end` draws one focus ring (the wrapper's) instead of a second square
+  ring on the inner input.
 
 ## 0.4.0 (2026-10-21)
 

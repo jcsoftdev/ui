@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import {
   type AuthState,
   keystroke,
@@ -7,6 +7,7 @@ import {
   slabSpread,
   sparkVectors,
 } from "../model.js";
+import { PORTAL_GLYPHS } from "./portal-glyphs.js";
 
 const THICKNESS = 22;
 const TOP = "M0 0 L86.6 50 L0 100 L-86.6 50Z";
@@ -14,34 +15,6 @@ const LEFT = `M-86.6 50 L0 100 L0 ${100 + THICKNESS} L-86.6 ${50 + THICKNESS}Z`;
 const RIGHT = `M0 100 L86.6 50 L86.6 ${50 + THICKNESS} L0 ${100 + THICKNESS}Z`;
 const SPARK = "M0-11 L3-3 L11 0 L3 3 L0 11 L-3 3 L-11 0 L-3-3Z";
 const SPARKS = sparkVectors();
-
-/** The three portal glyphs: a book, a house and a graduation cap, drawn on a 100px square. */
-const GLYPHS: readonly ReactNode[] = [
-  <g key="book">
-    <path
-      className="ui-auth-g ui-auth-ga"
-      d="M18 30 Q34 23 50 32 Q66 23 82 30 V74 Q66 67 50 76 Q34 67 18 74Z"
-    />
-    <path
-      className="ui-auth-g ui-auth-gline"
-      d="M50 32V76"
-      style={{ stroke: "var(--glyph-line)" }}
-    />
-  </g>,
-  <g key="house">
-    <path className="ui-auth-g ui-auth-ga" d="M50 20 L84 48 H75 V78 H25 V48 H16Z" />
-    <rect className="ui-auth-g ui-auth-gc" x="42" y="56" width="16" height="22" />
-  </g>,
-  <g key="cap">
-    <path className="ui-auth-g ui-auth-ga" d="M50 24 L90 44 L50 64 L10 44Z" />
-    <path
-      className="ui-auth-g ui-auth-gline"
-      d="M28 55 V70 Q50 84 72 70 V55"
-      style={{ stroke: "var(--glyph-line)", strokeWidth: 5 }}
-    />
-    <path className="ui-auth-g ui-auth-gline" d="M88 46 V72" />
-  </g>,
-];
 
 function Slab({
   index,
@@ -84,7 +57,7 @@ function Slab({
                 <path className="ui-auth-face-top ui-auth-edge" d={TOP} />
                 <g transform="matrix(0.866 0.5 -0.866 0.5 0 0)">
                   <rect className="ui-auth-inlay" x="9" y="9" width="82" height="82" rx="8" />
-                  {GLYPHS[index]}
+                  {PORTAL_GLYPHS[index]}
                 </g>
               </g>
             </g>

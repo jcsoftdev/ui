@@ -138,3 +138,111 @@ export function pointerOffset(
       : 0;
   return { x: axis(point.x, box.left, box.width), y: axis(point.y, box.top, box.height) };
 }
+
+/* ---------------------------------------------------------------- isometric geometry */
+
+const ISO_X = 0.866;
+const ISO_Y = 0.5;
+
+/** Screen position of a point in isometric space: `u` runs right-down, `v` left-down, `z` up. */
+export function isoPoint(u: number, v: number, z = 0): { x: number; y: number } {
+  return { x: round(ISO_X * (u - v)), y: round(ISO_Y * (u + v) - z) };
+}
+
+const pathOf = (points: readonly { x: number; y: number }[]) =>
+  `M${points.map((p) => `${p.x} ${p.y}`).join("L")}Z`;
+
+export interface IsoBox {
+  top: string;
+  /** Face along the front-left edge (`v` at its maximum). */
+  left: string;
+  /** Face along the front-right edge (`u` at its maximum). */
+  right: string;
+}
+
+/** The three visible faces of a `w` by `d` by `h` box standing on the origin, centred on it. */
+export function isoBox(w: number, d: number, h: number): IsoBox {
+  const [u0, u1, v0, v1] = [-w / 2, w / 2, -d / 2, d / 2];
+  return {
+    top: pathOf([
+      isoPoint(u0, v0, h),
+      isoPoint(u1, v0, h),
+      isoPoint(u1, v1, h),
+      isoPoint(u0, v1, h),
+    ]),
+    left: pathOf([
+      isoPoint(u0, v1, h),
+      isoPoint(u1, v1, h),
+      isoPoint(u1, v1, 0),
+      isoPoint(u0, v1, 0),
+    ]),
+    right: pathOf([
+      isoPoint(u1, v0, h),
+      isoPoint(u1, v1, h),
+      isoPoint(u1, v1, 0),
+      isoPoint(u1, v0, 0),
+    ]),
+  };
+}
+
+/* ---------------------------------------------------------------- stack */
+
+export interface StackBook {
+  /** Footprint along `u` and `v`, and thickness. */
+  w: number;
+  d: number;
+  h: number;
+  /** Offset from the tower's axis, in isometric units, so the pile looks hand stacked. */
+  du: number;
+  dv: number;
+  /** Colour role, 0 to 3. */
+  tone: number;
+}
+
+/** The books of the tower from the bottom up. Narrow containers show only the first ones. */
+export const STACK_BOOKS: readonly StackBook[] = [
+  { w: 178, d: 128, h: 30, du: 0, dv: 0, tone: 0 },
+  { w: 152, d: 112, h: 22, du: 8, dv: -6, tone: 1 },
+  { w: 164, d: 104, h: 26, du: -10, dv: 6, tone: 2 },
+  { w: 140, d: 112, h: 20, du: 6, dv: 4, tone: 3 },
+  { w: 150, d: 98, h: 24, du: -6, dv: -8, tone: 1 },
+  { w: 128, d: 100, h: 20, du: 4, dv: 6, tone: 0 },
+];
+
+/** How many books a container shows: fewer when it is narrow. */
+export const STACK_COUNTS = [4, 5, 6] as const;
+export type StackCount = (typeof STACK_COUNTS)[number];
+
+/**
+ * Books resting in a tower of `count`: the foundation is always there, the rest land one by one
+ * as the form fills, and all of them are down on success.
+ */
+export function stackPlaced(state: AuthState, progress: number, count: number): number {
+  if (state === "success") return count;
+  return Math.min(count, 1 + Math.floor(clamp01(progress) * (count - 1) + 1e-9));
+}
+
+export interface StackSlot {
+  /** Screen offset of the book's ground centre from the tower's base. */
+  x: number;
+  y: number;
+}
+
+/** Where each book sits, from its offsets and the thickness of the books under it. */
+export function stackSlots(books: readonly StackBook[] = STACK_BOOKS): StackSlot[] {
+  let z = 0;
+  return books.map((book) => {
+    const at = isoPoint(book.du, book.dv, z);
+    z += book.h;
+    return at;
+  });
+}
+
+/** Top centre of the tower of `count` books, where the success flag is planted. */
+export function stackTop(count: number, books: readonly StackBook[] = STACK_BOOKS): StackSlot {
+  const shown = books.slice(0, count);
+  const last = shown[shown.length - 1];
+  if (!last) return { x: 0, y: 0 };
+  const z = shown.reduce((sum, book) => sum + book.h, 0);
+  return isoPoint(last.du, last.dv, z);
+}

@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { AuthState } from "../model.js";
 import { Slabs } from "./slabs.js";
+import { Stack } from "./stack.js";
 
 /** What every illustration variant receives. State and progress come already clamped. */
 export interface AuthVariantProps {
@@ -13,7 +14,7 @@ export interface AuthVariantProps {
   uid: string;
 }
 
-export type AuthIllustrationVariant = "slabs";
+export type AuthIllustrationVariant = "slabs" | "stack";
 
 /**
  * Registry of the looks. A new look is one component with {@link AuthVariantProps} plus an entry
@@ -23,4 +24,4 @@ export type AuthIllustrationVariant = "slabs";
  */
 export const AUTH_VARIANTS: Readonly<
   Record<AuthIllustrationVariant, ComponentType<AuthVariantProps>>
-> = { slabs: Slabs };
+> = { slabs: Slabs, stack: Stack };

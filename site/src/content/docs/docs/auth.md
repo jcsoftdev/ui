@@ -86,6 +86,28 @@ export function SolidPanelScreen() {
 }
 ```
 
+### Looks
+
+`variant` on `AuthIllustration` (or `AuthLayout.Art`) switches the illustration; every look reads the same `state`, `progress` and `activeIndex`, takes its colors from the tokens, and adapts its composition to the width of its own container (`@container/art`), not the viewport.
+
+| `variant` | What it shows                                                                                                                                                                                                                                                                                      |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slabs`   | Three isometric portal slabs (the default). They drift together as the form fills, hop on each keystroke, fly apart on an error and lock together with a burst on success.                                                                                                                          |
+| `stack`   | A tower of books that gains a book as the form fills (a dashed slot marks the next one), squashes on each keystroke, wobbles on an error and plants a flag with the active portal's glyph on success. Narrow containers show a shorter, larger tower (4, 5 or 6 books).                              |
+
+```tsx region=looks
+export function BooksScreen() {
+  return (
+    <AuthLayout panel="solid">
+      <AuthLayout.Art variant="stack" />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+```
+
 ### State
 
 `LoginForm` keeps the layout in step with the form: focusing the identifier reads `typing`, the password `password`, leaving both `idle`; a failed submit reads `error` until the person edits a field; a resolved `onSubmit` reads `success`. `progress` is the fill of both fields (the identifier is the first half). The selected portal becomes `activeIndex`, so its slab rises (the illustration draws three slabs, so portals past the third share the last).
@@ -132,7 +154,7 @@ export function ControlledState() {
 
 ### Motion
 
-Movement is CSS only (transitions and keyframes driven by `data-state` and custom properties, with `--motion-ease`). With `prefers-reduced-motion: reduce` the slabs rest assembled and still; an error still shows in the slab edges, which turn toward the danger color.
+Movement is CSS only: transitions and keyframes driven by `data-state` and custom properties, animating only `transform` and `opacity`. The one piece of script writes the pointer position as `--px` and `--py` on the art, at most once per frame, for a light parallax; it does nothing for touch or coarse pointers and is removed on unmount. An error holds for about a second (`ERROR_HOLD_MS`) and then the art settles back to the password state by itself. With `prefers-reduced-motion: reduce` every look rests still and assembled, with no parallax; an error still shows in the edges, which turn toward the danger color.
 
 ### Strings
 

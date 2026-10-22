@@ -106,3 +106,36 @@ test("pointer offset is -1..1 from the box centre and clamped outside it", () =>
     y: 0,
   });
 });
+
+test("isometric box faces are closed paths centred on the origin", () => {
+  assert.deepEqual(model.isoPoint(10, 0, 0), { x: 8.66, y: 5 });
+  assert.deepEqual(model.isoPoint(0, 10, 4), { x: -8.66, y: 1 });
+  const box = model.isoBox(100, 100, 20);
+  assert.equal(box.top, "M0 -70L86.6 -20L0 30L-86.6 -20Z");
+  assert.equal(box.left, "M-86.6 -20L0 30L0 50L-86.6 0Z");
+  assert.equal(box.right, "M86.6 -20L0 30L0 50L86.6 0Z");
+});
+
+test("the stack keeps its foundation, gains books with progress and completes on success", () => {
+  for (const count of model.STACK_COUNTS) {
+    assert.equal(model.stackPlaced("idle", 0, count), 1);
+    assert.equal(model.stackPlaced("password", 1, count), count);
+    assert.equal(model.stackPlaced("success", 0, count), count);
+    assert.equal(model.stackPlaced("typing", Number.NaN, count), 1);
+  }
+  assert.deepEqual(
+    [0, 0.2, 0.25, 0.5, 0.74, 0.75, 1].map((p) => model.stackPlaced("typing", p, 5)),
+    [1, 1, 2, 3, 3, 4, 5],
+  );
+});
+
+test("each book rests on the books under it and the flag stands on the top one", () => {
+  const slots = model.stackSlots();
+  assert.equal(slots.length, model.STACK_BOOKS.length);
+  assert.deepEqual(slots[0], { x: 0, y: 0 });
+  const [first, second] = model.STACK_BOOKS;
+  assert.deepEqual(slots[1], model.isoPoint(second.du, second.dv, first.h));
+  const tops = model.STACK_COUNTS.map((count) => model.stackTop(count).y);
+  assert.ok(tops[0] > tops[1] && tops[1] > tops[2], "a taller tower plants the flag higher");
+  assert.deepEqual(model.stackTop(0), { x: 0, y: 0 });
+});
