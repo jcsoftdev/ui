@@ -24,6 +24,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
@@ -32,6 +33,8 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.isTraversalGroup
@@ -151,16 +154,20 @@ public fun AuthScaffold(
     val drop = if (arc) arcDepth else overlap
     val headerClip: Shape = if (arc) remember(arcDepth) { ArcEdgeShape(arcDepth) } else RectangleShape
     val sheetShape: Shape = if (arc) RectangleShape else shape
+    val zones = remember { AuthTextZones() }
     Layout(
         modifier = modifier.fillMaxSize().background(colors.sheet),
         content = {
             CompositionLocalProvider(LocalContentColor provides colors.onHeader) {
                 Box(Modifier.fillMaxWidth().clip(headerClip).background(colors.header)) {
-                    Box(Modifier.matchParentSize().clearAndSetSemantics {}) { art(state, progress) }
+                    Box(Modifier.matchParentSize().clearAndSetSemantics {}) {
+                        CompositionLocalProvider(LocalAuthTextZones provides zones) { art(state, progress) }
+                    }
                     Column(
                         Modifier
                             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
-                            .padding(start = padding, end = padding, top = padding, bottom = drop + padding),
+                            .padding(start = padding, end = padding, top = padding, bottom = drop + padding)
+                            .onGloballyPositioned { zones.login = it.boundsInHeader() },
                         verticalArrangement = Arrangement.spacedBy(UiTheme.sizes.space8),
                     ) {
                         Text(title, Modifier.semantics { heading() }, titleStyle, colors.onHeader)
@@ -219,6 +226,9 @@ public fun AuthScaffold(
         }
     }
 }
+
+/** Bounds of a header child in the coordinates of the header box, where the art is drawn. */
+private fun LayoutCoordinates.boundsInHeader(): Rect = parentLayoutCoordinates?.localBoundingBoxOf(this, clipBounds = false) ?: Rect.Zero
 
 private class ArcEdgeShape(
     private val depth: Dp,
