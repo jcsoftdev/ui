@@ -3,7 +3,11 @@
 import { createContext, useContext } from "react";
 import type { AuthState } from "../auth-illustration/model.js";
 
+export type AuthPanel = "paper" | "solid";
+
 export interface AuthContextValue {
+  /** Composition of the screen: the card over paper, or a solid side panel with an open form. */
+  panel: AuthPanel;
   state: AuthState;
   setState: (state: AuthState) => void;
   /** Fill of the whole form, 0 to 1. */

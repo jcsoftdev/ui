@@ -76,6 +76,12 @@ export interface UiStrings {
   enterIdentifier: string;
   /** Inline error of a `LoginForm` submitted without a password. */
   enterPassword: string;
+  /** Label of the remember-me checkbox of `LoginForm.Options`. */
+  rememberMe: string;
+  /** Default help link of `LoginForm.Options`. */
+  needHelp: string;
+  /** Default label of `LoginForm.Providers`. */
+  orLogInWith: string;
   /** Message shown by a `LoginForm` when sign-in fails and the app gives none. */
   signInFailed: string;
 }
@@ -140,6 +146,9 @@ export const uiStrings = {
     signInAction: "Sign in",
     enterIdentifier: "Enter your email or ID.",
     enterPassword: "Enter your password.",
+    rememberMe: "Remember me",
+    needHelp: "Need help?",
+    orLogInWith: "Or log in with",
     signInFailed: "We could not sign you in. Check your details and try again.",
   },
   es: {
@@ -199,6 +208,9 @@ export const uiStrings = {
     signInAction: "Ingresar",
     enterIdentifier: "Escribe tu correo o documento.",
     enterPassword: "Escribe tu contraseña.",
+    rememberMe: "Recordarme",
+    needHelp: "¿Necesitas ayuda?",
+    orLogInWith: "O ingresa con",
     signInFailed: "No pudimos iniciar tu sesión. Revisa tus datos e inténtalo de nuevo.",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

@@ -66,3 +66,27 @@ export function ControlledState() {
   );
 }
 // #endregion
+
+// #region solid
+export function SolidPanelScreen() {
+  return (
+    <AuthLayout panel="solid">
+      <AuthLayout.Brand>Acme</AuthLayout.Brand>
+      <AuthLayout.Art />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)}>
+          <LoginForm.Header title="Welcome back" />
+          <LoginForm.Identifier />
+          <LoginForm.Password forgotHref="/forgot" />
+          <LoginForm.Options helpHref="/help" />
+          <LoginForm.Error />
+          <LoginForm.Submit />
+          <LoginForm.Providers label="Or log in with">
+            <button type="button">Company account</button>
+          </LoginForm.Providers>
+        </LoginForm>
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion

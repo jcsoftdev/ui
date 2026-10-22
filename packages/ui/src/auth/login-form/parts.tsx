@@ -2,6 +2,7 @@
 
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { Button, type ButtonProps } from "../../atoms/button/button.js";
+import { Checkbox } from "../../atoms/checkbox/checkbox.js";
 import { Divider } from "../../atoms/divider/divider.js";
 import { RadioGroupItem, RadioGroupRoot } from "../../atoms/radio-group/radio-group-primitive.js";
 import { Field } from "../../forms/field/field.js";
@@ -35,19 +36,25 @@ export function LoginFormHeader({
   ...props
 }: LoginFormHeaderProps) {
   const strings = useUiStrings();
-  const { portal, classNames } = useLoginForm("Header");
+  const { portal, appearance, classNames } = useLoginForm("Header");
+  const open = appearance === "open";
   const text = description ?? portal?.description;
   return (
     <div {...props} className={cn("grid gap-1.5", classNames?.header, className)}>
       <Title
-        className={cn("m-0 text-center font-extrabold text-3xl tracking-tight", classNames?.title)}
+        className={cn(
+          "m-0 font-extrabold tracking-tight",
+          open ? "text-4xl" : "text-center text-3xl",
+          classNames?.title,
+        )}
       >
         {title ?? strings.signIn}
       </Title>
       {text ? (
         <p
           className={cn(
-            "m-0 text-balance text-center text-ink-3 text-control",
+            "m-0 text-balance text-ink-3 text-control",
+            !open && "text-center",
             classNames?.description,
           )}
         >
@@ -70,11 +77,17 @@ export interface LoginFormPortalsProps {
  */
 export function LoginFormPortals({ label, className }: LoginFormPortalsProps) {
   const strings = useUiStrings();
-  const { portals, portal, setPortal, ids, classNames } = useLoginForm("Portals");
+  const { portals, portal, setPortal, ids, appearance, classNames } = useLoginForm("Portals");
   if (portals.length < 2) return null;
   return (
     <div className="grid gap-2.5">
-      <div id={ids.portals} className="text-center font-semibold text-ink text-control">
+      <div
+        id={ids.portals}
+        className={cn(
+          "font-semibold text-ink text-control",
+          appearance === "card" && "text-center",
+        )}
+      >
         {label ?? strings.signInAs}
       </div>
       <RadioGroupRoot
@@ -116,19 +129,19 @@ export interface LoginFormFieldProps {
   className?: string;
 }
 
-// A fragment keeps Field from cloning its own (empty) aria props over the form-level error wiring.
 const fieldClasses = "[&_input]:text-fs-140";
 
 export function LoginFormIdentifier({ label, placeholder, className }: LoginFormFieldProps) {
   const strings = useUiStrings();
-  const { ids, portal, identifier, setValue, invalidField, identifierRef, classNames } =
+  const { ids, portal, identifier, setValue, invalidField, identifierRef, appearance, classNames } =
     useLoginForm("Identifier");
+  const hideLabel = appearance === "card";
   const text = label ?? portal?.identifierLabel ?? strings.identifier;
   return (
     <Field
       label={text}
       controlId={ids.identifier}
-      classNames={{ label: "sr-only" }}
+      classNames={{ label: hideLabel ? "sr-only" : "" }}
       className={cn(fieldClasses, classNames?.identifier, className)}
     >
       {/* biome-ignore lint/complexity/noUselessFragments: stops Field cloning empty aria props over the error wiring */}
@@ -141,7 +154,7 @@ export function LoginFormIdentifier({ label, placeholder, className }: LoginForm
           autoComplete="username"
           autoCapitalize="none"
           spellCheck={false}
-          placeholder={placeholder ?? text}
+          placeholder={placeholder ?? (hideLabel ? text : undefined)}
           value={identifier}
           onChange={(event) => setValue("identifier", event.currentTarget.value)}
           start={<Mail />}
@@ -168,8 +181,9 @@ export function LoginFormPassword({
   className,
 }: LoginFormPasswordProps) {
   const strings = useUiStrings();
-  const { ids, password, setValue, invalidField, passwordRef, classNames } =
+  const { ids, password, setValue, invalidField, passwordRef, appearance, classNames } =
     useLoginForm("Password");
+  const hideLabel = appearance === "card";
   const text = label ?? strings.password;
   const link =
     forgot ??
@@ -186,7 +200,7 @@ export function LoginFormPassword({
       <Field
         label={text}
         controlId={ids.password}
-        classNames={{ label: "sr-only" }}
+        classNames={{ label: hideLabel ? "sr-only" : "" }}
         className={cn(fieldClasses, classNames?.password, className)}
       >
         {/* biome-ignore lint/complexity/noUselessFragments: stops Field cloning empty aria props over the error wiring */}
@@ -196,7 +210,8 @@ export function LoginFormPassword({
             id={ids.password}
             name="password"
             size="lg"
-            placeholder={placeholder ?? text}
+            start={<Lock />}
+            placeholder={placeholder ?? (hideLabel ? text : undefined)}
             value={password}
             onChange={(event) => setValue("password", event.currentTarget.value)}
             aria-invalid={invalidField === "password" ? true : undefined}
@@ -234,7 +249,7 @@ export interface LoginFormSubmitProps extends Omit<ButtonProps, "type" | "loadin
 
 export function LoginFormSubmit({ children, className, ...props }: LoginFormSubmitProps) {
   const strings = useUiStrings();
-  const { loading, classNames } = useLoginForm("Submit");
+  const { loading, appearance, classNames } = useLoginForm("Submit");
   return (
     <Button
       variant="primary"
@@ -243,7 +258,7 @@ export function LoginFormSubmit({ children, className, ...props }: LoginFormSubm
       {...props}
       type="submit"
       loading={loading}
-      className={cn(classNames?.submit, className)}
+      className={cn(appearance === "open" && "rounded-pill", classNames?.submit, className)}
     >
       {children ?? strings.signInAction}
     </Button>
@@ -252,14 +267,17 @@ export function LoginFormSubmit({ children, className, ...props }: LoginFormSubm
 
 export interface LoginFormFooterProps extends ComponentPropsWithoutRef<"div"> {}
 
-/** Strip under the form for terms and privacy links; it runs edge to edge of the card. */
+/** Terms and privacy links under the form. In the card appearance it is a strip running edge to edge. */
 export function LoginFormFooter({ className, ...props }: LoginFormFooterProps) {
-  const { classNames } = useLoginForm("Footer");
+  const { appearance, classNames } = useLoginForm("Footer");
   return (
     <div
       {...props}
       className={cn(
-        "-mx-7 -mb-5.5 mt-1 border-t-divider px-5 py-3.5 text-center text-ink-3 text-meta [&_a]:text-inherit [&_a]:underline [&_a]:underline-offset-2",
+        "text-ink-3 text-meta [&_a]:text-inherit [&_a]:underline [&_a]:underline-offset-2",
+        appearance === "card"
+          ? "-mx-7 -mb-5.5 mt-1 border-t-divider px-5 py-3.5 text-center"
+          : "text-center",
         classNames?.footer,
         className,
       )}
@@ -268,3 +286,85 @@ export function LoginFormFooter({ className, ...props }: LoginFormFooterProps) {
 }
 
 export { Lock as LoginFormLockIcon };
+
+export interface LoginFormOptionsProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /** Label of the checkbox. Defaults to the localized "Remember me". */
+  rememberLabel?: string;
+  /** Help link or button at the end of the row. */
+  help?: ReactNode;
+  /** Adds the localized "Need help?" link to this address when `help` is not given. */
+  helpHref?: string;
+}
+
+/** Row under the fields with a remember-me checkbox (reported to `onSubmit` as `remember`) and a help slot. */
+export function LoginFormOptions({
+  rememberLabel,
+  help,
+  helpHref,
+  className,
+  ...props
+}: LoginFormOptionsProps) {
+  const strings = useUiStrings();
+  const { remember, setRemember, classNames } = useLoginForm("Options");
+  const link =
+    help ??
+    (helpHref ? (
+      <a
+        href={helpHref}
+        className="font-medium text-accent-ink text-control underline underline-offset-3 focus-visible:focus-ring"
+      >
+        {strings.needHelp}
+      </a>
+    ) : null);
+  return (
+    <div
+      {...props}
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-x-4 gap-y-2",
+        classNames?.options,
+        className,
+      )}
+    >
+      <Checkbox
+        name="remember"
+        checked={remember}
+        onCheckedChange={(checked) => setRemember(checked === true)}
+        label={rememberLabel ?? strings.rememberMe}
+      />
+      {link}
+    </div>
+  );
+}
+
+export interface LoginFormProvidersProps extends ComponentPropsWithoutRef<"div"> {
+  /** Text on the divider above the providers. Defaults to the localized "Or log in with". */
+  label?: string;
+}
+
+/**
+ * Labelled slot for alternative ways to sign in. The library ships no providers: it renders only
+ * the children you pass (buttons, links) in a wrapping row, and nothing when there are none.
+ */
+export function LoginFormProviders({
+  label,
+  children,
+  className,
+  ...props
+}: LoginFormProvidersProps) {
+  const strings = useUiStrings();
+  const { classNames } = useLoginForm("Providers");
+  if (children === undefined || children === null || children === false) return null;
+  const text = label ?? strings.orLogInWith;
+  return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would add a legend and form-disabling behaviour the slot does not want
+    <div
+      {...props}
+      role="group"
+      aria-label={text}
+      className={cn("grid gap-3", classNames?.providers, className)}
+    >
+      <Divider>{text}</Divider>
+      <div className="flex flex-wrap items-center justify-center gap-2.5">{children}</div>
+    </div>
+  );
+}

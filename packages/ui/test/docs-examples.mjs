@@ -42,8 +42,8 @@ const blocks = check("docs/blocks.tsx", "../../../site/src/content/docs/docs/blo
   required: ["atoms", "overlays", "testing", "forms", "wizard", "containers", "states"],
 });
 const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md", {
-  min: 2,
-  required: ["login", "controlled"],
+  min: 3,
+  required: ["login", "controlled", "solid"],
 });
 console.log(
   `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block and ${auth} sign-in blocks match the type-checked source`,

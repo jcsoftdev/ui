@@ -45,16 +45,46 @@ export function LoginScreen() {
 
 ## Parts
 
-| Piece                      | What it does                                                                                                                                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AuthLayout`               | `layout` (`split`, `split-reverse`, `centered`); `state`, `progress`, `activeIndex` (each controlled or with a `default*` and `on*Change`). Parts: `.Brand`, `.Art`, `.Panel`, `.Footer`. `useAuthLayout()` reads the shared state.            |
-| `AuthIllustration`         | `state` (`idle`, `typing`, `password`, `error`, `success`), `progress` (0 to 1, fill of the whole form), `activeIndex` (the slab that rises), `label`. Without `label` it is decorative: `aria-hidden`, nothing focusable.                     |
-| `LoginForm`                | `onSubmit`, `portals`, `portal` / `defaultPortal` / `onPortalChange`, `loading`, `error`, `success`. Parts: `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`, `.Submit`, `.Footer`. With no children it renders them in that order. |
-| `PasswordInput`, `Divider` | The generic pieces behind the form, exported from `forms` and `atoms`.                                                                                                                                                                         |
+| Piece                      | What it does                                                                                                                                                                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AuthLayout`               | `layout` (`split`, `split-reverse`, `centered`); `state`, `progress`, `activeIndex` (each controlled or with a `default*` and `on*Change`). Parts: `.Brand`, `.Art`, `.Panel`, `.Footer`. `useAuthLayout()` reads the shared state.                                      |
+| `AuthIllustration`         | `state` (`idle`, `typing`, `password`, `error`, `success`), `progress` (0 to 1, fill of the whole form), `activeIndex` (the slab that rises), `label`. Without `label` it is decorative: `aria-hidden`, nothing focusable.                                               |
+| `LoginForm`                | `onSubmit`, `portals`, `portal` / `defaultPortal` / `onPortalChange`, `loading`, `error`, `success`. Parts: `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Options`, `.Error`, `.Submit`, `.Providers`, `.Footer`. With no children it renders them in that order. |
+| `PasswordInput`, `Divider` | The generic pieces behind the form, exported from `forms` and `atoms`.                                                                                                                                                                                                   |
 
 ### Layout follows the container
 
 The root of `AuthLayout` is a named container (`@container/auth`), never the viewport. At 768px of its own width the art goes beside the panel (`split`, `split-reverse`) or sits faded behind it (`centered`); under that the art stacks above the panel, and under 448px it is dropped so a narrow embed shows only the form. See the [container queries guide](/docs/container-queries/).
+
+### Solid panel and open form
+
+`panel="solid"` fills one side of a `split` or `split-reverse` layout with a solid color derived from the theme (`color-mix` of `--accent` and `--ink`) for the art, and leaves the form open on the other side with no card. Inside it `LoginForm` defaults to `appearance="open"`: labels above the fields, a pill submit button and a left-aligned heading. Set `appearance` yourself to mix them (`card` on a solid panel, `open` on paper). The art collapses under 448px of layout width and stacks above the form under 768px, like the paper layout; `centered` ignores `panel`.
+
+`LoginForm.Options` is a row with a remember-me checkbox (reported to `onSubmit` as `remember`) and a help link slot (`help`, or `helpHref` for the localized link). `LoginForm.Providers` is a labelled group for alternative ways to sign in: the library ships no providers and renders only the children you pass, and nothing when there are none.
+
+```tsx region=solid
+export function SolidPanelScreen() {
+  return (
+    <AuthLayout panel="solid">
+      <AuthLayout.Brand>Acme</AuthLayout.Brand>
+      <AuthLayout.Art />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)}>
+          <LoginForm.Header title="Welcome back" />
+          <LoginForm.Identifier />
+          <LoginForm.Password forgotHref="/forgot" />
+          <LoginForm.Options helpHref="/help" />
+          <LoginForm.Error />
+          <LoginForm.Submit />
+          <LoginForm.Providers label="Or log in with">
+            <button type="button">Company account</button>
+          </LoginForm.Providers>
+        </LoginForm>
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+```
 
 ### State
 
@@ -106,4 +136,4 @@ Movement is CSS only (transitions and keyframes driven by `data-state` and custo
 
 ### Strings
 
-Defaults come from `UiStringsProvider` (en and es): `signIn`, `signInAs`, `withYourAccount`, `identifier`, `password`, `forgotPassword`, `signInAction`, `enterIdentifier`, `enterPassword`, `signInFailed` and `showPassword`.
+Defaults come from `UiStringsProvider` (en and es): `signIn`, `signInAs`, `withYourAccount`, `identifier`, `password`, `forgotPassword`, `signInAction`, `enterIdentifier`, `enterPassword`, `signInFailed`, `rememberMe`, `needHelp`, `orLogInWith` and `showPassword`.

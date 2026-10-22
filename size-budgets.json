@@ -59,7 +59,7 @@
       "id": "ui/auth",
       "kind": "js",
       "file": "packages/ui/dist/auth/index.js",
-      "maxGzip": 21300
+      "maxGzip": 22800
     },
     {
       "id": "ui/atoms",

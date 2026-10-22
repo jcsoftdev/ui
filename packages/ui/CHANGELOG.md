@@ -16,6 +16,10 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
   motion) and `LoginForm` (parts `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
   `.Submit`, `.Footer`; async `onSubmit`, `loading`, `error`, `success`; drives the surrounding
   layout and works standalone).
+- **Auth compositions.** `AuthLayout` `panel` (`paper`, `solid`: a solid themed side panel with an
+  open form on the other side), `LoginForm` `appearance` (`card`, `open`), `LoginForm.Options`
+  (remember me, reported as `remember`, plus a help slot) and `LoginForm.Providers` (a labelled slot,
+  no providers included), and `AuthIllustration` `variant` as the plug-in point for further looks.
 - **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
 - **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
 - **UI strings** (en/es) for the sign-in screen and `showPassword`.

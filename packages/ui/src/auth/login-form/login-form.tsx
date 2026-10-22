@@ -18,6 +18,7 @@ import { useControllableState } from "../../utils/use-controllable-state.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import {
   type LoginField,
+  type LoginFormAppearance,
   LoginFormContext,
   type LoginFormContextValue,
   type LoginFormPart,
@@ -28,18 +29,22 @@ import {
   LoginFormFooter,
   LoginFormHeader,
   LoginFormIdentifier,
+  LoginFormOptions,
   LoginFormPassword,
   LoginFormPortals,
+  LoginFormProviders,
   LoginFormSubmit,
 } from "./parts.js";
 
-export type { LoginFormPart, LoginPortal } from "./context.js";
+export type { LoginFormAppearance, LoginFormPart, LoginPortal } from "./context.js";
 
 export interface LoginValues {
   identifier: string;
   password: string;
   /** Value of the selected portal; `undefined` when the form has none. */
   portal: string | undefined;
+  /** State of `LoginForm.Options`' remember-me checkbox. */
+  remember: boolean;
 }
 
 /** Characters at which a field counts as filled for the illustration's progress. */
@@ -61,6 +66,12 @@ export interface LoginFormProps
   portal?: string;
   defaultPortal?: string;
   onPortalChange?: (value: string) => void;
+  /**
+   * `card` is the form inside the panel card, labels hidden visually. `open` has no card chrome and
+   * shows the labels above the fields with a pill button. Defaults to `open` inside an
+   * `AuthLayout panel="solid"` and `card` otherwise.
+   */
+  appearance?: LoginFormAppearance;
   /** The form is waiting for the server. Overrides the state `onSubmit` keeps. */
   loading?: boolean;
   /** Sign-in error to show. `null` clears it. Overrides the state `onSubmit` keeps. */
@@ -68,8 +79,8 @@ export interface LoginFormProps
   /** The sign-in worked. Overrides the state `onSubmit` keeps. */
   success?: boolean;
   /**
-   * Parts to place yourself: `LoginForm.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
-   * `.Submit` and `.Footer`. Without children the form renders them in that order.
+   * Parts to place yourself: `LoginForm.Header`, `.Portals`, `.Identifier`, `.Password`, `.Options`,
+   * `.Error`, `.Submit`, `.Providers` and `.Footer`. Without children the form renders them in that order.
    */
   children?: ReactNode;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -85,6 +96,7 @@ export function LoginForm({
   onSubmit,
   portals = [],
   portal: portalProp,
+  appearance: appearanceProp,
   defaultPortal,
   onPortalChange,
   loading: loadingProp,
@@ -104,6 +116,7 @@ export function LoginForm({
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [internal, setInternal] = useState<{
     loading: boolean;
     error: string | null;
@@ -116,6 +129,7 @@ export function LoginForm({
     onChange: onPortalChange,
   });
 
+  const appearance = appearanceProp ?? (auth?.panel === "solid" ? "open" : "card");
   const loading = loadingProp ?? internal.loading;
   const error = errorProp !== undefined ? errorProp : internal.error;
   const success = successProp ?? internal.success;
@@ -156,6 +170,9 @@ export function LoginForm({
       setPortal: setPortalValue,
       identifier,
       password,
+      appearance,
+      remember,
+      setRemember,
       loading,
       error,
       invalidField,
@@ -178,6 +195,8 @@ export function LoginForm({
       setPortalValue,
       identifier,
       password,
+      appearance,
+      remember,
       loading,
       error,
       invalidField,
@@ -220,7 +239,12 @@ export function LoginForm({
     if (loading) return;
     if (!identifier.trim()) return fail(strings.enterIdentifier, "identifier");
     if (!password) return fail(strings.enterPassword, "password");
-    const values: LoginValues = { identifier: identifier.trim(), password, portal: portal?.value };
+    const values: LoginValues = {
+      identifier: identifier.trim(),
+      password,
+      portal: portal?.value,
+      remember,
+    };
     setInternal({ loading: true, error: null, success: false, field: null });
     try {
       await onSubmit?.(values);
@@ -242,7 +266,13 @@ export function LoginForm({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onSubmit={handleSubmit}
-        className={cn("grid gap-3.5 px-7 pt-6.5 pb-5.5", classNames?.root, className)}
+        data-appearance={appearance}
+        className={cn(
+          "grid",
+          appearance === "open" ? "mx-auto w-full max-w-110 gap-5" : "gap-3.5 px-7 pt-6.5 pb-5.5",
+          classNames?.root,
+          className,
+        )}
       >
         {children ?? (
           <>
@@ -263,6 +293,8 @@ LoginForm.Header = LoginFormHeader;
 LoginForm.Portals = LoginFormPortals;
 LoginForm.Identifier = LoginFormIdentifier;
 LoginForm.Password = LoginFormPassword;
+LoginForm.Options = LoginFormOptions;
+LoginForm.Providers = LoginFormProviders;
 LoginForm.Error = LoginFormError;
 LoginForm.Submit = LoginFormSubmit;
 LoginForm.Footer = LoginFormFooter;

@@ -26,7 +26,11 @@ export type LoginFormPart =
   | "password"
   | "error"
   | "submit"
+  | "options"
+  | "providers"
   | "footer";
+
+export type LoginFormAppearance = "card" | "open";
 
 export type LoginField = "identifier" | "password";
 
@@ -37,6 +41,9 @@ export interface LoginFormContextValue {
   setPortal: (value: string) => void;
   identifier: string;
   password: string;
+  appearance: LoginFormAppearance;
+  remember: boolean;
+  setRemember: (remember: boolean) => void;
   loading: boolean;
   error: string | null;
   /** The field the current error belongs to, so it can be marked invalid. */

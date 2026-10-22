@@ -5,9 +5,11 @@ import { cn } from "../../utils/cn.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import { AuthStyles } from "../internal/auth-styles.js";
 import { type AuthState, clamp01 } from "./model.js";
-import { Slabs } from "./variants/slabs.js";
+import { AUTH_VARIANTS, type AuthIllustrationVariant } from "./variants/index.js";
 
 export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+  /** The look of the illustration. Defaults to `slabs`. */
+  variant?: AuthIllustrationVariant;
   /** What the screen is doing. Inside an `AuthLayout` it follows the layout's state. */
   state?: AuthState;
   /** Fill of the whole form, 0 to 1. Inside an `AuthLayout` it follows the layout's progress. */
@@ -24,6 +26,7 @@ export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"di
  * mode and every accent apply on their own. With reduced motion it rests assembled and still.
  */
 export function AuthIllustration({
+  variant = "slabs",
   state: stateProp,
   progress: progressProp,
   activeIndex: activeIndexProp,
@@ -33,6 +36,7 @@ export function AuthIllustration({
 }: AuthIllustrationProps) {
   const auth = useOptionalAuth();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const Look = AUTH_VARIANTS[variant];
   const state = stateProp ?? auth?.state ?? "idle";
   const progress = clamp01(progressProp ?? auth?.progress ?? 0);
   const activeIndex = activeIndexProp ?? auth?.activeIndex ?? 0;
@@ -41,10 +45,12 @@ export function AuthIllustration({
       {...props}
       {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
       data-state={state}
-      className={cn("ui-auth-art min-w-0", className)}
+      data-panel={auth?.panel}
+      data-variant={variant}
+      className={cn("ui-auth-art @container/art w-full min-w-0", className)}
     >
       <AuthStyles />
-      <Slabs state={state} progress={progress} activeIndex={activeIndex} uid={uid} />
+      <Look state={state} progress={progress} activeIndex={activeIndex} uid={uid} />
     </div>
   );
 }

@@ -53,6 +53,7 @@ export const Standalone: Story = {
         identifier: "maria@colegio.pe",
         password: "secreto",
         portal: undefined,
+        remember: false,
       }),
     );
   },

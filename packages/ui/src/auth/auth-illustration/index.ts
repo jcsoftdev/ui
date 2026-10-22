@@ -5,3 +5,4 @@ export {
   slabPlacement,
   slabSpread,
 } from "./model.js";
+export type { AuthIllustrationVariant, AuthVariantProps } from "./variants/index.js";
