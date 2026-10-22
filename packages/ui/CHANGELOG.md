@@ -27,6 +27,9 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **`AuthIllustration variant="stack"`.** A tower of books that gains a book as the form fills,
   wobbles on an error and plants a flag with the active portal's glyph on success; 4, 5 or 6
   books by the width of its container.
+- **`AuthIllustration variant="mosaic"`.** A floor of isometric tiles that lights diagonally with
+  progress, glints per keystroke, glows under the pointer, flashes red on an error and ripples on
+  success; three tiles carry the portal glyphs and the active one stands raised.
 - **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
 - **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
 - **UI strings** (en/es) for the sign-in screen and `showPassword`.

@@ -246,3 +246,65 @@ export function stackTop(count: number, books: readonly StackBook[] = STACK_BOOK
   const z = shown.reduce((sum, book) => sum + book.h, 0);
   return isoPoint(last.du, last.dv, z);
 }
+
+/* ---------------------------------------------------------------- mosaic */
+
+/** Tiles per side of the mosaic floor; its container picks one by width. */
+export const MOSAIC_SIZES = [4, 5, 6] as const;
+export type MosaicSize = (typeof MOSAIC_SIZES)[number];
+
+/** Diagonals of an `n` by `n` floor that are lit: they fill from the back corner as the form fills. */
+export function mosaicFilled(state: AuthState, progress: number, n: number): number {
+  const diagonals = n * 2 - 1;
+  if (state === "success") return diagonals;
+  return Math.min(diagonals, Math.floor(clamp01(progress) * diagonals + 1e-9));
+}
+
+export interface MosaicTile {
+  row: number;
+  col: number;
+  /** Diagonal from the back corner, 0 to 2n-2: the fill and the error sweep follow it. */
+  diagonal: number;
+  /** Steps from the centre: the success ripple follows it. */
+  ring: number;
+}
+
+export function mosaicTiles(n: number): MosaicTile[] {
+  const middle = (n - 1) / 2;
+  return Array.from({ length: n * n }, (_, k) => {
+    const row = Math.floor(k / n);
+    const col = k % n;
+    return {
+      row,
+      col,
+      diagonal: row + col,
+      ring: Math.round(Math.abs(row - middle) + Math.abs(col - middle)),
+    };
+  });
+}
+
+/** Row and column of the tile carrying each portal's glyph, for each floor size. */
+export const MOSAIC_GLYPH_TILES: Readonly<
+  Record<MosaicSize, readonly (readonly [number, number])[]>
+> = {
+  4: [
+    [1, 0],
+    [0, 2],
+    [2, 3],
+  ],
+  5: [
+    [1, 1],
+    [0, 3],
+    [3, 3],
+  ],
+  6: [
+    [1, 1],
+    [1, 4],
+    [4, 3],
+  ],
+};
+
+/** The tile that glints on a keystroke: it jumps around the floor instead of marching in order. */
+export function mosaicGlint(count: number, n: number): number {
+  return count > 0 ? (count * 7) % (n * n) : -1;
+}

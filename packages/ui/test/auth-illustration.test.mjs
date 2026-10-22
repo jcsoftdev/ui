@@ -139,3 +139,30 @@ test("each book rests on the books under it and the flag stands on the top one",
   assert.ok(tops[0] > tops[1] && tops[1] > tops[2], "a taller tower plants the flag higher");
   assert.deepEqual(model.stackTop(0), { x: 0, y: 0 });
 });
+
+test("the mosaic lights its diagonals with progress and all of them on success", () => {
+  assert.deepEqual(
+    [0, 0.1, 0.5, 0.99, 1].map((p) => model.mosaicFilled("typing", p, 4)),
+    [0, 0, 3, 6, 7],
+  );
+  assert.equal(model.mosaicFilled("success", 0, 6), 11);
+  assert.equal(model.mosaicFilled("idle", Number.NaN, 5), 0);
+});
+
+test("mosaic tiles know their diagonal and ring, and every glyph tile is on the floor", () => {
+  const tiles = model.mosaicTiles(5);
+  assert.equal(tiles.length, 25);
+  assert.deepEqual(tiles[0], { row: 0, col: 0, diagonal: 0, ring: 4 });
+  assert.deepEqual(tiles[12], { row: 2, col: 2, diagonal: 4, ring: 0 });
+  for (const n of model.MOSAIC_SIZES) {
+    const glyphs = model.MOSAIC_GLYPH_TILES[n];
+    assert.equal(glyphs.length, 3);
+    for (const [row, col] of glyphs) assert.ok(row < n && col < n, `glyph tile inside ${n}x${n}`);
+    assert.equal(new Set(glyphs.map(([r, c]) => `${r}:${c}`)).size, 3);
+  }
+  assert.equal(model.mosaicGlint(0, 4), -1);
+  assert.deepEqual(
+    [1, 2, 3].map((c) => model.mosaicGlint(c, 4)),
+    [7, 14, 5],
+  );
+});

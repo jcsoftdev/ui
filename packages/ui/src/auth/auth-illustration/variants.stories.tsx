@@ -105,3 +105,21 @@ export const StackNarrow: Story = {
     await expect(shown(640)).toBe(6);
   },
 };
+
+export const MosaicStates: Story = { args: { variant: "mosaic" } };
+
+export const MosaicSolid: Story = { args: { variant: "mosaic", panel: "solid" } };
+
+/** The floor has 4, 5 or 6 tiles a side by the width of its container. */
+export const MosaicNarrow: Story = {
+  args: { variant: "mosaic", widths: [240, 460, 640], states: ["typing"] },
+  play: async ({ canvasElement }) => {
+    const side = (width: number) =>
+      [...canvasElement.querySelectorAll(`[data-width="${width}"] .ui-msc-grid`)]
+        .find((grid) => getComputedStyle(grid).display !== "none")
+        ?.getAttribute("data-n");
+    await expect(side(240)).toBe("4");
+    await expect(side(460)).toBe("5");
+    await expect(side(640)).toBe("6");
+  },
+};
