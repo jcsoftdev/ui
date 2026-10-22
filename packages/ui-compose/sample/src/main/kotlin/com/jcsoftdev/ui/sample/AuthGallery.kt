@@ -88,6 +88,7 @@ fun AuthGallery(
                 welcomeTagline = "Clases, notas y mensajes de tu colegio en un solo lugar",
                 welcomeAction = { AuthPrimaryButton("Empezar", { welcome = false }, Modifier.fillMaxWidth()) },
                 onBackToWelcome = { welcome = true },
+                successDescription = "Sesión iniciada",
             )
             Column(
                 Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.safeDrawing).padding(top = 8.dp, end = 8.dp),

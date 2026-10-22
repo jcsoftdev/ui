@@ -1,5 +1,6 @@
 package com.jcsoftdev.ui.auth
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,10 +17,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import com.jcsoftdev.ui.forms.InputContentType
 import com.jcsoftdev.ui.icons.Icons
 import com.jcsoftdev.ui.icons.User
+import com.jcsoftdev.ui.theme.UiTheme
 
 /**
  * The common sign-in screen: [AuthScaffold] with an identifier field, a password field, an optional "forgot" link, a pinned
@@ -27,6 +31,9 @@ import com.jcsoftdev.ui.icons.User
  * the field lengths, the password focus, [error] and [success] (see [AuthProgress]). All text comes from the caller.
  *
  * [error] non-null marks both fields invalid and shows the message under the password. [loading] makes the action ignore taps.
+ * [success] is the sign-in moment: the header art celebrates, a soft wave crosses the sheet, the fields settle back and the
+ * action morphs into a round badge with a check mark, announcing [successDescription] (pass it, for example "Signed in");
+ * with motion off the screen shows that final state at once.
  * Pressing the keyboard's done key on the password calls [onSubmit] unless [loading]; both fields are disabled while [loading].
  * [errorKey] is an extra counter that replays the header's error reaction and the error announcement when it changes; the screen
  * also replays them by itself whenever a request ends in [error] or the error text changes. [expanded], [welcomeTitle], [welcomeTagline],
@@ -66,12 +73,15 @@ public fun LoginScreen(
     welcomeAction: (@Composable ColumnScope.() -> Unit)? = null,
     onBackToWelcome: (() -> Unit)? = null,
     errorKey: Int = 0,
+    successDescription: String? = null,
 ) {
     var passwordFocused by remember { mutableStateOf(false) }
     val attempts = rememberFailedAttempts(error, loading)
     val replay = errorKey + attempts
     val submit = { if (!loading) onSubmit() }
     val state = AuthProgress.stateOf(id.length, password.length, passwordFocused, error != null, success)
+    val settle = animateFloatAsState(if (success) 1f else 0f, UiTheme.motion.tween(AuthMotion.MORPH_MS), label = "settle")
+    val lift = with(LocalDensity.current) { UiTheme.sizes.space4.toPx() }
     AuthScaffold(
         title,
         tagline,
@@ -87,9 +97,20 @@ public fun LoginScreen(
         welcomeTagline = welcomeTagline,
         welcomeAction = welcomeAction,
         onBackToWelcome = onBackToWelcome,
-        bottom = { LoginActions(submitText, onSubmit, loading, loadingDescription, secondaryText, onSecondary) },
+        bottom = {
+            LoginActions(submitText, onSubmit, loading, loadingDescription, secondaryText, onSecondary, success, successDescription)
+        },
     ) {
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(AuthFieldDefaults.rhythm)) {
+        Column(
+            Modifier.fillMaxWidth().graphicsLayer {
+                val s = settle.value
+                alpha = 1f - 0.4f * s
+                scaleX = 1f - 0.03f * s
+                scaleY = scaleX
+                translationY = -lift * s
+            },
+            verticalArrangement = Arrangement.spacedBy(AuthFieldDefaults.rhythm),
+        ) {
             AuthTextField(
                 id,
                 onIdChange,
@@ -111,7 +132,9 @@ public fun LoginScreen(
                 errorKey = replay,
                 keyboardActions = KeyboardActions(onDone = { submit() }),
             )
-            if (forgotText != null) AuthLink(forgotText, onForgot, Modifier.align(Alignment.End))
+        }
+        if (forgotText != null) {
+            AuthLink(forgotText, onForgot, Modifier.align(Alignment.End).graphicsLayer { alpha = 1f - settle.value })
         }
     }
 }
@@ -160,7 +183,17 @@ private fun ColumnScope.LoginActions(
     loadingDescription: String?,
     secondaryText: String?,
     onSecondary: () -> Unit,
+    success: Boolean,
+    successDescription: String?,
 ) {
-    AuthPrimaryButton(submitText, onSubmit, Modifier.fillMaxWidth(), loading = loading, loadingDescription = loadingDescription)
+    AuthPrimaryButton(
+        submitText,
+        onSubmit,
+        Modifier.fillMaxWidth(),
+        loading = loading,
+        loadingDescription = loadingDescription,
+        success = success,
+        successDescription = successDescription,
+    )
     if (secondaryText != null) AuthLink(secondaryText, onSecondary, Modifier.align(Alignment.CenterHorizontally))
 }

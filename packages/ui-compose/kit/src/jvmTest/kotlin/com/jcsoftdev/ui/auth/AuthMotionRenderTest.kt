@@ -19,7 +19,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -218,5 +220,91 @@ class AuthMotionRenderTest {
                 frames += frame("welcome-$step")
             }
             assertTrue(frames.zipWithNext().all { (a, b) -> changed(a, b) > 0.01f }, "every sampled step of the hand-over differs")
+        }
+
+    @Test
+    fun floatingPiecesPopInOneAfterAnother() =
+        runComposeUiTest {
+            art(1f, frozen = true, content = floating)
+            mainClock.advanceTimeBy(80)
+            val early = frame("floating-intro-early")
+            mainClock.advanceTimeBy(3000)
+            val full = frame("floating-intro-full")
+            assertTrue(
+                covered(early) < covered(full) * 0.7f,
+                "the pieces start small and grow into place: ${covered(early)} vs ${covered(full)}",
+            )
+        }
+
+    @Test
+    fun floatingPiecesAreSolidEnoughToRead() =
+        runComposeUiTest {
+            art(0f, content = floating)
+            assertTrue(covered(frame("floating-solid")) > 0.08f, "the pieces fill a visible share of the header, not faint outlines")
+        }
+
+    private var success by mutableStateOf(false)
+
+    private fun ComposeUiTest.login(motion: Float) {
+        mainClock.autoAdvance = false
+        setContent {
+            UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(motion)) {
+                CompositionLocalProvider(LocalAuthDriftFrozen provides true) {
+                    Box(Modifier.size(360.dp, 640.dp).testTag("art")) {
+                        LoginScreen(
+                            "Welcome back",
+                            "Use your school account",
+                            "ana@school.edu",
+                            {},
+                            "Email",
+                            "secret12",
+                            {},
+                            "Password",
+                            "Sign in",
+                            {},
+                            success = success,
+                            forgotText = "Forgot password?",
+                            art = { _, _ -> },
+                            successDescription = "Signed in",
+                        )
+                    }
+                }
+            }
+        }
+        mainClock.advanceTimeByFrame()
+    }
+
+    @Test
+    fun successWithMotionOffShowsTheFinalStateAtOnce() =
+        runComposeUiTest {
+            login(0f)
+            val filled = frame("success-still-before")
+            success = true
+            mainClock.advanceTimeBy(50)
+            val done = frame("success-still-after")
+            assertTrue(changed(filled, done) > 0.02f, "the morphed action and the settled fields show without any animation")
+            val badge = onNodeWithText("Sign in").getUnclippedBoundsInRoot()
+            val wide = badge.right - badge.left
+            val tall = badge.bottom - badge.top
+            assertTrue(wide <= tall * 1.05f, "the action is a round badge, was $wide x $tall")
+            mainClock.advanceTimeBy(2000)
+            assertEquals(0f, changed(done, frame("success-still-later")))
+        }
+
+    @Test
+    fun successSendsAWaveAcrossTheSheetThatThenRests() =
+        runComposeUiTest {
+            login(1f)
+            success = true
+            mainClock.advanceTimeBy(4000)
+            val rest = frame("success-rest")
+            success = false
+            mainClock.advanceTimeBy(4000)
+            success = true
+            mainClock.advanceTimeBy(450)
+            val wave = frame("success-wave")
+            mainClock.advanceTimeBy(4000)
+            assertTrue(changed(rest, wave) > 0.05f, "mid way the wave covers a large part of the sheet: ${changed(rest, wave)}")
+            assertEquals(0f, changed(rest, frame("success-rest-again")), "and leaves the same final state behind")
         }
 }

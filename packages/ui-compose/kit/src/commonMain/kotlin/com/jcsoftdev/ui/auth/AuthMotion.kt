@@ -31,11 +31,30 @@ internal object AuthMotion {
     /** Length of the welcome-to-login transition. */
     const val WELCOME_MS: Int = 620
 
+    /** Length of the success wave across the sheet. */
+    const val WAVE_MS: Int = 1100
+
+    /** Length of the success morph of the primary button, and of the fields settling with it. */
+    const val MORPH_MS: Int = 420
+
+    /** Length of the check mark drawing itself in the morphed button, after the morph. */
+    const val CHECK_MS: Int = 360
+
+    /** Pause before the welcome title's swash sweeps in, and the length of the sweep. */
+    const val SWASH_DELAY_MS: Int = 280
+    const val SWASH_MS: Int = 720
+
+    /** Length of the floating pieces' pop-in when the art first shows. */
+    const val INTRO_MS: Int = 1100
+
     /** Danger tint the arcs keep while the error lasts, after the flash. */
     const val ERROR_SETTLE: Float = 0.55f
 
     /** Travel of each comet over its share of the sweep: past the arc end (1) far enough to have faded out by `t = 1`. */
     private const val COMET_SPAN: Float = 0.5f
+
+    /** Back-out overshoot of the pieces' pop-in. */
+    private const val POP_OVERSHOOT: Float = 1.9f
 
     /** Damped shake in -1..1: three swings that die out, zero at both ends. */
     fun jitter(t: Float): Float {
@@ -90,6 +109,30 @@ internal object AuthMotion {
             AuthState.Error -> 0.2f
             AuthState.Success -> 1.6f
         }
+
+    /** Radius of the success wave as a share of its reach: fast at first, slowing as it nears the far corner. */
+    fun waveRadius(t: Float): Float = easeOut(t.coerceIn(0f, 1f))
+
+    /** Opacity of the success wave: full at the start, gone at `t = 1`. */
+    fun waveAlpha(t: Float): Float {
+        val p = 1f - t.coerceIn(0f, 1f)
+        return p * p
+    }
+
+    /**
+     * Scale of floating piece [index] while the art pops in ([t] 0..1 for the whole intro): each piece starts a little after
+     * the one before, overshoots and settles at exactly 1.
+     */
+    fun popIn(
+        t: Float,
+        index: Int,
+    ): Float {
+        val start = index * 0.07f
+        val p = segment(t, start, start + 0.45f)
+        if (p >= 1f) return 1f
+        val x = p - 1f
+        return 1f + (POP_OVERSHOOT + 1f) * x * x * x + POP_OVERSHOOT * x * x
+    }
 
     /** Remaps the shared welcome fraction to the part of it between [from] and [to], clamped to 0..1. */
     fun segment(

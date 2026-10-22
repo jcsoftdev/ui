@@ -366,4 +366,37 @@ class AuthUiTest {
             onNodeWithContentDescription("Password").assertTextEquals("secret", includeEditableText = true)
             onNodeWithContentDescription("Hide password").assertExists()
         }
+
+    @Test
+    fun successAnnouncesItsStateOnTheActionAndIgnoresTaps() =
+        runComposeUiTest {
+            var submitted = 0
+            var success by mutableStateOf(false)
+            setContent(
+                screen {
+                    LoginScreen(
+                        "Welcome",
+                        "Sign in",
+                        "ana",
+                        {},
+                        "Email",
+                        "secret",
+                        {},
+                        "Password",
+                        "Go",
+                        { submitted++ },
+                        success = success,
+                        successDescription = "Signed in",
+                    )
+                },
+            )
+            onNodeWithText("Go").assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.StateDescription))
+            success = true
+            waitForIdle()
+            onNodeWithText("Go")
+                .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Signed in"))
+                .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion))
+                .performClick()
+            assertEquals(0, submitted, "a signed-in action does not submit again")
+        }
 }

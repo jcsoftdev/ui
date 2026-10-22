@@ -17,7 +17,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.runComposeUiTest
+import androidx.compose.ui.test.runDesktopComposeUiTest
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,6 +41,10 @@ internal enum class Look(
 
 private const val SHOT_DENSITY = 1.5f
 
+/** The default test window (1024 x 768 px); a taller fixed frame gets a taller window, or its foot would be cut off. */
+private const val WINDOW_WIDTH = 1024
+private const val WINDOW_HEIGHT = 768
+
 // The goldens of record are Linux ones, recorded by the `ui-compose-record` workflow on ubuntu (CI is the source of
 // truth). A local run on macOS differs by glyph rasterization, which this small share of changed pixels tolerates
 // when only checking roughly; CI verifies the same goldens with the same threshold.
@@ -51,7 +55,8 @@ private val Options =
  * Renders [content] once per [Look] and stores the cropped bounds of a fixed-width frame as
  * `screenshots/<family>/<name>_<look>.png` (relative to the kit module). `recordRoborazziJvm` writes the goldens and
  * `verifyRoborazziJvm` compares against them. Motion is off so nothing animates, and the bundled Figtree keeps text
- * metrics identical across machines. A [height] makes a fixed frame, needed by overlays that fill their parent.
+ * metrics identical across machines. A [height] makes a fixed frame, needed by overlays that fill their parent; the test
+ * window grows to hold a frame taller than the default window.
  */
 internal fun shoot(
     family: String,
@@ -61,8 +66,9 @@ internal fun shoot(
     style: UiStyle = UiStyle.Default,
     content: @Composable () -> Unit,
 ) {
+    val window = maxOf(WINDOW_HEIGHT, kotlin.math.ceil((height?.value ?: 0f) * SHOT_DENSITY).toInt())
     for (look in Look.entries) {
-        runComposeUiTest {
+        runDesktopComposeUiTest(WINDOW_WIDTH, window) {
             setContent {
                 CompositionLocalProvider(LocalDensity provides Density(SHOT_DENSITY, look.fontScale)) {
                     if (height == null) {

@@ -38,13 +38,17 @@ import com.jcsoftdev.ui.forms.InputContentType
 import com.jcsoftdev.ui.forms.InputDefaults
 import com.jcsoftdev.ui.forms.InputSize
 import com.jcsoftdev.ui.forms.LocalFieldInfo
+import com.jcsoftdev.ui.icons.CircleAlert
 import com.jcsoftdev.ui.icons.Icon
 import com.jcsoftdev.ui.icons.Icons
 import com.jcsoftdev.ui.icons.Lock
 import com.jcsoftdev.ui.icons.User
 import com.jcsoftdev.ui.theme.UiTheme
 
-/** Colors of the auth fields: the soft [container], the [focusedRing] shown while editing, the [errorRing] and [error] text, the [text] and [placeholder], and the leading [icon]. */
+/**
+ * Colors of the auth fields: the soft [container] with its resting [border], the [focusedRing] shown while editing, the
+ * [errorRing], [errorContainer] and [error] text of an invalid field, the [text] and [placeholder], and the leading [icon].
+ */
 @Immutable
 public class AuthFieldColors(
     public val container: Color,
@@ -54,6 +58,8 @@ public class AuthFieldColors(
     public val text: Color,
     public val placeholder: Color,
     public val icon: Color,
+    public val border: Color,
+    public val errorContainer: Color,
 ) {
     /** Copy with selected colors replaced. */
     public fun copy(
@@ -64,17 +70,34 @@ public class AuthFieldColors(
         text: Color = this.text,
         placeholder: Color = this.placeholder,
         icon: Color = this.icon,
-    ): AuthFieldColors = AuthFieldColors(container, focusedRing, errorRing, error, text, placeholder, icon)
+        border: Color = this.border,
+        errorContainer: Color = this.errorContainer,
+    ): AuthFieldColors = AuthFieldColors(container, focusedRing, errorRing, error, text, placeholder, icon, border, errorContainer)
 }
 
 /** Default colors, shape and metrics of [AuthTextField] and [AuthPasswordField]. */
 public object AuthFieldDefaults {
-    /** A soft filled container with no resting border; the ring appears on focus and on error so state never depends on the fill alone. */
+    /**
+     * A soft filled container with a resting edge that keeps 3:1 against the sheet; the focus ring is `accentInk` and the
+     * error ring `danger`. An invalid field also takes a `dangerSoft` fill and swaps its leading icon for an alert, so error
+     * and focus differ by more than hue (in a dark theme `danger` and a pink accent are close).
+     */
     @Composable
     @ReadOnlyComposable
     public fun colors(): AuthFieldColors {
         val c = UiTheme.colors
-        return AuthFieldColors(lerp(c.surface2, c.accentSoft, 0.25f), c.accent, c.danger, c.danger, c.ink, c.ink3, c.ink3)
+        val container = lerp(c.surface2, c.accentSoft, 0.25f)
+        return AuthFieldColors(
+            container = container,
+            focusedRing = c.accentInk,
+            errorRing = c.danger,
+            error = c.danger,
+            text = c.ink,
+            placeholder = c.ink3,
+            icon = c.ink3,
+            border = authFieldEdgeColor(c),
+            errorContainer = lerp(container, c.dangerSoft, 0.85f),
+        )
     }
 
     /** Pill shape. */
@@ -110,9 +133,9 @@ public object AuthFieldDefaults {
 /**
  * Filled pill field for an identifier (e-mail, user name, student id), 52dp high with a 24dp [leadingIcon] and a [placeholder]
  * (default [label]). [label] is what screen readers announce, since the placeholder disappears once typing starts. A non-null
- * [error] marks the field invalid and shows the message under it (an empty string marks it without a message); changing [errorKey] re-creates the message so a screen reader announces it again
- * even when the text is the same. Focus: attach
- * `Modifier.onFocusChanged` to [modifier] to learn it.
+ * [error] marks the field invalid: the danger ring and fill, an alert in place of the leading icon, and the message under it
+ * (an empty string marks it without a message). Changing [errorKey] re-creates the message so a screen reader announces it
+ * again even when the text is the same. Focus: attach `Modifier.onFocusChanged` to [modifier] to learn it.
  */
 @Composable
 public fun AuthTextField(
@@ -142,10 +165,10 @@ public fun AuthTextField(
                 isError = error != null,
                 placeholder = placeholder,
                 contentType = contentType,
-                leading = leadingIcon?.let { icon -> { Icon(icon, null, tint = colors.icon, size = AuthFieldDefaults.iconSize) } },
+                leading = fieldIcon(leadingIcon, error != null, colors),
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
-                colors = colors.toInputColors(),
+                colors = colors.toInputColors(error != null),
                 shape = shape,
                 contentPadding = AuthFieldDefaults.contentPadding,
                 textStyle = textStyle,
@@ -190,7 +213,7 @@ public fun AuthPasswordField(
                 isError = error != null,
                 placeholder = placeholder,
                 contentType = contentType,
-                leading = leadingIcon?.let { icon -> { Icon(icon, null, tint = colors.icon, size = AuthFieldDefaults.iconSize) } },
+                leading = fieldIcon(leadingIcon, error != null, colors),
                 trailing = {
                     IconButton({ visible = !visible }, if (visible) hideLabel else showLabel, enabled = enabled) {
                         InputDefaults.VisibilityIcon(visible)
@@ -199,7 +222,7 @@ public fun AuthPasswordField(
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
                 visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-                colors = colors.toInputColors(),
+                colors = colors.toInputColors(error != null),
                 shape = shape,
                 contentPadding = AuthFieldDefaults.contentPadding,
                 textStyle = textStyle,
@@ -232,5 +255,21 @@ private fun AuthFieldFrame(
     }
 }
 
-private fun AuthFieldColors.toInputColors(): InputColors =
-    InputColors(container, Color.Transparent, focusedRing, errorRing, text, placeholder, focusedRing)
+/** The leading icon: [icon] in the icon color, or an alert in the error color while the field is invalid, a cue that is not only color. */
+private fun fieldIcon(
+    icon: ImageVector?,
+    invalid: Boolean,
+    colors: AuthFieldColors,
+): (@Composable () -> Unit)? =
+    when {
+        invalid -> {
+            { Icon(Icons.CircleAlert, null, tint = colors.error, size = AuthFieldDefaults.iconSize) }
+        }
+        icon != null -> {
+            { Icon(icon, null, tint = colors.icon, size = AuthFieldDefaults.iconSize) }
+        }
+        else -> null
+    }
+
+private fun AuthFieldColors.toInputColors(invalid: Boolean): InputColors =
+    InputColors(if (invalid) errorContainer else container, border, focusedRing, errorRing, text, placeholder, focusedRing)

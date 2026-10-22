@@ -1,7 +1,12 @@
 package com.jcsoftdev.ui.auth
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +26,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.ZeroCornerSize
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -31,7 +37,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -39,20 +44,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -63,6 +75,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -77,14 +90,16 @@ import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackHandler
 import com.jcsoftdev.ui.foundation.BackPriority
 import com.jcsoftdev.ui.theme.UiTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlin.math.sin
+import kotlin.math.roundToLong
 
 /**
- * Colors of [AuthScaffold]: the [header] band and the [onHeader] text and art on it, the [sheet] surface, the [tagline] text,
- * and the outlined [echo] behind the welcome title.
+ * Colors of [AuthScaffold]: the [header] band and the [onHeader] text and art on it, the [sheet] surface, the [tagline] text
+ * on the header, the [onSheet] and [sheetTagline] text of the welcome panel, and the [highlight] swash under the welcome title.
  */
 @Immutable
 public class AuthScaffoldColors(
@@ -92,7 +107,9 @@ public class AuthScaffoldColors(
     public val onHeader: Color,
     public val sheet: Color,
     public val tagline: Color,
-    public val echo: Color = tagline,
+    public val onSheet: Color,
+    public val sheetTagline: Color,
+    public val highlight: Color,
 ) {
     /** Copy with selected colors replaced. */
     public fun copy(
@@ -100,8 +117,10 @@ public class AuthScaffoldColors(
         onHeader: Color = this.onHeader,
         sheet: Color = this.sheet,
         tagline: Color = this.tagline,
-        echo: Color = this.echo,
-    ): AuthScaffoldColors = AuthScaffoldColors(header, onHeader, sheet, tagline, echo)
+        onSheet: Color = this.onSheet,
+        sheetTagline: Color = this.sheetTagline,
+        highlight: Color = this.highlight,
+    ): AuthScaffoldColors = AuthScaffoldColors(header, onHeader, sheet, tagline, onSheet, sheetTagline, highlight)
 }
 
 /** How the header meets the sheet. */
@@ -116,8 +135,10 @@ public enum class AuthHeaderShape {
 /** Default colors, shapes, metrics and text styles of [AuthScaffold]; read the theme, so any accent and dark mode flow through. */
 public object AuthScaffoldDefaults {
     /**
-     * The header is the accent pulled toward the darkest tone of the theme; text and art on it use `surface` or `ink`,
-     * whichever contrasts more. The welcome title's echo leans toward the accent.
+     * The header is near black with a faint tint of the accent (a little lighter in a dark theme, so it stands apart from the
+     * sheet); text and art on it use `surface` or `ink`, whichever contrasts more, at 4.5:1 or more. The welcome panel is the
+     * sheet with `ink` and `ink2` text; the swash under the welcome title is the accent, softened toward the sheet until the
+     * title keeps 4.5:1 over it.
      */
     @Composable
     @ReadOnlyComposable
@@ -125,7 +146,7 @@ public object AuthScaffoldDefaults {
         val c = UiTheme.colors
         val header = authHeaderColor(c)
         val onHeader = authOnColor(header, c)
-        return AuthScaffoldColors(header, onHeader, c.surface, lerp(onHeader, header, 0.25f), lerp(c.accent, onHeader, 0.3f))
+        return AuthScaffoldColors(header, onHeader, c.surface, lerp(onHeader, header, 0.25f), c.ink, c.ink2, authHighlightColor(c))
     }
 
     /** The sheet: the theme `sheet` shape with square bottom corners. */
@@ -153,12 +174,13 @@ public object AuthScaffoldDefaults {
         get() = UiTheme.typography.mBody
 
     /**
-     * Welcome title style: the theme `mTitle` at poster size, tight lines. The scaffold lets it grow with the system font scale
-     * only up to 1.3x, since display text this large is already readable and would otherwise break mid-word.
+     * Welcome title style: the theme `mTitle` at poster size, tight lines, set on the welcome panel over a highlight swash. The
+     * scaffold lets it grow with the system font scale only up to 1.3x, since display text this large is already readable and
+     * would otherwise break mid-word.
      */
     public val welcomeTitleStyle: TextStyle
         @Composable @ReadOnlyComposable
-        get() = UiTheme.typography.mTitle.copy(fontSize = 56.sp, lineHeight = 56.sp, letterSpacing = (-0.035).em)
+        get() = UiTheme.typography.mTitle.copy(fontSize = 48.sp, lineHeight = 50.sp, letterSpacing = (-0.035).em)
 
     /** The built-in header art: [AuthArcs] filling the header. */
     public val Art: @Composable (state: AuthState, progress: Float) -> Unit = { state, progress ->
@@ -168,24 +190,27 @@ public object AuthScaffoldDefaults {
 
 /**
  * Screen frame of the sign-in family: a dark header band with [title], [tagline] and animated [art], and a surface sheet with
- * large rounded top corners rising [overlap] over it. [content] scrolls inside the sheet; [bottom] stays pinned at the sheet's
- * foot, above the system bar and the keyboard. It fills the space it is given (give it the whole screen), and draws edge to
- * edge: the header pads itself by the status bar and cutout, the pinned slot by the bottom and keyboard insets.
+ * large rounded top corners rising [overlap] over it. [content] scrolls inside the sheet; [bottom] follows the content and
+ * sticks to the sheet's foot, above the system bar and the keyboard, once the content needs the room. It fills the space it is
+ * given (give it the whole screen), and draws edge to edge: the header pads itself by the status bar and cutout, the bottom
+ * slot by the bottom and keyboard insets.
  *
  * [headerShape] `Arc` replaces the overlap with a concave curve of [arcDepth] cut into the header edge; [shape] and [overlap]
  * then do not apply. A photo header: pass an `art` that draws an `Image` with `ContentScale.Crop` filling the header; the
  * header clips it with the same shape.
  *
- * Welcome mode: with [expanded] the header fills the screen and shows [welcomeTitle] at poster size with an outlined echo,
- * [welcomeTagline] and the [welcomeAction] slot (typically a "Get started" pill whose click sets [expanded] to false); the
- * sheet waits below the fold. Toggling [expanded] plays one shared transition: the header shrinks to its band, the art shrinks
- * with it, the titles hand over and the sheet slides up. With motion off it cuts. Only the visible mode is in the
- * accessibility tree and takes input. [onBackToWelcome], when given, answers the system back while the sign-in form shows (at
- * `BackPriority.TAB`), so the host can set [expanded] again; nothing navigates by itself.
+ * Welcome mode: with [expanded] the header grows over most of the screen with its art, and the sheet becomes a panel at the
+ * foot holding [welcomeTitle] at poster size over a highlight swash, [welcomeTagline] and the [welcomeAction] slot (typically
+ * a "Get started" pill whose click sets [expanded] to false). Toggling [expanded] plays one shared transition: the panel rises
+ * into the sign-in sheet while the welcome text hands over to the form, and the header and its art shrink to the band. With
+ * motion off it cuts. Only the visible mode is in the accessibility tree and takes input. [onBackToWelcome], when given,
+ * answers the system back while the sign-in form shows (at `BackPriority.TAB`), so the host can set [expanded] again; nothing
+ * navigates by itself.
  *
  * [state] and [progress] (see [AuthProgress]) are handed to [art], which reacts to them; pass your own composable to change the
- * header look. The art is decorative and hidden from accessibility; the titles are headings. Colors come from the theme through
- * [AuthScaffoldDefaults.colors], so the band follows the accent and dark mode.
+ * header look. `AuthState.Success` also sends a soft wave across the sheet from the bottom slot. The art is decorative and
+ * hidden from accessibility; the titles are headings. Colors come from the theme through [AuthScaffoldDefaults.colors], so the
+ * band follows the accent and dark mode.
  */
 @Composable
 public fun AuthScaffold(
@@ -241,6 +266,7 @@ public fun AuthScaffold(
     val ime = WindowInsets.ime
     if (onBackToWelcome != null) BackHandler(enabled = !expanded, priority = BackPriority.TAB, onBack = onBackToWelcome)
     val rise = with(LocalDensity.current) { 36.dp.toPx() }
+    val minArt = with(LocalDensity.current) { MIN_WELCOME_ART.roundToPx() }
     Layout(
         modifier = modifier.fillMaxSize().background(colors.sheet).onPlaced { zones.root = it },
         content = {
@@ -248,7 +274,7 @@ public fun AuthScaffold(
                 Modifier
                     .graphicsLayer {
                         clip = true
-                        this.shape = if (arc) ArcEdgeShape(arcDepth * (1f - welcome.value)) else RectangleShape
+                        this.shape = if (arc) ArcEdgeShape(arcDepth) else RectangleShape
                     }.background(colors.header)
                     .clearAndSetSemantics {},
             ) {
@@ -285,6 +311,7 @@ public fun AuthScaffold(
                     }
                 }
             }
+            AuthSheet(sheetShape, colors, arc, drop, expanded, welcome, state == AuthState.Success, bottom, content)
             if (showWelcome) {
                 WelcomeContent(
                     welcomeTitle,
@@ -296,13 +323,13 @@ public fun AuthScaffold(
                     rise,
                     zones,
                     expanded,
+                    if (arc) drop else 0.dp,
                     welcomeTitleFocus,
                     welcomeAction,
                 )
             } else {
                 Box {}
             }
-            AuthSheet(sheetShape, colors.sheet, arc, drop, expanded, bottom, content)
         },
     ) { measurables, constraints ->
         val width = constraints.maxWidth
@@ -311,19 +338,22 @@ public fun AuthScaffold(
         val imeShare = (ime.getBottom(this) / (height * IME_SHARE_SPAN)).coerceIn(0f, 1f)
         val bandCap = if (scaledText) (height * lerp(BAND_SHARE, BAND_SHARE_IME, imeShare)).roundToInt() else height
         val text = measurables[1].measure(Constraints(minWidth = width, maxWidth = width, maxHeight = bandCap.coerceIn(0, height)))
-        val band = text.height
-        val headerHeight = lerp(band.toFloat(), height.toFloat(), f).roundToInt().coerceIn(0, height)
+        val minBand = (height * MIN_BAND_SHARE * (1f - imeShare)).roundToInt()
+        val band = maxOf(text.height, minBand).coerceAtMost(maxOf(text.height, bandCap))
+        val panel = measurables[3].measure(Constraints(maxWidth = width, maxHeight = (height - minArt).coerceAtLeast(0)))
+        val dropPx = drop.roundToPx()
+        val sheetTop = (band - dropPx).coerceAtLeast(0)
+        val panelTop = if (panel.height > 0) height - panel.height else height
+        val sheetY = lerp(sheetTop.toFloat(), panelTop.toFloat(), f).roundToInt()
+        val headerHeight = (sheetY + dropPx).coerceIn(0, height)
         val header = measurables[0].measure(Constraints.fixed(width, headerHeight))
-        val welcomeBlock = measurables[2].measure(Constraints(maxWidth = width, maxHeight = height))
-        val sheetTop = (band - drop.roundToPx()).coerceAtLeast(0)
-        val sheet = measurables[3].measure(Constraints.fixed(width, (height - sheetTop).coerceAtLeast(0)))
-        val sheetY = lerp(sheetTop.toFloat(), height.toFloat(), f).roundToInt()
+        val sheet = measurables[2].measure(Constraints.fixed(width, (height - sheetTop).coerceAtLeast(0)))
         layout(width, height) {
-            if (arc && f < 1f) sheet.place(0, sheetY)
+            if (arc) sheet.place(0, sheetY)
             header.place(0, 0)
             text.place(0, 0)
-            welcomeBlock.place(0, height - welcomeBlock.height)
-            if (!arc && f < 1f) sheet.place(0, sheetY)
+            if (!arc) sheet.place(0, sheetY)
+            panel.place(0, sheetY)
         }
     }
 }
@@ -331,10 +361,12 @@ public fun AuthScaffold(
 @Composable
 private fun AuthSheet(
     shape: Shape,
-    color: Color,
+    colors: AuthScaffoldColors,
     arc: Boolean,
     drop: Dp,
     hidden: Boolean,
+    welcome: State<Float>,
+    success: Boolean,
     bottom: (@Composable ColumnScope.() -> Unit)?,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -346,13 +378,21 @@ private fun AuthSheet(
     val movableBottom = remember { movableContentOf { scope: ColumnScope -> latestBottom?.invoke(scope) } }
     val scroll = rememberScrollState()
     val scaled = LocalDensity.current.fontScale > 1f
+    val wave = rememberSuccessWave(success)
+    val waveColors = UiTheme.colors.let { lerp(it.accentSoft, it.accent, 0.35f) to it.accent }
+    val origin = remember { SheetAnchor() }
+    val edge = !arc && authNeedsSheetEdge(colors.header, colors.sheet)
+    val reveal = Modifier.graphicsLayer { alpha = 1f - AuthMotion.segment(welcome.value, 0f, 0.45f) }
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .graphicsLayer {
                 clip = true
                 this.shape = shape
-            }.background(color)
+            }.background(colors.sheet)
+            .then(if (edge) Modifier.border(UiTheme.sizes.borderWidth, UiTheme.colors.lineStrong, shape) else Modifier)
+            .onPlaced { origin.sheet = it }
+            .drawBehind { drawSuccessWave(wave.value, origin.center(size), waveColors.first, waveColors.second) }
             .then(if (hidden) Modifier.clearAndSetSemantics {} else Modifier.semantics { isTraversalGroup = true }),
     ) {
         val visible = maxHeight - with(LocalDensity.current) { WindowInsets.safeDrawing.getBottom(this).toDp() }
@@ -365,28 +405,101 @@ private fun AuthSheet(
                 top = UiTheme.sizes.space8,
                 bottom = UiTheme.sizes.space16,
             )
+        val anchor = Modifier.onGloballyPositioned { origin.footer = it }
         Column(Modifier.fillMaxSize()) {
             Column(
                 Modifier
-                    .weight(1f)
+                    .weight(1f, fill = false)
                     .fillMaxWidth()
+                    .then(reveal)
                     .verticalScroll(scroll)
                     .windowInsetsPadding(if (bottom == null || compact) insets else insets.only(WindowInsetsSides.Horizontal))
-                    .padding(start = padding, end = padding, top = top, bottom = if (compact) 0.dp else padding),
+                    .padding(
+                        start = padding,
+                        end = padding,
+                        top = top,
+                        bottom =
+                            if (compact) {
+                                0.dp
+                            } else if (bottom != null) {
+                                UiTheme.sizes.space16
+                            } else {
+                                padding
+                            },
+                    ),
             ) {
                 movableContent(this)
-                if (compact) Column(Modifier.padding(top = padding, bottom = UiTheme.sizes.space16)) { movableBottom(this) }
+                if (compact) Column(anchor.padding(top = padding, bottom = UiTheme.sizes.space16)) { movableBottom(this) }
             }
             if (bottom != null && !compact) {
-                Column(Modifier.windowInsetsPadding(insets).then(footer)) { movableBottom(this) }
+                Column(
+                    Modifier
+                        .then(reveal)
+                        .windowInsetsPadding(insets)
+                        .then(footer)
+                        .then(anchor),
+                ) { movableBottom(this) }
             }
         }
+        if (hidden) Box(Modifier.matchParentSize().pointerInput(Unit) { swallowTouches() })
+    }
+}
+
+/** Where the success wave starts: the middle of the bottom slot, in the sheet's own coordinates. */
+private class SheetAnchor {
+    var sheet: LayoutCoordinates? = null
+    var footer: LayoutCoordinates? = null
+
+    fun center(size: Size): Offset {
+        val s = sheet?.takeIf { it.isAttached }
+        val f = footer?.takeIf { it.isAttached }
+        if (s == null || f == null) return Offset(size.width / 2f, size.height)
+        return s.localBoundingBoxOf(f, clipBounds = false).center
+    }
+}
+
+/** 0..1 progress of the wave that crosses the sheet when the sign-in succeeds; it rests at 1 (gone) and stays there with motion off. */
+@Composable
+private fun rememberSuccessWave(success: Boolean): State<Float> {
+    val wave = remember { Animatable(1f) }
+    val motion = UiTheme.motion
+    LaunchedEffect(success, motion) {
+        if (!success || !motion.enabled) {
+            wave.snapTo(1f)
+            return@LaunchedEffect
+        }
+        wave.snapTo(0f)
+        wave.animateTo(1f, tween((AuthMotion.WAVE_MS * motion.scale).roundToInt(), easing = LinearEasing))
+    }
+    return wave.asState()
+}
+
+/** A soft disc in [fill] spreading from [center] with a thin [ring] at its front; both fade as it reaches the sheet's corners. */
+private fun DrawScope.drawSuccessWave(
+    t: Float,
+    center: Offset,
+    fill: Color,
+    ring: Color,
+) {
+    if (t <= 0f || t >= 1f) return
+    val reach = maxOf(hypot(center.x, center.y), hypot(size.width - center.x, center.y))
+    val radius = reach * AuthMotion.waveRadius(t)
+    val fade = AuthMotion.waveAlpha(t)
+    drawCircle(fill, radius, center, alpha = fade)
+    drawCircle(ring, radius, center, alpha = fade * 0.7f, style = Stroke(2.dp.toPx()))
+}
+
+/** Takes every touch, so a sheet that waits under the welcome panel cannot be typed into. */
+private suspend fun PointerInputScope.swallowTouches() {
+    awaitPointerEventScope {
+        while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() }
     }
 }
 
 /**
- * The welcome block: poster title over its outlined echo, tagline and action, rising into place as [fraction] reaches 1. It
- * wraps its content at the foot of the screen, so the art above it keeps its touches, and scrolls when the text is too tall.
+ * The welcome panel's text: poster title over its highlight swash, tagline and action. It sits at the foot of the screen on
+ * the sheet (the panel); when the text is too tall it scrolls above the action, which stays in view, and fades and rises away as [fraction] leaves 1. [topInset] makes
+ * room for the curve of an arc header.
  */
 @Composable
 private fun WelcomeContent(
@@ -399,6 +512,7 @@ private fun WelcomeContent(
     rise: Float,
     zones: AuthTextZones,
     expanded: Boolean,
+    topInset: Dp,
     titleFocus: FocusRequester,
     action: (@Composable ColumnScope.() -> Unit)?,
 ) {
@@ -406,50 +520,44 @@ private fun WelcomeContent(
     val density = LocalDensity.current
     val cap = min(density.fontScale, MAX_WELCOME_FONT_SCALE) / density.fontScale
     val poster =
-        remember(titleStyle, cap) { titleStyle.copy(fontSize = titleStyle.fontSize * cap, lineHeight = titleStyle.lineHeight * cap) }
-    val echoStroke = with(density) { 1.5.dp.toPx() }
-    val echoStyle = remember(poster, echoStroke) { poster.copy(drawStyle = Stroke(echoStroke)) }
-    val echoShift = with(density) { 5.dp.toPx() }
-    val breath = rememberDriftClock(remember { mutableFloatStateOf(1f) })
+        UiTheme.text(titleStyle).let { remember(it, cap, colors.onSheet) { it.scaled(cap).copy(color = colors.onSheet) } }
+    val swash = rememberSwashInk()
+    var lines by remember { mutableStateOf<TextLayoutResult?>(null) }
     Column(
         Modifier
             .fillMaxWidth()
             .then(if (expanded) Modifier else Modifier.clearAndSetSemantics {})
-            .verticalScroll(rememberScrollState())
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(start = padding, end = padding, top = padding, bottom = padding + UiTheme.sizes.space8),
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+            .padding(start = padding, end = padding, top = padding + topInset + UiTheme.sizes.space4, bottom = padding),
     ) {
         Column(
             Modifier
+                .weight(1f, fill = false)
+                .verticalScroll(rememberScrollState())
                 .graphicsLayer {
                     val s = AuthMotion.segment(fraction.value, 0.35f, 1f)
                     alpha = s
                     translationY = -(1f - s) * rise
-                    scaleX = 0.94f + 0.06f * s
-                    scaleY = scaleX
-                    transformOrigin = TransformOrigin(0f, 1f)
                 }.onGloballyPositioned { zones.welcome = zones.boundsOf(it) },
         ) {
-            Box {
-                Text(
-                    title,
-                    Modifier
-                        .clearAndSetSemantics {}
-                        .graphicsLayer {
-                            val t = breath.value
-                            translationX = echoShift + echoShift * 0.35f * sin(t * 0.7f)
-                            translationY = echoShift + echoShift * 0.35f * sin(t * 0.7f + 1.4f)
-                        },
-                    echoStyle,
-                    colors.echo,
-                )
-                Text(title, Modifier.focusRequester(titleFocus).focusable().semantics { heading() }, poster, colors.onHeader)
-            }
-            Spacer(Modifier.height(UiTheme.sizes.space16))
-            Text(tagline, style = taglineStyle, color = colors.tagline)
+            BasicText(
+                title,
+                Modifier
+                    .focusRequester(titleFocus)
+                    .focusable()
+                    .semantics { heading() }
+                    .drawBehind {
+                        val drawn = swash.value * AuthMotion.segment(fraction.value, 0.5f, 1f)
+                        lines?.let { drawSwash(it, drawn, colors.highlight) }
+                    },
+                poster,
+                onTextLayout = { lines = it },
+            )
+            Spacer(Modifier.height(UiTheme.sizes.space12))
+            Text(tagline, style = taglineStyle, color = colors.sheetTagline)
         }
         if (action != null) {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(UiTheme.sizes.space28))
             Column(
                 Modifier.fillMaxWidth().graphicsLayer {
                     val s = AuthMotion.segment(fraction.value, 0.55f, 1f)
@@ -462,7 +570,58 @@ private fun WelcomeContent(
     }
 }
 
+/** How much of the swash is drawn, 0..1: it sweeps in once, shortly after the welcome first shows; at once with motion off. */
+@Composable
+private fun rememberSwashInk(): State<Float> {
+    val motion = UiTheme.motion
+    val ink = remember { Animatable(if (motion.enabled) 0f else 1f) }
+    LaunchedEffect(motion) {
+        if (!motion.enabled) {
+            ink.snapTo(1f)
+            return@LaunchedEffect
+        }
+        delay((AuthMotion.SWASH_DELAY_MS * motion.scale).roundToLong())
+        ink.animateTo(1f, tween((AuthMotion.SWASH_MS * motion.scale).roundToInt(), easing = FastOutSlowInEasing))
+    }
+    return ink.asState()
+}
+
+/**
+ * A marker stroke under the last line of the title, from its first to its last glyph with a small upward flick at the end,
+ * covering the lower part of the letters. [drawn] is the share of its length drawn so far.
+ */
+private fun DrawScope.drawSwash(
+    text: TextLayoutResult,
+    drawn: Float,
+    color: Color,
+) {
+    if (drawn <= 0f || text.lineCount == 0) return
+    val line = text.lineCount - 1
+    val left = text.getLineLeft(line)
+    val right = text.getLineRight(line)
+    val em =
+        text.layoutInput.style.fontSize
+            .toPx()
+    val y = text.getLineBaseline(line) - em * 0.04f
+    val start = if (text.layoutInput.layoutDirection == LayoutDirection.Rtl) right + em * 0.08f else left - em * 0.06f
+    val end = if (text.layoutInput.layoutDirection == LayoutDirection.Rtl) left - em * 0.1f else right + em * 0.1f
+    val path =
+        Path().apply {
+            moveTo(start, y + em * 0.05f)
+            quadraticTo((start + end) / 2f, y + em * 0.11f, end, y - em * 0.06f)
+        }
+    val measure = PathMeasure().apply { setPath(path, false) }
+    val part = Path()
+    measure.getSegment(0f, measure.length * drawn.coerceIn(0f, 1f), part, true)
+    drawPath(part, color, style = Stroke(em * 0.3f, cap = StrokeCap.Round))
+}
+
+private fun TextStyle.scaled(cap: Float): TextStyle = copy(fontSize = fontSize * cap, lineHeight = lineHeight * cap)
+
 private const val MAX_WELCOME_FONT_SCALE = 1.3f
+
+/** The welcome panel never covers more of the screen than leaves this much header for the art above it. */
+private val MIN_WELCOME_ART = 180.dp
 
 /** The header title and tagline stop growing with the system font scale here; the sheet keeps its room. */
 private const val MAX_HEADER_FONT_SCALE = 1.3f
@@ -470,6 +629,12 @@ private const val MAX_HEADER_FONT_SCALE = 1.3f
 /** From a font scale above 1 the header band takes at most this share of the screen, and [BAND_SHARE_IME] while the keyboard is up. */
 private const val BAND_SHARE = 0.4f
 private const val BAND_SHARE_IME = 0.3f
+
+/**
+ * The header band takes at least this share of the screen while the keyboard is down, so on a tall phone the art gets the
+ * room and the sheet rises only as far as the form needs; it gives the room back as the keyboard comes up.
+ */
+private const val MIN_BAND_SHARE = 0.34f
 
 /** The keyboard counts as fully up for the band once it covers this share of the screen. */
 private const val IME_SHARE_SPAN = 0.25f
