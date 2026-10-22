@@ -1,0 +1,268 @@
+"use client";
+
+import {
+  type ComponentPropsWithoutRef,
+  type FocusEvent,
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useUiStrings } from "../../i18n/index.js";
+import type { ClassNames } from "../../utils/class-names.js";
+import { cn } from "../../utils/cn.js";
+import { useControllableState } from "../../utils/use-controllable-state.js";
+import { useOptionalAuth } from "../internal/auth-context.js";
+import {
+  type LoginField,
+  LoginFormContext,
+  type LoginFormContextValue,
+  type LoginFormPart,
+  type LoginPortal,
+} from "./context.js";
+import {
+  LoginFormError,
+  LoginFormFooter,
+  LoginFormHeader,
+  LoginFormIdentifier,
+  LoginFormPassword,
+  LoginFormPortals,
+  LoginFormSubmit,
+} from "./parts.js";
+
+export type { LoginFormPart, LoginPortal } from "./context.js";
+
+export interface LoginValues {
+  identifier: string;
+  password: string;
+  /** Value of the selected portal; `undefined` when the form has none. */
+  portal: string | undefined;
+}
+
+/** Characters at which a field counts as filled for the illustration's progress. */
+const FILLED_AT = 10;
+const MAX_ILLUSTRATED_PORTALS = 3;
+
+export interface LoginFormProps
+  extends Omit<ComponentPropsWithoutRef<"form">, "onSubmit" | "children"> {
+  /**
+   * Called with the values when the form is submitted with both fields filled. A returned promise
+   * keeps the form loading; if it resolves the form reads as signed in, if it rejects the message of
+   * the error (or the localized default) is shown. Leave it out and drive `loading`, `error` and
+   * `success` yourself.
+   */
+  onSubmit?: (values: LoginValues) => void | Promise<void>;
+  /** Portals the person can sign in through. With two or more, `LoginForm.Portals` renders a picker. */
+  portals?: readonly LoginPortal[];
+  /** Selected portal value. Controlled; omit it for an uncontrolled picker. */
+  portal?: string;
+  defaultPortal?: string;
+  onPortalChange?: (value: string) => void;
+  /** The form is waiting for the server. Overrides the state `onSubmit` keeps. */
+  loading?: boolean;
+  /** Sign-in error to show. `null` clears it. Overrides the state `onSubmit` keeps. */
+  error?: string | null;
+  /** The sign-in worked. Overrides the state `onSubmit` keeps. */
+  success?: boolean;
+  /**
+   * Parts to place yourself: `LoginForm.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
+   * `.Submit` and `.Footer`. Without children the form renders them in that order.
+   */
+  children?: ReactNode;
+  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
+  classNames?: ClassNames<LoginFormPart>;
+}
+
+/**
+ * Sign-in form that works alone and, inside an `AuthLayout`, drives its illustration: focusing the
+ * identifier or the password, typing, failing and signing in all update the layout's state and
+ * progress, and the selected portal becomes the illustration's active slab.
+ */
+export function LoginForm({
+  onSubmit,
+  portals = [],
+  portal: portalProp,
+  defaultPortal,
+  onPortalChange,
+  loading: loadingProp,
+  error: errorProp,
+  success: successProp,
+  children,
+  className,
+  classNames,
+  onFocus,
+  onBlur,
+  ...props
+}: LoginFormProps) {
+  const strings = useUiStrings();
+  const auth = useOptionalAuth();
+  const baseId = useId();
+  const identifierRef = useRef<HTMLInputElement | null>(null);
+  const passwordRef = useRef<HTMLInputElement | null>(null);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [internal, setInternal] = useState<{
+    loading: boolean;
+    error: string | null;
+    success: boolean;
+    field: LoginField | null;
+  }>({ loading: false, error: null, success: false, field: null });
+  const [portalValue, setPortalValue] = useControllableState<string>({
+    prop: portalProp,
+    defaultProp: defaultPortal ?? portals[0]?.value ?? "",
+    onChange: onPortalChange,
+  });
+
+  const loading = loadingProp ?? internal.loading;
+  const error = errorProp !== undefined ? errorProp : internal.error;
+  const success = successProp ?? internal.success;
+  const portalIndex = Math.max(
+    0,
+    portals.findIndex((option) => option.value === portalValue),
+  );
+  const portal = portals[portalIndex];
+  const invalidField = error ? (internal.field ?? "password") : null;
+
+  const setAuthState = auth?.setState;
+  const setAuthProgress = auth?.setProgress;
+  const setAuthActive = auth?.setActiveIndex;
+  const progress =
+    (Math.min(1, identifier.length / FILLED_AT) + Math.min(1, password.length / FILLED_AT)) / 2;
+
+  useEffect(() => {
+    setAuthProgress?.(progress);
+  }, [progress, setAuthProgress]);
+  useEffect(() => {
+    setAuthActive?.(Math.min(portalIndex, MAX_ILLUSTRATED_PORTALS - 1));
+  }, [portalIndex, setAuthActive]);
+  useEffect(() => {
+    if (success) setAuthState?.("success");
+    else if (error) setAuthState?.("error");
+  }, [success, error, setAuthState]);
+
+  const context = useMemo<LoginFormContextValue>(
+    () => ({
+      ids: {
+        identifier: `${baseId}-identifier`,
+        password: `${baseId}-password`,
+        error: `${baseId}-error`,
+        portals: `${baseId}-portals`,
+      },
+      portals,
+      portal,
+      setPortal: setPortalValue,
+      identifier,
+      password,
+      loading,
+      error,
+      invalidField,
+      setValue: (field, value) => {
+        if (field === "identifier") setIdentifier(value);
+        else setPassword(value);
+        if (internal.error || internal.field) {
+          setInternal((current) => ({ ...current, error: null, field: null }));
+        }
+        setAuthState?.(field === "identifier" ? "typing" : "password");
+      },
+      identifierRef,
+      passwordRef,
+      classNames,
+    }),
+    [
+      baseId,
+      portals,
+      portal,
+      setPortalValue,
+      identifier,
+      password,
+      loading,
+      error,
+      invalidField,
+      internal.error,
+      internal.field,
+      classNames,
+      setAuthState,
+    ],
+  );
+
+  const fieldOf = (target: EventTarget): LoginField | null =>
+    target === identifierRef.current
+      ? "identifier"
+      : target === passwordRef.current
+        ? "password"
+        : null;
+
+  const handleFocus = (event: FocusEvent<HTMLFormElement>) => {
+    onFocus?.(event);
+    const field = fieldOf(event.target);
+    if (field && !loading && !success && !error) {
+      setAuthState?.(field === "identifier" ? "typing" : "password");
+    }
+  };
+  const handleBlur = (event: FocusEvent<HTMLFormElement>) => {
+    onBlur?.(event);
+    if (!fieldOf(event.target)) return;
+    const next = event.relatedTarget;
+    const staying = next !== null && fieldOf(next) !== null;
+    if (!staying && !loading && !success && !error) setAuthState?.("idle");
+  };
+
+  const fail = (message: string, field: LoginField) => {
+    setInternal({ loading: false, error: message, success: false, field });
+    (field === "identifier" ? identifierRef : passwordRef).current?.focus();
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (loading) return;
+    if (!identifier.trim()) return fail(strings.enterIdentifier, "identifier");
+    if (!password) return fail(strings.enterPassword, "password");
+    const values: LoginValues = { identifier: identifier.trim(), password, portal: portal?.value };
+    setInternal({ loading: true, error: null, success: false, field: null });
+    try {
+      await onSubmit?.(values);
+      setInternal({ loading: false, error: null, success: onSubmit !== undefined, field: null });
+    } catch (cause) {
+      fail(
+        cause instanceof Error && cause.message ? cause.message : strings.signInFailed,
+        "password",
+      );
+    }
+  };
+
+  return (
+    <LoginFormContext value={context}>
+      <form
+        noValidate
+        {...props}
+        aria-busy={loading || undefined}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onSubmit={handleSubmit}
+        className={cn("grid gap-3.5 px-7 pt-6.5 pb-5.5", classNames?.root, className)}
+      >
+        {children ?? (
+          <>
+            <LoginFormHeader />
+            <LoginFormPortals />
+            <LoginFormIdentifier />
+            <LoginFormPassword />
+            <LoginFormError />
+            <LoginFormSubmit />
+          </>
+        )}
+      </form>
+    </LoginFormContext>
+  );
+}
+
+LoginForm.Header = LoginFormHeader;
+LoginForm.Portals = LoginFormPortals;
+LoginForm.Identifier = LoginFormIdentifier;
+LoginForm.Password = LoginFormPassword;
+LoginForm.Error = LoginFormError;
+LoginForm.Submit = LoginFormSubmit;
+LoginForm.Footer = LoginFormFooter;

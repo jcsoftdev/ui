@@ -72,6 +72,10 @@ export interface UiStrings {
   forgotPassword: string;
   /** Submit button label of a `LoginForm`. */
   signInAction: string;
+  /** Inline error of a `LoginForm` submitted without an identifier. */
+  enterIdentifier: string;
+  /** Inline error of a `LoginForm` submitted without a password. */
+  enterPassword: string;
   /** Message shown by a `LoginForm` when sign-in fails and the app gives none. */
   signInFailed: string;
 }
@@ -134,6 +138,8 @@ export const uiStrings = {
     password: "Password",
     forgotPassword: "Forgot your password?",
     signInAction: "Sign in",
+    enterIdentifier: "Enter your email or ID.",
+    enterPassword: "Enter your password.",
     signInFailed: "We could not sign you in. Check your details and try again.",
   },
   es: {
@@ -191,6 +197,8 @@ export const uiStrings = {
     password: "Contraseña",
     forgotPassword: "¿Olvidaste tu contraseña?",
     signInAction: "Ingresar",
+    enterIdentifier: "Escribe tu correo o documento.",
+    enterPassword: "Escribe tu contraseña.",
     signInFailed: "No pudimos iniciar tu sesión. Revisa tus datos e inténtalo de nuevo.",
   },
 } as const satisfies Record<UiLocale, UiStrings>;
