@@ -16,6 +16,7 @@ export * from "./input-icon/index.js";
 export * from "./label/index.js";
 export * from "./native-select/index.js";
 export * from "./number-stepper/index.js";
+export * from "./password-input/index.js";
 export * from "./pin-input/index.js";
 export * from "./radio-button-group/index.js";
 export * from "./rating/index.js";

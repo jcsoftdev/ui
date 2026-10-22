@@ -56,6 +56,24 @@ export interface UiStrings {
   selectAll: string;
   /** Name of the overflow menu trigger of a `TableActionsCell`. */
   rowActions: string;
+  /** Name of the `PasswordInput` toggle; its pressed state says whether the password is visible. */
+  showPassword: string;
+  /** Default title of a `LoginForm`. */
+  signIn: string;
+  /** Label of the portal picker of a `LoginForm`. */
+  signInAs: string;
+  /** Divider between the portal picker and the credential fields. */
+  withYourAccount: string;
+  /** Default label and placeholder of the `LoginForm` identifier field. */
+  identifier: string;
+  /** Default label and placeholder of the `LoginForm` password field. */
+  password: string;
+  /** Default `LoginForm` link to recover a password. */
+  forgotPassword: string;
+  /** Submit button label of a `LoginForm`. */
+  signInAction: string;
+  /** Message shown by a `LoginForm` when sign-in fails and the app gives none. */
+  signInFailed: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -108,6 +126,15 @@ export const uiStrings = {
     selectRow: "Select {row}",
     selectAll: "Select all rows",
     rowActions: "Row actions",
+    showPassword: "Show password",
+    signIn: "Sign in",
+    signInAs: "Sign in as",
+    withYourAccount: "with your account",
+    identifier: "Email or ID",
+    password: "Password",
+    forgotPassword: "Forgot your password?",
+    signInAction: "Sign in",
+    signInFailed: "We could not sign you in. Check your details and try again.",
   },
   es: {
     retry: "Reintentar",
@@ -156,5 +183,14 @@ export const uiStrings = {
     selectRow: "Seleccionar {row}",
     selectAll: "Seleccionar todas las filas",
     rowActions: "Acciones de la fila",
+    showPassword: "Mostrar contraseña",
+    signIn: "Inicia sesión",
+    signInAs: "Ingresar como",
+    withYourAccount: "con tu cuenta",
+    identifier: "Correo o documento",
+    password: "Contraseña",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    signInAction: "Ingresar",
+    signInFailed: "No pudimos iniciar tu sesión. Revisa tus datos e inténtalo de nuevo.",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

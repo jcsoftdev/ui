@@ -4,6 +4,7 @@ export * from "./big-date/index.js";
 export * from "./button/index.js";
 export * from "./checkbox/index.js";
 export * from "./chip/index.js";
+export * from "./divider/index.js";
 export * from "./due-chip/index.js";
 export * from "./icon/index.js";
 export * from "./icon-button/index.js";
