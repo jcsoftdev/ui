@@ -120,7 +120,7 @@ public fun AuthArcs(
                 val thin = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
                 val bold = Stroke(strokeWidth.toPx() * 2.4f, cap = StrokeCap.Round)
                 val band = zones?.freeBand(size.height, size.width * 0.4f) ?: size.height
-                val unit = min(size.width, band * 2.3f)
+                val unit = min(size.width * (1f + 0.5f * (zones?.welcomeFraction?.value ?: 0f)), band * 2.3f)
                 val center = Offset(size.width + unit * 0.03f, min(band * 0.9f, size.width * 0.95f))
                 val first = unit * 0.15f
                 val step = unit * 0.092f

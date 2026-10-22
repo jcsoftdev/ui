@@ -281,7 +281,7 @@ public fun AuthScaffold(
             if (arc && f < 1f) sheet.place(0, sheetY)
             header.place(0, 0)
             text.place(0, 0)
-            welcomeBlock.place(0, 0)
+            welcomeBlock.place(0, height - welcomeBlock.height)
             if (!arc && f < 1f) sheet.place(0, sheetY)
         }
     }
@@ -334,7 +334,10 @@ private fun AuthSheet(
     }
 }
 
-/** The welcome block: poster title over its outlined echo, tagline and action, rising into place as [fraction] reaches 1. */
+/**
+ * The welcome block: poster title over its outlined echo, tagline and action, rising into place as [fraction] reaches 1. It
+ * wraps its content at the foot of the screen, so the art above it keeps its touches, and scrolls when the text is too tall.
+ */
 @Composable
 private fun WelcomeContent(
     title: String,
@@ -359,12 +362,11 @@ private fun WelcomeContent(
     val breath = rememberDriftClock(remember { mutableFloatStateOf(1f) })
     Column(
         Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .then(if (expanded) Modifier else Modifier.clearAndSetSemantics {})
             .verticalScroll(rememberScrollState())
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(start = padding, end = padding, top = padding, bottom = padding + UiTheme.sizes.space8),
-        verticalArrangement = Arrangement.Bottom,
     ) {
         Column(
             Modifier
