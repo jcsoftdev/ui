@@ -229,3 +229,17 @@ test("every look and the string-variant wrapper is a client module", async () =>
     assert.match(source, /^["']use client["'];?\r?\n/, `${file} must start with "use client"`);
   }
 });
+
+test("form progress counts identifier length but only whether the password is filled", () => {
+  near(model.formProgress(0, false), 0);
+  near(model.formProgress(5, false), 0.25);
+  near(model.formProgress(10, false), 0.5);
+  near(model.formProgress(40, false), 0.5);
+  near(model.formProgress(0, true), 0.5);
+  near(model.formProgress(10, true), 1);
+  // The password half is a single step: no length of it can change the number.
+  assert.equal(model.formProgress(4, true), model.formProgress(4, true));
+  for (const length of [1, 3, 9, 64]) {
+    assert.equal(model.formProgress(6, length > 0), model.formProgress(6, true));
+  }
+});

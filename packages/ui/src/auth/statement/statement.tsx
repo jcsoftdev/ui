@@ -37,10 +37,19 @@ const CSS = `
 }
 `;
 
-function Words({ text, line }: { text: ReactNode; line: "main" | "done" }) {
+function Words({
+  text,
+  line,
+  hidden,
+}: {
+  text: ReactNode;
+  line: "main" | "done";
+  /** The line is visually gone, so it is gone for assistive technology too. */
+  hidden: boolean;
+}) {
   const words = typeof text === "string" ? text.split(/\s+/).filter(Boolean) : [text];
   return (
-    <span className="ui-stm-line" data-line={line} aria-hidden={line === "done" || undefined}>
+    <span className="ui-stm-line" data-line={line} aria-hidden={hidden || undefined}>
       {words.map((word, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: words repeat, their order is their identity
         <span key={i}>
@@ -64,17 +73,26 @@ function Words({ text, line }: { text: ReactNode; line: "main" | "done" }) {
  */
 export function Statement({ state, progress, headline, caption, action }: AuthVariantProps) {
   const strings = useUiStrings();
-  const p = state === "success" ? 1 : progress;
+  const signedIn = state === "success";
+  const p = signedIn ? 1 : progress;
   return (
     <div className="ui-stm">
       <style href="jcsoftdev-ui-auth-statement" precedence="default">
         {CSS}
       </style>
       <p className="ui-stm-lines ui-stm-enter">
-        <Words text={headline ?? strings.welcomeBack} line="main" />
-        <Words text={strings.signedIn} line="done" />
+        <Words text={headline ?? strings.welcomeBack} line="main" hidden={signedIn} />
+        <Words text={strings.signedIn} line="done" hidden={!signedIn} />
       </p>
-      {caption != null ? <p className="ui-stm-caption">{caption}</p> : null}
+      {caption != null ? (
+        <p
+          className="ui-stm-caption"
+          aria-hidden={signedIn || undefined}
+          style={signedIn ? { visibility: "hidden" } : undefined}
+        >
+          {caption}
+        </p>
+      ) : null}
       <div className="ui-stm-row">
         <span className="ui-stm-pill" aria-hidden="true" style={{ "--p": p } as CSSProperties}>
           <span className="ui-stm-fill" />

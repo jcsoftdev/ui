@@ -167,7 +167,26 @@ const STATEMENT = {
   caption: "Sign in to pick up where your school left off.",
 } as const;
 
-export const StatementStates: Story = { args: STATEMENT };
+/** Assistive technology follows what is visible: the headline until success, then "You're in." */
+export const StatementStates: Story = {
+  args: STATEMENT,
+  play: async ({ canvasElement }) => {
+    const arts = [
+      ...canvasElement.querySelectorAll<HTMLElement>(".ui-auth-art[data-variant=statement]"),
+    ];
+    await expect(arts.length).toBeGreaterThan(0);
+    for (const art of arts) {
+      const signedIn = art.dataset.state === "success";
+      const main = art.querySelector("[data-line=main]") as Element;
+      const done = art.querySelector("[data-line=done]") as Element;
+      const caption = art.querySelector(".ui-stm-caption") as HTMLElement;
+      await expect(main.getAttribute("aria-hidden") === "true").toBe(signedIn);
+      await expect(done.getAttribute("aria-hidden") === "true").toBe(!signedIn);
+      await expect(caption.getAttribute("aria-hidden") === "true").toBe(signedIn);
+      await expect(getComputedStyle(caption).visibility).toBe(signedIn ? "hidden" : "visible");
+    }
+  },
+};
 
 export const StatementSolid: Story = { args: { ...STATEMENT, panel: "solid" } };
 

@@ -29,7 +29,11 @@ export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"di
   progress?: number;
   /** Index of the portal being used (0 to 2); that slab rises above the others. */
   activeIndex?: number;
-  /** Accessible name. Without it the illustration is decorative and hidden from assistive technology. */
+  /**
+   * Accessible name of the image. Without it the illustration is decorative and hidden from
+   * assistive technology. Ignored by text looks (`Statement`): their text is the content, so they
+   * are never an `img` and never hidden.
+   */
   label?: string;
   /** Text looks (`Statement`) only: the headline (a string animates word by word). Defaults to the UI string `welcomeBack`. */
   headline?: ReactNode;

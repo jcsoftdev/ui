@@ -15,7 +15,7 @@ import { useUiStrings } from "../../i18n/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
-import { KEYSTROKES_PER_FIELD } from "../auth-illustration/model.js";
+import { formProgress } from "../auth-illustration/model.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import {
   type LoginField,
@@ -48,8 +48,6 @@ export interface LoginValues {
   remember: boolean;
 }
 
-/** Characters at which a field counts as filled for the illustration's progress. */
-const FILLED_AT = KEYSTROKES_PER_FIELD;
 const MAX_ILLUSTRATED_PORTALS = 3;
 
 export interface LoginFormProps
@@ -146,8 +144,7 @@ export function LoginForm({
   const setAuthState = auth?.setState;
   const setAuthProgress = auth?.setProgress;
   const setAuthActive = auth?.setActiveIndex;
-  const progress =
-    (Math.min(1, identifier.length / FILLED_AT) + Math.min(1, password.length / FILLED_AT)) / 2;
+  const progress = formProgress(identifier.length, password.length > 0);
 
   useEffect(() => {
     setAuthProgress?.(progress);

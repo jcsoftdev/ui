@@ -98,8 +98,18 @@ export function shownState(state: AuthState, errorHeld: boolean): AuthState {
   return state === "error" && errorHeld ? "password" : state;
 }
 
-/** Characters per field at which the form reports it full; one keystroke moves `progress` by 1/(2 x this). */
+/** Characters of the identifier at which its half of the form reads full; one keystroke moves `progress` by 1/(2 x this). */
 export const KEYSTROKES_PER_FIELD = 10;
+
+/**
+ * Fill of the whole form: the identifier grows its half by length, the password adds its half in
+ * one step as soon as it is not empty. The password's length never reaches `progress`, because
+ * `progress` is written to the DOM (styles, classes) where session-replay tools do not mask it.
+ */
+export function formProgress(identifierLength: number, passwordFilled: boolean): number {
+  const identifier = Math.min(1, Math.max(0, identifierLength) / KEYSTROKES_PER_FIELD);
+  return (identifier + (passwordFilled ? 1 : 0)) / 2;
+}
 
 export interface Keystroke {
   /** Keystrokes so far across both fields. */

@@ -63,6 +63,12 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
   leaves the error state first). A controlled `success` or `error` returning to unset derives
   idle, typing or password from focus again. Without portals the form no longer overrides
   `AuthLayout` `defaultActiveIndex`.
+- **`Statement` accessibility.** The visible line is the one assistive technology reads: "You're in."
+  replaces the headline on success, and the caption is hidden with it.
+- **Password length no longer reaches the DOM.** `progress` counts the identifier by length but the
+  password only as filled or not (new pure `formProgress`), so styles and attributes do not mirror
+  how long the password is. The slabs tighten once the password is filled instead of per character,
+  and the keystroke hop no longer fires per password character.
 
 ## 0.4.0 (2026-10-21)
 
