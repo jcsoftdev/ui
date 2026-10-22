@@ -77,6 +77,39 @@ export const WithPortals: Story = {
   },
 };
 
+/**
+ * A portal tile lifts on keyboard focus as it does on hover, and the checked tile shows a check
+ * badge as well as its colour. The badge is decorative: the radio's `aria-checked` carries the state.
+ */
+export const PortalTilesFocusAndCheck: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const radios = within(canvas.getByRole("radiogroup", { name: "Sign in as" })).getAllByRole(
+      "radio",
+    );
+    const tileOf = (radio: HTMLElement | undefined) =>
+      radio?.querySelector<HTMLElement>(":scope > [aria-hidden='true']") ?? null;
+    const badgeOf = (radio: HTMLElement | undefined) =>
+      radio?.querySelector<HTMLElement>("[data-portal-check]") ?? null;
+    const lifted = (radio: HTMLElement | undefined) => {
+      const tile = tileOf(radio);
+      return tile ? getComputedStyle(tile).translate : "";
+    };
+    await expect(lifted(radios[0])).toBe("none");
+    await userEvent.tab();
+    await expect(radios[0]).toHaveFocus();
+    await waitFor(() => expect(lifted(radios[0])).toBe("0px -2px"));
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(radios[1]).toHaveAttribute("aria-checked", "true");
+    await waitFor(() => expect(lifted(radios[1])).toBe("0px -2px"));
+    await waitFor(() => expect(lifted(radios[0])).toBe("none"));
+    await waitFor(() => expect(getComputedStyle(badgeOf(radios[1]) as Element).opacity).toBe("1"));
+    await waitFor(() => expect(getComputedStyle(badgeOf(radios[0]) as Element).opacity).toBe("0"));
+    await expect(badgeOf(radios[1])?.closest("[aria-hidden='true']")).not.toBeNull();
+    await expect(radios[1]).toHaveAccessibleName("Familia");
+  },
+};
+
 export const Complete: Story = {
   render: (args) => (
     <LoginForm {...args}>
@@ -319,6 +352,8 @@ export const SubmitKeepsFocusWhileLoading: Story = {
     await expect(submit).toHaveFocus();
     await expect(submit).toHaveAttribute("aria-disabled", "true");
     await expect(getComputedStyle(submit).opacity).toBe("1");
+    await expect(submit.querySelector("span.rounded-full[aria-hidden='true']")).not.toBeNull();
+    await expect(submit).toHaveAccessibleName("Sign in");
     await userEvent.keyboard("{Enter}");
     await userEvent.click(submit);
     await userEvent.type(password, "{Enter}");

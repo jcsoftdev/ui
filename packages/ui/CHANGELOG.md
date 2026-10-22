@@ -10,7 +10,8 @@
   still announces the loading text), it ignores clicks, Enter and Space, and a `type="submit"`
   button does not submit its form, including the implicit submit from Enter in one of its fields.
   The dimmed `disabled` look no longer applies while loading; the spinner or loading label stays
-  and the cursor turns to `progress`. Passing `disabled` keeps the native attribute and the dimmed
+  and the cursor turns to `progress` (a button with neither a `loadingLabel` nor a spinner child
+  shows no other visible change, so give it one). Passing `disabled` keeps the native attribute and the dimmed
   look as before, also while loading. Check code that read `button.disabled` or tests that expect
   `toBeDisabled()` on a loading button: they now see `aria-disabled` instead.
 
@@ -66,6 +67,11 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 
 #### Fixed
 
+- **Portal tiles.** A `LoginForm.Portals` tile lifts on keyboard focus as it does on hover, and the
+  selected tile shows a check badge besides its colour change, so the choice does not rest on
+  colour alone. The badge is decorative; the radio's `aria-checked` still carries the state.
+- **Sign in shows it is busy.** `LoginForm.Submit` draws a spinner next to its label while the
+  request runs, since a loading button is no longer dimmed.
 - **`Input`** with `start` or `end` draws one focus ring (the wrapper's) instead of a second square
   ring on the inner input.
 - **`LoginForm` posts by default.** The form carries `method="post"`, so a submit before hydration

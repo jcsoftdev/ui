@@ -69,7 +69,8 @@ export interface ButtonProps extends ComponentPropsWithRef<"button"> {
    * Busy state: the button keeps its focus and its full colour, ignores clicks (a submit button no
    * longer submits, including the implicit submit from Enter in a field of its form) and is exposed
    * as `aria-disabled` and `aria-busy`. It is not natively `disabled`, so keyboard focus stays on it
-   * while the work runs; pass `disabled` for a button that must leave the tab order.
+   * while the work runs; pass `disabled` for a button that must leave the tab order. The visible
+   * cue is `loadingLabel` or a spinner among the children: without either only the cursor changes.
    */
   loading?: boolean;
   /**

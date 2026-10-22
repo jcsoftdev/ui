@@ -190,8 +190,8 @@ export function ControlledState() {
 - Fields are real `Field`s: labels are visually hidden but present, `aria-invalid` and `aria-describedby` point at the error.
 - A field left empty on submit is reported right under that field (`role="alert"`, an alert icon, a danger ring and icon on the field), and the field's `aria-describedby` points at that message.
 - `LoginForm.Error` holds errors about the sign-in itself (wrong credentials, a server message) as a callout above the fields. It is a `role="alert"` region that stays in the page while empty, so a new message is announced, and the password field points at it while it shows.
-- `LoginForm.Submit` is a `Button`: while signing in it stays focused and undimmed, reports `aria-busy` and `aria-disabled`, and another press, click or Enter in a field does not submit again.
-- `LoginForm.Portals` is a `radiogroup` with arrow-key navigation; `PasswordInput`'s reveal toggle keeps one name and reports `aria-pressed`.
+- `LoginForm.Submit` is a `Button`: while signing in it shows a spinner next to its label, stays focused and undimmed, reports `aria-busy` and `aria-disabled`, and another press, click or Enter in a field does not submit again.
+- `LoginForm.Portals` is a `radiogroup` with arrow-key navigation. A tile lifts on keyboard focus as it does on hover (hover only on devices that can hover), and the selected tile shows a check badge besides its colour; the badge is decorative, the radio's `aria-checked` carries the state; `PasswordInput`'s reveal toggle keeps one name and reports `aria-pressed`.
 - The illustration is hidden from assistive technology unless you pass `label`. The `Statement` look is real text instead: the headline is read until sign-in succeeds, then "You're in." replaces it and the caption is hidden.
 
 ### Motion

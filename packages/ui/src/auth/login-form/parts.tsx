@@ -5,11 +5,20 @@ import { Button, type ButtonProps } from "../../atoms/button/button.js";
 import { Checkbox } from "../../atoms/checkbox/checkbox.js";
 import { Divider } from "../../atoms/divider/divider.js";
 import { RadioGroupItem, RadioGroupRoot } from "../../atoms/radio-group/radio-group-primitive.js";
+import { Spinner } from "../../atoms/spinner/spinner.js";
 import { Field } from "../../forms/field/field.js";
 import { Input } from "../../forms/input/input.js";
 import { PasswordInput } from "../../forms/password-input/password-input.js";
 import { useUiStrings } from "../../i18n/index.js";
-import { BookOpen, CircleAlert, GraduationCap, House, Lock, Mail } from "../../icons/index.js";
+import {
+  BookOpen,
+  Check,
+  CircleAlert,
+  GraduationCap,
+  House,
+  Lock,
+  Mail,
+} from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import {
   type LoginField,
@@ -70,6 +79,18 @@ export function LoginFormHeader({
   );
 }
 
+/**
+ * The tile lifts on hover (pointer devices only: Tailwind gates `hover` behind `(hover: hover)`) and
+ * the same way on keyboard focus. The checked tile changes colour and also shows a check badge, so
+ * the selection does not rest on a colour change alone.
+ */
+const PORTAL_TILE =
+  "relative grid h-13 w-16 place-items-center rounded-input border-[1.5px] border-line-strong bg-surface text-ink transition-[border-color,background-color,transform,box-shadow] duration-150 group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5 group-data-[state=checked]:border-ink group-data-[state=checked]:bg-surface-2 group-data-[state=checked]:shadow-[0_2px_0_var(--ink)] [&>svg]:size-6";
+
+/** Decorative check badge in the tile's corner; drawn inside the tile so it never moves the layout. */
+const PORTAL_CHECK =
+  "absolute top-1 right-1 grid size-4 scale-50 place-items-center rounded-full bg-ink text-surface opacity-0 transition-[opacity,scale] duration-150 group-data-[state=checked]:scale-100 group-data-[state=checked]:opacity-100 [&>svg]:size-3 [&>svg]:stroke-3";
+
 export interface LoginFormPortalsProps {
   /** Visible heading of the picker. Defaults to the localized "Sign in as". */
   label?: string;
@@ -112,11 +133,11 @@ export function LoginFormPortals({ label, className }: LoginFormPortalsProps) {
               classNames?.portal,
             )}
           >
-            <span
-              aria-hidden="true"
-              className="grid h-13 w-16 place-items-center rounded-input border-[1.5px] border-line-strong bg-surface text-ink transition-[border-color,background-color,transform,box-shadow] duration-150 group-hover:-translate-y-0.5 group-data-[state=checked]:border-ink group-data-[state=checked]:bg-surface-2 group-data-[state=checked]:shadow-[0_2px_0_var(--ink)] [&>svg]:size-6"
-            >
+            <span aria-hidden="true" className={PORTAL_TILE}>
               {option.icon ?? FALLBACK_ICONS[index]}
+              <span data-portal-check="" className={PORTAL_CHECK}>
+                <Check />
+              </span>
             </span>
             {option.label}
           </RadioGroupItem>
@@ -323,6 +344,8 @@ export function LoginFormSubmit({ children, className, ...props }: LoginFormSubm
       loading={loading}
       className={cn(appearance === "open" && "rounded-pill", classNames?.submit, className)}
     >
+      {/* The busy button keeps its colour, so the spinner is what shows the request is running. */}
+      {loading ? <Spinner size="sm" label={false} /> : null}
       {children ?? strings.signInAction}
     </Button>
   );
