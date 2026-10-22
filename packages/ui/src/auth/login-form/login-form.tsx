@@ -270,6 +270,7 @@ export function LoginForm({
         className={cn(
           "grid",
           appearance === "open" ? "mx-auto w-full max-w-110 gap-5" : "gap-3.5 px-7 pt-6.5 pb-5.5",
+          appearance === "open" && auth?.panel === "paper" && "px-7 pt-7.5 pb-6",
           classNames?.root,
           className,
         )}

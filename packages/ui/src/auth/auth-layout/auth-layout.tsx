@@ -162,7 +162,7 @@ export interface AuthLayoutBrandProps extends ComponentPropsWithoutRef<"div"> {}
 
 /** Colors of the solid art panel, derived from the theme so every accent and dark mode apply. */
 const SOLID_ART_VARS = {
-  "--auth-art-bg": "color-mix(in srgb, var(--accent) 78%, var(--ink))",
+  "--auth-art-bg": "var(--accent)",
   "--auth-art-ink": "var(--on-accent)",
 } as CSSProperties;
 
@@ -233,8 +233,8 @@ export function AuthLayoutPanel({ className, ...props }: AuthLayoutPanelProps) {
       {...props}
       className={cn(
         panel === "solid"
-          ? "relative z-[2] grid min-w-0 content-center px-4 py-10 text-ink @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:py-14"
-          : "ui-auth-rise relative z-[2] w-full max-w-110 min-w-0 justify-self-center overflow-hidden rounded-card border-[1.5px] border-ink bg-surface text-ink shadow-[0_3px_0_var(--ink),0_24px_50px_-12px_color-mix(in_srgb,var(--ink)_18%,transparent)]",
+          ? "relative z-[2] grid min-w-0 content-center px-4 py-10 text-ink @max-md/auth:pt-20 @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:py-14"
+          : "ui-auth-rise relative z-[2] w-full max-w-110 min-w-0 justify-self-center overflow-hidden rounded-card border-[1.5px] border-ink bg-surface text-ink shadow-[0_3px_0_var(--ink),0_24px_50px_-12px_color-mix(in_srgb,black_20%,transparent)]",
         layout === "split-reverse" && "@3xl/auth:order-1",
         classNames?.panel,
         className,

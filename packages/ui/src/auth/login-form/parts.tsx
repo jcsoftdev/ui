@@ -235,7 +235,7 @@ export function LoginFormError({ className, ...props }: LoginFormErrorProps) {
       id={ids.error}
       role="alert"
       className={cn(
-        "m-0 min-h-4.5 font-semibold text-danger text-meta",
+        "m-0 min-h-4.5 font-semibold text-danger text-meta empty:absolute",
         classNames?.error,
         className,
       )}
@@ -330,6 +330,7 @@ export function LoginFormOptions({
         checked={remember}
         onCheckedChange={(checked) => setRemember(checked === true)}
         label={rememberLabel ?? strings.rememberMe}
+        classNames={{ wrapper: "-ml-2.75" }}
       />
       {link}
     </div>

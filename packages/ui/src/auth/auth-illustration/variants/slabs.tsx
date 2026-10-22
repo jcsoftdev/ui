@@ -15,7 +15,11 @@ const GLYPHS: readonly ReactNode[] = [
       className="ui-auth-g ui-auth-ga"
       d="M18 30 Q34 23 50 32 Q66 23 82 30 V74 Q66 67 50 76 Q34 67 18 74Z"
     />
-    <path className="ui-auth-g ui-auth-gline" d="M50 32V76" style={{ stroke: "var(--accent)" }} />
+    <path
+      className="ui-auth-g ui-auth-gline"
+      d="M50 32V76"
+      style={{ stroke: "var(--glyph-line)" }}
+    />
   </g>,
   <g key="house">
     <path className="ui-auth-g ui-auth-ga" d="M50 20 L84 48 H75 V78 H25 V48 H16Z" />
@@ -26,7 +30,7 @@ const GLYPHS: readonly ReactNode[] = [
     <path
       className="ui-auth-g ui-auth-gline"
       d="M28 55 V70 Q50 84 72 70 V55"
-      style={{ stroke: "var(--accent)", strokeWidth: 5 }}
+      style={{ stroke: "var(--glyph-line)", strokeWidth: 5 }}
     />
     <path className="ui-auth-g ui-auth-gline" d="M88 46 V72" />
   </g>,
@@ -90,7 +94,7 @@ export function Slabs({ state, progress, activeIndex, uid }: SlabsProps) {
   const dotsId = `${uid}-dots`;
   return (
     // biome-ignore lint/a11y/noSvgWithoutTitle: the wrapper names the illustration or hides it
-    <svg viewBox="0 0 640 520" focusable="false" style={{ "--spread": spread } as CSSProperties}>
+    <svg viewBox="40 60 560 440" focusable="false" style={{ "--spread": spread } as CSSProperties}>
       <defs>
         <pattern id={dotsId} width="5" height="5" patternUnits="userSpaceOnUse">
           <circle className="ui-auth-dots" cx="2.5" cy="2.5" r="1" />

@@ -58,7 +58,7 @@ The root of `AuthLayout` is a named container (`@container/auth`), never the vie
 
 ### Solid panel and open form
 
-`panel="solid"` fills one side of a `split` or `split-reverse` layout with a solid color derived from the theme (`color-mix` of `--accent` and `--ink`) for the art, and leaves the form open on the other side with no card. Inside it `LoginForm` defaults to `appearance="open"`: labels above the fields, a pill submit button and a left-aligned heading. Set `appearance` yourself to mix them (`card` on a solid panel, `open` on paper). The art collapses under 448px of layout width and stacks above the form under 768px, like the paper layout; `centered` ignores `panel`.
+`panel="solid"` fills one side of a `split` or `split-reverse` layout with the theme's accent pair for the art (`--accent` behind, `--on-accent` for the brand and a duotone illustration, so the accent slab never disappears into the panel), and leaves the form open on the other side with no card. Inside it `LoginForm` defaults to `appearance="open"`: labels above the fields, a pill submit button and a left-aligned heading. Set `appearance` yourself to mix them (`card` on a solid panel, `open` on paper). The art collapses under 448px of layout width and stacks above the form under 768px, like the paper layout; `centered` ignores `panel`.
 
 `LoginForm.Options` is a row with a remember-me checkbox (reported to `onSubmit` as `remember`) and a help link slot (`help`, or `helpHref` for the localized link). `LoginForm.Providers` is a labelled group for alternative ways to sign in: the library ships no providers and renders only the children you pass, and nothing when there are none.
 

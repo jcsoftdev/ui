@@ -10,12 +10,20 @@ const CSS = `
 @keyframes ui-auth-shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
 @keyframes ui-auth-rise{from{opacity:0;transform:translateY(18px)}}
 .ui-auth-rise{animation:ui-auth-rise .7s .25s var(--motion-ease,cubic-bezier(.2,.7,.2,1)) backwards}
-.ui-auth-art{--ua-edge:color-mix(in srgb,var(--ink) 88%,var(--surface));--ua-spring:var(--motion-ease,cubic-bezier(.2,.8,.2,1))}
+.ui-auth-art{--ua-edge:color-mix(in srgb,var(--ink) 88%,var(--surface));--ua-shadow:color-mix(in srgb,black 14%,transparent);--ua-spring:var(--motion-ease,cubic-bezier(.2,.8,.2,1))}
+.ui-auth-art[data-panel=solid]{--ua-edge:var(--auth-art-ink);--ua-tint:color-mix(in srgb,var(--auth-art-bg) 22%,white);--ua-mid:color-mix(in srgb,var(--auth-art-ink) 30%,var(--auth-art-bg));--ua-shadow:color-mix(in srgb,var(--auth-art-ink) 22%,transparent)}
 .ui-auth-art svg{display:block;width:100%;height:auto;overflow:visible}
 .ui-auth-art[data-state=error] svg{animation:ui-auth-shake .5s var(--ua-spring)}
 .ui-auth-slab-tone-0{--top:var(--accent);--glyph-a:var(--surface);--glyph-b:var(--ink);--glyph-c:var(--accent);--dots:color-mix(in srgb,black 30%,transparent)}
 .ui-auth-slab-tone-1{--top:var(--surface);--glyph-a:var(--accent);--glyph-b:var(--ink);--glyph-c:var(--surface);--dots:color-mix(in srgb,black 30%,transparent)}
 .ui-auth-slab-tone-2{--top:color-mix(in srgb,var(--ink) 86%,var(--surface));--glyph-a:var(--accent);--glyph-b:var(--surface);--glyph-c:var(--surface);--dots:color-mix(in srgb,white 20%,transparent)}
+.ui-auth-art[data-panel=solid] .ui-auth-slab-tone-0{--top:var(--auth-art-ink);--glyph-a:var(--auth-art-bg);--glyph-b:var(--auth-art-ink);--glyph-c:var(--ua-tint);--dots:color-mix(in srgb,var(--auth-art-bg) 30%,transparent)}
+.ui-auth-art[data-panel=solid] .ui-auth-slab-tone-1{--top:var(--ua-tint);--glyph-a:var(--auth-art-ink);--glyph-b:var(--auth-art-ink);--glyph-c:var(--ua-tint);--dots:color-mix(in srgb,var(--auth-art-ink) 35%,transparent)}
+.ui-auth-art[data-panel=solid] .ui-auth-slab-tone-2{--top:var(--ua-mid);--glyph-a:var(--ua-tint);--glyph-b:var(--auth-art-ink);--glyph-c:var(--ua-mid);--dots:color-mix(in srgb,var(--auth-art-ink) 35%,transparent)}
+.ui-auth-art[data-panel=solid] .ui-auth-inlay{stroke:color-mix(in srgb,var(--auth-art-ink) 22%,transparent)}
+.ui-auth-slab{--glyph-line:var(--accent)}
+.ui-auth-art[data-panel=solid] .ui-auth-slab-tone-0{--glyph-line:var(--auth-art-ink)}
+.ui-auth-art[data-panel=solid] .ui-auth-slab-tone-2{--glyph-line:var(--ua-tint)}
 .ui-auth-slab{--left:color-mix(in srgb,var(--top) 82%,black);--right:color-mix(in srgb,var(--top) 66%,black)}
 .ui-auth-art[data-state=error] .ui-auth-slab{--edge:color-mix(in srgb,var(--danger) 70%,var(--ua-edge))}
 .ui-auth-enter{animation:ui-auth-drop .9s var(--ua-spring) backwards;animation-delay:calc(var(--i) * .14s)}
@@ -27,7 +35,7 @@ const CSS = `
 .ui-auth-face-right{fill:var(--right)}
 .ui-auth-edge{stroke:var(--edge,var(--ua-edge));stroke-width:2.2;stroke-linejoin:round}
 .ui-auth-dots{fill:var(--dots)}
-.ui-auth-shadow{fill:color-mix(in srgb,var(--ink) 16%,transparent)}
+.ui-auth-shadow{fill:var(--ua-shadow)}
 .ui-auth-inlay{fill:none;stroke:color-mix(in srgb,var(--ink) 14%,transparent);stroke-width:2}
 .ui-auth-g{stroke-width:3;stroke-linejoin:round;stroke:var(--glyph-b)}
 .ui-auth-ga{fill:var(--glyph-a)}
