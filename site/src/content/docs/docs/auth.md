@@ -145,7 +145,7 @@ export function StatementScreen() {
 
 ### State
 
-`LoginForm` keeps the layout in step with the form: focusing the identifier reads `typing`, the password `password`, leaving both `idle`; a failed submit reads `error` until the person edits a field; a resolved `onSubmit` reads `success`. `progress` is the fill of both fields (the identifier is the first half). The selected portal becomes `activeIndex`, so its slab rises (the illustration draws three slabs, so portals past the third share the last).
+`LoginForm` keeps the layout in step with the form: focusing the identifier reads `typing`, the password `password`, leaving both `idle`; a failed submit reads `error` until the person edits a field (a new submit leaves it, so the same failure twice replays the error); controlled `success` or `error` going back to unset hands the art back to focus and typing; a resolved `onSubmit` reads `success`. `progress` is the fill of both fields (the identifier is the first half). The selected portal becomes `activeIndex` (a form without portals leaves `defaultActiveIndex` alone), so its slab rises (the illustration draws three slabs, so portals past the third share the last).
 
 `onSubmit` may return a promise: while it is pending the button is loading, a rejection shows the error message (or the localized default) and moves focus to the password. To drive the form from your own mutation instead, pass `loading`, `error` and `success`.
 

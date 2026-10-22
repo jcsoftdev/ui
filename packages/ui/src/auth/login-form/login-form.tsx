@@ -141,6 +141,8 @@ export function LoginForm({
   const portal = portals[portalIndex];
   const invalidField = error ? (internal.field ?? "password") : null;
 
+  const focusedField = useRef<LoginField | null>(null);
+  const leftOutcome = useRef(false);
   const setAuthState = auth?.setState;
   const setAuthProgress = auth?.setProgress;
   const setAuthActive = auth?.setActiveIndex;
@@ -150,13 +152,24 @@ export function LoginForm({
   useEffect(() => {
     setAuthProgress?.(progress);
   }, [progress, setAuthProgress]);
+  const hasPortal = portal !== undefined;
   useEffect(() => {
-    setAuthActive?.(Math.min(portalIndex, MAX_ILLUSTRATED_PORTALS - 1));
-  }, [portalIndex, setAuthActive]);
+    if (hasPortal) setAuthActive?.(Math.min(portalIndex, MAX_ILLUSTRATED_PORTALS - 1));
+  }, [hasPortal, portalIndex, setAuthActive]);
   useEffect(() => {
-    if (success) setAuthState?.("success");
-    else if (error) setAuthState?.("error");
-  }, [success, error, setAuthState]);
+    if (success) {
+      leftOutcome.current = true;
+      setAuthState?.("success");
+    } else if (error) {
+      leftOutcome.current = true;
+      setAuthState?.("error");
+    } else if (leftOutcome.current) {
+      // The outcome went away (a controlled flag reset, or a new submit started): read focus again.
+      leftOutcome.current = false;
+      const field = focusedField.current;
+      setAuthState?.(field === "identifier" ? "typing" : field || loading ? "password" : "idle");
+    }
+  }, [success, error, loading, setAuthState]);
 
   const context = useMemo<LoginFormContextValue>(
     () => ({
@@ -218,6 +231,7 @@ export function LoginForm({
   const handleFocus = (event: FocusEvent<HTMLFormElement>) => {
     onFocus?.(event);
     const field = fieldOf(event.target);
+    if (field) focusedField.current = field;
     if (field && !loading && !success && !error) {
       setAuthState?.(field === "identifier" ? "typing" : "password");
     }
@@ -227,6 +241,7 @@ export function LoginForm({
     if (!fieldOf(event.target)) return;
     const next = event.relatedTarget;
     const staying = next !== null && fieldOf(next) !== null;
+    if (!staying) focusedField.current = null;
     if (!staying && !loading && !success && !error) setAuthState?.("idle");
   };
 

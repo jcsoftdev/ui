@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { AuthLayout } from "../auth-layout/auth-layout.js";
+import { AuthLayout, useAuthLayout } from "../auth-layout/auth-layout.js";
 import { LoginForm, type LoginPortal } from "./login-form.js";
 
 const portals: LoginPortal[] = [
@@ -170,5 +171,108 @@ export const InsideAuthLayout: Story = {
     await userEvent.type(password, "demo1234");
     await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
     await waitFor(() => expect(layout).toHaveAttribute("data-state", "success"));
+  },
+};
+
+const onRepeatedState = fn();
+
+/** The same rejected sign-in twice in a row must replay the error, not stay in it. */
+export const RepeatedError: Story = {
+  decorators: [
+    (Story) => (
+      <AuthLayout layout="split" onStateChange={onRepeatedState}>
+        <AuthLayout.Art />
+        <AuthLayout.Panel>
+          <Story />
+        </AuthLayout.Panel>
+      </AuthLayout>
+    ),
+  ],
+  args: {
+    portals: [],
+    onSubmit: async () => {
+      throw new Error("La contraseña no coincide.");
+    },
+  },
+  play: async ({ canvasElement }) => {
+    onRepeatedState.mockClear();
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
+    await userEvent.type(canvas.getByLabelText("Password", { selector: "input" }), "mala");
+    const submit = canvas.getByRole("button", { name: "Sign in" });
+    const errors = () => onRepeatedState.mock.calls.filter(([state]) => state === "error").length;
+    await userEvent.click(submit);
+    await waitFor(() => expect(errors()).toBe(1));
+    await userEvent.click(submit);
+    await waitFor(() => expect(errors()).toBe(2));
+  },
+};
+
+function ControlledOutcome() {
+  const [outcome, setOutcome] = useState<"success" | "error" | null>(null);
+  return (
+    <AuthLayout layout="split">
+      <AuthLayout.Art />
+      <AuthLayout.Panel>
+        <LoginForm
+          portals={[]}
+          success={outcome === "success"}
+          error={outcome === "error" ? "Cuenta bloqueada." : null}
+        />
+        <button type="button" onClick={() => setOutcome("success")}>
+          set success
+        </button>
+        <button type="button" onClick={() => setOutcome("error")}>
+          set error
+        </button>
+        <button type="button" onClick={() => setOutcome(null)}>
+          clear outcome
+        </button>
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+
+/** A controlled `success` or `error` going back to unset hands the art back to the form. */
+export const ControlledOutcomeReset: Story = {
+  render: () => <ControlledOutcome />,
+  decorators: [],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const layout = canvasElement.querySelector("[data-layout]") as HTMLElement;
+    await userEvent.click(canvas.getByRole("button", { name: "set success" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "success"));
+    await userEvent.click(canvas.getByRole("button", { name: "clear outcome" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "idle"));
+    await userEvent.click(canvas.getByRole("button", { name: "set error" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "error"));
+    await userEvent.click(canvas.getByRole("button", { name: "clear outcome" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "idle"));
+    await userEvent.click(canvas.getByLabelText("Password", { selector: "input" }));
+    await userEvent.click(canvas.getByRole("button", { name: "set error" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "error"));
+    await userEvent.click(canvas.getByRole("button", { name: "clear outcome" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "idle"));
+  },
+};
+
+function ActiveProbe() {
+  return <output data-testid="active-index">{useAuthLayout().activeIndex}</output>;
+}
+
+/** Without portals the form leaves the layout's `defaultActiveIndex` alone. */
+export const KeepsDefaultActiveIndex: Story = {
+  render: (args) => (
+    <AuthLayout defaultActiveIndex={2}>
+      <AuthLayout.Panel>
+        <ActiveProbe />
+        <LoginForm {...args} portals={[]} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  ),
+  decorators: [],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId("active-index")).toHaveTextContent("2");
   },
 };

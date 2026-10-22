@@ -59,6 +59,10 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **Looks are client modules.** Each look and `AuthIllustrationAny` start with `"use client"`, so a
   Server Component can pass `look={Stack}` to `AuthLayout.Art` or `AuthIllustration` without
   Next.js rejecting a function prop.
+- **`LoginForm` state.** The same failed sign-in twice in a row replays the error (a new submit
+  leaves the error state first). A controlled `success` or `error` returning to unset derives
+  idle, typing or password from focus again. Without portals the form no longer overrides
+  `AuthLayout` `defaultActiveIndex`.
 
 ## 0.4.0 (2026-10-21)
 
