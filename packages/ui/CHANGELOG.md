@@ -70,6 +70,12 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **Portal tiles.** A `LoginForm.Portals` tile lifts on keyboard focus as it does on hover, and the
   selected tile shows a check badge besides its colour change, so the choice does not rest on
   colour alone. The badge is decorative; the radio's `aria-checked` still carries the state.
+- **Primary button hover contrast.** On hover the primary `Button` and `IconButton` (and so
+  `LoginForm.Submit`) turn their text to `--surface` on the darker `--accent-ink` fill. The text
+  kept `--on-accent`, made for the pale `--accent`, and fell to 2.4:1 in light themes for six of the
+  seven accents; it is now 5.7:1 or more in every accent, light and dark.
+- **Portal tile edge.** An unselected portal tile draws its border in `--ink-3` instead of
+  `--line-strong`, which was 1.5:1 against the card; it is now 5.2:1 or more in light and dark.
 - **Sign in shows it is busy.** `LoginForm.Submit` draws a spinner next to its label while the
   request runs, since a loading button is no longer dimmed.
 - **`Input`** with `start` or `end` draws one focus ring (the wrapper's) instead of a second square

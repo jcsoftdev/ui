@@ -107,6 +107,14 @@ export const PortalTilesFocusAndCheck: Story = {
     await waitFor(() => expect(getComputedStyle(badgeOf(radios[0]) as Element).opacity).toBe("0"));
     await expect(badgeOf(radios[1])?.closest("[aria-hidden='true']")).not.toBeNull();
     await expect(radios[1]).toHaveAccessibleName("Familia");
+    // The unchecked tile's edge uses --ink-3, the boundary that keeps 3:1 against the card.
+    const probe = document.createElement("span");
+    probe.style.color = "var(--ink-3)";
+    canvasElement.append(probe);
+    await expect(getComputedStyle(tileOf(radios[2]) as Element).borderTopColor).toBe(
+      getComputedStyle(probe).color,
+    );
+    probe.remove();
   },
 };
 

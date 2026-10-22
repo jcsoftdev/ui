@@ -89,6 +89,12 @@ test("Button busy state swaps the dimmed look for a progress cursor", () => {
   assert.match(markup, /disabled:opacity-45/);
 });
 
+test("Button primary hover turns the text to the surface colour on the darker accent-ink fill", () => {
+  // --on-accent is a dark ink made for the pale --accent; on --accent-ink it drops to about 2.4:1.
+  // --surface on --accent-ink is the pair the accent tokens keep readable (links, focus ring).
+  assert.match(html.buttonPrimary(), /hover:bg-accent-ink hover:text-surface/);
+});
+
 test("Button block and lg sizes", () => {
   const markup = html.buttonLayout();
   assert.match(markup, /h-control-lg/);

@@ -20,7 +20,7 @@ export type ButtonSize = "sm" | "md" | "lg";
  * `cn(buttonVariantClasses.primary, "bg-brand")` on a link, or `{ ...buttonVariantClasses, brand: "..." }`.
  */
 export const buttonVariantClasses: Readonly<Record<ButtonVariant, string>> = {
-  primary: "bg-accent text-on-accent font-bold hover:bg-accent-ink",
+  primary: "bg-accent text-on-accent font-bold hover:bg-accent-ink hover:text-surface",
   secondary: "bg-surface-control text-ink shadow-control hover:bg-surface-2",
   ghost: "bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink",
   danger: "bg-danger-soft text-danger hover:bg-danger-soft/70",

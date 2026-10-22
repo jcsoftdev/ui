@@ -175,6 +175,7 @@ export const html = {
       </Button>,
     ),
   buttonIdle: () => renderToStaticMarkup(<Button loadingLabel="Saving…">Save</Button>),
+  buttonPrimary: () => renderToStaticMarkup(<Button variant="primary">Save</Button>),
   buttonPlain: () => renderToStaticMarkup(<Button>Save</Button>),
   buttonLayout: () =>
     renderToStaticMarkup(

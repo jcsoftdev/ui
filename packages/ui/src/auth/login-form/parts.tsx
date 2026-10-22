@@ -85,7 +85,7 @@ export function LoginFormHeader({
  * the selection does not rest on a colour change alone.
  */
 const PORTAL_TILE =
-  "relative grid h-13 w-16 place-items-center rounded-input border-[1.5px] border-line-strong bg-surface text-ink transition-[border-color,background-color,transform,box-shadow] duration-150 group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5 group-data-[state=checked]:border-ink group-data-[state=checked]:bg-surface-2 group-data-[state=checked]:shadow-[0_2px_0_var(--ink)] [&>svg]:size-6";
+  "relative grid h-13 w-16 place-items-center rounded-input border-[1.5px] border-ink-3 bg-surface text-ink transition-[border-color,background-color,transform,box-shadow] duration-150 group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5 group-data-[state=checked]:border-ink group-data-[state=checked]:bg-surface-2 group-data-[state=checked]:shadow-[0_2px_0_var(--ink)] [&>svg]:size-6";
 
 /** Decorative check badge in the tile's corner; drawn inside the tile so it never moves the layout. */
 const PORTAL_CHECK =
