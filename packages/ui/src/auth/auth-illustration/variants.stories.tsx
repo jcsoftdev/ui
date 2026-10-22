@@ -123,3 +123,20 @@ export const MosaicNarrow: Story = {
     await expect(side(640)).toBe("6");
   },
 };
+
+export const CharacterStates: Story = { args: { variant: "character", panel: "solid" } };
+
+export const CharacterPaper: Story = { args: { variant: "character" } };
+
+/** Clouds drift around the rider only when the container has room for them. */
+export const CharacterNarrow: Story = {
+  args: { variant: "character", panel: "solid", widths: [240, 460], states: ["password"] },
+  play: async ({ canvasElement }) => {
+    const decor = (width: number) =>
+      getComputedStyle(
+        canvasElement.querySelector(`[data-width="${width}"] .ui-chr-decor`) as Element,
+      ).display;
+    await expect(decor(240)).toBe("none");
+    await expect(decor(460)).not.toBe("none");
+  },
+};

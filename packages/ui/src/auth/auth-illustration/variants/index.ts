@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import type { AuthState } from "../model.js";
+import { Character } from "./character.js";
 import { Mosaic } from "./mosaic.js";
 import { Slabs } from "./slabs.js";
 import { Stack } from "./stack.js";
@@ -15,7 +16,7 @@ export interface AuthVariantProps {
   uid: string;
 }
 
-export type AuthIllustrationVariant = "slabs" | "stack" | "mosaic";
+export type AuthIllustrationVariant = "slabs" | "stack" | "mosaic" | "character";
 
 /**
  * Registry of the looks. A new look is one component with {@link AuthVariantProps} plus an entry
@@ -25,4 +26,4 @@ export type AuthIllustrationVariant = "slabs" | "stack" | "mosaic";
  */
 export const AUTH_VARIANTS: Readonly<
   Record<AuthIllustrationVariant, ComponentType<AuthVariantProps>>
-> = { slabs: Slabs, stack: Stack, mosaic: Mosaic };
+> = { slabs: Slabs, stack: Stack, mosaic: Mosaic, character: Character };

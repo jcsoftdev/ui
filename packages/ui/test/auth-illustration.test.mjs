@@ -166,3 +166,12 @@ test("mosaic tiles know their diagonal and ring, and every glyph tile is on the 
     [7, 14, 5],
   );
 });
+
+test("the character's board lamps fill with progress and all light on success", () => {
+  assert.deepEqual(
+    [0, 0.19, 0.2, 0.5, 0.99, 1].map((p) => model.boardLit("typing", p)),
+    [0, 0, 1, 2, 4, 5],
+  );
+  assert.equal(model.boardLit("success", 0), model.BOARD_LIGHTS);
+  assert.equal(model.boardLit("error", Number.NaN), 0);
+});

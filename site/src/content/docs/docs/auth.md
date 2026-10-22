@@ -95,6 +95,7 @@ export function SolidPanelScreen() {
 | `slabs`   | Three isometric portal slabs (the default). They drift together as the form fills, hop on each keystroke, fly apart on an error and lock together with a burst on success.                                                                                                                          |
 | `stack`   | A tower of books that gains a book as the form fills (a dashed slot marks the next one), squashes on each keystroke, wobbles on an error and plants a flag with the active portal's glyph on success. Narrow containers show a shorter, larger tower (4, 5 or 6 books).                              |
 | `mosaic`  | A floor of isometric tiles that light diagonally from the back corner as the form fills. A tile glints on each keystroke and glows under the pointer; an error sweeps a red flash across the floor and success ripples out from its centre. Three tiles carry the portal glyphs and the active one stands raised. 4, 5 or 6 tiles a side by container width. |
+| `character` | A student with a backpack riding a hover board over a pulsing shadow, made for the solid panel. They bob, blink and follow the pointer; they look toward the form and nod while it is typed into, cover their eyes for the password, shake their head on an error and hop with a boost on success. The deck lamps fill with progress and the chest badge carries the active portal's glyph. |
 
 ```tsx region=looks
 export function BooksScreen() {

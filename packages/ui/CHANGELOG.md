@@ -30,6 +30,9 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **`AuthIllustration variant="mosaic"`.** A floor of isometric tiles that lights diagonally with
   progress, glints per keystroke, glows under the pointer, flashes red on an error and ripples on
   success; three tiles carry the portal glyphs and the active one stands raised.
+- **`AuthIllustration variant="character"`.** A student on a hover board that follows the
+  pointer, looks toward the form while it is typed into, covers their eyes for the password,
+  shakes their head on an error and hops with a boost on success.
 - **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
 - **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
 - **UI strings** (en/es) for the sign-in screen and `showPassword`.

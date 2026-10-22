@@ -308,3 +308,13 @@ export const MOSAIC_GLYPH_TILES: Readonly<
 export function mosaicGlint(count: number, n: number): number {
   return count > 0 ? (count * 7) % (n * n) : -1;
 }
+
+/* ------------------------------------------------------------- character */
+
+/** Lamps along the character's board; they fill with progress. */
+export const BOARD_LIGHTS = 5;
+
+export function boardLit(state: AuthState, progress: number): number {
+  if (state === "success") return BOARD_LIGHTS;
+  return Math.min(BOARD_LIGHTS, Math.floor(clamp01(progress) * BOARD_LIGHTS + 1e-9));
+}
