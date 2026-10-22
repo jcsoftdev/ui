@@ -59,10 +59,15 @@ export const VariantsAndSizes: Story = {
 
 export const Loading: Story = {
   args: { loading: true },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const button = within(canvasElement).getByRole("button", { name: "Delete row" });
-    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute("aria-disabled", "true");
     await expect(button).toHaveAttribute("aria-busy", "true");
+    button.focus();
+    await expect(button).toHaveFocus();
+    await userEvent.click(button);
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onClick).not.toHaveBeenCalled();
     await expect(within(canvasElement).getByText("Loading")).toBeVisible();
   },
 };

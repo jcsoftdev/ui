@@ -147,7 +147,7 @@ export function StatementScreen() {
 
 `LoginForm` keeps the layout in step with the form: focusing the identifier reads `typing`, the password `password`, leaving both `idle`; a failed submit reads `error` until the person edits a field (a new submit leaves it, so the same failure twice replays the error); controlled `success` or `error` going back to unset hands the art back to focus and typing; a resolved `onSubmit` reads `success`. `progress` is the fill of both fields: the identifier is the first half and grows with its length, the password is the second half and counts only as filled or not (its length never reaches the DOM, where session-replay tools do not mask styles and attributes). The selected portal becomes `activeIndex` (a form without portals leaves `defaultActiveIndex` alone), so its slab rises (the illustration draws three slabs, so portals past the third share the last).
 
-`onSubmit` may return a promise: while it is pending the button is loading, a rejection shows the error message (or the localized default) and moves focus to the password. To drive the form from your own mutation instead, pass `loading`, `error` and `success`.
+`onSubmit` may return a promise: while it is pending the button is loading (it keeps focus and the form ignores further submits, see Accessibility), a rejection shows the error message (or the localized default) and moves focus to the password. To drive the form from your own mutation instead, pass `loading`, `error` and `success`.
 
 ```tsx region=controlled
 export function ControlledState() {
@@ -190,6 +190,7 @@ export function ControlledState() {
 - Fields are real `Field`s: labels are visually hidden but present, `aria-invalid` and `aria-describedby` point at the error.
 - A field left empty on submit is reported right under that field (`role="alert"`, an alert icon, a danger ring and icon on the field), and the field's `aria-describedby` points at that message.
 - `LoginForm.Error` holds errors about the sign-in itself (wrong credentials, a server message) as a callout above the fields. It is a `role="alert"` region that stays in the page while empty, so a new message is announced, and the password field points at it while it shows.
+- `LoginForm.Submit` is a `Button`: while signing in it stays focused and undimmed, reports `aria-busy` and `aria-disabled`, and another press, click or Enter in a field does not submit again.
 - `LoginForm.Portals` is a `radiogroup` with arrow-key navigation; `PasswordInput`'s reveal toggle keeps one name and reports `aria-pressed`.
 - The illustration is hidden from assistive technology unless you pass `label`. The `Statement` look is real text instead: the headline is read until sign-in succeeds, then "You're in." replaces it and the caption is hidden.
 

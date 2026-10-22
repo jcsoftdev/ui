@@ -298,3 +298,32 @@ export const KeepsDefaultActiveIndex: Story = {
     await expect(canvas.getByTestId("active-index")).toHaveTextContent("2");
   },
 };
+
+const slowSignIn = fn(() => new Promise<void>((resolve) => setTimeout(resolve, 1500)));
+
+/**
+ * Pressing Sign in from the keyboard keeps focus on the button while the request runs, and no
+ * second press, click or Enter in a field sends the form again until it settles.
+ */
+export const SubmitKeepsFocusWhileLoading: Story = {
+  args: { portals: [], onSubmit: slowSignIn },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const password = canvas.getByLabelText("Password", { selector: "input" });
+    await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
+    await userEvent.type(password, "secreto");
+    const submit = canvas.getByRole("button", { name: "Sign in" });
+    submit.focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(submit).toHaveAttribute("aria-busy", "true"));
+    await expect(submit).toHaveFocus();
+    await expect(submit).toHaveAttribute("aria-disabled", "true");
+    await expect(getComputedStyle(submit).opacity).toBe("1");
+    await userEvent.keyboard("{Enter}");
+    await userEvent.click(submit);
+    await userEvent.type(password, "{Enter}");
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(submit).not.toHaveAttribute("aria-busy"), { timeout: 3000 });
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+  },
+};

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Busy buttons keep focus (behavior to check when upgrading)
+
+- **`Button` and `IconButton` `loading`** no longer set the native `disabled` attribute. A busy
+  button stays focusable, so pressing it from the keyboard leaves focus on it instead of dropping
+  to `body`. It is exposed as `aria-disabled="true"` plus `aria-busy="true"` (the status region
+  still announces the loading text), it ignores clicks, Enter and Space, and a `type="submit"`
+  button does not submit its form, including the implicit submit from Enter in one of its fields.
+  The dimmed `disabled` look no longer applies while loading; the spinner or loading label stays
+  and the cursor turns to `progress`. Passing `disabled` keeps the native attribute and the dimmed
+  look as before, also while loading. Check code that read `button.disabled` or tests that expect
+  `toBeDisabled()` on a loading button: they now see `aria-disabled` instead.
+
 ### Sign-in screen
 
 New `@jcsoftdev/ui/auth` entry, additive and source compatible. Colors come only from the theme

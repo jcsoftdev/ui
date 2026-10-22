@@ -62,7 +62,9 @@ test("Chip onRemove renders a named remove button; without it there is none", ()
 test("Button loadingLabel replaces the label and is announced; plain buttons render as before", () => {
   const loading = html.buttonLoading();
   assert.match(loading, /aria-busy="true"/);
-  assert.match(loading, /disabled/);
+  assert.match(loading, /aria-disabled="true"/);
+  // Busy, not natively disabled: the button keeps keyboard focus while the work runs.
+  assert.doesNotMatch(loading, /\sdisabled=""/);
   assert.match(loading, /Saving…/);
   assert.doesNotMatch(loading, />Save</);
   assert.match(loading, /<span role="status" class="sr-only">Saving…<\/span>$/);
@@ -72,6 +74,19 @@ test("Button loadingLabel replaces the label and is announced; plain buttons ren
   assert.match(idle, /<span role="status" class="sr-only"><\/span>$/);
 
   assert.doesNotMatch(html.buttonPlain(), /role="status"/);
+});
+
+test("Button disabled stays native even while loading, so it leaves the tab order", () => {
+  const markup = html.buttonLoadingDisabled();
+  assert.match(markup, /\sdisabled=""/);
+  assert.doesNotMatch(markup, /aria-disabled/);
+  assert.match(markup, /aria-busy="true"/);
+});
+
+test("Button busy state swaps the dimmed look for a progress cursor", () => {
+  const markup = html.buttonLoading();
+  assert.match(markup, /aria-busy:cursor-progress/);
+  assert.match(markup, /disabled:opacity-45/);
 });
 
 test("Button block and lg sizes", () => {

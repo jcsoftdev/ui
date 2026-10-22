@@ -894,7 +894,8 @@ test("IconButton loading swaps the icon for a spinner and announces the localize
   const markup = html.iconButtonEs();
   assert.doesNotMatch(markup, /data-icon/);
   assert.match(markup, /aria-busy="true"/);
-  assert.match(markup, /disabled=""/);
+  assert.match(markup, /aria-disabled="true"/);
+  assert.doesNotMatch(markup, /\sdisabled=""/);
   assert.match(markup, /role="status"[^>]*>Cargando/);
   assert.match(html.iconButton(), /data-icon/);
 });
