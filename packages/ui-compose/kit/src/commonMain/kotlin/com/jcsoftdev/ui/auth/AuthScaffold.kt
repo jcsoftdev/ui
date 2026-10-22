@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -27,8 +29,11 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Rect
@@ -211,6 +216,10 @@ public fun AuthScaffold(
     zones.welcomeFraction = welcome
     val focus = LocalFocusManager.current
     LaunchedEffect(expanded) { if (expanded) focus.clearFocusSafely() }
+    val density = LocalDensity.current
+    val scaledText = density.fontScale > 1f
+    val headerDensity = remember(density) { Density(density.density, min(density.fontScale, MAX_HEADER_FONT_SCALE)) }
+    val ime = WindowInsets.ime
     if (onBackToWelcome != null) BackHandler(enabled = !expanded, priority = BackPriority.TAB, onBack = onBackToWelcome)
     val rise = with(LocalDensity.current) { 36.dp.toPx() }
     Layout(
@@ -242,12 +251,19 @@ public fun AuthScaffold(
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
                     .padding(start = padding, end = padding, top = padding, bottom = drop + padding),
             ) {
-                Column(
-                    Modifier.onGloballyPositioned { zones.login = zones.boundsOf(it) },
-                    verticalArrangement = Arrangement.spacedBy(UiTheme.sizes.space8),
-                ) {
-                    Text(title, Modifier.semantics { heading() }, titleStyle, colors.onHeader)
-                    Text(tagline, style = taglineStyle, color = colors.tagline)
+                CompositionLocalProvider(LocalDensity provides headerDensity) {
+                    Column(
+                        Modifier.onGloballyPositioned { zones.login = zones.boundsOf(it) },
+                        verticalArrangement = Arrangement.spacedBy(UiTheme.sizes.space8),
+                    ) {
+                        Text(
+                            title,
+                            Modifier.semantics { heading() },
+                            titleStyle,
+                            colors.onHeader,
+                        )
+                        Text(tagline, style = taglineStyle, color = colors.tagline)
+                    }
                 }
             }
             if (showWelcome) {
@@ -272,8 +288,9 @@ public fun AuthScaffold(
         val width = constraints.maxWidth
         val height = constraints.maxHeight
         val f = welcome.value
-        val loose = Constraints(minWidth = width, maxWidth = width, maxHeight = height)
-        val text = measurables[1].measure(loose)
+        val imeShare = (ime.getBottom(this) / (height * IME_SHARE_SPAN)).coerceIn(0f, 1f)
+        val bandCap = if (scaledText) (height * lerp(BAND_SHARE, BAND_SHARE_IME, imeShare)).roundToInt() else height
+        val text = measurables[1].measure(Constraints(minWidth = width, maxWidth = width, maxHeight = bandCap.coerceIn(0, height)))
         val band = text.height
         val headerHeight = lerp(band.toFloat(), height.toFloat(), f).roundToInt().coerceIn(0, height)
         val header = measurables[0].measure(Constraints.fixed(width, headerHeight))
@@ -303,7 +320,13 @@ private fun AuthSheet(
 ) {
     val padding = AuthScaffoldDefaults.horizontalPadding
     val insets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-    Column(
+    val latestContent by rememberUpdatedState(content)
+    val latestBottom by rememberUpdatedState(bottom)
+    val movableContent = remember { movableContentOf { scope: ColumnScope -> latestContent.invoke(scope) } }
+    val movableBottom = remember { movableContentOf { scope: ColumnScope -> latestBottom?.invoke(scope) } }
+    val scroll = rememberScrollState()
+    val scaled = LocalDensity.current.fontScale > 1f
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .graphicsLayer {
@@ -312,28 +335,31 @@ private fun AuthSheet(
             }.background(color)
             .then(if (hidden) Modifier.clearAndSetSemantics {} else Modifier.semantics { isTraversalGroup = true }),
     ) {
-        Column(
-            Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .windowInsetsPadding(if (bottom == null) insets else insets.only(WindowInsetsSides.Horizontal))
-                .padding(
-                    start = padding,
-                    end = padding,
-                    top = (if (arc) drop else 0.dp) + padding + UiTheme.sizes.space8,
-                    bottom = padding,
-                ),
-            content = content,
-        )
-        if (bottom != null) {
+        val visible = maxHeight - with(LocalDensity.current) { WindowInsets.safeDrawing.getBottom(this).toDp() }
+        val compact = bottom != null && scaled && visible < COMPACT_SHEET_HEIGHT
+        val top = (if (arc) drop else 0.dp) + padding + UiTheme.sizes.space8
+        val footer =
+            Modifier.fillMaxWidth().padding(
+                start = padding,
+                end = padding,
+                top = UiTheme.sizes.space8,
+                bottom = UiTheme.sizes.space16,
+            )
+        Column(Modifier.fillMaxSize()) {
             Column(
                 Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .windowInsetsPadding(insets)
-                    .padding(start = padding, end = padding, top = UiTheme.sizes.space8, bottom = UiTheme.sizes.space16),
-                content = bottom,
-            )
+                    .verticalScroll(scroll)
+                    .windowInsetsPadding(if (bottom == null || compact) insets else insets.only(WindowInsetsSides.Horizontal))
+                    .padding(start = padding, end = padding, top = top, bottom = if (compact) 0.dp else padding),
+            ) {
+                movableContent(this)
+                if (compact) Column(Modifier.padding(top = padding, bottom = UiTheme.sizes.space16)) { movableBottom(this) }
+            }
+            if (bottom != null && !compact) {
+                Column(Modifier.windowInsetsPadding(insets).then(footer)) { movableBottom(this) }
+            }
         }
     }
 }
@@ -416,6 +442,19 @@ private fun WelcomeContent(
 }
 
 private const val MAX_WELCOME_FONT_SCALE = 1.3f
+
+/** The header title and tagline stop growing with the system font scale here; the sheet keeps its room. */
+private const val MAX_HEADER_FONT_SCALE = 1.3f
+
+/** From a font scale above 1 the header band takes at most this share of the screen, and [BAND_SHARE_IME] while the keyboard is up. */
+private const val BAND_SHARE = 0.4f
+private const val BAND_SHARE_IME = 0.3f
+
+/** The keyboard counts as fully up for the band once it covers this share of the screen. */
+private const val IME_SHARE_SPAN = 0.25f
+
+/** Below this visible sheet height, with a font scale above 1, the pinned slot scrolls with the content instead. */
+private val COMPACT_SHEET_HEIGHT = 480.dp
 
 private fun FocusManager.clearFocusSafely() = clearFocus(force = true)
 

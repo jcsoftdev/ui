@@ -11,11 +11,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
@@ -24,9 +27,12 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackDispatcher
@@ -268,5 +274,72 @@ class AuthUiTest {
             loading = false
             waitForIdle()
             onNodeWithContentDescription("Password").assertIsEnabled()
+        }
+
+    private fun fontScaled(
+        scale: Float,
+        height: Dp,
+        content: @Composable () -> Unit,
+    ): @Composable () -> Unit =
+        {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, scale)) {
+                Box(Modifier.size(360.dp, height)) {
+                    UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(0f)) { content() }
+                }
+            }
+        }
+
+    private fun SemanticsNodeInteraction.isScrollable(): Boolean = runCatching { performScrollTo() }.isSuccess
+
+    private fun assertReachableAtFontScale(height: Dp) =
+        runComposeUiTest {
+            setContent(fontScaled(2f, height) { login(error = "Wrong password") })
+            for (field in listOf("Email", "Password")) {
+                onNodeWithContentDescription(field).performScrollTo().assertIsDisplayed()
+            }
+            onNodeWithText("Forgot?").performScrollTo().assertIsDisplayed()
+            onNodeWithText("Wrong password").performScrollTo().assertIsDisplayed()
+            // the action is pinned when there is room and scrolls with the content when there is not
+            onNodeWithText("Go").let { if (it.isScrollable()) it.performScrollTo() else it }.assertIsDisplayed()
+            val band = onNodeWithText("Sign in").getUnclippedBoundsInRoot().bottom
+            assertTrue(band <= height * 0.4f, "the header text stays within 40% of the screen, was $band of $height")
+        }
+
+    @Test
+    fun atTwiceTheFontScaleEverythingIsReachableOn640dp() = assertReachableAtFontScale(640.dp)
+
+    @Test
+    fun atTwiceTheFontScaleEverythingIsReachableOn800dp() = assertReachableAtFontScale(800.dp)
+
+    @Test
+    fun atTwiceTheFontScaleEverythingIsReachableWhereTheKeyboardLeavesLittleRoom() = assertReachableAtFontScale(360.dp)
+
+    @Test
+    fun atNormalFontScaleTheActionStaysPinnedToTheFootEvenOnAShortScreen() =
+        runComposeUiTest {
+            setContent(fontScaled(1f, 380.dp) { login() })
+            val button = onNodeWithText("Go").getUnclippedBoundsInRoot()
+            assertTrue(button.bottom > 380.dp * 0.6f, "the action sits near the foot, it does not scroll away with the content")
+        }
+
+    @Test
+    fun theSlotThatMovesIntoTheContentKeepsTheFieldState() =
+        runComposeUiTest {
+            var height by mutableStateOf(800.dp)
+            setContent {
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
+                    Box(Modifier.size(360.dp, height)) {
+                        UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(0f)) { login() }
+                    }
+                }
+            }
+            onNodeWithContentDescription("Password").performTextInput("secret")
+            onNodeWithContentDescription("Show password").performClick()
+            height = 400.dp
+            waitForIdle()
+            onNodeWithContentDescription("Password").assertTextEquals("secret", includeEditableText = true)
+            onNodeWithContentDescription("Hide password").assertExists()
         }
 }
