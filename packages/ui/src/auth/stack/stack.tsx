@@ -22,7 +22,7 @@ const SPARKS = sparkVectors(10).map((spark) => ({ dx: spark.dx * 0.7, dy: spark.
 const STAR = "M0-9 L2.5-2.5 L9 0 L2.5 2.5 L0 9 L-2.5 2.5 L-9 0 L-2.5-2.5Z";
 
 const CSS = `
-@keyframes ui-stk-drop{from{opacity:0;transform:translateY(-140px)}}
+@keyframes ui-stk-drop{0%{opacity:0;transform:translateY(-140px)}10%{opacity:1}}
 @keyframes ui-stk-pulse{50%{opacity:.3}}
 @keyframes ui-stk-squash-0{40%{transform:scale(1.012,.975)}}
 @keyframes ui-stk-squash-1{40%{transform:scale(1.012,.975)}}
@@ -40,7 +40,7 @@ const CSS = `
 .ui-stk-tower{transform:translateY(var(--shift))}
 .ui-stk-par{transform:translate(calc(var(--px,0) * var(--i) * 2.5px),calc(var(--py,0) * var(--i) * 1px));transition:transform .6s var(--ua-glide)}
 .ui-stk-flag-par{transform:translate(calc(var(--px,0) * (var(--n) - 1) * 2.5px),calc(var(--py,0) * (var(--n) - 1) * 1px));transition:transform .6s var(--ua-glide)}
-.ui-stk-drop{transform:translateY(calc((1 - var(--on)) * -130px));opacity:var(--on);transition:transform .75s var(--ua-bounce),opacity .3s linear;transition-delay:calc(var(--i) * 40ms)}
+.ui-stk-drop{transform:translateY(calc((1 - var(--on)) * -130px));opacity:var(--on);transition:transform .75s var(--ua-bounce),opacity .08s linear;transition-delay:calc(var(--i) * 40ms)}
 .ui-stk-enter{animation:ui-stk-drop .8s var(--ua-land) backwards;animation-delay:calc(.1s + var(--i) * .09s)}
 .ui-stk-ghost-wrap{opacity:var(--next);transition:opacity .3s linear}
 .ui-stk-ghost{fill:none;stroke:var(--ua-edge);stroke-opacity:.5;stroke-width:1.6;stroke-dasharray:5 6;animation:ui-stk-pulse 2.4s ease-in-out infinite;animation-delay:calc(var(--i) * -.3s)}
@@ -140,8 +140,9 @@ const SHAPES = STACK_BOOKS.map((book) => ({
 /** An isometric tower of books that gains a book as the form fills and plants a flag on success. */
 export function Stack({ state, progress, activeIndex, uid }: AuthVariantProps) {
   const dots = `url(#${uid}-stack-dots)`;
+  // The squash class of the last keystroke stays on through every state, so leaving an error
+  // does not replay it (a CSS animation restarts only when its class changes).
   const tick = keystroke(progress);
-  const typing = (state === "typing" || state === "password") && tick.count > 0;
   const placed = Object.fromEntries(
     STACK_COUNTS.map((count) => [count, stackPlaced(state, progress, count)]),
   );
@@ -171,7 +172,11 @@ export function Stack({ state, progress, activeIndex, uid }: AuthVariantProps) {
         <g transform={`translate(${BASE.x} ${BASE.y})`}>
           <g className="ui-stk-tower">
             <path className="ui-stk-shadow" d={shadow} transform="translate(14 16)" />
-            <g className={typing ? `ui-stk-squash ui-stk-squash-${tick.phase}` : "ui-stk-squash"}>
+            <g
+              className={
+                tick.count > 0 ? `ui-stk-squash ui-stk-squash-${tick.phase}` : "ui-stk-squash"
+              }
+            >
               {STACK_BOOKS.map((book, i) => {
                 const shape = SHAPES[i];
                 const slot = SLOTS[i];
@@ -241,6 +246,7 @@ export function Stack({ state, progress, activeIndex, uid }: AuthVariantProps) {
                       <path
                         key={`${spark.dx}:${spark.dy}`}
                         className="ui-auth-spark"
+                        data-tone={n % 4}
                         d={n % 2 ? STAR : "M-4 0a4 4 0 1 0 8 0a4 4 0 1 0-8 0"}
                         style={
                           { "--dx": `${spark.dx}px`, "--dy": `${spark.dy}px` } as CSSProperties

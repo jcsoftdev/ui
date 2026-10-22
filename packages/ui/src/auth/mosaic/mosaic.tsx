@@ -35,6 +35,16 @@ const CLIP = (() => {
   return `M${left.x} ${left.y}L${front.x} ${front.y}L${right.x} ${right.y}L${right.x} ${VIEW.y}L${left.x} ${VIEW.y}Z`;
 })();
 
+/** The tiled floor seen from above, raised a little so lifted tiles stay inside it. */
+const FLOOR_TOP = isoBox(FLOOR + MARGIN * 2, FLOOR + MARGIN * 2, BASE_H + 10).top;
+/**
+ * A soft horizontal band, parked just above the floor: on this floor a diagonal of tiles is a
+ * screen row, so moving it 375px down sweeps the tiles in order.
+ */
+const BAND = { x: -280, y: -251, w: 560, h: 72 } as const;
+/** The idle sheen and the error sweep. */
+const BANDS = ["sheen", "alarm"] as const;
+
 const GRIDS = MOSAIC_SIZES.map((n) => {
   const size = FLOOR / n;
   const face = size - GAP;
@@ -63,21 +73,30 @@ const GRIDS = MOSAIC_SIZES.map((n) => {
   return { n, shape, glyphTransform, tiles };
 });
 
+/**
+ * Only the floor on screen animates. The other two sizes stay in the markup for the container
+ * queries, and Chrome still runs animations inside a hidden SVG group, so a hidden grid names no
+ * animation: the visible one sets the names through custom properties (an unset one leaves the
+ * `animation` declaration invalid, which means none).
+ */
+const ON = '.ui-msc-grid[data-n="';
+const SHOW =
+  "display:inline;--b:ui-msc-bob;--r:ui-msc-ripple;--g0:ui-msc-glint-0;--g1:ui-msc-glint-1";
+
 const CSS = `
 @keyframes ui-msc-glint-0{35%{transform:translateY(-9px)}}
 @keyframes ui-msc-glint-1{35%{transform:translateY(-9px)}}
-@keyframes ui-msc-shine{0%,62%,100%{opacity:0}78%{opacity:.4}}
-@keyframes ui-msc-flash{0%,100%{opacity:0}30%{opacity:.85}}
+@keyframes ui-msc-sheen{58%{transform:none}86%,to{transform:translateY(375px)}}
+@keyframes ui-msc-sweep{to{transform:translateY(375px)}}
 @keyframes ui-msc-ripple{40%{transform:translateY(-12px)}75%{transform:translateY(2px)}}
-@keyframes ui-msc-pop{40%{opacity:.7}}
 @keyframes ui-msc-bob{50%{transform:translateY(-5px)}}
 @keyframes ui-msc-rise{from{opacity:0;transform:translateY(40px)}}
 .ui-msc{scale:1.12;transform-origin:50% 60%;--msc-base:color-mix(in srgb,var(--ink) 12%,var(--surface));--msc-tile:var(--surface);--msc-lit:var(--accent);--msc-active:color-mix(in srgb,var(--ink) 86%,var(--surface));--msc-glow:color-mix(in srgb,var(--accent-2) 70%,white);--msc-grout:color-mix(in srgb,var(--ink) 22%,transparent);--glyph-line:var(--accent)}
 .ui-auth-art[data-panel=solid] .ui-msc{--msc-base:var(--ua-tint);--msc-tile:color-mix(in srgb,white 55%,var(--auth-art-bg));--msc-lit:var(--ua-mid);--msc-active:var(--auth-art-ink);--msc-glow:white;--msc-grout:color-mix(in srgb,var(--auth-art-ink) 28%,transparent);--glyph-line:var(--auth-art-ink)}
 .ui-msc-grid{display:none}
-.ui-msc-grid[data-n="4"]{display:inline}
-@container art (min-width:24rem){.ui-msc{scale:1.04}.ui-msc-grid[data-n="4"]{display:none}.ui-msc-grid[data-n="5"]{display:inline}}
-@container art (min-width:34rem){.ui-msc{scale:1}.ui-msc-grid[data-n="5"]{display:none}.ui-msc-grid[data-n="6"]{display:inline}}
+@container art (width<24rem){${ON}4"]{${SHOW}}}
+@container art (24rem<=width<34rem){.ui-msc{scale:.88}${ON}5"]{${SHOW}}}
+@container art (width>=34rem){.ui-msc{scale:.9}${ON}6"]{${SHOW}}}
 .ui-msc-stage{animation:ui-msc-rise .9s var(--ua-land) backwards .1s}
 .ui-msc-shadow{fill:var(--ua-shadow)}
 .ui-msc-base-top{fill:var(--msc-base)}
@@ -97,39 +116,40 @@ const CSS = `
 .ui-msc-tile-left{fill:color-mix(in srgb,var(--top) 78%,black)}
 .ui-msc-side{opacity:max(var(--lit),var(--act));transition:opacity .2s linear;transition-delay:calc(var(--d) * 28ms)}
 .ui-msc-tile-right{fill:color-mix(in srgb,var(--top) 62%,black)}
-.ui-msc-tile[data-lit] .ui-msc-litface,.ui-msc-tile[data-active] .ui-msc-tile-top{stroke:var(--ua-edge);stroke-width:1.6;stroke-linejoin:round}
-.ui-msc-tile[data-lit] .ui-msc-tile-left,.ui-msc-tile[data-lit] .ui-msc-tile-right,.ui-msc-tile[data-active] .ui-msc-tile-left,.ui-msc-tile[data-active] .ui-msc-tile-right{stroke:var(--ua-edge);stroke-width:1.6;stroke-linejoin:round}
+.ui-msc-tile[data-lit] .ui-msc-litface,.ui-msc-tile[data-active] .ui-msc-tile-top,.ui-msc-tile:is([data-lit],[data-active]) .ui-msc-side{stroke:var(--ua-edge);stroke-width:1.6;stroke-linejoin:round}
 .ui-msc-glow{fill:var(--msc-glow);opacity:calc(var(--glow) * .7);transition:opacity .25s linear}
-.ui-msc-shine{fill:white;opacity:0;animation:ui-msc-shine 5s ease-in-out infinite;animation-delay:calc(var(--d) * 110ms)}
-.ui-msc-flash{fill:var(--danger);opacity:0}
-.ui-auth-art[data-state=error] .ui-msc-flash{animation:ui-msc-flash .75s var(--ua-glide) both;animation-delay:calc(var(--d) * 35ms)}
-.ui-auth-art[data-state=success] .ui-msc-pop{animation:ui-msc-ripple .6s var(--ua-glide) backwards;animation-delay:calc(.25s + var(--ring) * 75ms)}
-.ui-auth-art[data-state=success] .ui-msc-shine{animation:ui-msc-pop .6s var(--ua-glide) backwards;animation-delay:calc(.25s + var(--ring) * 75ms)}
-.ui-msc-glint-0{animation:ui-msc-glint-0 .4s var(--ua-glide)}
-.ui-msc-glint-1{animation:ui-msc-glint-1 .4s var(--ua-glide)}
-.ui-msc-bob{animation:ui-msc-bob 3.2s ease-in-out infinite}
+.ui-msc-sheen-stop{stop-color:white}
+.ui-msc-alarm-stop{stop-color:var(--danger)}
+.ui-msc-sheen{opacity:.5;animation:ui-msc-sheen 5s ease-in-out infinite}
+.ui-auth-art[data-state=success] .ui-msc-sheen{opacity:.9;animation:ui-msc-sweep 1.1s .25s var(--ua-glide) backwards}
+.ui-msc-alarm{opacity:.85}
+.ui-auth-art[data-state=error] .ui-msc-alarm{animation:ui-msc-sweep .8s var(--ua-glide) both}
+.ui-msc-bob{animation:var(--b) 3.2s ease-in-out infinite}
+.ui-msc-glint-0{animation:var(--g0) .4s var(--ua-glide)}
+.ui-msc-glint-1{animation:var(--g1) .4s var(--ua-glide)}
+.ui-auth-art[data-state=success] .ui-msc-pop{animation:var(--r) .6s var(--ua-glide) backwards;animation-delay:calc(.25s + var(--ring) * 75ms)}
 .ui-msc-glyph{--glyph-a:color-mix(in srgb,var(--ua-edge) 30%,var(--msc-tile));--glyph-b:color-mix(in srgb,var(--ua-edge) 30%,var(--msc-tile));--glyph-c:var(--msc-tile);--glyph-line:var(--msc-tile)}
 .ui-msc-tile[data-lit] .ui-msc-glyph{--glyph-a:color-mix(in srgb,var(--msc-lit) 55%,black);--glyph-b:color-mix(in srgb,var(--msc-lit) 55%,black);--glyph-c:var(--msc-lit);--glyph-line:var(--msc-lit)}
 .ui-msc-tile[data-active] .ui-msc-glyph{--glyph-a:var(--msc-lit);--glyph-b:var(--msc-tile);--glyph-c:var(--msc-active);--glyph-line:var(--msc-tile)}
 .ui-auth-art[data-panel=solid] .ui-msc-tile[data-active] .ui-msc-glyph{--glyph-a:var(--ua-tint);--glyph-b:var(--ua-tint);--glyph-c:var(--auth-art-ink)}
 @media (prefers-reduced-motion:reduce){
-.ui-msc-stage,.ui-msc-shine,.ui-msc-bob,.ui-msc-glint-0,.ui-msc-glint-1,.ui-auth-art[data-state] .ui-msc-flash,.ui-auth-art[data-state] .ui-msc-pop,.ui-auth-art[data-state] .ui-msc-shine{animation:none}
-.ui-msc-lift{transform:translateY(calc((var(--lit) * -8 - var(--act) * 14) * 1px));transition:none}
-.ui-msc-litface,.ui-msc-glow,.ui-msc-side{transition:none}
-.ui-msc-glow{opacity:0}
+.ui-msc *{animation:none!important}
+.ui-auth-art[data-state=error] .ui-msc-alarm{opacity:.5;transform:translateY(916px) scaleY(4.4)}
+.ui-msc-lift,.ui-msc-litface,.ui-msc-side{transition:none}
 }
 `;
 
 /**
  * A living floor of isometric tiles on a platform. The tiles light diagonally as the form fills,
- * glint on each keystroke and glow under the pointer; an error sweeps a red flash across them and
- * success ripples out from the centre. Three tiles carry the portal glyphs and the active one
+ * glint on each keystroke and glow under the pointer, and a soft sheen crosses the floor now and
+ * then; an error sweeps a red band across it and success ripples out from the centre. Three tiles carry the portal glyphs and the active one
  * stands raised. Its container picks a 4, 5 or 6 tile wide floor.
  */
 export function Mosaic({ state, progress, activeIndex, uid }: AuthVariantProps) {
   const dots = `url(#${uid}-mosaic-dots)`;
+  // The glint class of the last keystroke stays on through every state, so leaving an error does
+  // not replay it (a CSS animation restarts only when its class changes).
   const tick = keystroke(progress);
-  const typing = (state === "typing" || state === "password") && tick.count > 0;
   return (
     <>
       <style href="jcsoftdev-ui-auth-mosaic" precedence="default">
@@ -144,6 +164,16 @@ export function Mosaic({ state, progress, activeIndex, uid }: AuthVariantProps) 
           <clipPath id={`${uid}-mosaic-clip`}>
             <path d={CLIP} />
           </clipPath>
+          <clipPath id={`${uid}-mosaic-floor`}>
+            <path d={FLOOR_TOP} />
+          </clipPath>
+          {BANDS.map((band) => (
+            <linearGradient key={band} id={`${uid}-mosaic-${band}`} x1="0" y1="0" x2="0" y2="1">
+              <stop className={`ui-msc-${band}-stop`} offset="0" stopOpacity="0" />
+              <stop className={`ui-msc-${band}-stop`} offset=".5" stopOpacity="1" />
+              <stop className={`ui-msc-${band}-stop`} offset="1" stopOpacity="0" />
+            </linearGradient>
+          ))}
         </defs>
         <g className="ui-msc-stage">
           <path className="ui-msc-shadow" d={SHADOW} transform="translate(16 18)" />
@@ -155,7 +185,7 @@ export function Mosaic({ state, progress, activeIndex, uid }: AuthVariantProps) 
           <g clipPath={`url(#${uid}-mosaic-clip)`}>
             {GRIDS.map(({ n, shape, glyphTransform, tiles }) => {
               const lit = mosaicFilled(state, progress, n);
-              const glint = typing ? mosaicGlint(tick.count, n) : -1;
+              const glint = mosaicGlint(tick.count, n);
               return (
                 <g key={n} className="ui-msc-grid" data-n={n}>
                   {tiles.map((tile, k) => {
@@ -188,8 +218,6 @@ export function Mosaic({ state, progress, activeIndex, uid }: AuthVariantProps) 
                               <path className="ui-msc-tile-top" d={shape.top} />
                               <path className="ui-msc-litface" d={shape.top} />
                               <path className="ui-msc-glow" d={shape.top} />
-                              <path className="ui-msc-shine" d={shape.top} />
-                              <path className="ui-msc-flash" d={shape.top} />
                               {tile.glyph >= 0 ? (
                                 <g className="ui-msc-glyph" transform={glyphTransform}>
                                   {PORTAL_GLYPHS[tile.glyph]}
@@ -204,6 +232,19 @@ export function Mosaic({ state, progress, activeIndex, uid }: AuthVariantProps) 
                 </g>
               );
             })}
+          </g>
+          <g clipPath={`url(#${uid}-mosaic-floor)`}>
+            {BANDS.map((band) => (
+              <rect
+                key={band}
+                className={`ui-msc-band ui-msc-${band}`}
+                fill={`url(#${uid}-mosaic-${band})`}
+                x={BAND.x}
+                y={BAND.y}
+                width={BAND.w}
+                height={BAND.h}
+              />
+            ))}
           </g>
         </g>
       </svg>

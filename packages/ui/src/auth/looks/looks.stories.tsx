@@ -184,6 +184,18 @@ export const StatementStates: Story = {
       await expect(done.getAttribute("aria-hidden") === "true").toBe(!signedIn);
       await expect(caption.getAttribute("aria-hidden") === "true").toBe(signedIn);
       await expect(getComputedStyle(caption).visibility).toBe(signedIn ? "hidden" : "visible");
+      // The pill is a progress meter, not a control: nothing loops on it while the screen waits,
+      // and only the pill shakes on an error, never the arrow icon inside it as well.
+      const looping = art
+        .getAnimations({ subtree: true })
+        .filter((animation) => animation.effect?.getTiming().iterations === Infinity);
+      await expect(looping).toHaveLength(0);
+      const arrow = art.querySelector(".ui-stm-knob svg") as SVGElement;
+      await expect(arrow.getAnimations()).toHaveLength(0);
+      const pill = art.querySelector(".ui-stm-pill") as HTMLElement;
+      await expect(pill.hasAttribute("data-ready")).toBe(
+        signedIn || PROGRESS[art.dataset.state as AuthState] >= 1,
+      );
     }
   },
 };

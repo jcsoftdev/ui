@@ -47,9 +47,8 @@ const CSS = `
 .ui-auth-inlay{fill:none;stroke:color-mix(in srgb,var(--ink) 14%,transparent);stroke-width:2}
 @media (prefers-reduced-motion:reduce){
 .ui-auth-enter,.ui-auth-bob,.ui-auth-art[data-state] .ui-auth-hop,.ui-auth-hop-0,.ui-auth-hop-1,.ui-auth-shadow{animation:none}
-.ui-auth-pos{transform:translate(calc(var(--x0) * 1px),calc(var(--y0) * 1px));transition:none}
-.ui-auth-lift,.ui-auth-par{transform:none;transition:none}
-.ui-auth-shadow{opacity:1;transition:none}
+.ui-auth-pos,.ui-auth-lift,.ui-auth-shadow{transition:none}
+.ui-auth-par{transform:none;transition:none}
 }
 `;
 
@@ -74,14 +73,11 @@ function Slab({
   hop: 0 | 1 | null;
 }) {
   const live = slabPlacement(index, spread, activeIndex);
-  const assembled = slabPlacement(index, 0, -1);
   const vars = {
     "--i": index,
     "--x": live.x,
     "--y": live.y,
     "--lift": live.lift,
-    "--x0": assembled.x,
-    "--y0": assembled.y,
   } as CSSProperties;
   const dots = `url(#${dotsId})`;
   return (
@@ -124,8 +120,9 @@ export interface SlabsProps {
 export function Slabs({ state, progress, activeIndex, uid }: SlabsProps) {
   const spread = slabSpread(state, progress);
   const dotsId = `${uid}-dots`;
+  // The last keystroke's hop class stays on through every state: a CSS animation restarts only
+  // when its class changes, so an error settling back to password, or a refocus, never hops.
   const tick = keystroke(progress, SLAB_COUNT);
-  const typing = (state === "typing" || state === "password") && tick.count > 0;
   return (
     <>
       <style href="jcsoftdev-ui-auth-slabs" precedence="default">
@@ -150,7 +147,7 @@ export function Slabs({ state, progress, activeIndex, uid }: SlabsProps) {
             spread={spread}
             activeIndex={activeIndex}
             dotsId={dotsId}
-            hop={typing && tick.target === index ? tick.phase : null}
+            hop={tick.count > 0 && tick.target === index ? tick.phase : null}
           />
         ))}
         {state === "success" ? (
@@ -160,12 +157,14 @@ export function Slabs({ state, progress, activeIndex, uid }: SlabsProps) {
                 {n % 2 ? (
                   <circle
                     className="ui-auth-spark"
+                    data-tone={n % 4}
                     r="5"
                     style={{ "--dx": `${spark.dx}px`, "--dy": `${spark.dy}px` } as CSSProperties}
                   />
                 ) : (
                   <path
                     className="ui-auth-spark"
+                    data-tone={n % 4}
                     d={SPARK}
                     style={{ "--dx": `${spark.dx}px`, "--dy": `${spark.dy}px` } as CSSProperties}
                   />
