@@ -1,0 +1,18 @@
+:host {
+  display: block;
+  min-inline-size: 0;
+  container: ui-form-grid / inline-size;
+}
+:host([hidden]) {
+  display: none;
+}
+[part="grid"] {
+  display: grid;
+  gap: var(--ui-form-grid-gap, 14px);
+  grid-template-columns: minmax(0, 1fr);
+}
+@container ui-form-grid (min-width: 620px) {
+  [part="grid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

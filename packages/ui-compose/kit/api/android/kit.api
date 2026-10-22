@@ -44,6 +44,7 @@ public final class com/jcsoftdev/ui/atoms/ButtonDefaults {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/atoms/ButtonDefaults;
 	public final fun colors (Lcom/jcsoftdev/ui/atoms/ButtonVariant;Landroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/atoms/ButtonColors;
 	public final fun contentPadding (Lcom/jcsoftdev/ui/atoms/ButtonSize;Landroidx/compose/runtime/Composer;II)Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun disabledColors (Lcom/jcsoftdev/ui/atoms/ButtonVariant;Landroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/atoms/ButtonColors;
 	public final fun getIconSpacing-D9Ej5fM ()F
 	public final fun getLoadingIndicator ()Lkotlin/jvm/functions/Function3;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
@@ -52,7 +53,7 @@ public final class com/jcsoftdev/ui/atoms/ButtonDefaults {
 }
 
 public final class com/jcsoftdev/ui/atoms/ButtonKt {
-	public static final fun Button-ET9GhUo (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZZZLjava/lang/String;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Button-ipuLQCU (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZZZLjava/lang/String;Lcom/jcsoftdev/ui/atoms/ButtonColors;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/atoms/ButtonSize : java/lang/Enum {
@@ -121,7 +122,7 @@ public final class com/jcsoftdev/ui/atoms/ChipDefaults {
 }
 
 public final class com/jcsoftdev/ui/atoms/ChipKt {
-	public static final fun Chip (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ChipTone;ZLcom/jcsoftdev/ui/atoms/ChipColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun Chip (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ChipTone;ZLcom/jcsoftdev/ui/atoms/ChipColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 	public static final fun StatusPill (Lcom/jcsoftdev/ui/atoms/LedStatus;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/StatusPillColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;II)V
 }
 
@@ -156,8 +157,36 @@ public final class com/jcsoftdev/ui/atoms/DividerKt {
 	public static final fun VerticalDivider-aM-cp0Q (Landroidx/compose/ui/Modifier;JFLandroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/atoms/FabColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy--OWjLjI (JJ)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public static synthetic fun copy--OWjLjI$default (Lcom/jcsoftdev/ui/atoms/FabColors;JJILjava/lang/Object;)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getContent-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/atoms/FabDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/atoms/FabDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public final fun disabledColors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/atoms/FabColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getElevation-D9Ej5fM ()F
+	public final fun getIconSpacing-D9Ej5fM ()F
+	public final fun getMargin-D9Ej5fM ()F
+	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getSize-D9Ej5fM ()F
+	public final fun getTextStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/atoms/FloatingActionButtonKt {
+	public static final fun ExtendedFloatingActionButton-wn8IZOc (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZZLcom/jcsoftdev/ui/atoms/FabColors;Lcom/jcsoftdev/ui/atoms/FabColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public static final fun FloatingActionButton-gMrHQkA (Lkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLcom/jcsoftdev/ui/atoms/FabColors;Lcom/jcsoftdev/ui/atoms/FabColors;Landroidx/compose/ui/graphics/Shape;FLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/atoms/IconButtonKt {
-	public static final fun IconButton (Lkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZLcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun IconButton (Lkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/atoms/ButtonVariant;Lcom/jcsoftdev/ui/atoms/ButtonSize;ZLcom/jcsoftdev/ui/atoms/ButtonColors;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/atoms/LedStatus : java/lang/Enum {
@@ -329,7 +358,7 @@ public final class com/jcsoftdev/ui/containers/CardColors {
 public final class com/jcsoftdev/ui/containers/CardDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/CardDefaults;
-	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/containers/CardColors;
+	public final fun colors (ZLandroidx/compose/runtime/Composer;II)Lcom/jcsoftdev/ui/containers/CardColors;
 	public final fun getContentPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getFooterPadding (Landroidx/compose/runtime/Composer;I)Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getHeaderMinHeight-D9Ej5fM ()F
@@ -345,13 +374,13 @@ public final class com/jcsoftdev/ui/containers/CardKt {
 public final class com/jcsoftdev/ui/containers/ComposableSingletons$BannerKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ComposableSingletons$BannerKt;
 	public fun <init> ()V
-	public final fun getLambda$-1192661801$kit_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1769506294$kit_release ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/jcsoftdev/ui/containers/ComposableSingletons$PageHeaderKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/containers/ComposableSingletons$PageHeaderKt;
 	public fun <init> ()V
-	public final fun getLambda$-143045464$kit_release ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$727776135$kit_release ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/jcsoftdev/ui/containers/ListRowColors {
@@ -473,6 +502,19 @@ public final class com/jcsoftdev/ui/forms/InputColors {
 	public final fun getText-0d7_KjU ()J
 }
 
+public final class com/jcsoftdev/ui/forms/InputContentType : java/lang/Enum {
+	public static final field Email Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field NewPassword Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field NewUsername Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field OneTimeCode Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Password Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Phone Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static final field Username Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/forms/InputContentType;
+	public static fun values ()[Lcom/jcsoftdev/ui/forms/InputContentType;
+}
+
 public final class com/jcsoftdev/ui/forms/InputDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/forms/InputDefaults;
@@ -485,8 +527,16 @@ public final class com/jcsoftdev/ui/forms/InputDefaults {
 }
 
 public final class com/jcsoftdev/ui/forms/InputKt {
-	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
-	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+	public static final fun Input (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Landroidx/compose/ui/text/input/VisualTransformation;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/forms/InputSize;Landroidx/compose/runtime/Composer;III)V
+	public static final fun PasswordInput (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/forms/InputColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/forms/InputSize : java/lang/Enum {
+	public static final field Lg Lcom/jcsoftdev/ui/forms/InputSize;
+	public static final field Md Lcom/jcsoftdev/ui/forms/InputSize;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/forms/InputSize;
+	public static fun values ()[Lcom/jcsoftdev/ui/forms/InputSize;
 }
 
 public final class com/jcsoftdev/ui/forms/NumberStepperDefaults {
@@ -588,14 +638,44 @@ public final class com/jcsoftdev/ui/foundation/PressKt {
 	public static synthetic fun pressScale$default (Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/interaction/InteractionSource;FILjava/lang/Object;)Landroidx/compose/ui/Modifier;
 }
 
+public final class com/jcsoftdev/ui/glass/CrystalLens : com/jcsoftdev/ui/glass/LiquidLens {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (FLcom/jcsoftdev/ui/glass/Dispersion;)V
+	public synthetic fun <init> (FLcom/jcsoftdev/ui/glass/Dispersion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2 ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public final fun copy (FLcom/jcsoftdev/ui/glass/Dispersion;)Lcom/jcsoftdev/ui/glass/CrystalLens;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/CrystalLens;FLcom/jcsoftdev/ui/glass/Dispersion;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/CrystalLens;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public fun getRefraction ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/glass/Dispersion {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (F)V
+	public synthetic fun <init> (FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun copy (F)Lcom/jcsoftdev/ui/glass/Dispersion;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/Dispersion;FILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/Dispersion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmount ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/jcsoftdev/ui/glass/GlassBackdropKt {
 	public static final fun glassSource (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/GlassState;)Landroidx/compose/ui/Modifier;
 	public static final fun rememberGlassState (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/glass/GlassState;
 }
 
 public final class com/jcsoftdev/ui/glass/GlassEffectContainerKt {
-	public static final fun GlassEffectContainer (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
-	public static final fun glassEffect (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/runtime/Composer;II)Landroidx/compose/ui/Modifier;
+	public static final fun GlassEffectContainer (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/LiquidGlass;Lcom/jcsoftdev/ui/glass/GlassState;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun glassEffect (Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Lcom/jcsoftdev/ui/glass/LiquidGlass;Landroidx/compose/runtime/Composer;II)Landroidx/compose/ui/Modifier;
 }
 
 public final class com/jcsoftdev/ui/glass/GlassState {
@@ -603,52 +683,40 @@ public final class com/jcsoftdev/ui/glass/GlassState {
 	public final fun isRecording ()Z
 }
 
-public final class com/jcsoftdev/ui/glass/GlassVariant : java/lang/Enum {
-	public static final field Frosted Lcom/jcsoftdev/ui/glass/GlassVariant;
-	public static final field Liquid Lcom/jcsoftdev/ui/glass/GlassVariant;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/glass/GlassVariant;
-	public static fun values ()[Lcom/jcsoftdev/ui/glass/GlassVariant;
-}
-
-public final class com/jcsoftdev/ui/glass/LiquidGlassStyle {
+public final class com/jcsoftdev/ui/glass/LiquidGlass : com/jcsoftdev/ui/glass/SurfaceMaterial {
 	public static final field $stable I
-	public static final field Companion Lcom/jcsoftdev/ui/glass/LiquidGlassStyle$Companion;
-	public synthetic fun <init> (FFLcom/jcsoftdev/ui/glass/LiquidProfile;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;Lcom/jcsoftdev/ui/glass/LiquidInteraction;Lcom/jcsoftdev/ui/glass/LiquidMotion;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (FFLcom/jcsoftdev/ui/glass/LiquidProfile;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;Lcom/jcsoftdev/ui/glass/LiquidInteraction;Lcom/jcsoftdev/ui/glass/LiquidMotion;FLkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()F
+	public static final field Companion Lcom/jcsoftdev/ui/glass/LiquidGlass$Companion;
+	public synthetic fun <init> (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
 	public final fun component10 ()Lcom/jcsoftdev/ui/glass/LiquidSpecular;
 	public final fun component11 ()F
 	public final fun component12 ()F
 	public final fun component13 ()F
 	public final fun component14 ()Lcom/jcsoftdev/ui/glass/LiquidShadow;
-	public final fun component15 ()Lcom/jcsoftdev/ui/glass/LiquidInteraction;
-	public final fun component16 ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
-	public final fun component17-D9Ej5fM ()F
-	public final fun component2-D9Ej5fM ()F
-	public final fun component3 ()Lcom/jcsoftdev/ui/glass/LiquidProfile;
-	public final fun component4 ()F
+	public final fun component15-D9Ej5fM ()F
+	public final fun component2 ()Lcom/jcsoftdev/ui/glass/LiquidLens;
+	public final fun component3 ()Lcom/jcsoftdev/ui/glass/LiquidInteraction;
+	public final fun component4-D9Ej5fM ()F
 	public final fun component5-D9Ej5fM ()F
 	public final fun component6 ()Ljava/lang/Float;
 	public final fun component7 ()F
 	public final fun component8 ()Lcom/jcsoftdev/ui/glass/LiquidTint;
 	public final fun component9 ()F
-	public final fun copy-va6ycAI (FFLcom/jcsoftdev/ui/glass/LiquidProfile;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;Lcom/jcsoftdev/ui/glass/LiquidInteraction;Lcom/jcsoftdev/ui/glass/LiquidMotion;F)Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
-	public static synthetic fun copy-va6ycAI$default (Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;FFLcom/jcsoftdev/ui/glass/LiquidProfile;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;Lcom/jcsoftdev/ui/glass/LiquidInteraction;Lcom/jcsoftdev/ui/glass/LiquidMotion;FILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
+	public final fun copy-_V7ryL4 (ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;F)Lcom/jcsoftdev/ui/glass/LiquidGlass;
+	public static synthetic fun copy-_V7ryL4$default (Lcom/jcsoftdev/ui/glass/LiquidGlass;ZLcom/jcsoftdev/ui/glass/LiquidLens;Lcom/jcsoftdev/ui/glass/LiquidInteraction;FFLjava/lang/Float;FLcom/jcsoftdev/ui/glass/LiquidTint;FLcom/jcsoftdev/ui/glass/LiquidSpecular;FFFLcom/jcsoftdev/ui/glass/LiquidShadow;FILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/LiquidGlass;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBevelWidth-D9Ej5fM ()F
 	public final fun getBlend-D9Ej5fM ()F
 	public final fun getBrightness ()F
-	public final fun getDispersion ()F
+	public final fun getClear ()Z
 	public final fun getFresnel ()F
 	public final fun getFrost-D9Ej5fM ()F
 	public final fun getGrain ()F
 	public final fun getInteraction ()Lcom/jcsoftdev/ui/glass/LiquidInteraction;
-	public final fun getMotion ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
+	public final fun getLens ()Lcom/jcsoftdev/ui/glass/LiquidLens;
 	public final fun getOpacity ()F
 	public final fun getPreservesContrast ()Z
-	public final fun getProfile ()Lcom/jcsoftdev/ui/glass/LiquidProfile;
-	public final fun getRefraction ()F
 	public final fun getRim ()F
 	public final fun getSaturation ()Ljava/lang/Float;
 	public final fun getShadow ()Lcom/jcsoftdev/ui/glass/LiquidShadow;
@@ -658,24 +726,50 @@ public final class com/jcsoftdev/ui/glass/LiquidGlassStyle {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/jcsoftdev/ui/glass/LiquidGlassStyle$Companion {
-	public final fun getClear ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
-	public final fun getCrystal ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
-	public final fun getRegular ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
-	public final fun getThick ()Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
+public final class com/jcsoftdev/ui/glass/LiquidGlass$Companion {
+	public final fun getClear ()Lcom/jcsoftdev/ui/glass/LiquidGlass;
+	public final fun getCrystal ()Lcom/jcsoftdev/ui/glass/LiquidGlass;
+	public final fun getRegular ()Lcom/jcsoftdev/ui/glass/LiquidGlass;
+	public final fun getThick ()Lcom/jcsoftdev/ui/glass/LiquidGlass;
 }
 
-public final class com/jcsoftdev/ui/glass/LiquidGlassStyleKt {
-	public static final fun getLocalLiquidGlassStyle ()Landroidx/compose/runtime/ProvidableCompositionLocal;
+public abstract class com/jcsoftdev/ui/glass/LiquidInteraction {
+	public static final field $stable I
+	public abstract fun getMotion ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
 }
 
-public final class com/jcsoftdev/ui/glass/LiquidInteraction : java/lang/Enum {
-	public static final field Drag Lcom/jcsoftdev/ui/glass/LiquidInteraction;
-	public static final field None Lcom/jcsoftdev/ui/glass/LiquidInteraction;
-	public static final field Press Lcom/jcsoftdev/ui/glass/LiquidInteraction;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/glass/LiquidInteraction;
-	public static fun values ()[Lcom/jcsoftdev/ui/glass/LiquidInteraction;
+public final class com/jcsoftdev/ui/glass/LiquidInteraction$Drag : com/jcsoftdev/ui/glass/LiquidInteraction {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/jcsoftdev/ui/glass/LiquidMotion;)V
+	public synthetic fun <init> (Lcom/jcsoftdev/ui/glass/LiquidMotion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
+	public final fun copy (Lcom/jcsoftdev/ui/glass/LiquidMotion;)Lcom/jcsoftdev/ui/glass/LiquidInteraction$Drag;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/LiquidInteraction$Drag;Lcom/jcsoftdev/ui/glass/LiquidMotion;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/LiquidInteraction$Drag;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getMotion ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/glass/LiquidInteraction$Press : com/jcsoftdev/ui/glass/LiquidInteraction {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (Lcom/jcsoftdev/ui/glass/LiquidMotion;)V
+	public synthetic fun <init> (Lcom/jcsoftdev/ui/glass/LiquidMotion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
+	public final fun copy (Lcom/jcsoftdev/ui/glass/LiquidMotion;)Lcom/jcsoftdev/ui/glass/LiquidInteraction$Press;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/LiquidInteraction$Press;Lcom/jcsoftdev/ui/glass/LiquidMotion;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/LiquidInteraction$Press;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getMotion ()Lcom/jcsoftdev/ui/glass/LiquidMotion;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/jcsoftdev/ui/glass/LiquidLens {
+	public static final field $stable I
+	public abstract fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public abstract fun getRefraction ()F
 }
 
 public final class com/jcsoftdev/ui/glass/LiquidMotion {
@@ -710,7 +804,6 @@ public final class com/jcsoftdev/ui/glass/LiquidMotion$Companion {
 }
 
 public final class com/jcsoftdev/ui/glass/LiquidProfile : java/lang/Enum {
-	public static final field Convex Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public static final field Dome Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public static final field Full Lcom/jcsoftdev/ui/glass/LiquidProfile;
 	public static final field Rim Lcom/jcsoftdev/ui/glass/LiquidProfile;
@@ -782,19 +875,37 @@ public final class com/jcsoftdev/ui/glass/LiquidTint {
 }
 
 public final class com/jcsoftdev/ui/glass/MaterialSurfaceKt {
-	public static final fun MaterialSurface-8r3B23s (Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/Modifier;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/foundation/interaction/InteractionSource;Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
-	public static final fun material-hYmLsZ8 (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/foundation/interaction/InteractionSource;Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;Landroidx/compose/runtime/Composer;II)Landroidx/compose/ui/Modifier;
+	public static final fun MaterialSurface-hYmLsZ8 (Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/Modifier;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/foundation/interaction/InteractionSource;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+	public static final fun material-fWhpE4E (Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Landroidx/compose/ui/graphics/Shape;JLcom/jcsoftdev/ui/glass/GlassState;Landroidx/compose/foundation/interaction/InteractionSource;Landroidx/compose/runtime/Composer;II)Landroidx/compose/ui/Modifier;
 }
 
-public final class com/jcsoftdev/ui/glass/SurfaceMaterial : java/lang/Enum {
-	public static final field Glass Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
-	public static final field GlassClear Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
-	public static final field Liquid Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
-	public static final field LiquidClear Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
-	public static final field Solid Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
-	public static fun values ()[Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
+public final class com/jcsoftdev/ui/glass/RefractionLens : com/jcsoftdev/ui/glass/LiquidLens {
+	public static final field $stable I
+	public fun <init> ()V
+	public fun <init> (FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;)V
+	public synthetic fun <init> (FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2 ()Lcom/jcsoftdev/ui/glass/LiquidProfile;
+	public final fun component3 ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public final fun copy (FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;)Lcom/jcsoftdev/ui/glass/RefractionLens;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/glass/RefractionLens;FLcom/jcsoftdev/ui/glass/LiquidProfile;Lcom/jcsoftdev/ui/glass/Dispersion;ILjava/lang/Object;)Lcom/jcsoftdev/ui/glass/RefractionLens;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDispersion ()Lcom/jcsoftdev/ui/glass/Dispersion;
+	public final fun getProfile ()Lcom/jcsoftdev/ui/glass/LiquidProfile;
+	public fun getRefraction ()F
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/jcsoftdev/ui/glass/SurfaceMaterial {
+	public static final field $stable I
+	public static final field Companion Lcom/jcsoftdev/ui/glass/SurfaceMaterial$Companion;
+}
+
+public final class com/jcsoftdev/ui/glass/SurfaceMaterial$Companion {
+	public final fun getGlass ()Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
+	public final fun getGlassClear ()Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
+	public final fun getSolid ()Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
 }
 
 public final class com/jcsoftdev/ui/glass/SurfaceMaterialKt {
@@ -1094,6 +1205,10 @@ public final class com/jcsoftdev/ui/icons/ItalicKt {
 	public static final fun getItalic (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
+public final class com/jcsoftdev/ui/icons/KeyKt {
+	public static final fun getKey (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/LandmarkKt {
 	public static final fun getLandmark (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -1370,6 +1485,10 @@ public final class com/jcsoftdev/ui/icons/WalletKt {
 	public static final fun getWallet (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
+public final class com/jcsoftdev/ui/icons/WebhookKt {
+	public static final fun getWebhook (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/WrenchKt {
 	public static final fun getWrench (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -1412,6 +1531,17 @@ public final class com/jcsoftdev/ui/navigation/BarsKt {
 	public static final fun TopBar-tJlDC5Y (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Lcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lcom/jcsoftdev/ui/navigation/BarColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/navigation/BottomActionBarDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/navigation/BottomActionBarDefaults;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getShape ()Landroidx/compose/ui/graphics/Shape;
+}
+
+public final class com/jcsoftdev/ui/navigation/BottomActionBarKt {
+	public static final fun BottomActionBar-Uww-Ezs (Landroidx/compose/ui/Modifier;FLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lcom/jcsoftdev/ui/glass/GlassState;Lcom/jcsoftdev/ui/navigation/BarColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/foundation/layout/PaddingValues;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/navigation/SegmentedColors {
 	public static final field $stable I
 	public synthetic fun <init> (JJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -1430,6 +1560,7 @@ public final class com/jcsoftdev/ui/navigation/SegmentedDefaults {
 	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
 	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
 	public final fun getTrackPadding-D9Ej5fM ()F
+	public final fun getWrapWidth-D9Ej5fM ()F
 	public final fun textStyle (ZLandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
 }
 
@@ -1478,6 +1609,12 @@ public final class com/jcsoftdev/ui/navigation/TabsKt {
 	public static final fun Tabs-au3_HiA (Ljava/util/List;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/navigation/TabsColors;Landroidx/compose/foundation/layout/PaddingValues;FLandroidx/compose/runtime/Composer;II)V
 }
 
+public final class com/jcsoftdev/ui/overlays/ComposableSingletons$FullScreenModalKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/ComposableSingletons$FullScreenModalKt;
+	public fun <init> ()V
+	public final fun getLambda$1557053709$kit_release ()Lkotlin/jvm/functions/Function2;
+}
+
 public final class com/jcsoftdev/ui/overlays/ComposableSingletons$OverlayHostKt {
 	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/ComposableSingletons$OverlayHostKt;
 	public fun <init> ()V
@@ -1512,6 +1649,31 @@ public final class com/jcsoftdev/ui/overlays/DialogDefaults {
 
 public final class com/jcsoftdev/ui/overlays/DialogKt {
 	public static final fun Dialog-g4P7Ru4 (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/lang/String;ZZLjava/lang/String;Lcom/jcsoftdev/ui/overlays/DialogColors;Landroidx/compose/ui/graphics/Shape;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/primitives/OverlayMotion;FLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getDivider-0d7_KjU ()J
+	public final fun getTitle-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/overlays/FullScreenModalDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getHeaderHeight-D9Ej5fM ()F
+	public final fun getHeaderPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getMotion ()Lcom/jcsoftdev/ui/primitives/OverlayMotion;
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/overlays/FullScreenModalKt {
+	public static final fun FullScreenModal-uYRUAWA (ZLkotlin/jvm/functions/Function0;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Lcom/jcsoftdev/ui/overlays/FullScreenModalColors;FLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/ui/text/TextStyle;Lcom/jcsoftdev/ui/primitives/OverlayMotion;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/overlays/MenuColors {
@@ -2170,9 +2332,9 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 public final class com/jcsoftdev/ui/theme/UiStrings {
 	public static final field $stable I
 	public static final field Companion Lcom/jcsoftdev/ui/theme/UiStrings$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
-	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/jcsoftdev/ui/theme/UiStrings;
+	public static synthetic fun copy$default (Lcom/jcsoftdev/ui/theme/UiStrings;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/jcsoftdev/ui/theme/UiStrings;
 	public final fun getActionFailed ()Ljava/lang/String;
 	public final fun getActions ()Ljava/lang/String;
 	public final fun getBack ()Ljava/lang/String;
@@ -2188,6 +2350,7 @@ public final class com/jcsoftdev/ui/theme/UiStrings {
 	public final fun getNotifications ()Ljava/lang/String;
 	public final fun getOptional ()Ljava/lang/String;
 	public final fun getProcessing ()Ljava/lang/String;
+	public final fun getRemove ()Ljava/lang/String;
 	public final fun getRetry ()Ljava/lang/String;
 	public final fun getShowPassword ()Ljava/lang/String;
 	public final fun getSomethingWrong ()Ljava/lang/String;
@@ -2213,10 +2376,10 @@ public final class com/jcsoftdev/ui/theme/UiStyle : java/lang/Enum {
 public final class com/jcsoftdev/ui/theme/UiTheme {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiTheme;
+	public final fun getChromeGlass (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/glass/SurfaceMaterial;
 	public final fun getColors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeColors;
 	public final fun getFontFamily (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/font/FontFamily;
 	public final fun getHighContrast (Landroidx/compose/runtime/Composer;I)Z
-	public final fun getLiquidGlassStyle (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;
 	public final fun getMotion (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/foundation/Motion;
 	public final fun getReduceTransparency (Landroidx/compose/runtime/Composer;I)Z
 	public final fun getShapes (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/theme/ThemeShapes;
@@ -2228,7 +2391,7 @@ public final class com/jcsoftdev/ui/theme/UiTheme {
 }
 
 public final class com/jcsoftdev/ui/theme/UiThemeKt {
-	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lcom/jcsoftdev/ui/theme/UiStrings;Lcom/jcsoftdev/ui/theme/UiStyle;ZZZLcom/jcsoftdev/ui/glass/GlassVariant;Lcom/jcsoftdev/ui/glass/LiquidGlassStyle;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
+	public static final fun UiTheme (ZLcom/jcsoftdev/ui/theme/ThemeColors;Ljava/lang/String;Landroidx/compose/ui/text/font/FontFamily;Lcom/jcsoftdev/ui/foundation/Motion;Lcom/jcsoftdev/ui/theme/ThemeShapes;Lcom/jcsoftdev/ui/theme/ThemeSizes;Lcom/jcsoftdev/ui/theme/ThemeTypography;Lcom/jcsoftdev/ui/theme/UiStrings;Lcom/jcsoftdev/ui/theme/UiStyle;ZZZLcom/jcsoftdev/ui/glass/SurfaceMaterial;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/theme/UiTypography {

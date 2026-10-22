@@ -536,8 +536,8 @@
    {
     "name": "danger-soft",
     "value": {
-     "light": "#ffebe8",
-     "dark": "#300f0b"
+     "light": "#ffe0d4",
+     "dark": "#431608"
     },
     "usage": "Fondo de la cita con ausencia y del chip de error."
    },
@@ -881,8 +881,8 @@
      },
      {
       "name": "count",
-      "fontSize": "11px",
-      "lineHeight": 1,
+      "fontSize": "12px",
+      "lineHeight": 1.2,
       "fontWeight": 700,
       "usage": "Contador en navegación y pestañas.",
       "sample": "12"
@@ -1966,6 +1966,11 @@
      "name": "gap-density-lg",
      "value": "18px",
      "usage": "Separación entre bloques de una vista."
+    },
+    {
+     "name": "touch-target",
+     "value": "0px",
+     "usage": "Alto mínimo de un control interactivo pequeño: 0 salvo en data-density=touch, donde es 44px."
     }
    ],
    "scaled": [
@@ -1977,7 +1982,8 @@
     "pad-card",
     "gap-density-sm",
     "gap-density",
-    "gap-density-lg"
+    "gap-density-lg",
+    "touch-target"
    ],
    "levels": [
     {
@@ -2003,7 +2009,8 @@
       "control-height": "44px",
       "control-height-sm": "44px",
       "control-height-lg": "52px",
-      "input-height": "48px"
+      "input-height": "48px",
+      "touch-target": "44px"
      }
     }
    ]

@@ -1,0 +1,222 @@
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { defineChartLegend } from "../src/chart-legend/chart-legend.ts";
+import { defineChartTooltip } from "../src/chart-tooltip/chart-tooltip.ts";
+import { defineViolinChart } from "../src/violin-chart/violin-chart.ts";
+import {
+  chart,
+  marks,
+  parkMouse,
+  pinByTap,
+  settle,
+  svgOf,
+  sweep,
+  violations,
+  walkKeys,
+} from "./e18-fixture.ts";
+import { ax, wait } from "./setup.ts";
+
+const wave = (base: number, spread: number) =>
+  Array.from({ length: 40 }, (_, i) => base + Math.sin(i * 1.7) * spread + (i % 7) * 0.4);
+
+const CATEGORIES = ["Mon", "Tue", "Wed"];
+const SERIES = [
+  { id: "a", name: "Morning", data: [wave(30, 8), wave(40, 6), wave(35, 10)] },
+  { id: "b", name: "Evening", data: [wave(45, 5), wave(52, 9), wave(48, 7)] },
+];
+
+beforeAll(() => {
+  defineViolinChart();
+  defineChartLegend();
+  defineChartTooltip();
+});
+beforeEach(parkMouse);
+afterEach(() => {
+  document.body.innerHTML = "";
+});
+
+const mountChart = (attrs = "", width = 560, series = SERIES) =>
+  chart("ui-violin-chart", {
+    attrs: `value-format="integer" height="300" ${attrs}`,
+    inner: "<ui-chart-legend></ui-chart-legend><ui-chart-tooltip></ui-chart-tooltip>",
+    width,
+    setup: (c) => {
+      c.categories = CATEGORIES;
+      c.series = series;
+    },
+  });
+
+/** Centers (drawing units) of the violins of one chart, from the hit rectangles of its marks. */
+const centers = (c: HTMLElement) => {
+  const origin = svgOf(c).getBoundingClientRect();
+  return marks(c).map((m) => {
+    const r = m.getBoundingClientRect();
+    return { x: r.left - origin.left + r.width / 2, y: r.top - origin.top + r.height / 2 };
+  });
+};
+
+/** Plot box inside the drawing, from the translate of the plot group (the bottom margin is 28). */
+const plotBox = (c: Element) => {
+  const svg = svgOf(c);
+  const [left = 0, top = 0] = (svg.querySelector(":scope > g")?.getAttribute("transform") ?? "")
+    .replace(/[^\d.,-]/g, "")
+    .split(",")
+    .map(Number);
+  const box = svg.getBoundingClientRect();
+  return { left, top, right: box.width - 14, bottom: box.height - 28 };
+};
+
+const until = async (done: () => boolean, ms = 4000) => {
+  const end = performance.now() + ms;
+  while (!done() && performance.now() < end) await wait(20);
+};
+
+const bigSamples = (n: number) =>
+  Array.from({ length: n }, (_, i) => 50 + Math.sin(i * 0.37) * 20 + ((i * 7919) % 100) / 10);
+
+/** The hover log of a sweep must be a non-decreasing run of real marks with no leave in it. */
+const expectSteady = (seen: Array<number | null>, count: number) => {
+  expect(seen.length).toBeGreaterThan(0);
+  expect(seen).not.toContain(null);
+  const marks = seen as number[];
+  expect([...marks].sort((a, b) => a - b)).toEqual(marks);
+  expect(new Set(marks).size).toBe(count);
+};
+
+describe("ui-violin-chart", () => {
+  it("names every violin with its statistics and builds the table", async () => {
+    const c = await mountChart();
+    expect(await ax("group", "Test chart")).toBeTruthy();
+    expect(marks(c)).toHaveLength(6);
+    expect(marks(c)[0]?.getAttribute("aria-label")).toMatch(/^Mon · Morning: Median \d+, Q1 /);
+    expect(c.chartSnapshot?.categories).toHaveLength(6);
+    expect(c.chartSnapshot?.legend?.map((l) => l.name)).toEqual(["Morning", "Evening"]);
+  });
+
+  it("hovers one violin at a time, in order, without flicker", async () => {
+    const c = await mountChart();
+    const points = centers(c).map((p) => [p.x, p.y] as [number, number]);
+    const seen = await sweep(c, points);
+    expect(seen).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(c.querySelector("ui-chart-tooltip")?.textContent).toContain("Wed · Evening");
+  });
+
+  it("walks the violins with the arrow keys", async () => {
+    const c = await mountChart();
+    await walkKeys(c, "ArrowRight", 6);
+  });
+
+  it("pins a violin with a tap", async () => {
+    const c = await mountChart();
+    const p = centers(c)[1] as { x: number; y: number };
+    await pinByTap(c, p.x, p.y, 1);
+  });
+
+  it("splits two series into halves and only with exactly two visible", async () => {
+    const c = await mountChart("split");
+    const halves = marks(c).map((m) => m.getBoundingClientRect().width);
+    const full = await mountChart();
+    const whole = marks(full)[0]?.getBoundingClientRect().width as number;
+    expect(marks(c)).toHaveLength(6);
+    expect(Math.max(...halves)).toBeLessThanOrEqual(whole * 1.2);
+    (c as unknown as { toggleSeries(id: string): void }).toggleSeries("b");
+    await settle();
+    expect(marks(c)).toHaveLength(3);
+    expect(marks(c)[0]?.getAttribute("aria-label")).toMatch(/^Mon:/);
+  });
+
+  it("draws horizontally with points and the quartile inner", async () => {
+    const c = await mountChart('orientation="horizontal" inner="quartiles" show-points');
+    expect(svgOf(c).querySelectorAll("[data-observations] circle").length).toBe(6 * 40);
+    expect(svgOf(c).querySelectorAll("line[stroke-dasharray]").length).toBeGreaterThan(0);
+    await walkKeys(c, "ArrowDown", 6);
+  });
+
+  it("skips categories without samples and shows the empty state without any", async () => {
+    const c = await mountChart("", 560, [{ id: "a", name: "A", data: [[1, 2, 3], [], [4, 5, 9]] }]);
+    expect(marks(c)).toHaveLength(2);
+    c.series = [];
+    await settle();
+    expect(marks(c)).toHaveLength(0);
+    expect(c.querySelector("[data-ui-part=empty], [data-state=empty]")).not.toBeNull();
+  });
+
+  it("formats with the locale and passes axe", async () => {
+    const c = await mountChart('locale="de-DE" value-format="number"', 560, [
+      { id: "a", name: "A", data: [[1234.5, 1500.25, 2000.75, 1800.5]] },
+    ]);
+    c.categories = ["Only"];
+    await settle();
+    expect(c.chartSnapshot?.series[0]?.text[0]).toBe("4");
+    expect(c.chartSnapshot?.series.find((s) => s.id === "median")?.text[0]).toBe("1.650");
+    expect(await violations(c)).toEqual([]);
+  });
+
+  it("keeps the tooltip across the gutters of the whole plot, split or not", async () => {
+    for (const attrs of ["", "split", 'orientation="horizontal" split']) {
+      const c = await mountChart(attrs);
+      const p = plotBox(c);
+      const horizontal = attrs.includes("horizontal");
+      const path: Array<[number, number]> = [];
+      if (horizontal) for (let y = p.top + 1; y < p.bottom; y += 2) path.push([p.left + 20, y]);
+      else for (let x = p.left + 1; x < p.right; x += 2) path.push([x, (p.top + p.bottom) / 2]);
+      expectSteady(await sweep(c, path), 6);
+    }
+  });
+
+  it("does not hover outside the plot", async () => {
+    const c = await mountChart();
+    const p = plotBox(c);
+    expect(
+      await sweep(c, [
+        [p.left - 6, 100],
+        [p.right + 6, 100],
+        [200, p.bottom + 6],
+      ]),
+    ).toEqual([]);
+  });
+
+  it("draws a 200k-sample cell with points and 20k samples on a canvas", async () => {
+    const c = await mountChart("show-points", 560, [
+      { id: "a", name: "A", data: [bigSamples(200_000), [], []] },
+    ]);
+    await until(() => c.querySelector("canvas") != null, 8000);
+    expect(marks(c)).toHaveLength(1);
+    expect(c.querySelector("canvas")).not.toBeNull();
+
+    const many = await mountChart("show-points", 560, [
+      { id: "a", name: "A", data: [bigSamples(1), bigSamples(1), bigSamples(1)] },
+    ]);
+    const start = performance.now();
+    many.series = [
+      { id: "a", name: "A", data: [bigSamples(7000), bigSamples(7001), bigSamples(6000)] },
+    ];
+    await until(() => many.querySelector("canvas") != null);
+    const took = performance.now() - start;
+    console.log(`violin 20k samples drawn in ${took.toFixed(0)} ms`);
+    expect(many.querySelector("canvas")).not.toBeNull();
+    expect(svgOf(many).querySelectorAll("*").length).toBeLessThan(300);
+    expect(took).toBeLessThan(1500);
+  });
+
+  it("grades the dots by value once the color scale has loaded", async () => {
+    const c = await mountChart('show-points point-color="value"');
+    await until(() => c.querySelector("[data-observations] circle") != null);
+    expect(c.querySelectorAll("[data-observations] circle")).toHaveLength(6 * 40);
+  });
+
+  it("sorts each cell once: a resize or a hover sorts nothing", async () => {
+    const c = await mountChart("show-points");
+    await until(() => c.querySelector("[data-observations] circle") != null);
+    const sort = vi.spyOn(Array.prototype, "sort");
+    try {
+      (c.parentElement as HTMLElement).style.width = "430px";
+      await settle();
+      await settle();
+      const p = plotBox(c);
+      await sweep(c, [[p.left + 30, 100]]);
+      expect(sort).not.toHaveBeenCalled();
+    } finally {
+      sort.mockRestore();
+    }
+  });
+});

@@ -102,15 +102,15 @@ private fun Bitmap.sameAs(other: Bitmap): Boolean =
 
 class LiquidRenderTest {
     @Test fun lensDisplacesThePixelsNearTheEdge() {
-        val lens = scene(SurfaceMaterial.Liquid, lens = true).rgb(114, 60)
-        val flat = scene(SurfaceMaterial.Liquid, lens = false).rgb(114, 60)
+        val lens = scene(LiquidGlass.Regular, lens = true).rgb(114, 60)
+        val flat = scene(LiquidGlass.Regular, lens = false).rgb(114, 60)
         // The edge pulls in the blue from across the seam, so blue rises a lot compared with the plain blur.
         assertTrue(lens.third - flat.third > 10, "edge blue: lens=$lens flat=$flat")
     }
 
     @Test fun lensLeavesTheCenterAlone() {
-        val lens = scene(SurfaceMaterial.Liquid, lens = true).rgb(200, 60)
-        val flat = scene(SurfaceMaterial.Liquid, lens = false).rgb(200, 60)
+        val lens = scene(LiquidGlass.Regular, lens = true).rgb(200, 60)
+        val flat = scene(LiquidGlass.Regular, lens = false).rgb(200, 60)
         assertTrue(abs(lens.first - flat.first) <= 6 && abs(lens.third - flat.third) <= 6, "center: lens=$lens flat=$flat")
     }
 
@@ -120,34 +120,40 @@ class LiquidRenderTest {
     }
 
     @Test fun liquidDiffersFromFrosted() {
-        assertTrue(!scene(SurfaceMaterial.Liquid).sameAs(scene(SurfaceMaterial.Glass)))
+        assertTrue(!scene(LiquidGlass.Regular).sameAs(scene(SurfaceMaterial.Glass)))
     }
 
     @Test fun pressBrightensTheLiquidSurface() {
-        val idle = scene(SurfaceMaterial.Liquid, motion = 1f).rgb(200, 60)
-        val pressed = scene(SurfaceMaterial.Liquid, motion = 1f, press = PressInteraction.Press(Offset.Zero)).rgb(200, 60)
+        val idle = scene(LiquidGlass.Regular, motion = 1f).rgb(200, 60)
+        val pressed = scene(LiquidGlass.Regular, motion = 1f, press = PressInteraction.Press(Offset.Zero)).rgb(200, 60)
         assertTrue(pressed.first > idle.first, "press: idle=$idle pressed=$pressed")
     }
 
     @Test fun liquidCastsAnOuterShadowAndFrostedDoesNot() {
         // The surface starts at x=110 over a pure red backdrop; 3px outside it only the Liquid shadow darkens the red.
-        val liquid = scene(SurfaceMaterial.Liquid).rgb(107, 60).first
+        val liquid = scene(LiquidGlass.Regular).rgb(107, 60).first
         val frosted = scene(SurfaceMaterial.Glass).rgb(107, 60).first
         assertTrue(frosted == 255, "frosted must leave the backdrop alone: $frosted")
         assertTrue(liquid <= 251, "liquid shadow missing: $liquid")
     }
 
-    @Test fun theThemeDefaultsToTheFrostedVariant() {
-        var seen: GlassVariant? = null
+    @Test fun theThemeDefaultsToFrostedChromeGlass() {
+        var seen: SurfaceMaterial? = null
         runComposeUiTest {
-            setContent { UiTheme { seen = LocalGlassVariant.current } }
+            setContent { UiTheme { seen = LocalChromeGlass.current } }
             waitForIdle()
         }
-        assertTrue(seen == GlassVariant.Frosted, "default variant: $seen")
+        assertTrue(seen == SurfaceMaterial.Glass, "default chrome glass: $seen")
+    }
+
+    @Test fun theBaseMaterialIsTheLookOfALensedSurfaceWithoutTheShader() {
+        // No lens: it never asks for the shader, so it draws what a lensed material draws where the shader cannot run.
+        assertTrue(scene(LiquidGlass(), lens = true).sameAs(scene(LiquidGlass.Regular, lens = false)))
+        assertTrue(!scene(LiquidGlass(), lens = true).sameAs(scene(LiquidGlass.Regular, lens = true)))
     }
 
     @Test fun theLensShaderThinsTheVeilAtTheBevelAndKeepsItInTheMiddle() {
-        val liquid = scene(SurfaceMaterial.Liquid, lens = true)
+        val liquid = scene(LiquidGlass.Regular, lens = true)
         val frosted = scene(SurfaceMaterial.Glass, lens = false)
         // Over the blue backdrop the white veil lifts red; at the very edge Liquid shows noticeably more of the blue.
         assertTrue(

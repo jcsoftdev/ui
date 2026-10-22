@@ -1,0 +1,52 @@
+[data-ui="chart-breadcrumb"] {
+  display: block;
+  min-width: 0;
+  order: 0;
+}
+[data-ui="chart-breadcrumb"] ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  list-style: none;
+}
+[data-ui="chart-breadcrumb"] li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 12rem;
+}
+[data-ui="chart-breadcrumb"] li > svg {
+  flex: none;
+  color: var(--ink-3);
+}
+[data-ui="chart-breadcrumb"] li > :is(button, span) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ui="chart-breadcrumb"] button {
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+[data-ui="chart-breadcrumb"] button:hover {
+  color: var(--ink);
+}
+[data-ui="chart-breadcrumb"] button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="chart-breadcrumb"] [aria-current="page"] {
+  color: var(--ink);
+  font-weight: 700;
+}

@@ -4,7 +4,7 @@ import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
 import { Check, ChevronRight } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, withMaterialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material.js";
 
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
@@ -12,21 +12,43 @@ export const DropdownMenuRadioGroup = MenuPrimitive.RadioGroup;
 export const DropdownMenuGroup = MenuPrimitive.Group;
 export const DropdownMenuSub = MenuPrimitive.Sub;
 export const DropdownMenuArrow = MenuPrimitive.Arrow;
+/**
+ * Positions the menu against an element other than the trigger, e.g. the whole user card of a
+ * sidebar footer while a nested button opens it. Without a trigger, drive the menu with `open`.
+ */
+export const DropdownMenuAnchor = MenuPrimitive.Anchor;
 
-const surface =
-  "z-85 min-w-[min(14.375rem,var(--ui-popper-available-width))] max-h-(--ui-popper-available-height) max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover surface-overlay p-1.5 shadow-overlay";
+/** Layering and size limits every menu surface needs; the look is `dropdownMenuSurfaceClasses`. */
+const placement =
+  "z-85 min-w-[min(14.375rem,var(--ui-popper-available-width))] max-h-(--ui-popper-available-height) max-w-(--ui-popper-available-width) overflow-y-auto";
 
-const itemBase =
+/** The default look of a menu panel: radius, surface, padding and shadow. */
+export const dropdownMenuSurfaceClasses = "rounded-popover surface-overlay p-1.5 shadow-overlay";
+
+/** The default look of a menu item, for your own `DropdownMenuItem asChild` or `MenuPrimitive.Item`. */
+export const dropdownMenuItemClasses =
   "flex w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2";
+
+const surface = `${placement} ${dropdownMenuSurfaceClasses}`;
+const itemBase = dropdownMenuItemClasses;
 
 export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
   /**
    * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
-   * opt into Liquid Glass (with its fallbacks), `"solid"` forces an opaque surface.
+   * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
+   * forces an opaque surface. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
+  /**
+   * Leaves out the panel look (radius, surface, padding, shadow) and keeps only the layering and
+   * size limits, so a custom menu (a user card with its own header, say) draws its own surface
+   * with `className`. Positioning, focus handling and keyboard navigation are unchanged, and the
+   * items inside are the same `DropdownMenuItem`s.
+   */
+  bare?: boolean;
 }
 
 export function DropdownMenuContent({
@@ -35,7 +57,7 @@ export function DropdownMenuContent({
   collisionPadding = 8,
   container,
   material,
-  style,
+  bare = false,
   ...props
 }: DropdownMenuContentProps) {
   return (
@@ -43,8 +65,11 @@ export function DropdownMenuContent({
       <MenuPrimitive.Content
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
-        className={cn(surface, materialClass(material, "surface-solid"), className)}
-        style={withMaterialStyle(material, style)}
+        className={
+          bare
+            ? cn(placement, className)
+            : cn(surface, materialClass(material, "surface-solid"), className)
+        }
         {...props}
       />
     </MenuPrimitive.Portal>

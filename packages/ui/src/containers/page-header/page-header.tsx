@@ -1,7 +1,9 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
 export interface PageHeaderProps extends ComponentPropsWithoutRef<"header"> {
+  /** Trail shown on its own row above the title, usually a `Breadcrumbs`. */
+  breadcrumbs?: ReactNode;
   /** Tighter, centred header with a smaller title and a body-size lede. */
   compact?: boolean;
 }
@@ -11,7 +13,13 @@ export interface PageHeaderProps extends ComponentPropsWithoutRef<"header"> {
  * a plain `<div>` and, when the view has buttons, `PageHeaderActions` as the
  * second child. Actions wrap under the title when the container is too narrow.
  */
-export function PageHeader({ className, compact, ...props }: PageHeaderProps) {
+export function PageHeader({
+  breadcrumbs,
+  className,
+  compact,
+  children,
+  ...props
+}: PageHeaderProps) {
   return (
     <header
       data-compact={compact ? "" : undefined}
@@ -21,7 +29,10 @@ export function PageHeader({ className, compact, ...props }: PageHeaderProps) {
         className,
       )}
       {...props}
-    />
+    >
+      {breadcrumbs ? <div className="basis-full">{breadcrumbs}</div> : null}
+      {children}
+    </header>
   );
 }
 

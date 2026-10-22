@@ -191,10 +191,10 @@ function literal(value: unknown, indent: string): string {
   return q(value);
 }
 
-/** The `material` prop for a Card, Dialog, Popover and the other components with a glass `material`. */
+/** The `material` and `style` props for a Card, Dialog, Popover and the other components with a glass `material`. */
 export function materialSnippet(c: PlaygroundConfig): string {
-  const body = literal({ type: c.type, ...copyOptions(c) }, "");
-  return `<Card material={${body}}>\n  Liquid Glass\n</Card>`;
+  const body = literal(copyOptions(c), "");
+  return `<Card material="${c.type}" style={liquidStyle(${body})}>\n  Liquid Glass\n</Card>`;
 }
 
 /** The same configuration as CSS custom properties (a class, a scope or `:root`). */

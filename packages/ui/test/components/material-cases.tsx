@@ -18,16 +18,18 @@ export const material = {
   cardClass: (m: Material) => classOf(renderToStaticMarkup(<Card material={m} />)),
   cardStyle: (m: Material, style?: CSSProperties) =>
     styleOf(renderToStaticMarkup(<Card material={m} style={style} />)),
-  actionBarStyle: (m: Material) =>
+  actionBarStyle: (m: Material, style?: CSSProperties) =>
+    styleOf(renderToStaticMarkup(<ActionBar selectedCount={1} material={m} style={style} />)),
+  topbarStyle: (m: Material, style?: CSSProperties) =>
     styleOf(
       renderToStaticMarkup(
-        <ActionBar selectedCount={1} material={m} />,
-      ),
-    ),
-  topbarStyle: (m: Material) =>
-    styleOf(
-      renderToStaticMarkup(
-        <Topbar breadcrumbs={["Home"]} breadcrumbsLabel="Path" onSearch={() => {}} material={m} />,
+        <Topbar
+          breadcrumbs={["Home"]}
+          breadcrumbsLabel="Path"
+          onSearch={() => {}}
+          material={m}
+          style={style}
+        />,
       ),
     ),
   actionBar: (m?: "solid" | "glass" | "glass-clear") =>

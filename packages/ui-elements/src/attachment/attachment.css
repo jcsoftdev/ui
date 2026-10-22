@@ -1,0 +1,131 @@
+:host {
+  --ui-attachment-height: var(--control-height-sm);
+  position: relative;
+  display: flex;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  height: var(--ui-attachment-height);
+  align-items: center;
+  gap: var(--gap-density-sm);
+  padding: 0 4px 0 6px;
+  border-radius: var(--radius-button);
+  background-color: var(--surface-control);
+  color: var(--ink);
+  box-shadow: var(--shadow-control);
+  font-family: var(--font-sans);
+}
+:host([hidden]) {
+  display: none;
+}
+:host([variant="preview"]) {
+  width: 160px;
+  height: auto;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 6px;
+  border-radius: var(--radius-card);
+}
+:host([status="error"]) {
+  color: var(--danger);
+}
+[part][hidden] {
+  display: none;
+}
+[part="thumbnail"] {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-badge);
+  background-color: var(--sunken);
+  color: var(--ink-3);
+}
+:host([status="error"]) [part="thumbnail"] {
+  color: var(--danger);
+}
+:host([variant="preview"]) [part="thumbnail"] {
+  width: 100%;
+  height: 80px;
+  border-radius: var(--radius-chip);
+}
+[part="thumbnail"] img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+[part="icon"] {
+  width: 16px;
+  height: 16px;
+}
+[part="text"] {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.2;
+}
+[part="name"],
+[part="detail"] {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[part="name"] {
+  font-weight: 500;
+}
+[part="detail"] {
+  color: var(--ink-3);
+}
+:host([status="error"]) [part="detail"] {
+  color: var(--danger);
+}
+[part="progress"] {
+  position: absolute;
+  right: 6px;
+  bottom: 2px;
+  left: 6px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: var(--radius-badge);
+  background-color: var(--track);
+}
+[part="fill"] {
+  display: block;
+  height: 100%;
+  background-color: var(--accent);
+}
+[part="remove"] {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  place-items: center;
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+[part="remove"]:hover {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+[part="remove"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[part="remove"] [part="icon"] {
+  width: 14px;
+  height: 14px;
+}
+:host([variant="preview"]) [part="remove"] {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--surface-overlay);
+  box-shadow: var(--shadow-control);
+}

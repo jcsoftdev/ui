@@ -1,0 +1,154 @@
+[data-ui="markdown"] {
+  display: grid;
+  gap: var(--gap-density);
+  min-width: 0;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+[data-ui="markdown"] [data-part="heading"] {
+  margin: 0;
+  font-weight: 700;
+}
+[data-ui="markdown"] h1[data-part="heading"] {
+  font-size: 1.4em;
+}
+[data-ui="markdown"] h2[data-part="heading"] {
+  font-size: 1.2em;
+}
+[data-ui="markdown"] h3[data-part="heading"] {
+  font-size: 1.05em;
+}
+[data-ui="markdown"] h4[data-part="heading"] {
+  font-size: 1em;
+  font-weight: 600;
+}
+[data-ui="markdown"] h5[data-part="heading"] {
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+[data-ui="markdown"] h6[data-part="heading"] {
+  color: var(--ink-2);
+  font-size: 0.8em;
+  font-weight: 600;
+}
+[data-ui="markdown"] [data-part="paragraph"] {
+  margin: 0;
+}
+[data-ui="markdown"] [data-part="list"] {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-inline-start: 20px;
+}
+[data-ui="markdown"] ul[data-part="list"] {
+  list-style: disc;
+}
+[data-ui="markdown"] ol[data-part="list"] {
+  list-style: decimal;
+}
+[data-ui="markdown"] [data-part="list-item"] {
+  padding-inline-start: 4px;
+}
+[data-ui="markdown"] [data-part="list-body"] {
+  display: grid;
+  gap: 4px;
+  margin-block-start: 4px;
+}
+[data-ui="markdown"] [data-part="inline-code"] {
+  padding: 2px 4px;
+  border-radius: var(--radius-badge);
+  background-color: var(--surface-sunken);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+[data-ui="markdown"] [data-part="link"] {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+[data-ui="markdown"] [data-part="link"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="markdown"] [data-part="quote"] {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--accent-line);
+  color: var(--ink-2);
+}
+[data-ui="markdown"] [data-part="rule"] {
+  inline-size: 100%;
+  margin: 0;
+  border: 0;
+  border-block-start: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="markdown"] [data-part="table-wrapper"] {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+[data-ui="markdown"] [data-part="table"] {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+[data-ui="markdown"] [data-part="table-head"] {
+  background-color: var(--surface-sunken);
+}
+[data-ui="markdown"] [data-part="table-header-cell"],
+[data-ui="markdown"] [data-part="table-cell"] {
+  padding: 6px 12px;
+  text-align: start;
+}
+[data-ui="markdown"] [data-part="table-header-cell"] {
+  font-weight: 600;
+}
+[data-ui="markdown"] tbody > [data-part="table-row"] {
+  border-block-start: var(--border-width-divider) solid var(--border-color-divider);
+}
+[data-ui="markdown"] [data-align="center"] {
+  text-align: center;
+}
+[data-ui="markdown"] [data-align="right"] {
+  text-align: end;
+}
+[data-ui="markdown"] pre[data-ui-part="code"] {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  border: var(--border-width-card) solid var(--border-color-card);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-sunken);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+[data-ui="markdown"] pre[data-ui-part="code"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+[data-ui="markdown"] [data-part="caret"] {
+  display: inline-block;
+  inline-size: 2px;
+  block-size: 1em;
+  margin-inline-start: 2px;
+  background-color: currentColor;
+  transform: translateY(2px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui="markdown"] [data-part="caret"] {
+    animation: ui-markdown-caret 1s steps(1) infinite;
+  }
+}
+@keyframes ui-markdown-caret {
+  50% {
+    opacity: 0;
+  }
+}

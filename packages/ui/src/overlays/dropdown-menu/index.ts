@@ -1,5 +1,6 @@
 export {
   DropdownMenu,
+  DropdownMenuAnchor,
   DropdownMenuArrow,
   DropdownMenuCheckboxItem,
   type DropdownMenuCheckboxItemProps,
@@ -20,4 +21,6 @@ export {
   DropdownMenuSubTrigger,
   type DropdownMenuSubTriggerProps,
   DropdownMenuTrigger,
+  dropdownMenuItemClasses,
+  dropdownMenuSurfaceClasses,
 } from "./dropdown-menu.js";

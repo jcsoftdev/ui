@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -22,10 +23,12 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.atoms.dimWhenDisabled
+import com.jcsoftdev.ui.atoms.labelMaxLines
 import com.jcsoftdev.ui.primitives.rememberRovingFocus
 import com.jcsoftdev.ui.primitives.rovingItem
 import com.jcsoftdev.ui.primitives.rovingSelection
@@ -71,6 +74,9 @@ public object SegmentedDefaults {
 
     /** Padding between the track edge and the segments. */
     public val trackPadding: Dp = 3.dp
+
+    /** Widest a segment label grows before it wraps, once the font scale is large enough to allow two lines. */
+    public val wrapWidth: Dp = 140.dp
 
     /** Padding inside a segment. */
     public val contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp)
@@ -119,11 +125,14 @@ public fun Segmented(
                     .padding(contentPadding),
                 contentAlignment = Alignment.Center,
             ) {
+                val lines = labelMaxLines()
                 Text(
                     option.label,
+                    Modifier.then(if (lines > 1) Modifier.widthIn(max = SegmentedDefaults.wrapWidth) else Modifier),
                     style = SegmentedDefaults.textStyle(on),
                     color = if (on) colors.selectedContent else colors.content,
-                    maxLines = 1,
+                    maxLines = lines,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

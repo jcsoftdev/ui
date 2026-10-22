@@ -4,10 +4,13 @@ import { loadCases } from "./components/render.mjs";
 
 const { html } = await loadCases("cases.tsx");
 
-test("checkbox and switch grow their hit area to 44px under data-density=touch only", () => {
+test("checkbox and switch add an invisible 44px hit target under data-density=touch only", () => {
   for (const markup of [html.checkbox(), html.switch()]) {
     assert.match(markup, /size-10/);
-    assert.match(markup, /in-data-\[density=touch\]:size-11/);
+    assert.match(markup, /\brelative\b/);
+    assert.match(markup, /in-data-\[density=touch\]:after:size-11/);
+    assert.match(markup, /in-data-\[density=touch\]:after:absolute/);
+    assert.doesNotMatch(markup, /in-data-\[density=touch\]:size-11/);
   }
 });
 

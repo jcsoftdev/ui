@@ -10,17 +10,20 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
 import com.jcsoftdev.ui.foundation.Motion
+import com.jcsoftdev.ui.theme.UiStrings
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -98,5 +101,20 @@ class AtomsUiTest {
             onNodeWithText("Off").assertIsNotEnabled()
             onNodeWithText("Go").performClick()
             assertEquals(1, clicks)
+        }
+
+    @Test
+    fun chipRemoveIsNamedFromStringsAndFires() =
+        runComposeUiTest {
+            var removed = 0
+            setContent {
+                UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(0f), strings = UiStrings.Es) {
+                    Chip("Barba", onRemove = { removed++ })
+                    Chip("Fijo")
+                }
+            }
+            onNodeWithContentDescription("Quitar").performClick()
+            assertEquals(1, removed)
+            onAllNodesWithContentDescription("Quitar").assertCountEquals(1)
         }
 }

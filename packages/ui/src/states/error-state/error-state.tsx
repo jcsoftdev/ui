@@ -17,6 +17,11 @@ export interface ErrorStateProps {
   correlationLabel?: string;
   onRetry?: () => void;
   retryLabel?: string;
+  /**
+   * Extra actions (buttons or links) in the same row as the retry button, under the message.
+   * Use it for "Go back" or "Contact support"; `onRetry` stays the shortcut for a plain retry.
+   */
+  actions?: ReactNode;
   /** `outlined` draws a danger border around the state. */
   variant?: "plain" | "outlined";
   className?: string;
@@ -30,6 +35,7 @@ export function ErrorState({
   correlationLabel,
   onRetry,
   retryLabel,
+  actions,
   variant = "plain",
   className,
 }: ErrorStateProps) {
@@ -57,14 +63,19 @@ export function ErrorState({
           {correlationLabel ?? strings.correlationPrefix} {correlationId}
         </p>
       ) : null}
-      {onRetry ? (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-2 inline-flex h-control-sm cursor-pointer items-center rounded-input border-control bg-surface-control px-3 font-semibold text-fs-130 text-ink hover:bg-surface-2"
-        >
-          {retryLabel ?? strings.retry}
-        </button>
+      {onRetry || displayable(actions) !== undefined ? (
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+          {onRetry ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="inline-flex h-control-sm cursor-pointer items-center rounded-input border-control bg-surface-control px-3 font-semibold text-fs-130 text-ink hover:bg-surface-2"
+            >
+              {retryLabel ?? strings.retry}
+            </button>
+          ) : null}
+          {displayable(actions)}
+        </div>
       ) : null}
     </div>
   );

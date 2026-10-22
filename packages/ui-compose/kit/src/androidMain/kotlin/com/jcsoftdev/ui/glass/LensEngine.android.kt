@@ -1,0 +1,100 @@
+package com.jcsoftdev.ui.glass
+
+import android.graphics.RuntimeShader
+import android.graphics.Shader
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import android.graphics.RenderEffect as PlatformRenderEffect
+
+// One shader per program and process, compiled on first use (so the class stays loadable below API 33). Each effect snapshots
+// the uniforms when it is created, and effects are only built on the main thread, so every surface can reuse it.
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun LensProgram.shader(): RuntimeShader = compiled as? RuntimeShader ?: RuntimeShader(source).also { compiled = it }
+
+internal actual class LensEngine actual constructor() {
+    // The platform blur that feeds the shader, kept while its radius holds (typed Any so the class loads below API 31).
+    private var blurRadius = -1f
+    private var blurEffect: Any? = null
+
+    actual fun effect(
+        program: LensProgram,
+        params: LensParams,
+    ): RenderEffect? = if (lensSupported()) agslEffect(program.shader(), params, blurFor(params.blur)) else null
+
+    actual fun merged(
+        program: MergeProgram,
+        params: MergeParams,
+    ): RenderEffect? = if (lensSupported()) agslMerged(program.program.shader(), params, blurFor(params.lens.blur)) else null
+
+    private fun blurFor(radius: Float): Any? {
+        if (radius <= 0f || !lensSupported()) return null
+        if (radius != blurRadius || blurEffect == null) {
+            blurRadius = radius
+            blurEffect = platformBlur(radius)
+        }
+        return blurEffect
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun platformBlur(radius: Float): Any = PlatformRenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP)
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun agslEffect(
+    shader: RuntimeShader,
+    params: LensParams,
+    blur: Any?,
+): RenderEffect {
+    shader.setFloatUniform("size", params.width, params.height)
+    shader.setFloatUniform("origin", params.pad, params.pad)
+    shader.setFloatUniform("radii", params.tl, params.tr, params.br, params.bl)
+    shader.setFloatUniform("exponent", params.exponent)
+    shader.setFloatUniform("dome", params.dome)
+    shader.common(params)
+    return shader.chain(blur)
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun agslMerged(
+    shader: RuntimeShader,
+    params: MergeParams,
+    blur: Any?,
+): RenderEffect {
+    shader.setFloatUniform("boxes", params.shapes.boxes())
+    shader.setFloatUniform("roundness", params.shapes.roundness())
+    shader.setFloatUniform("count", params.count.toFloat())
+    shader.setFloatUniform("blendK", params.blendDistance)
+    shader.common(params.lens)
+    return shader.chain(blur)
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun RuntimeShader.common(params: LensParams) {
+    setFloatUniform("strength", params.strength)
+    setFloatUniform("dispersion", params.dispersion)
+    setFloatUniform("bounds", params.boundsLeft, params.boundsTop, params.boundsRight, params.boundsBottom)
+    setFloatUniform("sat", params.saturate)
+    setFloatUniform("tint", params.tintR, params.tintG, params.tintB, params.tintA)
+    setFloatUniform("dim", params.dimR, params.dimG, params.dimB, params.dimA)
+    setFloatUniform("veilEdge", params.veilEdge)
+    setFloatUniform("rimDepth", params.rimDepth)
+    setFloatUniform("glintWidth", params.glintWidth)
+    setFloatUniform("glintStrength", params.glintStrength)
+    setFloatUniform("light", params.lightX, params.lightY)
+    setFloatUniform("fresnel", params.fresnel)
+    setFloatUniform("grain", params.grain)
+    setFloatUniform("bright", params.brightness)
+    setFloatUniform("profile", params.profile)
+    setFloatUniform("band", params.band)
+    setFloatUniform("thickness", params.thickness)
+    setFloatUniform("glow", params.glowX, params.glowY, params.glowRadius, params.glowAlpha)
+}
+
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun RuntimeShader.chain(blur: Any?): RenderEffect {
+    val lens = PlatformRenderEffect.createRuntimeShaderEffect(this, "content")
+    val effect = if (blur is PlatformRenderEffect) PlatformRenderEffect.createChainEffect(lens, blur) else lens
+    return effect.asComposeRenderEffect()
+}

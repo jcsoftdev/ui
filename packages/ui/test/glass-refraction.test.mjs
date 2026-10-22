@@ -485,3 +485,93 @@ test("the crystal amplitude follows refraction up to a fixed cap and is zero for
   assert.equal(glass.crystalAmplitude(4000, 400, 2), glass.CRYSTAL_MAX_OFFSET);
   assert.equal(glass.crystalAmplitude(300, 96, 9), glass.crystalAmplitude(300, 96, 2));
 });
+
+/** The whole-surface field written the plain way: every term recomputed per pixel, nothing hoisted. */
+function referenceWholeField({ width, height, radius, coverage, dpr }) {
+  const ratio = Math.min(Math.max(dpr, 1), 2);
+  const w = Math.max(1, width);
+  const h = Math.max(1, height);
+  const shape = glass.WHOLE_SHAPES[coverage];
+  const corner = 2 ** (1 / shape.exponent);
+  const rim = Math.min(Math.max(glass.bezelFor(radius, w, h, "rim"), 1), Math.min(w, h) / 2);
+  const r = Math.min(Math.max(radius, 0), Math.min(w, h) / 2);
+  const pw = Math.max(1, Math.round(w * ratio));
+  const ph = Math.max(1, Math.round(h * ratio));
+  const [hx, hy] = [w / 2, h / 2];
+  const amp = glass.lensAmplitude(w, h, rim, coverage);
+  const norm = Math.max(amp.x, amp.y, 1);
+  const data = new Uint8ClampedArray(pw * ph * 4);
+  for (let j = 0; j < ph; j++) {
+    for (let i = 0; i < pw; i++) {
+      const px = (i + 0.5) / (pw / w) - hx;
+      const py = (j + 0.5) / (ph / h) - hy;
+      const gx = Math.sign(px) * (Math.abs(px) / hx) ** (shape.exponent - 1);
+      const gy = Math.sign(py) * (Math.abs(py) / hy) ** (shape.exponent - 1);
+      const g = Math.hypot(gx, gy);
+      const radial =
+        ((Math.abs(px) / hx) ** shape.exponent + (Math.abs(py) / hy) ** shape.exponent) **
+        (1 / shape.exponent);
+      const pull = g > 0 ? Math.min(radial / corner, 1) ** shape.power / g : 0;
+      const o = (j * pw + i) * 4;
+      data[o] = 128 - gx * pull * 127 * (amp.x / norm);
+      data[o + 1] = 128 - gy * pull * 127 * (amp.y / norm);
+      data[o + 3] = 255;
+      if (Math.abs(py) < hy - rim && Math.abs(px) < hx - rim) {
+        data[o + 2] = 255;
+        continue;
+      }
+      const qx = Math.abs(px) - (hx - r);
+      const qy = Math.abs(py) - (hy - r);
+      const depth =
+        r - (Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0));
+      const x = depth / rim;
+      data[o + 2] = (depth > 0 && depth < rim ? x * x * (3 - 2 * x) : 1) * 255;
+    }
+  }
+  return { width: pw, height: ph, data };
+}
+
+test("the hoisted column terms of the whole-surface field match a plain per-pixel loop", () => {
+  const shapes = [
+    [180, 56, 28],
+    [120, 120, 60],
+    [333.5, 77.25, 20],
+    [41, 90, 8],
+  ];
+  for (const coverage of ["full", "dome"]) {
+    for (const [width, height, radius] of shapes) {
+      for (const dpr of [1, 1.37, 1.5, 2]) {
+        const bezel = glass.bezelFor(radius, width, height, coverage);
+        const got = glass.computeDisplacementField({ width, height, radius, bezel, coverage, dpr });
+        const want = referenceWholeField({ width, height, radius, coverage, dpr });
+        const where = `${coverage} ${width}x${height} r${radius} dpr${dpr}`;
+        assert.deepEqual([got.width, got.height], [want.width, want.height], where);
+        assert.ok(Buffer.from(got.data.buffer).equals(Buffer.from(want.data.buffer)), where);
+      }
+    }
+  }
+});
+
+test("a fractional ratio samples at the effective pixels per px, so the field stays symmetric", () => {
+  // 101 px at 1.5 rounds to 152 device pixels: 1.505 per px, not 1.5. With the nominal ratio the
+  // centre of the map drifted a fraction of a px off the centre of the surface.
+  for (const coverage of ["full", "dome"]) {
+    const field = glass.computeDisplacementField({
+      width: 101,
+      height: 61,
+      radius: 20,
+      bezel: 30,
+      coverage,
+      dpr: 1.5,
+    });
+    const row = Math.floor(field.height / 2) * field.width * 4;
+    for (let i = 0; i < field.width; i++) {
+      const mirror = field.width - 1 - i;
+      assert.equal(
+        field.data[row + i * 4] + field.data[row + mirror * 4],
+        256,
+        `${coverage} column ${i}`,
+      );
+    }
+  }
+});

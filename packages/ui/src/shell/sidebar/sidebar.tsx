@@ -1,10 +1,9 @@
 "use client";
 
-import { type ReactNode, useCallback, useEffect, useRef } from "react";
-import { useGlassLens } from "../../glass/use-glass-lens.js";
+import { type CSSProperties, type ReactNode, useEffect, useRef } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { type Material, materialClass, materialStyle } from "../../utils/material.js";
+import { type Material, materialClass } from "../../utils/material.js";
 import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
 export interface SidebarLinkProps {
@@ -12,6 +11,8 @@ export interface SidebarLinkProps {
   className: string;
   children: ReactNode;
   "aria-current"?: "page";
+  /** Set in rail mode, where the label is visually hidden. */
+  title?: string;
 }
 
 /** Renders a navigation link; inject your router's link component here. */
@@ -60,10 +61,16 @@ export interface SidebarProps {
   /** Drawer state when the app container is under 900 px. Ignored above it, where the sidebar is always visible. */
   open?: boolean;
   onClose?: () => void;
+  /** Icons-only rail with the labels as tooltips. Ignored while the sidebar is a drawer. */
+  collapsed?: boolean;
   className?: string;
+  /** Inline style of the root (for example `liquidStyle()` options). */
+  style?: CSSProperties;
   /**
    * Surface material. Omitted keeps the default for this layer (opaque, glass in the glass
-   * preset); `"glass"` and `"glass-clear"` opt into Liquid Glass, `"solid"` forces opaque.
+   * preset); `"glass"` and `"glass-clear"` are frosted glass, `"liquid"` and `"liquid-clear"`
+   * Liquid Glass, `"solid"` forces opaque. Liquid options go in `style` (`liquidStyle()` from
+   * `@jcsoftdev/ui/liquid`); the lens needs `<LiquidGlass />` mounted once.
    */
   material?: Material;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -88,24 +95,19 @@ export function Sidebar({
   renderLink = defaultRenderLink,
   open = false,
   onClose,
+  collapsed = false,
   material,
   className,
+  style,
   classNames,
 }: SidebarProps) {
   const shell = useAppShell();
-  const asideRef = useRef<HTMLElement | null>(null);
-  const lens = useGlassLens<HTMLElement>(undefined, { ownInteractive: true });
-  const setAside = useCallback(
-    (node: HTMLElement | null) => {
-      asideRef.current = node;
-      lens(node);
-    },
-    [lens],
-  );
+  const asideRef = useRef<HTMLElement>(null);
   const parentCompact = useCompactContainer(asideRef, (aside) => aside.parentElement, !shell);
   const isMobile = shell ? shell.compact : parentCompact;
   const closedOnMobile = isMobile && !open;
   const openOnMobile = isMobile && open;
+  const rail = collapsed && !isMobile;
 
   useEffect(() => {
     if (!openOnMobile) return;
@@ -125,11 +127,12 @@ export function Sidebar({
   return (
     <>
       <aside
-        ref={setAside}
+        ref={asideRef}
         aria-label={ariaLabel}
         inert={closedOnMobile || undefined}
         className={cn(
-          "fixed inset-y-0 left-0 z-45 flex h-screen w-side-width flex-col gap-4.5 overflow-y-auto border-r-divider surface-side px-3 pt-3.5 pb-3 transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-45 flex h-screen flex-col gap-4.5 overflow-y-auto border-r-divider surface-side pt-3.5 pb-3 transition-transform duration-200",
+          rail ? "w-[4.5rem] px-2" : "w-side-width px-3",
           // Inside AppShell the container query decides before any script runs (no flash on a
           // narrow first paint); the measured state only drives inert, the scrim and focus.
           shell
@@ -146,7 +149,7 @@ export function Sidebar({
           classNames?.root,
           className,
         )}
-        style={materialStyle(material)}
+        style={style}
       >
         {header}
         {groups.map((group) => (
@@ -155,7 +158,13 @@ export function Sidebar({
             aria-label={group.label}
             className={cn("flex flex-col gap-px", classNames?.group)}
           >
-            <div className={cn("px-2.5 pb-1.5 text-overline text-ink-3", classNames?.groupLabel)}>
+            <div
+              className={cn(
+                "px-2.5 pb-1.5 text-overline text-ink-3",
+                rail && "sr-only",
+                classNames?.groupLabel,
+              )}
+            >
               {group.label}
             </div>
             {group.items.map((item) => {
@@ -168,18 +177,37 @@ export function Sidebar({
                   {renderLink({
                     href: item.href,
                     "aria-current": item.active ? "page" : undefined,
+                    title: rail ? item.label : undefined,
                     className: cn(
                       "flex items-center gap-2.5 rounded-control px-2.5 py-2 text-control text-ink-2 hover:bg-surface-2 hover:text-ink [&_svg]:size-4.25 [&_svg]:shrink-0",
+                      rail && "relative justify-center in-data-[density=touch]:min-h-11",
                       item.active && "bg-accent-soft font-bold text-accent-ink",
                       classNames?.link,
                     ),
                     children: (
                       <>
                         {item.icon}
-                        <span className={cn("min-w-0 truncate", classNames?.label)}>
+                        <span
+                          className={cn("min-w-0 truncate", rail && "sr-only", classNames?.label)}
+                        >
                           {item.label}
                         </span>
-                        {item.badge !== undefined ? (
+                        {item.badge !== undefined && rail ? (
+                          <>
+                            <span
+                              aria-hidden="true"
+                              className={cn(
+                                "absolute top-1 right-1 size-2 rounded-full ring-2 ring-surface",
+                                item.badgeTone === "danger" ? "bg-danger" : "bg-accent",
+                                classNames?.badge,
+                              )}
+                            />
+                            <span className="sr-only">
+                              {item.badge}
+                              {item.badgeLabel ? ` ${item.badgeLabel}` : null}
+                            </span>
+                          </>
+                        ) : item.badge !== undefined ? (
                           <span
                             className={cn(
                               "ml-auto shrink-0 rounded-chip px-1.5 py-0.75 text-count",

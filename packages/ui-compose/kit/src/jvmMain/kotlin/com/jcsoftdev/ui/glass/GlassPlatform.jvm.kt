@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 
 internal actual fun backdropBlurSupported(): Boolean = true
 
+internal actual fun lensSupported(): Boolean = true
+
 @Composable
 internal actual fun rememberSystemReduceTransparency(): Boolean = false
 

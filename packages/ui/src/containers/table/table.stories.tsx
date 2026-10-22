@@ -1,15 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
+import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import {
   type PinnedColumns,
   Table,
+  TableActionsCell,
   TableBody,
   TableCell,
   TableHead,
   TableHeaderCell,
   TableLinkRow,
   TableRow,
+  TableSelectAllCell,
+  TableSelectCell,
 } from "./table.js";
 
 const inventory = [
@@ -275,4 +280,166 @@ export const Narrow: Story = {
   render: () => (
     <WideTable pinnable defaultPinnedColumns={{ left: ["name"], right: ["actions"] }} />
   ),
+};
+
+/** Flush: the first and last columns drop their outer padding; the page owns the gutter. */
+export const Flush: Story = {
+  args: { flush: true },
+  play: async ({ canvasElement }) => {
+    const first = canvasElement.querySelector("tbody td:first-child") as HTMLElement;
+    const last = canvasElement.querySelector("tbody td:last-child") as HTMLElement;
+    const middle = canvasElement.querySelector("tbody td:nth-child(2)") as HTMLElement;
+    await expect(getComputedStyle(first).paddingLeft).toBe("0px");
+    await expect(getComputedStyle(last).paddingRight).toBe("0px");
+    await expect(getComputedStyle(first).paddingRight).not.toBe("0px");
+    await expect(getComputedStyle(middle).paddingLeft).not.toBe("0px");
+  },
+};
+
+/** Sticky header inside a height-capped wrapper: scroll the body and the header stays. */
+export const StickyHeader: Story = {
+  args: { stickyHeader: true, maxHeight: "8rem" },
+  play: async ({ canvasElement }) => {
+    const wrapper = canvasElement.querySelector("[class*='@container/table']") as HTMLElement;
+    await expect(wrapper.scrollHeight).toBeGreaterThan(wrapper.clientHeight);
+    wrapper.scrollTop = 40;
+    const th = canvasElement.querySelector("thead th") as HTMLElement;
+    await expect(getComputedStyle(th).position).toBe("sticky");
+    const wrapperTop = wrapper.getBoundingClientRect().top;
+    await expect(Math.abs(th.getBoundingClientRect().top - wrapperTop)).toBeLessThan(2);
+  },
+};
+
+/** Selection: controlled keys, select-all with a mixed state, rows report aria-selected. */
+export const Selection: Story = {
+  render: function Render(args) {
+    const [keys, setKeys] = useState<string[]>(["POM-001"]);
+    const all = inventory.map((item) => item.sku);
+    return (
+      <Table {...args} selectedKeys={keys} onSelectedKeysChange={setKeys}>
+        <TableHead>
+          <tr>
+            <TableSelectAllCell rowKeys={all} />
+            <TableHeaderCell>Producto</TableHeaderCell>
+            <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {inventory.map((item) => (
+            <TableRow key={item.sku} rowKey={item.sku}>
+              <TableSelectCell rowKey={item.sku} label={item.name} />
+              <TableCell>{item.name}</TableCell>
+              <TableCell alignRight>{item.stock}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const all = canvas.getByRole("checkbox", { name: "Select all rows" });
+    await expect(all).toHaveAttribute("aria-checked", "mixed");
+    await expect(canvasElement.querySelectorAll("tr[aria-selected='true']")).toHaveLength(1);
+    await userEvent.click(canvas.getByRole("checkbox", { name: "Select Cera brillo clásica" }));
+    await expect(canvasElement.querySelectorAll("tr[aria-selected='true']")).toHaveLength(2);
+    await userEvent.click(all);
+    await expect(all).toHaveAttribute("aria-checked", "true");
+    await expect(canvasElement.querySelectorAll("tr[aria-selected='true']")).toHaveLength(5);
+    await userEvent.click(all);
+    await expect(all).toHaveAttribute("aria-checked", "false");
+    await expect(canvasElement.querySelectorAll("tr[aria-selected='true']")).toHaveLength(0);
+  },
+};
+
+function ActionsTable({ menu }: { menu: boolean }) {
+  return (
+    <Table aria-label="Alumnos" flush>
+      <TableHead>
+        <tr>
+          <TableHeaderCell>Alumno</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Acciones</span>
+          </TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        <TableRow>
+          <TableCell>Ana Torres</TableCell>
+          <TableActionsCell
+            menu={
+              menu ? (
+                <Button size="sm" variant="ghost" aria-label="Row actions">
+                  ...
+                </Button>
+              ) : undefined
+            }
+          >
+            <Button size="sm">Cobrar</Button>
+            <Button size="sm" variant="ghost">
+              Ver ficha
+            </Button>
+            <Button size="sm" variant="ghost">
+              Enviar recordatorio
+            </Button>
+          </TableActionsCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  );
+}
+
+/** Wide container: the actions are inline. */
+export const ActionsWide: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-[960px]">
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <ActionsTable menu />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("button", { name: "Cobrar" })).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Row actions" })).toBeNull();
+  },
+};
+
+/** Narrow container with a menu: the inline actions give way to the overflow trigger. */
+export const ActionsNarrowMenu: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-[360px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <ActionsTable menu />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole("button", { name: "Cobrar" })).toBeNull();
+    await expect(canvas.getByRole("button", { name: "Row actions" })).toBeVisible();
+  },
+};
+
+/** Narrow container without a menu: the actions wrap and never clip the cell. */
+export const ActionsNarrowWrap: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-[360px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <ActionsTable menu={false} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const last = canvas.getByRole("button", { name: "Enviar recordatorio" });
+    const wrapper = canvasElement.querySelector("[class*='@container/table']") as HTMLElement;
+    await expect(last).toBeVisible();
+    await expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(
+      wrapper.getBoundingClientRect().right + 1,
+    );
+  },
 };

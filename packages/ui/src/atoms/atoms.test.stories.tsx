@@ -16,6 +16,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+export const CheckboxLabelTogglesAndNames: Story = {
+  render: () => <Checkbox label="Send me the receipt" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByRole("checkbox", { name: "Send me the receipt" });
+    await expect(box).toHaveAttribute("aria-checked", "false");
+    await userEvent.click(canvas.getByText("Send me the receipt"));
+    await expect(box).toHaveAttribute("aria-checked", "true");
+  },
+};
+
 export const CheckboxToggles: Story = {
   render: () => <Checkbox aria-label="Cita completada" />,
   play: async ({ canvasElement }) => {

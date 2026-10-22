@@ -1,0 +1,12 @@
+[data-ui="radio-group"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-radio-group-gap, 10px);
+}
+[data-ui="radio-group"][orientation="horizontal"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+[data-ui="radio-group"][hidden] {
+  display: none;
+}

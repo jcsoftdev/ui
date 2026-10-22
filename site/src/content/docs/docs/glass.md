@@ -115,14 +115,14 @@ export function LiquidCards() {
 
 ### Configuring the liquid
 
-`material` also takes an object, `{ type: "liquid" | "liquid-clear", ...options }`, on every component that has a `material` prop (Card, Dialog, Drawer, Popover, DropdownMenu, ContextMenu, HoverCard, Topbar, Sidebar, ActionBar, CommandPalette). The string values keep working. Every option is optional and maps to one `--liquid-*` custom property, so the same configuration can come from a prop, from a scope, or from the theme; the lens engine and the CSS read the same variables, and they inherit. Change them at run time and the lens follows.
+Options go in `style`, through `liquidStyle(options)`, on any liquid surface: `material="liquid"` (or `"liquid-clear"`) on a component that has a `material` prop (Card, Dialog, Drawer, Popover, DropdownMenu, ContextMenu, HoverCard, Topbar, Sidebar, ActionBar, CommandPalette), or a plain element with the `liquid` class. `liquidStyle()` is synchronous and returns plain custom properties, so the server markup is already right and hydration never changes it. Every option is optional and maps to one `--liquid-*` custom property, so the same configuration can come from a prop, from a scope, or from the theme; the lens engine and the CSS read the same variables, and they inherit. Change them at run time and the lens follows.
 
 ```tsx region=liquid-options
 export function ConfiguredLiquid() {
   return (
     <Card
-      material={{
-        type: "liquid",
+      material="liquid"
+      style={liquidStyle({
         profile: "dome",
         frost: 4,
         refraction: 0.8,
@@ -130,7 +130,7 @@ export function ConfiguredLiquid() {
         shadow: { opacity: 0.8, offsetY: 14 },
         interactive: "drag",
         motion: "jelly",
-      }}
+      })}
     >
       A drop of glass
     </Card>
@@ -138,26 +138,26 @@ export function ConfiguredLiquid() {
 }
 ```
 
-| Option                     | Variable                                                                      | Meaning (default)                                                                                                                                                                                                          |
-| -------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `refraction`               | `--liquid-refraction`                                                         | 0 to 1: the bend as a fraction of the strongest offset that cannot fold the backdrop (1)                                                                                                                                   |
-| `bevelWidth`               | `--liquid-bevel`                                                              | px: width of the refracting band (`rim`) or cap of the offset (`full`, `dome`); derived from size and radius, at most 24 px for the whole-surface profiles                                                                 |
-| `profile`                  | `--liquid-profile`                                                            | `"full"` a squarish dome over the whole surface (default), `"dome"` a round drop that is flatter in the middle, `"rim"` only a bevel along the edge                                                                        |
-| `dispersion`               | `--liquid-dispersion`                                                         | 0 to 0.2: colour channels pulled apart (0); small surfaces only                                                                                                                                                            |
-| `frost`                    | `--liquid-frost`                                                              | px of backdrop blur (2 regular, 0.6 clear)                                                                                                                                                                                 |
-| `saturation`, `brightness` | `--liquid-saturation`, `--liquid-brightness`                                  | backdrop filter (1.5, 1)                                                                                                                                                                                                   |
-| `tint`                     | `--liquid-tint-color`, `--liquid-tint-amount`                                 | `{ color, amount }`: a colour laid over the glass (none; amount 0.2)                                                                                                                                                       |
-| `rim`                      | `--liquid-rim-strength`                                                       | 0 to 2: edge highlight (1)                                                                                                                                                                                                 |
-| `specular`                 | `--liquid-specular`, `--liquid-specular-angle`                                | `{ intensity, angle }`: the glint on the walls facing the light (1, -120 deg: upper left)                                                                                                                                  |
-| `fresnel`                  | `--liquid-fresnel`                                                            | 0 to 1: extra glow towards the edge (0)                                                                                                                                                                                    |
-| `grain`                    | `--liquid-grain`                                                              | 0 to 1: film grain (0)                                                                                                                                                                                                     |
-| `radius`                   | `--liquid-radius`                                                             | px corner radius (the component's own)                                                                                                                                                                                     |
-| `opacity`                  | `--liquid-opacity`                                                            | 0 to 1: the legibility veil (1)                                                                                                                                                                                            |
-| `shadow`                   | `--liquid-shadow-opacity`, `--liquid-shadow-spread`, `--liquid-shadow-offset` | `{ opacity, spread, offsetY }` of the outer shadow (1, 0, 10)                                                                                                                                                              |
-| `interactive`              | `--liquid-interactive`                                                        | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive`. It inherits, except on the overlays (dialog, popover, sidebar, drawer), which read it only from their own inline style |
-| `motion`                   | `--liquid-motion`                                                             | `"snappy"` (default), `"smooth"`, `"soft"`, `"jelly"` or `false` (`off`)                                                                                                                                                   |
+| Option                     | Variable                                                                      | Meaning (default)                                                                                                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `refraction`               | `--liquid-refraction`                                                         | 0 to 1: the bend as a fraction of the strongest offset that cannot fold the backdrop (1)                                                                                                                |
+| `bevelWidth`               | `--liquid-bevel`                                                              | px: width of the refracting band (`rim`) or cap of the offset (`full`, `dome`); derived from size and radius, at most 24 px for the whole-surface profiles                                              |
+| `profile`                  | `--liquid-profile`                                                            | `"full"` a squarish dome over the whole surface (default), `"dome"` a round drop that is flatter in the middle, `"rim"` only a bevel along the edge                                                     |
+| `dispersion`               | `--liquid-dispersion`                                                         | 0 to 0.2: colour channels pulled apart (0); small surfaces only                                                                                                                                         |
+| `frost`                    | `--liquid-frost`                                                              | px of backdrop blur (2 regular, 0.6 clear)                                                                                                                                                              |
+| `saturation`, `brightness` | `--liquid-saturation`, `--liquid-brightness`                                  | backdrop filter (1.5, 1)                                                                                                                                                                                |
+| `tint`                     | `--liquid-tint-color`, `--liquid-tint-amount`                                 | `{ color, amount }`: a colour laid over the glass (none; amount 0.2)                                                                                                                                    |
+| `rim`                      | `--liquid-rim-strength`                                                       | 0 to 2: edge highlight (1)                                                                                                                                                                              |
+| `specular`                 | `--liquid-specular`, `--liquid-specular-angle`                                | `{ intensity, angle }`: the glint on the walls facing the light (1, -120 deg: upper left)                                                                                                               |
+| `fresnel`                  | `--liquid-fresnel`                                                            | 0 to 1: extra glow towards the edge (0)                                                                                                                                                                 |
+| `grain`                    | `--liquid-grain`                                                              | 0 to 1: film grain (0)                                                                                                                                                                                  |
+| `radius`                   | `--liquid-radius`                                                             | px corner radius (the component's own)                                                                                                                                                                  |
+| `opacity`                  | `--liquid-opacity`                                                            | 0 to 1: the legibility veil (1)                                                                                                                                                                         |
+| `shadow`                   | `--liquid-shadow-opacity`, `--liquid-shadow-spread`, `--liquid-shadow-offset` | `{ opacity, spread, offsetY }` of the outer shadow (1, 0, 10)                                                                                                                                           |
+| `interactive`              | `--liquid-interactive`                                                        | `"press"`, `"drag"` or `"none"`; by default `press` on buttons, links and `data-glass-interactive`. The automatic lens reads it only from the surface itself (its `style`), never from a scope above it |
+| `motion`                   | `--liquid-motion`                                                             | `"snappy"` (default), `"smooth"`, `"soft"`, `"jelly"` or `false` (`off`)                                                                                                                                |
 
-`LiquidGlassOptions`, `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle()` and `liquidVars()` are exported from `@jcsoftdev/ui/glass`; `liquidStyle(options)` is the `style` object for your own surfaces (pair it with `useGlassLens`). The values are clamped to ranges the lens can honour.
+`LiquidGlassOptions`, `LIQUID_DEFAULTS`, `LIQUID_PRESETS`, `liquidStyle()` and `liquidVars()` are exported from `@jcsoftdev/ui/liquid` (and, for the imperative engine, from `@jcsoftdev/ui/glass`); `mergeLiquid()` and the presets `LIQUID_PRESET_CLEAR`, `LIQUID_PRESET_REGULAR`, `LIQUID_PRESET_CRYSTAL` and `LIQUID_PRESET_THICK` are too. `liquidStyle(options)` is the `style` object for any surface; `liquidStyle(mergeLiquid(LIQUID_PRESET_THICK, { radius: 24 }))` starts from a preset. The values are clamped to ranges the lens can honour.
 
 **Presets.** `data-glass="liquid-clear"`, `"liquid-regular"` and `"liquid-thick"` switch the glass surfaces of a scope to the liquid look (like `data-glass="liquid"`) and set a bundle of the options above (`base.css` carries them; `LIQUID_PRESETS` is the same data). **Theme defaults** are plain CSS: `:root { --liquid-frost: 3px; --liquid-profile: dome; }` changes every liquid surface that does not set its own.
 
@@ -167,12 +167,16 @@ export function ConfiguredLiquid() {
 
 ### Crystal: a thick, clear lens
 
-`profile: "crystal"` (and the `crystal` preset, `data-glass="liquid-crystal"`) is the look of a thick convex piece of acrylic: the backdrop is **minified** (the surface shows a wider area than it covers, squeezed in), bent hard towards the rim, split into colour fringes at the edge, with no frost, no veil and no tint, only a thin bright edge.
+`profile: "crystal"` (and the `LIQUID_PRESET_CRYSTAL` preset, `data-glass="liquid-crystal"`) is the look of a thick convex piece of acrylic: the backdrop is **minified** (the surface shows a wider area than it covers, squeezed in), bent hard towards the rim, split into colour fringes at the edge, with no frost, no veil and no tint, only a thin bright edge.
 
 ```tsx region=crystal
 export function Crystal() {
   return (
-    <Card material={{ type: "liquid", preset: "crystal" }} className="rounded-full px-8 py-4">
+    <Card
+      material="liquid"
+      style={liquidStyle(LIQUID_PRESET_CRYSTAL)}
+      className="rounded-full px-8 py-4"
+    >
       <span className="font-bold text-white [text-shadow:0_2px_10px_rgb(0_0_0/.5)]">
         Liquid Glass
       </span>
@@ -198,15 +202,25 @@ Everything is off under `prefers-reduced-motion` (the lens is removed with it, a
 
 ### Switching the whole app
 
-Put `data-glass="liquid"` on `<html>` (or on any scope): `glass`, `glass-clear` and, in the `glass` preset, the chrome surfaces (`surface-overlay`, `surface-nav`, `surface-side`: Dialog, Drawer, menus, Topbar, Sidebar) render liquid. The content layer (`surface-card`) stays solid. Remove the attribute to go back to frosted. Limits: the switch is one-way down the tree (a nested `data-glass="frosted"` does not undo an outer `liquid`; use `material` on the component instead), and surfaces already mounted do not load the lens until they remount.
+Put `data-glass="liquid"` on `<html>` (or on any scope): `glass`, `glass-clear` and, in the `glass` preset, the chrome surfaces (`surface-overlay`, `surface-nav`, `surface-side`: Dialog, Drawer, menus, Topbar, Sidebar) render liquid. The content layer (`surface-card`) stays solid. Remove the attribute to go back to frosted. Limits: the switch is one-way down the tree (a nested `data-glass="frosted"` does not undo an outer `liquid`; use `material` on the component instead). With `<LiquidGlass />` mounted, flipping the attribute takes or gives the lens at once.
 
 ### The lens
 
-Chromium only: it is the one engine that paints `backdrop-filter: url(#filter)`. Components with a glass `material` (Dialog, Drawer, Popover, DropdownMenu, ContextMenu, HoverCard, Topbar, Sidebar, ActionBar, Card) call `useGlassLens` internally. It looks at the `--glass-lens` flag that the liquid utilities set and, only then, imports the engine as a separate chunk; frosted and solid surfaces never load it, so tree-shaking and bundle size are untouched for them. It does nothing on import, is SSR-safe, and releases its filter on unmount.
+Chromium only: it is the one engine that paints `backdrop-filter: url(#filter)`. The lens is opt-in: render `<LiquidGlass />` (from `@jcsoftdev/ui/liquid`) once near the root of an app that uses Liquid Glass (or call `startLiquidGlass()`, which returns its stop). It watches the page and gives the lens to every element whose computed style resolves to a lensed liquid (the `--glass-lens` flag that the liquid utilities set), and a backdrop filter (an element that only inherits the flag is not a surface). It considers elements whose class names contain `liquid`, `glass` or a chrome surface (`surface-overlay`, `surface-nav`, `surface-side`), or whose inline style sets `--glass-lens`; mark a custom class built with `@apply liquid` with `data-glass-lens="on"`. It imports the engine as a separate chunk the first time one does (a failed fetch is retried with a backoff); the crystal and dispersion parts are further chunks, fetched only for surfaces that use them. Without it, liquid surfaces keep the CSS look (rim, depth, blur), and no lens code is in the bundle or fetched at run time. Frosted and solid components carry no liquid code at all. It does nothing on the server, does nothing and loads nothing where the lens cannot paint, and releases a surface's filter as soon as the surface leaves the page. A lens applied by code (`applyGlassRefraction`, `useGlassRefraction`) on the same element keeps its own options and is never stopped by the watcher; after its cleanup the automatic lens takes over again.
+
+What the watcher follows, so a variant that flips the flag takes or gives the lens:
+
+- elements added to and removed from the page;
+- changes of `class`, of the inline `--glass-lens`, of `open` and of any `data-*` or `aria-*` attribute, on the surface or an ancestor (`data-[state=open]:liquid`, `aria-expanded:liquid`, `group-data-[...]:liquid`, `data-glass`, `data-theme`);
+- the window size, once a resize settles (breakpoints such as `md:liquid`);
+- the size of the surface and of its nearest size container (container queries);
+- the color scheme, reduced transparency, more contrast, forced colors and reduced motion preferences.
+
+Not followed: pseudo-classes (`hover:liquid`, `focus:liquid`, `focus-within:liquid`) and sibling variants (`peer-*`). For those, keep the surface liquid in every state, or lens it yourself with `useGlassRefraction()` or `applyGlassRefraction()` from `@jcsoftdev/ui/glass` (`data-glass-lens="on"` only makes the watcher consider an element; it does not follow a pseudo-class).
 
 The map is rasterised from the signed distance function of the rounded rectangle (size, radius and pixel ratio aware). Across a rim, the displacement follows a convex squircle height profile through Snell's law (n = 1.5): zero in the middle, strongest at the edge, pulling the content from just inside the shape. Full coverage is a dome over a superellipse radial coordinate (`r = (|u|^3 + |v|^3)^(1/3)`, `u` and `v` the position over the half size): each pixel is pulled towards the centre along the gradient of `r`, by `A (r / r_corner)^1.5`. The gradient is continuous everywhere, so there is no crease along the diagonals (a field built from the distance to the nearest edge, or from each axis alone, makes the glass read as a four-faced pyramid) and no seam at the centre; `A` is at most 0.55 of the smaller half size and 24 px. The offset at the silhouette (up to about 17 px) makes a backdrop shape that crosses the edge jump there, as in real glass. The first lenses (a Snell-law profile, strength equal to the bevel width) folded back on themselves where the offset fell faster than 1 px per px, which broke straight stripes into a repeating sawtooth along the walls; both profiles now keep the slope under 1, and a test checks it. The veil is adaptive: the lens is blurred wide, its luminance read, and a veil of the ink-contrasting colour is laid only where the backdrop is close to the ink, so over friendly backdrops the body stays clear. The directional specular layers are added on top. Dispersion is off by default (it paints a colour fringe on hard edges); turn it on with `--glass-lens-dispersion: .05` or the option, on surfaces up to 100,000 px squared, where it is naturally strongest at the rim because it scales with the local offset. When a lens is first applied the refraction springs up from nothing (the materialise), and on a pressed control it lifts to 1.35 times for the duration of the press (see Motion); neither runs under reduced motion, where there is no lens.
 
-Budgets: at most 8 lenses alive at once, no lens on a surface over 640,000 px squared (they keep the plain liquid look), dispersion only up to 100,000 px squared, the map is rebuilt at most about ten times a second while a surface resizes (one coalesced pass per frame for all surfaces), and the last 16 maps (displacement and specular) are cached. Opt out with `data-glass-lens="off"` on the element or any ancestor, or `--glass-lens: 0` in CSS. It follows `prefers-reduced-transparency`, `prefers-contrast: more`, `forced-colors` and `prefers-reduced-motion` live.
+Budgets: at most 8 lenses alive at once (hidden, zero-area and far-offscreen surfaces do not take a slot, and get one once they show), no lens on a surface over 640,000 px squared (they keep the plain liquid look), dispersion only up to 100,000 px squared, the map is rebuilt at most about ten times a second while a surface resizes (one coalesced pass per frame for all surfaces), and the last 16 maps (displacement and specular) are cached. Opt out with `data-glass-lens="off"` on the element or any ancestor, or `--glass-lens: 0` in CSS. It follows `prefers-reduced-transparency`, `prefers-contrast: more`, `forced-colors` and `prefers-reduced-motion` live.
 
 Other engines (Safari, Firefox) get the base liquid look without refraction: rim, thickness, saturation, outer shadow. Legibility is the same: the uniform CSS veil is used there. With the lens active the veil is lighter only along the rim (at most the outer 28px), so text placed on the rim of a surface over a black or white backdrop has less contrast than the guarantee below, which is measured away from it.
 
@@ -225,15 +239,15 @@ The cost only exists while the backdrop changes (scrolling under a nav, animatio
 
 ### Imperative API
 
-`applyGlassRefraction(element, options)` and `useGlassRefraction()` still exist for any element, glass or not, with `scale`, `bezel`, `dispersion`, `veil`, `specular`, `animate`, `refraction: "force"` and `auto` (only while `--glass-lens` is 1). `useGlassLens(ref?)` is the ref the components use; reuse it for your own surfaces.
+`applyGlassRefraction(element, options)` and `useGlassRefraction()` still exist for any element, glass or not, with `scale`, `bezel`, `dispersion`, `veil`, `specular`, `animate`, `refraction: "force"` and `auto` (only while `--glass-lens` is 1). For the automatic lens, mount `<LiquidGlass />` once:
 
 ```tsx region=lens
-export function Lens() {
-  const ref = useGlassLens<HTMLDivElement>();
+export function App({ children }: { children: ReactNode }) {
   return (
-    <div ref={ref} className="liquid-clear rounded-dialog p-6">
-      Bent edges
-    </div>
+    <>
+      <LiquidGlass />
+      {children}
+    </>
   );
 }
 ```

@@ -1,0 +1,120 @@
+[data-ui="gantt"] > [data-ui-part="drawing"] > svg {
+  cursor: default;
+}
+[data-ui="gantt"] text {
+  fill: var(--ink-2);
+  font-size: 12px;
+  pointer-events: none;
+}
+[data-ui="gantt"] .head-top {
+  fill: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+[data-ui="gantt"] .head-bottom {
+  fill: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="gantt"] .list-head {
+  fill: var(--ink-3);
+  font-size: 11px;
+  font-weight: 600;
+}
+[data-ui="gantt"] .list-name {
+  fill: var(--ink-2);
+}
+[data-ui="gantt"] .list-name.strong {
+  fill: var(--ink);
+  font-weight: 700;
+}
+[data-ui="gantt"] .list-cell {
+  fill: var(--ink-3);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+[data-ui="gantt"] .list-bg {
+  fill: var(--surface);
+}
+[data-ui="gantt"] .line {
+  stroke: var(--line);
+}
+[data-ui="gantt"] .line-strong {
+  stroke: var(--line-strong);
+}
+[data-ui="gantt"] .vline,
+[data-ui="gantt"] .hline {
+  stroke: var(--chart-grid);
+  shape-rendering: crispedges;
+}
+[data-ui="gantt"] .shade {
+  fill: var(--surface-2);
+  fill-opacity: 0.8;
+}
+[data-ui="gantt"] .today {
+  stroke: var(--danger);
+  stroke-width: 1.5;
+}
+[data-ui="gantt"] .today-pill {
+  fill: var(--danger);
+}
+[data-ui="gantt"] .today-label {
+  fill: var(--surface);
+  font-size: 10px;
+  font-weight: 700;
+}
+[data-ui="gantt"] .band {
+  fill: var(--chart-grid);
+  opacity: 0;
+  pointer-events: none;
+}
+[data-ui="gantt"] .band[data-active],
+[data-ui="gantt"] .band[data-selected] {
+  opacity: 1;
+}
+[data-ui="gantt"] .band[data-active] {
+  stroke: var(--focus-ring-color);
+  stroke-width: 0;
+}
+[data-ui="gantt"] .bar-label {
+  fill: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+}
+[data-ui="gantt"] .bar-label.outside {
+  fill: var(--ink-2);
+  font-weight: 500;
+}
+[data-ui="gantt"] .bar-label.outside.strong {
+  font-weight: 700;
+  font-size: 11.5px;
+}
+[data-ui="gantt"] .toggle {
+  cursor: pointer;
+  pointer-events: all;
+}
+[data-ui="gantt"] .chevron {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+[data-ui="gantt"] .divider {
+  cursor: col-resize;
+  fill: transparent;
+  outline: none;
+}
+[data-ui="gantt"] .divider-line {
+  stroke: var(--line);
+  pointer-events: none;
+}
+[data-ui="gantt"] .divider:hover + .divider-line,
+[data-ui="gantt"] .divider:focus-visible + .divider-line {
+  stroke: var(--accent-word);
+  stroke-width: 2;
+}
+[data-ui="gantt"] .divider:focus-visible {
+  outline: none;
+}

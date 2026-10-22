@@ -38,8 +38,9 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `BigDate` | web-only | none | |
 | `Button` | both | `atoms.Button`, `ButtonVariant`, `ButtonSize` | Loading state, `block`, 48dp touch target. |
 | (icon-only `Button`) | compose-only | `atoms.IconButton` | Description is required because it is icon-only. |
+| (floating action button) | compose-only | `atoms.FloatingActionButton`, `ExtendedFloatingActionButton`, `FabColors`, `FabDefaults` | 56dp, button role, collapses to the icon; reduced motion is a jump cut. |
 | `Checkbox` | both | `atoms.Checkbox` | Boolean and tri-state overloads. |
-| `Chip` | both | `atoms.Chip`, `ChipTone` | |
+| `Chip` | both | `atoms.Chip`, `ChipTone` | `onRemove` and `removeLabel` append a remove button with a 48dp touch target. |
 | `Icon` and the icon set | both | `icons.Icon`, `icons.Icons.*` | Same SVG source (`packages/ui/icons`), same names; generated at build time, one nullable-backed property each. |
 | `Led`, `StatusDot` | web-only | none | The Compose LED is part of `StatusPill`. |
 | `StatusPill` | both | `atoms.StatusPill`, `LedStatus` | |
@@ -56,8 +57,9 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | Web | Status | Compose | Notes |
 | --- | --- | --- | --- |
 | `Field`, `Label` | both | `forms.Field` | Label, description, error and required marker in one composable. |
-| `Input`, `InputIcon` | both | `forms.Input` | `leading` and `trailing` slots replace `InputIcon`. |
+| `Input`, `InputIcon` | both | `forms.Input` | `leading` and `trailing` slots replace `InputIcon`. `size = InputSize.Lg` matches the large button height. |
 | (password input) | compose-only | `forms.PasswordInput` | The web uses `Input` with a password type. |
+| (autofill content type) | compose-only | `forms.InputContentType`, `Input(contentType)`, `PasswordInput(contentType)` | Maps to Compose `contentType` semantics; the web uses the `autocomplete` attribute. |
 | `TimeInput` | both | `forms.TimeInput` | Number keyboard; stores digits and emits `HH:mm` when valid. |
 | (date input) | compose-only | `forms.DateInput` | Emits `dd/MM/yyyy` when valid. |
 | `PinInput` | both | `forms.PinInput` | One hidden field, SMS autofill. |
@@ -81,7 +83,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Cell`, `GenericRow` | both | `containers.ListRow` | Leading, title, subtitle, meta, trailing. |
 | `ActionBar`, `Toolbar` | web-only | none | |
 | `Carousel`, `Kanban`, `Scrolly`, `Resizable*`, `FileTree` | web-only | none | |
-| `Table*`, `DataGrid`, `ResponsiveList` | web-only | none | Out of scope for the Compose kit. |
+| `Table*`, `DataGrid`, `ResponsiveList` | web-only | none | Out of scope for the Compose kit; the web container-width switch has no counterpart. |
 | `Kpi`, `KpiGroup`, `HBars`, `Facts`, `HighlightLine`, `DescriptionList` | web-only | none | |
 | `Comment`, `Timeline`, `ItemCardGroup` | web-only | none | |
 | `ConfirmAction` | web-only | none | Compose callers build it from `Dialog`. |
@@ -98,7 +100,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `backdrop-filter` | both | `glass.GlassState`, `glassSource`, `rememberGlassState` | `GraphicsLayer` + `BlurEffect`; Android 31+, desktop, iOS. Tint fallback elsewhere. |
 | glass-on-glass nested tint | both | `glass.MaterialSurface` nesting marker | Near-solid `float` fill. |
 | reduced transparency, more contrast | both | `UiTheme(reduceTransparency, highContrast)` | OS defaults on iOS and Android high-contrast. |
-| refraction (SVG displacement) | both | `glass.SurfaceMaterial.Liquid`, `LiquidClear`, `GlassVariant` | Runtime shader lens (Android 13+, desktop, iOS); blur plus rim on API 31-32, tint plus rim below. Frosted stays available. |
+| refraction (SVG displacement) | both | `glass.LiquidGlass` (`lens = RefractionLens(dispersion = Dispersion())` / `CrystalLens()`, `LiquidInteraction`), `UiTheme(chromeGlass)` | Opt-in per feature like the web tiers (base, lens, crystal, dispersion, interaction), each preset its own value; runtime shader lens (Android 13+, desktop, iOS); blur plus rim on API 31-32, tint plus rim below. Frosted stays available. |
 
 ## Overlays
 
@@ -107,6 +109,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | --- | --- | --- | --- |
 | `Dialog` | both | `overlays.Dialog` | Glass with `UiStyle.Glass`. |
 | `Drawer` | both | `overlays.Sheet` | The web drawer is a side panel; Compose is a bottom sheet with scrollable body and pinned footer. |
+| (full-screen sub-screen) | compose-only | `overlays.FullScreenModal`, `FullScreenModalColors`, `FullScreenModalDefaults` | A modal layer: hides the app from accessibility, focus to the header, back handling. |
 | `DropdownMenu` | both | `overlays.Menu` | Roles for items, checkbox and radio items; opens an anchored popup (no screenshot golden). |
 | `Toaster` / `toast` | both | `overlays.Toaster`, `primitives.ToastHostState` | Same `success`/`error`/`info` shape and queue of two. |
 | `ContextMenu` | web-only | none | |
@@ -121,6 +124,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Tabs` | both | `navigation.Tabs`, `TabItem` | Selected tab role, optional count. |
 | `Segmented` | both | `navigation.Segmented`, `SegmentedOption` | |
 | `Topbar` | both | `navigation.TopBar`, `BarColors`, `BarDefaults` | Chrome: glass with `UiStyle.Glass`. |
+| (pinned bottom actions) | compose-only | `navigation.BottomActionBar`, `BottomActionBarDefaults` | Insets, keyboard and an optional `dockHeight`. |
 | `ActionBar` | both | `navigation.ActionBar` | Floating capsule; chrome. |
 | `Stepper` | web-only | none | |
 | `FloatingToc` | n/a | none | |
@@ -139,7 +143,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 
 | Web | Status | Compose | Notes |
 | --- | --- | --- | --- |
-| `AppShell`, `Sidebar`, `Topbar` | n/a | none | Multi-pane desktop shell; apps own their navigation on phones. |
+| `AppShell`, `Sidebar`, `Topbar` | n/a | none | Multi-pane desktop shell; apps own their navigation on phones, so the web `collapsed` rail has no counterpart. |
 | `MonthView`, `WeekView`, `TimelineView`, `DayChip`, `EventBlock` | web-only | none | Out of scope for now. |
 | Charts (54 kinds: line, bar, area, pie, donut, scatter, heatmap, sankey, treemap, maps, gauges, sparkline and more) | web-only | none | Out of scope for now. |
 | `CommandPalette` | n/a | none | Keyboard-driven. |

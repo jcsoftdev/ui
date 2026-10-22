@@ -9,6 +9,7 @@ import {
   useRovingFocus,
 } from "../../utils/roving-focus.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { nextSegmentedValue } from "./model.js";
 
 type GetItemProps = ReturnType<typeof useRovingFocus>["getItemProps"];
 
@@ -43,14 +44,17 @@ export interface SegmentedProps
   options?: SegmentedOption[] | undefined;
   /** Full-width selector with equal-width, control-height items. */
   block?: boolean | undefined;
-  /** When `false`, pressing the selected item keeps it selected. Defaults to `true`. */
+  /** Lets a second press on the selected item clear the selection. Defaults to `false`: the selected item stays selected. */
   allowDeselect?: boolean | undefined;
   orientation?: RovingOrientation | undefined;
   dir?: RovingDirection | undefined;
   loop?: boolean | undefined;
 }
 
-/** Exclusive selector for 2-4 options. Like Radix `type="single"`, it uses the `radiogroup` role. */
+/**
+ * Exclusive selector for 2-4 options. Like Radix `type="single"`, it uses the `radiogroup` role.
+ * Pressing the selected item keeps it selected; pass `allowDeselect` to let it clear instead.
+ */
 export function Segmented({
   className,
   value: valueProp,
@@ -60,7 +64,7 @@ export function Segmented({
   rovingFocus = true,
   options,
   block = false,
-  allowDeselect = true,
+  allowDeselect = false,
   children,
   orientation,
   dir = "ltr",
@@ -146,7 +150,8 @@ export function SegmentedItem({
       {...props}
       {...item}
       onClick={composeHandlers(onClick, () => {
-        if (!disabled) context.setValue(pressed && context.allowDeselect ? "" : value);
+        if (!disabled)
+          context.setValue(nextSegmentedValue(context.value, value, context.allowDeselect));
       })}
       className={cn(
         "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-button px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",

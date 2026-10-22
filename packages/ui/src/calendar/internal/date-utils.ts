@@ -76,3 +76,118 @@ export function formatHour(hour: number, locale?: string): string {
     timeZone: "UTC",
   }).format(new Date(Date.UTC(1970, 0, 1, hour)));
 }
+
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** True for a real calendar date written "YYYY-MM-DD" (rejects "2026-02-30"). */
+export function isIsoDate(value: string): boolean {
+  const match = ISO_DATE.exec(value);
+  if (!match) return false;
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+  );
+}
+
+/** Builds "YYYY-MM-DD" from numeric parts; no time zone is involved. */
+export function toIsoDate(year: number, month: number, day: number): string {
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Same day of the month `amount` months away, or the last day when the month is shorter. */
+export function addMonths(value: string, amount: number): string {
+  const date = parseDate(value);
+  const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + amount, 1));
+  const last = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  return toIsoDate(
+    target.getUTCFullYear(),
+    target.getUTCMonth() + 1,
+    Math.min(date.getUTCDate(), last),
+  );
+}
+
+/** The viewer's calendar date today, read from local fields (never from the UTC date). */
+export function todayIso(now: Date = new Date()): string {
+  return toIsoDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+}
+
+/** `value` pulled inside `[min, max]`. ISO dates compare correctly as strings. */
+export function clampDate(value: string, min?: string, max?: string): string {
+  if (min && value < min) return min;
+  if (max && value > max) return max;
+  return value;
+}
+
+/** Regions whose calendars conventionally start the week on Sunday. */
+const SUNDAY_REGIONS = new Set([
+  "US",
+  "CA",
+  "MX",
+  "BR",
+  "JP",
+  "KR",
+  "IL",
+  "IN",
+  "PH",
+  "TW",
+  "HK",
+  "ZA",
+  "CO",
+  "VE",
+  "SA",
+]);
+
+/**
+ * First day of the week for a BCP 47 locale: Sunday (0) where that is the convention of the
+ * region (en-US, es-MX, pt-BR, ...), Monday (1) everywhere else, including es-PE and en-GB.
+ */
+export function weekStartFor(locale: string): WeekStart {
+  const region = /[-_]([A-Za-z]{2})(?:[-_]|$)/.exec(locale)?.[1]?.toUpperCase();
+  if (region) return SUNDAY_REGIONS.has(region) ? 0 : 1;
+  return locale.toLowerCase().startsWith("en") || locale.toLowerCase().startsWith("ja") ? 0 : 1;
+}
+
+/** "September 2026" with only the first letter capitalised ("Setiembre de 2026"). */
+export function formatMonthTitle(value: string, locale?: string): string {
+  const raw = format(value, locale, { month: "long", year: "numeric" });
+  return raw.charAt(0).toLocaleUpperCase(locale) + raw.slice(1);
+}
+
+/** Full date for a screen reader, e.g. "Monday, September 7, 2026". */
+export function formatFullDate(value: string, locale?: string): string {
+  return format(value, locale, { dateStyle: "full" });
+}
+
+/** Weekday names in column order starting at `weekStartsOn`. */
+export function weekdayNames(
+  locale: string | undefined,
+  weekStartsOn: WeekStart,
+): { narrow: string; long: string }[] {
+  // 2024-01-07 was a Sunday.
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = addDays("2024-01-07", weekStartsOn + index);
+    return {
+      narrow: format(day, locale, { weekday: "narrow" }),
+      long: format(day, locale, { weekday: "long" }),
+    };
+  });
+}
+
+/** Six full weeks of "YYYY-MM-DD" covering the month of `value`, so the grid keeps its height. */
+export function monthWeeks(value: string, weekStartsOn: WeekStart): string[][] {
+  const date = parseDate(value);
+  let cursor = startOfWeek(
+    formatDate(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))),
+    weekStartsOn,
+  );
+  return Array.from({ length: 6 }, () =>
+    Array.from({ length: 7 }, () => {
+      const day = cursor;
+      cursor = addDays(cursor, 1);
+      return day;
+    }),
+  );
+}

@@ -12,6 +12,19 @@ const toneClasses: Record<BannerTone, string> = {
   danger: "bg-danger-soft",
 };
 
+export type BannerAppearance = "soft" | "outline";
+
+/**
+ * `outline` keeps the page surface and lets only the border carry the tone: a quieter notice
+ * for content that sits inside a form or a card, where a tinted block would shout.
+ */
+const outlineToneClasses: Record<BannerTone, string> = {
+  info: "border border-info/40 bg-surface",
+  success: "border border-success/40 bg-surface",
+  warning: "border border-warning/40 bg-surface",
+  danger: "border border-danger/40 bg-surface",
+};
+
 const toneIconClasses: Record<BannerTone, string> = {
   info: "text-info",
   success: "text-success",
@@ -34,6 +47,8 @@ export type BannerPart = "root" | "icon" | "body" | "title" | "action";
 
 export interface BannerProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "title"> {
   tone?: BannerTone;
+  /** `soft` (default) tints the whole banner; `outline` keeps the surface and tints only the border. */
+  appearance?: BannerAppearance;
   /** Bold first line above the content. */
   title?: ReactNode;
   /** Decorative icon on the left; marked `aria-hidden`. Defaults to a glyph for the tone; `null` hides it. */
@@ -46,6 +61,7 @@ export interface BannerProps extends Omit<ComponentPropsWithoutRef<"div">, "role
 
 export function Banner({
   tone = "info",
+  appearance = "soft",
   title,
   icon,
   action,
@@ -58,9 +74,10 @@ export function Banner({
   return (
     <div
       role={toneRole[tone]}
+      data-appearance={appearance}
       className={cn(
         "flex flex-wrap items-start gap-x-3 gap-y-2 rounded-banner px-3.5 py-3 text-fs-130 text-ink",
-        toneClasses[tone],
+        appearance === "outline" ? outlineToneClasses[tone] : toneClasses[tone],
         classNames?.root,
         className,
       )}

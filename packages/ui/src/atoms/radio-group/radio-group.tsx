@@ -46,6 +46,8 @@ export function RadioGroup({ options, className, classNames, ...props }: RadioGr
     >
       {options.map((option) => {
         const id = `${baseId}-${option.value}`;
+        const labelId = `${id}-label`;
+        const descriptionId = `${id}-description`;
         return (
           <label
             key={option.value}
@@ -59,6 +61,8 @@ export function RadioGroup({ options, className, classNames, ...props }: RadioGr
               id={id}
               value={option.value}
               disabled={option.disabled}
+              aria-labelledby={labelId}
+              aria-describedby={option.description ? descriptionId : undefined}
               className={cn(
                 "mt-0.5 grid size-4 shrink-0 place-items-center rounded-pill border-[1.5px] border-line-strong data-[state=checked]:border-accent",
                 classNames?.radio,
@@ -71,9 +75,11 @@ export function RadioGroup({ options, className, classNames, ...props }: RadioGr
             <span
               className={cn("flex min-w-0 flex-col [overflow-wrap:anywhere]", classNames?.text)}
             >
-              <b className={cn("font-semibold text-fs-130", classNames?.label)}>{option.label}</b>
+              <b id={labelId} className={cn("font-semibold text-fs-130", classNames?.label)}>
+                {option.label}
+              </b>
               {option.description ? (
-                <span className={cn("text-ink-3", classNames?.description)}>
+                <span id={descriptionId} className={cn("text-ink-3", classNames?.description)}>
                   {option.description}
                 </span>
               ) : null}

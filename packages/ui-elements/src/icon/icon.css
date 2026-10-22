@@ -1,0 +1,22 @@
+:host {
+  /* Component variables are --ui-icon-*; everything else must be a ui-tokens token. */
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  color: inherit;
+}
+:host([hidden]) {
+  display: none;
+}
+svg {
+  display: block;
+  flex-shrink: 0;
+}
+svg[hidden] {
+  display: none;
+}
+::slotted(svg) {
+  display: block;
+}

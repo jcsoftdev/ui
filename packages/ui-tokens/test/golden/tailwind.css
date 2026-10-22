@@ -7,13 +7,16 @@
   --color-pal-mint-fill: var(--pal-mint-fill);
   --color-pal-mint-deep: var(--pal-mint-deep);
   --color-pal-mint-ink: var(--pal-mint-ink);
-  --radius-card: var(--radius-card);
-  --radius-pill: var(--radius-pill);
-  --shadow-flat: var(--shadow-flat);
   --spacing-side-width: var(--side-width);
-  --font-sans: var(--font-sans);
   --text-page-title: 26px;
   --text-page-title--line-height: 1.2;
   --text-page-title--font-weight: 800;
   --text-page-title--letter-spacing: -0.025em;
+}
+
+@theme reference inline {
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+  --shadow-flat: var(--shadow-flat);
+  --font-sans: var(--font-sans);
 }

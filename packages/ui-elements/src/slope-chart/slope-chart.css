@@ -1,0 +1,24 @@
+[data-slope] [data-label] {
+  fill: var(--ink-2);
+}
+[data-slope] [data-row]:has([data-active]) [data-label] {
+  fill: var(--ink);
+}
+[data-slope] [data-line] {
+  transition: stroke-width 150ms;
+}
+[data-slope] [data-dot] {
+  transition: r 150ms;
+}
+[data-slope] [data-row]:has([data-active]) [data-line] {
+  stroke-width: 3.5;
+}
+[data-slope] [data-row]:has([data-active]) [data-dot] {
+  r: 5.5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-slope] [data-line],
+  [data-slope] [data-dot] {
+    transition: none;
+  }
+}

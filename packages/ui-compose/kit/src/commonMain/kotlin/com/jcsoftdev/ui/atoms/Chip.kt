@@ -19,9 +19,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -86,7 +91,7 @@ public object ChipDefaults {
         get() = UiTheme.typography.chipText
 }
 
-/** Static label chip. [square] uses the small chip radius instead of a full pill. Restyle with [colors], [shape], [contentPadding] and [textStyle] (see [ChipDefaults]). */
+/** Label chip. [square] uses the small chip radius instead of a full pill. A non-null [onRemove] appends a remove button named [removeLabel] with a 48dp touch target. Restyle with [colors], [shape], [contentPadding] and [textStyle] (see [ChipDefaults]). */
 @Composable
 public fun Chip(
     text: String,
@@ -97,6 +102,8 @@ public fun Chip(
     shape: Shape = ChipDefaults.shape(square),
     contentPadding: PaddingValues = ChipDefaults.contentPadding,
     textStyle: TextStyle = ChipDefaults.textStyle,
+    onRemove: (() -> Unit)? = null,
+    removeLabel: String = UiTheme.strings.remove,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
@@ -114,11 +121,35 @@ public fun Chip(
     ) {
         CompositionLocalProvider(LocalContentColor provides colors.content) {
             leading?.invoke()
-            Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text, Modifier.weight(1f, fill = false), textStyle, maxLines = labelMaxLines(), overflow = TextOverflow.Ellipsis)
             trailing?.invoke()
+            if (onRemove != null) RemoveGlyph(onRemove, removeLabel)
         }
     }
 }
+
+@Composable
+private fun RemoveGlyph(
+    onRemove: () -> Unit,
+    label: String,
+) {
+    val source = remember { MutableInteractionSource() }
+    val color = LocalContentColor.current
+    Box(
+        Modifier
+            .pressableTarget(onRemove, true, Role.Button, source)
+            .semantics { contentDescription = label }
+            .size(RemoveGlyphSize)
+            .drawBehind {
+                val stroke = 1.5.dp.toPx()
+                val inset = size.width * 0.28f
+                drawLine(color, Offset(inset, inset), Offset(size.width - inset, size.height - inset), stroke, StrokeCap.Round)
+                drawLine(color, Offset(size.width - inset, inset), Offset(inset, size.height - inset), stroke, StrokeCap.Round)
+            },
+    )
+}
+
+private val RemoveGlyphSize = 16.dp
 
 /** Colors of a [StatusPill]: fill, outline, label and the status dot. */
 @Immutable
@@ -193,6 +224,6 @@ public fun StatusPill(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(StatusPillDefaults.ledSize).background(colors.led, CircleShape))
-        Text(label, style = textStyle, color = colors.content, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = textStyle, color = colors.content, maxLines = labelMaxLines(), overflow = TextOverflow.Ellipsis)
     }
 }

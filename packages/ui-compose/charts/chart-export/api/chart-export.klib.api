@@ -1,0 +1,17 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-export>
+final object com.jcsoftdev.ui.chart.export/ExportModule { // com.jcsoftdev.ui.chart.export/ExportModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.export/ExportModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.export/ExportModule.id.<get-id>|<get-id>(){}[0]
+}
+
+final val com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop // com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop|#static{}com_jcsoftdev_ui_chart_export_ExportModule$stableprop[0]
+
+final fun com.jcsoftdev.ui.chart.export/ExportPlaceholder(androidx.compose.runtime/Composer?, kotlin/Int) // com.jcsoftdev.ui.chart.export/ExportPlaceholder|ExportPlaceholder(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.chart.export/com_jcsoftdev_ui_chart_export_ExportModule$stableprop_getter|com_jcsoftdev_ui_chart_export_ExportModule$stableprop_getter(){}[0]

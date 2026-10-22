@@ -1,0 +1,5912 @@
+{
+  "thin": [
+    {
+      "gap": 0,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 212,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 412,
+          "label": "c"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "gap": 10,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 212,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 412,
+          "label": "c"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "gap": 30,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 212,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 412,
+          "label": "c"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "gap": 0,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "Enero"
+        },
+        {
+          "key": 1,
+          "position": 87,
+          "label": "Febrero"
+        },
+        {
+          "key": 2,
+          "position": 162,
+          "label": "Marzo"
+        },
+        {
+          "key": 3,
+          "position": 237,
+          "label": "Abril"
+        },
+        {
+          "key": 4,
+          "position": 312,
+          "label": "Mayo"
+        },
+        {
+          "key": 5,
+          "position": 387,
+          "label": "Junio"
+        },
+        {
+          "key": 6,
+          "position": 462,
+          "label": "Julio"
+        },
+        {
+          "key": 7,
+          "position": 537,
+          "label": "Agosto"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "gap": 10,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "Enero"
+        },
+        {
+          "key": 1,
+          "position": 87,
+          "label": "Febrero"
+        },
+        {
+          "key": 2,
+          "position": 162,
+          "label": "Marzo"
+        },
+        {
+          "key": 3,
+          "position": 237,
+          "label": "Abril"
+        },
+        {
+          "key": 4,
+          "position": 312,
+          "label": "Mayo"
+        },
+        {
+          "key": 5,
+          "position": 387,
+          "label": "Junio"
+        },
+        {
+          "key": 6,
+          "position": 462,
+          "label": "Julio"
+        },
+        {
+          "key": 7,
+          "position": 537,
+          "label": "Agosto"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "gap": 30,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "Enero"
+        },
+        {
+          "key": 1,
+          "position": 87,
+          "label": "Febrero"
+        },
+        {
+          "key": 2,
+          "position": 162,
+          "label": "Marzo"
+        },
+        {
+          "key": 3,
+          "position": 237,
+          "label": "Abril"
+        },
+        {
+          "key": 4,
+          "position": 312,
+          "label": "Mayo"
+        },
+        {
+          "key": 5,
+          "position": 387,
+          "label": "Junio"
+        },
+        {
+          "key": 6,
+          "position": 462,
+          "label": "Julio"
+        },
+        {
+          "key": 7,
+          "position": 537,
+          "label": "Agosto"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "gap": 0,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "d1"
+        },
+        {
+          "key": 1,
+          "position": 32,
+          "label": "d2"
+        },
+        {
+          "key": 2,
+          "position": 52,
+          "label": "d3"
+        },
+        {
+          "key": 3,
+          "position": 72,
+          "label": "d4"
+        },
+        {
+          "key": 4,
+          "position": 92,
+          "label": "d5"
+        },
+        {
+          "key": 5,
+          "position": 112,
+          "label": "d6"
+        },
+        {
+          "key": 6,
+          "position": 132,
+          "label": "d7"
+        },
+        {
+          "key": 7,
+          "position": 152,
+          "label": "d8"
+        },
+        {
+          "key": 8,
+          "position": 172,
+          "label": "d9"
+        },
+        {
+          "key": 9,
+          "position": 192,
+          "label": "d10"
+        },
+        {
+          "key": 10,
+          "position": 212,
+          "label": "d11"
+        },
+        {
+          "key": 11,
+          "position": 232,
+          "label": "d12"
+        },
+        {
+          "key": 12,
+          "position": 252,
+          "label": "d13"
+        },
+        {
+          "key": 13,
+          "position": 272,
+          "label": "d14"
+        },
+        {
+          "key": 14,
+          "position": 292,
+          "label": "d15"
+        },
+        {
+          "key": 15,
+          "position": 312,
+          "label": "d16"
+        },
+        {
+          "key": 16,
+          "position": 332,
+          "label": "d17"
+        },
+        {
+          "key": 17,
+          "position": 352,
+          "label": "d18"
+        },
+        {
+          "key": 18,
+          "position": 372,
+          "label": "d19"
+        },
+        {
+          "key": 19,
+          "position": 392,
+          "label": "d20"
+        },
+        {
+          "key": 20,
+          "position": 412,
+          "label": "d21"
+        },
+        {
+          "key": 21,
+          "position": 432,
+          "label": "d22"
+        },
+        {
+          "key": 22,
+          "position": 452,
+          "label": "d23"
+        },
+        {
+          "key": 23,
+          "position": 472,
+          "label": "d24"
+        },
+        {
+          "key": 24,
+          "position": 492,
+          "label": "d25"
+        },
+        {
+          "key": 25,
+          "position": 512,
+          "label": "d26"
+        },
+        {
+          "key": 26,
+          "position": 532,
+          "label": "d27"
+        },
+        {
+          "key": 27,
+          "position": 552,
+          "label": "d28"
+        },
+        {
+          "key": 28,
+          "position": 572,
+          "label": "d29"
+        },
+        {
+          "key": 29,
+          "position": 592,
+          "label": "d30"
+        }
+      ],
+      "kept": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29
+      ]
+    },
+    {
+      "gap": 10,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "d1"
+        },
+        {
+          "key": 1,
+          "position": 32,
+          "label": "d2"
+        },
+        {
+          "key": 2,
+          "position": 52,
+          "label": "d3"
+        },
+        {
+          "key": 3,
+          "position": 72,
+          "label": "d4"
+        },
+        {
+          "key": 4,
+          "position": 92,
+          "label": "d5"
+        },
+        {
+          "key": 5,
+          "position": 112,
+          "label": "d6"
+        },
+        {
+          "key": 6,
+          "position": 132,
+          "label": "d7"
+        },
+        {
+          "key": 7,
+          "position": 152,
+          "label": "d8"
+        },
+        {
+          "key": 8,
+          "position": 172,
+          "label": "d9"
+        },
+        {
+          "key": 9,
+          "position": 192,
+          "label": "d10"
+        },
+        {
+          "key": 10,
+          "position": 212,
+          "label": "d11"
+        },
+        {
+          "key": 11,
+          "position": 232,
+          "label": "d12"
+        },
+        {
+          "key": 12,
+          "position": 252,
+          "label": "d13"
+        },
+        {
+          "key": 13,
+          "position": 272,
+          "label": "d14"
+        },
+        {
+          "key": 14,
+          "position": 292,
+          "label": "d15"
+        },
+        {
+          "key": 15,
+          "position": 312,
+          "label": "d16"
+        },
+        {
+          "key": 16,
+          "position": 332,
+          "label": "d17"
+        },
+        {
+          "key": 17,
+          "position": 352,
+          "label": "d18"
+        },
+        {
+          "key": 18,
+          "position": 372,
+          "label": "d19"
+        },
+        {
+          "key": 19,
+          "position": 392,
+          "label": "d20"
+        },
+        {
+          "key": 20,
+          "position": 412,
+          "label": "d21"
+        },
+        {
+          "key": 21,
+          "position": 432,
+          "label": "d22"
+        },
+        {
+          "key": 22,
+          "position": 452,
+          "label": "d23"
+        },
+        {
+          "key": 23,
+          "position": 472,
+          "label": "d24"
+        },
+        {
+          "key": 24,
+          "position": 492,
+          "label": "d25"
+        },
+        {
+          "key": 25,
+          "position": 512,
+          "label": "d26"
+        },
+        {
+          "key": 26,
+          "position": 532,
+          "label": "d27"
+        },
+        {
+          "key": 27,
+          "position": 552,
+          "label": "d28"
+        },
+        {
+          "key": 28,
+          "position": 572,
+          "label": "d29"
+        },
+        {
+          "key": 29,
+          "position": 592,
+          "label": "d30"
+        }
+      ],
+      "kept": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        28
+      ]
+    },
+    {
+      "gap": 30,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "d1"
+        },
+        {
+          "key": 1,
+          "position": 32,
+          "label": "d2"
+        },
+        {
+          "key": 2,
+          "position": 52,
+          "label": "d3"
+        },
+        {
+          "key": 3,
+          "position": 72,
+          "label": "d4"
+        },
+        {
+          "key": 4,
+          "position": 92,
+          "label": "d5"
+        },
+        {
+          "key": 5,
+          "position": 112,
+          "label": "d6"
+        },
+        {
+          "key": 6,
+          "position": 132,
+          "label": "d7"
+        },
+        {
+          "key": 7,
+          "position": 152,
+          "label": "d8"
+        },
+        {
+          "key": 8,
+          "position": 172,
+          "label": "d9"
+        },
+        {
+          "key": 9,
+          "position": 192,
+          "label": "d10"
+        },
+        {
+          "key": 10,
+          "position": 212,
+          "label": "d11"
+        },
+        {
+          "key": 11,
+          "position": 232,
+          "label": "d12"
+        },
+        {
+          "key": 12,
+          "position": 252,
+          "label": "d13"
+        },
+        {
+          "key": 13,
+          "position": 272,
+          "label": "d14"
+        },
+        {
+          "key": 14,
+          "position": 292,
+          "label": "d15"
+        },
+        {
+          "key": 15,
+          "position": 312,
+          "label": "d16"
+        },
+        {
+          "key": 16,
+          "position": 332,
+          "label": "d17"
+        },
+        {
+          "key": 17,
+          "position": 352,
+          "label": "d18"
+        },
+        {
+          "key": 18,
+          "position": 372,
+          "label": "d19"
+        },
+        {
+          "key": 19,
+          "position": 392,
+          "label": "d20"
+        },
+        {
+          "key": 20,
+          "position": 412,
+          "label": "d21"
+        },
+        {
+          "key": 21,
+          "position": 432,
+          "label": "d22"
+        },
+        {
+          "key": 22,
+          "position": 452,
+          "label": "d23"
+        },
+        {
+          "key": 23,
+          "position": 472,
+          "label": "d24"
+        },
+        {
+          "key": 24,
+          "position": 492,
+          "label": "d25"
+        },
+        {
+          "key": 25,
+          "position": 512,
+          "label": "d26"
+        },
+        {
+          "key": 26,
+          "position": 532,
+          "label": "d27"
+        },
+        {
+          "key": 27,
+          "position": 552,
+          "label": "d28"
+        },
+        {
+          "key": 28,
+          "position": 572,
+          "label": "d29"
+        },
+        {
+          "key": 29,
+          "position": 592,
+          "label": "d30"
+        }
+      ],
+      "kept": [
+        0,
+        3,
+        6,
+        9,
+        12,
+        15,
+        18,
+        21,
+        24,
+        27
+      ]
+    },
+    {
+      "gap": 0,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "x"
+        },
+        {
+          "key": 1,
+          "position": 62,
+          "label": "xxxx"
+        },
+        {
+          "key": 2,
+          "position": 112,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 3,
+          "position": 162,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 4,
+          "position": 212,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 5,
+          "position": 262,
+          "label": "x"
+        },
+        {
+          "key": 6,
+          "position": 312,
+          "label": "xxxx"
+        },
+        {
+          "key": 7,
+          "position": 362,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 8,
+          "position": 412,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 9,
+          "position": 462,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 10,
+          "position": 512,
+          "label": "x"
+        },
+        {
+          "key": 11,
+          "position": 562,
+          "label": "xxxx"
+        }
+      ],
+      "kept": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10
+      ]
+    },
+    {
+      "gap": 10,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "x"
+        },
+        {
+          "key": 1,
+          "position": 62,
+          "label": "xxxx"
+        },
+        {
+          "key": 2,
+          "position": 112,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 3,
+          "position": 162,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 4,
+          "position": 212,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 5,
+          "position": 262,
+          "label": "x"
+        },
+        {
+          "key": 6,
+          "position": 312,
+          "label": "xxxx"
+        },
+        {
+          "key": 7,
+          "position": 362,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 8,
+          "position": 412,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 9,
+          "position": 462,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 10,
+          "position": 512,
+          "label": "x"
+        },
+        {
+          "key": 11,
+          "position": 562,
+          "label": "xxxx"
+        }
+      ],
+      "kept": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10
+      ]
+    },
+    {
+      "gap": 30,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "x"
+        },
+        {
+          "key": 1,
+          "position": 62,
+          "label": "xxxx"
+        },
+        {
+          "key": 2,
+          "position": 112,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 3,
+          "position": 162,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 4,
+          "position": 212,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 5,
+          "position": 262,
+          "label": "x"
+        },
+        {
+          "key": 6,
+          "position": 312,
+          "label": "xxxx"
+        },
+        {
+          "key": 7,
+          "position": 362,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 8,
+          "position": 412,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 9,
+          "position": 462,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 10,
+          "position": 512,
+          "label": "x"
+        },
+        {
+          "key": 11,
+          "position": 562,
+          "label": "xxxx"
+        }
+      ],
+      "kept": [
+        0,
+        3,
+        6,
+        9
+      ]
+    },
+    {
+      "gap": 0,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "solo"
+        }
+      ],
+      "kept": [
+        0
+      ]
+    },
+    {
+      "gap": 10,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "solo"
+        }
+      ],
+      "kept": [
+        0
+      ]
+    },
+    {
+      "gap": 30,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "solo"
+        }
+      ],
+      "kept": [
+        0
+      ]
+    },
+    {
+      "gap": 0,
+      "ticks": [],
+      "kept": []
+    },
+    {
+      "gap": 10,
+      "ticks": [],
+      "kept": []
+    },
+    {
+      "gap": 30,
+      "ticks": [],
+      "kept": []
+    },
+    {
+      "gap": 0,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 312,
+          "label": "dos"
+        }
+      ],
+      "kept": [
+        0,
+        1
+      ]
+    },
+    {
+      "gap": 10,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 312,
+          "label": "dos"
+        }
+      ],
+      "kept": [
+        0,
+        1
+      ]
+    },
+    {
+      "gap": 30,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 12,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 312,
+          "label": "dos"
+        }
+      ],
+      "kept": [
+        0,
+        1
+      ]
+    }
+  ],
+  "valueTicks": [
+    {
+      "domain": [
+        -400,
+        800
+      ],
+      "count": 3,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 200,
+          "label": "0"
+        },
+        {
+          "key": 500,
+          "position": 75,
+          "label": "500"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -2000,
+        8000
+      ],
+      "count": 2,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 240,
+          "label": "0"
+        },
+        {
+          "key": 5000,
+          "position": 90,
+          "label": "5000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        9000
+      ],
+      "count": 2,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 270,
+          "label": "0"
+        },
+        {
+          "key": 5000,
+          "position": 120,
+          "label": "5000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        800
+      ],
+      "count": 5,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 200,
+          "position": 225,
+          "label": "200"
+        },
+        {
+          "key": 400,
+          "position": 150,
+          "label": "400"
+        },
+        {
+          "key": 600,
+          "position": 75,
+          "label": "600"
+        },
+        {
+          "key": 800,
+          "position": 0,
+          "label": "800"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        2400
+      ],
+      "count": 2,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 175,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 50,
+          "label": "2000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        3000
+      ],
+      "count": 8,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 500,
+          "position": 250,
+          "label": "500"
+        },
+        {
+          "key": 1000,
+          "position": 200,
+          "label": "1000"
+        },
+        {
+          "key": 1500,
+          "position": 150,
+          "label": "1500"
+        },
+        {
+          "key": 2000,
+          "position": 100,
+          "label": "2000"
+        },
+        {
+          "key": 2500,
+          "position": 50,
+          "label": "2500"
+        },
+        {
+          "key": 3000,
+          "position": 0,
+          "label": "3000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -500,
+        3500
+      ],
+      "count": 4,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 262.5,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 187.5,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 112.5,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 37.5,
+          "label": "3000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        8000
+      ],
+      "count": 7,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 262.5,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 225,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 187.5,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 150,
+          "label": "4000"
+        },
+        {
+          "key": 5000,
+          "position": 112.5,
+          "label": "5000"
+        },
+        {
+          "key": 6000,
+          "position": 75,
+          "label": "6000"
+        },
+        {
+          "key": 7000,
+          "position": 37.5,
+          "label": "7000"
+        },
+        {
+          "key": 8000,
+          "position": 0,
+          "label": "8000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        5000
+      ],
+      "count": 3,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 250,
+          "label": "0"
+        },
+        {
+          "key": 2000,
+          "position": 150,
+          "label": "2000"
+        },
+        {
+          "key": 4000,
+          "position": 50,
+          "label": "4000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        5000
+      ],
+      "count": 4,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 250,
+          "label": "0"
+        },
+        {
+          "key": 2000,
+          "position": 150,
+          "label": "2000"
+        },
+        {
+          "key": 4000,
+          "position": 50,
+          "label": "4000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -2000,
+        6000
+      ],
+      "count": 4,
+      "ticks": [
+        {
+          "key": -2000,
+          "position": 300,
+          "label": "-2000"
+        },
+        {
+          "key": 0,
+          "position": 225,
+          "label": "0"
+        },
+        {
+          "key": 2000,
+          "position": 150,
+          "label": "2000"
+        },
+        {
+          "key": 4000,
+          "position": 75,
+          "label": "4000"
+        },
+        {
+          "key": 6000,
+          "position": 0,
+          "label": "6000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -500,
+        2500
+      ],
+      "count": 5,
+      "ticks": [
+        {
+          "key": -500,
+          "position": 300,
+          "label": "-500"
+        },
+        {
+          "key": 0,
+          "position": 250,
+          "label": "0"
+        },
+        {
+          "key": 500,
+          "position": 200,
+          "label": "500"
+        },
+        {
+          "key": 1000,
+          "position": 150,
+          "label": "1000"
+        },
+        {
+          "key": 1500,
+          "position": 100,
+          "label": "1500"
+        },
+        {
+          "key": 2000,
+          "position": 50,
+          "label": "2000"
+        },
+        {
+          "key": 2500,
+          "position": 0,
+          "label": "2500"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        5000
+      ],
+      "count": 8,
+      "ticks": [
+        {
+          "key": -1000,
+          "position": 300,
+          "label": "-1000"
+        },
+        {
+          "key": 0,
+          "position": 250,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 200,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 150,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 100,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 50,
+          "label": "4000"
+        },
+        {
+          "key": 5000,
+          "position": 0,
+          "label": "5000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -5000,
+        10000
+      ],
+      "count": 3,
+      "ticks": [
+        {
+          "key": -5000,
+          "position": 300,
+          "label": "-5000"
+        },
+        {
+          "key": 0,
+          "position": 200,
+          "label": "0"
+        },
+        {
+          "key": 5000,
+          "position": 100,
+          "label": "5000"
+        },
+        {
+          "key": 10000,
+          "position": 0,
+          "label": "10000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -2000,
+        8000
+      ],
+      "count": 9,
+      "ticks": [
+        {
+          "key": -2000,
+          "position": 300,
+          "label": "-2000"
+        },
+        {
+          "key": -1000,
+          "position": 270,
+          "label": "-1000"
+        },
+        {
+          "key": 0,
+          "position": 240,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 210,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 180,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 150,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 120,
+          "label": "4000"
+        },
+        {
+          "key": 5000,
+          "position": 90,
+          "label": "5000"
+        },
+        {
+          "key": 6000,
+          "position": 60,
+          "label": "6000"
+        },
+        {
+          "key": 7000,
+          "position": 30,
+          "label": "7000"
+        },
+        {
+          "key": 8000,
+          "position": 0,
+          "label": "8000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -5000,
+        10000
+      ],
+      "count": 9,
+      "ticks": [
+        {
+          "key": -4000,
+          "position": 280,
+          "label": "-4000"
+        },
+        {
+          "key": -2000,
+          "position": 240,
+          "label": "-2000"
+        },
+        {
+          "key": 0,
+          "position": 200,
+          "label": "0"
+        },
+        {
+          "key": 2000,
+          "position": 160,
+          "label": "2000"
+        },
+        {
+          "key": 4000,
+          "position": 120,
+          "label": "4000"
+        },
+        {
+          "key": 6000,
+          "position": 80.00000000000003,
+          "label": "6000"
+        },
+        {
+          "key": 8000,
+          "position": 40,
+          "label": "8000"
+        },
+        {
+          "key": 10000,
+          "position": 0,
+          "label": "10000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        3000
+      ],
+      "count": 8,
+      "ticks": [
+        {
+          "key": -1000,
+          "position": 300,
+          "label": "-1000"
+        },
+        {
+          "key": -500,
+          "position": 262.5,
+          "label": "-500"
+        },
+        {
+          "key": 0,
+          "position": 225,
+          "label": "0"
+        },
+        {
+          "key": 500,
+          "position": 187.5,
+          "label": "500"
+        },
+        {
+          "key": 1000,
+          "position": 150,
+          "label": "1000"
+        },
+        {
+          "key": 1500,
+          "position": 112.5,
+          "label": "1500"
+        },
+        {
+          "key": 2000,
+          "position": 75,
+          "label": "2000"
+        },
+        {
+          "key": 2500,
+          "position": 37.5,
+          "label": "2500"
+        },
+        {
+          "key": 3000,
+          "position": 0,
+          "label": "3000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -500,
+        3000
+      ],
+      "count": 9,
+      "ticks": [
+        {
+          "key": -500,
+          "position": 300,
+          "label": "-500"
+        },
+        {
+          "key": 0,
+          "position": 257.14285714285717,
+          "label": "0"
+        },
+        {
+          "key": 500,
+          "position": 214.28571428571428,
+          "label": "500"
+        },
+        {
+          "key": 1000,
+          "position": 171.42857142857144,
+          "label": "1000"
+        },
+        {
+          "key": 1500,
+          "position": 128.57142857142858,
+          "label": "1500"
+        },
+        {
+          "key": 2000,
+          "position": 85.71428571428572,
+          "label": "2000"
+        },
+        {
+          "key": 2500,
+          "position": 42.85714285714289,
+          "label": "2500"
+        },
+        {
+          "key": 3000,
+          "position": 0,
+          "label": "3000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        4000
+      ],
+      "count": 5,
+      "ticks": [
+        {
+          "key": -1000,
+          "position": 300,
+          "label": "-1000"
+        },
+        {
+          "key": 0,
+          "position": 240,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 180,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 120,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 60,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 0,
+          "label": "4000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -1000,
+        6000
+      ],
+      "count": 9,
+      "ticks": [
+        {
+          "key": -1000,
+          "position": 300,
+          "label": "-1000"
+        },
+        {
+          "key": 0,
+          "position": 257.14285714285717,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 214.28571428571428,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 171.42857142857144,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 128.57142857142858,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 85.71428571428572,
+          "label": "4000"
+        },
+        {
+          "key": 5000,
+          "position": 42.85714285714289,
+          "label": "5000"
+        },
+        {
+          "key": 6000,
+          "position": 0,
+          "label": "6000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        -2000,
+        8000
+      ],
+      "count": 4,
+      "ticks": [
+        {
+          "key": -2000,
+          "position": 300,
+          "label": "-2000"
+        },
+        {
+          "key": 0,
+          "position": 240,
+          "label": "0"
+        },
+        {
+          "key": 2000,
+          "position": 180,
+          "label": "2000"
+        },
+        {
+          "key": 4000,
+          "position": 120,
+          "label": "4000"
+        },
+        {
+          "key": 6000,
+          "position": 60,
+          "label": "6000"
+        },
+        {
+          "key": 8000,
+          "position": 0,
+          "label": "8000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        5000
+      ],
+      "count": 5,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 240,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 180,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 120,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 60,
+          "label": "4000"
+        },
+        {
+          "key": 5000,
+          "position": 0,
+          "label": "5000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        6000
+      ],
+      "count": 5,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 1000,
+          "position": 250,
+          "label": "1000"
+        },
+        {
+          "key": 2000,
+          "position": 200,
+          "label": "2000"
+        },
+        {
+          "key": 3000,
+          "position": 150,
+          "label": "3000"
+        },
+        {
+          "key": 4000,
+          "position": 100,
+          "label": "4000"
+        },
+        {
+          "key": 5000,
+          "position": 50,
+          "label": "5000"
+        },
+        {
+          "key": 6000,
+          "position": 0,
+          "label": "6000"
+        }
+      ]
+    },
+    {
+      "domain": [
+        0,
+        10000
+      ],
+      "count": 3,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 300,
+          "label": "0"
+        },
+        {
+          "key": 2000,
+          "position": 240,
+          "label": "2000"
+        },
+        {
+          "key": 4000,
+          "position": 180,
+          "label": "4000"
+        },
+        {
+          "key": 6000,
+          "position": 120,
+          "label": "6000"
+        },
+        {
+          "key": 8000,
+          "position": 60,
+          "label": "8000"
+        },
+        {
+          "key": 10000,
+          "position": 0,
+          "label": "10000"
+        }
+      ]
+    }
+  ],
+  "category": [
+    {
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        160,
+        320
+      ],
+      "step": 160,
+      "bandwidth": 160,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 160,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 320,
+          "label": "c"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          1
+        ],
+        [
+          160,
+          1
+        ],
+        [
+          288,
+          2
+        ],
+        [
+          320,
+          2
+        ],
+        [
+          360,
+          2
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        400,
+        800
+      ],
+      "step": 400,
+      "bandwidth": 400,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 400,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 800,
+          "label": "c"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          1
+        ],
+        [
+          400,
+          1
+        ],
+        [
+          720,
+          2
+        ],
+        [
+          800,
+          2
+        ],
+        [
+          840,
+          2
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        53.333333333333336,
+        160,
+        266.6666666666667
+      ],
+      "step": 106.66666666666667,
+      "bandwidth": 74.66666666666667,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 53.333333333333336,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 160,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 266.6666666666667,
+          "label": "c"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          1
+        ],
+        [
+          160,
+          1
+        ],
+        [
+          288,
+          2
+        ],
+        [
+          320,
+          2
+        ],
+        [
+          360,
+          2
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "a",
+        "b",
+        "c"
+      ],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        133.33333333333331,
+        400,
+        666.6666666666667
+      ],
+      "step": 266.6666666666667,
+      "bandwidth": 186.66666666666666,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 133.33333333333331,
+          "label": "a"
+        },
+        {
+          "key": 1,
+          "position": 400,
+          "label": "b"
+        },
+        {
+          "key": 2,
+          "position": 666.6666666666667,
+          "label": "c"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          1
+        ],
+        [
+          400,
+          1
+        ],
+        [
+          720,
+          2
+        ],
+        [
+          800,
+          2
+        ],
+        [
+          840,
+          2
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto"
+      ],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        45.714285714285715,
+        91.42857142857143,
+        137.14285714285714,
+        182.85714285714286,
+        228.57142857142858,
+        274.2857142857143,
+        320
+      ],
+      "step": 45.714285714285715,
+      "bandwidth": 45.714285714285715,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "Enero"
+        },
+        {
+          "key": 2,
+          "position": 91.42857142857143,
+          "label": "Marzo"
+        },
+        {
+          "key": 4,
+          "position": 182.85714285714286,
+          "label": "Mayo"
+        },
+        {
+          "key": 6,
+          "position": 274.2857142857143,
+          "label": "Julio"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          2
+        ],
+        [
+          160,
+          4
+        ],
+        [
+          288,
+          6
+        ],
+        [
+          320,
+          7
+        ],
+        [
+          360,
+          7
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto"
+      ],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        114.28571428571429,
+        228.57142857142858,
+        342.8571428571429,
+        457.14285714285717,
+        571.4285714285714,
+        685.7142857142858,
+        800
+      ],
+      "step": 114.28571428571429,
+      "bandwidth": 114.28571428571429,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "Enero"
+        },
+        {
+          "key": 1,
+          "position": 114.28571428571429,
+          "label": "Febrero"
+        },
+        {
+          "key": 2,
+          "position": 228.57142857142858,
+          "label": "Marzo"
+        },
+        {
+          "key": 3,
+          "position": 342.8571428571429,
+          "label": "Abril"
+        },
+        {
+          "key": 4,
+          "position": 457.14285714285717,
+          "label": "Mayo"
+        },
+        {
+          "key": 5,
+          "position": 571.4285714285714,
+          "label": "Junio"
+        },
+        {
+          "key": 6,
+          "position": 685.7142857142858,
+          "label": "Julio"
+        },
+        {
+          "key": 7,
+          "position": 800,
+          "label": "Agosto"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          2
+        ],
+        [
+          400,
+          4
+        ],
+        [
+          720,
+          6
+        ],
+        [
+          800,
+          7
+        ],
+        [
+          840,
+          7
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto"
+      ],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        20,
+        60,
+        100,
+        140,
+        180,
+        220,
+        260,
+        300
+      ],
+      "step": 40,
+      "bandwidth": 28,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 20,
+          "label": "Enero"
+        },
+        {
+          "key": 2,
+          "position": 100,
+          "label": "Marzo"
+        },
+        {
+          "key": 4,
+          "position": 180,
+          "label": "Mayo"
+        },
+        {
+          "key": 6,
+          "position": 260,
+          "label": "Julio"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          2
+        ],
+        [
+          160,
+          4
+        ],
+        [
+          288,
+          7
+        ],
+        [
+          320,
+          7
+        ],
+        [
+          360,
+          7
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto"
+      ],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        50,
+        150,
+        250,
+        350,
+        450,
+        550,
+        650,
+        750
+      ],
+      "step": 100,
+      "bandwidth": 70,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 50,
+          "label": "Enero"
+        },
+        {
+          "key": 1,
+          "position": 150,
+          "label": "Febrero"
+        },
+        {
+          "key": 2,
+          "position": 250,
+          "label": "Marzo"
+        },
+        {
+          "key": 3,
+          "position": 350,
+          "label": "Abril"
+        },
+        {
+          "key": 4,
+          "position": 450,
+          "label": "Mayo"
+        },
+        {
+          "key": 5,
+          "position": 550,
+          "label": "Junio"
+        },
+        {
+          "key": 6,
+          "position": 650,
+          "label": "Julio"
+        },
+        {
+          "key": 7,
+          "position": 750,
+          "label": "Agosto"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          2
+        ],
+        [
+          400,
+          4
+        ],
+        [
+          720,
+          7
+        ],
+        [
+          800,
+          7
+        ],
+        [
+          840,
+          7
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "d1",
+        "d2",
+        "d3",
+        "d4",
+        "d5",
+        "d6",
+        "d7",
+        "d8",
+        "d9",
+        "d10",
+        "d11",
+        "d12",
+        "d13",
+        "d14",
+        "d15",
+        "d16",
+        "d17",
+        "d18",
+        "d19",
+        "d20",
+        "d21",
+        "d22",
+        "d23",
+        "d24",
+        "d25",
+        "d26",
+        "d27",
+        "d28",
+        "d29",
+        "d30"
+      ],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        11.03448275862069,
+        22.06896551724138,
+        33.10344827586207,
+        44.13793103448276,
+        55.17241379310345,
+        66.20689655172414,
+        77.24137931034483,
+        88.27586206896552,
+        99.31034482758622,
+        110.3448275862069,
+        121.37931034482759,
+        132.41379310344828,
+        143.44827586206898,
+        154.48275862068965,
+        165.51724137931035,
+        176.55172413793105,
+        187.58620689655174,
+        198.62068965517244,
+        209.6551724137931,
+        220.6896551724138,
+        231.7241379310345,
+        242.75862068965517,
+        253.79310344827587,
+        264.82758620689657,
+        275.86206896551727,
+        286.89655172413796,
+        297.93103448275866,
+        308.9655172413793,
+        320
+      ],
+      "step": 11.03448275862069,
+      "bandwidth": 11.03448275862069,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "d1"
+        },
+        {
+          "key": 3,
+          "position": 33.10344827586207,
+          "label": "d4"
+        },
+        {
+          "key": 6,
+          "position": 66.20689655172414,
+          "label": "d7"
+        },
+        {
+          "key": 9,
+          "position": 99.31034482758622,
+          "label": "d10"
+        },
+        {
+          "key": 12,
+          "position": 132.41379310344828,
+          "label": "d13"
+        },
+        {
+          "key": 15,
+          "position": 165.51724137931035,
+          "label": "d16"
+        },
+        {
+          "key": 18,
+          "position": 198.62068965517244,
+          "label": "d19"
+        },
+        {
+          "key": 21,
+          "position": 231.7241379310345,
+          "label": "d22"
+        },
+        {
+          "key": 24,
+          "position": 264.82758620689657,
+          "label": "d25"
+        },
+        {
+          "key": 27,
+          "position": 297.93103448275866,
+          "label": "d28"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          10
+        ],
+        [
+          160,
+          14
+        ],
+        [
+          288,
+          26
+        ],
+        [
+          320,
+          29
+        ],
+        [
+          360,
+          29
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "d1",
+        "d2",
+        "d3",
+        "d4",
+        "d5",
+        "d6",
+        "d7",
+        "d8",
+        "d9",
+        "d10",
+        "d11",
+        "d12",
+        "d13",
+        "d14",
+        "d15",
+        "d16",
+        "d17",
+        "d18",
+        "d19",
+        "d20",
+        "d21",
+        "d22",
+        "d23",
+        "d24",
+        "d25",
+        "d26",
+        "d27",
+        "d28",
+        "d29",
+        "d30"
+      ],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        27.586206896551722,
+        55.172413793103445,
+        82.75862068965517,
+        110.34482758620689,
+        137.9310344827586,
+        165.51724137931035,
+        193.10344827586206,
+        220.68965517241378,
+        248.2758620689655,
+        275.8620689655172,
+        303.44827586206895,
+        331.0344827586207,
+        358.6206896551724,
+        386.2068965517241,
+        413.7931034482758,
+        441.37931034482756,
+        468.9655172413793,
+        496.551724137931,
+        524.1379310344827,
+        551.7241379310344,
+        579.3103448275862,
+        606.8965517241379,
+        634.4827586206897,
+        662.0689655172414,
+        689.655172413793,
+        717.2413793103448,
+        744.8275862068965,
+        772.4137931034483,
+        800
+      ],
+      "step": 27.586206896551722,
+      "bandwidth": 27.586206896551722,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "d1"
+        },
+        {
+          "key": 2,
+          "position": 55.172413793103445,
+          "label": "d3"
+        },
+        {
+          "key": 4,
+          "position": 110.34482758620689,
+          "label": "d5"
+        },
+        {
+          "key": 6,
+          "position": 165.51724137931035,
+          "label": "d7"
+        },
+        {
+          "key": 8,
+          "position": 220.68965517241378,
+          "label": "d9"
+        },
+        {
+          "key": 10,
+          "position": 275.8620689655172,
+          "label": "d11"
+        },
+        {
+          "key": 12,
+          "position": 331.0344827586207,
+          "label": "d13"
+        },
+        {
+          "key": 14,
+          "position": 386.2068965517241,
+          "label": "d15"
+        },
+        {
+          "key": 16,
+          "position": 441.37931034482756,
+          "label": "d17"
+        },
+        {
+          "key": 18,
+          "position": 496.551724137931,
+          "label": "d19"
+        },
+        {
+          "key": 20,
+          "position": 551.7241379310344,
+          "label": "d21"
+        },
+        {
+          "key": 22,
+          "position": 606.8965517241379,
+          "label": "d23"
+        },
+        {
+          "key": 24,
+          "position": 662.0689655172414,
+          "label": "d25"
+        },
+        {
+          "key": 26,
+          "position": 717.2413793103448,
+          "label": "d27"
+        },
+        {
+          "key": 28,
+          "position": 772.4137931034483,
+          "label": "d29"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          10
+        ],
+        [
+          400,
+          15
+        ],
+        [
+          720,
+          26
+        ],
+        [
+          800,
+          29
+        ],
+        [
+          840,
+          29
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "d1",
+        "d2",
+        "d3",
+        "d4",
+        "d5",
+        "d6",
+        "d7",
+        "d8",
+        "d9",
+        "d10",
+        "d11",
+        "d12",
+        "d13",
+        "d14",
+        "d15",
+        "d16",
+        "d17",
+        "d18",
+        "d19",
+        "d20",
+        "d21",
+        "d22",
+        "d23",
+        "d24",
+        "d25",
+        "d26",
+        "d27",
+        "d28",
+        "d29",
+        "d30"
+      ],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        5.333333333333333,
+        15.999999999999998,
+        26.666666666666668,
+        37.333333333333336,
+        48,
+        58.666666666666664,
+        69.33333333333333,
+        79.99999999999999,
+        90.66666666666666,
+        101.33333333333333,
+        111.99999999999999,
+        122.66666666666666,
+        133.33333333333331,
+        143.99999999999997,
+        154.66666666666663,
+        165.33333333333331,
+        175.99999999999997,
+        186.66666666666663,
+        197.33333333333331,
+        207.99999999999997,
+        218.66666666666663,
+        229.33333333333331,
+        239.99999999999997,
+        250.66666666666663,
+        261.33333333333337,
+        272,
+        282.6666666666667,
+        293.33333333333337,
+        304,
+        314.6666666666667
+      ],
+      "step": 10.666666666666666,
+      "bandwidth": 7.466666666666666,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 5.333333333333333,
+          "label": "d1"
+        },
+        {
+          "key": 3,
+          "position": 37.333333333333336,
+          "label": "d4"
+        },
+        {
+          "key": 6,
+          "position": 69.33333333333333,
+          "label": "d7"
+        },
+        {
+          "key": 9,
+          "position": 101.33333333333333,
+          "label": "d10"
+        },
+        {
+          "key": 12,
+          "position": 133.33333333333331,
+          "label": "d13"
+        },
+        {
+          "key": 15,
+          "position": 165.33333333333331,
+          "label": "d16"
+        },
+        {
+          "key": 18,
+          "position": 197.33333333333331,
+          "label": "d19"
+        },
+        {
+          "key": 21,
+          "position": 229.33333333333331,
+          "label": "d22"
+        },
+        {
+          "key": 24,
+          "position": 261.33333333333337,
+          "label": "d25"
+        },
+        {
+          "key": 27,
+          "position": 293.33333333333337,
+          "label": "d28"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          10
+        ],
+        [
+          160,
+          15
+        ],
+        [
+          288,
+          27
+        ],
+        [
+          320,
+          29
+        ],
+        [
+          360,
+          29
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "d1",
+        "d2",
+        "d3",
+        "d4",
+        "d5",
+        "d6",
+        "d7",
+        "d8",
+        "d9",
+        "d10",
+        "d11",
+        "d12",
+        "d13",
+        "d14",
+        "d15",
+        "d16",
+        "d17",
+        "d18",
+        "d19",
+        "d20",
+        "d21",
+        "d22",
+        "d23",
+        "d24",
+        "d25",
+        "d26",
+        "d27",
+        "d28",
+        "d29",
+        "d30"
+      ],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        13.333333333333334,
+        40,
+        66.66666666666667,
+        93.33333333333333,
+        120,
+        146.66666666666669,
+        173.33333333333334,
+        200.00000000000003,
+        226.66666666666669,
+        253.33333333333334,
+        280,
+        306.6666666666667,
+        333.3333333333333,
+        360,
+        386.6666666666667,
+        413.3333333333333,
+        440,
+        466.6666666666667,
+        493.3333333333333,
+        520,
+        546.6666666666667,
+        573.3333333333334,
+        600.0000000000001,
+        626.6666666666667,
+        653.3333333333334,
+        680.0000000000001,
+        706.6666666666667,
+        733.3333333333334,
+        760.0000000000001,
+        786.6666666666667
+      ],
+      "step": 26.666666666666668,
+      "bandwidth": 18.666666666666668,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 13.333333333333334,
+          "label": "d1"
+        },
+        {
+          "key": 2,
+          "position": 66.66666666666667,
+          "label": "d3"
+        },
+        {
+          "key": 4,
+          "position": 120,
+          "label": "d5"
+        },
+        {
+          "key": 6,
+          "position": 173.33333333333334,
+          "label": "d7"
+        },
+        {
+          "key": 8,
+          "position": 226.66666666666669,
+          "label": "d9"
+        },
+        {
+          "key": 10,
+          "position": 280,
+          "label": "d11"
+        },
+        {
+          "key": 12,
+          "position": 333.3333333333333,
+          "label": "d13"
+        },
+        {
+          "key": 14,
+          "position": 386.6666666666667,
+          "label": "d15"
+        },
+        {
+          "key": 16,
+          "position": 440,
+          "label": "d17"
+        },
+        {
+          "key": 18,
+          "position": 493.3333333333333,
+          "label": "d19"
+        },
+        {
+          "key": 20,
+          "position": 546.6666666666667,
+          "label": "d21"
+        },
+        {
+          "key": 22,
+          "position": 600.0000000000001,
+          "label": "d23"
+        },
+        {
+          "key": 24,
+          "position": 653.3333333333334,
+          "label": "d25"
+        },
+        {
+          "key": 26,
+          "position": 706.6666666666667,
+          "label": "d27"
+        },
+        {
+          "key": 28,
+          "position": 760.0000000000001,
+          "label": "d29"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          10
+        ],
+        [
+          400,
+          15
+        ],
+        [
+          720,
+          27
+        ],
+        [
+          800,
+          29
+        ],
+        [
+          840,
+          29
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx"
+      ],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        29.09090909090909,
+        58.18181818181818,
+        87.27272727272727,
+        116.36363636363636,
+        145.45454545454544,
+        174.54545454545453,
+        203.63636363636363,
+        232.72727272727272,
+        261.8181818181818,
+        290.9090909090909,
+        320
+      ],
+      "step": 29.09090909090909,
+      "bandwidth": 29.09090909090909,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "x"
+        },
+        {
+          "key": 4,
+          "position": 116.36363636363636,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 8,
+          "position": 232.72727272727272,
+          "label": "xxxxxxxxxx"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          4
+        ],
+        [
+          160,
+          6
+        ],
+        [
+          288,
+          10
+        ],
+        [
+          320,
+          11
+        ],
+        [
+          360,
+          11
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx"
+      ],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        72.72727272727273,
+        145.45454545454547,
+        218.1818181818182,
+        290.90909090909093,
+        363.6363636363637,
+        436.3636363636364,
+        509.0909090909091,
+        581.8181818181819,
+        654.5454545454546,
+        727.2727272727274,
+        800.0000000000001
+      ],
+      "step": 72.72727272727273,
+      "bandwidth": 72.72727272727273,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "x"
+        },
+        {
+          "key": 2,
+          "position": 145.45454545454547,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 4,
+          "position": 290.90909090909093,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 6,
+          "position": 436.3636363636364,
+          "label": "xxxx"
+        },
+        {
+          "key": 8,
+          "position": 581.8181818181819,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 10,
+          "position": 727.2727272727274,
+          "label": "x"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          4
+        ],
+        [
+          400,
+          5
+        ],
+        [
+          720,
+          10
+        ],
+        [
+          800,
+          11
+        ],
+        [
+          840,
+          11
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx"
+      ],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        13.333333333333334,
+        40,
+        66.66666666666667,
+        93.33333333333333,
+        120,
+        146.66666666666669,
+        173.33333333333334,
+        200.00000000000003,
+        226.66666666666669,
+        253.33333333333334,
+        280,
+        306.6666666666667
+      ],
+      "step": 26.666666666666668,
+      "bandwidth": 18.666666666666668,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 13.333333333333334,
+          "label": "x"
+        },
+        {
+          "key": 4,
+          "position": 120,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 8,
+          "position": 226.66666666666669,
+          "label": "xxxxxxxxxx"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          4
+        ],
+        [
+          160,
+          6
+        ],
+        [
+          288,
+          10
+        ],
+        [
+          320,
+          11
+        ],
+        [
+          360,
+          11
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx",
+        "xxxxxxx",
+        "xxxxxxxxxx",
+        "xxxxxxxxxxxxx",
+        "x",
+        "xxxx"
+      ],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        33.33333333333333,
+        100,
+        166.66666666666669,
+        233.33333333333334,
+        300,
+        366.6666666666667,
+        433.3333333333333,
+        500,
+        566.6666666666667,
+        633.3333333333334,
+        700.0000000000001,
+        766.6666666666667
+      ],
+      "step": 66.66666666666667,
+      "bandwidth": 46.666666666666664,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 33.33333333333333,
+          "label": "x"
+        },
+        {
+          "key": 2,
+          "position": 166.66666666666669,
+          "label": "xxxxxxx"
+        },
+        {
+          "key": 4,
+          "position": 300,
+          "label": "xxxxxxxxxxxxx"
+        },
+        {
+          "key": 6,
+          "position": 433.3333333333333,
+          "label": "xxxx"
+        },
+        {
+          "key": 8,
+          "position": 566.6666666666667,
+          "label": "xxxxxxxxxx"
+        },
+        {
+          "key": 10,
+          "position": 700.0000000000001,
+          "label": "x"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          4
+        ],
+        [
+          400,
+          6
+        ],
+        [
+          720,
+          10
+        ],
+        [
+          800,
+          11
+        ],
+        [
+          840,
+          11
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "solo"
+      ],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        160
+      ],
+      "step": 320,
+      "bandwidth": 320,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 160,
+          "label": "solo"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          0
+        ],
+        [
+          160,
+          0
+        ],
+        [
+          288,
+          0
+        ],
+        [
+          320,
+          0
+        ],
+        [
+          360,
+          0
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "solo"
+      ],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        400
+      ],
+      "step": 800,
+      "bandwidth": 800,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 400,
+          "label": "solo"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          0
+        ],
+        [
+          400,
+          0
+        ],
+        [
+          720,
+          0
+        ],
+        [
+          800,
+          0
+        ],
+        [
+          840,
+          0
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "solo"
+      ],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        160
+      ],
+      "step": 320,
+      "bandwidth": 224,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 160,
+          "label": "solo"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          0
+        ],
+        [
+          160,
+          0
+        ],
+        [
+          288,
+          0
+        ],
+        [
+          320,
+          0
+        ],
+        [
+          360,
+          0
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "solo"
+      ],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        400
+      ],
+      "step": 800,
+      "bandwidth": 560,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 400,
+          "label": "solo"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          0
+        ],
+        [
+          400,
+          0
+        ],
+        [
+          720,
+          0
+        ],
+        [
+          800,
+          0
+        ],
+        [
+          840,
+          0
+        ]
+      ]
+    },
+    {
+      "labels": [],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [],
+      "step": 320,
+      "bandwidth": 320,
+      "ticks": [],
+      "indexAt": [
+        [
+          -20,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          106.66666666666667,
+          -1
+        ],
+        [
+          160,
+          -1
+        ],
+        [
+          288,
+          -1
+        ],
+        [
+          320,
+          -1
+        ],
+        [
+          360,
+          -1
+        ]
+      ]
+    },
+    {
+      "labels": [],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [],
+      "step": 800,
+      "bandwidth": 800,
+      "ticks": [],
+      "indexAt": [
+        [
+          -20,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          266.6666666666667,
+          -1
+        ],
+        [
+          400,
+          -1
+        ],
+        [
+          720,
+          -1
+        ],
+        [
+          800,
+          -1
+        ],
+        [
+          840,
+          -1
+        ]
+      ]
+    },
+    {
+      "labels": [],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [],
+      "step": 320,
+      "bandwidth": 224,
+      "ticks": [],
+      "indexAt": [
+        [
+          -20,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          106.66666666666667,
+          -1
+        ],
+        [
+          160,
+          -1
+        ],
+        [
+          288,
+          -1
+        ],
+        [
+          320,
+          -1
+        ],
+        [
+          360,
+          -1
+        ]
+      ]
+    },
+    {
+      "labels": [],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [],
+      "step": 800,
+      "bandwidth": 560,
+      "ticks": [],
+      "indexAt": [
+        [
+          -20,
+          -1
+        ],
+        [
+          0,
+          -1
+        ],
+        [
+          266.6666666666667,
+          -1
+        ],
+        [
+          400,
+          -1
+        ],
+        [
+          720,
+          -1
+        ],
+        [
+          800,
+          -1
+        ],
+        [
+          840,
+          -1
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "uno",
+        "dos"
+      ],
+      "mode": "point",
+      "width": 320,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        320
+      ],
+      "step": 320,
+      "bandwidth": 320,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 320,
+          "label": "dos"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          0
+        ],
+        [
+          160,
+          1
+        ],
+        [
+          288,
+          1
+        ],
+        [
+          320,
+          1
+        ],
+        [
+          360,
+          1
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "uno",
+        "dos"
+      ],
+      "mode": "point",
+      "width": 800,
+      "options": {
+        "mode": "point"
+      },
+      "positions": [
+        0,
+        800
+      ],
+      "step": 800,
+      "bandwidth": 800,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 0,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 800,
+          "label": "dos"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          0
+        ],
+        [
+          400,
+          1
+        ],
+        [
+          720,
+          1
+        ],
+        [
+          800,
+          1
+        ],
+        [
+          840,
+          1
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "uno",
+        "dos"
+      ],
+      "mode": "band",
+      "width": 320,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        80,
+        240
+      ],
+      "step": 160,
+      "bandwidth": 112,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 80,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 240,
+          "label": "dos"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          106.66666666666667,
+          0
+        ],
+        [
+          160,
+          1
+        ],
+        [
+          288,
+          1
+        ],
+        [
+          320,
+          1
+        ],
+        [
+          360,
+          1
+        ]
+      ]
+    },
+    {
+      "labels": [
+        "uno",
+        "dos"
+      ],
+      "mode": "band",
+      "width": 800,
+      "options": {
+        "mode": "band",
+        "paddingInner": 0.3,
+        "padding": 0.15
+      },
+      "positions": [
+        200,
+        600
+      ],
+      "step": 400,
+      "bandwidth": 280,
+      "ticks": [
+        {
+          "key": 0,
+          "position": 200,
+          "label": "uno"
+        },
+        {
+          "key": 1,
+          "position": 600,
+          "label": "dos"
+        }
+      ],
+      "indexAt": [
+        [
+          -20,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          266.6666666666667,
+          0
+        ],
+        [
+          400,
+          1
+        ],
+        [
+          720,
+          1
+        ],
+        [
+          800,
+          1
+        ],
+        [
+          840,
+          1
+        ]
+      ]
+    }
+  ],
+  "dated": [
+    {
+      "name": "daily",
+      "timeZone": "UTC",
+      "times": [
+        1790553600000,
+        1790640000000,
+        1790726400000,
+        1790812800000,
+        1790899200000,
+        1790985600000,
+        1791072000000,
+        1791158400000,
+        1791244800000,
+        1791331200000,
+        1791417600000,
+        1791504000000,
+        1791590400000,
+        1791676800000,
+        1791763200000,
+        1791849600000,
+        1791936000000,
+        1792022400000,
+        1792108800000,
+        1792195200000,
+        1792281600000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        32,
+        64,
+        96,
+        128,
+        160,
+        192,
+        224,
+        256,
+        288,
+        320,
+        352,
+        384,
+        416,
+        448,
+        480,
+        512,
+        544,
+        576,
+        608,
+        640
+      ],
+      "step": 32,
+      "bandwidth": 32,
+      "ticks": [
+        {
+          "key": 1790553600000,
+          "position": 0,
+          "label": "28 set"
+        },
+        {
+          "key": 1791158400000,
+          "position": 224,
+          "label": "5 oct"
+        },
+        {
+          "key": 1791763200000,
+          "position": 448,
+          "label": "12 oct"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          10
+        ],
+        [
+          500,
+          16
+        ],
+        [
+          640,
+          20
+        ],
+        [
+          700,
+          20
+        ]
+      ]
+    },
+    {
+      "name": "daily",
+      "timeZone": "America/Lima",
+      "times": [
+        1790553600000,
+        1790640000000,
+        1790726400000,
+        1790812800000,
+        1790899200000,
+        1790985600000,
+        1791072000000,
+        1791158400000,
+        1791244800000,
+        1791331200000,
+        1791417600000,
+        1791504000000,
+        1791590400000,
+        1791676800000,
+        1791763200000,
+        1791849600000,
+        1791936000000,
+        1792022400000,
+        1792108800000,
+        1792195200000,
+        1792281600000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        32,
+        64,
+        96,
+        128,
+        160,
+        192,
+        224,
+        256,
+        288,
+        320,
+        352,
+        384,
+        416,
+        448,
+        480,
+        512,
+        544,
+        576,
+        608,
+        640
+      ],
+      "step": 32,
+      "bandwidth": 32,
+      "ticks": [
+        {
+          "key": 1790571600000,
+          "position": 6.666666666666666,
+          "label": "28 set"
+        },
+        {
+          "key": 1791176400000,
+          "position": 230.66666666666666,
+          "label": "5 oct"
+        },
+        {
+          "key": 1791781200000,
+          "position": 454.6666666666667,
+          "label": "12 oct"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          10
+        ],
+        [
+          500,
+          16
+        ],
+        [
+          640,
+          20
+        ],
+        [
+          700,
+          20
+        ]
+      ]
+    },
+    {
+      "name": "daily",
+      "timeZone": "America/New_York",
+      "times": [
+        1790553600000,
+        1790640000000,
+        1790726400000,
+        1790812800000,
+        1790899200000,
+        1790985600000,
+        1791072000000,
+        1791158400000,
+        1791244800000,
+        1791331200000,
+        1791417600000,
+        1791504000000,
+        1791590400000,
+        1791676800000,
+        1791763200000,
+        1791849600000,
+        1791936000000,
+        1792022400000,
+        1792108800000,
+        1792195200000,
+        1792281600000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        32,
+        64,
+        96,
+        128,
+        160,
+        192,
+        224,
+        256,
+        288,
+        320,
+        352,
+        384,
+        416,
+        448,
+        480,
+        512,
+        544,
+        576,
+        608,
+        640
+      ],
+      "step": 32,
+      "bandwidth": 32,
+      "ticks": [
+        {
+          "key": 1790568000000,
+          "position": 5.333333333333333,
+          "label": "28 set"
+        },
+        {
+          "key": 1791172800000,
+          "position": 229.33333333333334,
+          "label": "5 oct"
+        },
+        {
+          "key": 1791777600000,
+          "position": 453.33333333333337,
+          "label": "12 oct"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          10
+        ],
+        [
+          500,
+          16
+        ],
+        [
+          640,
+          20
+        ],
+        [
+          700,
+          20
+        ]
+      ]
+    },
+    {
+      "name": "sparse",
+      "timeZone": "UTC",
+      "times": [
+        1790553600000,
+        1790640000000,
+        1791331200000,
+        1791417600000,
+        1794009600000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        16,
+        144,
+        160,
+        640
+      ],
+      "step": 16,
+      "bandwidth": 16,
+      "ticks": [
+        {
+          "key": 1790553600000,
+          "position": 0,
+          "label": "28 set"
+        },
+        {
+          "key": 1791158400000,
+          "position": 112,
+          "label": "5 oct"
+        },
+        {
+          "key": 1791763200000,
+          "position": 224,
+          "label": "12 oct"
+        },
+        {
+          "key": 1792368000000,
+          "position": 336,
+          "label": "19 oct"
+        },
+        {
+          "key": 1792972800000,
+          "position": 448,
+          "label": "26 oct"
+        },
+        {
+          "key": 1793577600000,
+          "position": 560,
+          "label": "2 nov"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          2
+        ],
+        [
+          321,
+          3
+        ],
+        [
+          500,
+          4
+        ],
+        [
+          640,
+          4
+        ],
+        [
+          700,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "sparse",
+      "timeZone": "America/Lima",
+      "times": [
+        1790553600000,
+        1790640000000,
+        1791331200000,
+        1791417600000,
+        1794009600000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        16,
+        144,
+        160,
+        640
+      ],
+      "step": 16,
+      "bandwidth": 16,
+      "ticks": [
+        {
+          "key": 1790571600000,
+          "position": 3.333333333333333,
+          "label": "28 set"
+        },
+        {
+          "key": 1791176400000,
+          "position": 115.33333333333333,
+          "label": "5 oct"
+        },
+        {
+          "key": 1791781200000,
+          "position": 227.33333333333334,
+          "label": "12 oct"
+        },
+        {
+          "key": 1792386000000,
+          "position": 339.3333333333333,
+          "label": "19 oct"
+        },
+        {
+          "key": 1792990800000,
+          "position": 451.3333333333333,
+          "label": "26 oct"
+        },
+        {
+          "key": 1793595600000,
+          "position": 563.3333333333334,
+          "label": "2 nov"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          2
+        ],
+        [
+          321,
+          3
+        ],
+        [
+          500,
+          4
+        ],
+        [
+          640,
+          4
+        ],
+        [
+          700,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "sparse",
+      "timeZone": "America/New_York",
+      "times": [
+        1790553600000,
+        1790640000000,
+        1791331200000,
+        1791417600000,
+        1794009600000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        16,
+        144,
+        160,
+        640
+      ],
+      "step": 16,
+      "bandwidth": 16,
+      "ticks": [
+        {
+          "key": 1790568000000,
+          "position": 2.6666666666666665,
+          "label": "28 set"
+        },
+        {
+          "key": 1791172800000,
+          "position": 114.66666666666667,
+          "label": "5 oct"
+        },
+        {
+          "key": 1791777600000,
+          "position": 226.66666666666669,
+          "label": "12 oct"
+        },
+        {
+          "key": 1792382400000,
+          "position": 338.6666666666667,
+          "label": "19 oct"
+        },
+        {
+          "key": 1792987200000,
+          "position": 450.6666666666667,
+          "label": "26 oct"
+        },
+        {
+          "key": 1793595600000,
+          "position": 563.3333333333334,
+          "label": "2 nov"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          2
+        ],
+        [
+          321,
+          3
+        ],
+        [
+          500,
+          4
+        ],
+        [
+          640,
+          4
+        ],
+        [
+          700,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "monthly",
+      "timeZone": "UTC",
+      "times": [
+        1735689600000,
+        1738368000000,
+        1740787200000,
+        1743465600000,
+        1746057600000,
+        1748736000000,
+        1751328000000,
+        1754006400000,
+        1756684800000,
+        1759276800000,
+        1761955200000,
+        1764547200000,
+        1767225600000,
+        1769904000000,
+        1772323200000,
+        1775001600000,
+        1777593600000,
+        1780272000000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        38.44961240310078,
+        73.17829457364341,
+        111.62790697674419,
+        148.8372093023256,
+        187.28682170542638,
+        224.49612403100775,
+        262.94573643410854,
+        301.3953488372093,
+        338.60465116279073,
+        377.0542635658915,
+        414.2635658914729,
+        452.71317829457365,
+        491.16279069767444,
+        525.8914728682171,
+        564.3410852713179,
+        601.5503875968992,
+        640
+      ],
+      "step": 34.72868217054263,
+      "bandwidth": 34.72868217054263,
+      "ticks": [
+        {
+          "key": 1735689600000,
+          "position": 0,
+          "label": "ene 2025"
+        },
+        {
+          "key": 1743465600000,
+          "position": 111.62790697674419,
+          "label": "abr"
+        },
+        {
+          "key": 1751328000000,
+          "position": 224.49612403100775,
+          "label": "jul"
+        },
+        {
+          "key": 1759276800000,
+          "position": 338.60465116279073,
+          "label": "oct"
+        },
+        {
+          "key": 1767225600000,
+          "position": 452.71317829457365,
+          "label": "ene 2026"
+        },
+        {
+          "key": 1775001600000,
+          "position": 564.3410852713179,
+          "label": "abr"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          9
+        ],
+        [
+          500,
+          13
+        ],
+        [
+          640,
+          17
+        ],
+        [
+          700,
+          17
+        ]
+      ]
+    },
+    {
+      "name": "monthly",
+      "timeZone": "America/Lima",
+      "times": [
+        1735689600000,
+        1738368000000,
+        1740787200000,
+        1743465600000,
+        1746057600000,
+        1748736000000,
+        1751328000000,
+        1754006400000,
+        1756684800000,
+        1759276800000,
+        1761955200000,
+        1764547200000,
+        1767225600000,
+        1769904000000,
+        1772323200000,
+        1775001600000,
+        1777593600000,
+        1780272000000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        38.44961240310078,
+        73.17829457364341,
+        111.62790697674419,
+        148.8372093023256,
+        187.28682170542638,
+        224.49612403100775,
+        262.94573643410854,
+        301.3953488372093,
+        338.60465116279073,
+        377.0542635658915,
+        414.2635658914729,
+        452.71317829457365,
+        491.16279069767444,
+        525.8914728682171,
+        564.3410852713179,
+        601.5503875968992,
+        640
+      ],
+      "step": 34.72868217054263,
+      "bandwidth": 34.72868217054263,
+      "ticks": [
+        {
+          "key": 1735707600000,
+          "position": 0.25839793281653745,
+          "label": "ene 2025"
+        },
+        {
+          "key": 1743483600000,
+          "position": 111.88630490956072,
+          "label": "abr"
+        },
+        {
+          "key": 1751346000000,
+          "position": 224.7545219638243,
+          "label": "jul"
+        },
+        {
+          "key": 1759294800000,
+          "position": 338.8630490956072,
+          "label": "oct"
+        },
+        {
+          "key": 1767243600000,
+          "position": 452.9715762273902,
+          "label": "ene 2026"
+        },
+        {
+          "key": 1775019600000,
+          "position": 564.5994832041343,
+          "label": "abr"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          9
+        ],
+        [
+          500,
+          13
+        ],
+        [
+          640,
+          17
+        ],
+        [
+          700,
+          17
+        ]
+      ]
+    },
+    {
+      "name": "monthly",
+      "timeZone": "America/New_York",
+      "times": [
+        1735689600000,
+        1738368000000,
+        1740787200000,
+        1743465600000,
+        1746057600000,
+        1748736000000,
+        1751328000000,
+        1754006400000,
+        1756684800000,
+        1759276800000,
+        1761955200000,
+        1764547200000,
+        1767225600000,
+        1769904000000,
+        1772323200000,
+        1775001600000,
+        1777593600000,
+        1780272000000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        38.44961240310078,
+        73.17829457364341,
+        111.62790697674419,
+        148.8372093023256,
+        187.28682170542638,
+        224.49612403100775,
+        262.94573643410854,
+        301.3953488372093,
+        338.60465116279073,
+        377.0542635658915,
+        414.2635658914729,
+        452.71317829457365,
+        491.16279069767444,
+        525.8914728682171,
+        564.3410852713179,
+        601.5503875968992,
+        640
+      ],
+      "step": 34.72868217054263,
+      "bandwidth": 34.72868217054263,
+      "ticks": [
+        {
+          "key": 1735707600000,
+          "position": 0.25839793281653745,
+          "label": "ene 2025"
+        },
+        {
+          "key": 1743480000000,
+          "position": 111.83462532299741,
+          "label": "abr"
+        },
+        {
+          "key": 1751342400000,
+          "position": 224.702842377261,
+          "label": "jul"
+        },
+        {
+          "key": 1759291200000,
+          "position": 338.8113695090439,
+          "label": "oct"
+        },
+        {
+          "key": 1767243600000,
+          "position": 452.9715762273902,
+          "label": "ene 2026"
+        },
+        {
+          "key": 1775016000000,
+          "position": 564.547803617571,
+          "label": "abr"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          9
+        ],
+        [
+          500,
+          13
+        ],
+        [
+          640,
+          17
+        ],
+        [
+          700,
+          17
+        ]
+      ]
+    },
+    {
+      "name": "unsorted",
+      "timeZone": "UTC",
+      "times": [
+        1790985600000,
+        1790553600000,
+        1791331200000,
+        1790726400000
+      ],
+      "width": 640,
+      "positions": [
+        355.55555555555554,
+        0,
+        640,
+        142.22222222222223
+      ],
+      "step": 355.55555555555554,
+      "bandwidth": 355.55555555555554,
+      "ticks": [
+        {
+          "key": 1790553600000,
+          "position": 0,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790726400000,
+          "position": 142.22222222222223,
+          "label": "mié 30"
+        },
+        {
+          "key": 1790899200000,
+          "position": 284.44444444444446,
+          "label": "vie 2"
+        },
+        {
+          "key": 1791072000000,
+          "position": 426.66666666666663,
+          "label": "dom 4"
+        },
+        {
+          "key": 1791244800000,
+          "position": 568.8888888888889,
+          "label": "mar 6"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          0
+        ],
+        [
+          500,
+          2
+        ],
+        [
+          640,
+          2
+        ],
+        [
+          700,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "unsorted",
+      "timeZone": "America/Lima",
+      "times": [
+        1790985600000,
+        1790553600000,
+        1791331200000,
+        1790726400000
+      ],
+      "width": 640,
+      "positions": [
+        355.55555555555554,
+        0,
+        640,
+        142.22222222222223
+      ],
+      "step": 355.55555555555554,
+      "bandwidth": 355.55555555555554,
+      "ticks": [
+        {
+          "key": 1790571600000,
+          "position": 14.814814814814813,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790744400000,
+          "position": 157.03703703703704,
+          "label": "mié 30"
+        },
+        {
+          "key": 1790917200000,
+          "position": 299.2592592592593,
+          "label": "vie 2"
+        },
+        {
+          "key": 1791090000000,
+          "position": 441.48148148148147,
+          "label": "dom 4"
+        },
+        {
+          "key": 1791262800000,
+          "position": 583.7037037037037,
+          "label": "mar 6"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          0
+        ],
+        [
+          500,
+          2
+        ],
+        [
+          640,
+          2
+        ],
+        [
+          700,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "unsorted",
+      "timeZone": "America/New_York",
+      "times": [
+        1790985600000,
+        1790553600000,
+        1791331200000,
+        1790726400000
+      ],
+      "width": 640,
+      "positions": [
+        355.55555555555554,
+        0,
+        640,
+        142.22222222222223
+      ],
+      "step": 355.55555555555554,
+      "bandwidth": 355.55555555555554,
+      "ticks": [
+        {
+          "key": 1790568000000,
+          "position": 11.851851851851851,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790740800000,
+          "position": 154.07407407407408,
+          "label": "mié 30"
+        },
+        {
+          "key": 1790913600000,
+          "position": 296.2962962962963,
+          "label": "vie 2"
+        },
+        {
+          "key": 1791086400000,
+          "position": 438.51851851851853,
+          "label": "dom 4"
+        },
+        {
+          "key": 1791259200000,
+          "position": 580.7407407407408,
+          "label": "mar 6"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          100,
+          3
+        ],
+        [
+          321,
+          0
+        ],
+        [
+          500,
+          2
+        ],
+        [
+          640,
+          2
+        ],
+        [
+          700,
+          2
+        ]
+      ]
+    },
+    {
+      "name": "single",
+      "timeZone": "UTC",
+      "times": [
+        1790553600000
+      ],
+      "width": 640,
+      "positions": [
+        0
+      ],
+      "step": 640,
+      "bandwidth": 640,
+      "ticks": [
+        {
+          "key": 1790553600000,
+          "position": 0,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790640000000,
+          "position": 640,
+          "label": "mar 29"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          321,
+          0
+        ],
+        [
+          500,
+          0
+        ],
+        [
+          640,
+          0
+        ],
+        [
+          700,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "single",
+      "timeZone": "America/Lima",
+      "times": [
+        1790553600000
+      ],
+      "width": 640,
+      "positions": [
+        0
+      ],
+      "step": 640,
+      "bandwidth": 640,
+      "ticks": [
+        {
+          "key": 1790571600000,
+          "position": 133.33333333333334,
+          "label": "lun 28"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          321,
+          0
+        ],
+        [
+          500,
+          0
+        ],
+        [
+          640,
+          0
+        ],
+        [
+          700,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "single",
+      "timeZone": "America/New_York",
+      "times": [
+        1790553600000
+      ],
+      "width": 640,
+      "positions": [
+        0
+      ],
+      "step": 640,
+      "bandwidth": 640,
+      "ticks": [
+        {
+          "key": 1790568000000,
+          "position": 106.66666666666666,
+          "label": "lun 28"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          321,
+          0
+        ],
+        [
+          500,
+          0
+        ],
+        [
+          640,
+          0
+        ],
+        [
+          700,
+          0
+        ]
+      ]
+    },
+    {
+      "name": "hourly",
+      "timeZone": "UTC",
+      "times": [
+        1790553600000,
+        1790557200000,
+        1790560800000,
+        1790564400000,
+        1790568000000,
+        1790571600000,
+        1790575200000,
+        1790578800000,
+        1790582400000,
+        1790586000000,
+        1790589600000,
+        1790593200000,
+        1790596800000,
+        1790600400000,
+        1790604000000,
+        1790607600000,
+        1790611200000,
+        1790614800000,
+        1790618400000,
+        1790622000000,
+        1790625600000,
+        1790629200000,
+        1790632800000,
+        1790636400000,
+        1790640000000,
+        1790643600000,
+        1790647200000,
+        1790650800000,
+        1790654400000,
+        1790658000000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        22.06896551724138,
+        44.13793103448276,
+        66.20689655172414,
+        88.27586206896552,
+        110.3448275862069,
+        132.41379310344828,
+        154.48275862068965,
+        176.55172413793105,
+        198.6206896551724,
+        220.6896551724138,
+        242.75862068965517,
+        264.82758620689657,
+        286.8965517241379,
+        308.9655172413793,
+        331.0344827586207,
+        353.1034482758621,
+        375.17241379310343,
+        397.2413793103448,
+        419.31034482758616,
+        441.3793103448276,
+        463.44827586206895,
+        485.51724137931035,
+        507.58620689655174,
+        529.6551724137931,
+        551.7241379310344,
+        573.7931034482758,
+        595.8620689655172,
+        617.9310344827586,
+        640
+      ],
+      "step": 22.06896551724128,
+      "bandwidth": 22.06896551724128,
+      "ticks": [
+        {
+          "key": 1790553600000,
+          "position": 0,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790640000000,
+          "position": 529.6551724137931,
+          "label": "mar 29"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          5
+        ],
+        [
+          321,
+          15
+        ],
+        [
+          500,
+          23
+        ],
+        [
+          640,
+          29
+        ],
+        [
+          700,
+          29
+        ]
+      ]
+    },
+    {
+      "name": "hourly",
+      "timeZone": "America/Lima",
+      "times": [
+        1790553600000,
+        1790557200000,
+        1790560800000,
+        1790564400000,
+        1790568000000,
+        1790571600000,
+        1790575200000,
+        1790578800000,
+        1790582400000,
+        1790586000000,
+        1790589600000,
+        1790593200000,
+        1790596800000,
+        1790600400000,
+        1790604000000,
+        1790607600000,
+        1790611200000,
+        1790614800000,
+        1790618400000,
+        1790622000000,
+        1790625600000,
+        1790629200000,
+        1790632800000,
+        1790636400000,
+        1790640000000,
+        1790643600000,
+        1790647200000,
+        1790650800000,
+        1790654400000,
+        1790658000000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        22.06896551724138,
+        44.13793103448276,
+        66.20689655172414,
+        88.27586206896552,
+        110.3448275862069,
+        132.41379310344828,
+        154.48275862068965,
+        176.55172413793105,
+        198.6206896551724,
+        220.6896551724138,
+        242.75862068965517,
+        264.82758620689657,
+        286.8965517241379,
+        308.9655172413793,
+        331.0344827586207,
+        353.1034482758621,
+        375.17241379310343,
+        397.2413793103448,
+        419.31034482758616,
+        441.3793103448276,
+        463.44827586206895,
+        485.51724137931035,
+        507.58620689655174,
+        529.6551724137931,
+        551.7241379310344,
+        573.7931034482758,
+        595.8620689655172,
+        617.9310344827586,
+        640
+      ],
+      "step": 22.06896551724128,
+      "bandwidth": 22.06896551724128,
+      "ticks": [
+        {
+          "key": 1790571600000,
+          "position": 110.3448275862069,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790658000000,
+          "position": 640,
+          "label": "mar 29"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          5
+        ],
+        [
+          321,
+          15
+        ],
+        [
+          500,
+          23
+        ],
+        [
+          640,
+          29
+        ],
+        [
+          700,
+          29
+        ]
+      ]
+    },
+    {
+      "name": "hourly",
+      "timeZone": "America/New_York",
+      "times": [
+        1790553600000,
+        1790557200000,
+        1790560800000,
+        1790564400000,
+        1790568000000,
+        1790571600000,
+        1790575200000,
+        1790578800000,
+        1790582400000,
+        1790586000000,
+        1790589600000,
+        1790593200000,
+        1790596800000,
+        1790600400000,
+        1790604000000,
+        1790607600000,
+        1790611200000,
+        1790614800000,
+        1790618400000,
+        1790622000000,
+        1790625600000,
+        1790629200000,
+        1790632800000,
+        1790636400000,
+        1790640000000,
+        1790643600000,
+        1790647200000,
+        1790650800000,
+        1790654400000,
+        1790658000000
+      ],
+      "width": 640,
+      "positions": [
+        0,
+        22.06896551724138,
+        44.13793103448276,
+        66.20689655172414,
+        88.27586206896552,
+        110.3448275862069,
+        132.41379310344828,
+        154.48275862068965,
+        176.55172413793105,
+        198.6206896551724,
+        220.6896551724138,
+        242.75862068965517,
+        264.82758620689657,
+        286.8965517241379,
+        308.9655172413793,
+        331.0344827586207,
+        353.1034482758621,
+        375.17241379310343,
+        397.2413793103448,
+        419.31034482758616,
+        441.3793103448276,
+        463.44827586206895,
+        485.51724137931035,
+        507.58620689655174,
+        529.6551724137931,
+        551.7241379310344,
+        573.7931034482758,
+        595.8620689655172,
+        617.9310344827586,
+        640
+      ],
+      "step": 22.06896551724128,
+      "bandwidth": 22.06896551724128,
+      "ticks": [
+        {
+          "key": 1790568000000,
+          "position": 88.27586206896552,
+          "label": "lun 28"
+        },
+        {
+          "key": 1790654400000,
+          "position": 617.9310344827586,
+          "label": "mar 29"
+        }
+      ],
+      "indexAt": [
+        [
+          -10,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          100,
+          5
+        ],
+        [
+          321,
+          15
+        ],
+        [
+          500,
+          23
+        ],
+        [
+          640,
+          29
+        ],
+        [
+          700,
+          29
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "name": "@jcsoftdev/ui-core",
+  "version": "0.2.0",
+  "description": "Framework-agnostic UI behaviour (focus scope, roving focus, popper, dismiss layers, typeahead) and a granular, lazily loaded Liquid Glass engine. Zero dependencies.",
+  "author": "jcsoftdev",
+  "license": "MIT",
+  "homepage": "https://ui.jcsoftdev.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcsoftdev/ui.git",
+    "directory": "packages/ui-core"
+  },
+  "bugs": {
+    "url": "https://github.com/jcsoftdev/ui/issues"
+  },
+  "keywords": [
+    "headless",
+    "focus-trap",
+    "roving-tabindex",
+    "popper",
+    "dismissable-layer",
+    "liquid-glass",
+    "vanilla-js",
+    "web-components"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    "./liquid": {
+      "types": "./dist/liquid/attach.d.ts",
+      "import": "./dist/liquid/attach.js"
+    },
+    "./liquid/options": {
+      "types": "./dist/liquid/options.d.ts",
+      "import": "./dist/liquid/options.js"
+    },
+    "./liquid/support": {
+      "types": "./dist/liquid/support.d.ts",
+      "import": "./dist/liquid/support.js"
+    },
+    "./liquid/spring": {
+      "types": "./dist/liquid/spring.d.ts",
+      "import": "./dist/liquid/spring.js"
+    },
+    "./liquid/lens": {
+      "types": "./dist/liquid/lens.d.ts",
+      "import": "./dist/liquid/lens.js"
+    },
+    "./liquid/lens-map": {
+      "types": "./dist/liquid/lens-map.d.ts",
+      "import": "./dist/liquid/lens-map.js"
+    },
+    "./liquid/specular": {
+      "types": "./dist/liquid/specular.d.ts",
+      "import": "./dist/liquid/specular.js"
+    },
+    "./liquid/dispersion": {
+      "types": "./dist/liquid/dispersion.d.ts",
+      "import": "./dist/liquid/dispersion.js"
+    },
+    "./liquid/crystal": {
+      "types": "./dist/liquid/crystal.d.ts",
+      "import": "./dist/liquid/crystal.js"
+    },
+    "./liquid/motion": {
+      "types": "./dist/liquid/motion.d.ts",
+      "import": "./dist/liquid/motion.js"
+    },
+    "./liquid/presets/*": {
+      "types": "./dist/liquid/presets/*.d.ts",
+      "import": "./dist/liquid/presets/*.js"
+    },
+    "./date/layout": {
+      "types": "./dist/date/layout.d.ts",
+      "import": "./dist/date/layout.js"
+    },
+    "./observe/scroll-spy": {
+      "types": "./dist/observe/scroll-spy.d.ts",
+      "import": "./dist/observe/scroll-spy.js"
+    },
+    "./observe/resize": {
+      "types": "./dist/observe/resize.d.ts",
+      "import": "./dist/observe/resize.js"
+    },
+    "./observe/stick-to-bottom": {
+      "types": "./dist/observe/stick-to-bottom.d.ts",
+      "import": "./dist/observe/stick-to-bottom.js"
+    },
+    "./observe/online": {
+      "types": "./dist/observe/online.d.ts",
+      "import": "./dist/observe/online.js"
+    },
+    "./chart/*": {
+      "types": "./dist/chart/*.d.ts",
+      "import": "./dist/chart/*.js"
+    },
+    "./geo/*": {
+      "types": "./dist/geo/*.d.ts",
+      "import": "./dist/geo/*.js"
+    },
+    "./grid/*": {
+      "types": "./dist/grid/*.d.ts",
+      "import": "./dist/grid/*.js"
+    },
+    "./package.json": "./package.json",
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "test": "pnpm build && node --test test/ssr.test.mjs && vitest run --project unit",
+    "check:treeshake": "node test/treeshake.mjs",
+    "check:pack": "node ../../scripts/pack-check.mjs packages/ui-core",
+    "test:browser": "vitest run --project browser"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/node": "^20",
+    "@vitest/browser-playwright": "4.1.11",
+    "esbuild": "^0.28.2",
+    "playwright": "1.64.0",
+    "typescript": "^5.5.4",
+    "vitest": "4.1.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,45 @@
+[data-ui="tooltip"] {
+  box-sizing: border-box;
+  max-width: min(18rem, var(--ui-popper-available-width, 100vw));
+  margin: 0;
+  padding: 5px 8px;
+  overflow: visible;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background-color: var(--toast-bg);
+  color: var(--toast-ink);
+  box-shadow: var(--shadow-pop);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.35;
+  inset: auto;
+}
+[data-ui="tooltip"]:not([popover]) {
+  position: fixed;
+  z-index: 90;
+}
+[data-ui="tooltip"][hidden] {
+  display: none;
+}
+[data-ui="tooltip"] > [data-ui-part="arrow"] {
+  position: absolute;
+  width: 10px;
+  height: 5px;
+  background-color: inherit;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+[data-ui="tooltip"] > [data-ui-part="arrow"][data-side="top"] {
+  translate: 0 100%;
+}
+[data-ui="tooltip"] > [data-ui-part="arrow"][data-side="bottom"] {
+  translate: 0 -100%;
+  rotate: 180deg;
+}
+[data-ui="tooltip"] > [data-ui-part="arrow"][data-side="left"] {
+  translate: 75% 0;
+  rotate: -90deg;
+}
+[data-ui="tooltip"] > [data-ui-part="arrow"][data-side="right"] {
+  translate: -75% 0;
+  rotate: 90deg;
+}

@@ -1,5 +1,5 @@
 import { Button } from "@jcsoftdev/ui/atoms";
-import { liquidStyle, supportsBackdropRefraction, useGlassLens } from "@jcsoftdev/ui/glass";
+import { LiquidGlass, liquidStyle, supportsBackdropRefraction } from "@jcsoftdev/ui/liquid";
 import {
   type CSSProperties,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -228,7 +228,6 @@ function GlassPanel({
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
-  const lensRef = useGlassLens<HTMLDivElement>(surfaceRef);
   const drag = useRef<{ gx: number; gy: number; id: number } | null>(null);
   const desired = useRef<Pos>({ x: 0, y: 0 });
   const frame = useRef(0);
@@ -380,7 +379,7 @@ function GlassPanel({
       onKeyDown={onKeyDown}
     >
       <div
-        ref={lensRef}
+        ref={surfaceRef}
         className={`${config.type} pg-surface`}
         style={surfaceStyle}
         data-testid="glass-surface"
@@ -484,6 +483,7 @@ export default function Playground() {
 
   return (
     <div className="pg">
+      <LiquidGlass />
       <div className="pg-stage-col">
         <div
           ref={stage}

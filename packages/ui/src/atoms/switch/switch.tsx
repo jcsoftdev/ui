@@ -6,6 +6,7 @@ import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { touchHitArea } from "../internal/hit-area.js";
 
 export type SwitchPart = "root" | "track" | "thumb";
 
@@ -68,7 +69,8 @@ export function Switch({
         {...props}
         ref={composedRef}
         className={cn(
-          "group inline-flex size-10 shrink-0 items-center justify-center in-data-[density=touch]:size-11",
+          touchHitArea,
+          "group inline-flex size-10 shrink-0 items-center justify-center",
           classNames?.root,
           className,
         )}

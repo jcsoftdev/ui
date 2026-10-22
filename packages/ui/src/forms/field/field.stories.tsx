@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
 import { Input } from "../input/index.js";
+import { NumberStepper } from "../number-stepper/index.js";
 import { Select } from "../select/index.js";
 import { Textarea } from "../textarea/index.js";
 import { Field } from "./field.js";
@@ -88,5 +90,52 @@ export const ControlledForm: Story = {
         </Field>
       </form>
     );
+  },
+};
+
+export const NodeLabelAndSeveralChildren: Story = {
+  args: {
+    label: (
+      <>
+        Teléfono <span aria-hidden="true">*</span>
+      </>
+    ),
+    hint: "Con código de país",
+    error: "Número inválido",
+    children: (
+      <div className="flex items-center gap-2">
+        <span className="text-ink-3">+51</span>
+        <Input placeholder="999 999 999" />
+      </div>
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = await canvas.findByRole("textbox", { name: /Teléfono/ });
+    // Label, description and invalid state reach the first control inside the wrapper.
+    await expect(input).toHaveAccessibleDescription("Con código de país Número inválido");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    await userEvent.click(canvas.getByText(/Teléfono/));
+    await expect(input).toHaveFocus();
+  },
+};
+
+export const ExplicitControlId: Story = {
+  args: {
+    label: "Cantidad",
+    hint: "Entre 1 y 10",
+    controlId: "qty-control",
+    children: [
+      <NumberStepper key="n" id="qty-control" min={1} max={10} />,
+      <span key="s" className="text-ink-3 text-meta">
+        unidades
+      </span>,
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const control = await canvas.findByRole("spinbutton", { name: "Cantidad" });
+    await expect(control).toHaveAttribute("id", "qty-control");
+    await expect(control).toHaveAccessibleDescription("Entre 1 y 10");
   },
 };

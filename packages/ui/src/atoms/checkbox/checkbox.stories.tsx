@@ -98,3 +98,25 @@ export const FormSubmitAndReset: Story = {
     await expect(Object.fromEntries(new FormData(form))).toEqual({ terms: "si" });
   },
 };
+
+/** `label` renders a `<label>` tied to the box: it names the checkbox and a click on it toggles. */
+export const WithLabel: Story = {
+  args: { label: "Send me the receipt" },
+};
+
+export const TouchHitArea: Story = {
+  render: (args) => (
+    <div data-density="touch">
+      <Checkbox {...args} classNames={{ root: "size-6" }} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement).getByRole("checkbox");
+    const visual = box.firstElementChild as HTMLElement;
+    const hit = getComputedStyle(box, "::after");
+    await expect(hit.position).toBe("absolute");
+    await expect(Math.round(Number.parseFloat(hit.width))).toBe(44);
+    await expect(Math.round(Number.parseFloat(hit.height))).toBe(44);
+    await expect(Math.round(visual.getBoundingClientRect().width)).toBe(18);
+  },
+};

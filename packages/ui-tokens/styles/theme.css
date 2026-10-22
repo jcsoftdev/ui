@@ -89,21 +89,6 @@
   --color-chart-up: var(--chart-up);
   --color-chart-down: var(--chart-down);
   --color-chart-total: var(--chart-total);
-  --radius-xs: var(--radius-xs);
-  --radius-chip: var(--radius-chip);
-  --radius-event: var(--radius-event);
-  --radius-control: var(--radius-control);
-  --radius-tile: var(--radius-tile);
-  --radius-banner: var(--radius-banner);
-  --radius-card: var(--radius-card);
-  --radius-dialog: var(--radius-dialog);
-  --radius-sheet: var(--radius-sheet);
-  --radius-pill: var(--radius-pill);
-  --shadow-flat: var(--shadow-flat);
-  --shadow-hero: var(--shadow-hero);
-  --shadow-cta: var(--shadow-cta);
-  --shadow-sel: var(--shadow-sel);
-  --shadow-pop: var(--shadow-pop);
   --spacing-side-width: var(--side-width);
   --spacing-top-height: var(--top-height);
   --spacing-control-height: var(--control-height);
@@ -116,7 +101,6 @@
   --spacing-m-tray: var(--m-tray);
   --spacing-m-chip: var(--m-chip);
   --spacing-m-hour: var(--m-hour);
-  --font-sans: var(--font-sans);
   --text-kpi-number: 30px;
   --text-kpi-number--line-height: 1.15;
   --text-kpi-number--font-weight: 800;
@@ -160,8 +144,8 @@
   --text-data: 12.5px;
   --text-data--line-height: 1.6;
   --text-data--font-weight: 600;
-  --text-count: 11px;
-  --text-count--line-height: 1;
+  --text-count: 12px;
+  --text-count--line-height: 1.2;
   --text-count--font-weight: 700;
   --text-m-title: 34px;
   --text-m-title--line-height: 41px;
@@ -198,20 +182,6 @@
   --text-fs-220: 22px;
   --text-fs-300: 30px;
   --text-fs-440: 44px;
-  --radius-button: var(--radius-button);
-  --radius-input: var(--radius-input);
-  --radius-badge: var(--radius-badge);
-  --radius-avatar: var(--radius-avatar);
-  --radius-popover: var(--radius-popover);
-  --shadow-card: var(--shadow-card);
-  --shadow-raised: var(--shadow-raised);
-  --shadow-overlay: var(--shadow-overlay);
-  --shadow-control: var(--shadow-control);
-  --shadow-selected: var(--shadow-selected);
-  --shadow-inset: var(--shadow-inset);
-  --shadow-inset-accent: var(--shadow-inset-accent);
-  --shadow-pinned-start: var(--shadow-pinned-start);
-  --shadow-pinned-end: var(--shadow-pinned-end);
   --color-surface-card: var(--surface-card);
   --color-surface-control: var(--surface-control);
   --color-surface-overlay: var(--surface-overlay);
@@ -232,6 +202,39 @@
   --spacing-density-lg: var(--gap-density-lg);
   --color-surface-nav: var(--surface-nav);
   --color-surface-side: var(--surface-side);
+}
+
+@theme reference inline {
+  --radius-xs: var(--radius-xs);
+  --radius-chip: var(--radius-chip);
+  --radius-event: var(--radius-event);
+  --radius-control: var(--radius-control);
+  --radius-tile: var(--radius-tile);
+  --radius-banner: var(--radius-banner);
+  --radius-card: var(--radius-card);
+  --radius-dialog: var(--radius-dialog);
+  --radius-sheet: var(--radius-sheet);
+  --radius-pill: var(--radius-pill);
+  --shadow-flat: var(--shadow-flat);
+  --shadow-hero: var(--shadow-hero);
+  --shadow-cta: var(--shadow-cta);
+  --shadow-sel: var(--shadow-sel);
+  --shadow-pop: var(--shadow-pop);
+  --font-sans: var(--font-sans);
+  --radius-button: var(--radius-button);
+  --radius-input: var(--radius-input);
+  --radius-badge: var(--radius-badge);
+  --radius-avatar: var(--radius-avatar);
+  --radius-popover: var(--radius-popover);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-overlay: var(--shadow-overlay);
+  --shadow-control: var(--shadow-control);
+  --shadow-selected: var(--shadow-selected);
+  --shadow-inset: var(--shadow-inset);
+  --shadow-inset-accent: var(--shadow-inset-accent);
+  --shadow-pinned-start: var(--shadow-pinned-start);
+  --shadow-pinned-end: var(--shadow-pinned-end);
 }
 
 @utility border-card {

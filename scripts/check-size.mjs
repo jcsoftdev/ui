@@ -2,9 +2,12 @@
 // gzips it and fails when it exceeds the budget in size-budgets.json. Run after `pnpm build`.
 // A JS entry is measured as a consumer's bundler loads it: the entry chunk plus the chunks it
 // imports statically. A dynamic `import()` (the Liquid Glass lens engine) becomes its own lazy
-// chunk and is not counted, since it is only fetched when a surface needs it.
+// chunk and is not counted, since it is only fetched when a surface needs it. An entry with `lazy`
+// is a tier: it also counts the lazy chunks that hold those modules (and what they import), which
+// is what a page fetches once a surface uses that feature. An entry with `code` bundles that source
+// (paths relative to the repository root) instead of a file, to measure a combination of imports.
 //   node scripts/check-size.mjs [--update]   --update prints suggested budgets (+8%, rounded up).
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,16 +16,70 @@ import { gzipSync } from "node:zlib";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const { build } = createRequire(join(root, "packages/ui/package.json"))("esbuild");
 const budgets = JSON.parse(readFileSync(join(root, "size-budgets.json"), "utf8")).entries;
+// Each ui-elements entry keeps its budget next to its source (src/<name>/size.json), so adding an
+// element never touches this list.
+// ui-core behaviours (top-level src/<name>.ts) without an entry here keep theirs in
+// src/<name>.size.json, for the same reason.
+// Grouped behaviours (src/<group>/<part>.ts, e.g. observe/resize) follow the same rule; liquid keeps
+// its own entries in size-budgets.json.
+const coreEntries = [];
+for (const item of readdirSync(join(root, "packages/ui-core/src"), { withFileTypes: true })) {
+  if (item.isFile() && item.name.endsWith(".ts")) coreEntries.push(item.name.slice(0, -3));
+  else if (item.isDirectory() && item.name !== "liquid" && item.name !== "geo-data")
+    for (const part of readdirSync(join(root, "packages/ui-core/src", item.name)))
+      if (part.endsWith(".ts")) coreEntries.push(`${item.name}/${part.slice(0, -3)}`);
+}
+for (const name of coreEntries) {
+  const dist = `packages/ui-core/dist/${name}.js`;
+  if (budgets.some((entry) => entry.file === dist)) continue;
+  const sizeFile = `packages/ui-core/src/${name}.size.json`;
+  budgets.push({
+    id: `ui-core/${name}`,
+    kind: "js",
+    file: dist,
+    maxGzip: existsSync(join(root, sizeFile))
+      ? JSON.parse(readFileSync(join(root, sizeFile), "utf8")).maxGzip
+      : null,
+    budgetFile: sizeFile,
+  });
+}
+const { elementEntries } = await import("../packages/ui-elements/scripts/entries.mjs");
+for (const element of elementEntries())
+  budgets.push({
+    id: `ui-elements/${element.name}`,
+    kind: "js",
+    file: `packages/ui-elements/${element.dist}`,
+    maxGzip: element.budget ?? null,
+    budgetFile: `packages/ui-elements/src/${element.name}/size.json`,
+  });
 
-async function measure({ file, kind }) {
-  const path = join(root, file);
+// Static icon entries (`@jcsoftdev/ui-elements/icons/<name>`: the icon element plus one glyph) share
+// one budget group in src/icon/glyphs.size.json, so 159 glyphs need no 159 files.
+const glyphDist = join(root, "packages/ui-elements/dist/icon/glyphs");
+if (existsSync(glyphDist)) {
+  const maxGzip = JSON.parse(readFileSync(join(root, "packages/ui-elements/src/icon/glyphs.size.json"), "utf8")).maxGzip;
+  for (const file of readdirSync(glyphDist).filter((name) => name.endsWith(".js")))
+    budgets.push({
+      id: `ui-elements/icons/${file.slice(0, -3)}`,
+      kind: "js",
+      file: `packages/ui-elements/dist/icon/glyphs/${file}`,
+      maxGzip,
+      budgetFile: "packages/ui-elements/src/icon/glyphs.size.json",
+    });
+}
+
+async function measure({ file, code: source, kind, lazy = [] }) {
+  const path = file && join(root, file);
   let code;
   if (kind === "css") {
     code = readFileSync(path);
   } else {
     const outdir = join(root, ".size-check");
     const result = await build({
-      entryPoints: [path],
+      ...(source
+        ? { stdin: { contents: source, resolveDir: root, loader: "js" } }
+        : { entryPoints: [path] }),
+      absWorkingDir: root,
       bundle: true,
       splitting: true,
       minify: true,
@@ -36,7 +93,8 @@ async function measure({ file, kind }) {
     });
     const files = new Map(result.outputFiles.map((out) => [out.path, out.contents]));
     const outputs = result.metafile.outputs;
-    const entry = Object.keys(outputs).find((name) => outputs[name].entryPoint);
+    // Dynamic-import chunks also carry `entryPoint`; pick the chunk of the measured file itself.
+    const entry = Object.keys(outputs).find((name) => (file ? outputs[name].entryPoint === file.replace(/^\.\//, "") : outputs[name].entryPoint));
     const eager = new Set();
     const visit = (name) => {
       if (eager.has(name)) return;
@@ -45,6 +103,15 @@ async function measure({ file, kind }) {
         if (dep.kind === "import-statement" && !dep.external) visit(dep.path);
     };
     visit(entry);
+    for (const module of lazy) {
+      const chunk = Object.keys(outputs).find((name) =>
+        Object.entries(outputs[name].inputs).some(
+          ([input, { bytesInOutput }]) => input.endsWith(module) && bytesInOutput > 0,
+        ),
+      );
+      if (!chunk) throw new Error(`no chunk holds ${module}`);
+      visit(chunk);
+    }
     code = Buffer.concat([...eager].map((name) => Buffer.from(files.get(join(root, name)))));
   }
   return gzipSync(code, { level: 9 }).length;
@@ -58,19 +125,26 @@ for (const entry of budgets) {
   try {
     size = await measure(entry);
   } catch (error) {
-    rows.push(`FAIL  ${entry.id}: cannot measure ${entry.file} (${error.message.split("\n")[0]})`);
+    rows.push(`FAIL  ${entry.id}: cannot measure ${entry.file ?? "code"} (${error.message.split("\n")[0]})`);
+    failed = true;
+    continue;
+  }
+  const suggested = Math.ceil((size * 1.08) / 50) * 50;
+  if (typeof entry.maxGzip !== "number") {
+    // New entries start at +5%, rounded up to 50 B.
+    const initial = Math.ceil((size * 1.05) / 50) * 50;
+    rows.push(`FAIL  ${entry.id}: no budget yet; measured ${size} B, set "maxGzip": ${initial} in ${entry.budgetFile ?? "size-budgets.json"}`);
     failed = true;
     continue;
   }
   const over = size > entry.maxGzip;
   failed ||= over;
-  const suggested = Math.ceil((size * 1.08) / 50) * 50;
   rows.push(
     `${over ? "FAIL" : "ok  "}  ${entry.id.padEnd(34)} ${String(size).padStart(7)} B gzip / budget ${String(entry.maxGzip).padStart(7)} B${update ? `  suggested ${suggested}` : ""}`,
   );
 }
 console.log(rows.join("\n"));
 if (failed) {
-  console.error("\ncheck:size failed: an entry is over budget. Shrink it or raise its budget in size-budgets.json with a reason in the PR.");
+  console.error("\ncheck:size failed: an entry is over budget. Shrink it, or set or raise its budget (size-budgets.json or the element's size.json) with a reason in the PR.");
   process.exit(1);
 }

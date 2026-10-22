@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  min-width: 0;
+  animation: ui-skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+:host([hidden]) {
+  display: none;
+}
+@keyframes ui-skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
+  }
+}
+[part="stack"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+[part="line"] {
+  block-size: 12px;
+  border-radius: var(--radius-xs);
+  background-color: var(--surface-2);
+}
+[part="line"]:last-child {
+  inline-size: 60%;
+}
+[part="row"] {
+  block-size: 36px;
+  border-radius: var(--radius-xs);
+  background-color: var(--surface-2);
+}
+[part="card"] {
+  block-size: 160px;
+  border-radius: var(--radius-card);
+  background-color: var(--surface-2);
+}

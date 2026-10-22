@@ -1,0 +1,12 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.jcsoftdev:chart-geo-peru>
+final object com.jcsoftdev.ui.chart.geo.peru/GeoPeruModule { // com.jcsoftdev.ui.chart.geo.peru/GeoPeruModule|null[0]
+    final val id // com.jcsoftdev.ui.chart.geo.peru/GeoPeruModule.id|{}id[0]
+        final fun <get-id>(): kotlin/String // com.jcsoftdev.ui.chart.geo.peru/GeoPeruModule.id.<get-id>|<get-id>(){}[0]
+}

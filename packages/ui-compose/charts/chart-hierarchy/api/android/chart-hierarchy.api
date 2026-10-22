@@ -1,0 +1,10 @@
+public final class com/jcsoftdev/ui/chart/hierarchy/HierarchyModule {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/chart/hierarchy/HierarchyModule;
+	public final fun getId ()Ljava/lang/String;
+}
+
+public final class com/jcsoftdev/ui/chart/hierarchy/HierarchyModuleKt {
+	public static final fun HierarchyPlaceholder (Landroidx/compose/runtime/Composer;I)V
+}
+

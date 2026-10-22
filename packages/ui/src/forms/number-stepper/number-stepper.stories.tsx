@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { NumberStepper } from "./number-stepper.js";
 
 const meta = {
@@ -76,4 +77,67 @@ export const InShrinkWrapRow: Story = {
     </div>
   ),
   args: WithUnit.args,
+};
+
+function StringMode({ onChange }: { onChange: (text: string) => void }) {
+  const [text, setText] = useState("");
+  return (
+    <div className="flex flex-col gap-2">
+      <NumberStepper
+        mode="string"
+        value={text}
+        placeholder="0"
+        min={1}
+        max={5}
+        aria-label="Cupos"
+        onChange={(event) => {
+          setText(event.target.value);
+          onChange(event.target.value);
+        }}
+      />
+      <p className="text-ink-3 text-meta">Text: [{text}]</p>
+    </div>
+  );
+}
+
+export const StringModeCallerOwned: Story = {
+  args: { onValueChange: undefined },
+  render: () => <StringMode onChange={fn()} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("spinbutton", { name: "Cupos" });
+    await expect(input).toHaveValue("");
+    await expect(canvas.getByText("Text: []")).toBeVisible();
+    // Empty is a real state: ArrowUp goes to the minimum, the buttons step from there.
+    await userEvent.type(input, "{ArrowUp}");
+    await expect(canvas.getByText("Text: [1]")).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Aumentar" }));
+    await expect(canvas.getByText("Text: [2]")).toBeVisible();
+    // Typing is never rewritten, not even half-typed text.
+    await userEvent.clear(input);
+    await expect(canvas.getByText("Text: []")).toBeVisible();
+    await userEvent.type(input, "3,5");
+    await expect(input).toHaveValue("3,5");
+    await userEvent.type(input, "{ArrowDown}");
+    await expect(canvas.getByText("Text: [3]")).toBeVisible();
+    // The ceiling holds.
+    await userEvent.clear(input);
+    await userEvent.type(input, "5");
+    await expect(canvas.getByRole("button", { name: "Aumentar" })).toBeDisabled();
+  },
+};
+
+export const StringModeUncontrolledForm: Story = {
+  args: { onValueChange: undefined },
+  render: () => (
+    <form data-testid="form">
+      <NumberStepper mode="string" name="seats" defaultValue="4" aria-label="Cupos" max={9} />
+    </form>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Aumentar" }));
+    const form = canvas.getByTestId("form") as HTMLFormElement;
+    await expect(new FormData(form).get("seats")).toBe("5");
+  },
 };

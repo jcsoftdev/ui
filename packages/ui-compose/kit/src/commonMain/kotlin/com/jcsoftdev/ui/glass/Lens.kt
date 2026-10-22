@@ -88,23 +88,57 @@ internal data class MergeParams(
     override fun hashCode(): Int = ((shapes.contentHashCode() * 31 + count) * 31 + blendDistance.hashCode()) * 31 + lens.hashCode()
 }
 
-/** True when a runtime shader can refract the backdrop (Android 13+, Skia targets). */
-internal expect fun lensSupported(): Boolean
+/**
+ * One shader and, once a platform compiled it, its compiled form. The lens and merge shaders come in a plain and a dispersive
+ * program: the dispersive part of the source lives with [Dispersion], so an app without dispersion ships neither the snippet nor
+ * its programs. The source is assembled when it is compiled, so the shared parts are in the binary once.
+ */
+internal class LensProgram(
+    private val dispersion: String,
+    private val main: String,
+) {
+    val source: String get() = LENS_COMMON_HEAD + dispersion + LENS_COMMON_TAIL + main
 
-/** Builds the blur-then-refract effect for a layer; one engine per surface reuses its compiled shader. */
+    /** The platform shader (an AGSL `RuntimeShader` or a Skia `RuntimeEffect`), compiled on first use. Main thread only. */
+    var compiled: Any? = null
+}
+
+/** Builds the blur-then-refract effect for a layer; one engine per surface reuses its shader builder and blur. */
 internal expect class LensEngine() {
-    /** The effect for [params], or null when [lensSupported] is false. */
-    fun effect(params: LensParams): RenderEffect?
+    /** The effect of [program] for [params], or null when [lensSupported] is false. */
+    fun effect(
+        program: LensProgram,
+        params: LensParams,
+    ): RenderEffect?
 
     /** The effect of a merged container, or null when [lensSupported] is false. */
-    fun merged(params: MergeParams): RenderEffect?
+    fun merged(
+        program: MergeProgram,
+        params: MergeParams,
+    ): RenderEffect?
+}
+
+/** A [LensProgram] of the merge shader; a separate type so a lens program cannot be handed to [LensEngine.merged]. */
+internal class MergeProgram(
+    val program: LensProgram,
+)
+
+/** The lens shader without dispersion: red, green and blue share one sample. */
+internal object PlainLensProgram {
+    val value: LensProgram = LensProgram("", LENS_MAIN)
+}
+
+/** The merge shader without dispersion. */
+internal object PlainMergeProgram {
+    val value: MergeProgram = MergeProgram(LensProgram("", MERGE_MAIN))
 }
 
 /**
- * The part of the lens shaders after the sample offset is known: dispersion, saturation, the veil that thins toward the rim,
- * thickness shading, glint, fresnel, grain, brightness and the touch glow. Valid SkSL and AGSL.
+ * The part of the lens shaders after the sample offset is known, up to the first sample of the backdrop. The [Dispersion]
+ * snippet (or nothing) follows it, then [LENS_COMMON_TAIL]: saturation, the veil that thins toward the rim, thickness shading,
+ * glint, fresnel, grain, brightness and the touch glow. Valid SkSL and AGSL.
  */
-internal const val LENS_COMMON: String = """
+private const val LENS_COMMON_HEAD: String = """
 uniform shader content;
 uniform float2 size;
 uniform float2 origin;
@@ -151,9 +185,11 @@ half4 shade(float2 coord, float2 off, float d, float2 n) {
         off.x * reachFit(coord.x, off.x * widest, lo.x, hi.x),
         off.y * reachFit(coord.y, off.y * widest, lo.y, hi.y));
     half4 mid = content.eval(clamp(coord + off, lo, hi));
-    half r = content.eval(clamp(coord + off * (1.0 + dispersion), lo, hi)).r;
-    half bl = content.eval(clamp(coord + off * (1.0 - dispersion), lo, hi)).b;
-    float3 c = float3(r, mid.g, bl);
+    float3 c = float3(mid.rgb);
+"""
+
+// The shading after the (optional) dispersion samples.
+private const val LENS_COMMON_TAIL: String = """
     float luma = dot(c, float3(0.2126, 0.7152, 0.0722));
     c = mix(float3(luma), c, sat);
 
@@ -171,21 +207,30 @@ half4 shade(float2 coord, float2 off, float d, float2 n) {
     float wall = (1.0 - vt) * thickness;
     c += 0.06 * wall * max(lf, 0.0);
     c *= 1.0 - 0.07 * wall * max(-lf, 0.0);
-    float edge = 1.0 - smoothstep(0.0, max(glintWidth, 0.001), -d);
-    float glint = edge * (pow(max(lf, 0.0), 2.0) + 0.55 * pow(max(-lf, 0.0), 2.0)) * glintStrength * 0.7;
-    c += glint * (0.35 + 0.65 * c);
+    // Each optional term below is skipped when its uniform is off; at zero it adds nothing, so the result is the same.
+    if (glintStrength != 0.0) {
+        float edge = 1.0 - smoothstep(0.0, max(glintWidth, 0.001), -d);
+        float glint = edge * (pow(max(lf, 0.0), 2.0) + 0.55 * pow(max(-lf, 0.0), 2.0)) * glintStrength * 0.7;
+        c += glint * (0.35 + 0.65 * c);
+    }
 
     // Fresnel: the rim catches light whatever the direction, strongest right at the wall.
-    float fr = pow(1.0 - rt, 3.0);
-    c = mix(c, float3(1.0), clamp(fresnel * fr * 0.5, 0.0, 1.0));
+    if (fresnel != 0.0) {
+        float fr = pow(1.0 - rt, 3.0);
+        c = mix(c, float3(1.0), clamp(fresnel * fr * 0.5, 0.0, 1.0));
+    }
 
     // Touch glow: a soft radial add at the finger.
-    float gd = length(coord - glow.xy) / max(glow.z, 1.0);
-    c += glow.w * (1.0 - smoothstep(0.0, 1.0, gd));
+    if (glow.w != 0.0) {
+        float gd = length(coord - glow.xy) / max(glow.z, 1.0);
+        c += glow.w * (1.0 - smoothstep(0.0, 1.0, gd));
+    }
 
     // Film grain from a hash of the pixel position.
-    float h = fract(sin(dot(coord, float2(12.9898, 78.233))) * 43758.5453);
-    c += (h - 0.5) * grain;
+    if (grain != 0.0) {
+        float h = fract(sin(dot(coord, float2(12.9898, 78.233))) * 43758.5453);
+        c += (h - 0.5) * grain;
+    }
     return half4(half3(clamp(c, 0.0, 1.0)), 1.0);
 }
 """
@@ -198,8 +243,7 @@ half4 shade(float2 coord, float2 off, float d, float2 n) {
  * subtle dispersion at the rim. The profile uniform picks how the displacement spreads: 0 across the whole surface, 1 only in
  * a band along the rim, 2 as a dome (a magnification with no bevel direction at all), 3 as a convex lens (minify plus an outward rim bend).
  */
-internal const val LENS_SHADER: String =
-    LENS_COMMON + """
+internal const val LENS_MAIN: String = """
 float sdBox(float2 p, float2 b, float4 r) {
     float2 rr = p.x > 0.0 ? r.yz : r.xw;
     float rad = p.y > 0.0 ? rr.y : rr.x;
@@ -247,8 +291,7 @@ half4 main(float2 coord) {
  * gradient of the joined field in a band along its edge (the field is smooth, so no seam appears where shapes meet), and the
  * coverage is anti-aliased from the field itself. Valid SkSL and AGSL.
  */
-internal const val MERGE_SHADER: String =
-    LENS_COMMON + """
+internal const val MERGE_MAIN: String = """
 uniform float4 boxes[16];
 uniform float roundness[16];
 uniform float count;

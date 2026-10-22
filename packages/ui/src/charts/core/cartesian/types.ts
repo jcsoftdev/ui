@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { ChartDockMode } from "../chart-dock.js";
 import type { ValueFormat } from "../format.js";
 import type { Curve } from "../path.js";
 import type { StackMode } from "../stack.js";
@@ -157,6 +158,11 @@ export interface CartesianChartProps {
   legend?: boolean | "top" | "bottom";
   /** Shared tooltip (default true). */
   tooltip?: boolean;
+  /**
+   * Where the tooltip's details go: `auto` (default) docks them in a panel under the chart on
+   * containers 480px wide or less and on coarse pointers, `always` / `never` force it.
+   */
+  dock?: ChartDockMode;
   /** Customises the tooltip content of a category: replace the title or rows, or add a footer. */
   tooltipRows?: (context: CartesianTooltipContext) => CartesianTooltipContent;
   annotations?: readonly ChartAnnotation[];

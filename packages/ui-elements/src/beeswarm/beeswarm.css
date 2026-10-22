@@ -1,0 +1,20 @@
+[data-ui="beeswarm"] [data-dot] {
+  transition: opacity 150ms;
+}
+[data-ui="beeswarm"] [data-ring] {
+  fill: none;
+  stroke-width: 2px;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="beeswarm"] [data-dot] {
+    transition: none;
+  }
+}
+[data-ui="beeswarm"] [data-ring] {
+  display: none;
+}
+[data-ui="beeswarm"] [data-ring][data-active],
+[data-ui="beeswarm"] [data-ring][data-selected] {
+  display: inline;
+}

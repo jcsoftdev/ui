@@ -1,0 +1,18 @@
+[data-ui="hbars"] [data-row] {
+  fill: transparent;
+  stroke: none;
+}
+[data-ui="hbars"] [data-row][data-active] {
+  fill: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+[data-ui="hbars"] [data-row][data-selected] {
+  fill: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+[data-ui="hbars"] [data-fill] {
+  transition: opacity 150ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="hbars"] [data-fill] {
+    transition: none;
+  }
+}

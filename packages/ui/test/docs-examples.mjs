@@ -37,6 +37,10 @@ const glass = check("docs/glass.tsx", "../../../site/src/content/docs/docs/glass
   min: 3,
   required: ["opt-in", "liquid", "liquid-options", "crystal", "lens"],
 });
+const blocks = check("docs/blocks.tsx", "../../../site/src/content/docs/docs/blocks.md", {
+  min: 6,
+  required: ["atoms", "overlays", "testing", "forms", "wizard", "containers", "states"],
+});
 console.log(
-  `docs-examples: ${primitives} primitives and ${glass} glass blocks match the type-checked source`,
+  `docs-examples: ${primitives} primitives, ${glass} glass and ${blocks} building-block blocks match the type-checked source`,
 );

@@ -464,7 +464,7 @@ function RadarPlot({
           fill="transparent"
           onPointerMove={onPointer}
           onPointerDown={onPointer}
-          onPointerLeave={nav.leave}
+          onPointerLeave={nav.pointerLeave}
         />
       </svg>
 

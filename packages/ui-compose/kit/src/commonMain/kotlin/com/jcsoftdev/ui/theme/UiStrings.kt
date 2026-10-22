@@ -29,6 +29,7 @@ public class UiStrings(
     public val hidePassword: String,
     public val increase: String,
     public val decrease: String,
+    public val remove: String,
 ) {
     /** Copy with selected strings replaced. */
     public fun copy(
@@ -50,6 +51,7 @@ public class UiStrings(
         hidePassword: String = this.hidePassword,
         increase: String = this.increase,
         decrease: String = this.decrease,
+        remove: String = this.remove,
     ): UiStrings =
         UiStrings(
             dismiss,
@@ -70,6 +72,7 @@ public class UiStrings(
             hidePassword,
             increase,
             decrease,
+            remove,
         )
 
     public companion object {
@@ -94,6 +97,7 @@ public class UiStrings(
                 hidePassword = "Hide password",
                 increase = "Increase",
                 decrease = "Decrease",
+                remove = "Remove",
             )
 
         /** Spanish, same wording as the web kit's `es` strings. */
@@ -117,6 +121,7 @@ public class UiStrings(
                 hidePassword = "Ocultar contraseña",
                 increase = "Aumentar",
                 decrease = "Disminuir",
+                remove = "Quitar",
             )
     }
 }

@@ -63,18 +63,55 @@ const DROP_WITH_CONTENT = new Set([
 
 const VOID_TAGS = new Set(["br"]);
 
+// Case-sensitive, as in HTML5 (`&Colon;` is a different character from `&colon;`).
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
+  AMP: "&",
   lt: "<",
+  LT: "<",
   gt: ">",
+  GT: ">",
   quot: '"',
+  QUOT: '"',
   apos: "'",
-  nbsp: " ",
+  nbsp: "\u00a0",
   colon: ":",
-  tab: "\t",
-  newline: "\n",
+  Tab: "\t",
+  NewLine: "\n",
   sol: "/",
 };
+
+let decoder: HTMLTextAreaElement | undefined;
+const decodedNames = new Map<string, string>();
+
+/**
+ * Full HTML5 named-entity decoding. With a DOM, the engine's own parser does it through a detached
+ * textarea (it runs no script and loads nothing, and the input is only `&name;` characters).
+ *
+ * Without a DOM (server rendering) only the table above applies, so other entities such as
+ * `&eacute;` stay as escaped text there and the same HTML can render differently on the server and
+ * in the browser. That is deliberate: a full table is too heavy to ship. Under Trusted Types the
+ * `innerHTML` assignment throws; the entity is then left undecoded, which stays escaped on emit.
+ */
+function decodeNamed(match: string, body: string): string {
+  const known = NAMED_ENTITIES[body];
+  if (known !== undefined) return known;
+  if (decoder === undefined && typeof document !== "undefined")
+    decoder = document.createElement("textarea");
+  if (!decoder) return match;
+  let out = decodedNames.get(match);
+  if (out === undefined) {
+    try {
+      decoder.innerHTML = match;
+      out = decoder.value;
+    } catch {
+      return match;
+    }
+    if (decodedNames.size > 512) decodedNames.clear();
+    decodedNames.set(match, out);
+  }
+  return out;
+}
 
 function decodeEntities(text: string): string {
   return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);?/gi, (match, body: string) => {
@@ -84,7 +121,7 @@ function decodeEntities(text: string): string {
       if (!Number.isFinite(code) || code <= 0 || code > 0x10ffff) return "";
       return String.fromCodePoint(code);
     }
-    return NAMED_ENTITIES[body.toLowerCase()] ?? match;
+    return decodeNamed(match, body);
   });
 }
 
@@ -107,16 +144,32 @@ function isInvisible(code: number): boolean {
   );
 }
 
+const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
+const IGNORED_IN_URL = /[\s\p{Cf}]/gu;
+
+/** The one string that is validated and emitted: entities decoded once, ends trimmed. */
+function normalizeHref(raw: string): string {
+  return decodeEntities(raw).trim();
+}
+
+function isAllowedHref(href: string): boolean {
+  // Browsers ignore control characters and whitespace around and inside the scheme ("java\tscript:").
+  // Strip every whitespace and format character too, so no prefix can hide a scheme from this check.
+  const url = Array.from(href)
+    .filter((char) => !isInvisible(char.codePointAt(0) ?? 0))
+    .join("")
+    .replace(IGNORED_IN_URL, "");
+  if (url === "") return false;
+  try {
+    return ALLOWED_PROTOCOLS.has(new URL(url, "https://invalid.invalid/").protocol);
+  } catch {
+    return false;
+  }
+}
+
 /** True for http(s), mailto, tel and scheme-less (relative or fragment) URLs. */
 export function isSafeUrl(raw: string): boolean {
-  // Browsers ignore control characters and whitespace inside the scheme ("java\tscript:").
-  const url = Array.from(decodeEntities(raw))
-    .filter((char) => !isInvisible(char.codePointAt(0) ?? 0))
-    .join("");
-  if (url === "") return false;
-  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(url);
-  if (!scheme) return true;
-  return ["http", "https", "mailto", "tel"].includes((scheme[1] ?? "").toLowerCase());
+  return isAllowedHref(normalizeHref(raw));
 }
 
 interface ParsedTag {
@@ -172,6 +225,9 @@ function parseTag(html: string, start: number): ParsedTag | null {
   };
 }
 
+/** Deepest run of open elements kept; tags beyond it are unwrapped (their text stays). */
+const MAX_OPEN_DEPTH = 128;
+
 /** Returns safe, balanced HTML containing only the editor's vocabulary. */
 export function sanitizeHtml(input: string): string {
   const html = String(input ?? "");
@@ -179,10 +235,21 @@ export function sanitizeHtml(input: string): string {
   const stack: string[] = [];
   let i = 0;
 
+  // Open count per tag: an unmatched closer then costs O(1) instead of a scan of the whole stack.
+  const open: Record<string, number> = Object.create(null);
+  const pop = () => {
+    const name = stack.pop() as string;
+    open[name] = (open[name] as number) - 1;
+    out.push(`</${name}>`);
+  };
+  const push = (name: string) => {
+    stack.push(name);
+    open[name] = (open[name] ?? 0) + 1;
+  };
   const closeTo = (name: string) => {
+    if (!open[name]) return;
     const at = stack.lastIndexOf(name);
-    if (at === -1) return;
-    while (stack.length > at) out.push(`</${stack.pop()}>`);
+    while (stack.length > at) pop();
   };
 
   while (i < html.length) {
@@ -213,11 +280,13 @@ export function sanitizeHtml(input: string): string {
     i = tag.end;
 
     if (!tag.closing && DROP_WITH_CONTENT.has(tag.name)) {
-      const closer = new RegExp(`</${tag.name}[\\s/>]`, "i").exec(html.slice(i));
-      if (!closer) {
+      const closer = new RegExp(`</${tag.name}[\\s/>]`, "gi");
+      closer.lastIndex = i;
+      const found = closer.exec(html);
+      if (!found) {
         i = html.length;
       } else {
-        const close = html.indexOf(">", i + closer.index);
+        const close = html.indexOf(">", found.index);
         i = close === -1 ? html.length : close + 1;
       }
       continue;
@@ -236,15 +305,16 @@ export function sanitizeHtml(input: string): string {
     }
     if (name === "a") {
       closeTo("a");
-      const href = tag.attributes.href;
-      if (href !== undefined && isSafeUrl(href)) {
+      if (stack.length >= MAX_OPEN_DEPTH) continue;
+      const href = tag.attributes.href === undefined ? "" : normalizeHref(tag.attributes.href);
+      if (isAllowedHref(href)) {
         out.push(
-          `<a href="${escapeAttribute(decodeEntities(href).trim())}" rel="noopener noreferrer nofollow" target="_blank">`,
+          `<a href="${escapeAttribute(href)}" rel="noopener noreferrer nofollow" target="_blank">`,
         );
       } else {
         out.push("<a>");
       }
-      stack.push("a");
+      push("a");
       continue;
     }
     // Block elements cannot nest inside inline ones or inside paragraphs; close what they would break.
@@ -252,11 +322,12 @@ export function sanitizeHtml(input: string): string {
       for (const open of ["p", "h2", "h3"]) closeTo(open);
     }
     if (name === "li") closeTo("li");
+    if (stack.length >= MAX_OPEN_DEPTH) continue;
     out.push(`<${name}>`);
-    stack.push(name);
+    push(name);
   }
 
-  while (stack.length) out.push(`</${stack.pop()}>`);
+  while (stack.length) pop();
   return out.join("").replace(/<a><\/a>/g, "");
 }
 

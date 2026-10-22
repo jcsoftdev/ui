@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import { assertScalesLinearly } from "./helpers/scaling.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -166,9 +167,98 @@ test("chat list grouping by date", () => {
   assert.equal(groups[0].label, "Hoy");
 });
 
+test("groupByDate stays linear on a large list", () => {
+  const now = new Date(2026, 2, 15, 12);
+  const makeItems = (length) =>
+    Array.from({ length }, (_, i) => ({
+      id: i,
+      updatedAt: new Date(2026, 2, 15, 1 + (i % 10)),
+    }));
+  assertScalesLinearly("groupByDate", {
+    make: makeItems,
+    run: (items) => group.groupByDate(items, now),
+    small: 15_000,
+    sizeOf: (items) => items.length,
+  });
+  assert.equal(group.groupByDate(makeItems(60_000), now)[0].items.length, 60_000);
+});
+
 test("prompt input submit key", () => {
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: false, isComposing: false }), true);
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: true, isComposing: false }), false);
   assert.equal(keys.shouldSubmit({ key: "Enter", shiftKey: false, isComposing: true }), false);
   assert.equal(keys.shouldSubmit({ key: "a", shiftKey: false, isComposing: false }), false);
+});
+
+test("markdown: pathological nesting and link scans stay bounded", () => {
+  const cases = {
+    quotes: (n) => `${">".repeat(n * 4)}x`,
+    lists: (n) => Array.from({ length: n }, (_, k) => `${"  ".repeat(k)}- item`).join("\n"),
+    links: (n) => "[](".repeat(n * 2),
+    brackets: (n) => "[".repeat(n * 4),
+  };
+  for (const [name, make] of Object.entries(cases)) {
+    assert.doesNotThrow(() => md.parseMarkdown(make(500)), name);
+    assertScalesLinearly(name, { make, run: md.parseMarkdown, small: 500 });
+  }
+});
+
+test("markdown: nesting beyond the cap degrades to literal text", () => {
+  const depthOf = (blocks) => {
+    let depth = 0;
+    let level = blocks;
+    while (level[0]?.t === "quote") {
+      depth += 1;
+      level = level[0].c;
+    }
+    return depth;
+  };
+  assert.equal(depthOf(md.parseMarkdown(`${">".repeat(10)}x`)), 10);
+  assert.equal(depthOf(md.parseMarkdown(`${">".repeat(500)}x`)), 33);
+});
+
+test("markdown: whitespace-heavy lines do not trigger quadratic regexes", () => {
+  const cases = {
+    trailingSpaces: (n) => `a${" ".repeat(n)}b\nc`,
+    heading: (n) => `# a${" ".repeat(n)}b`,
+    tableRule: (n) => `a|b\n${" ".repeat(n)}-x`,
+  };
+  for (const [name, make] of Object.entries(cases)) {
+    assertScalesLinearly(name, { make, run: md.parseMarkdown, small: 20_000 });
+  }
+});
+
+test("markdown: heading closing run and table rules keep their meaning", () => {
+  const h = (s) => md.parseMarkdown(s)[0];
+  assert.equal(flat(h("## Title ##").c), "Title");
+  assert.equal(flat(h("# a#").c), "a#");
+  assert.equal(h("#nospace").t, "p");
+  assert.equal(h("a|b\n:-|-:\n1|2").t, "table");
+  assert.equal(h("a|b\n|---|---|\n1|2").t, "table");
+  assert.equal(h("a|b\n--x|--\n1|2").t, "p");
+});
+
+test("markdown: wide tables are capped and list/heading scans stay linear", () => {
+  const makeTable = (n) =>
+    `${"|".repeat(n)}\n${"-|".repeat(n)}\n${"x|\n".repeat(Math.round(n * 1.3))}`;
+  const [block] = md.parseMarkdown(makeTable(10000));
+  assert.equal(block.t, "table");
+  assert.ok(block.head.length <= 64 && block.align.length <= 64);
+  assert.ok(block.rows.every((row) => row.length <= 64));
+  assertScalesLinearly("table", { make: makeTable, run: md.parseMarkdown, small: 2500 });
+
+  const scans = {
+    listSpaces: (n) => `- ${" ".repeat(n)}x y`,
+    headingSpaces: (n) => `# ${" ".repeat(n)}x y`,
+    listTabs: (n) => `-${"\t".repeat(n)}x\u2028y`,
+  };
+  for (const [name, make] of Object.entries(scans)) {
+    assertScalesLinearly(name, { make, run: md.parseMarkdown, small: 25_000 });
+  }
+});
+
+test("markdown: only space and tab separate a heading marker", () => {
+  assert.equal(md.parseMarkdown("# a\u2028b")[0].t, "heading");
+  assert.equal(md.parseMarkdown("#\u2028a")[0].t, "p");
+  assert.equal(md.parseMarkdown("#\u00a0a")[0].t, "p");
 });

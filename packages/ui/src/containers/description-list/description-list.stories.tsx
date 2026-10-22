@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DescriptionList } from "./description-list.js";
+import { expect, within } from "storybook/test";
+import { DescriptionList, DescriptionListItem } from "./description-list.js";
 
 const meta = {
   title: "Containers/DescriptionList",
@@ -58,4 +59,97 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+const colsOf = (el: Element) => getComputedStyle(el).gridTemplateColumns.split(" ").length;
+
+export const ItemsWithPlaceholder: Story = {
+  render: () => (
+    <DescriptionList valueAlign="start" aria-label="Student">
+      <DescriptionListItem term="Name">Luis Ramírez</DescriptionListItem>
+      <DescriptionListItem term="Phone" emptyLabel="Not provided" />
+      <DescriptionListItem term="Email" placeholder="n/a">
+        {""}
+      </DescriptionListItem>
+    </DescriptionList>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dl = canvasElement.querySelector("dl") as HTMLElement;
+    const dds = Array.from(dl.querySelectorAll("dd"));
+    await expect(dds.map((dd) => dd.hasAttribute("data-empty"))).toEqual([false, true, true]);
+    await expect(dds[1]).toHaveTextContent("—");
+    await expect(canvas.getByText("Not provided")).toHaveClass("sr-only");
+    await expect(dds[2]).toHaveTextContent("n/a");
+    await expect(getComputedStyle(dds[0] as Element).textAlign).toBe("start");
+  },
+};
+
+export const InlineNeverStacks: Story = {
+  args: { layout: "inline" },
+  decorators: [
+    (Story) => (
+      <div className="w-56">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await expect(colsOf(canvasElement.querySelector("dl") as Element)).toBe(2);
+  },
+};
+
+export const AutoStacksWhenNarrow: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-56">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await expect(colsOf(canvasElement.querySelector("dl") as Element)).toBe(1);
+  },
+};
+
+export const StackedAlways: Story = {
+  args: { layout: "stacked" },
+  decorators: [
+    (Story) => (
+      <div className="w-[40rem]">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await expect(colsOf(canvasElement.querySelector("dl") as Element)).toBe(1);
+  },
+};
+
+export const TwoColumns: Story = {
+  args: { columns: 2 },
+  decorators: [
+    (Story) => (
+      <div className="w-[40rem]">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await expect(colsOf(canvasElement.querySelector("dl") as Element)).toBe(4);
+  },
+};
+
+export const TwoColumnsCollapseWhenNarrow: Story = {
+  args: { columns: 2 },
+  decorators: [
+    (Story) => (
+      <div className="w-64">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    await expect(colsOf(canvasElement.querySelector("dl") as Element)).toBe(1);
+  },
 };

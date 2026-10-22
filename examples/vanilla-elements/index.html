@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ui-elements playground</title>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <h1>ui-elements</h1>
+        <p class="muted">Native custom elements on ui-core and ui-tokens. No framework.</p>
+      </header>
+
+      <form id="booking" class="panel" aria-label="Booking">
+        <h2>Form controls</h2>
+        <label class="field">Name <ui-input name="name" required placeholder="Ana"></ui-input></label>
+        <ui-radio-group name="service" value="cut" aria-label="Service" orientation="horizontal">
+          <ui-radio value="cut">Cut</ui-radio>
+          <ui-radio value="beard">Beard</ui-radio>
+          <ui-radio value="both">Both</ui-radio>
+        </ui-radio-group>
+        <ui-checkbox name="reminder" checked>Send a reminder</ui-checkbox>
+        <ui-switch name="vip">VIP client</ui-switch>
+        <div class="row">
+          <ui-button id="save" variant="primary" type="submit">Save</ui-button>
+          <ui-button type="reset">Reset</ui-button>
+          <ui-button id="info" variant="ghost" type="button">Info</ui-button>
+          <ui-tooltip for="info" arrow>Bookings sync every minute</ui-tooltip>
+        </div>
+        <output id="result" aria-live="polite"></output>
+      </form>
+
+      <section class="panel" aria-label="Overlays">
+        <h2>Overlays</h2>
+        <div class="row">
+          <button id="open-dialog" class="plain" commandfor="confirm" command="--open">Delete booking</button>
+          <button id="open-popover" class="plain" popovertarget="filters">Filters</button>
+          <button id="toast" class="plain" type="button">Toast</button>
+        </div>
+        <ui-dialog id="confirm">
+          <div data-dialog-header><h2 data-dialog-title>Delete booking?</h2></div>
+          <div data-dialog-body><p data-dialog-description>The client gets a cancellation message.</p></div>
+          <div data-dialog-footer>
+            <ui-button data-dialog-close>Keep</ui-button>
+            <ui-button id="delete" variant="danger">Delete</ui-button>
+          </div>
+        </ui-dialog>
+        <ui-popover id="filters" side="bottom" align="start">
+          <ui-checkbox checked>Today</ui-checkbox><br />
+          <ui-checkbox>This week</ui-checkbox>
+        </ui-popover>
+      </section>
+
+      <section class="panel" aria-label="Tabs">
+        <ui-tabs value="day">
+          <ui-tab-list aria-label="Range"><ui-tab value="day">Day</ui-tab><ui-tab value="week">Week</ui-tab><ui-tab value="month">Month</ui-tab></ui-tab-list>
+          <ui-tab-panel value="day"><p>12 bookings today.</p></ui-tab-panel>
+          <ui-tab-panel value="week"><p>64 bookings this week.</p></ui-tab-panel>
+          <ui-tab-panel value="month"><p>240 bookings this month.</p></ui-tab-panel>
+        </ui-tabs>
+      </section>
+
+      <section class="panel glass" aria-label="Liquid Glass">
+        <h2>Liquid Glass, on demand</h2>
+        <p class="muted">The liquid code is fetched only when a surface asks for it.</p>
+        <div class="row">
+          <ui-button id="liquid">Glass button</ui-button>
+          <button id="make-liquid" class="plain" type="button">Make it liquid</button>
+        </div>
+      </section>
+    </main>
+    <ui-toaster></ui-toaster>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

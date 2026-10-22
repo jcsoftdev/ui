@@ -55,12 +55,16 @@ public class CardColors(
 
 /** Default colors, shape and metrics of [Card]. */
 public object CardDefaults {
-    /** Colors in the active theme. */
+    /**
+     * Colors in the active theme. The default hairline outline is about 1.3:1 against the surface, which is decoration only.
+     * [outlined] draws the control border (about 3.6:1, the non-text contrast floor) so a card reads as a boundary; it
+     * is on by default when the theme asks for high contrast.
+     */
     @Composable
     @ReadOnlyComposable
-    public fun colors(): CardColors {
+    public fun colors(outlined: Boolean = UiTheme.highContrast): CardColors {
         val c = UiTheme.colors
-        return CardColors(c.surface, c.line, c.hair, c.ink3)
+        return CardColors(c.surface, if (outlined) c.lineControl else c.line, c.hair, c.ink3)
     }
 
     /** Corner shape; the theme `card` shape. */

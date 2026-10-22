@@ -12,8 +12,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { Checkbox } from "../../atoms/checkbox/checkbox.js";
+import { useUiStrings } from "../../i18n/index.js";
 import { ArrowLeftToLine, ArrowRightToLine, PinOff } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
+import { useControllableState } from "../../utils/use-controllable-state.js";
 import {
   computePinOffsets,
   type PinnedColumns,
@@ -24,12 +27,20 @@ import {
   setColumnPin,
 } from "./pin.js";
 
+import { formatSelectRow, selectAllState, setKeys, toggleKey } from "./selection.js";
+
 export type { PinnedColumns, PinSide } from "./pin.js";
 
 export interface TableLabels {
   pinLeft: string;
   pinRight: string;
   unpin: string;
+  /** Name of a row checkbox; `{row}` is replaced by the cell's `label`. Defaults to the UI string. */
+  selectRow?: string;
+  /** Name of the select-all checkbox. Defaults to the UI string. */
+  selectAll?: string;
+  /** Name of the overflow menu trigger of a `TableActionsCell`. Defaults to the UI string. */
+  rowActions?: string;
 }
 
 const DEFAULT_LABELS: TableLabels = {
@@ -48,6 +59,21 @@ interface PinContextValue {
 
 const PinContext = createContext<PinContextValue | null>(null);
 
+interface SelectionContextValue {
+  selected: readonly string[];
+  toggle: (key: string) => void;
+  setMany: (keys: readonly string[], on: boolean) => void;
+  labels: TableLabels;
+}
+
+/** `null` while the table has no selection props, so rows stay plain. */
+const SelectionContext = createContext<SelectionContextValue | null>(null);
+
+const FLUSH_START = "[&_:is(th,td):first-child]:pl-0 [&_td:first-child>a]:pl-0";
+const FLUSH_END = "[&_:is(th,td):last-child]:pr-0 [&_td:last-child>a]:pr-0";
+const STICKY_HEADER =
+  "[&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-2 [&_thead_th]:bg-surface [&_thead_th]:shadow-[inset_0_-1px_0_var(--border-color-divider)]";
+
 export interface TableProps extends ComponentPropsWithoutRef<"table"> {
   /** Controlled pinned columns (ids of `columnId`). Pair it with `onPinnedColumnsChange`. */
   pinnedColumns?: PinnedColumns;
@@ -60,6 +86,25 @@ export interface TableProps extends ComponentPropsWithoutRef<"table"> {
   labels?: Partial<TableLabels>;
   /** Classes of the scroll wrapper. */
   wrapperClassName?: string;
+  /**
+   * Drops the outer cell padding of the first (`"start"`), last (`"end"`) or both (`true`) columns,
+   * so their content sits on the container edge and the page layout owns the gutter. The padding
+   * between columns stays.
+   */
+  flush?: boolean | "start" | "end";
+  /**
+   * Keeps the header row in view while the body scrolls. It sticks inside the scroll wrapper, so
+   * give the table a `maxHeight` (or a bounded `wrapperClassName`) for it to have anything to scroll.
+   */
+  stickyHeader?: boolean;
+  /** Caps the wrapper height; the body scrolls vertically past it. Any CSS length. */
+  maxHeight?: CSSProperties["maxHeight"];
+  /** Controlled selected row keys (the `rowKey` of each `TableRow`). Setting it turns selection on. */
+  selectedKeys?: readonly string[];
+  /** Initial selected keys when uncontrolled. Setting it turns selection on. */
+  defaultSelectedKeys?: readonly string[];
+  /** Called with the next keys. Setting it turns selection on. */
+  onSelectedKeysChange?: (keys: string[]) => void;
 }
 
 function readStorage(key: string): string | null {
@@ -97,8 +142,24 @@ export function Table({
   onPinnedColumnsChange,
   pinStorageKey,
   labels,
+  flush,
+  stickyHeader,
+  maxHeight,
+  selectedKeys,
+  defaultSelectedKeys,
+  onSelectedKeysChange,
   ...props
 }: TableProps) {
+  const strings = useUiStrings();
+  const selectionOn =
+    selectedKeys !== undefined ||
+    defaultSelectedKeys !== undefined ||
+    onSelectedKeysChange !== undefined;
+  const [selected, setSelected] = useControllableState<readonly string[]>({
+    prop: selectedKeys,
+    defaultProp: defaultSelectedKeys ?? [],
+    onChange: onSelectedKeysChange ? (keys) => onSelectedKeysChange([...keys]) : undefined,
+  });
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const controlled = pinnedColumns !== undefined;
@@ -188,19 +249,47 @@ export function Table({
     pin,
   };
 
+  const selection: SelectionContextValue | null = selectionOn
+    ? {
+        selected,
+        toggle: (key) => setSelected(toggleKey(selected, key)),
+        setMany: (keys, on) => setSelected(setKeys(selected, keys, on)),
+        labels: {
+          ...context.labels,
+          selectRow: labels?.selectRow ?? strings.selectRow,
+          selectAll: labels?.selectAll ?? strings.selectAll,
+          rowActions: labels?.rowActions ?? strings.rowActions,
+        },
+      }
+    : null;
+
   return (
     <PinContext.Provider value={context}>
-      <div
-        ref={wrapperRef}
-        onScroll={measure}
-        className={cn("@container/table max-w-full overflow-x-auto", wrapperClassName)}
-      >
-        <table
-          ref={tableRef}
-          className={cn("w-full border-collapse text-fs-130", className)}
-          {...props}
-        />
-      </div>
+      <SelectionContext.Provider value={selection}>
+        <div
+          ref={wrapperRef}
+          onScroll={measure}
+          style={maxHeight !== undefined ? { maxHeight } : undefined}
+          tabIndex={maxHeight !== undefined ? 0 : undefined}
+          className={cn(
+            "@container/table max-w-full overflow-x-auto",
+            maxHeight !== undefined && "overflow-y-auto focus-visible:focus-ring",
+            wrapperClassName,
+          )}
+        >
+          <table
+            ref={tableRef}
+            className={cn(
+              "w-full border-collapse text-fs-130",
+              (flush === true || flush === "start") && FLUSH_START,
+              (flush === true || flush === "end") && FLUSH_END,
+              stickyHeader && STICKY_HEADER,
+              className,
+            )}
+            {...props}
+          />
+        </div>
+      </SelectionContext.Provider>
     </PinContext.Provider>
   );
 }
@@ -323,12 +412,116 @@ export function TableHeaderCell({
   );
 }
 
-export function TableRow({ className, ...props }: ComponentPropsWithoutRef<"tr">) {
+export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
+  /**
+   * Identifies the row for selection. In a table with selection the row reports `aria-selected`
+   * and highlights when its key is selected.
+   */
+  rowKey?: string;
+}
+
+export function TableRow({ className, rowKey, ...props }: TableRowProps) {
+  const selection = useContext(SelectionContext);
+  const isSelected =
+    selection && rowKey !== undefined ? selection.selected.includes(rowKey) : undefined;
   return (
     <tr
-      className={cn("group/row border-b-divider last:border-b-0 hover:bg-surface-2", className)}
+      aria-selected={isSelected}
+      data-selected={isSelected || undefined}
+      className={cn(
+        "group/row border-b-divider last:border-b-0 hover:bg-surface-2",
+        isSelected && "bg-accent-soft hover:bg-accent-soft",
+        className,
+      )}
       {...props}
     />
+  );
+}
+
+export interface TableSelectCellProps extends ComponentPropsWithoutRef<"td"> {
+  /** Key of the row, the same as the row's `rowKey`. */
+  rowKey: string;
+  /** Names the checkbox: "Select {label}". Defaults to the key. */
+  label?: string;
+}
+
+/** Cell with the checkbox that selects its row. Needs a `Table` with selection props. */
+export function TableSelectCell({ rowKey, label, className, ...props }: TableSelectCellProps) {
+  const selection = useContext(SelectionContext);
+  if (!selection)
+    throw new Error("TableSelectCell needs a Table with selectedKeys or onSelectedKeysChange");
+  return (
+    <td className={cn("w-px px-4 py-2.75 align-middle @max-sm/table:px-2.5", className)} {...props}>
+      <Checkbox
+        checked={selection.selected.includes(rowKey)}
+        onCheckedChange={() => selection.toggle(rowKey)}
+        aria-label={formatSelectRow(selection.labels.selectRow ?? "", label ?? rowKey)}
+      />
+    </td>
+  );
+}
+
+export interface TableSelectAllCellProps extends ComponentPropsWithoutRef<"th"> {
+  /** Keys of the rows on screen. The box is checked when all are selected, mixed when some are. */
+  rowKeys: readonly string[];
+}
+
+/** Header cell with the select-all checkbox for the rows on screen. */
+export function TableSelectAllCell({ rowKeys, className, ...props }: TableSelectAllCellProps) {
+  const selection = useContext(SelectionContext);
+  if (!selection)
+    throw new Error("TableSelectAllCell needs a Table with selectedKeys or onSelectedKeysChange");
+  const state = selectAllState(selection.selected, rowKeys);
+  return (
+    <th
+      scope="col"
+      className={cn(
+        "w-px border-b-divider px-4 py-2.5 text-left align-middle @max-sm/table:px-2.5",
+        className,
+      )}
+      {...props}
+    >
+      <Checkbox
+        checked={state}
+        onCheckedChange={() => selection.setMany(rowKeys, state !== true)}
+        aria-label={selection.labels.selectAll}
+      />
+    </th>
+  );
+}
+
+export interface TableActionsCellProps extends ComponentPropsWithoutRef<"td"> {
+  /**
+   * An overflow menu (a `DropdownMenu` with a trigger, say). When set, it replaces the inline
+   * actions under a narrow table container (under 48rem of the wrapper's own width), so the
+   * actions never clip or wrap. Without it the inline actions wrap and stay right-aligned.
+   */
+  menu?: ReactNode;
+}
+
+/**
+ * Right-aligned cell for row actions (buttons, links). Inline actions wrap onto more lines under
+ * a narrow table container instead of clipping; pass `menu` to collapse them into an overflow
+ * menu there. The container query is on the table wrapper, never the viewport.
+ */
+export function TableActionsCell({ menu, className, children, ...props }: TableActionsCellProps) {
+  return (
+    <td
+      className={cn("w-px px-4 py-2.75 text-right align-middle @max-sm/table:px-2.5", className)}
+      {...props}
+    >
+      <div
+        className={cn(
+          "inline-flex items-center justify-end gap-1.5",
+          menu !== undefined ? "@max-3xl/table:hidden" : "@max-3xl/table:flex-wrap",
+        )}
+      >
+        {children}
+      </div>
+      {menu !== undefined ? (
+        <div className="hidden justify-end @max-3xl/table:inline-flex">{menu}</div>
+      ) : null}
+    </td>
   );
 }
 
@@ -362,6 +555,8 @@ export interface TableLinkRowProps extends Omit<ComponentPropsWithoutRef<"tr">, 
   primary: ReactNode;
   /** `columnId` of the first cell, so that column can be pinned. */
   primaryColumnId?: string;
+  /** Selection key of the row; see `TableRow`. */
+  rowKey?: string;
   /** Additional `<td>` cells of the row. */
   children?: ReactNode;
 }
@@ -375,15 +570,22 @@ export function TableLinkRow({
   href,
   primary,
   primaryColumnId,
+  rowKey,
   children,
   className,
   ...props
 }: TableLinkRowProps) {
   const pinned = usePinnedCell(primaryColumnId, false);
+  const selection = useContext(SelectionContext);
+  const isSelected =
+    selection && rowKey !== undefined ? selection.selected.includes(rowKey) : undefined;
   return (
     <tr
+      aria-selected={isSelected}
+      data-selected={isSelected || undefined}
       className={cn(
         "group/row relative border-b-divider last:border-b-0 hover:bg-surface-2",
+        isSelected && "bg-accent-soft hover:bg-accent-soft",
         className,
       )}
       {...props}

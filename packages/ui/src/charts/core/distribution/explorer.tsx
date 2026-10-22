@@ -2,6 +2,7 @@
 
 import { type KeyboardEvent, type PointerEvent, useRef } from "react";
 import { cn } from "../../../utils/cn.js";
+import { TOUCH_TARGET } from "../chart-dock.js";
 import type { PlotMargin } from "./layout.js";
 
 export interface PlotExplorerProps {
@@ -9,8 +10,11 @@ export interface PlotExplorerProps {
   count: number;
   active: number | null;
   onActiveChange: (index: number | null) => void;
-  /** Item under a plot-relative pixel, or null. */
-  pick: (x: number, y: number) => number | null;
+  /**
+   * Item under a plot-relative pixel, or null. `radius` is set for a finger: snap to the nearest
+   * item within that many pixels instead of the chart's own, tighter mouse tolerance.
+   */
+  pick: (x: number, y: number, radius?: number) => number | null;
   /** Accessible name, e.g. `labels.explore`. */
   label: string;
   /** What a screen reader announces for the active item. */
@@ -66,7 +70,8 @@ export function PlotExplorer({
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    change(pick(event.clientX - rect.left, event.clientY - rect.top));
+    const radius = event.pointerType === "touch" ? TOUCH_TARGET : undefined;
+    change(pick(event.clientX - rect.left, event.clientY - rect.top, radius));
   };
 
   return (
@@ -79,13 +84,18 @@ export function PlotExplorer({
       aria-valuenow={(active ?? 0) + 1}
       aria-valuetext={valueText}
       onKeyDown={onKeyDown}
-      onFocus={() => {
-        if (latest.current == null && count > 0) change(0);
+      onFocus={(event) => {
+        if (latest.current == null && count > 0 && event.currentTarget.matches(":focus-visible"))
+          change(0);
       }}
       onBlur={() => change(null)}
       onPointerMove={onPointerMove}
-      onPointerDown={onPointerMove}
-      onPointerLeave={() => change(null)}
+      onPointerDown={(event) => {
+        if (event.pointerType !== "touch") onPointerMove(event);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "touch") change(null);
+      }}
       className={cn(
         "absolute cursor-default rounded-xs outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-4",
         className,
