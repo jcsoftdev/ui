@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { AuthVariantProps } from "../auth-illustration/look.js";
 import {
   isoBox,
   isoPoint,
@@ -10,9 +11,8 @@ import {
   stackPlaced,
   stackSlots,
   stackTop,
-} from "../model.js";
-import type { AuthVariantProps } from "./index.js";
-import { PORTAL_GLYPHS } from "./portal-glyphs.js";
+} from "../auth-illustration/model.js";
+import { PORTAL_GLYPHS } from "../internal/portal-glyphs.js";
 
 const BASE = { x: 210, y: 350 } as const;
 const SLOTS = stackSlots();
@@ -255,3 +255,5 @@ export function Stack({ state, progress, activeIndex, uid }: AuthVariantProps) {
     </>
   );
 }
+
+Stack.variant = "stack";

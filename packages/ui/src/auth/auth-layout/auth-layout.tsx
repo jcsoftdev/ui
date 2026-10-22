@@ -14,8 +14,8 @@ import {
   AuthIllustration,
   type AuthIllustrationProps,
 } from "../auth-illustration/auth-illustration.js";
+import type { AuthLook } from "../auth-illustration/look.js";
 import type { AuthState } from "../auth-illustration/model.js";
-import type { AuthIllustrationVariant } from "../auth-illustration/variants/index.js";
 import { AuthContext, type AuthContextValue, type AuthPanel } from "../internal/auth-context.js";
 import { AuthStyles } from "../internal/auth-styles.js";
 
@@ -191,8 +191,8 @@ export function AuthLayoutBrand({ className, ...props }: AuthLayoutBrandProps) {
 export interface AuthLayoutArtProps
   extends ComponentPropsWithoutRef<"div">,
     Pick<AuthIllustrationProps, "headline" | "caption" | "action"> {
-  /** Look of the default illustration, used when there are no children. */
-  variant?: AuthIllustrationVariant;
+  /** Look of the default illustration, used when there are no children (default `Slabs`). */
+  look?: AuthLook;
 }
 
 /**
@@ -200,7 +200,7 @@ export interface AuthLayoutArtProps
  * width and, in `centered`, sits faded behind the panel.
  */
 export function AuthLayoutArt({
-  variant,
+  look,
   headline,
   caption,
   action,
@@ -211,7 +211,7 @@ export function AuthLayoutArt({
   const { layout, panel, classNames } = useAuthLayoutParts("Art");
   const solid = panel === "solid";
   const art = children ?? (
-    <AuthIllustration variant={variant} headline={headline} caption={caption} action={action} />
+    <AuthIllustration look={look} headline={headline} caption={caption} action={action} />
   );
   return (
     <div

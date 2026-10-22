@@ -1,6 +1,9 @@
 // Type-checks the examples in site/src/content/docs/docs/auth.md against the built package.
 // Every ```tsx block in that page must equal one `#region` below (see test/docs-examples.mjs).
 import { AuthIllustration, AuthLayout, LoginForm } from "@jcsoftdev/ui/auth";
+import { Stack } from "@jcsoftdev/ui/auth/stack";
+import { Statement } from "@jcsoftdev/ui/auth/statement";
+import { AuthIllustrationAny } from "@jcsoftdev/ui/auth/looks";
 import { useState } from "react";
 
 declare function signIn(identifier: string, password: string): Promise<void>;
@@ -95,7 +98,7 @@ export function SolidPanelScreen() {
 export function BooksScreen() {
   return (
     <AuthLayout panel="solid">
-      <AuthLayout.Art variant="stack" />
+      <AuthLayout.Art look={Stack} />
       <AuthLayout.Panel>
         <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
       </AuthLayout.Panel>
@@ -104,12 +107,18 @@ export function BooksScreen() {
 }
 // #endregion
 
+// #region by-name
+export function ByName({ variant }: { variant: "slabs" | "stack" | "mosaic" }) {
+  return <AuthIllustrationAny variant={variant} />;
+}
+// #endregion
+
 // #region statement
 export function StatementScreen() {
   return (
     <AuthLayout layout="split-reverse">
       <AuthLayout.Art
-        variant="statement"
+        look={Statement}
         headline="Every class, every family, one place."
         caption="Sign in to pick up where your school left off."
         action={<a href="/about">How it works</a>}

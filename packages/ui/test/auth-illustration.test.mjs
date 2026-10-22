@@ -175,3 +175,40 @@ test("the character's board lamps fill with progress and all light on success", 
   assert.equal(model.boardLit("success", 0), model.BOARD_LIGHTS);
   assert.equal(model.boardLit("error", Number.NaN), 0);
 });
+
+// The looks are plain components that describe themselves with static properties, so
+// `AuthIllustration` needs no registry; `AuthIllustrationAny` is the only place that lists them all.
+const looksBundle = await build({
+  entryPoints: [join(here, "../src/auth/looks/index.ts")],
+  bundle: true,
+  format: "esm",
+  platform: "node",
+  write: false,
+  jsx: "automatic",
+});
+const { AUTH_LOOKS } = await import(
+  `data:text/javascript;base64,${Buffer.from(looksBundle.outputFiles[0].contents).toString("base64")}`
+);
+
+test("every look names itself and only the statement look is text", () => {
+  assert.deepEqual(Object.keys(AUTH_LOOKS), ["slabs", "stack", "mosaic", "character", "statement"]);
+  for (const [name, look] of Object.entries(AUTH_LOOKS)) {
+    assert.equal(typeof look, "function");
+    assert.equal(look.variant, name, `${name} carries its data-variant name`);
+    assert.equal(Boolean(look.text), name === "statement", `${name} text flag`);
+  }
+});
+
+test("AuthIllustration, AuthLayout and LoginForm do not import a registry or the other looks", async () => {
+  const { readFileSync } = await import("node:fs");
+  for (const file of [
+    "auth-illustration/auth-illustration.tsx",
+    "auth-layout/auth-layout.tsx",
+    "login-form/login-form.tsx",
+    "login-form/parts.tsx",
+  ]) {
+    const source = readFileSync(join(here, "../src/auth", file), "utf8");
+    for (const banned of ["looks/", "stack/", "mosaic/", "character/", "statement/"])
+      assert.ok(!source.includes(`../${banned}`), `${file} must not import ${banned}`);
+  }
+});

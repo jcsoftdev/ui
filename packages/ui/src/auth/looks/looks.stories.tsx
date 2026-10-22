@@ -1,10 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { CSSProperties } from "react";
 import { expect } from "storybook/test";
+import { AuthIllustration } from "../auth-illustration/auth-illustration.js";
+import type { AuthLook } from "../auth-illustration/look.js";
+import { AUTH_STATES, type AuthState } from "../auth-illustration/model.js";
+import { Character } from "../character/character.js";
 import { AuthContext, type AuthContextValue, type AuthPanel } from "../internal/auth-context.js";
-import { AuthIllustration } from "./auth-illustration.js";
-import { AUTH_STATES, type AuthState } from "./model.js";
-import type { AuthIllustrationVariant } from "./variants/index.js";
+import { Mosaic } from "../mosaic/mosaic.js";
+import { Stack } from "../stack/stack.js";
+import { Statement } from "../statement/statement.js";
+import { AuthIllustrationAny } from "./auth-illustration-any.js";
 
 const noop = () => {};
 
@@ -37,7 +42,7 @@ function Panel({ panel, children }: { panel: AuthPanel; children: React.ReactNod
 }
 
 interface GridProps {
-  variant: AuthIllustrationVariant;
+  look: AuthLook;
   panel?: AuthPanel;
   widths?: readonly number[];
   states?: readonly AuthState[];
@@ -47,7 +52,7 @@ interface GridProps {
 
 /** Every state at each container width: the art adapts to the width it is given. */
 function Grid({
-  variant,
+  look,
   panel = "paper",
   widths = [640, 320],
   states = AUTH_STATES,
@@ -74,7 +79,7 @@ function Grid({
                   }}
                 >
                   <AuthIllustration
-                    variant={variant}
+                    look={look}
                     state={state}
                     progress={PROGRESS[state]}
                     headline={headline}
@@ -95,7 +100,7 @@ const meta = {
   component: Grid,
   parameters: { layout: "fullscreen" },
   argTypes: {
-    variant: { control: false },
+    look: { control: false },
     panel: { control: "inline-radio", options: ["paper", "solid"] },
   },
 } satisfies Meta<typeof Grid>;
@@ -103,13 +108,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const StackStates: Story = { args: { variant: "stack" } };
+export const StackStates: Story = { args: { look: Stack } };
 
-export const StackSolid: Story = { args: { variant: "stack", panel: "solid" } };
+export const StackSolid: Story = { args: { look: Stack, panel: "solid" } };
 
 /** Narrow art containers show a shorter tower. */
 export const StackNarrow: Story = {
-  args: { variant: "stack", widths: [240, 460, 640], states: ["password"] },
+  args: { look: Stack, widths: [240, 460, 640], states: ["password"] },
   play: async ({ canvasElement }) => {
     const shown = (width: number) =>
       [...canvasElement.querySelectorAll(`[data-width="${width}"] .ui-stk-book`)].filter(
@@ -121,13 +126,13 @@ export const StackNarrow: Story = {
   },
 };
 
-export const MosaicStates: Story = { args: { variant: "mosaic" } };
+export const MosaicStates: Story = { args: { look: Mosaic } };
 
-export const MosaicSolid: Story = { args: { variant: "mosaic", panel: "solid" } };
+export const MosaicSolid: Story = { args: { look: Mosaic, panel: "solid" } };
 
 /** The floor has 4, 5 or 6 tiles a side by the width of its container. */
 export const MosaicNarrow: Story = {
-  args: { variant: "mosaic", widths: [240, 460, 640], states: ["typing"] },
+  args: { look: Mosaic, widths: [240, 460, 640], states: ["typing"] },
   play: async ({ canvasElement }) => {
     const side = (width: number) =>
       [...canvasElement.querySelectorAll(`[data-width="${width}"] .ui-msc-grid`)]
@@ -139,13 +144,13 @@ export const MosaicNarrow: Story = {
   },
 };
 
-export const CharacterStates: Story = { args: { variant: "character", panel: "solid" } };
+export const CharacterStates: Story = { args: { look: Character, panel: "solid" } };
 
-export const CharacterPaper: Story = { args: { variant: "character" } };
+export const CharacterPaper: Story = { args: { look: Character } };
 
 /** Clouds drift around the rider only when the container has room for them. */
 export const CharacterNarrow: Story = {
-  args: { variant: "character", panel: "solid", widths: [240, 460], states: ["password"] },
+  args: { look: Character, panel: "solid", widths: [240, 460], states: ["password"] },
   play: async ({ canvasElement }) => {
     const decor = (width: number) =>
       getComputedStyle(
@@ -157,7 +162,7 @@ export const CharacterNarrow: Story = {
 };
 
 const STATEMENT = {
-  variant: "statement",
+  look: Statement,
   headline: "Every class, every family, one place.",
   caption: "Sign in to pick up where your school left off.",
 } as const;
@@ -181,5 +186,23 @@ export const StatementNarrow: Story = {
     const art = canvasElement.querySelector(`[data-width="640"] .ui-auth-art`) as Element;
     await expect(art.getAttribute("aria-hidden")).toBeNull();
     await expect(art.textContent).toContain("one place.");
+  },
+};
+
+/** The string convenience: `AuthIllustrationAny` resolves the look by name and keeps `data-variant`. */
+export const ByName: Story = {
+  args: { look: Stack },
+  render: () => (
+    <div className="grid gap-4 p-4">
+      {(["slabs", "stack", "mosaic", "character", "statement"] as const).map((variant) => (
+        <AuthIllustrationAny key={variant} variant={variant} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const names = [...canvasElement.querySelectorAll(".ui-auth-art")].map((art) =>
+      art.getAttribute("data-variant"),
+    );
+    await expect(names).toEqual(["slabs", "stack", "mosaic", "character", "statement"]);
   },
 };

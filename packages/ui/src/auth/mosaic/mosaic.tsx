@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import type { AuthVariantProps } from "../auth-illustration/look.js";
 import {
   isoBox,
   isoPoint,
@@ -8,9 +9,8 @@ import {
   mosaicFilled,
   mosaicGlint,
   mosaicTiles,
-} from "../model.js";
-import type { AuthVariantProps } from "./index.js";
-import { PORTAL_GLYPHS } from "./portal-glyphs.js";
+} from "../auth-illustration/model.js";
+import { PORTAL_GLYPHS } from "../internal/portal-glyphs.js";
 
 /** Side of the tiled floor, the platform's margin and thickness, and the tiles' depth, in iso units. */
 const FLOOR = 260;
@@ -208,3 +208,5 @@ export function Mosaic({ state, progress, activeIndex, uid }: AuthVariantProps) 
     </>
   );
 }
+
+Mosaic.variant = "mosaic";

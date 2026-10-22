@@ -19,25 +19,32 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **Auth compositions.** `AuthLayout` `panel` (`paper`, `solid`: a solid themed side panel with an
   open form on the other side), `LoginForm` `appearance` (`card`, `open`), `LoginForm.Options`
   (remember me, reported as `remember`, plus a help slot) and `LoginForm.Providers` (a labelled slot,
-  no providers included), and `AuthIllustration` `variant` as the plug-in point for further looks.
+  no providers included), and `AuthIllustration` `look` as the plug-in point for further looks.
 - **Illustration motion.** Pointer parallax (fine pointers only, one CSS variable write per
   frame), a hop per keystroke, an overshooting entrance, a cheer and burst on success, and an
   error that settles back to the password state after `ERROR_HOLD_MS` (1.1s). Only `transform`
   and `opacity` animate; reduced motion leaves every look still and assembled.
-- **`AuthIllustration variant="stack"`.** A tower of books that gains a book as the form fills,
+- **`Stack` look (`@jcsoftdev/ui/auth/stack`).** A tower of books that gains a book as the form fills,
   wobbles on an error and plants a flag with the active portal's glyph on success; 4, 5 or 6
   books by the width of its container.
-- **`AuthIllustration variant="mosaic"`.** A floor of isometric tiles that lights diagonally with
+- **`Mosaic` look (`@jcsoftdev/ui/auth/mosaic`).** A floor of isometric tiles that lights diagonally with
   progress, glints per keystroke, glows under the pointer, flashes red on an error and ripples on
   success; three tiles carry the portal glyphs and the active one stands raised.
-- **`AuthIllustration variant="character"`.** A student on a hover board that follows the
+- **`Character` look (`@jcsoftdev/ui/auth/character`).** A student on a hover board that follows the
   pointer, looks toward the form while it is typed into, covers their eyes for the password,
   shakes their head on an error and hops with a boost on success.
-- **`AuthIllustration variant="statement"`.** Kinetic type: `headline` rises word by word, an
+- **`Statement` look (`@jcsoftdev/ui/auth/statement`).** Kinetic type: `headline` rises word by word, an
   optional `caption` and `action`, and a pill whose arrow loops while waiting and follows progress;
   on success the headline gives way to the new UI string `signedIn` (default headline
   `welcomeBack`). Not hidden from assistive technology. `AuthLayout.Art` forwards `headline`,
   `caption` and `action`.
+- **One entry per look.** `AuthIllustration` takes the look as a component (`look`, default `Slabs`),
+  and each look is its own subpath (`@jcsoftdev/ui/auth/slabs`, `stack`, `mosaic`, `character`,
+  `statement`), so an app bundles only the looks it renders; each look carries only its own CSS. A look
+  is any component typed `AuthLook`, with optional static `variant` (the `data-variant` value) and
+  `text` (not hidden from assistive technology). `AuthLayout.Art` takes `look` too.
+  `AuthIllustrationAny` (`@jcsoftdev/ui/auth/looks`) keeps the string `variant` and imports all five
+  looks on purpose. The `ui/auth` size budget drops back from 32300 to its default-entry weight.
 - **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
 - **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
 - **UI strings** (en/es) for the sign-in screen and `showPassword`.

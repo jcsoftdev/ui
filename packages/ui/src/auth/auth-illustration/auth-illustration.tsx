@@ -11,13 +11,18 @@ import {
 import { cn } from "../../utils/cn.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import { AuthStyles } from "../internal/auth-styles.js";
+import { Slabs } from "../slabs/slabs.js";
+import type { AuthLook } from "./look.js";
 import { type AuthState, clamp01, ERROR_HOLD_MS, shownState } from "./model.js";
 import { useArtPointer } from "./use-art-pointer.js";
-import { AUTH_VARIANTS, type AuthIllustrationVariant, TEXT_VARIANTS } from "./variants/index.js";
 
 export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
-  /** The look of the illustration. Defaults to `slabs`. */
-  variant?: AuthIllustrationVariant;
+  /**
+   * The look, a component from its own entry (`Stack` from `@jcsoftdev/ui/auth/stack`, and so on).
+   * Defaults to `Slabs`; looks you do not pass stay out of your bundle. For a string `variant`
+   * use `AuthIllustrationAny` from `@jcsoftdev/ui/auth/looks`.
+   */
+  look?: AuthLook;
   /** What the screen is doing. Inside an `AuthLayout` it follows the layout's state. */
   state?: AuthState;
   /** Fill of the whole form, 0 to 1. Inside an `AuthLayout` it follows the layout's progress. */
@@ -26,11 +31,11 @@ export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"di
   activeIndex?: number;
   /** Accessible name. Without it the illustration is decorative and hidden from assistive technology. */
   label?: string;
-  /** `statement` only: the headline (a string animates word by word). Defaults to the UI string `welcomeBack`. */
+  /** Text looks (`Statement`) only: the headline (a string animates word by word). Defaults to the UI string `welcomeBack`. */
   headline?: ReactNode;
-  /** `statement` only: a supporting line under the headline. */
+  /** Text looks only: a supporting line under the headline. */
   caption?: ReactNode;
-  /** `statement` only: content beside the arrow pill, such as a link. */
+  /** Text looks only: content beside the arrow pill, such as a link. */
   action?: ReactNode;
 }
 
@@ -40,7 +45,7 @@ export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"di
  * mode and every accent apply on their own. With reduced motion it rests assembled and still.
  */
 export function AuthIllustration({
-  variant = "slabs",
+  look: Look = Slabs,
   state: stateProp,
   progress: progressProp,
   activeIndex: activeIndexProp,
@@ -53,7 +58,6 @@ export function AuthIllustration({
 }: AuthIllustrationProps) {
   const auth = useOptionalAuth();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const Look = AUTH_VARIANTS[variant];
   const state = stateProp ?? auth?.state ?? "idle";
   const progress = clamp01(progressProp ?? auth?.progress ?? 0);
   const activeIndex = activeIndexProp ?? auth?.activeIndex ?? 0;
@@ -71,14 +75,10 @@ export function AuthIllustration({
     <div
       {...props}
       ref={ref}
-      {...(TEXT_VARIANTS.has(variant)
-        ? {}
-        : label
-          ? { role: "img", "aria-label": label }
-          : { "aria-hidden": true })}
+      {...(Look.text ? {} : label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
       data-state={shown}
       data-panel={auth?.panel}
-      data-variant={variant}
+      data-variant={Look.variant}
       className={cn("ui-auth-art @container/art w-full min-w-0", className)}
     >
       <AuthStyles />

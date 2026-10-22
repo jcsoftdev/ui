@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import { BOARD_LIGHTS, boardLit, keystroke } from "../model.js";
-import type { AuthVariantProps } from "./index.js";
-import { PORTAL_GLYPHS } from "./portal-glyphs.js";
+import type { AuthVariantProps } from "../auth-illustration/look.js";
+import { BOARD_LIGHTS, boardLit, keystroke } from "../auth-illustration/model.js";
+import { PORTAL_GLYPHS } from "../internal/portal-glyphs.js";
 
 const CSS = `
 @keyframes ui-chr-bob{50%{transform:translateY(-12px)}}
@@ -337,3 +337,5 @@ export function Character({ state, progress, activeIndex, uid }: AuthVariantProp
     </>
   );
 }
+
+Character.variant = "character";

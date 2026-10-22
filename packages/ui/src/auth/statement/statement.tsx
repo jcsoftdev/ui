@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
-import { useUiStrings } from "../../../i18n/index.js";
-import type { AuthVariantProps } from "./index.js";
+import { useUiStrings } from "../../i18n/index.js";
+import type { AuthVariantProps } from "../auth-illustration/look.js";
 
 const CSS = `
 @keyframes ui-stm-loop{0%{transform:translateX(0);opacity:1}45%{transform:translateX(var(--run));opacity:1}50%{transform:translateX(calc(var(--run) + 30%));opacity:0}51%{transform:translateX(-60%);opacity:0}70%,100%{transform:translateX(0);opacity:1}}
@@ -93,3 +93,6 @@ export function Statement({ state, progress, headline, caption, action }: AuthVa
     </div>
   );
 }
+
+Statement.variant = "statement";
+Statement.text = true;

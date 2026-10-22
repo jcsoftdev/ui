@@ -48,7 +48,7 @@ export function LoginScreen() {
 | Piece                      | What it does                                                                                                                                                                                                                                                             |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `AuthLayout`               | `layout` (`split`, `split-reverse`, `centered`); `state`, `progress`, `activeIndex` (each controlled or with a `default*` and `on*Change`). Parts: `.Brand`, `.Art`, `.Panel`, `.Footer`. `useAuthLayout()` reads the shared state.                                      |
-| `AuthIllustration`         | `state` (`idle`, `typing`, `password`, `error`, `success`), `progress` (0 to 1, fill of the whole form), `activeIndex` (the slab that rises), `label`. Without `label` it is decorative: `aria-hidden`, nothing focusable.                                               |
+| `AuthIllustration`         | `state` (`idle`, `typing`, `password`, `error`, `success`), `progress` (0 to 1, fill of the whole form), `activeIndex` (the slab that rises), `label`, `look` (default `Slabs`). Without `label` it is decorative: `aria-hidden`, nothing focusable.                     |
 | `LoginForm`                | `onSubmit`, `portals`, `portal` / `defaultPortal` / `onPortalChange`, `loading`, `error`, `success`. Parts: `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Options`, `.Error`, `.Submit`, `.Providers`, `.Footer`. With no children it renders them in that order. |
 | `PasswordInput`, `Divider` | The generic pieces behind the form, exported from `forms` and `atoms`.                                                                                                                                                                                                   |
 
@@ -88,26 +88,38 @@ export function SolidPanelScreen() {
 
 ### Looks
 
-`variant` on `AuthIllustration` (or `AuthLayout.Art`) switches the illustration; every look reads the same `state`, `progress` and `activeIndex`, takes its colors from the tokens, and adapts its composition to the width of its own container (`@container/art`), not the viewport.
+`look` on `AuthIllustration` (or `AuthLayout.Art`) takes the illustration as a component, and each look is its own entry. An app imports only the looks it renders: the default `Slabs` ships with `@jcsoftdev/ui/auth`, and the other four stay out of the bundle until you import them. Every look reads the same `state`, `progress` and `activeIndex`, takes its colors from the tokens, and adapts its composition to the width of its own container (`@container/art`), not the viewport.
 
-| `variant`   | What it shows                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `slabs`     | Three isometric portal slabs (the default). They drift together as the form fills, hop on each keystroke, fly apart on an error and lock together with a burst on success.                                                                                                                                                                                                                                                                                               |
-| `stack`     | A tower of books that gains a book as the form fills (a dashed slot marks the next one), squashes on each keystroke, wobbles on an error and plants a flag with the active portal's glyph on success. Narrow containers show a shorter, larger tower (4, 5 or 6 books).                                                                                                                                                                                                  |
-| `mosaic`    | A floor of isometric tiles that light diagonally from the back corner as the form fills. A tile glints on each keystroke and glows under the pointer; an error sweeps a red flash across the floor and success ripples out from its centre. Three tiles carry the portal glyphs and the active one stands raised. 4, 5 or 6 tiles a side by container width.                                                                                                             |
-| `character` | A student with a backpack riding a hover board over a pulsing shadow, made for the solid panel. They bob, blink and follow the pointer; they look toward the form and nod while it is typed into, cover their eyes for the password, shake their head on an error and hop with a boost on success. The deck lamps fill with progress and the chest badge carries the active portal's glyph.                                                                              |
-| `statement` | Kinetic type instead of a drawing: a large headline that rises word by word, an optional caption and a pill whose arrow loops while the screen waits and then follows the form's progress. On success the headline gives way to a short "you're in" line (UI strings `welcomeBack` and `signedIn`). The text is real content, so this look is never hidden from assistive technology; pass `headline`, `caption` and `action` to `AuthIllustration` or `AuthLayout.Art`. |
+| Look                           | What it shows                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Slabs` (default)              | Three isometric portal slabs (the default, shipped with `@jcsoftdev/ui/auth`). They drift together as the form fills, hop on each keystroke, fly apart on an error and lock together with a burst on success.                                                                                                                                                                                                                                                            |
+| `Stack` (`auth/stack`)         | A tower of books that gains a book as the form fills (a dashed slot marks the next one), squashes on each keystroke, wobbles on an error and plants a flag with the active portal's glyph on success. Narrow containers show a shorter, larger tower (4, 5 or 6 books).                                                                                                                                                                                                  |
+| `Mosaic` (`auth/mosaic`)       | A floor of isometric tiles that light diagonally from the back corner as the form fills. A tile glints on each keystroke and glows under the pointer; an error sweeps a red flash across the floor and success ripples out from its centre. Three tiles carry the portal glyphs and the active one stands raised. 4, 5 or 6 tiles a side by container width.                                                                                                             |
+| `Character` (`auth/character`) | A student with a backpack riding a hover board over a pulsing shadow, made for the solid panel. They bob, blink and follow the pointer; they look toward the form and nod while it is typed into, cover their eyes for the password, shake their head on an error and hop with a boost on success. The deck lamps fill with progress and the chest badge carries the active portal's glyph.                                                                              |
+| `Statement` (`auth/statement`) | Kinetic type instead of a drawing: a large headline that rises word by word, an optional caption and a pill whose arrow loops while the screen waits and then follows the form's progress. On success the headline gives way to a short "you're in" line (UI strings `welcomeBack` and `signedIn`). The text is real content, so this look is never hidden from assistive technology; pass `headline`, `caption` and `action` to `AuthIllustration` or `AuthLayout.Art`. |
 
 ```tsx region=looks
 export function BooksScreen() {
   return (
     <AuthLayout panel="solid">
-      <AuthLayout.Art variant="stack" />
+      <AuthLayout.Art look={Stack} />
       <AuthLayout.Panel>
         <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
       </AuthLayout.Panel>
     </AuthLayout>
   );
+}
+```
+
+Import a look from its own entry, for example `import { Stack } from "@jcsoftdev/ui/auth/stack"`. A look is any component that takes the illustration's props (`AuthLook`), so you can write your own. A look that is text people read sets `text`, which keeps it visible to assistive technology.
+
+#### Choosing the look by name
+
+`AuthIllustrationAny` from `@jcsoftdev/ui/auth/looks` takes a string `variant` (`slabs`, `stack`, `mosaic`, `character`, `statement`). It imports all five looks on purpose, so an app that renders it pays the weight of every look (about 2 to 3 KB gzip each). Use it for a gallery or a theme picker, and pass the component to `AuthIllustration` everywhere else.
+
+```tsx region=by-name
+export function ByName({ variant }: { variant: "slabs" | "stack" | "mosaic" }) {
+  return <AuthIllustrationAny variant={variant} />;
 }
 ```
 
@@ -118,7 +130,7 @@ export function StatementScreen() {
   return (
     <AuthLayout layout="split-reverse">
       <AuthLayout.Art
-        variant="statement"
+        look={Statement}
         headline="Every class, every family, one place."
         caption="Sign in to pick up where your school left off."
         action={<a href="/about">How it works</a>}

@@ -59,7 +59,43 @@
       "id": "ui/auth",
       "kind": "js",
       "file": "packages/ui/dist/auth/index.js",
-      "maxGzip": 32300
+      "maxGzip": 24000
+    },
+    {
+      "id": "ui/auth/looks",
+      "kind": "js",
+      "file": "packages/ui/dist/auth/looks/index.js",
+      "maxGzip": 23000
+    },
+    {
+      "id": "ui/auth/slabs",
+      "kind": "js",
+      "file": "packages/ui/dist/auth/slabs/index.js",
+      "maxGzip": 2750
+    },
+    {
+      "id": "ui/auth/stack",
+      "kind": "js",
+      "file": "packages/ui/dist/auth/stack/index.js",
+      "maxGzip": 3950
+    },
+    {
+      "id": "ui/auth/mosaic",
+      "kind": "js",
+      "file": "packages/ui/dist/auth/mosaic/index.js",
+      "maxGzip": 3400
+    },
+    {
+      "id": "ui/auth/character",
+      "kind": "js",
+      "file": "packages/ui/dist/auth/character/index.js",
+      "maxGzip": 4200
+    },
+    {
+      "id": "ui/auth/statement",
+      "kind": "js",
+      "file": "packages/ui/dist/auth/statement/index.js",
+      "maxGzip": 3450
     },
     {
       "id": "ui/atoms",
