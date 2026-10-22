@@ -12,10 +12,11 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **Auth.** `AuthLayout` (`layout` `split`, `split-reverse`, `centered`, driven by its own container
   width; parts `.Brand`, `.Art`, `.Panel`, `.Footer`; controlled or uncontrolled `state`,
   `progress` and `activeIndex`; `useAuthLayout`), `AuthIllustration` (isometric portal slabs that
-  react to `state`, `progress` and `activeIndex` with CSS only, still and assembled under reduced
-  motion) and `LoginForm` (parts `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
+  react to `state`, `progress` and `activeIndex` with CSS only; under reduced motion each state
+  keeps its pose without moving) and `LoginForm` (parts `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
   `.Submit`, `.Footer`; async `onSubmit`, `loading`, `error`, `success`; drives the surrounding
-  layout and works standalone).
+  layout and works standalone). A field left empty is reported under that field; a failed sign-in
+  shows as a callout from `.Error`, placed above the fields in the default composition.
 - **Auth compositions.** `AuthLayout` `panel` (`paper`, `solid`: a solid themed side panel with an
   open form on the other side), `LoginForm` `appearance` (`card`, `open`), `LoginForm.Options`
   (remember me, reported as `remember`, plus a help slot) and `LoginForm.Providers` (a labelled slot,
@@ -23,7 +24,9 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **Illustration motion.** Pointer parallax (fine pointers only, one CSS variable write per
   frame), a hop per keystroke, an overshooting entrance, a cheer and burst on success, and an
   error that settles back to the password state after `ERROR_HOLD_MS` (1.1s). Only `transform`
-  and `opacity` animate; reduced motion leaves every look still and assembled.
+  and `opacity` animate; reduced motion jumps straight to each state's pose (spread at rest, flung
+  apart on an error, assembled with a still burst on success) and turns the parallax off, also when
+  the setting changes while the page is open.
 - **`Stack` look (`@jcsoftdev/ui/auth/stack`).** A tower of books that gains a book as the form fills,
   wobbles on an error and plants a flag with the active portal's glyph on success; 4, 5 or 6
   books by the width of its container.
@@ -34,7 +37,7 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
   pointer, looks toward the form while it is typed into, covers their eyes for the password,
   shakes their head on an error and hops with a boost on success.
 - **`Statement` look (`@jcsoftdev/ui/auth/statement`).** Kinetic type: `headline` rises word by word, an
-  optional `caption` and `action`, and a pill whose arrow loops while waiting and follows progress;
+  optional `caption` and `action`, and a pill that fills toward its arrow as a progress meter;
   on success the headline gives way to the new UI string `signedIn` (default headline
   `welcomeBack`). Not hidden from assistive technology. `AuthLayout.Art` forwards `headline`,
   `caption` and `action`.

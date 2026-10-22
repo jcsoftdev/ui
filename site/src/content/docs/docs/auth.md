@@ -27,9 +27,9 @@ export function LoginScreen() {
         >
           <LoginForm.Header />
           <LoginForm.Portals />
+          <LoginForm.Error />
           <LoginForm.Identifier />
           <LoginForm.Password forgotHref="/forgot" />
-          <LoginForm.Error />
           <LoginForm.Submit />
           <LoginForm.Footer>
             By signing in you accept the <a href="/terms">Terms</a>.
@@ -54,7 +54,7 @@ export function LoginScreen() {
 
 ### Layout follows the container
 
-The root of `AuthLayout` is a named container (`@container/auth`), never the viewport. At 768px of its own width the art goes beside the panel (`split`, `split-reverse`) or sits faded behind it (`centered`); under that the art stacks above the panel, and under 448px it is dropped so a narrow embed shows only the form. See the [container queries guide](/docs/container-queries/).
+The root of `AuthLayout` is a named container (`@container/auth`), never the viewport. At 768px of its own width the art goes beside the panel (`split`, `split-reverse`) or sits faded behind it (`centered`); under that the art stacks above the panel, and under 448px it is dropped so a narrow embed shows only the form. `AuthLayout.Brand` sits on the art's side: top left, or top right in a wide `split-reverse`. See the [container queries guide](/docs/container-queries/).
 
 ### Solid panel and open form
 
@@ -71,10 +71,10 @@ export function SolidPanelScreen() {
       <AuthLayout.Panel>
         <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)}>
           <LoginForm.Header title="Welcome back" />
+          <LoginForm.Error />
           <LoginForm.Identifier />
           <LoginForm.Password forgotHref="/forgot" />
           <LoginForm.Options helpHref="/help" />
-          <LoginForm.Error />
           <LoginForm.Submit />
           <LoginForm.Providers label="Or log in with">
             <button type="button">Company account</button>
@@ -96,7 +96,7 @@ export function SolidPanelScreen() {
 | `Stack` (`auth/stack`)         | A tower of books that gains a book as the form fills (a dashed slot marks the next one), squashes on each keystroke, wobbles on an error and plants a flag with the active portal's glyph on success. Narrow containers show a shorter, larger tower (4, 5 or 6 books).                                                                                                                                                                                                  |
 | `Mosaic` (`auth/mosaic`)       | A floor of isometric tiles that light diagonally from the back corner as the form fills. A tile glints on each keystroke and glows under the pointer; an error sweeps a red flash across the floor and success ripples out from its centre. Three tiles carry the portal glyphs and the active one stands raised. 4, 5 or 6 tiles a side by container width.                                                                                                             |
 | `Character` (`auth/character`) | A student with a backpack riding a hover board over a pulsing shadow, made for the solid panel. They bob, blink and follow the pointer; they look toward the form and nod while it is typed into, cover their eyes for the password, shake their head on an error and hop with a boost on success. The deck lamps fill with progress and the chest badge carries the active portal's glyph.                                                                              |
-| `Statement` (`auth/statement`) | Kinetic type instead of a drawing: a large headline that rises word by word, an optional caption and a pill whose arrow loops while the screen waits and then follows the form's progress. On success the headline gives way to a short "you're in" line (UI strings `welcomeBack` and `signedIn`). The text is real content, so this look is never hidden from assistive technology; pass `headline`, `caption` and `action` to `AuthIllustration` or `AuthLayout.Art`. |
+| `Statement` (`auth/statement`) | Kinetic type instead of a drawing: a large headline that rises word by word, an optional caption and a pill that works as a progress meter (it fills toward the arrow at its end as the form fills, never moves on its own and is not a control). On success the headline gives way to a short "you're in" line (UI strings `welcomeBack` and `signedIn`). The text is real content, so this look is never hidden from assistive technology; pass `headline`, `caption` and `action` to `AuthIllustration` or `AuthLayout.Art`. |
 
 ```tsx region=looks
 export function BooksScreen() {
@@ -188,13 +188,14 @@ export function ControlledState() {
 ### Accessibility
 
 - Fields are real `Field`s: labels are visually hidden but present, `aria-invalid` and `aria-describedby` point at the error.
-- `LoginForm.Error` is a `role="alert"` region that stays in the page while empty, so a new message is announced.
+- A field left empty on submit is reported right under that field (`role="alert"`, an alert icon, a danger ring and icon on the field), and the field's `aria-describedby` points at that message.
+- `LoginForm.Error` holds errors about the sign-in itself (wrong credentials, a server message) as a callout above the fields. It is a `role="alert"` region that stays in the page while empty, so a new message is announced, and the password field points at it while it shows.
 - `LoginForm.Portals` is a `radiogroup` with arrow-key navigation; `PasswordInput`'s reveal toggle keeps one name and reports `aria-pressed`.
 - The illustration is hidden from assistive technology unless you pass `label`. The `Statement` look is real text instead: the headline is read until sign-in succeeds, then "You're in." replaces it and the caption is hidden.
 
 ### Motion
 
-Movement is CSS only: transitions and keyframes driven by `data-state` and custom properties, animating only `transform` and `opacity`. The one piece of script writes the pointer position as `--px` and `--py` on the art, at most once per frame, for a light parallax; it does nothing for touch or coarse pointers and is removed on unmount. An error holds for about a second (`ERROR_HOLD_MS`) and then the art settles back to the password state by itself. With `prefers-reduced-motion: reduce` every look rests still and assembled, with no parallax; an error still shows in the edges, which turn toward the danger color.
+Movement is CSS only: transitions and keyframes driven by `data-state` and custom properties, animating only `transform` and `opacity`. The one piece of script writes the pointer position as `--px` and `--py` on the art, at most once per frame, for a light parallax; it does nothing for touch or coarse pointers and is removed on unmount. An error holds for about a second (`ERROR_HOLD_MS`) and then the art settles back to the password state by itself. With `prefers-reduced-motion: reduce` nothing moves, but every state keeps its pose: the looks jump straight to it (spread out at rest, closer while typing, flung apart or tinted red on an error, assembled with a still burst on success), the edges still turn toward the danger color on an error, and there is no parallax. The parallax also follows the setting when it changes while the page is open.
 
 ### Strings
 

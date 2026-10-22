@@ -78,8 +78,10 @@ export interface LoginFormProps
   /** The sign-in worked. Overrides the state `onSubmit` keeps. */
   success?: boolean;
   /**
-   * Parts to place yourself: `LoginForm.Header`, `.Portals`, `.Identifier`, `.Password`, `.Options`,
-   * `.Error`, `.Submit`, `.Providers` and `.Footer`. Without children the form renders them in that order.
+   * Parts to place yourself: `LoginForm.Header`, `.Portals`, `.Error`, `.Identifier`, `.Password`,
+   * `.Options`, `.Submit`, `.Providers` and `.Footer`. Without children the form renders them in that
+   * order (no `.Options`, `.Providers` or `.Footer`). A field left empty is reported under that field;
+   * `.Error` shows only errors about the sign-in itself, so place it above the fields.
    */
   children?: ReactNode;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -121,6 +123,8 @@ export function LoginForm({
     error: string | null;
     success: boolean;
     field: LoginField | null;
+    /** The error is about a field left empty, not about the sign-in. */
+    fieldError?: boolean;
   }>({ loading: false, error: null, success: false, field: null });
   const [portalValue, setPortalValue] = useControllableState<string>({
     prop: portalProp,
@@ -138,6 +142,12 @@ export function LoginForm({
   );
   const portal = portals[portalIndex];
   const invalidField = error ? (internal.field ?? "password") : null;
+  const errorPlacement =
+    error === null || error === undefined || error === ""
+      ? null
+      : errorProp === undefined && internal.fieldError
+        ? "field"
+        : "form";
 
   const focusedField = useRef<LoginField | null>(null);
   const leftOutcome = useRef(false);
@@ -174,6 +184,7 @@ export function LoginForm({
         identifier: `${baseId}-identifier`,
         password: `${baseId}-password`,
         error: `${baseId}-error`,
+        fieldError: `${baseId}-field-error`,
         portals: `${baseId}-portals`,
       },
       portals,
@@ -187,6 +198,7 @@ export function LoginForm({
       loading,
       error,
       invalidField,
+      errorPlacement,
       setValue: (field, value) => {
         if (field === "identifier") setIdentifier(value);
         else setPassword(value);
@@ -211,6 +223,7 @@ export function LoginForm({
       loading,
       error,
       invalidField,
+      errorPlacement,
       internal.error,
       internal.field,
       classNames,
@@ -242,16 +255,16 @@ export function LoginForm({
     if (!staying && !loading && !success && !error) setAuthState?.("idle");
   };
 
-  const fail = (message: string, field: LoginField) => {
-    setInternal({ loading: false, error: message, success: false, field });
+  const fail = (message: string, field: LoginField, fieldError = false) => {
+    setInternal({ loading: false, error: message, success: false, field, fieldError });
     (field === "identifier" ? identifierRef : passwordRef).current?.focus();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (loading) return;
-    if (!identifier.trim()) return fail(strings.enterIdentifier, "identifier");
-    if (!password) return fail(strings.enterPassword, "password");
+    if (!identifier.trim()) return fail(strings.enterIdentifier, "identifier", true);
+    if (!password) return fail(strings.enterPassword, "password", true);
     const values: LoginValues = {
       identifier: identifier.trim(),
       password,
@@ -283,7 +296,9 @@ export function LoginForm({
         data-appearance={appearance}
         className={cn(
           "grid",
-          appearance === "open" ? "mx-auto w-full max-w-110 gap-5" : "gap-3.5 px-7 pt-6.5 pb-5.5",
+          appearance === "open"
+            ? "mx-auto w-full max-w-110 gap-5"
+            : "gap-3.5 px-7 pt-6.5 pb-5.5 @max-md/auth:px-1 @max-md/auth:pt-4",
           appearance === "open" && auth?.panel === "paper" && "px-7 pt-7.5 pb-6",
           classNames?.root,
           className,
@@ -293,9 +308,9 @@ export function LoginForm({
           <>
             <LoginFormHeader />
             <LoginFormPortals />
+            <LoginFormError />
             <LoginFormIdentifier />
             <LoginFormPassword />
-            <LoginFormError />
             <LoginFormSubmit />
           </>
         )}

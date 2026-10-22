@@ -9,9 +9,14 @@ import { Field } from "../../forms/field/field.js";
 import { Input } from "../../forms/input/input.js";
 import { PasswordInput } from "../../forms/password-input/password-input.js";
 import { useUiStrings } from "../../i18n/index.js";
-import { BookOpen, GraduationCap, House, Lock, Mail } from "../../icons/index.js";
+import { BookOpen, CircleAlert, GraduationCap, House, Lock, Mail } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
-import { type LoginPortal, useLoginForm } from "./context.js";
+import {
+  type LoginField,
+  type LoginFormContextValue,
+  type LoginPortal,
+  useLoginForm,
+} from "./context.js";
 
 const FALLBACK_ICONS = [
   <BookOpen key="book" />,
@@ -131,38 +136,81 @@ export interface LoginFormFieldProps {
 
 const fieldClasses = "[&_input]:text-fs-140";
 
+/**
+ * How a field shows that it is the invalid one: its ring and icon turn to the danger colour, and the
+ * message under it starts with an alert icon, so the state does not rest on a border hue (with a
+ * red-like accent the focus ring and the danger border are hard to tell apart).
+ */
+const INVALID_INPUT = {
+  root: "focus-within:outline-danger has-[input[aria-invalid=true]]:border-2",
+  start: "text-danger",
+};
+
+/** Error wiring of one field: invalid flag, what describes it, and whether its message sits under it. */
+function fieldErrorOf(
+  field: LoginField,
+  { invalidField, errorPlacement, error, ids }: LoginFormContextValue,
+) {
+  const invalid = invalidField === field;
+  const below = invalid && errorPlacement === "field" ? error : null;
+  return {
+    invalid,
+    below,
+    describedBy: invalid ? (below ? ids.fieldError : ids.error) : undefined,
+  };
+}
+
+/** The message under an invalid field. */
+function FieldError({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <p
+      id={id}
+      role="alert"
+      className="m-0 flex items-center gap-1.5 font-semibold text-danger text-meta [&>svg]:size-3.5 [&>svg]:shrink-0"
+    >
+      <CircleAlert aria-hidden="true" />
+      {children}
+    </p>
+  );
+}
+
 export function LoginFormIdentifier({ label, placeholder, className }: LoginFormFieldProps) {
   const strings = useUiStrings();
-  const { ids, portal, identifier, setValue, invalidField, identifierRef, appearance, classNames } =
-    useLoginForm("Identifier");
+  const form = useLoginForm("Identifier");
+  const { ids, portal, identifier, setValue, identifierRef, appearance, classNames } = form;
+  const { invalid, below, describedBy } = fieldErrorOf("identifier", form);
   const hideLabel = appearance === "card";
   const text = label ?? portal?.identifierLabel ?? strings.identifier;
   return (
-    <Field
-      label={text}
-      controlId={ids.identifier}
-      classNames={{ label: hideLabel ? "sr-only" : "" }}
-      className={cn(fieldClasses, classNames?.identifier, className)}
-    >
-      {/* biome-ignore lint/complexity/noUselessFragments: stops Field cloning empty aria props over the error wiring */}
-      <>
-        <Input
-          ref={identifierRef}
-          id={ids.identifier}
-          name="identifier"
-          size="lg"
-          autoComplete="username"
-          autoCapitalize="none"
-          spellCheck={false}
-          placeholder={placeholder ?? (hideLabel ? text : undefined)}
-          value={identifier}
-          onChange={(event) => setValue("identifier", event.currentTarget.value)}
-          start={<Mail />}
-          aria-invalid={invalidField === "identifier" ? true : undefined}
-          aria-describedby={invalidField === "identifier" ? ids.error : undefined}
-        />
-      </>
-    </Field>
+    <div className="grid gap-1.5" data-login-field="identifier">
+      <Field
+        label={text}
+        controlId={ids.identifier}
+        classNames={{ label: hideLabel ? "sr-only" : "" }}
+        className={cn(fieldClasses, classNames?.identifier, className)}
+      >
+        {/* biome-ignore lint/complexity/noUselessFragments: stops Field cloning empty aria props over the error wiring */}
+        <>
+          <Input
+            ref={identifierRef}
+            id={ids.identifier}
+            name="identifier"
+            size="lg"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder={placeholder ?? (hideLabel ? text : undefined)}
+            value={identifier}
+            onChange={(event) => setValue("identifier", event.currentTarget.value)}
+            start={<Mail />}
+            classNames={invalid ? INVALID_INPUT : undefined}
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
+          />
+        </>
+      </Field>
+      {below ? <FieldError id={ids.fieldError}>{below}</FieldError> : null}
+    </div>
   );
 }
 
@@ -181,8 +229,9 @@ export function LoginFormPassword({
   className,
 }: LoginFormPasswordProps) {
   const strings = useUiStrings();
-  const { ids, password, setValue, invalidField, passwordRef, appearance, classNames } =
-    useLoginForm("Password");
+  const form = useLoginForm("Password");
+  const { ids, password, setValue, passwordRef, appearance, classNames } = form;
+  const { invalid, below, describedBy } = fieldErrorOf("password", form);
   const hideLabel = appearance === "card";
   const text = label ?? strings.password;
   const link =
@@ -196,7 +245,7 @@ export function LoginFormPassword({
       </a>
     ) : null);
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-1.5" data-login-field="password">
       <Field
         label={text}
         controlId={ids.password}
@@ -214,11 +263,13 @@ export function LoginFormPassword({
             placeholder={placeholder ?? (hideLabel ? text : undefined)}
             value={password}
             onChange={(event) => setValue("password", event.currentTarget.value)}
-            aria-invalid={invalidField === "password" ? true : undefined}
-            aria-describedby={invalidField === "password" ? ids.error : undefined}
+            classNames={invalid ? INVALID_INPUT : undefined}
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
           />
         </>
       </Field>
+      {below ? <FieldError id={ids.fieldError}>{below}</FieldError> : null}
       {link ? <div className="justify-self-end">{link}</div> : null}
     </div>
   );
@@ -226,21 +277,33 @@ export function LoginFormPassword({
 
 export interface LoginFormErrorProps extends Omit<ComponentPropsWithoutRef<"p">, "children"> {}
 
-/** Live region for the sign-in error. It stays in the page while empty so the message is announced. */
+/**
+ * Live region for errors about the sign-in itself (wrong credentials, a server message), shown as a
+ * callout with an alert icon; place it above the fields. A field left empty is reported under that
+ * field instead. It stays in the page while empty so the message is announced.
+ */
 export function LoginFormError({ className, ...props }: LoginFormErrorProps) {
-  const { ids, error, classNames } = useLoginForm("Error");
+  const { ids, error, errorPlacement, classNames } = useLoginForm("Error");
+  const message = errorPlacement === "form" ? error : null;
   return (
     <p
       {...props}
       id={ids.error}
       role="alert"
       className={cn(
-        "m-0 min-h-4.5 font-semibold text-danger text-meta empty:absolute",
+        "m-0 empty:absolute",
+        message &&
+          "flex items-start gap-2 rounded-input bg-danger-soft px-3 py-2.5 font-semibold text-danger text-meta [&>svg]:mt-px [&>svg]:size-4 [&>svg]:shrink-0",
         classNames?.error,
         className,
       )}
     >
-      {error}
+      {message ? (
+        <>
+          <CircleAlert aria-hidden="true" />
+          {message}
+        </>
+      ) : null}
     </p>
   );
 }
@@ -276,7 +339,7 @@ export function LoginFormFooter({ className, ...props }: LoginFormFooterProps) {
       className={cn(
         "text-ink-3 text-meta [&_a]:text-inherit [&_a]:underline [&_a]:underline-offset-2",
         appearance === "card"
-          ? "-mx-7 -mb-5.5 mt-1 border-t-divider px-5 py-3.5 text-center"
+          ? "-mx-7 -mb-5.5 mt-1 border-t-divider px-5 py-3.5 text-center @max-md/auth:-mx-1 @max-md/auth:px-1"
           : "text-center",
         classNames?.footer,
         className,

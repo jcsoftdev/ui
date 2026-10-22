@@ -82,9 +82,9 @@ export const Complete: Story = {
     <LoginForm {...args}>
       <LoginForm.Header title="Bienvenido" description="Ingresa con tu cuenta del colegio." />
       <LoginForm.Portals />
+      <LoginForm.Error />
       <LoginForm.Identifier />
       <LoginForm.Password forgotHref="#recuperar" />
-      <LoginForm.Error />
       <LoginForm.Submit>Ingresar</LoginForm.Submit>
       <LoginForm.Footer>
         Al ingresar aceptas los <a href="#terminos">Términos</a>.
@@ -98,12 +98,29 @@ export const MissingIdentifier: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
-    const alert = await canvas.findByRole("alert");
-    await expect(alert).toHaveTextContent("Enter your email or ID.");
+    const message = await canvas.findByText("Enter your email or ID.");
+    await expect(message).toHaveAttribute("role", "alert");
     const identifier = canvas.getByLabelText("Email or ID");
     await expect(identifier).toHaveAttribute("aria-invalid", "true");
     await expect(identifier).toHaveAccessibleDescription("Enter your email or ID.");
     await expect(identifier).toHaveFocus();
+    // The message sits right under the field it is about, not next to the button.
+    await expect(identifier.closest("[data-login-field]")).toContainElement(message);
+    const gap =
+      message.getBoundingClientRect().top -
+      (identifier.parentElement as HTMLElement).getBoundingClientRect().bottom;
+    await expect(gap).toBeGreaterThanOrEqual(0);
+    await expect(gap).toBeLessThan(16);
+    // The sign-in error region stays empty: a field left empty is not a failed sign-in.
+    await expect(canvasElement.querySelector("form > p[role=alert]")).toBeEmptyDOMElement();
+
+    await userEvent.type(identifier, "maria@colegio.pe");
+    await expect(identifier).not.toHaveAttribute("aria-invalid");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    const password = canvas.getByLabelText("Password", { selector: "input" });
+    const passwordMessage = await canvas.findByText("Enter your password.");
+    await expect(password.closest("[data-login-field]")).toContainElement(passwordMessage);
+    await expect(password).toHaveAccessibleDescription("Enter your password.");
   },
 };
 
@@ -120,7 +137,12 @@ export const WrongPassword: Story = {
     const password = canvas.getByLabelText("Password", { selector: "input" });
     await userEvent.type(password, "mala");
     await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
-    await expect(await canvas.findByRole("alert")).toHaveTextContent("La contraseña no coincide.");
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent("La contraseña no coincide.");
+    // A failed sign-in is about the whole form: its callout sits above the fields.
+    await expect(alert.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      canvas.getByLabelText("Email or ID").getBoundingClientRect().top,
+    );
     await expect(password).toHaveAttribute("aria-invalid", "true");
     await expect(password).toHaveAccessibleDescription("La contraseña no coincide.");
     await expect(password).toHaveFocus();

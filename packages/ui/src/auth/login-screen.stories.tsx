@@ -4,6 +4,7 @@ import { Button } from "../atoms/button/button.js";
 import { AUTH_STATES, type AuthState } from "./auth-illustration/model.js";
 import { AuthLayout, type AuthLayoutKind } from "./auth-layout/auth-layout.js";
 import { LoginForm, type LoginFormAppearance, type LoginPortal } from "./login-form/login-form.js";
+import { AUTH_LOOKS, type AuthIllustrationVariant } from "./looks/auth-illustration-any.js";
 
 const portals: LoginPortal[] = [
   {
@@ -32,9 +33,23 @@ interface ScreenProps {
   appearance?: LoginFormAppearance;
   state?: AuthState;
   progress?: number;
+  /** Look of the illustration, by name. */
+  look?: AuthIllustrationVariant;
+  /** Width of the box the screen is rendered in; the layout follows it. */
+  width?: number;
 }
 
-function LoginScreen({ layout = "split", panel, appearance, state, progress }: ScreenProps) {
+function LoginScreen({ width, ...props }: ScreenProps) {
+  return width ? (
+    <div style={{ width }}>
+      <Screen {...props} />
+    </div>
+  ) : (
+    <Screen {...props} />
+  );
+}
+
+function Screen({ layout = "split", panel, appearance, state, progress, look }: ScreenProps) {
   return (
     <AuthLayout
       layout={layout}
@@ -43,7 +58,11 @@ function LoginScreen({ layout = "split", panel, appearance, state, progress }: S
       {...(progress !== undefined ? { progress } : {})}
     >
       <AuthLayout.Brand>EduModules</AuthLayout.Brand>
-      <AuthLayout.Art />
+      <AuthLayout.Art
+        look={look ? AUTH_LOOKS[look] : undefined}
+        headline="Aprende sin pausa"
+        caption="Tu colegio, tus cursos y tus pagos en un solo lugar."
+      />
       <AuthLayout.Panel>
         <LoginForm
           portals={portals}
@@ -54,10 +73,10 @@ function LoginScreen({ layout = "split", panel, appearance, state, progress }: S
         >
           <LoginForm.Header title="Inicia sesión" />
           <LoginForm.Portals />
+          <LoginForm.Error />
           <LoginForm.Identifier />
           <LoginForm.Password forgotHref="#recuperar" />
           <LoginForm.Options helpHref="#ayuda" />
-          <LoginForm.Error />
           <LoginForm.Submit />
           <LoginForm.Providers>
             <Button size="sm">Cuenta del colegio</Button>
@@ -83,6 +102,8 @@ const meta = {
     panel: { control: "inline-radio", options: ["paper", "solid"] },
     appearance: { control: "inline-radio", options: ["card", "open"] },
     state: { control: "inline-radio", options: AUTH_STATES },
+    look: { control: "inline-radio", options: Object.keys(AUTH_LOOKS) },
+    width: { control: { type: "number", min: 320, max: 1400, step: 10 } },
   },
 } satisfies Meta<typeof LoginScreen>;
 

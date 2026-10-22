@@ -25,9 +25,9 @@ export function LoginScreen() {
         >
           <LoginForm.Header />
           <LoginForm.Portals />
+          <LoginForm.Error />
           <LoginForm.Identifier />
           <LoginForm.Password forgotHref="/forgot" />
-          <LoginForm.Error />
           <LoginForm.Submit />
           <LoginForm.Footer>
             By signing in you accept the <a href="/terms">Terms</a>.
@@ -79,10 +79,10 @@ export function SolidPanelScreen() {
       <AuthLayout.Panel>
         <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)}>
           <LoginForm.Header title="Welcome back" />
+          <LoginForm.Error />
           <LoginForm.Identifier />
           <LoginForm.Password forgotHref="/forgot" />
           <LoginForm.Options helpHref="/help" />
-          <LoginForm.Error />
           <LoginForm.Submit />
           <LoginForm.Providers label="Or log in with">
             <button type="button">Company account</button>
