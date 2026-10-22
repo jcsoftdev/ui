@@ -109,3 +109,64 @@ export const CustomIllustration: Story = {
     ),
   },
 };
+
+const LAYOUTS = ["split", "split-reverse", "centered"] as const;
+const PANELS = ["paper", "solid"] as const;
+const BRAND_WIDTHS = [700, 900, 1100] as const;
+
+/**
+ * The brand stays on the art's side: in `split-reverse` it moves to the right once the art sits
+ * there, so it never lands on the card or on the open form, at any width or panel.
+ */
+export const BrandFollowsArt: Story = {
+  render: () => (
+    <div className="grid gap-6 p-4">
+      {PANELS.flatMap((panel) =>
+        LAYOUTS.flatMap((layout) =>
+          BRAND_WIDTHS.map((width) => (
+            <div
+              key={`${panel}-${layout}-${width}`}
+              style={{ width }}
+              data-case={`${panel} ${layout} ${width}`}
+            >
+              <AuthLayout layout={layout} panel={panel}>
+                <AuthLayout.Brand>EduModules</AuthLayout.Brand>
+                <AuthLayout.Art />
+                <AuthLayout.Panel>
+                  <PanelContent />
+                </AuthLayout.Panel>
+              </AuthLayout>
+            </div>
+          )),
+        ),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const overlaps = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    for (const box of canvasElement.querySelectorAll<HTMLElement>("[data-case]")) {
+      const label = box.dataset.case as string;
+      const brand = within(box).getByText("EduModules");
+      const text = document.createRange();
+      text.selectNodeContents(brand);
+      const brandBox = text.getBoundingClientRect();
+      const title = within(box).getByRole("heading").getBoundingClientRect();
+      const panel = (
+        within(box).getByRole("heading").closest("[class*=z-]") as HTMLElement
+      ).getBoundingClientRect();
+      const solid = label.startsWith("solid");
+      // A paper card has a border to collide with; an open solid form only has its content.
+      await expect({ label, hit: overlaps(brandBox, solid ? title : panel) }).toEqual({
+        label,
+        hit: false,
+      });
+      if (label.includes("split-reverse") && !label.endsWith(" 700")) {
+        await expect({ label, right: brandBox.left > panel.right - 1 }).toEqual({
+          label,
+          right: true,
+        });
+      }
+    }
+  },
+};

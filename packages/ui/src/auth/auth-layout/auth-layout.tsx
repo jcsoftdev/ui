@@ -146,9 +146,9 @@ export function AuthLayout({
               panel === "solid"
                 ? "content-start items-stretch @3xl/auth:grid-cols-2 @3xl/auth:content-stretch"
                 : [
-                    "content-center items-center gap-2 px-4 pt-16 pb-8 @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:pt-7",
+                    "content-center items-center gap-2 px-4 pt-14 pb-6 @max-md/auth:content-start @max-md/auth:bg-surface @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:pt-7 @3xl/auth:pb-8",
                     layout !== "centered" &&
-                      "@3xl/auth:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)] @3xl/auth:gap-6",
+                      "@3xl/auth:grid-cols-[minmax(0,1.1fr)_minmax(0,.9fr)] @3xl/auth:gap-12",
                   ],
               classNames?.content,
             )}
@@ -169,7 +169,10 @@ const SOLID_ART_VARS = {
   "--auth-art-ink": "var(--on-accent)",
 } as CSSProperties;
 
-/** Logo or wordmark pinned to the top corner. */
+/**
+ * Logo or wordmark pinned to the top corner on the art's side: left in `split` and `centered`,
+ * right in `split-reverse` once the art sits beside the panel, so it never lands on the card.
+ */
 export function AuthLayoutBrand({ className, ...props }: AuthLayoutBrandProps) {
   const { layout, panel, classNames } = useAuthLayoutParts("Brand");
   const onSolid = panel === "solid";
@@ -178,9 +181,9 @@ export function AuthLayoutBrand({ className, ...props }: AuthLayoutBrandProps) {
       {...props}
       className={cn(
         "absolute top-5.5 left-4 z-[3] font-bold text-lg tracking-tight @lg/auth:left-8 @3xl/auth:left-14",
+        layout === "split-reverse" && "@3xl/auth:right-14 @3xl/auth:left-auto",
         !onSolid && "text-ink",
         onSolid && "text-[var(--auth-art-ink)] @max-md/auth:text-ink",
-        onSolid && layout === "split-reverse" && "@3xl/auth:text-ink",
         classNames?.brand,
         className,
       )}
@@ -197,7 +200,9 @@ export interface AuthLayoutArtProps
 
 /**
  * Holds the illustration (a default `AuthIllustration` when empty). It hides under 448px of layout
- * width and, in `centered`, sits faded behind the panel.
+ * width and, in `centered`, sits faded behind the panel. A drawn look is at most 12rem tall while
+ * it is stacked above the panel, so the form stays in reach, and 34rem beside it; set
+ * `--auth-art-max-h` on this part to change that.
  */
 export function AuthLayoutArt({
   look,
@@ -217,12 +222,12 @@ export function AuthLayoutArt({
     <div
       {...props}
       className={cn(
-        "grid min-w-0 place-items-center @max-md/auth:hidden",
+        "grid min-w-0 place-items-center [--auth-art-max-h:12rem] @max-md/auth:hidden @3xl/auth:[--auth-art-max-h:34rem]",
         layout === "centered" && "pointer-events-none absolute inset-0 -z-10 px-8 opacity-35",
         layout !== "centered" && !solid && "relative mx-auto w-full max-w-90 @3xl/auth:max-w-160",
         layout !== "centered" &&
           solid &&
-          "bg-[var(--auth-art-bg)] px-4 pt-20 pb-10 text-[var(--auth-art-ink)] @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:py-14",
+          "bg-[var(--auth-art-bg)] px-4 pt-16 pb-6 text-[var(--auth-art-ink)] @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:py-14",
         layout === "split-reverse" && "@3xl/auth:order-2",
         classNames?.art,
         className,
@@ -244,7 +249,7 @@ export function AuthLayoutPanel({ className, ...props }: AuthLayoutPanelProps) {
       className={cn(
         panel === "solid"
           ? "relative z-[2] grid min-w-0 content-center px-4 py-10 text-ink @max-md/auth:pt-20 @lg/auth:px-8 @3xl/auth:px-14 @3xl/auth:py-14"
-          : "ui-auth-rise relative z-[2] w-full max-w-110 min-w-0 justify-self-center overflow-hidden rounded-card border-[1.5px] border-ink bg-surface text-ink shadow-[0_3px_0_var(--ink),0_24px_50px_-12px_color-mix(in_srgb,black_20%,transparent)]",
+          : "ui-auth-rise relative z-[2] w-full max-w-110 min-w-0 justify-self-center overflow-hidden rounded-card border-[1.5px] border-ink bg-surface text-ink shadow-[0_3px_0_var(--ink),0_24px_50px_-12px_color-mix(in_srgb,black_20%,transparent)] @max-md/auth:overflow-visible @max-md/auth:rounded-none @max-md/auth:border-0 @max-md/auth:shadow-none",
         layout === "split-reverse" && "@3xl/auth:order-1",
         classNames?.panel,
         className,
