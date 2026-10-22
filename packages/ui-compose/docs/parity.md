@@ -133,8 +133,9 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 
 | Web | Status | Compose | Notes |
 | --- | --- | --- | --- |
-| (sign-in screen frame) | compose-only | `auth.AuthScaffold`, `AuthScaffoldColors`, `AuthScaffoldDefaults`, `AuthHeaderShape` | Header band, overlapping or arc-cut sheet, pinned bottom slot, insets and keyboard. The web sibling lives in `packages/ui` (separate feature). |
-| (header art) | compose-only | `auth.AuthArcs`, `AuthArcsColors`, `AuthArcsDefaults` | Static frame driven by `AuthState` and progress; motion is pending. |
+| (sign-in screen frame) | compose-only | `auth.AuthScaffold`, `AuthScaffoldColors`, `AuthScaffoldDefaults`, `AuthHeaderShape` | Header band, overlapping or arc-cut sheet, pinned bottom slot, insets and keyboard. Welcome mode (`expanded`): full-screen header with a poster title and outlined echo, tagline and `welcomeAction` slot, one shared transition to the form, `onBackToWelcome` on system back. The web sibling lives in `packages/ui` (separate feature). |
+| (header art) | compose-only | `auth.AuthArcs`, `AuthArcsColors`, `AuthArcsDefaults` | Concentric arcs that sway, lengthen with progress, dim on the password, shake on error and carry a comet on success; clear of the header text; still frame with motion off. |
+| (header art) | compose-only | `auth.AuthFloatingArt`, `AuthFloatingArtColors`, `AuthFloatingArtDefaults` | Up to 8 pieces (kit icons and shapes) in 3 depth layers: drift, drag parallax with spring back, state reactions; fewer pieces in a short header; still frame with motion off. |
 | (form state) | compose-only | `auth.AuthState`, `AuthProgress` | Idle, Typing, Password, Error, Success; progress 0..1 (id 12 characters, password 8). |
 | (pill fields) | compose-only | `auth.AuthTextField`, `AuthPasswordField`, `AuthFieldColors`, `AuthFieldDefaults` | Built on `forms.Input`; reveal labels default to `UiStrings`. |
 | (actions) | compose-only | `auth.AuthPrimaryButton`, `AuthLink`, `AuthActionDefaults` | Pill action over `atoms.Button`; 48dp link. |
