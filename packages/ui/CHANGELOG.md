@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Sign-in screen
+
+New `@jcsoftdev/ui/auth` entry, additive and source compatible. Colors come only from the theme
+tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/docs/auth/`.
+
+#### Added
+
+- **Auth.** `AuthLayout` (`layout` `split`, `split-reverse`, `centered`, driven by its own container
+  width; parts `.Brand`, `.Art`, `.Panel`, `.Footer`; controlled or uncontrolled `state`,
+  `progress` and `activeIndex`; `useAuthLayout`), `AuthIllustration` (isometric portal slabs that
+  react to `state`, `progress` and `activeIndex` with CSS only, still and assembled under reduced
+  motion) and `LoginForm` (parts `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
+  `.Submit`, `.Footer`; async `onSubmit`, `loading`, `error`, `success`; drives the surrounding
+  layout and works standalone).
+- **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
+- **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
+- **UI strings** (en/es) for the sign-in screen and `showPassword`.
+
 ## 0.4.0 (2026-10-21)
 
 ### Blocks for application screens
