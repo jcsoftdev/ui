@@ -180,6 +180,11 @@ export function ControlledState() {
 }
 ```
 
+### Security and Server Components
+
+- The form carries `method="post"` (override it with the `method` prop), so a submit before hydration never puts the password in the URL.
+- Every look is a client module, so a Server Component (Next.js App Router) can pass it as the `look` prop: `<AuthLayout.Art look={Stack} />` works from a server file.
+
 ### Accessibility
 
 - Fields are real `Field`s: labels are visually hidden but present, `aria-invalid` and `aria-describedby` point at the error.

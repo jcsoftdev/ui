@@ -212,3 +212,20 @@ test("AuthIllustration, AuthLayout and LoginForm do not import a registry or the
       assert.ok(!source.includes(`../${banned}`), `${file} must not import ${banned}`);
   }
 });
+
+test("every look and the string-variant wrapper is a client module", async () => {
+  // A Server Component passes `look={Stack}` to a client component; that only works when the
+  // look is itself a client reference, so dropping the directive breaks Next.js at runtime.
+  const { readFileSync } = await import("node:fs");
+  for (const file of [
+    "slabs/slabs.tsx",
+    "stack/stack.tsx",
+    "mosaic/mosaic.tsx",
+    "character/character.tsx",
+    "statement/statement.tsx",
+    "looks/auth-illustration-any.tsx",
+  ]) {
+    const source = readFileSync(join(here, "../src/auth", file), "utf8");
+    assert.match(source, /^["']use client["'];?\r?\n/, `${file} must start with "use client"`);
+  }
+});

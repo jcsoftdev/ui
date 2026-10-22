@@ -1,3 +1,5 @@
+"use client";
+
 import type { CSSProperties } from "react";
 import type { AuthVariantProps } from "../auth-illustration/look.js";
 import { BOARD_LIGHTS, boardLit, keystroke } from "../auth-illustration/model.js";

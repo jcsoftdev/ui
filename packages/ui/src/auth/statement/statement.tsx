@@ -1,3 +1,5 @@
+"use client";
+
 import type { CSSProperties, ReactNode } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import type { AuthVariantProps } from "../auth-illustration/look.js";

@@ -261,6 +261,7 @@ export function LoginForm({
   return (
     <LoginFormContext value={context}>
       <form
+        method="post"
         noValidate
         {...props}
         aria-busy={loading || undefined}

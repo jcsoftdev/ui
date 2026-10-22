@@ -53,6 +53,12 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 
 - **`Input`** with `start` or `end` draws one focus ring (the wrapper's) instead of a second square
   ring on the inner input.
+- **`LoginForm` posts by default.** The form carries `method="post"`, so a submit before hydration
+  can no longer put the identifier and the password in the URL (history, logs, Referer). Pass
+  `method` to override it.
+- **Looks are client modules.** Each look and `AuthIllustrationAny` start with `"use client"`, so a
+  Server Component can pass `look={Stack}` to `AuthLayout.Art` or `AuthIllustration` without
+  Next.js rejecting a function prop.
 
 ## 0.4.0 (2026-10-21)
 

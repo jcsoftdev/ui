@@ -45,6 +45,8 @@ export const Standalone: Story = {
   args: { portals: [], onSubmit: fn() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    // Before hydration a native submit must not put the password in the URL.
+    await expect(canvasElement.querySelector("form")).toHaveAttribute("method", "post");
     await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
     await userEvent.type(canvas.getByLabelText("Password", { selector: "input" }), "secreto");
     await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
