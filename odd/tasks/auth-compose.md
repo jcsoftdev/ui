@@ -44,10 +44,13 @@ A native mobile login screen family for `packages/ui-compose`, following the own
 - [x] C3 `AuthTextField`, `AuthPasswordField`, `AuthPrimaryButton`, `AuthLink`, defaults (fd664df)
 - [x] C4 `LoginScreen` assembly + state driving (13603f8)
 - [x] C5 Sample gallery, jvmTest UI tests, Shots entries, docs/parity, CHANGELOG, apiDump (358a2fe)
-- [~] C7 (Arc shape and photo-in-art docs done in 5c08bae; sample toggle in 358a2fe) `AuthHeaderShape { Overlap, Arc }` param on AuthScaffold: concave curved header edge (Path, no bitmap); document photo Painter in `art`
-- [ ] C8 (PENDING: motion work reserved for an opus agent) `AuthFloatingArt`: 5-8 pieces in 3 depth layers from Lucide icons and primitives, per-piece drift/rotation, drag parallax with spring back, state reactions, gated on motion.enabled
-- [ ] C9 (PENDING: motion work reserved for an opus agent) Welcome mode `AuthScaffold(expanded)`: full-height header with outlined-echo title, `welcomeAction` slot, one shared transition fraction (header height, title, art scale, sheet slide), back callback
+- [x] C7 (Arc shape and photo-in-art docs done in 5c08bae; sample toggle in 358a2fe; arc depth eases out in welcome mode b6f6622) `AuthHeaderShape { Overlap, Arc }` param on AuthScaffold: concave curved header edge (Path, no bitmap); document photo Painter in `art`
+- [x] C8 (bb00a1d, tuned in b6f6622 and 3579e0e) `AuthFloatingArt`: 5-8 pieces in 3 depth layers from Lucide icons and primitives, per-piece drift/rotation, drag parallax with spring back, state reactions, gated on motion.enabled
+- [x] C9 (b6f6622, fix 3579e0e) Welcome mode `AuthScaffold(expanded)`: full-height header with outlined-echo title, `welcomeAction` slot, one shared transition fraction (header height, title, art scale, sheet slide), back callback
 - [x] C6 (partial: spotlessCheck, apiCheck, :kit:jvmTest 333 tests/0 fail/11 skipped, :kit:testDebugUnitTest 96/0, :kit:assembleRelease, :sample:assembleRelease green; :kit:allTests not completed: iOS simulator test hangs on simctl) Verification: `./gradlew spotlessCheck apiCheck :kit:allTests` (+ `:kit:assembleRelease :sample:assembleRelease` if the Android SDK is available; otherwise report it as not run), local `recordRoborazziJvm` for the new shots only to inspect the PNGs visually (do not commit them), iOS compile check only if on a Mac with the toolchain
+
+- [x] M1 AuthArcs motion: drift, typing/progress, password dim/turn, error shake + danger flash, success comet, text keep-out at any font scale (4811a95)
+- [x] M4 Gallery controls (welcome/form, overlap/arc, arcs/pieces, forced state, dark), UI tests, render-motion tests, shots, parity, CHANGELOG, apiDump (92c6abe)
 
 ## Acceptance
 
@@ -62,3 +65,4 @@ A native mobile login screen family for `packages/ui-compose`, following the own
 
 - 2026-10-22: owner scope: header/art are inspiration only; colors from UiTheme tokens (header derived from accent/ink mix); sizes prefer kit tokens (fields InputSize.Lg 52dp, button sizes.mButton 54dp, mTitle/mBody/mButton/mMeta). C7-C9 added (queued after C1-C6). C1 done: 40f6003.
 - 2026-10-22: C2-C6 done in commits 5c08bae fd664df 13603f8 358a2fe. AuthArcs is a static frame (hook: AuthArcsFrame in AuthArcs.kt). C8, C9 and all animation pending (owner: opus agent).
+- 2026-10-22: motion/visual layer (opus): 4811a95 M1 arcs motion, bb00a1d M2 AuthFloatingArt, b6f6622 M3 welcome mode, 92c6abe M4 gallery/docs, 3579e0e welcome block anchored at the foot (drags reach the art). Checks: spotlessCheck, apiCheck (only additions vs main), :kit:jvmTest 357 tests/0 fail/11 skipped, :kit:testDebugUnitTest 106/0, :kit:assembleRelease, :sample:assembleRelease green; :kit:compileKotlinIosSimulatorArm64 green. verifyRoborazziJvm: 9 AuthShots fail (no Linux goldens yet, expected) plus 15 pre-existing macOS glyph diffs in other families. Device: sample on Medium_Phone_API_35 emulator: welcome, Get started, system back to welcome, IME (fields and action above keyboard), drag parallax checked. Next: record Linux goldens via ui-compose-record.
