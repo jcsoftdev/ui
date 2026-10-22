@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.LayoutCoordinates
 
 /**
  * Where the header text sits inside the header art, so the built-in art can clear it. [login] is the title block of the
@@ -24,6 +25,23 @@ internal class AuthTextZones {
     var login: Rect by mutableStateOf(Rect.Zero)
     var welcome: Rect by mutableStateOf(Rect.Zero)
     var welcomeFraction: State<Float> = mutableFloatStateOf(0f)
+
+    /** The scaffold's own coordinates, the frame the zones are measured in; not observed, only read when a zone moves. */
+    var root: LayoutCoordinates? = null
+
+    /**
+     * Height of the band above the text that art can fill freely: the whole box on the sign-in header, the space above the
+     * welcome block in welcome mode, never less than [minimum].
+     */
+    fun freeBand(
+        height: Float,
+        minimum: Float,
+    ): Float {
+        val f = welcomeFraction.value
+        if (f <= 0f || welcome.isEmpty) return height
+        val top = welcome.top.coerceAtLeast(minimum)
+        return height + (top - height) * f
+    }
 }
 
 /** Provided by [AuthScaffold] to its art; null outside a scaffold, where nothing is cleared. */

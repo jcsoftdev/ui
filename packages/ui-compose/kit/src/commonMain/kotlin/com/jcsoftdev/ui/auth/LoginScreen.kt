@@ -25,7 +25,8 @@ import com.jcsoftdev.ui.icons.User
  * the field lengths, the password focus, [error] and [success] (see [AuthProgress]). All text comes from the caller.
  *
  * [error] non-null marks both fields invalid and shows the message under the password. [loading] makes the action ignore taps.
- * Pressing the keyboard's done key on the password calls [onSubmit]. This is a convenience over the parts
+ * Pressing the keyboard's done key on the password calls [onSubmit]. [expanded], [welcomeTitle], [welcomeTagline],
+ * [welcomeAction] and [onBackToWelcome] open the welcome mode of [AuthScaffold] in front of the form. This is a convenience over the parts
  * ([AuthScaffold], [AuthTextField], [AuthPasswordField], [AuthPrimaryButton], [AuthLink]); use them directly for another layout.
  */
 @Composable
@@ -55,6 +56,11 @@ public fun LoginScreen(
     headerShape: AuthHeaderShape = AuthHeaderShape.Overlap,
     colors: AuthScaffoldColors = AuthScaffoldDefaults.colors(),
     art: @Composable (state: AuthState, progress: Float) -> Unit = AuthScaffoldDefaults.Art,
+    expanded: Boolean = false,
+    welcomeTitle: String = title,
+    welcomeTagline: String = tagline,
+    welcomeAction: (@Composable ColumnScope.() -> Unit)? = null,
+    onBackToWelcome: (() -> Unit)? = null,
 ) {
     var passwordFocused by remember { mutableStateOf(false) }
     val state = AuthProgress.stateOf(id.length, password.length, passwordFocused, error != null, success)
@@ -67,6 +73,11 @@ public fun LoginScreen(
         colors = colors,
         headerShape = headerShape,
         art = art,
+        expanded = expanded,
+        welcomeTitle = welcomeTitle,
+        welcomeTagline = welcomeTagline,
+        welcomeAction = welcomeAction,
+        onBackToWelcome = onBackToWelcome,
         bottom = { LoginActions(submitText, onSubmit, loading, loadingDescription, secondaryText, onSecondary) },
     ) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(AuthFieldDefaults.rhythm)) {

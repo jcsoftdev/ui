@@ -144,4 +144,33 @@ class AuthMotionRenderTest {
             val home = frame("floating-burst-3")
             assertTrue(changed(flying, home) > 0.002f)
         }
+
+    @Test
+    fun welcomeHandsOverToTheFormInSteps() =
+        runComposeUiTest {
+            var expanded by mutableStateOf(true)
+            mainClock.autoAdvance = false
+            setContent {
+                UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(1f)) {
+                    Box(Modifier.size(360.dp, 640.dp).testTag("art")) {
+                        AuthScaffold(
+                            "Welcome back",
+                            "Sign in with your school account",
+                            art = { s, p -> AuthFloatingArt(s, p, Modifier.fillMaxSize()) },
+                            expanded = expanded,
+                            welcomeTitle = "Learn without limits",
+                            welcomeAction = { AuthPrimaryButton("Get started", { expanded = false }) },
+                        ) { AuthTextField("", {}, "Email") }
+                    }
+                }
+            }
+            mainClock.advanceTimeByFrame()
+            val frames = mutableListOf(frame("welcome-0"))
+            expanded = false
+            for (step in 1..5) {
+                mainClock.advanceTimeBy(130)
+                frames += frame("welcome-$step")
+            }
+            assertTrue(frames.zipWithNext().all { (a, b) -> changed(a, b) > 0.01f }, "every sampled step of the hand-over differs")
+        }
 }

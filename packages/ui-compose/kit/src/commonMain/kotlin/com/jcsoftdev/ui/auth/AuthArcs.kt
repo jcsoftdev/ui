@@ -119,8 +119,9 @@ public fun AuthArcs(
             .drawWithCache {
                 val thin = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
                 val bold = Stroke(strokeWidth.toPx() * 2.4f, cap = StrokeCap.Round)
-                val unit = min(size.width, size.height * 2.3f)
-                val center = Offset(size.width + unit * 0.03f, min(size.height * 0.9f, size.width * 0.95f))
+                val band = zones?.freeBand(size.height, size.width * 0.4f) ?: size.height
+                val unit = min(size.width, band * 2.3f)
+                val center = Offset(size.width + unit * 0.03f, min(band * 0.9f, size.width * 0.95f))
                 val first = unit * 0.15f
                 val step = unit * 0.092f
                 val sway = 1.dp.toPx() * 7f

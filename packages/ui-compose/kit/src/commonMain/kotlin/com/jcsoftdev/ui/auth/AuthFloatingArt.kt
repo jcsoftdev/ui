@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import com.jcsoftdev.ui.atoms.LocalContentColor
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.icons.BookOpen
@@ -159,9 +160,11 @@ public fun AuthFloatingArt(
             .then(parallax)
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithCache {
-                val stage = floatStage(size.width, size.height)
-                val unit = min(size.width, stage * 1.6f)
-                val count = pieceCount(stage / density)
+                val free = zones?.freeBand(size.height, size.width * 0.4f) ?: size.height
+                val stage = min(floatStage(size.width, size.height), free)
+                val welcomeShare = zones?.welcomeFraction?.value ?: 0f
+                val unit = lerp(min(size.width, stage * 1.6f), size.width * 0.85f, welcomeShare)
+                val count = if (welcomeShare > 0.5f) AuthFloatingArtDefaults.MAX_PIECES else pieceCount(stage / density)
                 val filters = arrayOf(ColorFilter.tint(colors.shape), ColorFilter.tint(colors.line))
                 val outline = Stroke(1.5.dp.toPx())
                 val glows =

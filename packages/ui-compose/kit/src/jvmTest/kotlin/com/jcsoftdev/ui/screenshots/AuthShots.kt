@@ -1,11 +1,13 @@
 package com.jcsoftdev.ui.screenshots
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.jcsoftdev.ui.auth.AuthFloatingArt
 import com.jcsoftdev.ui.auth.AuthHeaderShape
+import com.jcsoftdev.ui.auth.AuthPrimaryButton
 import com.jcsoftdev.ui.auth.AuthScaffoldDefaults
 import com.jcsoftdev.ui.auth.AuthState
 import com.jcsoftdev.ui.auth.LoginScreen
@@ -24,6 +26,7 @@ class AuthShots {
         success: Boolean = false,
         shape: AuthHeaderShape = AuthHeaderShape.Overlap,
         floating: Boolean = false,
+        expanded: Boolean = false,
     ) = LoginScreen(
         title = "Welcome back",
         tagline = "Sign in with your school account",
@@ -42,6 +45,10 @@ class AuthShots {
         secondaryText = "New here? Create an account",
         headerShape = shape,
         art = if (floating) FloatingArt else AuthScaffoldDefaults.Art,
+        expanded = expanded,
+        welcomeTitle = "Learn without limits",
+        welcomeTagline = "Classes, grades and messages from your school in one place",
+        welcomeAction = { AuthPrimaryButton("Get started", {}, Modifier.fillMaxWidth()) },
     )
 
     @Test fun loginIdle() = shoot("auth", "login-idle", height = 640.dp) { login() }
@@ -60,6 +67,10 @@ class AuthShots {
 
     @Test fun floatingArc() =
         shoot("auth", "floating-arc", height = 640.dp) { login(id = "ana@school.edu", shape = AuthHeaderShape.Arc, floating = true) }
+
+    @Test fun welcomeFloating() = shoot("auth", "welcome-floating", height = 640.dp) { login(floating = true, expanded = true) }
+
+    @Test fun welcomeArcs() = shoot("auth", "welcome-arcs", height = 640.dp) { login(expanded = true) }
 
     @Test fun loginArc() = shoot("auth", "login-arc", height = 640.dp) { login(id = "ana@school.edu", shape = AuthHeaderShape.Arc) }
 }

@@ -5,6 +5,7 @@ package com.jcsoftdev.ui.auth
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,10 +25,14 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.jcsoftdev.ui.atoms.Text
+import com.jcsoftdev.ui.foundation.BackDispatcher
+import com.jcsoftdev.ui.foundation.LocalBackDispatcher
 import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AuthUiTest {
@@ -155,5 +160,93 @@ class AuthUiTest {
                 waitForIdle()
                 onNodeWithText("Title").assertExists()
             }
+        }
+
+    @Composable
+    private fun welcomeScaffold(
+        expanded: Boolean,
+        onStart: () -> Unit = {},
+        onBack: (() -> Unit)? = null,
+    ) = AuthScaffold(
+        "Title",
+        "Tag",
+        expanded = expanded,
+        welcomeTitle = "Hello",
+        welcomeTagline = "Big tagline",
+        welcomeAction = { AuthPrimaryButton("Start", onStart) },
+        onBackToWelcome = onBack,
+    ) { Text("Form") }
+
+    @Test
+    fun expandedShowsOnlyTheWelcomeAndCallsTheAction() =
+        runComposeUiTest {
+            var started = 0
+            setContent(screen { welcomeScaffold(expanded = true, onStart = { started++ }) })
+            onNodeWithText("Hello").assertExists()
+            onNodeWithText("Big tagline").assertExists()
+            onNodeWithText("Form").assertDoesNotExist()
+            onNodeWithText("Title").assertDoesNotExist()
+            onNodeWithText("Start").performClick()
+            assertEquals(1, started)
+        }
+
+    @Test
+    fun collapsingHidesTheWelcomeAndShowsTheForm() =
+        runComposeUiTest {
+            var expanded by mutableStateOf(true)
+            setContent(screen { welcomeScaffold(expanded = expanded, onStart = { expanded = false }) })
+            onNodeWithText("Start").performClick()
+            waitForIdle()
+            onNodeWithText("Hello").assertDoesNotExist()
+            onNodeWithText("Start").assertDoesNotExist()
+            onNodeWithText("Form").assertExists()
+            onNodeWithText("Title").assertExists()
+        }
+
+    @Test
+    fun systemBackReturnsToTheWelcomeOnlyFromTheForm() =
+        runComposeUiTest {
+            val back = BackDispatcher()
+            var expanded by mutableStateOf(false)
+            var calls = 0
+            setContent {
+                CompositionLocalProvider(LocalBackDispatcher provides back) {
+                    screen {
+                        welcomeScaffold(expanded = expanded, onBack = {
+                            calls++
+                            expanded = true
+                        })
+                    }()
+                }
+            }
+            assertTrue(back.dispatch())
+            waitForIdle()
+            assertEquals(1, calls)
+            onNodeWithText("Hello").assertExists()
+            assertFalse(back.dispatch(), "nothing to answer while the welcome shows: the host's own back goes on")
+        }
+
+    @Test
+    fun theWelcomeTransitionSlidesTheSheetUpOverTime() =
+        runComposeUiTest {
+            mainClock.autoAdvance = false
+            var expanded by mutableStateOf(true)
+            setContent {
+                Box(Modifier.size(360.dp, 700.dp)) {
+                    UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(1f)) { welcomeScaffold(expanded) }
+                }
+            }
+            mainClock.advanceTimeByFrame()
+            expanded = false
+            mainClock.advanceTimeBy(160)
+            val early = onNodeWithText("Form").getUnclippedBoundsInRoot().top
+            mainClock.advanceTimeBy(160)
+            val later = onNodeWithText("Form").getUnclippedBoundsInRoot().top
+            mainClock.advanceTimeBy(1500)
+            val settled = onNodeWithText("Form").getUnclippedBoundsInRoot().top
+            mainClock.advanceTimeBy(500)
+            assertTrue(later < early, "the sheet rises while the transition runs")
+            assertTrue(settled < later)
+            assertEquals(settled, onNodeWithText("Form").getUnclippedBoundsInRoot().top, "and then rests")
         }
 }
