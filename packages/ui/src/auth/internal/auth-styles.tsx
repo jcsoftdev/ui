@@ -9,6 +9,7 @@ const CSS = `
 @keyframes ui-auth-spark{0%{opacity:1;transform:scale(.4) rotate(0)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.2) rotate(90deg)}}
 @keyframes ui-auth-shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
 @keyframes ui-auth-rise{from{opacity:0;transform:translateY(18px)}}
+.ui-auth-rise{animation:ui-auth-rise .7s .25s var(--motion-ease,cubic-bezier(.2,.7,.2,1)) backwards}
 .ui-auth-art{--ua-edge:color-mix(in srgb,var(--ink) 88%,var(--surface));--ua-spring:var(--motion-ease,cubic-bezier(.2,.8,.2,1))}
 .ui-auth-art svg{display:block;width:100%;height:auto;overflow:visible}
 .ui-auth-art[data-state=error] svg{animation:ui-auth-shake .5s var(--ua-spring)}
