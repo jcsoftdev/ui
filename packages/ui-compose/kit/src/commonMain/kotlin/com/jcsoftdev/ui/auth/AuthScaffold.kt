@@ -198,6 +198,7 @@ public fun AuthScaffold(
     welcomeAction: (@Composable ColumnScope.() -> Unit)? = null,
     onBackToWelcome: (() -> Unit)? = null,
     bottom: (@Composable ColumnScope.() -> Unit)? = null,
+    errorKey: Int = 0,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val padding = AuthScaffoldDefaults.horizontalPadding
@@ -224,7 +225,11 @@ public fun AuthScaffold(
                     }.background(colors.header)
                     .clearAndSetSemantics {},
             ) {
-                CompositionLocalProvider(LocalContentColor provides colors.onHeader, LocalAuthTextZones provides zones) {
+                CompositionLocalProvider(
+                    LocalContentColor provides colors.onHeader,
+                    LocalAuthTextZones provides zones,
+                    LocalAuthErrorKey provides errorKey,
+                ) {
                     Box(Modifier.fillMaxSize()) { art(state, progress) }
                 }
             }

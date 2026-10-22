@@ -139,7 +139,7 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | (form state) | compose-only | `auth.AuthState`, `AuthProgress` | Idle, Typing, Password, Error, Success; progress 0..1 (id 12 characters, password 8). |
 | (pill fields) | compose-only | `auth.AuthTextField`, `AuthPasswordField`, `AuthFieldColors`, `AuthFieldDefaults` | Built on `forms.Input`; reveal labels default to `UiStrings`. |
 | (actions) | compose-only | `auth.AuthPrimaryButton`, `AuthLink`, `AuthActionDefaults` | Pill action over `atoms.Button`; 48dp link. |
-| (login assembly) | compose-only | `auth.LoginScreen` | Convenience over the parts; drives the header state from the fields. |
+| (login assembly) | compose-only | `auth.LoginScreen` | Convenience over the parts; drives the header state from the fields; disables the fields and the done key while `loading`; replays the error reaction on every failed attempt (`errorKey`). |
 
 ## States
 

@@ -94,7 +94,8 @@ public object AuthFloatingArtDefaults {
  * from accessibility.
  *
  * Plug it in as the `art` of [AuthScaffold] or `LoginScreen`: `art = { state, progress -> AuthFloatingArt(state, progress, Modifier.fillMaxSize()) }`.
- * Motion follows `UiTheme.motion`: with animations off the pieces hold their arranged composition and dragging does nothing.
+ * [errorKey] replays the error shake when it changes while [state] stays `Error` (a second failed attempt); inside an
+ * [AuthScaffold] it defaults to the scaffold's own. Motion follows `UiTheme.motion`: with animations off the pieces hold their arranged composition and dragging does nothing.
  */
 @Composable
 public fun AuthFloatingArt(
@@ -102,6 +103,7 @@ public fun AuthFloatingArt(
     progress: Float,
     modifier: Modifier = Modifier,
     colors: AuthFloatingArtColors = AuthFloatingArtDefaults.colors(),
+    errorKey: Int = LocalAuthErrorKey.current,
 ) {
     val motion = UiTheme.motion
     val sink =
@@ -123,7 +125,7 @@ public fun AuthFloatingArt(
     val shake = remember { Animatable(1f) }
     val burst = remember { Animatable(1f) }
     val drag = remember { Animatable(Offset.Zero, Offset.VectorConverter) }
-    LaunchedEffect(state, motion) {
+    LaunchedEffect(state, motion, errorKey) {
         if (!motion.enabled) {
             shake.snapTo(1f)
             burst.snapTo(1f)

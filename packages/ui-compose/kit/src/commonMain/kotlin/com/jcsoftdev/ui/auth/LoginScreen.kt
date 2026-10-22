@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,7 +27,9 @@ import com.jcsoftdev.ui.icons.User
  * the field lengths, the password focus, [error] and [success] (see [AuthProgress]). All text comes from the caller.
  *
  * [error] non-null marks both fields invalid and shows the message under the password. [loading] makes the action ignore taps.
- * Pressing the keyboard's done key on the password calls [onSubmit]. [expanded], [welcomeTitle], [welcomeTagline],
+ * Pressing the keyboard's done key on the password calls [onSubmit] unless [loading]; both fields are disabled while [loading].
+ * [errorKey] is an extra counter that replays the header's error reaction and the error announcement when it changes; the screen
+ * also replays them by itself whenever a request ends in [error] or the error text changes. [expanded], [welcomeTitle], [welcomeTagline],
  * [welcomeAction] and [onBackToWelcome] open the welcome mode of [AuthScaffold] in front of the form. This is a convenience over the parts
  * ([AuthScaffold], [AuthTextField], [AuthPasswordField], [AuthPrimaryButton], [AuthLink]); use them directly for another layout.
  */
@@ -61,8 +65,12 @@ public fun LoginScreen(
     welcomeTagline: String = tagline,
     welcomeAction: (@Composable ColumnScope.() -> Unit)? = null,
     onBackToWelcome: (() -> Unit)? = null,
+    errorKey: Int = 0,
 ) {
     var passwordFocused by remember { mutableStateOf(false) }
+    val attempts = rememberFailedAttempts(error, loading)
+    val replay = errorKey + attempts
+    val submit = { if (!loading) onSubmit() }
     val state = AuthProgress.stateOf(id.length, password.length, passwordFocused, error != null, success)
     AuthScaffold(
         title,
@@ -73,6 +81,7 @@ public fun LoginScreen(
         colors = colors,
         headerShape = headerShape,
         art = art,
+        errorKey = replay,
         expanded = expanded,
         welcomeTitle = welcomeTitle,
         welcomeTagline = welcomeTagline,
@@ -86,6 +95,7 @@ public fun LoginScreen(
                 onIdChange,
                 idLabel,
                 Modifier.fillMaxWidth(),
+                enabled = !loading,
                 error = error?.let { "" },
                 leadingIcon = idLeadingIcon,
                 contentType = idContentType,
@@ -96,12 +106,50 @@ public fun LoginScreen(
                 onPasswordChange,
                 passwordLabel,
                 Modifier.fillMaxWidth().onFocusChanged { passwordFocused = it.hasFocus },
+                enabled = !loading,
                 error = error,
-                keyboardActions = KeyboardActions(onDone = { onSubmit() }),
+                errorKey = replay,
+                keyboardActions = KeyboardActions(onDone = { submit() }),
             )
             if (forgotText != null) AuthLink(forgotText, onForgot, Modifier.align(Alignment.End))
         }
     }
+}
+
+/**
+ * Counts the sign-in attempts that ended in an error: a request that finishes (`loading` goes back to false) with an error, or an
+ * error that changes its text. A caller that keeps the same error across a retry therefore still replays the header's reaction.
+ */
+internal class FailedAttempts(
+    initialError: String?,
+    initialLoading: Boolean,
+) {
+    var count: Int = 0
+        private set
+    private var wasLoading = initialLoading
+    private var lastError = initialError
+
+    /** Feeds the current screen state; returns the attempts counted so far. */
+    fun observe(
+        error: String?,
+        loading: Boolean,
+    ): Int {
+        if (error != null && !loading && (wasLoading || error != lastError)) count++
+        wasLoading = loading
+        lastError = error
+        return count
+    }
+}
+
+@Composable
+private fun rememberFailedAttempts(
+    error: String?,
+    loading: Boolean,
+): Int {
+    val counter = remember { FailedAttempts(error, loading) }
+    var attempts by remember { mutableIntStateOf(0) }
+    LaunchedEffect(error, loading) { attempts = counter.observe(error, loading) }
+    return attempts
 }
 
 @Composable

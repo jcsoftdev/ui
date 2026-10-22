@@ -16,11 +16,14 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.text.font.FontFamily
@@ -32,6 +35,7 @@ import com.jcsoftdev.ui.foundation.Motion
 import com.jcsoftdev.ui.theme.UiTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -150,18 +154,6 @@ class AuthUiTest {
             assertTrue(tag.bottom > title.bottom)
         }
 
-    @Test
-    fun scaffoldAcceptsEveryStateWithoutAnimation() =
-        runComposeUiTest {
-            var state by mutableStateOf(AuthState.Idle)
-            setContent(screen { AuthScaffold("Title", "Tag", state = state, progress = 0.5f) { Box(Modifier.size(10.dp)) } })
-            for (s in AuthState.entries) {
-                state = s
-                waitForIdle()
-                onNodeWithText("Title").assertExists()
-            }
-        }
-
     @Composable
     private fun welcomeScaffold(
         expanded: Boolean,
@@ -248,5 +240,33 @@ class AuthUiTest {
             assertTrue(later < early, "the sheet rises while the transition runs")
             assertTrue(settled < later)
             assertEquals(settled, onNodeWithText("Form").getUnclippedBoundsInRoot().top, "and then rests")
+        }
+
+    @Test
+    fun doneOnThePasswordSubmitsOnce() =
+        runComposeUiTest {
+            var submitted = 0
+            setContent(screen { login(onSubmit = { submitted++ }) })
+            onNodeWithContentDescription("Password").performImeAction()
+            assertEquals(1, submitted)
+        }
+
+    @Test
+    fun loadingDisablesTheFieldsSoDoneCannotSubmitAgain() =
+        runComposeUiTest {
+            var submitted = 0
+            var loading by mutableStateOf(false)
+            setContent(screen { login(loading = loading, onSubmit = { submitted++ }) })
+            onNodeWithText("Go").performClick()
+            loading = true
+            waitForIdle()
+            onNodeWithContentDescription("Email").assertIsNotEnabled()
+            onNodeWithContentDescription("Password").assertIsNotEnabled()
+            assertFailsWith<AssertionError> { onNodeWithContentDescription("Password").performImeAction() }
+            onNodeWithText("Go").performClick()
+            assertEquals(1, submitted, "only the first tap went through")
+            loading = false
+            waitForIdle()
+            onNodeWithContentDescription("Password").assertIsEnabled()
         }
 }

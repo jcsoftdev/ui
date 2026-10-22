@@ -77,7 +77,9 @@ public object AuthArcsDefaults {
  * color. Inside an [AuthScaffold] the arcs fade out around the header text, at any font scale. Decorative: hidden from
  * accessibility.
  *
- * Motion follows `UiTheme.motion`: with animations off the arcs hold one still frame of the same state.
+ * [errorKey] replays the error shake when it changes while [state] stays `Error` (a second failed attempt); inside an
+ * [AuthScaffold] it defaults to the scaffold's own. Motion follows `UiTheme.motion`: with animations off the arcs hold one still
+ * frame of the same state.
  */
 @Composable
 public fun AuthArcs(
@@ -87,6 +89,7 @@ public fun AuthArcs(
     colors: AuthArcsColors = AuthArcsDefaults.colors(),
     ringCount: Int = AuthArcsDefaults.RING_COUNT,
     strokeWidth: Dp = AuthArcsDefaults.strokeWidth,
+    errorKey: Int = LocalAuthErrorKey.current,
 ) {
     val motion = UiTheme.motion
     val target = AuthArcsFrame.of(state, progress)
@@ -99,7 +102,7 @@ public fun AuthArcs(
     val time = rememberDriftClock(speed)
     val shake = remember { Animatable(1f) }
     val comet = remember { Animatable(1f) }
-    LaunchedEffect(state, motion) {
+    LaunchedEffect(state, motion, errorKey) {
         if (!motion.enabled) {
             shake.snapTo(1f)
             comet.snapTo(1f)

@@ -38,16 +38,21 @@ import kotlin.test.assertTrue
  */
 class AuthMotionRenderTest {
     private var state by mutableStateOf(AuthState.Idle)
+    private var errorKey by mutableStateOf(0)
 
     private fun ComposeUiTest.art(
         motion: Float,
+        frozen: Boolean = false,
         content: @Composable () -> Unit,
     ) {
         mainClock.autoAdvance = false
         setContent {
             UiTheme(dark = false, fontFamily = FontFamily.Default, motion = Motion(motion)) {
                 val header = authHeaderColor(UiTheme.colors)
-                CompositionLocalProvider(LocalContentColor provides authOnColor(header, UiTheme.colors)) {
+                CompositionLocalProvider(
+                    LocalContentColor provides authOnColor(header, UiTheme.colors),
+                    LocalAuthDriftFrozen provides frozen,
+                ) {
                     Box(Modifier.size(360.dp, 220.dp).background(header).testTag("art")) { content() }
                 }
             }
@@ -76,12 +81,15 @@ class AuthMotionRenderTest {
         b: IntArray,
     ): Float = a.indices.count { a[it] != b[it] }.toFloat() / a.size
 
-    private val arcs: @Composable () -> Unit = { AuthArcs(state, 0.5f, Modifier.fillMaxSize()) }
+    /** Pixels that differ from the header fill (the top left corner), as a share of the frame: how much is drawn. */
+    private fun covered(frame: IntArray): Float = frame.count { it != frame[0] }.toFloat() / frame.size
+
+    private val arcs: @Composable () -> Unit = { AuthArcs(state, 0.5f, Modifier.fillMaxSize(), errorKey = errorKey) }
 
     @Test
     fun arcsHoldStillWithMotionOff() =
         runComposeUiTest {
-            art(0f, arcs)
+            art(0f, content = arcs)
             val first = frame("arcs-still-0")
             mainClock.advanceTimeBy(2000)
             assertEquals(0f, changed(first, frame("arcs-still-1")))
@@ -90,59 +98,97 @@ class AuthMotionRenderTest {
     @Test
     fun arcsDriftWithMotionOn() =
         runComposeUiTest {
-            art(1f, arcs)
+            art(1f, content = arcs)
             val first = frame("arcs-drift-0")
             mainClock.advanceTimeBy(2500)
             assertTrue(changed(first, frame("arcs-drift-1")) > 0.002f)
         }
 
     @Test
-    fun arcsShakeOnErrorAndSweepOnSuccess() =
+    fun arcsShakeAgainOnEveryFailedAttempt() =
         runComposeUiTest {
-            art(1f, arcs)
-            frame("arcs-idle")
+            art(1f, frozen = true, content = arcs)
             state = AuthState.Error
+            mainClock.advanceTimeBy(3000)
+            val settled = frame("arcs-error-settled")
+            mainClock.advanceTimeBy(1000)
+            assertEquals(0f, changed(settled, frame("arcs-error-still")), "nothing else moves once the error has settled")
+            errorKey++
             val shots =
-                (1..5).map {
+                (1..4).map {
                     mainClock.advanceTimeBy(90)
-                    frame("arcs-error-$it")
+                    frame("arcs-retry-$it")
                 }
-            assertTrue(shots.zipWithNext().all { (a, b) -> changed(a, b) > 0f }, "the error shake moves every sampled frame")
-            mainClock.advanceTimeBy(1500)
-            state = AuthState.Success
-            mainClock.advanceTimeBy(400)
-            val mid = frame("arcs-success-mid")
+            assertTrue(shots.any { changed(settled, it) > 0.002f }, "the second failed attempt shakes the arcs again")
             mainClock.advanceTimeBy(2000)
-            val end = frame("arcs-success-end")
-            assertTrue(changed(mid, end) > 0.002f, "the comet has passed and gone")
+            assertEquals(0f, changed(settled, frame("arcs-retry-end")), "and they come back to rest")
         }
 
-    private val floating: @Composable () -> Unit = { AuthFloatingArt(state, 0.5f, Modifier.fillMaxSize()) }
+    @Test
+    fun arcsCarryACometOnSuccess() =
+        runComposeUiTest {
+            art(1f, frozen = true, content = arcs)
+            state = AuthState.Success
+            mainClock.advanceTimeBy(500)
+            val running = frame("arcs-comet-running")
+            mainClock.advanceTimeBy(3000)
+            val gone = frame("arcs-comet-gone")
+            assertTrue(covered(running) > covered(gone) * 1.1f, "the bold comet covers more of the header while it runs than at rest")
+        }
+
+    private val floating: @Composable () -> Unit = { AuthFloatingArt(state, 0.5f, Modifier.fillMaxSize(), errorKey = errorKey) }
 
     @Test
     fun floatingPiecesHoldStillWithMotionOff() =
         runComposeUiTest {
-            art(0f, floating)
+            art(0f, content = floating)
             val first = frame("floating-still-0")
             mainClock.advanceTimeBy(2000)
             assertEquals(0f, changed(first, frame("floating-still-1")))
         }
 
     @Test
-    fun floatingPiecesDriftThenBurstAndComeHome() =
+    fun floatingPiecesDriftWithMotionOn() =
         runComposeUiTest {
-            art(1f, floating)
+            art(1f, content = floating)
             val first = frame("floating-drift-0")
             mainClock.advanceTimeBy(2000)
             assertTrue(changed(first, frame("floating-drift-1")) > 0.002f)
+        }
+
+    @Test
+    fun floatingPiecesBurstOnSuccessAndComeHome() =
+        runComposeUiTest {
+            art(1f, frozen = true, content = floating)
             state = AuthState.Success
-            mainClock.advanceTimeBy(300)
-            val flying = frame("floating-burst-1")
-            mainClock.advanceTimeBy(400)
-            frame("floating-burst-2")
-            mainClock.advanceTimeBy(1500)
-            val home = frame("floating-burst-3")
-            assertTrue(changed(flying, home) > 0.002f)
+            mainClock.advanceTimeBy(3500)
+            val home = frame("floating-burst-home")
+            state = AuthState.Idle
+            mainClock.advanceTimeBy(3500)
+            state = AuthState.Success
+            mainClock.advanceTimeBy(700)
+            val flying = frame("floating-burst-flying")
+            assertTrue(covered(flying) < covered(home) * 0.6f, "the pieces have flown out and faded at the burst's peak")
+            mainClock.advanceTimeBy(3000)
+            assertEquals(covered(home), covered(frame("floating-burst-back")), 0.002f, "and they are back home afterwards")
+        }
+
+    @Test
+    fun floatingPiecesShakeAgainOnEveryFailedAttempt() =
+        runComposeUiTest {
+            art(1f, frozen = true, content = floating)
+            state = AuthState.Error
+            mainClock.advanceTimeBy(3000)
+            val settled = frame("floating-error-settled")
+            errorKey++
+            val shots =
+                (1..4).map {
+                    mainClock.advanceTimeBy(90)
+                    frame("floating-retry-$it")
+                }
+            assertTrue(shots.any { changed(settled, it) > 0.002f }, "the second failed attempt shakes the pieces again")
+            mainClock.advanceTimeBy(2000)
+            assertEquals(0f, changed(settled, frame("floating-retry-end")))
         }
 
     @Test

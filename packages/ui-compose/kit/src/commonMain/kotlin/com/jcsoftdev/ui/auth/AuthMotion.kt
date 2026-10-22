@@ -6,7 +6,9 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.State
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
@@ -104,6 +106,15 @@ internal object AuthMotion {
     }
 }
 
+/**
+ * Counter that replays the header art's error reaction. [AuthScaffold] provides its `errorKey` here; [AuthArcs] and
+ * [AuthFloatingArt] read it as the default of their own `errorKey`, so custom art can read it too.
+ */
+public val LocalAuthErrorKey: ProvidableCompositionLocal<Int> = compositionLocalOf { 0 }
+
+/** Test hook: while true the drift clock holds at zero so only the state reactions move the art. */
+internal val LocalAuthDriftFrozen: ProvidableCompositionLocal<Boolean> = compositionLocalOf { false }
+
 /** A soft spring when motion is on, a jump cut when it is off. */
 internal fun <T> Motion.springOrSnap(stiffness: Float = Spring.StiffnessVeryLow): AnimationSpec<T> =
     if (enabled) spring(dampingRatio = 0.85f, stiffness = stiffness / (scale * scale)) else snap()
@@ -116,8 +127,9 @@ internal fun <T> Motion.springOrSnap(stiffness: Float = Spring.StiffnessVeryLow)
 internal fun rememberDriftClock(speed: State<Float>): State<Float> {
     val time = remember { mutableFloatStateOf(0f) }
     val motion = UiTheme.motion
-    LaunchedEffect(motion) {
-        if (!motion.enabled) {
+    val frozen = LocalAuthDriftFrozen.current
+    LaunchedEffect(motion, frozen) {
+        if (!motion.enabled || frozen) {
             time.floatValue = 0f
             return@LaunchedEffect
         }

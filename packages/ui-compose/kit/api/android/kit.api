@@ -338,7 +338,7 @@ public final class com/jcsoftdev/ui/auth/AuthArcsDefaults {
 }
 
 public final class com/jcsoftdev/ui/auth/AuthArcsKt {
-	public static final fun AuthArcs-HYR8e34 (Lcom/jcsoftdev/ui/auth/AuthState;FLandroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthArcsColors;IFLandroidx/compose/runtime/Composer;II)V
+	public static final fun AuthArcs-PfoAEA0 (Lcom/jcsoftdev/ui/auth/AuthState;FLandroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthArcsColors;IFILandroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/auth/AuthFieldColors {
@@ -369,8 +369,8 @@ public final class com/jcsoftdev/ui/auth/AuthFieldDefaults {
 }
 
 public final class com/jcsoftdev/ui/auth/AuthFieldsKt {
-	public static final fun AuthPasswordField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
-	public static final fun AuthTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun AuthPasswordField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;ILjava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun AuthTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;ILjava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
 }
 
 public final class com/jcsoftdev/ui/auth/AuthFloatingArtColors {
@@ -391,7 +391,7 @@ public final class com/jcsoftdev/ui/auth/AuthFloatingArtDefaults {
 }
 
 public final class com/jcsoftdev/ui/auth/AuthFloatingArtKt {
-	public static final fun AuthFloatingArt (Lcom/jcsoftdev/ui/auth/AuthState;FLandroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AuthFloatingArt (Lcom/jcsoftdev/ui/auth/AuthState;FLandroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;ILandroidx/compose/runtime/Composer;II)V
 }
 
 public final class com/jcsoftdev/ui/auth/AuthHeaderShape : java/lang/Enum {
@@ -400,6 +400,10 @@ public final class com/jcsoftdev/ui/auth/AuthHeaderShape : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
 	public static fun values ()[Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
+}
+
+public final class com/jcsoftdev/ui/auth/AuthMotionKt {
+	public static final fun getLocalAuthErrorKey ()Landroidx/compose/runtime/ProvidableCompositionLocal;
 }
 
 public final class com/jcsoftdev/ui/auth/AuthProgress {
@@ -442,7 +446,7 @@ public final class com/jcsoftdev/ui/auth/AuthScaffoldDefaults {
 }
 
 public final class com/jcsoftdev/ui/auth/AuthScaffoldKt {
-	public static final fun AuthScaffold-Y3kUhCI (Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthState;FLcom/jcsoftdev/ui/auth/AuthScaffoldColors;Lcom/jcsoftdev/ui/auth/AuthHeaderShape;Landroidx/compose/ui/graphics/Shape;FFLandroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function4;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;IIII)V
+	public static final fun AuthScaffold-1X2Z8W4 (Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthState;FLcom/jcsoftdev/ui/auth/AuthScaffoldColors;Lcom/jcsoftdev/ui/auth/AuthHeaderShape;Landroidx/compose/ui/graphics/Shape;FFLandroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function4;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function3;ILkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;IIII)V
 }
 
 public final class com/jcsoftdev/ui/auth/AuthState : java/lang/Enum {
@@ -463,7 +467,7 @@ public final class com/jcsoftdev/ui/auth/ComposableSingletons$AuthScaffoldKt {
 }
 
 public final class com/jcsoftdev/ui/auth/LoginScreenKt {
-	public static final fun LoginScreen (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Ljava/lang/String;ZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Lcom/jcsoftdev/ui/auth/AuthHeaderShape;Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;Lkotlin/jvm/functions/Function4;ZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;Landroidx/compose/runtime/Composer;IIII)V
+	public static final fun LoginScreen (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Ljava/lang/String;ZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Lcom/jcsoftdev/ui/auth/AuthHeaderShape;Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;Lkotlin/jvm/functions/Function4;ZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function0;ILandroidx/compose/runtime/Composer;IIIII)V
 }
 
 public final class com/jcsoftdev/ui/containers/BannerColors {

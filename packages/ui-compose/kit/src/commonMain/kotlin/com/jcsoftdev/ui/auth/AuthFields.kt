@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -109,7 +110,8 @@ public object AuthFieldDefaults {
 /**
  * Filled pill field for an identifier (e-mail, user name, student id), 52dp high with a 24dp [leadingIcon] and a [placeholder]
  * (default [label]). [label] is what screen readers announce, since the placeholder disappears once typing starts. A non-null
- * [error] marks the field invalid and shows the message under it (an empty string marks it without a message). Focus: attach
+ * [error] marks the field invalid and shows the message under it (an empty string marks it without a message); changing [errorKey] re-creates the message so a screen reader announces it again
+ * even when the text is the same. Focus: attach
  * `Modifier.onFocusChanged` to [modifier] to learn it.
  */
 @Composable
@@ -120,6 +122,7 @@ public fun AuthTextField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     error: String? = null,
+    errorKey: Int = 0,
     placeholder: String? = label,
     leadingIcon: ImageVector? = Icons.User,
     contentType: InputContentType = InputContentType.Username,
@@ -129,7 +132,7 @@ public fun AuthTextField(
     shape: Shape = AuthFieldDefaults.shape,
     textStyle: TextStyle = AuthFieldDefaults.textStyle,
 ) {
-    AuthFieldFrame(error, colors, modifier) {
+    AuthFieldFrame(error, errorKey, colors, modifier) {
         CompositionLocalProvider(LocalFieldInfo provides FieldInfo(label, null, error)) {
             Input(
                 value,
@@ -164,6 +167,7 @@ public fun AuthPasswordField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     error: String? = null,
+    errorKey: Int = 0,
     placeholder: String? = label,
     leadingIcon: ImageVector? = Icons.Lock,
     showLabel: String = UiTheme.strings.showPassword,
@@ -176,7 +180,7 @@ public fun AuthPasswordField(
     textStyle: TextStyle = AuthFieldDefaults.textStyle,
 ) {
     var visible by remember { mutableStateOf(false) }
-    AuthFieldFrame(error, colors, modifier) {
+    AuthFieldFrame(error, errorKey, colors, modifier) {
         CompositionLocalProvider(LocalFieldInfo provides FieldInfo(label, null, error)) {
             Input(
                 value,
@@ -208,6 +212,7 @@ public fun AuthPasswordField(
 @Composable
 private fun AuthFieldFrame(
     error: String?,
+    errorKey: Int,
     colors: AuthFieldColors,
     modifier: Modifier,
     field: @Composable () -> Unit,
@@ -215,12 +220,14 @@ private fun AuthFieldFrame(
     Column(modifier, verticalArrangement = Arrangement.spacedBy(UiTheme.sizes.space6)) {
         field()
         if (!error.isNullOrEmpty()) {
-            Text(
-                error,
-                Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                UiTheme.typography.mMeta,
-                colors.error,
-            )
+            key(errorKey) {
+                Text(
+                    error,
+                    Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    UiTheme.typography.mMeta,
+                    colors.error,
+                )
+            }
         }
     }
 }
