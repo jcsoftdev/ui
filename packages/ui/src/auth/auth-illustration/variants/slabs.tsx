@@ -1,5 +1,12 @@
 import type { CSSProperties, ReactNode } from "react";
-import { type AuthState, SLAB_COUNT, slabPlacement, slabSpread, sparkVectors } from "../model.js";
+import {
+  type AuthState,
+  keystroke,
+  SLAB_COUNT,
+  slabPlacement,
+  slabSpread,
+  sparkVectors,
+} from "../model.js";
 
 const THICKNESS = 22;
 const TOP = "M0 0 L86.6 50 L0 100 L-86.6 50Z";
@@ -41,11 +48,13 @@ function Slab({
   spread,
   activeIndex,
   dotsId,
+  hop,
 }: {
   index: number;
   spread: number;
   activeIndex: number;
   dotsId: string;
+  hop: 0 | 1 | null;
 }) {
   const live = slabPlacement(index, spread, activeIndex);
   const assembled = slabPlacement(index, 0, -1);
@@ -59,19 +68,25 @@ function Slab({
   } as CSSProperties;
   const dots = `url(#${dotsId})`;
   return (
-    <g className="ui-auth-enter" style={vars}>
-      <g className={`ui-auth-pos ui-auth-slab ui-auth-slab-tone-${index}`}>
-        <path className="ui-auth-shadow" d={TOP} transform={`translate(24 ${THICKNESS + 22})`} />
+    <g className={`ui-auth-pos ui-auth-slab ui-auth-slab-tone-${index}`} style={vars}>
+      <g transform={`translate(24 ${THICKNESS + 22})`}>
+        <path className="ui-auth-shadow" d={TOP} />
+      </g>
+      <g className="ui-auth-par">
         <g className="ui-auth-lift">
-          <g className="ui-auth-bob">
-            <path className="ui-auth-face-left ui-auth-edge" d={LEFT} />
-            <path className="ui-auth-face-right ui-auth-edge" d={RIGHT} />
-            <path d={LEFT} fill={dots} />
-            <path d={RIGHT} fill={dots} />
-            <path className="ui-auth-face-top ui-auth-edge" d={TOP} />
-            <g transform="matrix(0.866 0.5 -0.866 0.5 0 0)">
-              <rect className="ui-auth-inlay" x="9" y="9" width="82" height="82" rx="8" />
-              {GLYPHS[index]}
+          <g className="ui-auth-enter">
+            <g className={hop === null ? "ui-auth-hop" : `ui-auth-hop ui-auth-hop-${hop}`}>
+              <g className="ui-auth-bob">
+                <path className="ui-auth-face-left ui-auth-edge" d={LEFT} />
+                <path className="ui-auth-face-right ui-auth-edge" d={RIGHT} />
+                <path d={LEFT} fill={dots} />
+                <path d={RIGHT} fill={dots} />
+                <path className="ui-auth-face-top ui-auth-edge" d={TOP} />
+                <g transform="matrix(0.866 0.5 -0.866 0.5 0 0)">
+                  <rect className="ui-auth-inlay" x="9" y="9" width="82" height="82" rx="8" />
+                  {GLYPHS[index]}
+                </g>
+              </g>
             </g>
           </g>
         </g>
@@ -92,6 +107,8 @@ export interface SlabsProps {
 export function Slabs({ state, progress, activeIndex, uid }: SlabsProps) {
   const spread = slabSpread(state, progress);
   const dotsId = `${uid}-dots`;
+  const tick = keystroke(progress, SLAB_COUNT);
+  const typing = (state === "typing" || state === "password") && tick.count > 0;
   return (
     // biome-ignore lint/a11y/noSvgWithoutTitle: the wrapper names the illustration or hides it
     <svg viewBox="40 60 560 440" focusable="false" style={{ "--spread": spread } as CSSProperties}>
@@ -108,17 +125,26 @@ export function Slabs({ state, progress, activeIndex, uid }: SlabsProps) {
           spread={spread}
           activeIndex={activeIndex}
           dotsId={dotsId}
+          hop={typing && tick.target === index ? tick.phase : null}
         />
       ))}
       {state === "success" ? (
         <g>
-          {SPARKS.map((spark) => (
-            <g key={`${spark.dx}:${spark.dy}`} transform="translate(320 240)">
-              <path
-                className="ui-auth-spark"
-                d={SPARK}
-                style={{ "--dx": `${spark.dx}px`, "--dy": `${spark.dy}px` } as CSSProperties}
-              />
+          {SPARKS.map((spark, n) => (
+            <g key={`${spark.dx}:${spark.dy}`} transform="translate(320 250)">
+              {n % 2 ? (
+                <circle
+                  className="ui-auth-spark"
+                  r="5"
+                  style={{ "--dx": `${spark.dx}px`, "--dy": `${spark.dy}px` } as CSSProperties}
+                />
+              ) : (
+                <path
+                  className="ui-auth-spark"
+                  d={SPARK}
+                  style={{ "--dx": `${spark.dx}px`, "--dy": `${spark.dy}px` } as CSSProperties}
+                />
+              )}
             </g>
           ))}
         </g>

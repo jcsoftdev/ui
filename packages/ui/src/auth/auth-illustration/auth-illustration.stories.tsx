@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import { AuthIllustration } from "./auth-illustration.js";
 import { AUTH_STATES } from "./model.js";
 
@@ -37,6 +37,16 @@ export const TypingIdentifier: Story = { args: { state: "typing", progress: 0.3 
 export const TypingPassword: Story = { args: { state: "password", progress: 0.8 } };
 
 export const Failed: Story = { args: { state: "error", progress: 0.6 } };
+
+/** An error holds for about a second, then the art settles back to the password state by itself. */
+export const FailedSettles: Story = {
+  args: { state: "error", progress: 0.6 },
+  play: async ({ canvasElement }) => {
+    const art = canvasElement.querySelector(".ui-auth-art") as HTMLElement;
+    await expect(art).toHaveAttribute("data-state", "error");
+    await waitFor(() => expect(art).toHaveAttribute("data-state", "password"), { timeout: 2500 });
+  },
+};
 
 export const Success: Story = { args: { state: "success", progress: 1 } };
 

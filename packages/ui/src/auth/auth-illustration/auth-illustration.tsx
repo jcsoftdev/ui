@@ -1,10 +1,11 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useId } from "react";
+import { type ComponentPropsWithoutRef, useEffect, useId, useRef, useState } from "react";
 import { cn } from "../../utils/cn.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import { AuthStyles } from "../internal/auth-styles.js";
-import { type AuthState, clamp01 } from "./model.js";
+import { type AuthState, clamp01, ERROR_HOLD_MS, shownState } from "./model.js";
+import { useArtPointer } from "./use-art-pointer.js";
 import { AUTH_VARIANTS, type AuthIllustrationVariant } from "./variants/index.js";
 
 export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
@@ -40,17 +41,28 @@ export function AuthIllustration({
   const state = stateProp ?? auth?.state ?? "idle";
   const progress = clamp01(progressProp ?? auth?.progress ?? 0);
   const activeIndex = activeIndexProp ?? auth?.activeIndex ?? 0;
+  const ref = useRef<HTMLDivElement>(null);
+  useArtPointer(ref);
+  const [errorHeld, setErrorHeld] = useState(false);
+  useEffect(() => {
+    setErrorHeld(false);
+    if (state !== "error") return;
+    const timer = setTimeout(() => setErrorHeld(true), ERROR_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [state]);
+  const shown = shownState(state, errorHeld);
   return (
     <div
       {...props}
+      ref={ref}
       {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
-      data-state={state}
+      data-state={shown}
       data-panel={auth?.panel}
       data-variant={variant}
       className={cn("ui-auth-art @container/art w-full min-w-0", className)}
     >
       <AuthStyles />
-      <Look state={state} progress={progress} activeIndex={activeIndex} uid={uid} />
+      <Look state={shown} progress={progress} activeIndex={activeIndex} uid={uid} />
     </div>
   );
 }

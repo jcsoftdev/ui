@@ -89,3 +89,52 @@ export function sparkVectors(count = 12): SparkVector[] {
     return { dx: round(Math.cos(angle) * distance), dy: round(Math.sin(angle) * distance * 0.7) };
   });
 }
+
+/** How long an error stays on screen before the illustration settles back to the password state. */
+export const ERROR_HOLD_MS = 1100;
+
+/** The state the art shows: an error that has been held long enough reads as `password` again. */
+export function shownState(state: AuthState, errorHeld: boolean): AuthState {
+  return state === "error" && errorHeld ? "password" : state;
+}
+
+/** Characters per field at which the form reports it full; one keystroke moves `progress` by 1/(2 x this). */
+export const KEYSTROKES_PER_FIELD = 10;
+
+export interface Keystroke {
+  /** Keystrokes so far across both fields. */
+  count: number;
+  /** Which of the three pieces reacts to this keystroke. */
+  target: number;
+  /**
+   * Alternates every time the same piece reacts again, so CSS can swap between two identical
+   * keyframes and restart the animation without JavaScript timers.
+   */
+  phase: 0 | 1;
+}
+
+/** The keystroke a `progress` value stands for. */
+export function keystroke(progress: number, pieces = 3): Keystroke {
+  const count = Math.round(clamp01(progress) * KEYSTROKES_PER_FIELD * 2);
+  return { count, target: count % pieces, phase: (Math.floor(count / pieces) % 2) as 0 | 1 };
+}
+
+export interface PointerOffset {
+  x: number;
+  y: number;
+}
+
+/**
+ * Where a pointer is relative to a box, as -1 to 1 on each axis from its center (clamped, so a
+ * pointer far over the form still reads as "all the way to that side").
+ */
+export function pointerOffset(
+  point: { x: number; y: number },
+  box: { left: number; top: number; width: number; height: number },
+): PointerOffset {
+  const axis = (value: number, start: number, size: number) =>
+    size > 0
+      ? Math.round(Math.max(-1, Math.min(1, (value - start - size / 2) / (size / 2))) * 1000) / 1000
+      : 0;
+  return { x: axis(point.x, box.left, box.width), y: axis(point.y, box.top, box.height) };
+}

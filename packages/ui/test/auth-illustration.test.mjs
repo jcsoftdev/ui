@@ -67,3 +67,42 @@ test("spark vectors are deterministic and spread around the centre", () => {
   assert.deepEqual(sparks, model.sparkVectors(12));
   assert.deepEqual(sparks[0], { dx: 90, dy: 0 });
 });
+
+test("an error settles back to the password state once it has been held", () => {
+  assert.equal(model.ERROR_HOLD_MS, 1100);
+  assert.equal(model.shownState("error", false), "error");
+  assert.equal(model.shownState("error", true), "password");
+  for (const state of ["idle", "typing", "password", "success"]) {
+    assert.equal(model.shownState(state, true), state);
+  }
+});
+
+test("each keystroke picks the next piece and flips phase when a piece reacts again", () => {
+  const step = 1 / (model.KEYSTROKES_PER_FIELD * 2);
+  const ticks = [1, 2, 3, 4, 5, 6].map((n) => model.keystroke(n * step));
+  assert.deepEqual(
+    ticks.map((tick) => [tick.count, tick.target, tick.phase]),
+    [
+      [1, 1, 0],
+      [2, 2, 0],
+      [3, 0, 1],
+      [4, 1, 1],
+      [5, 2, 1],
+      [6, 0, 0],
+    ],
+  );
+  assert.deepEqual(model.keystroke(0), { count: 0, target: 0, phase: 0 });
+  assert.equal(model.keystroke(5).count, model.KEYSTROKES_PER_FIELD * 2);
+});
+
+test("pointer offset is -1..1 from the box centre and clamped outside it", () => {
+  const box = { left: 100, top: 50, width: 200, height: 100 };
+  assert.deepEqual(model.pointerOffset({ x: 200, y: 100 }, box), { x: 0, y: 0 });
+  assert.deepEqual(model.pointerOffset({ x: 300, y: 50 }, box), { x: 1, y: -1 });
+  assert.deepEqual(model.pointerOffset({ x: 150, y: 125 }, box), { x: -0.5, y: 0.5 });
+  assert.deepEqual(model.pointerOffset({ x: 2000, y: -900 }, box), { x: 1, y: -1 });
+  assert.deepEqual(model.pointerOffset({ x: 5, y: 5 }, { left: 0, top: 0, width: 0, height: 0 }), {
+    x: 0,
+    y: 0,
+  });
+});

@@ -15,6 +15,7 @@ import { useUiStrings } from "../../i18n/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { KEYSTROKES_PER_FIELD } from "../auth-illustration/model.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import {
   type LoginField,
@@ -48,7 +49,7 @@ export interface LoginValues {
 }
 
 /** Characters at which a field counts as filled for the illustration's progress. */
-const FILLED_AT = 10;
+const FILLED_AT = KEYSTROKES_PER_FIELD;
 const MAX_ILLUSTRATED_PORTALS = 3;
 
 export interface LoginFormProps
