@@ -41,10 +41,19 @@ interface GridProps {
   panel?: AuthPanel;
   widths?: readonly number[];
   states?: readonly AuthState[];
+  headline?: string;
+  caption?: string;
 }
 
 /** Every state at each container width: the art adapts to the width it is given. */
-function Grid({ variant, panel = "paper", widths = [640, 320], states = AUTH_STATES }: GridProps) {
+function Grid({
+  variant,
+  panel = "paper",
+  widths = [640, 320],
+  states = AUTH_STATES,
+  headline,
+  caption,
+}: GridProps) {
   return (
     <Panel panel={panel}>
       <div className="grid gap-6 p-4">
@@ -64,7 +73,13 @@ function Grid({ variant, panel = "paper", widths = [640, 320], states = AUTH_STA
                       : { background: "color-mix(in srgb, var(--accent) 14%, var(--bg))" }),
                   }}
                 >
-                  <AuthIllustration variant={variant} state={state} progress={PROGRESS[state]} />
+                  <AuthIllustration
+                    variant={variant}
+                    state={state}
+                    progress={PROGRESS[state]}
+                    headline={headline}
+                    caption={caption}
+                  />
                 </div>
               ))}
             </div>
@@ -138,5 +153,33 @@ export const CharacterNarrow: Story = {
       ).display;
     await expect(decor(240)).toBe("none");
     await expect(decor(460)).not.toBe("none");
+  },
+};
+
+const STATEMENT = {
+  variant: "statement",
+  headline: "Every class, every family, one place.",
+  caption: "Sign in to pick up where your school left off.",
+} as const;
+
+export const StatementStates: Story = { args: STATEMENT };
+
+export const StatementSolid: Story = { args: { ...STATEMENT, panel: "solid" } };
+
+/** The headline scales with its container and stays readable by assistive technology. */
+export const StatementNarrow: Story = {
+  args: { ...STATEMENT, widths: [240, 460, 640], states: ["typing"] },
+  play: async ({ canvasElement }) => {
+    const size = (width: number) =>
+      Number.parseFloat(
+        getComputedStyle(
+          canvasElement.querySelector(`[data-width="${width}"] .ui-stm-lines`) as Element,
+        ).fontSize,
+      );
+    await expect(size(240)).toBeLessThan(size(460));
+    await expect(size(460)).toBeLessThan(size(640));
+    const art = canvasElement.querySelector(`[data-width="640"] .ui-auth-art`) as Element;
+    await expect(art.getAttribute("aria-hidden")).toBeNull();
+    await expect(art.textContent).toContain("one place.");
   },
 };

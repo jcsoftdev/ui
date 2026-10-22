@@ -10,7 +10,10 @@ import {
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
-import { AuthIllustration } from "../auth-illustration/auth-illustration.js";
+import {
+  AuthIllustration,
+  type AuthIllustrationProps,
+} from "../auth-illustration/auth-illustration.js";
 import type { AuthState } from "../auth-illustration/model.js";
 import type { AuthIllustrationVariant } from "../auth-illustration/variants/index.js";
 import { AuthContext, type AuthContextValue, type AuthPanel } from "../internal/auth-context.js";
@@ -185,7 +188,9 @@ export function AuthLayoutBrand({ className, ...props }: AuthLayoutBrandProps) {
   );
 }
 
-export interface AuthLayoutArtProps extends ComponentPropsWithoutRef<"div"> {
+export interface AuthLayoutArtProps
+  extends ComponentPropsWithoutRef<"div">,
+    Pick<AuthIllustrationProps, "headline" | "caption" | "action"> {
   /** Look of the default illustration, used when there are no children. */
   variant?: AuthIllustrationVariant;
 }
@@ -194,9 +199,20 @@ export interface AuthLayoutArtProps extends ComponentPropsWithoutRef<"div"> {
  * Holds the illustration (a default `AuthIllustration` when empty). It hides under 448px of layout
  * width and, in `centered`, sits faded behind the panel.
  */
-export function AuthLayoutArt({ variant, className, children, ...props }: AuthLayoutArtProps) {
+export function AuthLayoutArt({
+  variant,
+  headline,
+  caption,
+  action,
+  className,
+  children,
+  ...props
+}: AuthLayoutArtProps) {
   const { layout, panel, classNames } = useAuthLayoutParts("Art");
   const solid = panel === "solid";
+  const art = children ?? (
+    <AuthIllustration variant={variant} headline={headline} caption={caption} action={action} />
+  );
   return (
     <div
       {...props}
@@ -212,13 +228,7 @@ export function AuthLayoutArt({ variant, className, children, ...props }: AuthLa
         className,
       )}
     >
-      {solid ? (
-        <div className="w-full max-w-90 @3xl/auth:max-w-160">
-          {children ?? <AuthIllustration variant={variant} />}
-        </div>
-      ) : (
-        (children ?? <AuthIllustration variant={variant} />)
-      )}
+      {solid ? <div className="w-full max-w-90 @3xl/auth:max-w-160">{art}</div> : art}
     </div>
   );
 }

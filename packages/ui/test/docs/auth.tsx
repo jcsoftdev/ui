@@ -103,3 +103,21 @@ export function BooksScreen() {
   );
 }
 // #endregion
+
+// #region statement
+export function StatementScreen() {
+  return (
+    <AuthLayout layout="split-reverse">
+      <AuthLayout.Art
+        variant="statement"
+        headline="Every class, every family, one place."
+        caption="Sign in to pick up where your school left off."
+        action={<a href="/about">How it works</a>}
+      />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion

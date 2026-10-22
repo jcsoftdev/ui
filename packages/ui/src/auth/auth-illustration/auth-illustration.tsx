@@ -1,12 +1,19 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useEffect, useId, useRef, useState } from "react";
+import {
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "../../utils/cn.js";
 import { useOptionalAuth } from "../internal/auth-context.js";
 import { AuthStyles } from "../internal/auth-styles.js";
 import { type AuthState, clamp01, ERROR_HOLD_MS, shownState } from "./model.js";
 import { useArtPointer } from "./use-art-pointer.js";
-import { AUTH_VARIANTS, type AuthIllustrationVariant } from "./variants/index.js";
+import { AUTH_VARIANTS, type AuthIllustrationVariant, TEXT_VARIANTS } from "./variants/index.js";
 
 export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /** The look of the illustration. Defaults to `slabs`. */
@@ -19,6 +26,12 @@ export interface AuthIllustrationProps extends Omit<ComponentPropsWithoutRef<"di
   activeIndex?: number;
   /** Accessible name. Without it the illustration is decorative and hidden from assistive technology. */
   label?: string;
+  /** `statement` only: the headline (a string animates word by word). Defaults to the UI string `welcomeBack`. */
+  headline?: ReactNode;
+  /** `statement` only: a supporting line under the headline. */
+  caption?: ReactNode;
+  /** `statement` only: content beside the arrow pill, such as a link. */
+  action?: ReactNode;
 }
 
 /**
@@ -32,6 +45,9 @@ export function AuthIllustration({
   progress: progressProp,
   activeIndex: activeIndexProp,
   label,
+  headline,
+  caption,
+  action,
   className,
   ...props
 }: AuthIllustrationProps) {
@@ -55,14 +71,26 @@ export function AuthIllustration({
     <div
       {...props}
       ref={ref}
-      {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
+      {...(TEXT_VARIANTS.has(variant)
+        ? {}
+        : label
+          ? { role: "img", "aria-label": label }
+          : { "aria-hidden": true })}
       data-state={shown}
       data-panel={auth?.panel}
       data-variant={variant}
       className={cn("ui-auth-art @container/art w-full min-w-0", className)}
     >
       <AuthStyles />
-      <Look state={shown} progress={progress} activeIndex={activeIndex} uid={uid} />
+      <Look
+        state={shown}
+        progress={progress}
+        activeIndex={activeIndex}
+        uid={uid}
+        headline={headline}
+        caption={caption}
+        action={action}
+      />
     </div>
   );
 }

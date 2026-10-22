@@ -84,6 +84,10 @@ export interface UiStrings {
   orLogInWith: string;
   /** Message shown by a `LoginForm` when sign-in fails and the app gives none. */
   signInFailed: string;
+  /** Default headline of the `statement` look of `AuthIllustration`. */
+  welcomeBack: string;
+  /** Line the `statement` look of `AuthIllustration` shows once sign-in succeeds. */
+  signedIn: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -150,6 +154,8 @@ export const uiStrings = {
     needHelp: "Need help?",
     orLogInWith: "Or log in with",
     signInFailed: "We could not sign you in. Check your details and try again.",
+    welcomeBack: "Good to see you again.",
+    signedIn: "You're in.",
   },
   es: {
     retry: "Reintentar",
@@ -212,5 +218,7 @@ export const uiStrings = {
     needHelp: "¿Necesitas ayuda?",
     orLogInWith: "O ingresa con",
     signInFailed: "No pudimos iniciar tu sesión. Revisa tus datos e inténtalo de nuevo.",
+    welcomeBack: "Qué bueno verte otra vez.",
+    signedIn: "Ya estás dentro.",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

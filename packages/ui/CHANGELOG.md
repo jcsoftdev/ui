@@ -33,6 +33,11 @@ tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/
 - **`AuthIllustration variant="character"`.** A student on a hover board that follows the
   pointer, looks toward the form while it is typed into, covers their eyes for the password,
   shakes their head on an error and hops with a boost on success.
+- **`AuthIllustration variant="statement"`.** Kinetic type: `headline` rises word by word, an
+  optional `caption` and `action`, and a pill whose arrow loops while waiting and follows progress;
+  on success the headline gives way to the new UI string `signedIn` (default headline
+  `welcomeBack`). Not hidden from assistive technology. `AuthLayout.Art` forwards `headline`,
+  `caption` and `action`.
 - **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
 - **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
 - **UI strings** (en/es) for the sign-in screen and `showPassword`.
