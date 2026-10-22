@@ -10,14 +10,14 @@ Every example below is type-checked against the built package (`pnpm check:docs-
 
 ## Atoms
 
-| Component    | Props worth knowing                                                                                                                                                                                         |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Spinner`    | `size` (`xs`, `sm`, `md`, `lg` or a pixel number), `label` (defaults to the localized "Loading"; `label={false}` makes it decorative). Reduced motion leaves a static ring.                                 |
-| `Kbd`        | A styled `<kbd>`; compose several for a chord.                                                                                                                                                              |
-| `IconButton` | Required `label` (becomes `aria-label`), `variant`, `size` (`sm`, `md`, `lg`), `loading`, `asChild`. A `Button` with a square box that grows with touch density.                                            |
-| `Chip`       | New `size="sm"` (compact metrics). A tag is `<Chip size="sm" square>`.                                                                                                                                      |
+| Component    | Props worth knowing                                                                                                                                                                                                                                                                    |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Spinner`    | `size` (`xs`, `sm`, `md`, `lg` or a pixel number), `label` (defaults to the localized "Loading"; `label={false}` makes it decorative). Reduced motion leaves a static ring.                                                                                                            |
+| `Kbd`        | A styled `<kbd>`; compose several for a chord.                                                                                                                                                                                                                                         |
+| `IconButton` | Required `label` (becomes `aria-label`), `variant`, `size` (`sm`, `md`, `lg`), `loading`, `asChild`. A `Button` with a square box that grows with touch density.                                                                                                                       |
+| `Chip`       | New `size="sm"` (compact metrics). A tag is `<Chip size="sm" square>`.                                                                                                                                                                                                                 |
 | `DueChip`    | `date`, `today` (reference day, pass it for deterministic SSR), `soonDays` (3), `done`, `state` (forces `overdue`, `soon`, `ok` or `done` whatever the date says), `locale`. Overdue and soon states add a status glyph and a screen-reader suffix, so color is never the only signal. |
-| `Seal`       | `title`, `icon`, `tone` (`accent`, `success`, `warning`, `danger`, `neutral`, `institutional`, or any `tonePalettes` tone by name), `label` (names the seal as a group). Children are the lines.   |
+| `Seal`       | `title`, `icon`, `tone` (`accent`, `success`, `warning`, `danger`, `neutral`, `institutional`, or any `tonePalettes` tone by name), `label` (names the seal as a group). Children are the lines.                                                                                       |
 
 ```tsx region=atoms
 export function Atoms() {
@@ -46,12 +46,12 @@ Date strings (`YYYY-MM-DD`, naive `YYYY-MM-DDTHH:mm`) are read as the written da
 
 ## Overlays
 
-| Component     | Props worth knowing                                                                                                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Tooltip`     | `content`, `shortcut` (rendered as `Kbd`), `side`, `align`, `openDelay` (300 ms), `closeDelay` (100 ms), `open`/`defaultOpen`/`onOpenChange`, `disabled`.                           |
-| `AlertDialog` | `trigger`, `title`, `description`, `tone` (`default`, `danger`), `confirmLabel`, `cancelLabel`, `onConfirm`, `onCancel`, `initialFocus` (cancel by default), `confirmDisabled`, `cancelDisabled`, `open`/`onOpenChange`. |
+| Component           | Props worth knowing                                                                                                                                                                                                                                                                                                                                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Tooltip`           | `content`, `shortcut` (rendered as `Kbd`), `side`, `align`, `openDelay` (300 ms), `closeDelay` (100 ms), `open`/`defaultOpen`/`onOpenChange`, `disabled`.                                                                                                                                                                                                |
+| `AlertDialog`       | `trigger`, `title`, `description`, `tone` (`default`, `danger`), `confirmLabel`, `cancelLabel`, `onConfirm`, `onCancel`, `initialFocus` (cancel by default), `confirmDisabled`, `cancelDisabled`, `open`/`onOpenChange`.                                                                                                                                 |
 | `AlertDialog` parts | `AlertDialog.Root`, `.Trigger`, `.Content`, `.Header`, `.Title`, `.Description`, `.Body`, `.Footer`, `.Cancel`, `.Action`. Same alertdialog: no close button, outside presses ignored, focus on Cancel, Escape closes. Cancel and Action close after their `onClick` unless it calls `preventDefault()`. Per-action `disabled` is the button's own prop. |
-| `toast`       | New tones `toast.info`, `toast.warning`, `toast.danger` (same as `toast.error`).                                                                                                    |
+| `toast`             | New tones `toast.info`, `toast.warning`, `toast.danger` (same as `toast.error`).                                                                                                                                                                                                                                                                         |
 
 ```tsx region=overlays
 export function Overlays({ onDelete }: { onDelete: () => Promise<void> }) {
@@ -145,7 +145,7 @@ Accessibility: `SelectMenu` and `Combobox` follow the WAI-ARIA combobox and list
 | Component                 | Props worth knowing                                                                                                                                                                                                                        |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `Wizard`                  | `steps` (`id`, `label`, `content`, `canAdvance`), `value`/`defaultValue`/`onValueChange(stepId)`, `onBeforeNext`, `onComplete`, `backLabel`/`nextLabel`/`finishLabel`. Gates may be async; a throw keeps the step and shows an alert.      |
-| `Stepper`                 | `steps` (`id`, `label`, `status`), `currentStepId`. `status` is `done` (check), `current`, `error` (cross) or `pending`; done and error also speak their state. Without `status` the step is `current` or `pending` from `currentStepId`. |
+| `Stepper`                 | `steps` (`id`, `label`, `status`), `currentStepId`. `status` is `done` (check), `current`, `error` (cross) or `pending`; done and error also speak their state. Without `status` the step is `current` or `pending` from `currentStepId`.  |
 | `TabsNav` / `TabsNavLink` | A link strip for sub-navigation: required `aria-label` on the strip, `value` marks the current item (`aria-current="page"`), `count`, `renderLink` or `asChild` for client routers. No tab roles or panels; use `Tabs` for in-page panels. |
 
 ```tsx region=wizard
@@ -184,19 +184,19 @@ The wizard heading takes focus on every step change, Enter in a single-line inpu
 
 ## Containers
 
-| Component                     | Props worth knowing                                                                                                                                                                                                                                                                                 |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Banner`                      | `appearance="outline"`: page surface where only the border carries the tone (default `soft`).                                                                                                                                                                                                       |
-| `Section`                     | `title`, `count`, `description`, `actions`, `divider` (default off), `padded`, `as`, `titleAs`. The heading level steps down per titled nesting; a section with no title takes no level. Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` replace the props when a part is a direct child. |
-| `Kpi`                         | `label`, `value`, `suffix`, `description`, `tone`, `dot`, `icon`, `trend`, plus `trailing` (interactive content at the end of the label row) and `card` (border and radius). Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`. |
-| `Timeline`                    | `items` or `Timeline.Item` children (both: items first). `status` per item: `done`, `current`, `error`, `pending`; `tone` still wins for the marker colour. |
-| `Table`                       | `flush` (`true`, `"start"`, `"end"`), `stickyHeader` (needs `maxHeight`), `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (`menu`). |
-| `Note`                        | `tone` (`neutral`, `info`, `success`, `warning`, `danger`), `divider`.                                                                                                                                                                                                                              |
-| `Aside` / `AsideHeader`       | Complementary region named by the localized "Related information" (or `aria-label`).                                                                                                                                                                                                                |
-| `DescriptionList`             | New `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3 pairs per row from 28rem), `valueAlign` (`end` default, `start`). `DescriptionListItem` has `term`, children as the value and a dash placeholder for `null`, `undefined`, `false` and `""` (0 is a value).                            |
+| Component                     | Props worth knowing                                                                                                                                                                                                                                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Banner`                      | `appearance="outline"`: page surface where only the border carries the tone (default `soft`).                                                                                                                                                                                                                                |
+| `Section`                     | `title`, `count`, `description`, `actions`, `divider` (default off), `padded`, `as`, `titleAs`. The heading level steps down per titled nesting; a section with no title takes no level. Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` replace the props when a part is a direct child.    |
+| `Kpi`                         | `label`, `value`, `suffix`, `description`, `tone`, `dot`, `icon`, `trend`, plus `trailing` (interactive content at the end of the label row) and `card` (border and radius). Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`.                                                                        |
+| `Timeline`                    | `items` or `Timeline.Item` children (both: items first). `status` per item: `done`, `current`, `error`, `pending`; `tone` still wins for the marker colour.                                                                                                                                                                  |
+| `Table`                       | `flush` (`true`, `"start"`, `"end"`), `stickyHeader` (needs `maxHeight`), `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (`menu`).                                                                            |
+| `Note`                        | `tone` (`neutral`, `info`, `success`, `warning`, `danger`), `divider`.                                                                                                                                                                                                                                                       |
+| `Aside` / `AsideHeader`       | Complementary region named by the localized "Related information" (or `aria-label`).                                                                                                                                                                                                                                         |
+| `DescriptionList`             | New `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3 pairs per row from 28rem), `valueAlign` (`end` default, `start`). `DescriptionListItem` has `term`, children as the value and a dash placeholder for `null`, `undefined`, `false` and `""` (0 is a value).                                                     |
 | `ListDetail`                  | Master-detail: `value`/`onValueChange` (never `null`), `onBack`, required `aria-label`, parts `ListDetailList`, `ListDetailItem`, `ListDetailTitle`, `ListDetailMeta`, `ListDetailDetail`, `ListDetailDetailHeader`, plus `useListDetail()`. One pane under 641px of its own width, with focus moved to the detail and back. |
-| `Feed` / `FeedEvent`          | Activity log: `icon`, `time` (ISO instant, calendar date or `Date`), `relative`, `now`, `timeZone`, `timeLabel`, `meta`.                                                                                                                                                                            |
-| `Shortcuts` / `ShortcutsItem` | Link or button tiles: `href`, `asChild`, `icon`, `count`, `kbd`.                                                                                                                                                                                                                                    |
+| `Feed` / `FeedEvent`          | Activity log: `icon`, `time` (ISO instant, calendar date or `Date`), `relative`, `now`, `timeZone`, `timeLabel`, `meta`.                                                                                                                                                                                                     |
+| `Shortcuts` / `ShortcutsItem` | Link or button tiles: `href`, `asChild`, `icon`, `count`, `kbd`.                                                                                                                                                                                                                                                             |
 
 ```tsx region=containers
 export function Containers() {
@@ -256,7 +256,14 @@ None of `Section`, `Note`, `Aside`, `DescriptionList` or `Feed` pads its inline 
 export function Students({ rows }: { rows: { id: string; name: string }[] }) {
   const [selected, setSelected] = useState<string[]>([]);
   return (
-    <Table aria-label="Students" flush stickyHeader maxHeight="20rem" selectedKeys={selected} onSelectedKeysChange={setSelected}>
+    <Table
+      aria-label="Students"
+      flush
+      stickyHeader
+      maxHeight="20rem"
+      selectedKeys={selected}
+      onSelectedKeysChange={setSelected}
+    >
       <TableHead>
         <TableRow>
           <TableSelectAllCell rowKeys={rows.map((row) => row.id)} />
@@ -271,7 +278,13 @@ export function Students({ rows }: { rows: { id: string; name: string }[] }) {
           <TableRow key={row.id} rowKey={row.id}>
             <TableSelectCell rowKey={row.id} label={row.name} />
             <TableCell>{row.name}</TableCell>
-            <TableActionsCell menu={<Button size="sm" variant="ghost" aria-label="Row actions">...</Button>}>
+            <TableActionsCell
+              menu={
+                <Button size="sm" variant="ghost" aria-label="Row actions">
+                  ...
+                </Button>
+              }
+            >
               <Button size="sm">Charge</Button>
               <Button size="sm" variant="ghost">
                 Open file
@@ -304,7 +317,15 @@ export function Parts() {
         </Section.Body>
       </Section>
       <Kpi card tone="success" dot>
-        <Kpi.Label trailing={<Button size="sm" variant="ghost">Details</Button>}>Collected</Kpi.Label>
+        <Kpi.Label
+          trailing={
+            <Button size="sm" variant="ghost">
+              Details
+            </Button>
+          }
+        >
+          Collected
+        </Kpi.Label>
         <Kpi.Value mono suffix="/ 1,200">
           840
         </Kpi.Value>
@@ -347,7 +368,12 @@ export function UserMenu() {
           </DropdownMenuTrigger>
         </div>
       </DropdownMenuAnchor>
-      <DropdownMenuContent bare side="top" align="start" className="w-64 rounded-lg border border-line bg-surface">
+      <DropdownMenuContent
+        bare
+        side="top"
+        align="start"
+        className="w-64 rounded-lg border border-line bg-surface"
+      >
         <div className="px-3 py-2.5">ana@school.test</div>
         <DropdownMenuItem asChild>
           <a href="/profile" className={dropdownMenuItemClasses}>

@@ -1,6 +1,6 @@
 {
   "name": "@jcsoftdev/ui-elements",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "ui-* custom elements (button, input, checkbox, switch, radio-group, dialog, popover, tooltip, tabs, toast) with precompiled token CSS and opt-in, per-feature Liquid Glass. No framework, no Tailwind.",
   "author": "jcsoftdev",
   "license": "MIT",
