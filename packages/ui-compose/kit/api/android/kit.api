@@ -305,6 +305,143 @@ public final class com/jcsoftdev/ui/atoms/TextKt {
 	public static final fun getLocalContentColor ()Landroidx/compose/runtime/ProvidableCompositionLocal;
 }
 
+public final class com/jcsoftdev/ui/auth/AuthActionDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/AuthActionDefaults;
+	public final fun getButtonHeight (Landroidx/compose/runtime/Composer;I)F
+	public final fun getButtonTextStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getLinkColor (Landroidx/compose/runtime/Composer;I)J
+	public final fun getLinkTextStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/auth/AuthActionsKt {
+	public static final fun AuthLink-FHprtrg (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZJLandroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AuthPrimaryButton-eKw1uXw (Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZZLjava/lang/String;Lcom/jcsoftdev/ui/atoms/ButtonColors;Landroidx/compose/ui/text/TextStyle;FLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/auth/AuthArcsColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/auth/AuthArcsColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/auth/AuthArcsColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/auth/AuthArcsColors;
+	public final fun getArc-0d7_KjU ()J
+	public final fun getError-0d7_KjU ()J
+	public final fun getHighlight-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/auth/AuthArcsDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/AuthArcsDefaults;
+	public static final field RING_COUNT I
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/auth/AuthArcsColors;
+	public final fun getStrokeWidth-D9Ej5fM ()F
+}
+
+public final class com/jcsoftdev/ui/auth/AuthArcsKt {
+	public static final fun AuthArcs-HYR8e34 (Lcom/jcsoftdev/ui/auth/AuthState;FLandroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthArcsColors;IFLandroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/jcsoftdev/ui/auth/AuthFieldColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-4JmcsL4 (JJJJJJJ)Lcom/jcsoftdev/ui/auth/AuthFieldColors;
+	public static synthetic fun copy-4JmcsL4$default (Lcom/jcsoftdev/ui/auth/AuthFieldColors;JJJJJJJILjava/lang/Object;)Lcom/jcsoftdev/ui/auth/AuthFieldColors;
+	public final fun getContainer-0d7_KjU ()J
+	public final fun getError-0d7_KjU ()J
+	public final fun getErrorRing-0d7_KjU ()J
+	public final fun getFocusedRing-0d7_KjU ()J
+	public final fun getIcon-0d7_KjU ()J
+	public final fun getPlaceholder-0d7_KjU ()J
+	public final fun getText-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/auth/AuthFieldDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/AuthFieldDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/auth/AuthFieldColors;
+	public final fun getContentPadding ()Landroidx/compose/foundation/layout/PaddingValues;
+	public final fun getIconSize-D9Ej5fM ()F
+	public final fun getIdKeyboard ()Landroidx/compose/foundation/text/KeyboardOptions;
+	public final fun getPasswordKeyboard ()Landroidx/compose/foundation/text/KeyboardOptions;
+	public final fun getRhythm (Landroidx/compose/runtime/Composer;I)F
+	public final fun getShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getTextStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/auth/AuthFieldsKt {
+	public static final fun AuthPasswordField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Ljava/lang/String;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+	public static final fun AuthTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/auth/AuthHeaderShape : java/lang/Enum {
+	public static final field Arc Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
+	public static final field Overlap Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
+	public static fun values ()[Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
+}
+
+public final class com/jcsoftdev/ui/auth/AuthProgress {
+	public static final field $stable I
+	public static final field ID_CAPACITY I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/AuthProgress;
+	public static final field PASSWORD_CAPACITY I
+	public final fun emphasis (Lcom/jcsoftdev/ui/auth/AuthState;F)F
+	public final fun of (II)F
+	public final fun stateOf (IIZZZ)Lcom/jcsoftdev/ui/auth/AuthState;
+	public static synthetic fun stateOf$default (Lcom/jcsoftdev/ui/auth/AuthProgress;IIZZZILjava/lang/Object;)Lcom/jcsoftdev/ui/auth/AuthState;
+	public final fun sweepDegrees (F)F
+}
+
+public final class com/jcsoftdev/ui/auth/AuthScaffoldColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-jRlVdoo (JJJJ)Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;
+	public static synthetic fun copy-jRlVdoo$default (Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;JJJJILjava/lang/Object;)Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;
+	public final fun getHeader-0d7_KjU ()J
+	public final fun getOnHeader-0d7_KjU ()J
+	public final fun getSheet-0d7_KjU ()J
+	public final fun getTagline-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/auth/AuthScaffoldDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/AuthScaffoldDefaults;
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;
+	public final fun getArcDepth-D9Ej5fM ()F
+	public final fun getArt ()Lkotlin/jvm/functions/Function4;
+	public final fun getHorizontalPadding-D9Ej5fM ()F
+	public final fun getOverlap-D9Ej5fM ()F
+	public final fun getSheetShape (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/Shape;
+	public final fun getTaglineStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+	public final fun getTitleStyle (Landroidx/compose/runtime/Composer;I)Landroidx/compose/ui/text/TextStyle;
+}
+
+public final class com/jcsoftdev/ui/auth/AuthScaffoldKt {
+	public static final fun AuthScaffold-pglpRAY (Ljava/lang/String;Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthState;FLcom/jcsoftdev/ui/auth/AuthScaffoldColors;Lcom/jcsoftdev/ui/auth/AuthHeaderShape;Landroidx/compose/ui/graphics/Shape;FFLandroidx/compose/ui/text/TextStyle;Landroidx/compose/ui/text/TextStyle;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V
+}
+
+public final class com/jcsoftdev/ui/auth/AuthState : java/lang/Enum {
+	public static final field Error Lcom/jcsoftdev/ui/auth/AuthState;
+	public static final field Idle Lcom/jcsoftdev/ui/auth/AuthState;
+	public static final field Password Lcom/jcsoftdev/ui/auth/AuthState;
+	public static final field Success Lcom/jcsoftdev/ui/auth/AuthState;
+	public static final field Typing Lcom/jcsoftdev/ui/auth/AuthState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/jcsoftdev/ui/auth/AuthState;
+	public static fun values ()[Lcom/jcsoftdev/ui/auth/AuthState;
+}
+
+public final class com/jcsoftdev/ui/auth/ComposableSingletons$AuthScaffoldKt {
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/ComposableSingletons$AuthScaffoldKt;
+	public fun <init> ()V
+	public final fun getLambda$823296753$kit_release ()Lkotlin/jvm/functions/Function4;
+}
+
+public final class com/jcsoftdev/ui/auth/LoginScreenKt {
+	public static final fun LoginScreen (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Ljava/lang/String;ZZLjava/lang/String;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Ljava/lang/String;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Lcom/jcsoftdev/ui/auth/AuthHeaderShape;Lcom/jcsoftdev/ui/auth/AuthScaffoldColors;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;IIII)V
+}
+
 public final class com/jcsoftdev/ui/containers/BannerColors {
 	public static final field $stable I
 	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.jcsoftdev.ui.auth.AuthHeaderShape
 import com.jcsoftdev.ui.foundation.ProvideAndroidBack
 import com.jcsoftdev.ui.glass.LiquidGlass
 import com.jcsoftdev.ui.glass.SurfaceMaterial
@@ -22,6 +23,18 @@ class SampleActivity : ComponentActivity() {
                     "custom" -> CustomThemeGallery()
                     "headless" -> HeadlessGallery()
                     "states" -> StatesGallery()
+                    "auth" ->
+                        AuthGallery(
+                            dark = intent.getBooleanExtra("dark", false),
+                            shape =
+                                if (intent.getStringExtra("shape") ==
+                                    "arc"
+                                ) {
+                                    AuthHeaderShape.Arc
+                                } else {
+                                    AuthHeaderShape.Overlap
+                                },
+                        )
                     "playground" ->
                         GlassPlayground(
                             dark = intent.getBooleanExtra("dark", false),

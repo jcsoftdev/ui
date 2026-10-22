@@ -98,10 +98,12 @@ public object AuthFieldDefaults {
         get() = UiTheme.sizes.space18
 
     /** The keyboard of an identifier field: e-mail layout, no autocorrect, `Next`. */
-    public val IdKeyboard: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false, imeAction = ImeAction.Next)
+    public val IdKeyboard: KeyboardOptions =
+        KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false, imeAction = ImeAction.Next)
 
     /** The keyboard of a password field: masked, no autocorrect, `Done`. */
-    public val PasswordKeyboard: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false, imeAction = ImeAction.Done)
+    public val PasswordKeyboard: KeyboardOptions =
+        KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false, imeAction = ImeAction.Done)
 }
 
 /**

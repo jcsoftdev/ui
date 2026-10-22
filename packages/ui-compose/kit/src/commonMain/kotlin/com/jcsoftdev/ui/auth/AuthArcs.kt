@@ -44,7 +44,7 @@ public object AuthArcsDefaults {
     }
 
     /** Number of concentric arcs. */
-    public const val RingCount: Int = 5
+    public const val RING_COUNT: Int = 5
 
     /** Stroke width of every arc. */
     public val strokeWidth: Dp = 1.dp
@@ -65,7 +65,7 @@ public fun AuthArcs(
     progress: Float,
     modifier: Modifier = Modifier,
     colors: AuthArcsColors = AuthArcsDefaults.colors(),
-    ringCount: Int = AuthArcsDefaults.RingCount,
+    ringCount: Int = AuthArcsDefaults.RING_COUNT,
     strokeWidth: Dp = AuthArcsDefaults.strokeWidth,
 ) {
     val frame = AuthArcsFrame.of(state, progress)

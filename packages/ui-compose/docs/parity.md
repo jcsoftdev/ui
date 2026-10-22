@@ -129,6 +129,17 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `Stepper` | web-only | none | |
 | `FloatingToc` | n/a | none | |
 
+## Auth
+
+| Web | Status | Compose | Notes |
+| --- | --- | --- | --- |
+| (sign-in screen frame) | compose-only | `auth.AuthScaffold`, `AuthScaffoldColors`, `AuthScaffoldDefaults`, `AuthHeaderShape` | Header band, overlapping or arc-cut sheet, pinned bottom slot, insets and keyboard. The web sibling lives in `packages/ui` (separate feature). |
+| (header art) | compose-only | `auth.AuthArcs`, `AuthArcsColors`, `AuthArcsDefaults` | Static frame driven by `AuthState` and progress; motion is pending. |
+| (form state) | compose-only | `auth.AuthState`, `AuthProgress` | Idle, Typing, Password, Error, Success; progress 0..1 (id 12 characters, password 8). |
+| (pill fields) | compose-only | `auth.AuthTextField`, `AuthPasswordField`, `AuthFieldColors`, `AuthFieldDefaults` | Built on `forms.Input`; reveal labels default to `UiStrings`. |
+| (actions) | compose-only | `auth.AuthPrimaryButton`, `AuthLink`, `AuthActionDefaults` | Pill action over `atoms.Button`; 48dp link. |
+| (login assembly) | compose-only | `auth.LoginScreen` | Convenience over the parts; drives the header state from the fields. |
+
 ## States
 
 | Web | Status | Compose | Notes |

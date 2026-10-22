@@ -24,8 +24,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
@@ -169,14 +169,25 @@ public fun AuthScaffold(
                 }
             }
             val insets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
-            Column(Modifier.fillMaxSize().clip(sheetShape).background(colors.sheet).semantics { isTraversalGroup = true }) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .clip(sheetShape)
+                    .background(colors.sheet)
+                    .semantics { isTraversalGroup = true },
+            ) {
                 Column(
                     Modifier
                         .weight(1f)
                         .fillMaxWidth()
                         .verticalScroll(rememberScrollState())
                         .windowInsetsPadding(if (bottom == null) insets else insets.only(WindowInsetsSides.Horizontal))
-                        .padding(start = padding, end = padding, top = (if (arc) drop else 0.dp) + padding + UiTheme.sizes.space8, bottom = padding),
+                        .padding(
+                            start = padding,
+                            end = padding,
+                            top = (if (arc) drop else 0.dp) + padding + UiTheme.sizes.space8,
+                            bottom = padding,
+                        ),
                     content = content,
                 )
                 if (bottom != null) {

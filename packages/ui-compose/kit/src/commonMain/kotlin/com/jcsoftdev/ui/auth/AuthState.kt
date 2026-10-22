@@ -24,18 +24,18 @@ public enum class AuthState {
 @Stable
 public object AuthProgress {
     /** Identifier length that counts as half of the form. */
-    public const val IdCapacity: Int = 12
+    public const val ID_CAPACITY: Int = 12
 
     /** Password length that counts as the other half of the form. */
-    public const val PasswordCapacity: Int = 8
+    public const val PASSWORD_CAPACITY: Int = 8
 
-    /** Form completion in 0..1: the identifier fills the first half (up to [IdCapacity] characters), the password the second (up to [PasswordCapacity]). */
+    /** Form completion in 0..1: the identifier fills the first half (up to [ID_CAPACITY] characters), the password the second (up to [PASSWORD_CAPACITY]). */
     public fun of(
         idLength: Int,
         passwordLength: Int,
     ): Float {
-        val id = idLength.coerceIn(0, IdCapacity).toFloat() / IdCapacity
-        val password = passwordLength.coerceIn(0, PasswordCapacity).toFloat() / PasswordCapacity
+        val id = idLength.coerceIn(0, ID_CAPACITY).toFloat() / ID_CAPACITY
+        val password = passwordLength.coerceIn(0, PASSWORD_CAPACITY).toFloat() / PASSWORD_CAPACITY
         return (id + password) / 2f
     }
 

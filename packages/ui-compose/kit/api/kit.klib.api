@@ -72,6 +72,31 @@ final enum class com.jcsoftdev.ui.atoms/LedStatus : kotlin/Enum<com.jcsoftdev.ui
     final fun values(): kotlin/Array<com.jcsoftdev.ui.atoms/LedStatus> // com.jcsoftdev.ui.atoms/LedStatus.values|values#static(){}[0]
 }
 
+final enum class com.jcsoftdev.ui.auth/AuthHeaderShape : kotlin/Enum<com.jcsoftdev.ui.auth/AuthHeaderShape> { // com.jcsoftdev.ui.auth/AuthHeaderShape|null[0]
+    enum entry Arc // com.jcsoftdev.ui.auth/AuthHeaderShape.Arc|null[0]
+    enum entry Overlap // com.jcsoftdev.ui.auth/AuthHeaderShape.Overlap|null[0]
+
+    final val entries // com.jcsoftdev.ui.auth/AuthHeaderShape.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.auth/AuthHeaderShape> // com.jcsoftdev.ui.auth/AuthHeaderShape.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.auth/AuthHeaderShape // com.jcsoftdev.ui.auth/AuthHeaderShape.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.auth/AuthHeaderShape> // com.jcsoftdev.ui.auth/AuthHeaderShape.values|values#static(){}[0]
+}
+
+final enum class com.jcsoftdev.ui.auth/AuthState : kotlin/Enum<com.jcsoftdev.ui.auth/AuthState> { // com.jcsoftdev.ui.auth/AuthState|null[0]
+    enum entry Error // com.jcsoftdev.ui.auth/AuthState.Error|null[0]
+    enum entry Idle // com.jcsoftdev.ui.auth/AuthState.Idle|null[0]
+    enum entry Password // com.jcsoftdev.ui.auth/AuthState.Password|null[0]
+    enum entry Success // com.jcsoftdev.ui.auth/AuthState.Success|null[0]
+    enum entry Typing // com.jcsoftdev.ui.auth/AuthState.Typing|null[0]
+
+    final val entries // com.jcsoftdev.ui.auth/AuthState.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.jcsoftdev.ui.auth/AuthState> // com.jcsoftdev.ui.auth/AuthState.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.jcsoftdev.ui.auth/AuthState // com.jcsoftdev.ui.auth/AuthState.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.jcsoftdev.ui.auth/AuthState> // com.jcsoftdev.ui.auth/AuthState.values|values#static(){}[0]
+}
+
 final enum class com.jcsoftdev.ui.containers/BannerTone : kotlin/Enum<com.jcsoftdev.ui.containers/BannerTone> { // com.jcsoftdev.ui.containers/BannerTone|null[0]
     enum entry Danger // com.jcsoftdev.ui.containers/BannerTone.Danger|null[0]
     enum entry Info // com.jcsoftdev.ui.containers/BannerTone.Info|null[0]
@@ -310,6 +335,55 @@ final class com.jcsoftdev.ui.atoms/SwitchColors { // com.jcsoftdev.ui.atoms/Swit
         final fun <get-trackOn>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.atoms/SwitchColors.trackOn.<get-trackOn>|<get-trackOn>(){}[0]
 
     final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.atoms/SwitchColors // com.jcsoftdev.ui.atoms/SwitchColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.auth/AuthArcsColors { // com.jcsoftdev.ui.auth/AuthArcsColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.auth/AuthArcsColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val arc // com.jcsoftdev.ui.auth/AuthArcsColors.arc|{}arc[0]
+        final fun <get-arc>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthArcsColors.arc.<get-arc>|<get-arc>(){}[0]
+    final val error // com.jcsoftdev.ui.auth/AuthArcsColors.error|{}error[0]
+        final fun <get-error>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthArcsColors.error.<get-error>|<get-error>(){}[0]
+    final val highlight // com.jcsoftdev.ui.auth/AuthArcsColors.highlight|{}highlight[0]
+        final fun <get-highlight>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthArcsColors.highlight.<get-highlight>|<get-highlight>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.auth/AuthArcsColors // com.jcsoftdev.ui.auth/AuthArcsColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.auth/AuthFieldColors { // com.jcsoftdev.ui.auth/AuthFieldColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.auth/AuthFieldColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val container // com.jcsoftdev.ui.auth/AuthFieldColors.container|{}container[0]
+        final fun <get-container>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.container.<get-container>|<get-container>(){}[0]
+    final val error // com.jcsoftdev.ui.auth/AuthFieldColors.error|{}error[0]
+        final fun <get-error>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.error.<get-error>|<get-error>(){}[0]
+    final val errorRing // com.jcsoftdev.ui.auth/AuthFieldColors.errorRing|{}errorRing[0]
+        final fun <get-errorRing>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.errorRing.<get-errorRing>|<get-errorRing>(){}[0]
+    final val focusedRing // com.jcsoftdev.ui.auth/AuthFieldColors.focusedRing|{}focusedRing[0]
+        final fun <get-focusedRing>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.focusedRing.<get-focusedRing>|<get-focusedRing>(){}[0]
+    final val icon // com.jcsoftdev.ui.auth/AuthFieldColors.icon|{}icon[0]
+        final fun <get-icon>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.icon.<get-icon>|<get-icon>(){}[0]
+    final val placeholder // com.jcsoftdev.ui.auth/AuthFieldColors.placeholder|{}placeholder[0]
+        final fun <get-placeholder>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.placeholder.<get-placeholder>|<get-placeholder>(){}[0]
+    final val text // com.jcsoftdev.ui.auth/AuthFieldColors.text|{}text[0]
+        final fun <get-text>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthFieldColors.text.<get-text>|<get-text>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.auth/AuthFieldColors // com.jcsoftdev.ui.auth/AuthFieldColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+}
+
+final class com.jcsoftdev.ui.auth/AuthScaffoldColors { // com.jcsoftdev.ui.auth/AuthScaffoldColors|null[0]
+    constructor <init>(androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color, androidx.compose.ui.graphics/Color) // com.jcsoftdev.ui.auth/AuthScaffoldColors.<init>|<init>(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
+
+    final val header // com.jcsoftdev.ui.auth/AuthScaffoldColors.header|{}header[0]
+        final fun <get-header>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthScaffoldColors.header.<get-header>|<get-header>(){}[0]
+    final val onHeader // com.jcsoftdev.ui.auth/AuthScaffoldColors.onHeader|{}onHeader[0]
+        final fun <get-onHeader>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthScaffoldColors.onHeader.<get-onHeader>|<get-onHeader>(){}[0]
+    final val sheet // com.jcsoftdev.ui.auth/AuthScaffoldColors.sheet|{}sheet[0]
+        final fun <get-sheet>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthScaffoldColors.sheet.<get-sheet>|<get-sheet>(){}[0]
+    final val tagline // com.jcsoftdev.ui.auth/AuthScaffoldColors.tagline|{}tagline[0]
+        final fun <get-tagline>(): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthScaffoldColors.tagline.<get-tagline>|<get-tagline>(){}[0]
+
+    final fun copy(androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ..., androidx.compose.ui.graphics/Color = ...): com.jcsoftdev.ui.auth/AuthScaffoldColors // com.jcsoftdev.ui.auth/AuthScaffoldColors.copy|copy(androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color;androidx.compose.ui.graphics.Color){}[0]
 }
 
 final class com.jcsoftdev.ui.containers/BannerColors { // com.jcsoftdev.ui.containers/BannerColors|null[0]
@@ -1483,6 +1557,77 @@ final object com.jcsoftdev.ui.atoms/SwitchDefaults { // com.jcsoftdev.ui.atoms/S
     final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.atoms/SwitchColors // com.jcsoftdev.ui.atoms/SwitchDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 }
 
+final object com.jcsoftdev.ui.auth/AuthActionDefaults { // com.jcsoftdev.ui.auth/AuthActionDefaults|null[0]
+    final val buttonHeight // com.jcsoftdev.ui.auth/AuthActionDefaults.buttonHeight|{}buttonHeight[0]
+        final fun <get-buttonHeight>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthActionDefaults.buttonHeight.<get-buttonHeight>|<get-buttonHeight>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val buttonTextStyle // com.jcsoftdev.ui.auth/AuthActionDefaults.buttonTextStyle|{}buttonTextStyle[0]
+        final fun <get-buttonTextStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.auth/AuthActionDefaults.buttonTextStyle.<get-buttonTextStyle>|<get-buttonTextStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val linkColor // com.jcsoftdev.ui.auth/AuthActionDefaults.linkColor|{}linkColor[0]
+        final fun <get-linkColor>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.graphics/Color // com.jcsoftdev.ui.auth/AuthActionDefaults.linkColor.<get-linkColor>|<get-linkColor>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val linkTextStyle // com.jcsoftdev.ui.auth/AuthActionDefaults.linkTextStyle|{}linkTextStyle[0]
+        final fun <get-linkTextStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.auth/AuthActionDefaults.linkTextStyle.<get-linkTextStyle>|<get-linkTextStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.auth/AuthArcsDefaults { // com.jcsoftdev.ui.auth/AuthArcsDefaults|null[0]
+    final const val RING_COUNT // com.jcsoftdev.ui.auth/AuthArcsDefaults.RING_COUNT|{}RING_COUNT[0]
+        final fun <get-RING_COUNT>(): kotlin/Int // com.jcsoftdev.ui.auth/AuthArcsDefaults.RING_COUNT.<get-RING_COUNT>|<get-RING_COUNT>(){}[0]
+
+    final val strokeWidth // com.jcsoftdev.ui.auth/AuthArcsDefaults.strokeWidth|{}strokeWidth[0]
+        final fun <get-strokeWidth>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthArcsDefaults.strokeWidth.<get-strokeWidth>|<get-strokeWidth>(){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.auth/AuthArcsColors // com.jcsoftdev.ui.auth/AuthArcsDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.auth/AuthFieldDefaults { // com.jcsoftdev.ui.auth/AuthFieldDefaults|null[0]
+    final val IdKeyboard // com.jcsoftdev.ui.auth/AuthFieldDefaults.IdKeyboard|{}IdKeyboard[0]
+        final fun <get-IdKeyboard>(): androidx.compose.foundation.text/KeyboardOptions // com.jcsoftdev.ui.auth/AuthFieldDefaults.IdKeyboard.<get-IdKeyboard>|<get-IdKeyboard>(){}[0]
+    final val PasswordKeyboard // com.jcsoftdev.ui.auth/AuthFieldDefaults.PasswordKeyboard|{}PasswordKeyboard[0]
+        final fun <get-PasswordKeyboard>(): androidx.compose.foundation.text/KeyboardOptions // com.jcsoftdev.ui.auth/AuthFieldDefaults.PasswordKeyboard.<get-PasswordKeyboard>|<get-PasswordKeyboard>(){}[0]
+    final val contentPadding // com.jcsoftdev.ui.auth/AuthFieldDefaults.contentPadding|{}contentPadding[0]
+        final fun <get-contentPadding>(): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.auth/AuthFieldDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(){}[0]
+    final val iconSize // com.jcsoftdev.ui.auth/AuthFieldDefaults.iconSize|{}iconSize[0]
+        final fun <get-iconSize>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthFieldDefaults.iconSize.<get-iconSize>|<get-iconSize>(){}[0]
+    final val rhythm // com.jcsoftdev.ui.auth/AuthFieldDefaults.rhythm|{}rhythm[0]
+        final fun <get-rhythm>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthFieldDefaults.rhythm.<get-rhythm>|<get-rhythm>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val shape // com.jcsoftdev.ui.auth/AuthFieldDefaults.shape|{}shape[0]
+        final fun <get-shape>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.graphics/Shape // com.jcsoftdev.ui.auth/AuthFieldDefaults.shape.<get-shape>|<get-shape>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val textStyle // com.jcsoftdev.ui.auth/AuthFieldDefaults.textStyle|{}textStyle[0]
+        final fun <get-textStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.auth/AuthFieldDefaults.textStyle.<get-textStyle>|<get-textStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.auth/AuthFieldColors // com.jcsoftdev.ui.auth/AuthFieldDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
+final object com.jcsoftdev.ui.auth/AuthProgress { // com.jcsoftdev.ui.auth/AuthProgress|null[0]
+    final const val ID_CAPACITY // com.jcsoftdev.ui.auth/AuthProgress.ID_CAPACITY|{}ID_CAPACITY[0]
+        final fun <get-ID_CAPACITY>(): kotlin/Int // com.jcsoftdev.ui.auth/AuthProgress.ID_CAPACITY.<get-ID_CAPACITY>|<get-ID_CAPACITY>(){}[0]
+    final const val PASSWORD_CAPACITY // com.jcsoftdev.ui.auth/AuthProgress.PASSWORD_CAPACITY|{}PASSWORD_CAPACITY[0]
+        final fun <get-PASSWORD_CAPACITY>(): kotlin/Int // com.jcsoftdev.ui.auth/AuthProgress.PASSWORD_CAPACITY.<get-PASSWORD_CAPACITY>|<get-PASSWORD_CAPACITY>(){}[0]
+
+    final fun emphasis(com.jcsoftdev.ui.auth/AuthState, kotlin/Float): kotlin/Float // com.jcsoftdev.ui.auth/AuthProgress.emphasis|emphasis(com.jcsoftdev.ui.auth.AuthState;kotlin.Float){}[0]
+    final fun of(kotlin/Int, kotlin/Int): kotlin/Float // com.jcsoftdev.ui.auth/AuthProgress.of|of(kotlin.Int;kotlin.Int){}[0]
+    final fun stateOf(kotlin/Int, kotlin/Int, kotlin/Boolean, kotlin/Boolean = ..., kotlin/Boolean = ...): com.jcsoftdev.ui.auth/AuthState // com.jcsoftdev.ui.auth/AuthProgress.stateOf|stateOf(kotlin.Int;kotlin.Int;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun sweepDegrees(kotlin/Float): kotlin/Float // com.jcsoftdev.ui.auth/AuthProgress.sweepDegrees|sweepDegrees(kotlin.Float){}[0]
+}
+
+final object com.jcsoftdev.ui.auth/AuthScaffoldDefaults { // com.jcsoftdev.ui.auth/AuthScaffoldDefaults|null[0]
+    final val Art // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.Art|{}Art[0]
+        final fun <get-Art>(): kotlin/Function4<com.jcsoftdev.ui.auth/AuthState, kotlin/Float, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit> // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.Art.<get-Art>|<get-Art>(){}[0]
+    final val arcDepth // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.arcDepth|{}arcDepth[0]
+        final fun <get-arcDepth>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.arcDepth.<get-arcDepth>|<get-arcDepth>(){}[0]
+    final val horizontalPadding // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.horizontalPadding|{}horizontalPadding[0]
+        final fun <get-horizontalPadding>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.horizontalPadding.<get-horizontalPadding>|<get-horizontalPadding>(){}[0]
+    final val overlap // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.overlap|{}overlap[0]
+        final fun <get-overlap>(): androidx.compose.ui.unit/Dp // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.overlap.<get-overlap>|<get-overlap>(){}[0]
+    final val sheetShape // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.sheetShape|{}sheetShape[0]
+        final fun <get-sheetShape>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.graphics/Shape // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.sheetShape.<get-sheetShape>|<get-sheetShape>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val taglineStyle // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.taglineStyle|{}taglineStyle[0]
+        final fun <get-taglineStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.taglineStyle.<get-taglineStyle>|<get-taglineStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+    final val titleStyle // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.titleStyle|{}titleStyle[0]
+        final fun <get-titleStyle>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.ui.text/TextStyle // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.titleStyle.<get-titleStyle>|<get-titleStyle>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+
+    final fun colors(androidx.compose.runtime/Composer?, kotlin/Int): com.jcsoftdev.ui.auth/AuthScaffoldColors // com.jcsoftdev.ui.auth/AuthScaffoldDefaults.colors|colors(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+}
+
 final object com.jcsoftdev.ui.containers/BannerDefaults { // com.jcsoftdev.ui.containers/BannerDefaults|null[0]
     final val contentPadding // com.jcsoftdev.ui.containers/BannerDefaults.contentPadding|{}contentPadding[0]
         final fun <get-contentPadding>(androidx.compose.runtime/Composer?, kotlin/Int): androidx.compose.foundation.layout/PaddingValues // com.jcsoftdev.ui.containers/BannerDefaults.contentPadding.<get-contentPadding>|<get-contentPadding>(androidx.compose.runtime.Composer?;kotlin.Int){}[0]
@@ -2039,6 +2184,15 @@ final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillColors$stablep
 final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop|#static{}com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop[0]
 final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop|#static{}com_jcsoftdev_ui_atoms_SwitchColors$stableprop[0]
 final val com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop|#static{}com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthActionDefaults$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthActionDefaults$stableprop|#static{}com_jcsoftdev_ui_auth_AuthActionDefaults$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsColors$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsColors$stableprop|#static{}com_jcsoftdev_ui_auth_AuthArcsColors$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsDefaults$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsDefaults$stableprop|#static{}com_jcsoftdev_ui_auth_AuthArcsDefaults$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsFrame$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsFrame$stableprop|#static{}com_jcsoftdev_ui_auth_AuthArcsFrame$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldColors$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldColors$stableprop|#static{}com_jcsoftdev_ui_auth_AuthFieldColors$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldDefaults$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldDefaults$stableprop|#static{}com_jcsoftdev_ui_auth_AuthFieldDefaults$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthProgress$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthProgress$stableprop|#static{}com_jcsoftdev_ui_auth_AuthProgress$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldColors$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldColors$stableprop|#static{}com_jcsoftdev_ui_auth_AuthScaffoldColors$stableprop[0]
+final val com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldDefaults$stableprop // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldDefaults$stableprop|#static{}com_jcsoftdev_ui_auth_AuthScaffoldDefaults$stableprop[0]
 final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerColors$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerColors$stableprop|#static{}com_jcsoftdev_ui_containers_BannerColors$stableprop[0]
 final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerDefaults$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_BannerDefaults$stableprop|#static{}com_jcsoftdev_ui_containers_BannerDefaults$stableprop[0]
 final val com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardColors$stableprop // com.jcsoftdev.ui.containers/com_jcsoftdev_ui_containers_CardColors$stableprop|#static{}com_jcsoftdev_ui_containers_CardColors$stableprop[0]
@@ -2512,6 +2666,22 @@ final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillColors$stablep
 final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop_getter|com_jcsoftdev_ui_atoms_StatusPillDefaults$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchColors$stableprop_getter|com_jcsoftdev_ui_atoms_SwitchColors$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.atoms/com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop_getter|com_jcsoftdev_ui_atoms_SwitchDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/AuthArcs(com.jcsoftdev.ui.auth/AuthState, kotlin/Float, androidx.compose.ui/Modifier?, com.jcsoftdev.ui.auth/AuthArcsColors?, kotlin/Int, androidx.compose.ui.unit/Dp, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/AuthArcs|AuthArcs(com.jcsoftdev.ui.auth.AuthState;kotlin.Float;androidx.compose.ui.Modifier?;com.jcsoftdev.ui.auth.AuthArcsColors?;kotlin.Int;androidx.compose.ui.unit.Dp;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/AuthLink(kotlin/String, kotlin/Function0<kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Boolean, androidx.compose.ui.graphics/Color, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/AuthLink|AuthLink(kotlin.String;kotlin.Function0<kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Boolean;androidx.compose.ui.graphics.Color;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/AuthPasswordField(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/String?, kotlin/String?, androidx.compose.ui.graphics.vector/ImageVector?, kotlin/String?, kotlin/String?, com.jcsoftdev.ui.forms/InputContentType?, androidx.compose.foundation.text/KeyboardOptions?, androidx.compose.foundation.text/KeyboardActions?, com.jcsoftdev.ui.auth/AuthFieldColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/AuthPasswordField|AuthPasswordField(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.String?;kotlin.String?;androidx.compose.ui.graphics.vector.ImageVector?;kotlin.String?;kotlin.String?;com.jcsoftdev.ui.forms.InputContentType?;androidx.compose.foundation.text.KeyboardOptions?;androidx.compose.foundation.text.KeyboardActions?;com.jcsoftdev.ui.auth.AuthFieldColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/AuthPrimaryButton(kotlin/String, kotlin/Function0<kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.atoms/ButtonColors?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.unit/Dp, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/AuthPrimaryButton|AuthPrimaryButton(kotlin.String;kotlin.Function0<kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.atoms.ButtonColors?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.unit.Dp;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/AuthScaffold(kotlin/String, kotlin/String, androidx.compose.ui/Modifier?, com.jcsoftdev.ui.auth/AuthState?, kotlin/Float, com.jcsoftdev.ui.auth/AuthScaffoldColors?, com.jcsoftdev.ui.auth/AuthHeaderShape?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.unit/Dp, androidx.compose.ui.unit/Dp, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, kotlin/Function4<com.jcsoftdev.ui.auth/AuthState, kotlin/Float, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/AuthScaffold|AuthScaffold(kotlin.String;kotlin.String;androidx.compose.ui.Modifier?;com.jcsoftdev.ui.auth.AuthState?;kotlin.Float;com.jcsoftdev.ui.auth.AuthScaffoldColors?;com.jcsoftdev.ui.auth.AuthHeaderShape?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.unit.Dp;androidx.compose.ui.unit.Dp;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;kotlin.Function4<com.jcsoftdev.ui.auth.AuthState,kotlin.Float,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/AuthTextField(kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/String, androidx.compose.ui/Modifier?, kotlin/Boolean, kotlin/String?, kotlin/String?, androidx.compose.ui.graphics.vector/ImageVector?, com.jcsoftdev.ui.forms/InputContentType?, androidx.compose.foundation.text/KeyboardOptions?, androidx.compose.foundation.text/KeyboardActions?, com.jcsoftdev.ui.auth/AuthFieldColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/AuthTextField|AuthTextField(kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;kotlin.String;androidx.compose.ui.Modifier?;kotlin.Boolean;kotlin.String?;kotlin.String?;androidx.compose.ui.graphics.vector.ImageVector?;com.jcsoftdev.ui.forms.InputContentType?;androidx.compose.foundation.text.KeyboardOptions?;androidx.compose.foundation.text.KeyboardActions?;com.jcsoftdev.ui.auth.AuthFieldColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/LoginScreen(kotlin/String, kotlin/String, kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/String, kotlin/String, kotlin/Function1<kotlin/String, kotlin/Unit>, kotlin/String, kotlin/String, kotlin/Function0<kotlin/Unit>, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, kotlin/String?, kotlin/Function0<kotlin/Unit>?, kotlin/String?, kotlin/Function0<kotlin/Unit>?, androidx.compose.ui.graphics.vector/ImageVector?, com.jcsoftdev.ui.forms/InputContentType?, androidx.compose.foundation.text/KeyboardOptions?, com.jcsoftdev.ui.auth/AuthHeaderShape?, com.jcsoftdev.ui.auth/AuthScaffoldColors?, kotlin/Function4<com.jcsoftdev.ui.auth/AuthState, kotlin/Float, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.auth/LoginScreen|LoginScreen(kotlin.String;kotlin.String;kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;kotlin.String;kotlin.String;kotlin.Function1<kotlin.String,kotlin.Unit>;kotlin.String;kotlin.String;kotlin.Function0<kotlin.Unit>;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;kotlin.String?;kotlin.Function0<kotlin.Unit>?;kotlin.String?;kotlin.Function0<kotlin.Unit>?;androidx.compose.ui.graphics.vector.ImageVector?;com.jcsoftdev.ui.forms.InputContentType?;androidx.compose.foundation.text.KeyboardOptions?;com.jcsoftdev.ui.auth.AuthHeaderShape?;com.jcsoftdev.ui.auth.AuthScaffoldColors?;kotlin.Function4<com.jcsoftdev.ui.auth.AuthState,kotlin.Float,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthActionDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthActionDefaults$stableprop_getter|com_jcsoftdev_ui_auth_AuthActionDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsColors$stableprop_getter|com_jcsoftdev_ui_auth_AuthArcsColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsDefaults$stableprop_getter|com_jcsoftdev_ui_auth_AuthArcsDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsFrame$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthArcsFrame$stableprop_getter|com_jcsoftdev_ui_auth_AuthArcsFrame$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldColors$stableprop_getter|com_jcsoftdev_ui_auth_AuthFieldColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthFieldDefaults$stableprop_getter|com_jcsoftdev_ui_auth_AuthFieldDefaults$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthProgress$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthProgress$stableprop_getter|com_jcsoftdev_ui_auth_AuthProgress$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldColors$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldColors$stableprop_getter|com_jcsoftdev_ui_auth_AuthScaffoldColors$stableprop_getter(){}[0]
+final fun com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldDefaults$stableprop_getter(): kotlin/Int // com.jcsoftdev.ui.auth/com_jcsoftdev_ui_auth_AuthScaffoldDefaults$stableprop_getter|com_jcsoftdev_ui_auth_AuthScaffoldDefaults$stableprop_getter(){}[0]
 final fun com.jcsoftdev.ui.containers/Banner(kotlin/String, androidx.compose.ui/Modifier?, com.jcsoftdev.ui.containers/BannerTone?, kotlin/String?, androidx.compose.ui.graphics.vector/ImageVector?, kotlin/Function0<kotlin/Unit>?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, com.jcsoftdev.ui.containers/BannerColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/Banner|Banner(kotlin.String;androidx.compose.ui.Modifier?;com.jcsoftdev.ui.containers.BannerTone?;kotlin.String?;androidx.compose.ui.graphics.vector.ImageVector?;kotlin.Function0<kotlin.Unit>?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;com.jcsoftdev.ui.containers.BannerColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.containers/Card(androidx.compose.ui/Modifier?, kotlin/Function0<kotlin/Unit>?, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.containers/CardColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.foundation.layout/PaddingValues?, com.jcsoftdev.ui.glass/SurfaceMaterial?, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/RowScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function3<androidx.compose.foundation.layout/ColumnScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/Card|Card(androidx.compose.ui.Modifier?;kotlin.Function0<kotlin.Unit>?;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.containers.CardColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.foundation.layout.PaddingValues?;com.jcsoftdev.ui.glass.SurfaceMaterial?;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.RowScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function3<androidx.compose.foundation.layout.ColumnScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 final fun com.jcsoftdev.ui.containers/ListRow(kotlin/String, androidx.compose.ui/Modifier?, kotlin/String?, kotlin/String?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>?, kotlin/Function0<kotlin/Unit>?, kotlin/Boolean, kotlin/Boolean, kotlin/String?, com.jcsoftdev.ui.containers/ListRowColors?, androidx.compose.ui.graphics/Shape?, androidx.compose.foundation.layout/PaddingValues?, androidx.compose.ui.unit/Dp, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.ui.text/TextStyle?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int, kotlin/Int) // com.jcsoftdev.ui.containers/ListRow|ListRow(kotlin.String;androidx.compose.ui.Modifier?;kotlin.String?;kotlin.String?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>?;kotlin.Function0<kotlin.Unit>?;kotlin.Boolean;kotlin.Boolean;kotlin.String?;com.jcsoftdev.ui.containers.ListRowColors?;androidx.compose.ui.graphics.Shape?;androidx.compose.foundation.layout.PaddingValues?;androidx.compose.ui.unit.Dp;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.ui.text.TextStyle?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
