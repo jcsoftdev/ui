@@ -20,7 +20,9 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -274,6 +276,28 @@ class AuthUiTest {
             loading = false
             waitForIdle()
             onNodeWithContentDescription("Password").assertIsEnabled()
+        }
+
+    @Test
+    fun collapsingTheWelcomeMovesFocusToTheFormTitleAndExpandingBringsItBack() =
+        runComposeUiTest {
+            var expanded by mutableStateOf(true)
+            setContent(screen { welcomeScaffold(expanded = expanded) })
+            waitForIdle()
+            expanded = false
+            waitForIdle()
+            onNodeWithText("Title").assertIsFocused()
+            expanded = true
+            waitForIdle()
+            onNodeWithText("Hello").assertIsFocused()
+        }
+
+    @Test
+    fun aScaffoldThatStartsCollapsedDoesNotGrabFocus() =
+        runComposeUiTest {
+            setContent(screen { welcomeScaffold(expanded = false) })
+            waitForIdle()
+            onNodeWithText("Title").assertIsNotFocused()
         }
 
     private fun fontScaled(

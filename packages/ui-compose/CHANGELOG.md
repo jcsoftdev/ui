@@ -20,6 +20,7 @@ Fixes the kit-level defaults an accessibility audit of a production app found in
 - **Auth loading and repeated errors** (`auth`): `LoginScreen` ignores the keyboard's done key and disables both fields while `loading`, and replays the header's error reaction and the error announcement on every failed attempt. `errorKey` (on `LoginScreen`, `AuthScaffold`, `AuthArcs`, `AuthFloatingArt`, `AuthTextField` and `AuthPasswordField`, with `LocalAuthErrorKey` for custom art) is the additive counter behind it.
 - **Auth drag**: fast drags on `AuthFloatingArt` add up every pointer delta instead of dropping the ones that arrive in the same frame.
 - **Auth at large font scales** (`auth`): above a font scale of 1 the header title and tagline stop growing at 1.3x and the header band takes at most 40% of the screen (30% with the keyboard up); when the visible sheet is under 480dp the pinned bottom slot moves into the scrolling content, so the fields and the action stay reachable. Nothing changes at a font scale of 1.
+- **Auth focus**: when the welcome mode of `AuthScaffold` collapses, accessibility focus moves to the form title (and back to the welcome title when it expands).
 - All new components are separate files that no existing code refers to, so R8 drops them from apps that do not use them.
 - Binary note (pre-1.0): recompile. Changed signatures: `Button`, `IconButton` (new `disabledColors`), `Input`, `PasswordInput` (new `contentType`), `CardDefaults.colors`.
 

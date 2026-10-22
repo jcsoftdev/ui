@@ -2,6 +2,7 @@ package com.jcsoftdev.ui.auth
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -31,11 +32,16 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -71,6 +77,7 @@ import com.jcsoftdev.ui.atoms.Text
 import com.jcsoftdev.ui.foundation.BackHandler
 import com.jcsoftdev.ui.foundation.BackPriority
 import com.jcsoftdev.ui.theme.UiTheme
+import kotlinx.coroutines.flow.first
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -215,7 +222,19 @@ public fun AuthScaffold(
     val zones = remember { AuthTextZones() }
     zones.welcomeFraction = welcome
     val focus = LocalFocusManager.current
-    LaunchedEffect(expanded) { if (expanded) focus.clearFocusSafely() }
+    val formTitleFocus = remember { FocusRequester() }
+    val welcomeTitleFocus = remember { FocusRequester() }
+    var settled by remember { mutableStateOf(false) }
+    LaunchedEffect(expanded) {
+        if (expanded) focus.clearFocusSafely()
+        if (!settled) {
+            settled = true
+            return@LaunchedEffect
+        }
+        if (expanded) snapshotFlow { showWelcome }.first { it }
+        withFrameNanos { }
+        runCatching { (if (expanded) welcomeTitleFocus else formTitleFocus).requestFocus() }
+    }
     val density = LocalDensity.current
     val scaledText = density.fontScale > 1f
     val headerDensity = remember(density) { Density(density.density, min(density.fontScale, MAX_HEADER_FONT_SCALE)) }
@@ -258,7 +277,7 @@ public fun AuthScaffold(
                     ) {
                         Text(
                             title,
-                            Modifier.semantics { heading() },
+                            Modifier.focusRequester(formTitleFocus).focusable().semantics { heading() },
                             titleStyle,
                             colors.onHeader,
                         )
@@ -277,6 +296,7 @@ public fun AuthScaffold(
                     rise,
                     zones,
                     expanded,
+                    welcomeTitleFocus,
                     welcomeAction,
                 )
             } else {
@@ -379,6 +399,7 @@ private fun WelcomeContent(
     rise: Float,
     zones: AuthTextZones,
     expanded: Boolean,
+    titleFocus: FocusRequester,
     action: (@Composable ColumnScope.() -> Unit)?,
 ) {
     val padding = AuthScaffoldDefaults.horizontalPadding
@@ -422,7 +443,7 @@ private fun WelcomeContent(
                     echoStyle,
                     colors.echo,
                 )
-                Text(title, Modifier.semantics { heading() }, poster, colors.onHeader)
+                Text(title, Modifier.focusRequester(titleFocus).focusable().semantics { heading() }, poster, colors.onHeader)
             }
             Spacer(Modifier.height(UiTheme.sizes.space16))
             Text(tagline, style = taglineStyle, color = colors.tagline)
