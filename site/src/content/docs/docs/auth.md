@@ -45,12 +45,12 @@ export function LoginScreen() {
 
 ## Parts
 
-| Piece | What it does |
-| --- | --- |
-| `AuthLayout` | `layout` (`split`, `split-reverse`, `centered`); `state`, `progress`, `activeIndex` (each controlled or with a `default*` and `on*Change`). Parts: `.Brand`, `.Art`, `.Panel`, `.Footer`. `useAuthLayout()` reads the shared state. |
-| `AuthIllustration` | `state` (`idle`, `typing`, `password`, `error`, `success`), `progress` (0 to 1, fill of the whole form), `activeIndex` (the slab that rises), `label`. Without `label` it is decorative: `aria-hidden`, nothing focusable. |
-| `LoginForm` | `onSubmit`, `portals`, `portal` / `defaultPortal` / `onPortalChange`, `loading`, `error`, `success`. Parts: `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`, `.Submit`, `.Footer`. With no children it renders them in that order. |
-| `PasswordInput`, `Divider` | The generic pieces behind the form, exported from `forms` and `atoms`. |
+| Piece                      | What it does                                                                                                                                                                                                                                   |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AuthLayout`               | `layout` (`split`, `split-reverse`, `centered`); `state`, `progress`, `activeIndex` (each controlled or with a `default*` and `on*Change`). Parts: `.Brand`, `.Art`, `.Panel`, `.Footer`. `useAuthLayout()` reads the shared state.            |
+| `AuthIllustration`         | `state` (`idle`, `typing`, `password`, `error`, `success`), `progress` (0 to 1, fill of the whole form), `activeIndex` (the slab that rises), `label`. Without `label` it is decorative: `aria-hidden`, nothing focusable.                     |
+| `LoginForm`                | `onSubmit`, `portals`, `portal` / `defaultPortal` / `onPortalChange`, `loading`, `error`, `success`. Parts: `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`, `.Submit`, `.Footer`. With no children it renders them in that order. |
+| `PasswordInput`, `Divider` | The generic pieces behind the form, exported from `forms` and `atoms`.                                                                                                                                                                         |
 
 ### Layout follows the container
 
