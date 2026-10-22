@@ -143,3 +143,32 @@ internal fun rememberDriftClock(speed: State<Float>): State<Float> {
     }
     return time
 }
+
+/** Sums the pointer deltas of a drag into one offset limited to [reach] on each axis, scaled by [gain]; reads no stale value however many events arrive in a frame. */
+internal class DragAccumulator(
+    private val reach: Float,
+    private val gain: Float = 0.4f,
+) {
+    var x: Float = 0f
+        private set
+    var y: Float = 0f
+        private set
+
+    /** Starts from [fromX], [fromY] (the offset the art currently shows, for example mid spring-back). */
+    fun begin(
+        fromX: Float,
+        fromY: Float,
+    ) {
+        x = fromX.coerceIn(-reach, reach)
+        y = fromY.coerceIn(-reach, reach)
+    }
+
+    /** Adds one delta; read [x] and [y] afterwards. */
+    fun add(
+        dx: Float,
+        dy: Float,
+    ) {
+        x = (x + dx * gain).coerceIn(-reach, reach)
+        y = (y + dy * gain).coerceIn(-reach, reach)
+    }
+}

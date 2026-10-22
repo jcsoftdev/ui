@@ -45,6 +45,7 @@ import com.jcsoftdev.ui.icons.Pencil
 import com.jcsoftdev.ui.icons.Sparkles
 import com.jcsoftdev.ui.icons.Star
 import com.jcsoftdev.ui.theme.UiTheme
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.cos
@@ -144,13 +145,16 @@ public fun AuthFloatingArt(
             Modifier.pointerInput(motion) {
                 val reach = 28.dp.toPx()
                 val home = spring<Offset>(dampingRatio = 0.55f, stiffness = Spring.StiffnessLow / (motion.scale * motion.scale))
+                val offset = DragAccumulator(reach)
                 detectDragGestures(
+                    onDragStart = { offset.begin(drag.value.x, drag.value.y) },
                     onDragEnd = { scope.launch { drag.animateTo(Offset.Zero, home) } },
                     onDragCancel = { scope.launch { drag.animateTo(Offset.Zero, home) } },
                 ) { change, amount ->
                     change.consume()
-                    val next = drag.value + amount * 0.4f
-                    scope.launch { drag.snapTo(Offset(next.x.coerceIn(-reach, reach), next.y.coerceIn(-reach, reach))) }
+                    offset.add(amount.x, amount.y)
+                    val target = Offset(offset.x, offset.y)
+                    scope.launch(start = CoroutineStart.UNDISPATCHED) { drag.snapTo(target) }
                 }
             }
         } else {

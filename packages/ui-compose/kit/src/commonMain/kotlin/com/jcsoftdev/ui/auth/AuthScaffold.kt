@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -120,7 +119,7 @@ public object AuthScaffoldDefaults {
     /** The sheet: the theme `sheet` shape with square bottom corners. */
     public val sheetShape: Shape
         @Composable @ReadOnlyComposable
-        get() = (UiTheme.shapes.sheet as CornerBasedShape).copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
+        get() = UiTheme.shapes.sheet.copy(bottomStart = ZeroCornerSize, bottomEnd = ZeroCornerSize)
 
     /** How far the sheet rises over the header band. */
     public val overlap: Dp = 24.dp
