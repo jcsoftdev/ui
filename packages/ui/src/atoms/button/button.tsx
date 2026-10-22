@@ -113,7 +113,7 @@ export function Button({
     <Comp
       {...(asChild ? {} : { type: "button" })}
       aria-busy={loading ? "true" : undefined}
-      aria-disabled={busy ? "true" : undefined}
+      aria-disabled={busy || undefined}
       disabled={disabled}
       className={buttonClasses({ variant, size, block, className })}
       {...props}

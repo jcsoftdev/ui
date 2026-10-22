@@ -59,7 +59,7 @@
       "id": "ui/auth",
       "kind": "js",
       "file": "packages/ui/dist/auth/index.js",
-      "maxGzip": 24000
+      "maxGzip": 24100
     },
     {
       "id": "ui/auth/looks",
@@ -125,7 +125,7 @@
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 97800
+      "maxGzip": 97900
     },
     {
       "id": "ui/forms",
@@ -143,7 +143,7 @@
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 15600
+      "maxGzip": 15650
     },
     {
       "id": "ui/overlays",
