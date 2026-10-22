@@ -373,6 +373,27 @@ public final class com/jcsoftdev/ui/auth/AuthFieldsKt {
 	public static final fun AuthTextField (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLjava/lang/String;Ljava/lang/String;Landroidx/compose/ui/graphics/vector/ImageVector;Lcom/jcsoftdev/ui/forms/InputContentType;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/foundation/text/KeyboardActions;Lcom/jcsoftdev/ui/auth/AuthFieldColors;Landroidx/compose/ui/graphics/Shape;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V
 }
 
+public final class com/jcsoftdev/ui/auth/AuthFloatingArtColors {
+	public static final field $stable I
+	public synthetic fun <init> (JJJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy-ysEtTa8 (JJJ)Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;
+	public static synthetic fun copy-ysEtTa8$default (Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;JJJILjava/lang/Object;)Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;
+	public final fun getGlow-0d7_KjU ()J
+	public final fun getLine-0d7_KjU ()J
+	public final fun getShape-0d7_KjU ()J
+}
+
+public final class com/jcsoftdev/ui/auth/AuthFloatingArtDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/jcsoftdev/ui/auth/AuthFloatingArtDefaults;
+	public static final field MAX_PIECES I
+	public final fun colors (Landroidx/compose/runtime/Composer;I)Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;
+}
+
+public final class com/jcsoftdev/ui/auth/AuthFloatingArtKt {
+	public static final fun AuthFloatingArt (Lcom/jcsoftdev/ui/auth/AuthState;FLandroidx/compose/ui/Modifier;Lcom/jcsoftdev/ui/auth/AuthFloatingArtColors;Landroidx/compose/runtime/Composer;II)V
+}
+
 public final class com/jcsoftdev/ui/auth/AuthHeaderShape : java/lang/Enum {
 	public static final field Arc Lcom/jcsoftdev/ui/auth/AuthHeaderShape;
 	public static final field Overlap Lcom/jcsoftdev/ui/auth/AuthHeaderShape;

@@ -72,4 +72,18 @@ class AuthMotionTest {
         assertEquals(0f, AuthArcsFrame.of(AuthState.Typing, 0.5f).highlight)
         assertTrue(AuthArcsFrame.of(AuthState.Password, 0f).turnDegrees > 0f)
     }
+
+    @Test
+    fun shortHeadersShowFewerPiecesAndTallOnesAll() {
+        assertEquals(5, pieceCount(120f))
+        assertTrue(pieceCount(200f) in 6..7)
+        assertEquals(AuthFloatingArtDefaults.MAX_PIECES, pieceCount(400f))
+    }
+
+    @Test
+    fun aTallBoxKeepsThePiecesInItsUpperPart() {
+        assertEquals(150f, floatStage(360f, 150f))
+        val stage = floatStage(360f, 800f)
+        assertTrue(stage < 800f * 0.6f && stage >= 360f * 0.9f)
+    }
 }

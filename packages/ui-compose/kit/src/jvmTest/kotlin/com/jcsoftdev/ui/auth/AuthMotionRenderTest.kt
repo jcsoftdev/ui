@@ -116,4 +116,32 @@ class AuthMotionRenderTest {
             val end = frame("arcs-success-end")
             assertTrue(changed(mid, end) > 0.002f, "the comet has passed and gone")
         }
+
+    private val floating: @Composable () -> Unit = { AuthFloatingArt(state, 0.5f, Modifier.fillMaxSize()) }
+
+    @Test
+    fun floatingPiecesHoldStillWithMotionOff() =
+        runComposeUiTest {
+            art(0f, floating)
+            val first = frame("floating-still-0")
+            mainClock.advanceTimeBy(2000)
+            assertEquals(0f, changed(first, frame("floating-still-1")))
+        }
+
+    @Test
+    fun floatingPiecesDriftThenBurstAndComeHome() =
+        runComposeUiTest {
+            art(1f, floating)
+            val first = frame("floating-drift-0")
+            mainClock.advanceTimeBy(2000)
+            assertTrue(changed(first, frame("floating-drift-1")) > 0.002f)
+            state = AuthState.Success
+            mainClock.advanceTimeBy(300)
+            val flying = frame("floating-burst-1")
+            mainClock.advanceTimeBy(400)
+            frame("floating-burst-2")
+            mainClock.advanceTimeBy(1500)
+            val home = frame("floating-burst-3")
+            assertTrue(changed(flying, home) > 0.002f)
+        }
 }
