@@ -20,7 +20,7 @@ export interface IconButtonProps
   label: string;
   variant?: ButtonVariant;
   size?: IconButtonSize;
-  /** Swaps the icon for a spinner and disables the button; announces the localized `loading` string. */
+  /** Swaps the icon for a spinner and makes the button busy like `Button` `loading`: it keeps focus, ignores clicks and announces the localized `loading` string. */
   loading?: boolean;
   /** Render the child element (via Slot) instead of a `<button>`, e.g. a link wrapping the icon. */
   asChild?: boolean;

@@ -49,6 +49,7 @@ export default defineConfig({
             { slug: "docs/container-queries" },
             { slug: "docs/accessibility" },
             { slug: "docs/blocks" },
+            { slug: "docs/auth" },
           ],
         },
         {

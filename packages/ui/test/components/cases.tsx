@@ -168,7 +168,14 @@ export const html = {
         Save
       </Button>,
     ),
+  buttonLoadingDisabled: () =>
+    renderToStaticMarkup(
+      <Button loading disabled>
+        Save
+      </Button>,
+    ),
   buttonIdle: () => renderToStaticMarkup(<Button loadingLabel="Saving…">Save</Button>),
+  buttonPrimary: () => renderToStaticMarkup(<Button variant="primary">Save</Button>),
   buttonPlain: () => renderToStaticMarkup(<Button>Save</Button>),
   buttonLayout: () =>
     renderToStaticMarkup(

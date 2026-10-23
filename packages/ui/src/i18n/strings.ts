@@ -56,6 +56,38 @@ export interface UiStrings {
   selectAll: string;
   /** Name of the overflow menu trigger of a `TableActionsCell`. */
   rowActions: string;
+  /** Name of the `PasswordInput` toggle; its pressed state says whether the password is visible. */
+  showPassword: string;
+  /** Default title of a `LoginForm`. */
+  signIn: string;
+  /** Label of the portal picker of a `LoginForm`. */
+  signInAs: string;
+  /** Divider between the portal picker and the credential fields. */
+  withYourAccount: string;
+  /** Default label and placeholder of the `LoginForm` identifier field. */
+  identifier: string;
+  /** Default label and placeholder of the `LoginForm` password field. */
+  password: string;
+  /** Default `LoginForm` link to recover a password. */
+  forgotPassword: string;
+  /** Submit button label of a `LoginForm`. */
+  signInAction: string;
+  /** Inline error of a `LoginForm` submitted without an identifier. */
+  enterIdentifier: string;
+  /** Inline error of a `LoginForm` submitted without a password. */
+  enterPassword: string;
+  /** Label of the remember-me checkbox of `LoginForm.Options`. */
+  rememberMe: string;
+  /** Default help link of `LoginForm.Options`. */
+  needHelp: string;
+  /** Default label of `LoginForm.Providers`. */
+  orLogInWith: string;
+  /** Message shown by a `LoginForm` when sign-in fails and the app gives none. */
+  signInFailed: string;
+  /** Default headline of the `statement` look of `AuthIllustration`. */
+  welcomeBack: string;
+  /** Line the `statement` look of `AuthIllustration` shows once sign-in succeeds. */
+  signedIn: string;
 }
 
 export type UiLocale = "en" | "es";
@@ -108,6 +140,22 @@ export const uiStrings = {
     selectRow: "Select {row}",
     selectAll: "Select all rows",
     rowActions: "Row actions",
+    showPassword: "Show password",
+    signIn: "Sign in",
+    signInAs: "Sign in as",
+    withYourAccount: "with your account",
+    identifier: "Email or ID",
+    password: "Password",
+    forgotPassword: "Forgot your password?",
+    signInAction: "Sign in",
+    enterIdentifier: "Enter your email or ID.",
+    enterPassword: "Enter your password.",
+    rememberMe: "Remember me",
+    needHelp: "Need help?",
+    orLogInWith: "Or log in with",
+    signInFailed: "We could not sign you in. Check your details and try again.",
+    welcomeBack: "Good to see you again.",
+    signedIn: "You're in.",
   },
   es: {
     retry: "Reintentar",
@@ -156,5 +204,21 @@ export const uiStrings = {
     selectRow: "Seleccionar {row}",
     selectAll: "Seleccionar todas las filas",
     rowActions: "Acciones de la fila",
+    showPassword: "Mostrar contraseña",
+    signIn: "Inicia sesión",
+    signInAs: "Ingresar como",
+    withYourAccount: "con tu cuenta",
+    identifier: "Correo o documento",
+    password: "Contraseña",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    signInAction: "Ingresar",
+    enterIdentifier: "Escribe tu correo o documento.",
+    enterPassword: "Escribe tu contraseña.",
+    rememberMe: "Recordarme",
+    needHelp: "¿Necesitas ayuda?",
+    orLogInWith: "O ingresa con",
+    signInFailed: "No pudimos iniciar tu sesión. Revisa tus datos e inténtalo de nuevo.",
+    welcomeBack: "Qué bueno verte otra vez.",
+    signedIn: "Ya estás dentro.",
   },
 } as const satisfies Record<UiLocale, UiStrings>;

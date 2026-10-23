@@ -1,0 +1,132 @@
+// Type-checks the examples in site/src/content/docs/docs/auth.md against the built package.
+// Every ```tsx block in that page must equal one `#region` below (see test/docs-examples.mjs).
+import { AuthIllustration, AuthLayout, LoginForm } from "@jcsoftdev/ui/auth";
+import { Stack } from "@jcsoftdev/ui/auth/stack";
+import { Statement } from "@jcsoftdev/ui/auth/statement";
+import { AuthIllustrationAny } from "@jcsoftdev/ui/auth/looks";
+import { useState } from "react";
+
+declare function signIn(identifier: string, password: string): Promise<void>;
+
+// #region login
+export function LoginScreen() {
+  return (
+    <AuthLayout layout="split">
+      <AuthLayout.Brand>Acme</AuthLayout.Brand>
+      <AuthLayout.Art />
+      <AuthLayout.Panel>
+        <LoginForm
+          portals={[
+            { value: "staff", label: "Staff", identifierLabel: "Work email" },
+            { value: "family", label: "Family", identifierLabel: "Guardian ID" },
+            { value: "student", label: "Student", identifierLabel: "Student code" },
+          ]}
+          onSubmit={({ identifier, password }) => signIn(identifier, password)}
+        >
+          <LoginForm.Header />
+          <LoginForm.Portals />
+          <LoginForm.Error />
+          <LoginForm.Identifier />
+          <LoginForm.Password forgotHref="/forgot" />
+          <LoginForm.Submit />
+          <LoginForm.Footer>
+            By signing in you accept the <a href="/terms">Terms</a>.
+          </LoginForm.Footer>
+        </LoginForm>
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion
+
+// #region controlled
+export function ControlledState() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <AuthLayout layout="centered">
+      <AuthLayout.Art>
+        <AuthIllustration label="The three portals" />
+      </AuthLayout.Art>
+      <AuthLayout.Panel>
+        <LoginForm
+          loading={loading}
+          error={error}
+          onSubmit={async ({ identifier, password }) => {
+            setLoading(true);
+            setError(null);
+            try {
+              await signIn(identifier, password);
+            } catch {
+              setError("Those details do not match.");
+            } finally {
+              setLoading(false);
+            }
+          }}
+        />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion
+
+// #region solid
+export function SolidPanelScreen() {
+  return (
+    <AuthLayout panel="solid">
+      <AuthLayout.Brand>Acme</AuthLayout.Brand>
+      <AuthLayout.Art />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)}>
+          <LoginForm.Header title="Welcome back" />
+          <LoginForm.Error />
+          <LoginForm.Identifier />
+          <LoginForm.Password forgotHref="/forgot" />
+          <LoginForm.Options helpHref="/help" />
+          <LoginForm.Submit />
+          <LoginForm.Providers label="Or log in with">
+            <button type="button">Company account</button>
+          </LoginForm.Providers>
+        </LoginForm>
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion
+
+// #region looks
+export function BooksScreen() {
+  return (
+    <AuthLayout panel="solid">
+      <AuthLayout.Art look={Stack} />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion
+
+// #region by-name
+export function ByName({ variant }: { variant: "slabs" | "stack" | "mosaic" }) {
+  return <AuthIllustrationAny variant={variant} />;
+}
+// #endregion
+
+// #region statement
+export function StatementScreen() {
+  return (
+    <AuthLayout layout="split-reverse">
+      <AuthLayout.Art
+        look={Statement}
+        headline="Every class, every family, one place."
+        caption="Sign in to pick up where your school left off."
+        action={<a href="/about">How it works</a>}
+      />
+      <AuthLayout.Panel>
+        <LoginForm onSubmit={({ identifier, password }) => signIn(identifier, password)} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+// #endregion

@@ -105,6 +105,8 @@ export function Input({
           classNames?.input,
         )}
         {...props}
+        // The wrapper draws the ring; the unlayered base `:focus-visible` rule outranks `outline-none`.
+        style={{ outline: "none", ...props.style }}
       />
       {end != null ? <span className={cn(adornment, classNames?.end)}>{end}</span> : null}
     </span>

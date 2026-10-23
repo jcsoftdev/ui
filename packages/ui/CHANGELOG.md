@@ -1,5 +1,102 @@
 # Changelog
 
+## Unreleased
+
+### Busy buttons keep focus (behavior to check when upgrading)
+
+- **`Button` and `IconButton` `loading`** no longer set the native `disabled` attribute. A busy
+  button stays focusable, so pressing it from the keyboard leaves focus on it instead of dropping
+  to `body`. It is exposed as `aria-disabled="true"` plus `aria-busy="true"` (the status region
+  still announces the loading text), it ignores clicks, Enter and Space, and a `type="submit"`
+  button does not submit its form, including the implicit submit from Enter in one of its fields.
+  The dimmed `disabled` look no longer applies while loading; the spinner or loading label stays
+  and the cursor turns to `progress` (a button with neither a `loadingLabel` nor a spinner child
+  shows no other visible change, so give it one). Passing `disabled` keeps the native attribute and the dimmed
+  look as before, also while loading. Check code that read `button.disabled` or tests that expect
+  `toBeDisabled()` on a loading button: they now see `aria-disabled` instead.
+
+### Sign-in screen
+
+New `@jcsoftdev/ui/auth` entry, additive and source compatible. Colors come only from the theme
+tokens, so dark mode and every `data-accent` apply without extra code. Guide: `/docs/auth/`.
+
+#### Added
+
+- **Auth.** `AuthLayout` (`layout` `split`, `split-reverse`, `centered`, driven by its own container
+  width; parts `.Brand`, `.Art`, `.Panel`, `.Footer`; controlled or uncontrolled `state`,
+  `progress` and `activeIndex`; `useAuthLayout`), `AuthIllustration` (isometric portal slabs that
+  react to `state`, `progress` and `activeIndex` with CSS only; under reduced motion each state
+  keeps its pose without moving) and `LoginForm` (parts `.Header`, `.Portals`, `.Identifier`, `.Password`, `.Error`,
+  `.Submit`, `.Footer`; async `onSubmit`, `loading`, `error`, `success`; drives the surrounding
+  layout and works standalone). A field left empty is reported under that field; a failed sign-in
+  shows as a callout from `.Error`, placed above the fields in the default composition.
+- **Auth compositions.** `AuthLayout` `panel` (`paper`, `solid`: a solid themed side panel with an
+  open form on the other side), `LoginForm` `appearance` (`card`, `open`), `LoginForm.Options`
+  (remember me, reported as `remember`, plus a help slot) and `LoginForm.Providers` (a labelled slot,
+  no providers included), and `AuthIllustration` `look` as the plug-in point for further looks.
+- **Illustration motion.** Pointer parallax (fine pointers only, one CSS variable write per
+  frame), a hop per keystroke, an overshooting entrance, a cheer and burst on success, and an
+  error that settles back to the password state after `ERROR_HOLD_MS` (1.1s). Only `transform`
+  and `opacity` animate; reduced motion jumps straight to each state's pose (spread at rest, flung
+  apart on an error, assembled with a still burst on success) and turns the parallax off, also when
+  the setting changes while the page is open.
+- **`Stack` look (`@jcsoftdev/ui/auth/stack`).** A tower of books that gains a book as the form fills,
+  wobbles on an error and plants a flag with the active portal's glyph on success; 4, 5 or 6
+  books by the width of its container.
+- **`Mosaic` look (`@jcsoftdev/ui/auth/mosaic`).** A floor of isometric tiles that lights diagonally with
+  progress, glints per keystroke, glows under the pointer, flashes red on an error and ripples on
+  success; three tiles carry the portal glyphs and the active one stands raised.
+- **`Character` look (`@jcsoftdev/ui/auth/character`).** A student on a hover board that follows the
+  pointer, looks toward the form while it is typed into, covers their eyes for the password,
+  shakes their head on an error and hops with a boost on success.
+- **`Statement` look (`@jcsoftdev/ui/auth/statement`).** Kinetic type: `headline` rises word by word, an
+  optional `caption` and `action`, and a pill that fills toward its arrow as a progress meter;
+  on success the headline gives way to the new UI string `signedIn` (default headline
+  `welcomeBack`). Not hidden from assistive technology. `AuthLayout.Art` forwards `headline`,
+  `caption` and `action`.
+- **One entry per look.** `AuthIllustration` takes the look as a component (`look`, default `Slabs`),
+  and each look is its own subpath (`@jcsoftdev/ui/auth/slabs`, `stack`, `mosaic`, `character`,
+  `statement`), so an app bundles only the looks it renders; each look carries only its own CSS. A look
+  is any component typed `AuthLook`, with optional static `variant` (the `data-variant` value) and
+  `text` (not hidden from assistive technology). `AuthLayout.Art` takes `look` too.
+  `AuthIllustrationAny` (`@jcsoftdev/ui/auth/looks`) keeps the string `variant` and imports all five
+  looks on purpose. The `ui/auth` size budget drops back from 32300 to its default-entry weight.
+- **`PasswordInput`** (reveal toggle with `aria-pressed`) and **`Divider`** (optional label).
+- **Icons.** `Eye`, `Mail`, `House` and `GraduationCap`.
+- **UI strings** (en/es) for the sign-in screen and `showPassword`.
+
+#### Fixed
+
+- **Portal tiles.** A `LoginForm.Portals` tile lifts on keyboard focus as it does on hover, and the
+  selected tile shows a check badge besides its colour change, so the choice does not rest on
+  colour alone. The badge is decorative; the radio's `aria-checked` still carries the state.
+- **Primary button hover contrast.** On hover the primary `Button` and `IconButton` (and so
+  `LoginForm.Submit`) turn their text to `--surface` on the darker `--accent-ink` fill. The text
+  kept `--on-accent`, made for the pale `--accent`, and fell to 2.4:1 in light themes for six of the
+  seven accents; it is now 5.7:1 or more in every accent, light and dark.
+- **Portal tile edge.** An unselected portal tile draws its border in `--ink-3` instead of
+  `--line-strong`, which was 1.5:1 against the card; it is now 5.2:1 or more in light and dark.
+- **Sign in shows it is busy.** `LoginForm.Submit` draws a spinner next to its label while the
+  request runs, since a loading button is no longer dimmed.
+- **`Input`** with `start` or `end` draws one focus ring (the wrapper's) instead of a second square
+  ring on the inner input.
+- **`LoginForm` posts by default.** The form carries `method="post"`, so a submit before hydration
+  can no longer put the identifier and the password in the URL (history, logs, Referer). Pass
+  `method` to override it.
+- **Looks are client modules.** Each look and `AuthIllustrationAny` start with `"use client"`, so a
+  Server Component can pass `look={Stack}` to `AuthLayout.Art` or `AuthIllustration` without
+  Next.js rejecting a function prop.
+- **`LoginForm` state.** The same failed sign-in twice in a row replays the error (a new submit
+  leaves the error state first). A controlled `success` or `error` returning to unset derives
+  idle, typing or password from focus again. Without portals the form no longer overrides
+  `AuthLayout` `defaultActiveIndex`.
+- **`Statement` accessibility.** The visible line is the one assistive technology reads: "You're in."
+  replaces the headline on success, and the caption is hidden with it.
+- **Password length no longer reaches the DOM.** `progress` counts the identifier by length but the
+  password only as filled or not (new pure `formProgress`), so styles and attributes do not mirror
+  how long the password is. The slabs tighten once the password is filled instead of per character,
+  and the keystroke hop no longer fires per password character.
+
 ## 0.4.0 (2026-10-21)
 
 ### Blocks for application screens

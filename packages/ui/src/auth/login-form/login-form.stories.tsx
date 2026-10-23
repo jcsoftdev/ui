@@ -1,0 +1,372 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { AuthLayout, useAuthLayout } from "../auth-layout/auth-layout.js";
+import { LoginForm, type LoginPortal } from "./login-form.js";
+
+const portals: LoginPortal[] = [
+  {
+    value: "staff",
+    label: "Personal",
+    description: "Docentes, dirección y tesorería",
+    identifierLabel: "Correo institucional",
+  },
+  {
+    value: "family",
+    label: "Familia",
+    description: "Padres y apoderados",
+    identifierLabel: "DNI del apoderado",
+  },
+  {
+    value: "student",
+    label: "Estudiante",
+    description: "Alumnos con cuenta",
+    identifierLabel: "Código de estudiante",
+  },
+];
+
+const meta = {
+  title: "Auth/LoginForm",
+  component: LoginForm,
+  tags: ["autodocs"],
+  args: { portals },
+  decorators: [
+    (Story) => (
+      <div className="max-w-110 overflow-hidden rounded-card border-card bg-surface">
+        <Story />
+      </div>
+    ),
+  ],
+} satisfies Meta<typeof LoginForm>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Standalone: Story = {
+  args: { portals: [], onSubmit: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    // Before hydration a native submit must not put the password in the URL.
+    await expect(canvasElement.querySelector("form")).toHaveAttribute("method", "post");
+    await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
+    await userEvent.type(canvas.getByLabelText("Password", { selector: "input" }), "secreto");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    await waitFor(() =>
+      expect(args.onSubmit).toHaveBeenCalledWith({
+        identifier: "maria@colegio.pe",
+        password: "secreto",
+        portal: undefined,
+        remember: false,
+      }),
+    );
+  },
+};
+
+export const WithPortals: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const group = canvas.getByRole("radiogroup", { name: "Sign in as" });
+    await expect(group).toBeVisible();
+    const radios = within(group).getAllByRole("radio");
+    await expect(radios).toHaveLength(3);
+    radios[0]?.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(radios[1]).toHaveAttribute("aria-checked", "true");
+    await expect(canvas.getByLabelText("DNI del apoderado")).toBeVisible();
+    await expect(canvas.getByText("Padres y apoderados")).toBeVisible();
+  },
+};
+
+/**
+ * A portal tile lifts on keyboard focus as it does on hover, and the checked tile shows a check
+ * badge as well as its colour. The badge is decorative: the radio's `aria-checked` carries the state.
+ */
+export const PortalTilesFocusAndCheck: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const radios = within(canvas.getByRole("radiogroup", { name: "Sign in as" })).getAllByRole(
+      "radio",
+    );
+    const tileOf = (radio: HTMLElement | undefined) =>
+      radio?.querySelector<HTMLElement>(":scope > [aria-hidden='true']") ?? null;
+    const badgeOf = (radio: HTMLElement | undefined) =>
+      radio?.querySelector<HTMLElement>("[data-portal-check]") ?? null;
+    const lifted = (radio: HTMLElement | undefined) => {
+      const tile = tileOf(radio);
+      return tile ? getComputedStyle(tile).translate : "";
+    };
+    await expect(lifted(radios[0])).toBe("none");
+    await userEvent.tab();
+    await expect(radios[0]).toHaveFocus();
+    await waitFor(() => expect(lifted(radios[0])).toBe("0px -2px"));
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(radios[1]).toHaveAttribute("aria-checked", "true");
+    await waitFor(() => expect(lifted(radios[1])).toBe("0px -2px"));
+    await waitFor(() => expect(lifted(radios[0])).toBe("none"));
+    await waitFor(() => expect(getComputedStyle(badgeOf(radios[1]) as Element).opacity).toBe("1"));
+    await waitFor(() => expect(getComputedStyle(badgeOf(radios[0]) as Element).opacity).toBe("0"));
+    await expect(badgeOf(radios[1])?.closest("[aria-hidden='true']")).not.toBeNull();
+    await expect(radios[1]).toHaveAccessibleName("Familia");
+    // The unchecked tile's edge uses --ink-3, the boundary that keeps 3:1 against the card.
+    const probe = document.createElement("span");
+    probe.style.color = "var(--ink-3)";
+    canvasElement.append(probe);
+    await expect(getComputedStyle(tileOf(radios[2]) as Element).borderTopColor).toBe(
+      getComputedStyle(probe).color,
+    );
+    probe.remove();
+  },
+};
+
+export const Complete: Story = {
+  render: (args) => (
+    <LoginForm {...args}>
+      <LoginForm.Header title="Bienvenido" description="Ingresa con tu cuenta del colegio." />
+      <LoginForm.Portals />
+      <LoginForm.Error />
+      <LoginForm.Identifier />
+      <LoginForm.Password forgotHref="#recuperar" />
+      <LoginForm.Submit>Ingresar</LoginForm.Submit>
+      <LoginForm.Footer>
+        Al ingresar aceptas los <a href="#terminos">Términos</a>.
+      </LoginForm.Footer>
+    </LoginForm>
+  ),
+};
+
+export const MissingIdentifier: Story = {
+  args: { portals: [] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    const message = await canvas.findByText("Enter your email or ID.");
+    await expect(message).toHaveAttribute("role", "alert");
+    const identifier = canvas.getByLabelText("Email or ID");
+    await expect(identifier).toHaveAttribute("aria-invalid", "true");
+    await expect(identifier).toHaveAccessibleDescription("Enter your email or ID.");
+    await expect(identifier).toHaveFocus();
+    // The message sits right under the field it is about, not next to the button.
+    await expect(identifier.closest("[data-login-field]")).toContainElement(message);
+    const gap =
+      message.getBoundingClientRect().top -
+      (identifier.parentElement as HTMLElement).getBoundingClientRect().bottom;
+    await expect(gap).toBeGreaterThanOrEqual(0);
+    await expect(gap).toBeLessThan(16);
+    // The sign-in error region stays empty: a field left empty is not a failed sign-in.
+    await expect(canvasElement.querySelector("form > p[role=alert]")).toBeEmptyDOMElement();
+
+    await userEvent.type(identifier, "maria@colegio.pe");
+    await expect(identifier).not.toHaveAttribute("aria-invalid");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    const password = canvas.getByLabelText("Password", { selector: "input" });
+    const passwordMessage = await canvas.findByText("Enter your password.");
+    await expect(password.closest("[data-login-field]")).toContainElement(passwordMessage);
+    await expect(password).toHaveAccessibleDescription("Enter your password.");
+  },
+};
+
+export const WrongPassword: Story = {
+  args: {
+    portals: [],
+    onSubmit: async () => {
+      throw new Error("La contraseña no coincide.");
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
+    const password = canvas.getByLabelText("Password", { selector: "input" });
+    await userEvent.type(password, "mala");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent("La contraseña no coincide.");
+    // A failed sign-in is about the whole form: its callout sits above the fields.
+    await expect(alert.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      canvas.getByLabelText("Email or ID").getBoundingClientRect().top,
+    );
+    await expect(password).toHaveAttribute("aria-invalid", "true");
+    await expect(password).toHaveAccessibleDescription("La contraseña no coincide.");
+    await expect(password).toHaveFocus();
+    await userEvent.type(password, "x");
+    await expect(password).not.toHaveAttribute("aria-invalid");
+  },
+};
+
+export const Loading: Story = { args: { portals: [], loading: true } };
+
+export const ControlledError: Story = {
+  args: { portals: [], error: "Tu cuenta está bloqueada. Contacta a tu colegio." },
+};
+
+/** Inside an `AuthLayout` the form drives the illustration: focus, typing, failure and success. */
+export const InsideAuthLayout: Story = {
+  decorators: [
+    (Story) => (
+      <AuthLayout layout="split">
+        <AuthLayout.Brand>EduModules</AuthLayout.Brand>
+        <AuthLayout.Art />
+        <AuthLayout.Panel>
+          <Story />
+        </AuthLayout.Panel>
+      </AuthLayout>
+    ),
+  ],
+  args: {
+    onSubmit: async ({ password }) => {
+      if (password !== "demo1234") throw new Error("La contraseña no coincide.");
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const layout = canvasElement.querySelector("[data-layout]") as HTMLElement;
+    await expect(layout).toHaveAttribute("data-state", "idle");
+    const identifier = canvas.getByLabelText("Correo institucional");
+    await userEvent.click(identifier);
+    await expect(layout).toHaveAttribute("data-state", "typing");
+    await userEvent.type(identifier, "maria@colegio.pe");
+    const password = canvas.getByLabelText("Password", { selector: "input" });
+    await userEvent.click(password);
+    await expect(layout).toHaveAttribute("data-state", "password");
+    await userEvent.type(password, "mala");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "error"));
+    await userEvent.clear(password);
+    await userEvent.type(password, "demo1234");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "success"));
+  },
+};
+
+const onRepeatedState = fn();
+
+/** The same rejected sign-in twice in a row must replay the error, not stay in it. */
+export const RepeatedError: Story = {
+  decorators: [
+    (Story) => (
+      <AuthLayout layout="split" onStateChange={onRepeatedState}>
+        <AuthLayout.Art />
+        <AuthLayout.Panel>
+          <Story />
+        </AuthLayout.Panel>
+      </AuthLayout>
+    ),
+  ],
+  args: {
+    portals: [],
+    onSubmit: async () => {
+      throw new Error("La contraseña no coincide.");
+    },
+  },
+  play: async ({ canvasElement }) => {
+    onRepeatedState.mockClear();
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
+    await userEvent.type(canvas.getByLabelText("Password", { selector: "input" }), "mala");
+    const submit = canvas.getByRole("button", { name: "Sign in" });
+    const errors = () => onRepeatedState.mock.calls.filter(([state]) => state === "error").length;
+    await userEvent.click(submit);
+    await waitFor(() => expect(errors()).toBe(1));
+    await userEvent.click(submit);
+    await waitFor(() => expect(errors()).toBe(2));
+  },
+};
+
+function ControlledOutcome() {
+  const [outcome, setOutcome] = useState<"success" | "error" | null>(null);
+  return (
+    <AuthLayout layout="split">
+      <AuthLayout.Art />
+      <AuthLayout.Panel>
+        <LoginForm
+          portals={[]}
+          success={outcome === "success"}
+          error={outcome === "error" ? "Cuenta bloqueada." : null}
+        />
+        <button type="button" onClick={() => setOutcome("success")}>
+          set success
+        </button>
+        <button type="button" onClick={() => setOutcome("error")}>
+          set error
+        </button>
+        <button type="button" onClick={() => setOutcome(null)}>
+          clear outcome
+        </button>
+      </AuthLayout.Panel>
+    </AuthLayout>
+  );
+}
+
+/** A controlled `success` or `error` going back to unset hands the art back to the form. */
+export const ControlledOutcomeReset: Story = {
+  render: () => <ControlledOutcome />,
+  decorators: [],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const layout = canvasElement.querySelector("[data-layout]") as HTMLElement;
+    await userEvent.click(canvas.getByRole("button", { name: "set success" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "success"));
+    await userEvent.click(canvas.getByRole("button", { name: "clear outcome" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "idle"));
+    await userEvent.click(canvas.getByRole("button", { name: "set error" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "error"));
+    await userEvent.click(canvas.getByRole("button", { name: "clear outcome" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "idle"));
+    await userEvent.click(canvas.getByLabelText("Password", { selector: "input" }));
+    await userEvent.click(canvas.getByRole("button", { name: "set error" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "error"));
+    await userEvent.click(canvas.getByRole("button", { name: "clear outcome" }));
+    await waitFor(() => expect(layout).toHaveAttribute("data-state", "idle"));
+  },
+};
+
+function ActiveProbe() {
+  return <output data-testid="active-index">{useAuthLayout().activeIndex}</output>;
+}
+
+/** Without portals the form leaves the layout's `defaultActiveIndex` alone. */
+export const KeepsDefaultActiveIndex: Story = {
+  render: (args) => (
+    <AuthLayout defaultActiveIndex={2}>
+      <AuthLayout.Panel>
+        <ActiveProbe />
+        <LoginForm {...args} portals={[]} />
+      </AuthLayout.Panel>
+    </AuthLayout>
+  ),
+  decorators: [],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId("active-index")).toHaveTextContent("2");
+  },
+};
+
+const slowSignIn = fn(() => new Promise<void>((resolve) => setTimeout(resolve, 1500)));
+
+/**
+ * Pressing Sign in from the keyboard keeps focus on the button while the request runs, and no
+ * second press, click or Enter in a field sends the form again until it settles.
+ */
+export const SubmitKeepsFocusWhileLoading: Story = {
+  args: { portals: [], onSubmit: slowSignIn },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const password = canvas.getByLabelText("Password", { selector: "input" });
+    await userEvent.type(canvas.getByLabelText("Email or ID"), "maria@colegio.pe");
+    await userEvent.type(password, "secreto");
+    const submit = canvas.getByRole("button", { name: "Sign in" });
+    submit.focus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(submit).toHaveAttribute("aria-busy", "true"));
+    await expect(submit).toHaveFocus();
+    await expect(submit).toHaveAttribute("aria-disabled", "true");
+    await expect(getComputedStyle(submit).opacity).toBe("1");
+    await expect(submit.querySelector("span.rounded-full[aria-hidden='true']")).not.toBeNull();
+    await expect(submit).toHaveAccessibleName("Sign in");
+    await userEvent.keyboard("{Enter}");
+    await userEvent.click(submit);
+    await userEvent.type(password, "{Enter}");
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(submit).not.toHaveAttribute("aria-busy"), { timeout: 3000 });
+    await expect(args.onSubmit).toHaveBeenCalledTimes(1);
+  },
+};

@@ -5,6 +5,7 @@ import {
   type ComponentPropsWithRef,
   Fragment,
   isValidElement,
+  type MouseEvent,
   type ReactNode,
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
@@ -19,7 +20,7 @@ export type ButtonSize = "sm" | "md" | "lg";
  * `cn(buttonVariantClasses.primary, "bg-brand")` on a link, or `{ ...buttonVariantClasses, brand: "..." }`.
  */
 export const buttonVariantClasses: Readonly<Record<ButtonVariant, string>> = {
-  primary: "bg-accent text-on-accent font-bold hover:bg-accent-ink",
+  primary: "bg-accent text-on-accent font-bold hover:bg-accent-ink hover:text-surface",
   secondary: "bg-surface-control text-ink shadow-control hover:bg-surface-2",
   ghost: "bg-transparent text-ink-2 hover:bg-surface-2 hover:text-ink",
   danger: "bg-danger-soft text-danger hover:bg-danger-soft/70",
@@ -33,7 +34,7 @@ export const buttonSizeClasses: Readonly<Record<ButtonSize, string>> = {
 };
 
 const baseClasses =
-  "inline-flex min-w-0 max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-button pressable focus-visible:focus-ring font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:shrink-0";
+  "inline-flex min-w-0 max-w-full cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-button pressable focus-visible:focus-ring font-[650] no-underline disabled:cursor-not-allowed disabled:opacity-45 aria-busy:cursor-progress aria-busy:scale-none! [&_svg]:shrink-0";
 
 export interface ButtonClassOptions {
   variant?: ButtonVariant;
@@ -64,6 +65,13 @@ export function buttonClasses({
 export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /**
+   * Busy state: the button keeps its focus and its full colour, ignores clicks (a submit button no
+   * longer submits, including the implicit submit from Enter in a field of its form) and is exposed
+   * as `aria-disabled` and `aria-busy`. It is not natively `disabled`, so keyboard focus stays on it
+   * while the work runs; pass `disabled` for a button that must leave the tab order. The visible
+   * cue is `loadingLabel` or a spinner among the children: without either only the cursor changes.
+   */
   loading?: boolean;
   /**
    * Replaces the children while `loading` and is announced to screen readers. Without it the
@@ -86,9 +94,12 @@ export function Button({
   asChild,
   className,
   children,
+  onClick,
   ...props
 }: ButtonProps) {
   const strings = useUiStrings();
+  // Natively disabled wins; a busy button stays focusable and swallows its activation instead.
+  const busy = Boolean(loading) && !disabled;
   const Comp = asChild ? Slot : "button";
   // Text runs get their own truncating span so a long label ends in "…" inside a narrow
   // container instead of overflowing; icons keep their size. Slot needs its single child as is.
@@ -102,9 +113,11 @@ export function Button({
     <Comp
       {...(asChild ? {} : { type: "button" })}
       aria-busy={loading ? "true" : undefined}
-      disabled={disabled || loading}
+      aria-disabled={busy || undefined}
+      disabled={disabled}
       className={buttonClasses({ variant, size, block, className })}
       {...props}
+      onClick={busy ? ignoreClick : onClick}
     >
       {content}
     </Comp>
@@ -118,6 +131,15 @@ export function Button({
       </span>
     </>
   );
+}
+
+/**
+ * Cancels the activation of a busy button: no handler runs, a submit button does not submit (an
+ * implicit submit from Enter in a field is a click on this button too) and a slotted link does not
+ * navigate.
+ */
+function ignoreClick(event: MouseEvent<HTMLElement>): void {
+  event.preventDefault();
 }
 
 function labelRun(child: ReactNode): ReactNode {

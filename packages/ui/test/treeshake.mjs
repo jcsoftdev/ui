@@ -586,3 +586,71 @@ for (const banned of ["glass/crystal-map", "glass/specular-map", "glass/refracti
 console.log(
   `liquid glass tiers OK (preset ${preset.bytes} bytes, displacement map ${plainMap.bytes} bytes)`,
 );
+
+// Auth looks: each look is its own entry and carries its own CSS and markup. A screen built from
+// AuthLayout / LoginForm with the default look must not hold the code of the other four, and
+// importing one look adds only that look. Each look ships a `<style href="jcsoftdev-ui-auth-<look>">`,
+// so that href is its unique marker; `ui-stk-`, `ui-msc-`, `ui-chr-` and `ui-stm-` are its class prefixes.
+{
+  const { gzipSync } = await import("node:zlib");
+  const LOOKS = {
+    slabs: ["jcsoftdev-ui-auth-slabs", "ui-auth-slab-tone-0"],
+    stack: ["jcsoftdev-ui-auth-stack", "ui-stk-book"],
+    mosaic: ["jcsoftdev-ui-auth-mosaic", "ui-msc-grid"],
+    character: ["jcsoftdev-ui-auth-character", "ui-chr-decor"],
+    statement: ["jcsoftdev-ui-auth-statement", "ui-stm-lines"],
+  };
+  async function authBundle(code) {
+    const result = await build({
+      stdin: { contents: code, resolveDir: process.cwd(), loader: "js" },
+      bundle: true,
+      minify: true,
+      format: "esm",
+      write: false,
+      external: ["react", "react-dom", "react/jsx-runtime", "react-dom/*"],
+    });
+    const out = result.outputFiles[0].contents;
+    const text = Buffer.from(out).toString("utf8");
+    const has = (look) => LOOKS[look].every((marker) => text.includes(marker));
+    const none = (look) => LOOKS[look].every((marker) => !text.includes(marker));
+    return { has, none, gzip: gzipSync(out, { level: 9 }).length };
+  }
+  const authLayout = await authBundle(
+    `import { AuthLayout, LoginForm } from "@jcsoftdev/ui/auth"; console.log(AuthLayout, LoginForm);`,
+  );
+  assert.ok(authLayout.has("slabs"), "the default look is slabs and ships with AuthLayout");
+  for (const other of ["stack", "mosaic", "character", "statement"])
+    assert.ok(authLayout.none(other), `AuthLayout + LoginForm must not include the ${other} look`);
+
+  const index = await authBundle(`export * from "@jcsoftdev/ui/auth";`);
+  for (const other of ["stack", "mosaic", "character", "statement"])
+    assert.ok(index.none(other), `the auth entry must not include the ${other} look`);
+
+  for (const look of ["stack", "mosaic", "character", "statement"]) {
+    const exportName = look[0].toUpperCase() + look.slice(1);
+    const withLook = await authBundle(
+      `import { AuthLayout } from "@jcsoftdev/ui/auth"; import { ${exportName} } from "@jcsoftdev/ui/auth/${look}"; console.log(AuthLayout, ${exportName});`,
+    );
+    assert.ok(withLook.has(look), `importing auth/${look} adds the ${look} look`);
+    for (const other of Object.keys(LOOKS).filter((name) => name !== look && name !== "slabs"))
+      assert.ok(withLook.none(other), `importing auth/${look} must not add the ${other} look`);
+    const alone = await authBundle(
+      `import { ${exportName} } from "@jcsoftdev/ui/auth/${look}"; console.log(${exportName});`,
+    );
+    for (const other of Object.keys(LOOKS).filter((name) => name !== look))
+      assert.ok(alone.none(other), `auth/${look} alone must not include the ${other} look`);
+    console.log(
+      `auth/${look}: alone ${alone.gzip} B gzip, with AuthLayout ${withLook.gzip} B gzip`,
+    );
+  }
+
+  const any = await authBundle(
+    `import { AuthIllustrationAny } from "@jcsoftdev/ui/auth/looks"; console.log(AuthIllustrationAny);`,
+  );
+  for (const look of Object.keys(LOOKS))
+    assert.ok(any.has(look), `AuthIllustrationAny holds the ${look} look on purpose`);
+  console.log(
+    `auth: entry ${index.gzip} B gzip, AuthLayout + LoginForm ${authLayout.gzip} B gzip, AuthIllustrationAny ${any.gzip} B gzip`,
+  );
+  console.log("auth looks tree-shaking OK");
+}
