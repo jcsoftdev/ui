@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 (2026-10-23)
 
 ### Busy buttons keep focus (behavior to check when upgrading)
 
