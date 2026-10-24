@@ -20,6 +20,11 @@ Additive; every new prop defaults to the previous behavior unless noted.
   `TabsNav` or `Tabs` list under the title), plus `sticky` and `stickyOffset` (the header, tabs
   included, stays at the top of its scroll container on the page background). Without them the
   header renders as before.
+- **`Page` (G9).** New `aside` (a rail beside the content; 20rem by default, `asideWidth` to change
+  it, `asideSticky` to keep it in view), with the rail falling under the content at 1000px of page
+  width or less. The rail does not change the width the `page` container measures, so `Cols` inside
+  react the same with or without it. Without `aside` the markup is unchanged. `PageProps` is now an
+  interface extending the div props.
 
 ## 0.5.0 (2026-10-23)
 

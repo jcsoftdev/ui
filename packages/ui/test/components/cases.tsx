@@ -11,6 +11,7 @@ import { CopyField } from "../../src/forms/copy-field/copy-field.js";
 import { Topbar } from "../../src/shell/topbar/topbar.js";
 import { EmptyState } from "../../src/states/empty-state/empty-state.js";
 import { CardHeader } from "../../src/containers/card/card.js";
+import { Page } from "../../src/containers/page/page.js";
 import { PageHeader } from "../../src/containers/page-header/page-header.js";
 import { PageHeaderBack } from "../../src/containers/page-header/back.js";
 import { Segmented } from "../../src/navigation/segmented/segmented.js";
@@ -141,6 +142,12 @@ export const html = {
     ),
   emptyOutlined: () => renderToStaticMarkup(<EmptyState title="Vacío" variant="outlined" />),
   errorOutlined: () => renderToStaticMarkup(<ErrorState message="Falló" variant="outlined" />),
+  page: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Page {...props}>
+        <p>content</p>
+      </Page>,
+    ),
   pageHeaderCompact: () => renderToStaticMarkup(<PageHeader compact />),
   pageHeaderSlots: (props: Record<string, unknown> = {}) =>
     renderToStaticMarkup(

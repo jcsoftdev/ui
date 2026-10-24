@@ -236,6 +236,26 @@ test("Topbar renders only the parts it is given", () => {
   assert.match(full, /aria-label="Buscar"/);
 });
 
+test("Page keeps its single column and adds an aside rail on request", () => {
+  const plain = html.page({ className: "gap-2" });
+  assert.match(plain, /^<div class="[^"]*@container\/page flex w-full min-w-0 flex-col gap-2/);
+  assert.doesNotMatch(plain, /data-page-rail|--page-aside-width/);
+  const split = html.page({ aside: "rail" });
+  assert.match(split, /^<div data-page-aside="" class="@container\/page w-full min-w-0">/);
+  assert.match(split, /grid-cols-\[minmax\(0,1fr\)_var\(--page-aside-width,20rem\)\]/);
+  assert.match(split, /@max-\[1000px\]\/page:grid-cols-\[minmax\(0,1fr\)\]/);
+  assert.match(
+    split,
+    /content<\/p><\/div><div data-page-rail="" class="[^"]*border-l-divider[^"]*">rail<\/div>/,
+  );
+  assert.match(split, /@max-\[1000px\]\/page:border-t-divider/);
+  assert.doesNotMatch(split, /sticky/);
+  assert.match(html.page({ aside: "rail", asideSticky: true }), /@min-\[1001px\]\/page:sticky/);
+  assert.match(html.page({ aside: "rail", asideWidth: 360 }), /--page-aside-width:360px/);
+  assert.match(html.page({ aside: "rail", asideWidth: "24rem" }), /--page-aside-width:24rem/);
+  assert.doesNotMatch(split, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
 test("PageHeader stacks back, breadcrumbs, title, meta and tabs, and can stick", () => {
   const plain = html.pageHeaderSlots();
   const at = (text) => plain.indexOf(text);

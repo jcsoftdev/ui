@@ -321,6 +321,30 @@ export function ApplicantHeader() {
 }
 ```
 
+### Page with a side rail
+
+`Page` takes an `aside` (usually an `Aside`) and lays the page out as a content column plus a rail, 20rem wide by default (`asideWidth`: pixels or any CSS length). The rail has a divider and the page background; `asideSticky` keeps it in view and scrolls it on its own beside the content. Page is the `page` container for the whole split and the rail does not change the width it measures, so a `Cols` or `SettingsLayout` in the content reacts the same with or without a rail, and an app that owns the page gutter on the content column gets the same gutter either way. Once the page is 1000px wide or less the rail falls under the content with a top divider. With an `aside`, `className` and `style` go to the content column. `Page` adds no outer padding or scrolling: the shell owns both.
+
+```tsx region=page-aside
+export function Applicant() {
+  return (
+    <Page
+      aside={
+        <Aside className="px-4">
+          <AsideHeader title="Related" />
+          <p>Notes and shortcuts.</p>
+        </Aside>
+      }
+    >
+      <PageHeader>
+        <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      </PageHeader>
+      <Section title="Guardians">Rosa Quispe</Section>
+    </Page>
+  );
+}
+```
+
 ### Tables, parts and statuses
 
 `Table` can sit flush with the container edge (`flush`), keep its header in view (`stickyHeader` with a `maxHeight`, which makes the wrapper focusable for keyboard scrolling) and select rows. Selection is on as soon as one of `selectedKeys`, `defaultSelectedKeys` or `onSelectedKeysChange` is set: rows with a `rowKey` report `aria-selected`, the select-all box is checked, mixed or unchecked from the keys on screen, and checkboxes are named from the localized `selectRow` and `selectAll` strings. `TableActionsCell` wraps its inline actions under 48rem of the table's own container; pass `menu` (your overflow `DropdownMenu`) to swap them for it instead. Give an actions header column hidden text so it has a name.

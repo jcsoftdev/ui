@@ -19,6 +19,7 @@ import {
   ListDetailList,
   ListDetailTitle,
   Note,
+  Page,
   PageHeader,
   PageHeaderActions,
   PageHeaderBack,
@@ -288,6 +289,26 @@ export function ApplicantHeader() {
         <Button>Approve</Button>
       </PageHeaderActions>
     </PageHeader>
+  );
+}
+// #endregion
+
+// #region page-aside
+export function Applicant() {
+  return (
+    <Page
+      aside={
+        <Aside className="px-4">
+          <AsideHeader title="Related" />
+          <p>Notes and shortcuts.</p>
+        </Aside>
+      }
+    >
+      <PageHeader>
+        <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      </PageHeader>
+      <Section title="Guardians">Rosa Quispe</Section>
+    </Page>
   );
 }
 // #endregion
