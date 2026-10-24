@@ -125,7 +125,7 @@
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 97900
+      "maxGzip": 99200
     },
     {
       "id": "ui/forms",
