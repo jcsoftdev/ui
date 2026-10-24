@@ -112,7 +112,8 @@ export function DialogContent({
           <DialogPrimitive.Close
             aria-label={closeLabel ?? strings.close}
             className={cn(
-              "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
+              // A 30px square (44px under touch) centred where the 24px button was, so the glyph stays put.
+              "absolute top-2.25 right-2.25 flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5",
               classNames?.close,
             )}
           >

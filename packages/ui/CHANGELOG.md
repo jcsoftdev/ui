@@ -34,6 +34,8 @@ patch in. Additive except for the visual changes listed under "Changed".
 - **Chips meet the 30px hit area.** `ChipGroup` chips grow from 28px to 30px (`min-h-control-sm`,
   replacing `min-h-7`). A `Chip` with `onClick` or `role="button"` is at least 30px tall at either
   `size`; a display chip (and one with only `onRemove`) keeps its 24px or content height.
+- **`Dialog` and `Drawer` close button is a 30px square** (`size-control-sm`, 44px under touch as
+  before) instead of a 24px one. It is centred on the same point, so the X glyph does not move.
 - **Type change: `Select` and `TimeInput` no longer accept the native numeric `size` attribute**; `size`
   is now the control size. A native `<select size={n}>` list box was never styled by `Select` (it
   draws a single-line trigger with a chevron); use a plain `<select>` for that.
