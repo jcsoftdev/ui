@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+### Control sizes, table density, row actions and pagination
+
+One height per control size, a denser and steadier table, and the row and paging parts an app used to
+patch in. Additive except for the visual changes listed under "Changed".
+
+#### Added
+
+- **`--control-height-md` token** (`@jcsoftdev/ui-tokens`, Tailwind `h-control-md` / `w-control-md`):
+  38px, scaled by `data-density` like the other control heights and 48px under `touch`, the same as
+  `--input-height`. With `--control-height-sm` (30px) it is the one height of each control size.
+
+#### Changed
+
+- **`Button` and `IconButton` `size="md"` (the default) are 38px instead of 36px** (`h-control-md`,
+  `w-control-md`), so a default button lines up with a default field. `sm` (30px) and `lg` (52px) are
+  unchanged. `--control-height` (36px) still exists for code that uses it directly.
+
 ### Page structure (G1, G4, G9, G10)
 
 Additive; every new prop defaults to the previous behavior unless noted.
