@@ -237,7 +237,14 @@ export function States({ onRetry }: { onRetry: () => void }) {
 export function Students({ rows }: { rows: { id: string; name: string }[] }) {
   const [selected, setSelected] = useState<string[]>([]);
   return (
-    <Table aria-label="Students" flush stickyHeader maxHeight="20rem" selectedKeys={selected} onSelectedKeysChange={setSelected}>
+    <Table
+      aria-label="Students"
+      flush
+      stickyHeader
+      maxHeight="20rem"
+      selectedKeys={selected}
+      onSelectedKeysChange={setSelected}
+    >
       <TableHead>
         <TableRow>
           <TableSelectAllCell rowKeys={rows.map((row) => row.id)} />
@@ -252,7 +259,13 @@ export function Students({ rows }: { rows: { id: string; name: string }[] }) {
           <TableRow key={row.id} rowKey={row.id}>
             <TableSelectCell rowKey={row.id} label={row.name} />
             <TableCell>{row.name}</TableCell>
-            <TableActionsCell menu={<Button size="sm" variant="ghost" aria-label="Row actions">...</Button>}>
+            <TableActionsCell
+              menu={
+                <Button size="sm" variant="ghost" aria-label="Row actions">
+                  ...
+                </Button>
+              }
+            >
               <Button size="sm">Charge</Button>
               <Button size="sm" variant="ghost">
                 Open file
@@ -283,7 +296,15 @@ export function Parts() {
         </Section.Body>
       </Section>
       <Kpi card tone="success" dot>
-        <Kpi.Label trailing={<Button size="sm" variant="ghost">Details</Button>}>Collected</Kpi.Label>
+        <Kpi.Label
+          trailing={
+            <Button size="sm" variant="ghost">
+              Details
+            </Button>
+          }
+        >
+          Collected
+        </Kpi.Label>
         <Kpi.Value mono suffix="/ 1,200">
           840
         </Kpi.Value>
@@ -322,7 +343,12 @@ export function UserMenu() {
           </DropdownMenuTrigger>
         </div>
       </DropdownMenuAnchor>
-      <DropdownMenuContent bare side="top" align="start" className="w-64 rounded-lg border border-line bg-surface">
+      <DropdownMenuContent
+        bare
+        side="top"
+        align="start"
+        className="w-64 rounded-lg border border-line bg-surface"
+      >
         <div className="px-3 py-2.5">ana@school.test</div>
         <DropdownMenuItem asChild>
           <a href="/profile" className={dropdownMenuItemClasses}>

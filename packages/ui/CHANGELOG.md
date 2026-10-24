@@ -1,5 +1,40 @@
 # Changelog
 
+## Unreleased
+
+### Data and dashboards (G3, G5, G6, G11)
+
+Additive and source compatible, except for the barrel growth noted below. Guide: `/docs/data-and-dashboards/`.
+
+#### Added
+
+- **Dashboard blocks** (`@jcsoftdev/ui/containers`). `DashboardPage`, `KpiRow`, `CardGrid` (`columns` 2 or 3),
+  `ChartCard` (`height`) and `TableCard`, promoted from the stories. `KpiRow` is a named `group`;
+  `ChartCard` and `TableCard` are `section` landmarks named by their title (`headingLevel` 2 to 4).
+  Grids answer to the `page` container, never the viewport.
+- **Sortable `Table`.** `TableHeaderCell sortable` (with a `columnId`) cycles ascending, descending and off
+  and reports `aria-sort`; `Table` takes `sort`, `defaultSort` and `onSortChange` (`TableSort`,
+  `nextTableSort`, `ariaSortFor`). The table reports the state, the app sorts the rows.
+- **`TableEmpty`, `TableLoading` and column visibility.** `TableEmpty` is a row with an `EmptyState`
+  across `colSpan` columns; `TableLoading` renders placeholder rows with one status announcement;
+  `Table hiddenColumns` drops columns by `columnId` and `TableColumnsMenu` is the checkbox picker.
+- **`Pagination`.** Standalone footer (1-based `page` and `pageSize`, controlled or not, `pageSizeOptions`,
+  `total`, `labels`) with the range text, first, previous, next and last buttons. `DataGrid` keeps its own.
+- **`FilterBar`.** Search, `quickFilters` chips, a "More filters" popover (its `children`), removable
+  `activeFilters` chips, `onClearAll`, `resultCount` (polite status) and an `actions` slot. Under 40rem of
+  its own container width the chips and extra filters fold into one "Filters" button.
+- **UI strings.** `tableEmpty`, `columns`, `pagination`, `rowsPerPage`, `pageRange`, `firstPage`,
+  `previousPage`, `nextPage`, `lastPage`, `search`, `filters`, `moreFilters`, `clearAllFilters`,
+  `removeFilter`, `activeFilters`, `resultOne` and `resultMany` (en and es). A custom `UiStrings` object
+  must add them to type-check.
+
+#### Fixed
+
+- **Exports.** `BottomNav` (and its helpers) is now exported from `@jcsoftdev/ui/shell`, and
+  `BulletChart` and `LollipopChart` from `@jcsoftdev/ui/charts`; all three were implemented and
+  documented but missing from their barrels. The `shell` entry now includes `BottomNav` and its
+  `Drawer`, so it grows by about 6 kB gzip for apps that import the whole barrel.
+
 ## 0.5.0 (2026-10-23)
 
 ### Busy buttons keep focus (behavior to check when upgrading)

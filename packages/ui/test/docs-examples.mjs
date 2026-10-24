@@ -45,6 +45,10 @@ const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md
   min: 3,
   required: ["login", "controlled", "solid", "looks", "statement"],
 });
+const data = check("docs/data.tsx", "../../../site/src/content/docs/docs/data-and-dashboards.md", {
+  min: 4,
+  required: ["dashboard", "sortable", "pagination", "filter-bar"],
+});
 console.log(
-  `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block and ${auth} sign-in blocks match the type-checked source`,
+  `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block and ${auth} sign-in and ${data} data blocks match the type-checked source`,
 );
