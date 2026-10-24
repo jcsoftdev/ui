@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # The repo is public: a fork pull request must never run on the self-hosted Mac. Same-repo
+    # pushes and pull requests use the local runner (label `ui`); everything else stays hosted.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","ui"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
