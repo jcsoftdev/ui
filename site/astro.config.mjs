@@ -50,6 +50,7 @@ export default defineConfig({
             { slug: "docs/accessibility" },
             { slug: "docs/blocks" },
             { slug: "docs/auth" },
+            { slug: "docs/motion" },
           ],
         },
         {

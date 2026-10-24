@@ -140,6 +140,12 @@
       "maxGzip": 1700
     },
     {
+      "id": "ui/motion",
+      "kind": "js",
+      "file": "packages/ui/dist/motion/index.js",
+      "maxGzip": 5600
+    },
+    {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",

@@ -2,7 +2,6 @@
 
 import { type HTMLAttributes, type Ref, useEffect, useMemo, useRef, useState } from "react";
 import { useUiStrings } from "../i18n/index.js";
-import { cn } from "../utils/cn.js";
 import { usePrefersReducedMotion } from "../utils/reduced-motion.js";
 import { composeRefs } from "../utils/slot.js";
 import { COUNT_UP_SCALE, countAt, parseDuration, parseEasing } from "./model.js";
@@ -62,7 +61,11 @@ export function CountUp({ value, formatter, from = 0, className, ref, ...props }
   return (
     <>
       <MotionStyles />
-      <span ref={composeRefs(ref, node)} className={cn("ui-count", className)} {...props}>
+      <span
+        ref={composeRefs(ref, node)}
+        className={className ? `ui-count ${className}` : "ui-count"}
+        {...props}
+      >
         {shown === value ? (
           final
         ) : (
