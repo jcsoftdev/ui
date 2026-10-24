@@ -20,6 +20,8 @@ patch in. Additive except for the visual changes listed under "Changed".
   `Forms/Control sizes` measures them.
 - **`DateTimePicker` `classNames` reach the inner parts**: new parts `dateInput`, `clear`, `trigger`,
   `content`, `calendar` (the inner `DatePicker`) and `timeInput`.
+- **`Wizard` `buttonSize`** (default `"md"`): size of the Back and Next/Finish buttons, which now
+  reach the 38px md height of a field (they followed `Button` md, 36px, before).
 - **`ChipGroup` `size`**: `"sm"` (default, 30px minimum) or `"md"` (38px minimum).
 
 #### Changed

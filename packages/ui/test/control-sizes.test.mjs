@@ -84,3 +84,13 @@ test("an interactive Chip has a 30px minimum height; a display chip keeps its si
   assert.doesNotMatch(html.chip(), /min-h-control-sm/);
   assert.match(html.chip(), /\bh-6\b/);
 });
+
+test("the Wizard footer buttons are md by default and follow buttonSize", () => {
+  const footer = (markup) =>
+    [...markup.matchAll(/<button[^>]*class="([^"]*)"/g)]
+      .map((m) => m[1])
+      .filter((classes) => /\bh-control-(sm|md)\b/.test(classes));
+  assert.equal(footer(html.wizard()).length, 2);
+  for (const classes of footer(html.wizard())) assert.match(classes, /\bh-control-md\b/);
+  for (const classes of footer(html.wizard("sm"))) assert.match(classes, /\bh-control-sm\b/);
+});

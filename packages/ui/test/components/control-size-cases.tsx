@@ -9,6 +9,7 @@ import { DateTimePicker } from "../../src/forms/date-picker/date-time-picker.js"
 import { Input } from "../../src/forms/input/input.js";
 import { Select } from "../../src/forms/select/select.js";
 import { TimeInput } from "../../src/forms/time-input/time-input.js";
+import { Wizard } from "../../src/navigation/wizard/wizard.js";
 
 type Size = "sm" | "md";
 
@@ -55,4 +56,14 @@ export const html = {
       />,
     ),
   chip: (props: Record<string, unknown> = {}) => renderToStaticMarkup(<Chip {...props}>Paid</Chip>),
+  wizard: (buttonSize?: "sm" | "md") =>
+    renderToStaticMarkup(
+      <Wizard
+        buttonSize={buttonSize}
+        steps={[
+          { id: "a", label: "A", content: "One" },
+          { id: "b", label: "B", content: "Two" },
+        ]}
+      />,
+    ),
 };
