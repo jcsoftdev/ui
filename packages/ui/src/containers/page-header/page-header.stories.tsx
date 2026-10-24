@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
+import { Chip } from "../../atoms/chip/chip.js";
 import { Breadcrumbs } from "../../navigation/breadcrumbs/breadcrumbs.js";
+import { TabsNav, TabsNavLink } from "../../navigation/tabs/tabs-nav.js";
+import { PageHeaderBack } from "./back.js";
 import {
   PageHeader,
   PageHeaderActions,
@@ -97,5 +101,70 @@ export const Compact: Story = {
         <PageHeaderLede>Te enviamos un código de seis dígitos.</PageHeaderLede>
       </div>
     ),
+  },
+};
+
+const tabs = (
+  <TabsNav aria-label="Applicant sections" value="overview">
+    <TabsNavLink value="overview" href="#overview">
+      Overview
+    </TabsNavLink>
+    <TabsNavLink value="documents" href="#documents" count={4}>
+      Documents
+    </TabsNavLink>
+    <TabsNavLink value="history" href="#history">
+      History
+    </TabsNavLink>
+  </TabsNav>
+);
+
+/** `back` link, `meta` row and `tabs` under the title block. */
+export const BackMetaTabs: Story = {
+  args: {
+    back: <PageHeaderBack href="#applicants" />,
+    meta: (
+      <>
+        <Chip tone="warning">In review</Chip>
+        <span>Grade 3 admission</span>
+        <span>Applied 12 Oct</span>
+      </>
+    ),
+    tabs,
+    children: (
+      <>
+        <div>
+          <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+        </div>
+        <PageHeaderActions>
+          <Button>Approve</Button>
+        </PageHeaderActions>
+      </>
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("link", { name: "Back" })).toHaveAttribute("href", "#applicants");
+    await expect(canvas.getByRole("navigation", { name: "Applicant sections" })).toBeVisible();
+    await expect(canvas.getByRole("link", { name: /Overview/ })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  },
+};
+
+/** Stays at the top of its scroll container, tabs included. */
+export const Sticky: Story = {
+  args: { ...BackMetaTabs.args, sticky: true },
+  decorators: [
+    (Story) => (
+      <div className="h-64 overflow-auto">
+        <Story />
+        <div className="h-[600px]" />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const header = canvasElement.querySelector("header") as HTMLElement;
+    await expect(getComputedStyle(header).position).toBe("sticky");
   },
 };

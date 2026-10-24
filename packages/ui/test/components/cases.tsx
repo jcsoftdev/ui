@@ -12,6 +12,7 @@ import { Topbar } from "../../src/shell/topbar/topbar.js";
 import { EmptyState } from "../../src/states/empty-state/empty-state.js";
 import { CardHeader } from "../../src/containers/card/card.js";
 import { PageHeader } from "../../src/containers/page-header/page-header.js";
+import { PageHeaderBack } from "../../src/containers/page-header/back.js";
 import { Segmented } from "../../src/navigation/segmented/segmented.js";
 import { ConfirmAction } from "../../src/containers/confirm-action/confirm-action.js";
 import { ResponsiveList } from "../../src/containers/responsive-list/responsive-list.js";
@@ -141,6 +142,18 @@ export const html = {
   emptyOutlined: () => renderToStaticMarkup(<EmptyState title="Vacío" variant="outlined" />),
   errorOutlined: () => renderToStaticMarkup(<ErrorState message="Falló" variant="outlined" />),
   pageHeaderCompact: () => renderToStaticMarkup(<PageHeader compact />),
+  pageHeaderSlots: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <PageHeader
+        back={<PageHeaderBack href="/applicants" />}
+        breadcrumbs={<nav>crumbs</nav>}
+        meta={<span>facts</span>}
+        tabs={<nav>tabs</nav>}
+        {...props}
+      >
+        <h1>Title</h1>
+      </PageHeader>,
+    ),
   cardHeaderSlots: () =>
     renderToStaticMarkup(<CardHeader icon={<i data-icon />} title="Caja" action={<b data-action />} />),
   segmentedOptions: (block?: boolean) =>

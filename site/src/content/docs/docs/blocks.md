@@ -285,6 +285,42 @@ export function StudentRail({ rows }: { rows: { id: string; name: string }[] }) 
 }
 ```
 
+### Page header with navigation
+
+`PageHeader` has slots for the rows around the title. `back` takes a `PageHeaderBack` (a real link; `href`, or `asChild` with your router's `Link`; the label defaults to the localized "Back"), shown before `breadcrumbs`. `meta` is a wrapping row of status chips and short facts under the title block. `tabs` takes a `TabsNav` or `Tabs` list across the full width, closing the header with its divider. `sticky` keeps the whole header, tabs included, at the top of its scroll container on an opaque page background; `stickyOffset` (px or any CSS length) leaves room for a sticky bar above it.
+
+```tsx region=page-header
+export function ApplicantHeader() {
+  return (
+    <PageHeader
+      sticky
+      back={<PageHeaderBack href="/applicants" />}
+      meta={
+        <>
+          <Chip tone="warning">In review</Chip>
+          <span>Grade 3 admission</span>
+        </>
+      }
+      tabs={
+        <TabsNav aria-label="Applicant sections" value="overview">
+          <TabsNavLink value="overview" href="#overview">
+            Overview
+          </TabsNavLink>
+          <TabsNavLink value="documents" href="#documents" count={4}>
+            Documents
+          </TabsNavLink>
+        </TabsNav>
+      }
+    >
+      <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      <PageHeaderActions>
+        <Button>Approve</Button>
+      </PageHeaderActions>
+    </PageHeader>
+  );
+}
+```
+
 ### Tables, parts and statuses
 
 `Table` can sit flush with the container edge (`flush`), keep its header in view (`stickyHeader` with a `maxHeight`, which makes the wrapper focusable for keyboard scrolling) and select rows. Selection is on as soon as one of `selectedKeys`, `defaultSelectedKeys` or `onSelectedKeysChange` is set: rows with a `rowKey` report `aria-selected`, the select-all box is checked, mixed or unchecked from the keys on screen, and checkboxes are named from the localized `selectRow` and `selectAll` strings. `TableActionsCell` wraps its inline actions under 48rem of the table's own container; pass `menu` (your overflow `DropdownMenu`) to swap them for it instead. Give an actions header column hidden text so it has a name.

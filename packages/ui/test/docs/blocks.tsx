@@ -19,6 +19,10 @@ import {
   ListDetailList,
   ListDetailTitle,
   Note,
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderBack,
+  PageHeaderTitle,
   Section,
   Shortcuts,
   ShortcutsItem,
@@ -252,6 +256,38 @@ export function StudentRail({ rows }: { rows: { id: string; name: string }[] }) 
         <ListDetailEmpty title="No student selected" description="Choose one from the list." />
       </ListDetailDetail>
     </ListDetail>
+  );
+}
+// #endregion
+
+// #region page-header
+export function ApplicantHeader() {
+  return (
+    <PageHeader
+      sticky
+      back={<PageHeaderBack href="/applicants" />}
+      meta={
+        <>
+          <Chip tone="warning">In review</Chip>
+          <span>Grade 3 admission</span>
+        </>
+      }
+      tabs={
+        <TabsNav aria-label="Applicant sections" value="overview">
+          <TabsNavLink value="overview" href="#overview">
+            Overview
+          </TabsNavLink>
+          <TabsNavLink value="documents" href="#documents" count={4}>
+            Documents
+          </TabsNavLink>
+        </TabsNav>
+      }
+    >
+      <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      <PageHeaderActions>
+        <Button>Approve</Button>
+      </PageHeaderActions>
+    </PageHeader>
   );
 }
 // #endregion

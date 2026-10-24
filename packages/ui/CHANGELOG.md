@@ -15,6 +15,11 @@ Additive; every new prop defaults to the previous behavior unless noted.
   (`data-list-detail-pane="list"`, carrying the divider and the hide-when-detail classes) around the
   `ul`; the `ul` keeps its `aria-label`, `className` and props, but `list.parentElement` is no longer
   the grid.
+- **`PageHeader` (G4).** New slots `back` (with the new `PageHeaderBack` link: `href` or `asChild`,
+  localized "Back" label by default), `meta` (wrapping row of chips and facts) and `tabs` (full-width
+  `TabsNav` or `Tabs` list under the title), plus `sticky` and `stickyOffset` (the header, tabs
+  included, stays at the top of its scroll container on the page background). Without them the
+  header renders as before.
 
 ## 0.5.0 (2026-10-23)
 

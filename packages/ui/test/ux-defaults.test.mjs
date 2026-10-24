@@ -236,6 +236,21 @@ test("Topbar renders only the parts it is given", () => {
   assert.match(full, /aria-label="Buscar"/);
 });
 
+test("PageHeader stacks back, breadcrumbs, title, meta and tabs, and can stick", () => {
+  const plain = html.pageHeaderSlots();
+  const at = (text) => plain.indexOf(text);
+  assert.ok(at("Back") > 0 && at("Back") < at("crumbs"));
+  assert.ok(at("crumbs") < at("<h1>") && at("<h1>") < at("facts") && at("facts") < at("tabs"));
+  assert.match(plain, /<a [^>]*href="\/applicants"/);
+  assert.doesNotMatch(plain, /data-sticky|sticky/);
+  assert.match(
+    html.pageHeaderSlots({ sticky: true }),
+    /data-sticky="".*sticky top-\(--page-header-top,0px\)/,
+  );
+  assert.match(html.pageHeaderSlots({ stickyOffset: 56 }), /--page-header-top:56px/);
+  assert.doesNotMatch(plain, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
 test("outlined, compact and slot variants add their markup", () => {
   assert.match(html.emptyOutlined(), /border-dashed/);
   assert.match(html.errorOutlined(), /border-danger/);
