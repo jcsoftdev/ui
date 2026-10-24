@@ -140,6 +140,50 @@ export function Forms() {
 
 Accessibility: `SelectMenu` and `Combobox` follow the WAI-ARIA combobox and listbox patterns (focus stays on the trigger or input, `aria-activedescendant`, arrows, Home/End, typeahead, Escape). Disabled options are skipped and options are 44px tall under touch density. Inside `Field` the listbox is named from the label. The calendar grid uses a roving tabindex with arrows, Home/End, PageUp/PageDown and Shift+Page for years; out-of-range dates stay focusable with `aria-disabled`. Weeks start on Monday for es-PE and en-GB, and on Sunday for US-style locales; override with `weekStartsOn`. `ChipGroup` is a named group of `aria-pressed` toggle buttons with roving focus; a check glyph marks selected chips.
 
+### Form layout
+
+A typical create or edit form is `Form > FormSection > FormGrid > Field`, closed by a `FormFooter`.
+
+| Component     | Props worth knowing                                                                                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FormSection` | `title`, `description`. The title column sits beside the fields from 640px of container width and stacks above them in a narrower one (a drawer, a split pane).                                                                        |
+| `FormGrid`    | `columns` 1 to 3 (default 2): the most columns it reaches, 2 from 620px and 3 from 900px of container width. `FormGridItem span` (1, 2, 3 or `"full"`) never adds a column the grid does not have.                                     |
+| `Fieldset`    | `legend`, `description`; a native `fieldset`, so `disabled` reaches every control inside.                                                                                                                                              |
+| `Field`       | `required` adds a visible `*` and `aria-required` on the control (native validation stays off); `disabled` disables the control and mutes the label.                                                                                   |
+| `FormFooter`  | Sticky by default (`sticky={false}` to opt out). `onCancel` shows Cancel, `submitLabel`, `submitDisabled`, `dirty` shows "Unsaved changes" in a polite status region, `busy` keeps the submit focusable but inert and disables Cancel. |
+
+```tsx region=form-layout
+export function CreateStudent({ saving, onCancel }: { saving: boolean; onCancel: () => void }) {
+  return (
+    <Form>
+      <FormSection title="Student" description="Shown on reports and certificates.">
+        <FormGrid columns={2}>
+          <Field label="First name" required>
+            <Input />
+          </Field>
+          <Field label="Last name" required>
+            <Input />
+          </Field>
+          <FormGridItem span="full">
+            <Field label="Notes" optional>
+              <Textarea />
+            </Field>
+          </FormGridItem>
+        </FormGrid>
+      </FormSection>
+      <FormSection title="Guardian">
+        <Fieldset legend="Primary contact" description="Receives every notice.">
+          <Field label="Email" required>
+            <Input type="email" />
+          </Field>
+        </Fieldset>
+      </FormSection>
+      <FormFooter dirty busy={saving} onCancel={onCancel} submitLabel="Create student" />
+    </Form>
+  );
+}
+```
+
 ## Navigation
 
 | Component                 | Props worth knowing                                                                                                                                                                                                                        |
@@ -538,7 +582,7 @@ export function RemoveStudent({ onRemove }: { onRemove: () => void }) {
 
 ## States
 
-`Skeleton` has the variants `list`, `kpis`, `key-value` and `bar` with a `count` (default 4, max 12); each renders one status region and hides its bars from assistive technology. `ErrorState` accepts an `actions` node rendered in the same wrapping row as the retry button. `RadioGroup` radios are now named from their labels and described by their descriptions.
+`Skeleton` has the variants `list`, `kpis`, `key-value` and `bar` with a `count` (default 4, max 12); each renders one status region and hides its bars from assistive technology. `EmptyState` takes an `icon` node or one of `"inbox"`, `"search"` and `"lock"`, and `size="sm"` renders the inline one-row form for a list, a table cell or a card body (a muted sentence with an optional action). `ErrorState` accepts an `actions` node rendered in the same wrapping row as the retry button. `RadioGroup` radios are now named from their labels and described by their descriptions.
 
 ```tsx region=states
 export function States({ onRetry }: { onRetry: () => void }) {
@@ -546,6 +590,8 @@ export function States({ onRetry }: { onRetry: () => void }) {
     <>
       <Skeleton variant="list" count={5} />
       <Skeleton variant="kpis" count={3} />
+      <EmptyState icon="search" title="No results" description="Try another term." />
+      <EmptyState size="sm" icon="inbox" title="No pending payments" />
       <ErrorState onRetry={onRetry} actions={<Button variant="ghost">Contact support</Button>} />
     </>
   );

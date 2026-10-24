@@ -21,12 +21,36 @@ import { ResponsiveList } from "../../src/containers/responsive-list/responsive-
 import { Banner } from "../../src/containers/banner/banner.js";
 import { Field } from "../../src/forms/field/field.js";
 import { Input } from "../../src/forms/input/input.js";
+import { FormFooter } from "../../src/forms/form-footer/form-footer.js";
+import { FormGrid, FormGridItem } from "../../src/forms/form-grid/form-grid.js";
+import { FormSection } from "../../src/forms/form-section/form-section.js";
 import { ErrorState } from "../../src/states/error-state/error-state.js";
 import { RadioGroup } from "../../src/atoms/radio-group/radio-group.js";
 import { Switch } from "../../src/atoms/switch/switch.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 
 export const html = {
+  fieldRequired: () =>
+    renderToStaticMarkup(
+      <Field label="Name" required disabled>
+        <Input />
+      </Field>,
+    ),
+  formGrid: (columns?: 1 | 2 | 3) =>
+    renderToStaticMarkup(
+      <FormGrid columns={columns}>
+        <FormGridItem span="full" />
+        <FormGridItem span={3} />
+      </FormGrid>,
+    ),
+  formSection: () =>
+    renderToStaticMarkup(
+      <FormSection title="Contact" description="How we reach them">
+        <i data-fields />
+      </FormSection>,
+    ),
+  formFooter: (props: { busy?: boolean; dirty?: boolean }) =>
+    renderToStaticMarkup(<FormFooter onCancel={() => {}} {...props} />),
   skeletonDefault: () => renderToStaticMarkup(<Skeleton />),
   skeletonEs: () =>
     renderToStaticMarkup(

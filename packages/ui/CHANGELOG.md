@@ -30,6 +30,29 @@ Additive; every new prop defaults to the previous behavior unless noted.
   `facts` (a `Facts` list) and `actions`; the actions wrap under the name from 480px of its own width
   down.
 
+### Forms and empty states (G2, G7)
+
+Additive and source compatible; no default changed. New UI strings `save` and `unsavedChanges` (en, es).
+
+#### Added
+
+- **Forms.** `FormSection` (`title`, `description`: the title column sits beside the fields from
+  640px of container width and stacks above them in a narrower container), `Fieldset` (`legend`,
+  `description`, a native `fieldset`) and `FormFooter` (sticky by default; `onCancel`,
+  `cancelLabel`, `submitLabel`, `submitDisabled`, `dirty` for an "Unsaved changes" hint in a status
+  region, `busy` for a submit that stays focusable but inert and a disabled cancel). Typical form:
+  `Form > FormSection > FormGrid > Field`, then `FormFooter`.
+- **`FormGrid` `columns` and `FormGridItem`.** `columns` 1 to 3 (default `2`, as before): 2 columns
+  from 620px and 3 from 900px of container width. `FormGridItem` `span` (1, 2, 3 or `"full"`) never
+  adds a column the grid does not have.
+- **`Field` `required` and `disabled`.** `required` adds a visible `*` (hidden from assistive
+  tech) and `aria-required` on the control; native validation stays off. `disabled` disables the
+  control and mutes the label. Both reach the control the same way `error` does, also in a
+  multi-child field. New `required` part for `classNames`.
+- **`EmptyState`.** `size="sm"` is an inline row (icon, title, description, action) to replace a
+  muted one-line paragraph. `icon` also takes `"inbox"`, `"search"` or `"lock"` (exported type
+  `EmptyStateIconName`) for a default domain icon; a node still works as before.
+
 ## 0.5.0 (2026-10-23)
 
 ### Busy buttons keep focus (behavior to check when upgrading)

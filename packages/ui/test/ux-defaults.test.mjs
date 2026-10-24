@@ -319,3 +319,49 @@ test("Button announces the UI string `loading` when no loadingLabel is given", (
     /<span role="status" class="sr-only">Cargando<\/span>$/,
   );
 });
+
+test("Field required marks the label visibly and the control with aria-required", () => {
+  const markup = html.fieldRequired();
+  assert.match(markup, /Name<span aria-hidden="true"[^>]*>\*<\/span>/);
+  assert.match(markup, /<input[^>]*aria-required="true"/);
+  assert.match(markup, /<input[^>]*disabled/);
+});
+
+test("FormGrid keeps two columns by default and never adds a column it does not have", () => {
+  assert.match(
+    html.formGrid(),
+    /data-columns="2"[^>]*@min-\[620px\]\/form-grid:grid-cols-\[repeat\(2/,
+  );
+  assert.doesNotMatch(html.formGrid(), /repeat\(3/);
+  assert.match(html.formGrid(3), /@min-\[900px\]\/form-grid:grid-cols-\[repeat\(3/);
+  assert.doesNotMatch(html.formGrid(1), /grid-cols-\[repeat/);
+  assert.match(html.formGrid(1), /col-span-full/);
+  assert.match(html.formGrid(2), /group-data-\[columns=3\]\/form-grid:@min-\[900px\]/);
+});
+
+test("FormSection stacks in a narrow container and sits beside the fields from 640px", () => {
+  const markup = html.formSection();
+  assert.match(markup, /<h3[^>]*>Contact<\/h3>/);
+  assert.match(
+    markup,
+    /grid-cols-\[minmax\(0,1fr\)\] [^"]*@min-\[640px\]\/form-section:grid-cols-/,
+  );
+  assert.doesNotMatch(markup, /(?:sm|md|lg):grid-cols/);
+});
+
+test("FormFooter is sticky, localizes its labels and reports a busy submit", () => {
+  const idle = html.formFooter({});
+  assert.match(idle, /sticky bottom-0/);
+  assert.match(idle, />Cancel</);
+  assert.match(idle, /type="submit"[^>]*><span[^>]*>Save</);
+  assert.doesNotMatch(idle, /aria-busy="true"/);
+  assert.doesNotMatch(idle, /Unsaved changes/);
+  assert.match(html.formFooter({ dirty: true }), /role="status"[^>]*>Unsaved changes</);
+  const busy = html.formFooter({ busy: true });
+  assert.match(busy, /^<div[^>]*aria-busy="true"/);
+  assert.match(
+    busy,
+    /type="submit"[^>]*aria-disabled="true"|aria-disabled="true"[^>]*type="submit"/,
+  );
+  assert.match(busy, /type="button"[^>]*disabled/);
+});
