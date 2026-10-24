@@ -16,6 +16,7 @@ import {
   TableSelectAllCell,
   TableSelectCell,
 } from "./table.js";
+import { TableColumnsMenu, TableEmpty, TableLoading } from "./table-parts.js";
 
 const inventory = [
   { sku: "POM-001", name: "Pomada mate Hombre Fuerte", stock: 24, price: "S/ 38", low: false },
@@ -440,6 +441,132 @@ export const ActionsNarrowWrap: Story = {
     await expect(last).toBeVisible();
     await expect(last.getBoundingClientRect().right).toBeLessThanOrEqual(
       wrapper.getBoundingClientRect().right + 1,
+    );
+  },
+};
+
+const byStock = (sort: { columnId: string; direction: "ascending" | "descending" } | null) =>
+  [...inventory].sort((a, b) => {
+    if (!sort) return 0;
+    const key = sort.columnId === "stock" ? "stock" : "name";
+    const order = a[key] < b[key] ? -1 : a[key] > b[key] ? 1 : 0;
+    return sort.direction === "ascending" ? order : -order;
+  });
+
+/** Sortable headers cycle ascending, descending, off and report `aria-sort`; the rows are sorted by the app. */
+export const Sortable: Story = {
+  render: function Render(args) {
+    const [sort, setSort] = useState<{
+      columnId: string;
+      direction: "ascending" | "descending";
+    } | null>(null);
+    return (
+      <Table {...args} sort={sort} onSortChange={setSort}>
+        <TableHead>
+          <tr>
+            <TableHeaderCell columnId="name" sortable>
+              Producto
+            </TableHeaderCell>
+            <TableHeaderCell columnId="stock" alignRight sortable>
+              Stock
+            </TableHeaderCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {byStock(sort).map((item) => (
+            <TableRow key={item.sku}>
+              <TableCell>{item.name}</TableCell>
+              <TableCell alignRight>{item.stock}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole("columnheader", { name: /stock/i });
+    await expect(header).toHaveAttribute("aria-sort", "none");
+    const button = within(header).getByRole("button");
+    await userEvent.click(button);
+    await expect(header).toHaveAttribute("aria-sort", "ascending");
+    await userEvent.click(button);
+    await expect(header).toHaveAttribute("aria-sort", "descending");
+    await userEvent.click(button);
+    await expect(header).toHaveAttribute("aria-sort", "none");
+  },
+};
+
+/** The first load shows placeholder rows; an empty result shows an `EmptyState` across the columns. */
+export const LoadingAndEmpty: Story = {
+  render: (args) => (
+    <div className="grid gap-6">
+      <Table {...args} aria-label="Cargando" aria-busy="true">
+        <TableHead>
+          <tr>
+            <TableHeaderCell>Producto</TableHeaderCell>
+            <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          <TableLoading columns={2} rows={4} />
+        </TableBody>
+      </Table>
+      <Table {...args} aria-label="Sin resultados">
+        <TableHead>
+          <tr>
+            <TableHeaderCell>Producto</TableHeaderCell>
+            <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          <TableEmpty colSpan={2} description="Prueba con otra búsqueda." />
+        </TableBody>
+      </Table>
+    </div>
+  ),
+};
+
+/** `hiddenColumns` drops the columns by `columnId`; `TableColumnsMenu` is the checkbox picker. */
+export const ColumnVisibility: Story = {
+  render: function Render(args) {
+    const [hidden, setHidden] = useState<string[]>(["sku"]);
+    return (
+      <div className="grid gap-3">
+        <div className="flex justify-end">
+          <TableColumnsMenu
+            columns={[
+              { id: "name", label: "Producto" },
+              { id: "sku", label: "SKU" },
+              { id: "stock", label: "Stock" },
+            ]}
+            hiddenColumns={hidden}
+            onHiddenColumnsChange={setHidden}
+          />
+        </div>
+        <Table {...args} hiddenColumns={hidden}>
+          <TableHead>
+            <tr>
+              <TableHeaderCell columnId="name">Producto</TableHeaderCell>
+              <TableHeaderCell columnId="sku">SKU</TableHeaderCell>
+              <TableHeaderCell columnId="stock" alignRight>
+                Stock
+              </TableHeaderCell>
+            </tr>
+          </TableHead>
+          <TableBody>
+            {inventory.map((item) => (
+              <TableRow key={item.sku}>
+                <TableCell columnId="name">{item.name}</TableCell>
+                <TableCell columnId="sku">{item.sku}</TableCell>
+                <TableCell columnId="stock" alignRight>
+                  {item.stock}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     );
   },
 };

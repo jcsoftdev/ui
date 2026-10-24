@@ -25,6 +25,7 @@ export * from "./list-detail/index.js";
 export * from "./note/index.js";
 export * from "./page/index.js";
 export * from "./page-header/index.js";
+export * from "./pagination/index.js";
 export * from "./resizable/index.js";
 export * from "./responsive-list/index.js";
 export * from "./scrolly/index.js";
