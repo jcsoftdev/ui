@@ -36,5 +36,6 @@ export * from "./settings-row/index.js";
 export * from "./shortcuts/index.js";
 export * from "./stack/index.js";
 export * from "./table/index.js";
+export * from "./table-columns-menu/index.js";
 export * from "./timeline/index.js";
 export * from "./toolbar/index.js";

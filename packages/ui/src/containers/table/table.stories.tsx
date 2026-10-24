@@ -3,6 +3,7 @@ import { useState } from "react";
 import { expect, userEvent, within } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
+import { TableColumnsMenu } from "../table-columns-menu/table-columns-menu.js";
 import {
   type PinnedColumns,
   Table,
@@ -16,7 +17,7 @@ import {
   TableSelectAllCell,
   TableSelectCell,
 } from "./table.js";
-import { TableColumnsMenu, TableEmpty, TableLoading } from "./table-parts.js";
+import { TableEmpty, TableLoading } from "./table-parts.js";
 
 const inventory = [
   { sku: "POM-001", name: "Pomada mate Hombre Fuerte", stock: 24, price: "S/ 38", low: false },
