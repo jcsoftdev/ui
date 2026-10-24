@@ -59,7 +59,7 @@
       "id": "ui/auth",
       "kind": "js",
       "file": "packages/ui/dist/auth/index.js",
-      "maxGzip": 24350
+      "maxGzip": 24650
     },
     {
       "id": "ui/auth/looks",
@@ -95,7 +95,7 @@
       "id": "ui/auth/statement",
       "kind": "js",
       "file": "packages/ui/dist/auth/statement/index.js",
-      "maxGzip": 3450
+      "maxGzip": 3650
     },
     {
       "id": "ui/atoms",
@@ -113,7 +113,7 @@
       "id": "ui/calendar",
       "kind": "js",
       "file": "packages/ui/dist/calendar/index.js",
-      "maxGzip": 14800
+      "maxGzip": 15000
     },
     {
       "id": "ui/charts",
@@ -125,7 +125,7 @@
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 99200
+      "maxGzip": 103600
     },
     {
       "id": "ui/forms",
@@ -137,19 +137,19 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 1700
+      "maxGzip": 2050
     },
     {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 15750
+      "maxGzip": 16100
     },
     {
       "id": "ui/overlays",
       "kind": "js",
       "file": "packages/ui/dist/overlays/index.js",
-      "maxGzip": 31100
+      "maxGzip": 31500
     },
     {
       "id": "ui/palette",
@@ -167,13 +167,13 @@
       "id": "ui/shell",
       "kind": "js",
       "file": "packages/ui/dist/shell/index.js",
-      "maxGzip": 12850
+      "maxGzip": 18900
     },
     {
       "id": "ui/states",
       "kind": "js",
       "file": "packages/ui/dist/states/index.js",
-      "maxGzip": 12100
+      "maxGzip": 11950
     },
     {
       "id": "ui/utils",
