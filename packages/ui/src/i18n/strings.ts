@@ -72,6 +72,14 @@ export interface UiStrings {
   previousPage: string;
   nextPage: string;
   lastPage: string;
+  /** Range text of a `Pagination variant="pages"`; `{first}`, `{last}` and `{total}` are replaced. */
+  showingRange: string;
+  /** Range text of a `CursorPagination` (no known total); `{first}` and `{last}` are replaced. */
+  showingRangeOpen: string;
+  /** Visible label of the previous-page button of `Pagination variant="pages"` and `CursorPagination`. */
+  previous: string;
+  /** Name of a page number button; `{page}` is replaced. */
+  pageNumber: string;
   /** Name of the search field of a `FilterBar`. */
   search: string;
   /** Label of the `FilterBar` button that opens every filter under a narrow container. */
@@ -183,6 +191,10 @@ export const uiStrings = {
     previousPage: "Previous page",
     nextPage: "Next page",
     lastPage: "Last page",
+    showingRange: "Showing {first}–{last} of {total}",
+    showingRangeOpen: "Showing {first}–{last}",
+    previous: "Previous",
+    pageNumber: "Page {page}",
     search: "Search",
     filters: "Filters",
     moreFilters: "More filters",
@@ -266,6 +278,10 @@ export const uiStrings = {
     previousPage: "Página anterior",
     nextPage: "Página siguiente",
     lastPage: "Última página",
+    showingRange: "Mostrando {first}–{last} de {total}",
+    showingRangeOpen: "Mostrando {first}–{last}",
+    previous: "Anterior",
+    pageNumber: "Página {page}",
     search: "Buscar",
     filters: "Filtros",
     moreFilters: "Más filtros",

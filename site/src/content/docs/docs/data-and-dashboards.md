@@ -95,6 +95,67 @@ export function Products() {
 }
 ```
 
+### Row density and sticky actions
+
+Every body row has a minimum height, so a row of text and a row holding a 30px button measure the
+same: `density="comfortable"` (default) is 48px and `"compact"` 40px, with cells centred vertically.
+Both set CSS variables on the table (`--row-min-h`, `--table-cell-py`) that `className` or `style` can
+override. `stickyActions` keeps the last column, the row actions, on the right edge while the other
+columns scroll under it; it engages from 24rem of the table's own width, so a phone-width table
+scrolls it along.
+
+```tsx region=density
+export function LongList() {
+  return (
+    <Table aria-label="Stock" density="compact" stickyActions>
+      <TableHead>
+        <tr>
+          <TableHeaderCell>Name</TableHeaderCell>
+          <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Actions</span>
+          </TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell>{row.name}</TableCell>
+            <TableCell alignRight>{row.stock}</TableCell>
+            <TableActionsCell>
+              <Button size="sm">Restock</Button>
+            </TableActionsCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+```
+
+### Row actions
+
+`RowActions` puts at most one inline action in a row and the rest in an overflow menu behind a
+30px "more" button. `label` names that button (name the row: "Actions for Ana Quispe"). Items are
+`{ id, label, onSelect, icon?, tone?, disabled? }`; `tone: "danger"` items sort last, behind a
+separator. The actions never wrap, and neither a click nor a key inside them (menu included)
+reaches the row, so a clickable row does not also activate. Put it in a `TableActionsCell`.
+
+```tsx region=row-actions
+export function PersonActions({ person }: { person: Person }) {
+  return (
+    <RowActions
+      label={`Actions for ${person.name}`}
+      primary={<Button size="sm">Open</Button>}
+      items={[
+        { id: "edit", label: "Edit", onSelect: () => edit(person) },
+        { id: "delete", label: "Delete", tone: "danger", onSelect: () => remove(person) },
+      ]}
+    />
+  );
+}
+```
+
 ## Pagination
 
 A footer for any list: rows per page, the range ("11–20 of 134") and first, previous, next and last buttons. Pages are 1-based. It does not slice your rows; use `page` and `pageSize` to do that or to request the page. Changing the page size returns to page 1. `DataGrid` keeps its own built-in footer.
@@ -110,6 +171,56 @@ export function PagedFooter() {
       onPageChange={setPage}
       pageSize={pageSize}
       onPageSizeChange={setPageSize}
+    />
+  );
+}
+```
+
+### Page numbers, client-side paging and cursors
+
+`variant="pages"` swaps the icon buttons for Previous, page numbers (with gaps on long lists) and
+Next, and reads the range as "Showing 1–25 of 134". It renders nothing while every row fits on one
+page (`hideOnSinglePage`) and shows the page size picker only when you pass `pageSizeOptions`.
+`usePagination(rows, resetKey, pageSize)` slices a client-side list: the page is clamped when the
+list shrinks and returns to 1 whenever `resetKey` (the search, a filter) changes.
+
+```tsx region=pagination-pages
+export function StudentList({ students, query }: { students: Row[]; query: string }) {
+  const pager = usePagination(students, query, 25);
+  return (
+    <>
+      <ul>
+        {pager.items.map((student) => (
+          <li key={student.id}>{student.name}</li>
+        ))}
+      </ul>
+      <Pagination
+        variant="pages"
+        total={pager.total}
+        pageSize={pager.pageSize}
+        page={pager.page}
+        onPageChange={pager.setPage}
+      />
+    </>
+  );
+}
+```
+
+`CursorPagination` is for server-side cursor paging, where the total is unknown: it shows the range
+on screen ("Showing 26–50") and Previous / Next, and renders nothing on a first page without a next
+cursor. Keep the cursor trail yourself; it only reports the clicks. Strings come from
+`UiStringsProvider` (Spanish: "Mostrando 26–50", "Anterior", "Siguiente").
+
+```tsx region=cursor-pagination
+export function ServerList() {
+  const [page, setPage] = useState(1);
+  return (
+    <CursorPagination
+      page={page}
+      count={rows.length}
+      hasNext={hasNextCursor}
+      onPrevious={() => setPage(page - 1)}
+      onNext={() => setPage(page + 1)}
     />
   );
 }

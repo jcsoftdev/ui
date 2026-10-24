@@ -1,13 +1,12 @@
 import { type ReactNode, useId, useMemo } from "react";
 import { Check } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
+import { ITEM_MOTION, POPPER_MOTION } from "../../utils/overlay-motion.js";
 import { isGroup, type ListboxItem, type ListboxOption } from "./listbox.js";
 
-export const LISTBOX_SURFACE =
-  "z-85 min-w-(--ui-popper-anchor-width) max-h-[min(20rem,var(--ui-popper-available-height))] max-w-(--ui-popper-available-width) overflow-y-auto overscroll-contain rounded-popover surface-overlay p-1.5 text-ink shadow-overlay";
+export const LISTBOX_SURFACE = `z-85 min-w-(--ui-popper-anchor-width) max-h-[min(20rem,var(--ui-popper-available-height))] max-w-(--ui-popper-available-width) overflow-y-auto overscroll-contain rounded-popover surface-overlay p-1.5 text-ink shadow-overlay ${POPPER_MOTION}`;
 
-const OPTION =
-  "flex min-h-[max(2rem,var(--touch-target))] w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.5 text-body text-ink outline-none data-[highlighted]:bg-surface-2 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50";
+const OPTION = `flex min-h-[max(2rem,var(--touch-target))] w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.5 text-body text-ink outline-none data-[highlighted]:bg-surface-2 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 ${ITEM_MOTION}`;
 
 export function optionDomId(base: string, index: number): string {
   return `${base}-opt-${index}`;

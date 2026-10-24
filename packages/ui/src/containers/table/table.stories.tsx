@@ -571,3 +571,112 @@ export const ColumnVisibility: Story = {
     );
   },
 };
+
+function DensityTable({ density }: { density: "comfortable" | "compact" }) {
+  return (
+    <Table aria-label={`Inventario ${density}`} density={density}>
+      <TableHead>
+        <tr>
+          <TableHeaderCell>Producto</TableHeaderCell>
+          <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Acciones</span>
+          </TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        <TableRow data-testid="text-row">
+          <TableCell>{inventory[0]?.name}</TableCell>
+          <TableCell alignRight>{inventory[0]?.stock}</TableCell>
+          <TableCell />
+        </TableRow>
+        <TableRow data-testid="control-row">
+          <TableCell>{inventory[1]?.name}</TableCell>
+          <TableCell alignRight>{inventory[1]?.stock}</TableCell>
+          <TableActionsCell>
+            <Button size="sm">Reponer</Button>
+          </TableActionsCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  );
+}
+
+/**
+ * `density`: every body row is at least 48px (`comfortable`, default) or 40px (`compact`), the
+ * same whether it holds text or a 30px button.
+ */
+export const Density: Story = {
+  render: () => (
+    <div className="grid gap-6">
+      <DensityTable density="comfortable" />
+      <DensityTable density="compact" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const [density, height] of [
+      ["comfortable", 48],
+      ["compact", 40],
+    ] as const) {
+      const table = canvas.getByRole("table", { name: `Inventario ${density}` });
+      for (const id of ["text-row", "control-row"]) {
+        const row = within(table).getByTestId(id);
+        await expect(Math.round(row.getBoundingClientRect().height)).toBe(height);
+      }
+    }
+  },
+};
+
+/**
+ * `stickyActions`: the last column stays on the right edge while the other columns scroll under it.
+ */
+export const StickyActions: Story = {
+  render: () => (
+    <div className="w-[520px] max-w-full">
+      <Table aria-label="Inventario ancho" stickyActions>
+        <TableHead>
+          <tr>
+            <TableHeaderCell>SKU</TableHeaderCell>
+            <TableHeaderCell>Producto</TableHeaderCell>
+            <TableHeaderCell>Proveedor</TableHeaderCell>
+            <TableHeaderCell alignRight>Stock</TableHeaderCell>
+            <TableHeaderCell alignRight>Precio</TableHeaderCell>
+            <TableHeaderCell>
+              <span className="sr-only">Acciones</span>
+            </TableHeaderCell>
+          </tr>
+        </TableHead>
+        <TableBody>
+          {inventory.map((item) => (
+            <TableRow key={item.sku}>
+              <TableCell className="whitespace-nowrap">{item.sku}</TableCell>
+              <TableCell className="whitespace-nowrap">{item.name}</TableCell>
+              <TableCell className="whitespace-nowrap">Distribuidora Andina S.A.C.</TableCell>
+              <TableCell alignRight>{item.stock}</TableCell>
+              <TableCell alignRight>{item.price}</TableCell>
+              <TableActionsCell>
+                <Button size="sm">Editar {item.sku}</Button>
+              </TableActionsCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const table = canvas.getByRole("table", { name: "Inventario ancho" });
+    const wrapper = table.parentElement as HTMLElement;
+    await expect(wrapper.scrollWidth).toBeGreaterThan(wrapper.clientWidth);
+    const action = canvas.getByRole("button", { name: "Editar POM-001" }).closest("td");
+    await expect(action).not.toBeNull();
+    if (!action) return;
+    await expect(getComputedStyle(action).position).toBe("sticky");
+    const edge = () => wrapper.getBoundingClientRect().right - action.getBoundingClientRect().right;
+    await expect(Math.round(edge())).toBe(0);
+    wrapper.scrollLeft = 120;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await expect(Math.round(edge())).toBe(0);
+  },
+};

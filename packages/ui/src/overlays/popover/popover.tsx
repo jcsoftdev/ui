@@ -3,6 +3,7 @@
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { POPPER_MOTION } from "../../utils/overlay-motion.js";
 
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
@@ -38,6 +39,7 @@ export function PopoverContent({
         collisionPadding={collisionPadding}
         className={cn(
           "z-85 min-w-[min(14.375rem,var(--ui-popper-available-width))] max-h-(--ui-popper-available-height) max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover surface-overlay p-1.5 text-ink shadow-overlay",
+          POPPER_MOTION,
           materialClass(material, "surface-solid"),
           className,
         )}

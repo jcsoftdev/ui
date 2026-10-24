@@ -205,14 +205,15 @@ export const DialogNestedEscapeInertAndScrollLock: Story = {
 
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Dialogo B" })).toBeNull());
+    // B's exit transition plays before it unmounts and hands the page back to A.
+    await waitFor(() => expect(a.closest("[inert]")).toBeNull());
     await expect(screen.getByRole("dialog", { name: "Dialogo A" })).toBeInTheDocument();
-    await expect(a.closest("[inert]")).toBeNull();
     await expect(body.style.overflow).toBe("hidden");
     await waitFor(() => expect(within(a).getByRole("button", { name: "Abrir B" })).toHaveFocus());
 
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(dialogs()).toHaveLength(0));
-    await expect(body.style.overflow).toBe(before);
+    await waitFor(() => expect(body.style.overflow).toBe(before));
     await expect(canvasElement.closest("[inert]")).toBeNull();
     await expect(canvasElement.closest("[aria-hidden=true]")).toBeNull();
   },
@@ -476,10 +477,10 @@ export const NestedDialogInContainerInsideRootIsUsable: Story = {
     await waitFor(() => expect(b.contains(document.activeElement)).toBe(true));
     await userEvent.click(within(b).getByRole("button", { name: "Cerrar B" }));
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Dialogo B" })).toBeNull());
-    await expect(a.closest("[inert]")).toBeNull();
+    await waitFor(() => expect(a.closest("[inert]")).toBeNull());
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(dialogs()).toHaveLength(0));
-    await expect(canvasElement.closest("[inert]")).toBeNull();
+    await waitFor(() => expect(canvasElement.closest("[inert]")).toBeNull());
   },
 };
 

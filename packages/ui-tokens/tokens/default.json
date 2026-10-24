@@ -1122,6 +1122,11 @@
     "usage": "Alto de botones dentro de filas."
    },
    {
+    "name": "control-height-md",
+    "value": "38px",
+    "usage": "Alto de todo control en tamaño md (botón, campo, select, selector de fecha u hora), para que se alineen en una fila."
+   },
+   {
     "name": "control-height-lg",
     "value": "52px",
     "usage": "Alto del botón grande: la acción principal de una pantalla pensada para el pulgar."
@@ -1976,6 +1981,7 @@
    "scaled": [
     "control-height",
     "control-height-sm",
+    "control-height-md",
     "control-height-lg",
     "input-height",
     "pad-control-x",
@@ -2008,6 +2014,7 @@
      "values": {
       "control-height": "44px",
       "control-height-sm": "44px",
+      "control-height-md": "48px",
       "control-height-lg": "52px",
       "input-height": "48px",
       "touch-target": "44px"
@@ -2145,6 +2152,7 @@
    "--ease-style": "motion-ease",
    "--spacing-control": "control-height",
    "--spacing-control-sm": "control-height-sm",
+   "--spacing-control-md": "control-height-md",
    "--spacing-control-lg": "control-height-lg",
    "--spacing-input": "input-height",
    "--spacing-control-x": "pad-control-x",

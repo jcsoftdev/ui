@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, screen, waitFor } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
 import {
   Dialog,
@@ -76,6 +77,33 @@ export const OpenByDefault: Story = {
       </DialogContent>
     </Dialog>
   ),
+};
+
+/** The close button is a 30px hit area, and its glyph sits 24px from the top and right edges as before. */
+export const CloseHitArea: Story = {
+  render: (args) => (
+    <Dialog defaultOpen>
+      <DialogContent {...args}>
+        <CancelBody />
+      </DialogContent>
+    </Dialog>
+  ),
+  play: async () => {
+    const close = await screen.findByRole("button", { name: "Cerrar" });
+    // Measure once the enter transition (a scale) has settled.
+    await waitFor(() =>
+      expect(getComputedStyle(screen.getByRole("dialog")).scale).toMatch(/^(none|1)$/),
+    );
+    const box = close.getBoundingClientRect();
+    await expect(Math.round(box.width)).toBe(30);
+    await expect(Math.round(box.height)).toBe(30);
+    const dialog = screen.getByRole("dialog").getBoundingClientRect();
+    const glyph = close.querySelector("svg")?.getBoundingClientRect();
+    await expect(glyph).toBeDefined();
+    if (!glyph) return;
+    await expect(Math.round(glyph.top + glyph.height / 2 - dialog.top)).toBe(24);
+    await expect(Math.round(dialog.right - (glyph.left + glyph.width / 2))).toBe(24);
+  },
 };
 
 export const Large: Story = {

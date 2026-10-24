@@ -12,8 +12,10 @@ import { cn } from "../../utils/cn.js";
 export interface TimeInputProps
   extends Omit<
     ComponentPropsWithoutRef<"input">,
-    "type" | "value" | "defaultValue" | "onChange" | "step" | "inputMode" | "maxLength"
+    "type" | "value" | "defaultValue" | "onChange" | "step" | "inputMode" | "maxLength" | "size"
   > {
+  /** `sm` is 30px and `md` (default) 38px, the heights of `Button` and `Input` of the same size. */
+  size?: "sm" | "md";
   /** 24h "HH:MM" (controlled). */
   value?: string;
   defaultValue?: string;
@@ -50,6 +52,7 @@ export function TimeInput({
   defaultValue = "",
   onValueChange,
   step = 5,
+  size = "md",
   className,
   onBlur,
   onKeyDown,
@@ -103,7 +106,8 @@ export function TimeInput({
       maxLength={5}
       placeholder={placeholder}
       className={cn(
-        "h-input w-full min-w-0 rounded-input border-control bg-surface-control px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
+        size === "sm" ? "h-control-sm" : "h-control-md",
+        "w-full min-w-0 rounded-input border-control bg-surface-control px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
         className,
       )}
       {...props}

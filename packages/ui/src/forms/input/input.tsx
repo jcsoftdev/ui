@@ -2,23 +2,27 @@ import type { ComponentPropsWithRef, ReactNode } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
-export type InputSize = "xs" | "md" | "lg";
+/** `sm` (30px) and `md` (38px) are the heights every control shares; `xs` is the older name of `sm`. */
+export type InputSize = "xs" | "sm" | "md" | "lg";
 export type InputVariant = "default" | "bare";
 export type InputPart = "root" | "start" | "end" | "input";
 
 const height: Readonly<Record<InputSize, string>> = {
   xs: "h-control-sm",
-  md: "h-input",
+  sm: "h-control-sm",
+  md: "h-control-md",
   lg: "h-control-lg text-fs-140",
 };
 const paddingX: Readonly<Record<InputSize, string>> = {
   xs: "px-2.5",
+  sm: "px-2.5",
   md: "px-3",
   lg: "px-4",
 };
 
 export const inputSizeClasses: Readonly<Record<InputSize, string>> = {
   xs: `${height.xs} ${paddingX.xs}`,
+  sm: `${height.sm} ${paddingX.sm}`,
   md: `${height.md} ${paddingX.md}`,
   lg: `${height.lg} ${paddingX.lg}`,
 };
@@ -30,7 +34,10 @@ const RING =
 const INVALID = "aria-[invalid=true]:border-danger";
 
 export interface InputProps extends Omit<ComponentPropsWithRef<"input">, "size"> {
-  /** `xs` is the 30px compact field (the height of the small `Button`), `lg` the thumb-friendly one. Default `md`. */
+  /**
+   * `sm` is the 30px compact field and `md` (default) the 38px one: the heights of `Button` `sm` and
+   * `md`. `xs` is the same as `sm`; `lg` is the thumb-friendly field.
+   */
   size?: InputSize;
   /** `bare` drops the border, background and side padding, for a field that sits inside chrome of its own. */
   variant?: InputVariant;

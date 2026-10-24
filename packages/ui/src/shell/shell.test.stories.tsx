@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { CalendarDays, Package, Scissors, Settings, Users } from "../icons/index.js";
 import { BottomNav, type BottomNavRenderLink } from "./bottom-nav/bottom-nav.js";
 import type { SidebarItem } from "./sidebar/index.js";
@@ -55,8 +55,10 @@ export const BottomNavMoreDrawer: Story = {
     await expect(drawer.getByText("Account")).toBeInTheDocument();
 
     await userEvent.keyboard("{Escape}");
-    await expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument();
-    await expect(more).toHaveFocus();
+    await waitFor(() =>
+      expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    await waitFor(() => expect(more).toHaveFocus());
   },
 };
 
@@ -67,6 +69,8 @@ export const BottomNavLinkClosesDrawer: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "More" }));
     const drawer = within(await within(document.body).findByRole("dialog", { name: "More" }));
     await userEvent.click(drawer.getByRole("button", { name: "Settings" }));
-    await expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument(),
+    );
   },
 };

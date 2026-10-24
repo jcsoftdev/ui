@@ -26,10 +26,14 @@ export const buttonVariantClasses: Readonly<Record<ButtonVariant, string>> = {
   danger: "bg-danger-soft text-danger hover:bg-danger-soft/70",
 };
 
-/** Class map behind each `size`; exported like {@link buttonVariantClasses}. */
+/**
+ * Class map behind each `size`; exported like {@link buttonVariantClasses}. `sm` and `md` take the
+ * shared control heights (`--control-height-sm`, `--control-height-md`), so a button lines up with an
+ * `Input`, `Select`, `Combobox`, `DatePicker` or `TimeInput` of the same size.
+ */
 export const buttonSizeClasses: Readonly<Record<ButtonSize, string>> = {
   sm: "h-control-sm px-3 text-fs-125 [&_svg]:size-3.5",
-  md: "h-control px-control-x text-fs-130",
+  md: "h-control-md px-control-x text-fs-130",
   lg: "h-control-lg px-control-x text-fs-140",
 };
 
@@ -64,6 +68,7 @@ export function buttonClasses({
 
 export interface ButtonProps extends ComponentPropsWithRef<"button"> {
   variant?: ButtonVariant;
+  /** `sm` is 30px and `md` (default) 38px, the heights every form control shares; `lg` is 52px. */
   size?: ButtonSize;
   /**
    * Busy state: the button keeps its focus and its full colour, ignores clicks (a submit button no

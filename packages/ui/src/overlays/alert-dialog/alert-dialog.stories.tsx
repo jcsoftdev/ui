@@ -67,7 +67,7 @@ export const OutsidePressDoesNothing: Story = {
     );
     await dialog();
     await userEvent.click(document.querySelector(".bg-scrim") as HTMLElement);
-    await expect(screen.getByRole("alertdialog")).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("alertdialog")).toBeVisible());
   },
 };
 
@@ -100,7 +100,7 @@ export const PendingBlocksEveryWayOut: Story = {
     );
     await expect(panel).toContainElement(document.activeElement as HTMLElement);
     await userEvent.keyboard("{Escape}");
-    await expect(screen.getByRole("alertdialog")).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("alertdialog")).toBeVisible());
     await expect(args.onCancel).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
   },
@@ -190,8 +190,12 @@ export const InSpanish: Story = {
       within(canvasElement).getByRole("button", { name: "Delete appointment" }),
     );
     const panel = await screen.findByRole("alertdialog", { name: "¿Anular esta cita?" });
-    await expect(within(panel).getByRole("button", { name: "Cancelar" })).toBeVisible();
-    await expect(within(panel).getByRole("button", { name: "Confirmar" })).toBeVisible();
+    await waitFor(() =>
+      expect(within(panel).getByRole("button", { name: "Cancelar" })).toBeVisible(),
+    );
+    await waitFor(() =>
+      expect(within(panel).getByRole("button", { name: "Confirmar" })).toBeVisible(),
+    );
   },
 };
 

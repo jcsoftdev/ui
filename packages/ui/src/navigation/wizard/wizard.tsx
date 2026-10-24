@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Button } from "../../atoms/button/button.js";
+import { Button, type ButtonSize } from "../../atoms/button/button.js";
 import { useUiStrings } from "../../i18n/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -59,6 +59,8 @@ export interface WizardProps
   backLabel?: string | undefined;
   nextLabel?: string | undefined;
   finishLabel?: string | undefined;
+  /** Size of the Back and Next/Finish buttons. Default `md` (38px, the height of a default field). */
+  buttonSize?: ButtonSize | undefined;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
   classNames?: ClassNames<WizardPart>;
 }
@@ -79,6 +81,7 @@ export function Wizard({
   onComplete,
   backLabel,
   nextLabel,
+  buttonSize = "md",
   finishLabel,
   className,
   classNames,
@@ -200,6 +203,7 @@ export function Wizard({
       >
         <Button
           variant="secondary"
+          size={buttonSize}
           disabled={index === 0 || pending !== null}
           onClick={() => goTo(index - 1)}
           className={classNames?.back}
@@ -208,6 +212,7 @@ export function Wizard({
         </Button>
         <Button
           variant="primary"
+          size={buttonSize}
           loading={pending !== null}
           loadingLabel={strings.processing}
           disabled={blocked}

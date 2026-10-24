@@ -223,7 +223,7 @@ export function SelectMenu({
         }}
         className={cn(
           "flex w-full min-w-0 items-center justify-between gap-2 rounded-input border-control bg-surface-control py-0 pr-2.5 pl-3 text-left text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
-          size === "sm" ? "h-control-sm" : "h-input min-h-(--touch-target)",
+          size === "sm" ? "h-control-sm" : "h-control-md min-h-(--touch-target)",
           classNames?.trigger,
           className,
         )}

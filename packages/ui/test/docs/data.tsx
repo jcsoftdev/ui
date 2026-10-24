@@ -3,15 +3,18 @@
 import {
   CardGrid,
   ChartCard,
+  CursorPagination,
   DashboardPage,
   FilterBar,
   Kpi,
   KpiRow,
   Page,
   Pagination,
+  RowActions,
   Table,
   TableBody,
   TableCard,
+  TableActionsCell,
   TableCell,
   TableColumnsMenu,
   TableEmpty,
@@ -20,7 +23,9 @@ import {
   TableLoading,
   TableRow,
   type TableSort,
+  usePagination,
 } from "@jcsoftdev/ui/containers";
+import { Button } from "@jcsoftdev/ui/atoms";
 import { BarChart } from "@jcsoftdev/ui/charts";
 import { type ReactElement, useState } from "react";
 
@@ -32,7 +37,14 @@ interface Row {
 declare const rows: Row[];
 declare const total: number;
 declare const loading: boolean;
+declare const hasNextCursor: boolean;
 declare function PaymentsTable(): ReactElement;
+interface Person {
+  id: string;
+  name: string;
+}
+declare function edit(person: Person): void;
+declare function remove(person: Person): void;
 declare function sortRows(rows: Row[], sort: TableSort | null): Row[];
 
 // #region dashboard
@@ -112,6 +124,50 @@ export function Products() {
 }
 // #endregion
 
+// #region density
+export function LongList() {
+  return (
+    <Table aria-label="Stock" density="compact" stickyActions>
+      <TableHead>
+        <tr>
+          <TableHeaderCell>Name</TableHeaderCell>
+          <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Actions</span>
+          </TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell>{row.name}</TableCell>
+            <TableCell alignRight>{row.stock}</TableCell>
+            <TableActionsCell>
+              <Button size="sm">Restock</Button>
+            </TableActionsCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+// #endregion
+
+// #region row-actions
+export function PersonActions({ person }: { person: Person }) {
+  return (
+    <RowActions
+      label={`Actions for ${person.name}`}
+      primary={<Button size="sm">Open</Button>}
+      items={[
+        { id: "edit", label: "Edit", onSelect: () => edit(person) },
+        { id: "delete", label: "Delete", tone: "danger", onSelect: () => remove(person) },
+      ]}
+    />
+  );
+}
+// #endregion
+
 // #region pagination
 export function PagedFooter() {
   const [page, setPage] = useState(1);
@@ -123,6 +179,43 @@ export function PagedFooter() {
       onPageChange={setPage}
       pageSize={pageSize}
       onPageSizeChange={setPageSize}
+    />
+  );
+}
+// #endregion
+
+// #region pagination-pages
+export function StudentList({ students, query }: { students: Row[]; query: string }) {
+  const pager = usePagination(students, query, 25);
+  return (
+    <>
+      <ul>
+        {pager.items.map((student) => (
+          <li key={student.id}>{student.name}</li>
+        ))}
+      </ul>
+      <Pagination
+        variant="pages"
+        total={pager.total}
+        pageSize={pager.pageSize}
+        page={pager.page}
+        onPageChange={pager.setPage}
+      />
+    </>
+  );
+}
+// #endregion
+
+// #region cursor-pagination
+export function ServerList() {
+  const [page, setPage] = useState(1);
+  return (
+    <CursorPagination
+      page={page}
+      count={rows.length}
+      hasNext={hasNextCursor}
+      onPrevious={() => setPage(page - 1)}
+      onNext={() => setPage(page + 1)}
     />
   );
 }

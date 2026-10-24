@@ -7,6 +7,7 @@ import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { DIALOG_MOTION, OVERLAY_MOTION } from "../../utils/overlay-motion.js";
 import {
   PreviousFocusProvider,
   restoreFocusOnClose,
@@ -80,11 +81,14 @@ export function DialogContent({
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
-      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
+      <DialogPrimitive.Overlay
+        className={cn("fixed inset-0 z-70 bg-scrim", OVERLAY_MOTION, classNames?.overlay)}
+      />
       <DialogPrimitive.Content
         className={cn(
           "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
           widthClasses[width],
+          DIALOG_MOTION,
           materialClass(material, "surface-solid"),
           classNames?.root,
           className,
@@ -112,7 +116,8 @@ export function DialogContent({
           <DialogPrimitive.Close
             aria-label={closeLabel ?? strings.close}
             className={cn(
-              "absolute top-3 right-3 rounded-event p-1 text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5 in-data-[density=touch]:p-3.5",
+              // A 30px square (44px under touch) centred where the 24px button was, so the glyph stays put.
+              "absolute top-2.25 right-2.25 flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5",
               classNames?.close,
             )}
           >

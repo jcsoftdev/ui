@@ -10,7 +10,7 @@ export type IconButtonSize = ButtonSize;
 /** Width behind each `size`; the height comes from the matching `Button` size, so the button is square. */
 export const iconButtonSizeClasses: Readonly<Record<IconButtonSize, string>> = {
   sm: "w-control-sm",
-  md: "w-control [&_svg]:size-4",
+  md: "w-control-md [&_svg]:size-4",
   lg: "w-control-lg [&_svg]:size-4",
 };
 

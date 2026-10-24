@@ -66,6 +66,16 @@ export function exitDuration(node: Element): number {
   return Math.max(animated, transitioned);
 }
 
+/** Whether an exit-relevant animation or transition on the node itself is still running. */
+function stillRunning(node: Element): boolean {
+  if (typeof node.getAnimations !== "function") return false;
+  return node.getAnimations().some((animation) => {
+    if (animation.playState !== "running") return false;
+    const property = (animation as Animation & { transitionProperty?: string }).transitionProperty;
+    return property === undefined || EXIT_PROPERTIES.has(property);
+  });
+}
+
 function prefersReducedMotion(): boolean {
   return typeof window.matchMedia === "function"
     ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -95,6 +105,9 @@ export function usePresence(present: boolean, ref: RefObject<HTMLElement | null>
       if (event.target !== node) return;
       const property = (event as TransitionEvent).propertyName;
       if (event.type === "transitionend" && !EXIT_PROPERTIES.has(property)) return;
+      // A built-in exit transition and a consumer's own (longer) exit animation can run together:
+      // wait for the last one, not the first to end.
+      if (stillRunning(node)) return;
       finish();
     };
     node.addEventListener("animationend", onEnd);

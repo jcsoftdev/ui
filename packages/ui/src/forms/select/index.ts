@@ -1,1 +1,1 @@
-export { Select, type SelectProps } from "./select.js";
+export { Select, type SelectProps, type SelectSize } from "./select.js";

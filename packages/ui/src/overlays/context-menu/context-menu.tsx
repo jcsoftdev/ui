@@ -18,6 +18,7 @@ import { Check } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { ITEM_MOTION, POPPER_MOTION } from "../../utils/overlay-motion.js";
 
 interface ContextMenuState {
   open: (x: number, y: number) => void;
@@ -192,6 +193,7 @@ export function ContextMenuContent({
         }}
         className={cn(
           "z-85 max-h-(--ui-popper-available-height) min-w-48 max-w-(--ui-popper-available-width) overflow-y-auto rounded-popover border-card surface-overlay p-1.5 text-ink shadow-overlay",
+          POPPER_MOTION,
           materialClass(material, "surface-solid"),
           className,
         )}
@@ -201,8 +203,7 @@ export function ContextMenuContent({
   );
 }
 
-const itemBase =
-  "relative flex min-h-control-sm w-full cursor-pointer select-none items-center gap-density-sm rounded-button px-control-x text-body outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-surface-2 [&_svg]:size-4 [&_svg]:shrink-0";
+const itemBase = `relative flex min-h-control-sm w-full cursor-pointer select-none items-center gap-density-sm rounded-button px-control-x text-body outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-surface-2 [&_svg]:size-4 [&_svg]:shrink-0 ${ITEM_MOTION}`;
 
 export interface ContextMenuItemProps extends MenuPrimitive.MenuItemProps {
   /** Destructive action styling. */

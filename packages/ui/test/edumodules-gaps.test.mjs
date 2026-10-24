@@ -234,7 +234,7 @@ test("Input stays a bare input without adornments and gains xs and bare", () => 
   const plain = html.input({ className: "w-48" });
   assert.match(plain, /^<input /);
   assert.match(plain, /class="[^"]*w-48/);
-  assert.match(plain, /h-input/);
+  assert.match(plain, /h-control-md/);
   assert.match(html.input({ size: "xs" }), /h-control-sm[^"]*px-2\.5/);
   const bare = html.input({ variant: "bare" });
   assert.doesNotMatch(bare, /border-control|bg-surface-control/);

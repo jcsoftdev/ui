@@ -39,7 +39,16 @@ const glass = check("docs/glass.tsx", "../../../site/src/content/docs/docs/glass
 });
 const blocks = check("docs/blocks.tsx", "../../../site/src/content/docs/docs/blocks.md", {
   min: 6,
-  required: ["atoms", "overlays", "testing", "forms", "wizard", "containers", "states"],
+  required: [
+    "atoms",
+    "overlays",
+    "testing",
+    "forms",
+    "control-sizes",
+    "wizard",
+    "containers",
+    "states",
+  ],
 });
 const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md", {
   min: 3,
@@ -47,7 +56,16 @@ const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md
 });
 const data = check("docs/data.tsx", "../../../site/src/content/docs/docs/data-and-dashboards.md", {
   min: 4,
-  required: ["dashboard", "sortable", "pagination", "filter-bar"],
+  required: [
+    "dashboard",
+    "sortable",
+    "density",
+    "row-actions",
+    "pagination",
+    "pagination-pages",
+    "cursor-pagination",
+    "filter-bar",
+  ],
 });
 const motion = check("docs/motion.tsx", "../../../site/src/content/docs/docs/motion.md", {
   min: 6,

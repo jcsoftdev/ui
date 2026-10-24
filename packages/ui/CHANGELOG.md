@@ -2,6 +2,106 @@
 
 ## Unreleased
 
+### Control sizes, table density, row actions and pagination
+
+One height per control size, a denser and steadier table, and the row and paging parts an app used to
+patch in. Additive except for the visual changes listed under "Changed".
+
+#### Added
+
+- **`--control-height-md` token** (`@jcsoftdev/ui-tokens`, Tailwind `h-control-md` / `w-control-md`):
+  38px, scaled by `data-density` like the other control heights and 48px under `touch`, the same as
+  `--input-height`. With `--control-height-sm` (30px) it is the one height of each control size.
+- **`size` on every field** (`"sm"` 30px, `"md"` 38px, default `md`): new on `Select`, `DatePicker`,
+  `TimeInput` and `DateTimePicker` (which passes it to both halves); `Input` gains `sm` (the same as
+  `xs`, which stays). `Button`, `IconButton`, `Input`, `Select`, `SelectMenu`, `NativeSelect`,
+  `Combobox`, `DatePicker`, `DateTimePicker` and `TimeInput` now render the same token per size
+  (`h-control-sm`, `h-control-md`), so they line up in a toolbar or a table row. Story:
+  `Forms/Control sizes` measures them.
+- **`DateTimePicker` `classNames` reach the inner parts**: new parts `dateInput`, `clear`, `trigger`,
+  `content`, `calendar` (the inner `DatePicker`) and `timeInput`.
+- **`Wizard` `buttonSize`** (default `"md"`): size of the Back and Next/Finish buttons, which now
+  reach the 38px md height of a field (they followed `Button` md, 36px, before).
+- **`Table` `density`** (`"comfortable"` default, `"compact"`): every body row is at least 48px or
+  40px (`--row-min-h`), whatever its cells hold, with cells centred vertically and their vertical
+  padding from `--table-cell-py` (8px or 4px). Both variables can be overridden with `className` or
+  `style`. The table carries `data-table-density`.
+- **`Table` `stickyActions`**: the last column (the row actions) sticks to the right edge while the
+  table scrolls sideways, from 24rem of the table's own width; its row divider is redrawn and an edge
+  shadow shows while columns are hidden underneath.
+- **`RowActions`, new in `@jcsoftdev/ui/containers`** (also `/containers/row-actions`): one row's
+  actions as at most one inline `primary` action plus an overflow menu (`DropdownMenu`) behind a 30px
+  "more" `IconButton`. Required `label` names the trigger; `items` are
+  `{ id, label, onSelect, icon?, tone?: "default" | "danger", disabled? }`, with `danger` items sorted
+  last behind a separator. It never wraps, renders no trigger without items, and stops click and key
+  events from reaching the row (portaled menu included). Exported types `RowActionItem`,
+  `RowActionsProps`. It brings the menu primitive into the `containers` barrel, which grows by about
+  4 kB gzip for apps that import the whole barrel; `@jcsoftdev/ui/containers/table` does not include it.
+- **`Pagination` `variant="pages"`**: the range as "Showing 1–25 of 134" ("Mostrando 1–25 de 134"),
+  then Previous, page number buttons (`aria-current="page"` on the current one, gaps on long lists)
+  and Next, all 30px `Button`s. It renders nothing on a single page (`hideOnSinglePage`, default
+  `true` for this variant and `false` for the default one) and shows the page size picker only when
+  `pageSizeOptions` is passed. New `labels` keys `showing`, `previousLabel`, `nextLabel`,
+  `pageNumber`. The default variant is unchanged.
+- **`CursorPagination`**, new in `@jcsoftdev/ui/containers`: server-side cursor paging with an unknown
+  total. `page`, `count` (rows on this page), `pageSize` (default 25), `hasNext`, `onPrevious`,
+  `onNext`, `labels`. Shows "Showing 26–50" and Previous / Next; renders nothing on a first page
+  without a next cursor.
+- **`usePagination(rows, resetKey?, pageSize = 25)`**, new in `@jcsoftdev/ui/containers`: client-side
+  paging returning `{ page, pageCount, total, pageSize, items, setPage }`; the page is clamped when
+  the list shrinks and returns to 1 when `resetKey` changes. Type `PaginationState`.
+- **New UI strings** (en, es): `showingRange`, `showingRangeOpen`, `previous`, `pageNumber`. They grow
+  every entry that carries the string table by a few dozen bytes gzip.
+- **`ChipGroup` `size`**: `"sm"` (default, 30px minimum) or `"md"` (38px minimum).
+
+#### Changed
+
+- **`Button` and `IconButton` `size="md"` (the default) are 38px instead of 36px** (`h-control-md`,
+  `w-control-md`), so a default button lines up with a default field. `sm` (30px) and `lg` (52px) are
+  unchanged. `--control-height` (36px) still exists for code that uses it directly.
+- **Fields at `md` use `h-control-md` instead of `h-input`.** Same 38px in every density, so nothing
+  moves; a `className` that overrode `h-input` on these controls still wins through `cn`.
+- **`DatePicker` clear and calendar buttons have a 30px hit area** (`min-h-control-sm`); the glyphs
+  stay where they were.
+- **Chips meet the 30px hit area.** `ChipGroup` chips grow from 28px to 30px (`min-h-control-sm`,
+  replacing `min-h-7`). A `Chip` with `onClick` or `role="button"` is at least 30px tall at either
+  `size`; a display chip (and one with only `onRemove`) keeps its 24px or content height.
+- **Table rows have a steady height.** With the default `comfortable` density a body row is at least
+  48px and body cells pad 8px vertically instead of 11px: a one-line text row grows from about 41px
+  to 48px, and a row holding a 30px button shrinks from about 52px to 48px, so both match. Rows
+  taller than that (wrapped text) lose 6px. Pass `density="compact"` for 40px rows. Header cells are
+  unchanged. Cells rendered outside a `Table` keep the former 11px.
+- **`Dialog` and `Drawer` close button is a 30px square** (`size-control-sm`, 44px under touch as
+  before) instead of a 24px one. It is centred on the same point, so the X glyph does not move.
+- **Type change: `Select` and `TimeInput` no longer accept the native numeric `size` attribute**; `size`
+  is now the control size. A native `<select size={n}>` list box was never styled by `Select` (it
+  draws a single-line trigger with a chevron); use a plain `<select>` for that.
+
+### Overlay enter and exit motion
+
+#### Changed
+
+- **Overlays animate in and out.** `DropdownMenu` content and submenus, `ContextMenu` content, `Popover`,
+  the `SelectMenu` and `Combobox` listbox, `Tooltip` and `HoverCard` fade in while they
+  grow from 96% at their anchor (`transform-origin: var(--ui-popper-transform-origin)`) and slide 4px
+  in from the side they open on (`data-side`). `Dialog` and `AlertDialog` fade and settle from 97%;
+  `Drawer` slides in from the right; the scrim fades. The exit is the reverse at two thirds of the
+  duration and plays before the node unmounts. Timing is `--motion-duration` (180ms by default) and
+  `--motion-ease` from the theme, so style presets and `[data-motion]` retune it;
+  `prefers-reduced-motion: reduce` turns it off and unmounts at once. Enter uses `@starting-style`,
+  so it needs no stylesheet beyond what consumers already compile: `@jcsoftdev/ui/styles/tokens.css`,
+  `@jcsoftdev/ui/styles/theme.css` and the `@source` for the package's `dist`.
+- **Menu items and listbox options fade their highlight** (120ms at the default duration). **Table
+  rows fade their hover background**, a sticky actions cell follows it, and the `RowActions` "more"
+  glyph is muted until its row is hovered or focused on devices that hover (never hidden).
+- **Exit waits for the longest effect.** `usePresence` used to unmount on the first exit-relevant
+  `transitionend`/`animationend`; it now waits until no exit animation or transition on the node is
+  still running, so a consumer's own longer exit animation is not cut short by the built-in one.
+- **Tests that query an overlay right after opening it in a real browser** may see it at opacity 0
+  (`toBeVisible()` from jest-dom fails) or still mounted for a moment after closing; wrap those
+  assertions in `waitFor`. jsdom and Playwright's `toBeVisible` are unaffected. The `forms`,
+  `overlays` and `shell` entries grow by a few hundred bytes gzip.
+
 ### Page structure (G1, G4, G9, G10)
 
 Additive; every new prop defaults to the previous behavior unless noted.

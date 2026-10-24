@@ -53,8 +53,10 @@ import {
   FormGridItem,
   FormSection,
   Input,
+  Select,
   SelectMenu,
   Textarea,
+  TimeInput,
 } from "@jcsoftdev/ui/forms";
 import { Stepper, TabsNav, TabsNavLink, Wizard } from "@jcsoftdev/ui/navigation";
 import {
@@ -161,6 +163,23 @@ export function Forms() {
       />
       <DateCalendar value="2026-10-17" onSelect={(date) => void date} />
     </>
+  );
+}
+// #endregion
+
+// #region control-sizes
+export function Toolbar() {
+  return (
+    <div className="flex items-center gap-2">
+      <Input size="sm" aria-label="Search" placeholder="Search" />
+      <Select size="sm" aria-label="Status">
+        <option>Open</option>
+        <option>Closed</option>
+      </Select>
+      <DatePicker size="sm" aria-label="From" />
+      <TimeInput size="sm" aria-label="At" />
+      <Button size="sm">Apply</Button>
+    </div>
   );
 }
 // #endregion

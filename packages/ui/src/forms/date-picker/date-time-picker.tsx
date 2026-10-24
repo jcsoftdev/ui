@@ -11,7 +11,20 @@ import { TimeInput } from "../time-input/time-input.js";
 import { DatePicker } from "./date-picker.js";
 import { dateTimeInRange, joinDateTime, splitDateTime } from "./model.js";
 
-export type DateTimePickerPart = "root" | "date" | "time";
+/**
+ * `date` is the date picker's root and `time` the wrapper of the time field; `dateInput`, `clear`,
+ * `trigger`, `content` and `calendar` reach the inner `DatePicker` parts, `timeInput` the time field.
+ */
+export type DateTimePickerPart =
+  | "root"
+  | "date"
+  | "time"
+  | "dateInput"
+  | "clear"
+  | "trigger"
+  | "content"
+  | "calendar"
+  | "timeInput";
 
 export interface DateTimePickerProps
   extends Omit<
@@ -47,6 +60,8 @@ export interface DateTimePickerProps
   "aria-invalid"?: boolean | "true" | "false";
   container?: HTMLElement | null;
   material?: Material;
+  /** Height of both halves: `sm` is 30px and `md` (default) 38px, like `Button` and `Input`. */
+  size?: "sm" | "md";
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<DateTimePickerPart>;
 }
@@ -74,6 +89,7 @@ export function DateTimePicker({
   invalid,
   container,
   material,
+  size = "md",
   className,
   classNames,
   "aria-label": ariaLabel,
@@ -158,8 +174,16 @@ export function DateTimePicker({
         aria-labelledby={ariaLabelledBy}
         container={container}
         material={material}
+        size={size}
         className={undefined}
-        classNames={{ root: cn("flex-[3_1_10rem]", classNames?.date) }}
+        classNames={{
+          root: cn("flex-[3_1_10rem]", classNames?.date),
+          input: classNames?.dateInput,
+          clear: classNames?.clear,
+          trigger: classNames?.trigger,
+          content: classNames?.content,
+          calendar: classNames?.calendar,
+        }}
       />
       <div className={cn("flex min-w-0 flex-[2_1_6rem]", classNames?.time)}>
         <TimeInput
@@ -170,6 +194,8 @@ export function DateTimePicker({
           onValueChange={(time) => update({ ...parts, time })}
           required={required}
           step={step}
+          size={size}
+          className={classNames?.timeInput}
         />
       </div>
       {name ? <input type="hidden" name={name} value={current} disabled={disabled} /> : null}
