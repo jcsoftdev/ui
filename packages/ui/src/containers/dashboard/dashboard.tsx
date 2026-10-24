@@ -20,6 +20,7 @@ export interface KpiRowProps extends ComponentPropsWithoutRef<"div"> {
  */
 export function KpiRow({ className, ...props }: KpiRowProps) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset would add form semantics and default chrome to a grid of figures
     <div
       role="group"
       className={cn(
@@ -43,7 +44,9 @@ export interface CardGridProps extends ComponentPropsWithoutRef<"div"> {
 
 /** Equal cards that stack under 720 px of `page` container width. */
 export function CardGrid({ columns = 2, className, ...props }: CardGridProps) {
-  return <div className={cn("grid items-start gap-4", gridClasses[columns], className)} {...props} />;
+  return (
+    <div className={cn("grid items-start gap-4", gridClasses[columns], className)} {...props} />
+  );
 }
 
 export interface DashboardCardProps {
@@ -99,17 +102,19 @@ export function ChartCard({
 }: ChartCardProps) {
   const titleId = useId();
   return (
-    <Card role="region" aria-labelledby={titleId} className={className}>
-      <CardHeader>
-        <CardTitle id={titleId} title={title} subtitle={subtitle} level={headingLevel} />
-        {aside}
-      </CardHeader>
-      <CardBody>
-        <div className="min-w-0" style={{ height }}>
-          {children}
-        </div>
-      </CardBody>
-    </Card>
+    <section aria-labelledby={titleId} className={cn("min-w-0", className)}>
+      <Card>
+        <CardHeader>
+          <CardTitle id={titleId} title={title} subtitle={subtitle} level={headingLevel} />
+          {aside}
+        </CardHeader>
+        <CardBody>
+          <div className="min-w-0" style={{ height }}>
+            {children}
+          </div>
+        </CardBody>
+      </Card>
+    </section>
   );
 }
 
@@ -124,12 +129,14 @@ export function TableCard({
 }: DashboardCardProps) {
   const titleId = useId();
   return (
-    <Card role="region" aria-labelledby={titleId} className={className}>
-      <CardHeader>
-        <CardTitle id={titleId} title={title} subtitle={subtitle} level={headingLevel} />
-        {aside}
-      </CardHeader>
-      <div className="min-w-0">{children}</div>
-    </Card>
+    <section aria-labelledby={titleId} className={cn("min-w-0", className)}>
+      <Card>
+        <CardHeader>
+          <CardTitle id={titleId} title={title} subtitle={subtitle} level={headingLevel} />
+          {aside}
+        </CardHeader>
+        <div className="min-w-0">{children}</div>
+      </Card>
+    </section>
   );
 }

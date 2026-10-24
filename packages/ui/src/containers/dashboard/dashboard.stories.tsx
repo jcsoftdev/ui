@@ -3,7 +3,14 @@ import { Chip } from "../../atoms/chip/chip.js";
 import { BarChart } from "../../charts/bar-chart/index.js";
 import { Kpi } from "../kpi/kpi.js";
 import { Page } from "../page/page.js";
-import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../table/table.js";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "../table/table.js";
 import { CardGrid, ChartCard, DashboardPage, KpiRow, TableCard } from "./dashboard.js";
 
 const meta = {
@@ -31,7 +38,7 @@ function Collected() {
       height="fill"
       title="Recaudación mensual"
       categories={months}
-      series={[{ name: "Recaudado", data: [42, 51, 47, 58, 62, 66] }]}
+      series={[{ id: "recaudado", name: "Recaudado", data: [42, 51, 47, 58, 62, 66] }]}
     />
   );
 }
