@@ -11,6 +11,7 @@ import { CopyField } from "../../src/forms/copy-field/copy-field.js";
 import { Topbar } from "../../src/shell/topbar/topbar.js";
 import { EmptyState } from "../../src/states/empty-state/empty-state.js";
 import { CardHeader } from "../../src/containers/card/card.js";
+import { DetailHeader } from "../../src/containers/detail-header/detail-header.js";
 import { Page } from "../../src/containers/page/page.js";
 import { PageHeader } from "../../src/containers/page-header/page-header.js";
 import { PageHeaderBack } from "../../src/containers/page-header/back.js";
@@ -147,6 +148,18 @@ export const html = {
       <Page {...props}>
         <p>content</p>
       </Page>,
+    ),
+  detailHeader: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <DetailHeader
+        name="Ana Torres"
+        avatar={<span>AT</span>}
+        status={<span>In review</span>}
+        subtitle="Applicant 2041"
+        facts={<dl>facts</dl>}
+        actions={<button type="button">Approve</button>}
+        {...props}
+      />,
     ),
   pageHeaderCompact: () => renderToStaticMarkup(<PageHeader compact />),
   pageHeaderSlots: (props: Record<string, unknown> = {}) =>

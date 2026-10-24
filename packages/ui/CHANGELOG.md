@@ -25,6 +25,10 @@ Additive; every new prop defaults to the previous behavior unless noted.
   width or less. The rail does not change the width the `page` container measures, so `Cols` inside
   react the same with or without it. Without `aside` the markup is unchanged. `PageProps` is now an
   interface extending the div props.
+- **`DetailHeader` (G10), new in `@jcsoftdev/ui/containers`.** Record header for applicant, person and
+  student screens: `avatar`, `name` (heading, `headingLevel` default 2), `status`, `subtitle`,
+  `facts` (a `Facts` list) and `actions`; the actions wrap under the name from 480px of its own width
+  down.
 
 ## 0.5.0 (2026-10-23)
 

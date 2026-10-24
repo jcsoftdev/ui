@@ -9,6 +9,7 @@ export * from "./comment/index.js";
 export * from "./confirm-action/index.js";
 export * from "./data-grid/index.js";
 export * from "./description-list/index.js";
+export * from "./detail-header/index.js";
 export * from "./facts/index.js";
 export * from "./feed/index.js";
 export * from "./file-tree/index.js";

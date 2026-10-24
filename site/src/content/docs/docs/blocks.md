@@ -345,6 +345,36 @@ export function Applicant() {
 }
 ```
 
+### Record header
+
+`DetailHeader` is the header of a record screen (an applicant, a person, a student): `avatar`, the `name` as a heading (`headingLevel`, default 2, the level under the page's `h1`), `status` beside it, a `subtitle`, `actions` and a `facts` row, usually a `Facts` list. The status and the buttons wrap under the name when the header's own width is 480px or less. It heads the record, not the page: keep the page title in `PageHeader`. `Avatar` only has two sizes, so pass `className="size-14"` for a larger picture.
+
+```tsx region=detail-header
+export function ApplicantRecord() {
+  return (
+    <DetailHeader
+      name="Ana Torres"
+      subtitle="Applicant 2041 · Grade 3"
+      avatar={<Avatar name="Ana Torres" size="lg" className="size-14" />}
+      status={<Chip tone="warning">In review</Chip>}
+      actions={<Button>Approve</Button>}
+      facts={
+        <Facts>
+          <div>
+            <dt>Guardian</dt>
+            <dd>Rosa Quispe</dd>
+          </div>
+          <div>
+            <dt>Applied</dt>
+            <dd>12 Oct 2026</dd>
+          </div>
+        </Facts>
+      }
+    />
+  );
+}
+```
+
 ### Tables, parts and statuses
 
 `Table` can sit flush with the container edge (`flush`), keep its header in view (`stickyHeader` with a `maxHeight`, which makes the wrapper focusable for keyboard scrolling) and select rows. Selection is on as soon as one of `selectedKeys`, `defaultSelectedKeys` or `onSelectedKeysChange` is set: rows with a `rowKey` report `aria-selected`, the select-all box is checked, mixed or unchecked from the keys on screen, and checkboxes are named from the localized `selectRow` and `selectAll` strings. `TableActionsCell` wraps its inline actions under 48rem of the table's own container; pass `menu` (your overflow `DropdownMenu`) to swap them for it instead. Give an actions header column hidden text so it has a name.

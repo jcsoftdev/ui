@@ -256,6 +256,26 @@ test("Page keeps its single column and adds an aside rail on request", () => {
   assert.doesNotMatch(split, /class="[^"]*\b(?:sm|md|lg|xl):/);
 });
 
+test("DetailHeader names the record with a heading and keeps status, facts and actions in one header", () => {
+  const markup = html.detailHeader();
+  assert.match(markup, /^<header class="@container\/detail-header/);
+  assert.match(markup, /<h2 class="[^"]*">Ana Torres<\/h2><span>In review<\/span>/);
+  assert.ok(markup.indexOf("AT") < markup.indexOf("Ana Torres"));
+  assert.ok(markup.indexOf("Applicant 2041") < markup.indexOf("Approve"));
+  assert.ok(markup.indexOf("Approve") < markup.indexOf("<dl>facts"));
+  assert.match(markup, /@max-\[480px\]\/detail-header:basis-full/);
+  assert.match(html.detailHeader({ headingLevel: 3 }), /<h3 /);
+  const bare = html.detailHeader({
+    avatar: undefined,
+    subtitle: undefined,
+    status: undefined,
+    facts: undefined,
+    actions: undefined,
+  });
+  assert.doesNotMatch(bare, /<p |<button|<dl|<span/);
+  assert.doesNotMatch(markup, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
 test("PageHeader stacks back, breadcrumbs, title, meta and tabs, and can stick", () => {
   const plain = html.pageHeaderSlots();
   const at = (text) => plain.indexOf(text);

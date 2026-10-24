@@ -1,9 +1,11 @@
 // Type-checks the examples in site/src/content/docs/docs/blocks.md against the built package.
 // Every ```tsx block in that page must equal one `#region` below (see test/docs-examples.mjs).
-import { Button, Chip, DueChip, IconButton, Kbd, Seal, Spinner } from "@jcsoftdev/ui/atoms";
+import { Avatar, Button, Chip, DueChip, IconButton, Kbd, Seal, Spinner } from "@jcsoftdev/ui/atoms";
 import {
   Aside,
   AsideHeader,
+  DetailHeader,
+  Facts,
   Banner,
   DescriptionList,
   DescriptionListItem,
@@ -309,6 +311,32 @@ export function Applicant() {
       </PageHeader>
       <Section title="Guardians">Rosa Quispe</Section>
     </Page>
+  );
+}
+// #endregion
+
+// #region detail-header
+export function ApplicantRecord() {
+  return (
+    <DetailHeader
+      name="Ana Torres"
+      subtitle="Applicant 2041 · Grade 3"
+      avatar={<Avatar name="Ana Torres" size="lg" className="size-14" />}
+      status={<Chip tone="warning">In review</Chip>}
+      actions={<Button>Approve</Button>}
+      facts={
+        <Facts>
+          <div>
+            <dt>Guardian</dt>
+            <dd>Rosa Quispe</dd>
+          </div>
+          <div>
+            <dt>Applied</dt>
+            <dd>12 Oct 2026</dd>
+          </div>
+        </Facts>
+      }
+    />
   );
 }
 // #endregion

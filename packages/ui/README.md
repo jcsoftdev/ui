@@ -175,7 +175,10 @@ https://ui.jcsoftdev.com/docs/blocks/
 | `Wizard` | `navigation` | `Stepper` plus Back/Next/Finish: `steps`, async `canAdvance`, `onBeforeNext`, `onComplete`. |
 | `TabsNav`, `TabsNavLink` | `navigation` | Link-mode sub-navigation strip (`aria-current="page"`, `renderLink` or `asChild`). |
 | `Section`, `Note`, `Aside` | `containers` | Titled block with `actions` and optional `divider`, a text note with a `tone`, and a complementary region. |
-| `ListDetail` | `containers` | Master-detail that collapses to one pane under 641px of its own width. |
+| `ListDetail` | `containers` | Master-detail that collapses to one pane under 641px of its own width. `listWidth` or `ratio` for a list rail, `surface="card"`, `stickyList`, a `ListDetailHeader` above the list and a `ListDetailEmpty` detail placeholder. |
+| `PageHeader`, `PageHeaderBack` | `containers` | Page title block with `back`, `breadcrumbs`, `meta` and `tabs` rows and a `sticky` variant. |
+| `Page` | `containers` | The `page` container; `aside` adds a side rail that stacks under the content at 1000px of page width. |
+| `DetailHeader` | `containers` | Record header: `avatar`, `name`, `status`, `subtitle`, `facts` and `actions`. |
 | `Feed`, `FeedEvent` | `containers` | Activity log with a mark, text and `<time>` (absolute or `relative`). |
 | `Shortcuts`, `ShortcutsItem` | `containers` | Link or button tiles with `icon`, `count`, `kbd`. |
 
