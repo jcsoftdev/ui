@@ -25,6 +25,7 @@ import {
 } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
+import { CELL_PY } from "./cell-padding.js";
 import {
   computePinOffsets,
   type PinnedColumns,
@@ -34,7 +35,6 @@ import {
   sanitizePinned,
   setColumnPin,
 } from "./pin.js";
-
 import { formatSelectRow, selectAllState, setKeys, toggleKey } from "./selection.js";
 import { ariaSortFor, nextTableSort, type TableSort } from "./sort.js";
 
@@ -98,6 +98,35 @@ const HiddenContext = createContext<ReadonlySet<string>>(new Set());
 
 const FLUSH_START = "[&_:is(th,td):first-child]:pl-0 [&_td:first-child>a]:pl-0";
 const FLUSH_END = "[&_:is(th,td):last-child]:pr-0 [&_td:last-child>a]:pr-0";
+/**
+ * Row density. Each sets `--row-min-h` (the least a body row measures, whatever it holds) and
+ * `--table-cell-py` (the vertical cell padding), so a row of text and a row holding a 30px control
+ * come out the same height. Override either variable with `className` or `style` to tune it.
+ */
+export type TableDensity = "comfortable" | "compact";
+
+const DENSITY: Readonly<Record<TableDensity, string>> = {
+  comfortable: "[--row-min-h:48px] [--table-cell-py:--spacing(2)]",
+  compact: "[--row-min-h:40px] [--table-cell-py:--spacing(1)]",
+};
+// A table row's `height` works as a minimum: content taller than it still grows the row.
+const ROW_MIN_HEIGHT = "[&>tbody>tr]:h-(--row-min-h)";
+
+// The last column (the actions one) sticks to the right edge from 24rem of the wrapper's width, so
+// it stays reachable while the other columns scroll under it; a narrower table scrolls it along,
+// since a pinned column would take most of a phone screen. Sticky cells in a collapsed-border table
+// lose their bottom border, so an inset shadow redraws it, and the edge shadow shows only while
+// columns are hidden underneath.
+// Written out in full (no interpolation) so Tailwind finds every class in the source.
+const STICKY_ACTIONS = cn(
+  "@sm/table:[&_:is(th,td):last-child]:sticky @sm/table:[&_:is(th,td):last-child]:right-0 @sm/table:[&_:is(th,td):last-child]:bg-surface",
+  "@sm/table:[&_td:last-child]:z-1 @sm/table:[&_th:last-child]:z-2",
+  "@sm/table:[&_tr:hover>td:last-child]:bg-surface-2 @sm/table:[&_tr[data-selected]>td:last-child]:bg-accent-soft",
+  "@sm/table:[&_:is(th,td):last-child]:[box-shadow:var(--sticky-divider,0_0_transparent),var(--sticky-edge,0_0_transparent)]",
+  "[&_th:last-child]:[--sticky-divider:inset_0_-1px_0_var(--border-color-divider)] [&_tbody>tr:not(:last-child)>td:last-child]:[--sticky-divider:inset_0_-1px_0_var(--border-color-divider)]",
+);
+const STICKY_EDGE = "[&_:is(th,td):last-child]:[--sticky-edge:var(--shadow-pinned-end)]";
+
 const STICKY_HEADER =
   "[&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-2 [&_thead_th]:bg-surface [&_thead_th]:shadow-[inset_0_-1px_0_var(--border-color-divider)]";
 
@@ -143,6 +172,16 @@ export interface TableProps extends ComponentPropsWithoutRef<"table"> {
   onSortChange?: (sort: TableSort | null) => void;
   /** Ids (`columnId`) of the columns to hide. Headers and cells with that id render nothing. */
   hiddenColumns?: readonly string[];
+  /**
+   * Row density: `comfortable` (default) gives every body row at least 48px, `compact` 40px, with
+   * the cells centred vertically. Rows never depend on what a cell holds for their height.
+   */
+  density?: TableDensity;
+  /**
+   * Keeps the last column (the row actions) stuck to the right edge while the table scrolls
+   * sideways, from 24rem of the table's own width up. Leave the last column unpinned when using it.
+   */
+  stickyActions?: boolean;
 }
 
 function readStorage(key: string): string | null {
@@ -190,6 +229,8 @@ export function Table({
   defaultSort,
   onSortChange,
   hiddenColumns,
+  density = "comfortable",
+  stickyActions,
   ...props
 }: TableProps) {
   const strings = useUiStrings();
@@ -335,8 +376,13 @@ export function Table({
             >
               <table
                 ref={tableRef}
+                data-table-density={density}
                 className={cn(
                   "w-full border-collapse text-fs-130",
+                  DENSITY[density],
+                  ROW_MIN_HEIGHT,
+                  stickyActions && STICKY_ACTIONS,
+                  stickyActions && scrolled.end && STICKY_EDGE,
                   (flush === true || flush === "start") && FLUSH_START,
                   (flush === true || flush === "end") && FLUSH_END,
                   stickyHeader && STICKY_HEADER,
@@ -560,7 +606,10 @@ export function TableSelectCell({ rowKey, label, className, ...props }: TableSel
   if (!selection)
     throw new Error("TableSelectCell needs a Table with selectedKeys or onSelectedKeysChange");
   return (
-    <td className={cn("w-px px-4 py-2.75 align-middle @max-sm/table:px-2.5", className)} {...props}>
+    <td
+      className={cn("w-px px-4 align-middle @max-sm/table:px-2.5", CELL_PY, className)}
+      {...props}
+    >
       <Checkbox
         checked={selection.selected.includes(rowKey)}
         onCheckedChange={() => selection.toggle(rowKey)}
@@ -616,7 +665,7 @@ export interface TableActionsCellProps extends ComponentPropsWithoutRef<"td"> {
 export function TableActionsCell({ menu, className, children, ...props }: TableActionsCellProps) {
   return (
     <td
-      className={cn("w-px px-4 py-2.75 text-right align-middle @max-sm/table:px-2.5", className)}
+      className={cn("w-px px-4 text-right align-middle @max-sm/table:px-2.5", CELL_PY, className)}
       {...props}
     >
       <div
@@ -647,7 +696,8 @@ export function TableCell({
   return (
     <td
       className={cn(
-        "px-4 py-2.75 align-middle @max-sm/table:px-2.5",
+        "px-4 align-middle @max-sm/table:px-2.5",
+        CELL_PY,
         alignRight && "text-right",
         pinned.className,
         className,
@@ -710,7 +760,10 @@ export function TableLinkRow({
         >
           <a
             href={href}
-            className="block px-4 py-2.75 font-[650] text-ink no-underline before:absolute before:inset-0 before:content-[''] @max-sm/table:px-2.5"
+            className={cn(
+              "block px-4 font-[650] text-ink no-underline before:absolute before:inset-0 before:content-[''] @max-sm/table:px-2.5",
+              CELL_PY,
+            )}
           >
             {primary}
           </a>

@@ -12,6 +12,7 @@ import {
   Table,
   TableBody,
   TableCard,
+  TableActionsCell,
   TableCell,
   TableColumnsMenu,
   TableEmpty,
@@ -21,6 +22,7 @@ import {
   TableRow,
   type TableSort,
 } from "@jcsoftdev/ui/containers";
+import { Button } from "@jcsoftdev/ui/atoms";
 import { BarChart } from "@jcsoftdev/ui/charts";
 import { type ReactElement, useState } from "react";
 
@@ -108,6 +110,35 @@ export function Products() {
         </TableBody>
       </Table>
     </>
+  );
+}
+// #endregion
+
+// #region density
+export function LongList() {
+  return (
+    <Table aria-label="Stock" density="compact" stickyActions>
+      <TableHead>
+        <tr>
+          <TableHeaderCell>Name</TableHeaderCell>
+          <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Actions</span>
+          </TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell>{row.name}</TableCell>
+            <TableCell alignRight>{row.stock}</TableCell>
+            <TableActionsCell>
+              <Button size="sm">Restock</Button>
+            </TableActionsCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 // #endregion

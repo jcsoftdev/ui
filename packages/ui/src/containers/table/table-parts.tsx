@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { EmptyState } from "../../states/empty-state/empty-state.js";
 import { cn } from "../../utils/cn.js";
+import { CELL_PY } from "./cell-padding.js";
 
 export interface TableEmptyProps {
   /** Number of columns to span: the count of header cells. */
@@ -60,7 +61,7 @@ export function TableLoading({ columns, rows = 5, label }: TableLoadingProps) {
     <tr key={row} aria-hidden={row === 0 ? undefined : "true"} className="border-b-divider">
       {Array.from({ length: Math.max(1, columns) }, (_, column) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: placeholder cells have no identity
-        <td key={column} className="px-4 py-2.75 align-middle @max-sm/table:px-2.5">
+        <td key={column} className={cn("px-4 align-middle @max-sm/table:px-2.5", CELL_PY)}>
           {row === 0 && column === 0 ? (
             <span role="status" className="sr-only">
               {label ?? strings.loading}

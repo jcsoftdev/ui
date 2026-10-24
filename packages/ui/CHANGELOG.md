@@ -22,6 +22,13 @@ patch in. Additive except for the visual changes listed under "Changed".
   `content`, `calendar` (the inner `DatePicker`) and `timeInput`.
 - **`Wizard` `buttonSize`** (default `"md"`): size of the Back and Next/Finish buttons, which now
   reach the 38px md height of a field (they followed `Button` md, 36px, before).
+- **`Table` `density`** (`"comfortable"` default, `"compact"`): every body row is at least 48px or
+  40px (`--row-min-h`), whatever its cells hold, with cells centred vertically and their vertical
+  padding from `--table-cell-py` (8px or 4px). Both variables can be overridden with `className` or
+  `style`. The table carries `data-table-density`.
+- **`Table` `stickyActions`**: the last column (the row actions) sticks to the right edge while the
+  table scrolls sideways, from 24rem of the table's own width; its row divider is redrawn and an edge
+  shadow shows while columns are hidden underneath.
 - **`ChipGroup` `size`**: `"sm"` (default, 30px minimum) or `"md"` (38px minimum).
 
 #### Changed
@@ -36,6 +43,11 @@ patch in. Additive except for the visual changes listed under "Changed".
 - **Chips meet the 30px hit area.** `ChipGroup` chips grow from 28px to 30px (`min-h-control-sm`,
   replacing `min-h-7`). A `Chip` with `onClick` or `role="button"` is at least 30px tall at either
   `size`; a display chip (and one with only `onRemove`) keeps its 24px or content height.
+- **Table rows have a steady height.** With the default `comfortable` density a body row is at least
+  48px and body cells pad 8px vertically instead of 11px: a one-line text row grows from about 41px
+  to 48px, and a row holding a 30px button shrinks from about 52px to 48px, so both match. Rows
+  taller than that (wrapped text) lose 6px. Pass `density="compact"` for 40px rows. Header cells are
+  unchanged. Cells rendered outside a `Table` keep the former 11px.
 - **`Dialog` and `Drawer` close button is a 30px square** (`size-control-sm`, 44px under touch as
   before) instead of a 24px one. It is centred on the same point, so the X glyph does not move.
 - **Type change: `Select` and `TimeInput` no longer accept the native numeric `size` attribute**; `size`

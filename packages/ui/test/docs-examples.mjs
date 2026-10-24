@@ -56,7 +56,7 @@ const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md
 });
 const data = check("docs/data.tsx", "../../../site/src/content/docs/docs/data-and-dashboards.md", {
   min: 4,
-  required: ["dashboard", "sortable", "pagination", "filter-bar"],
+  required: ["dashboard", "sortable", "density", "pagination", "filter-bar"],
 });
 const motion = check("docs/motion.tsx", "../../../site/src/content/docs/docs/motion.md", {
   min: 6,

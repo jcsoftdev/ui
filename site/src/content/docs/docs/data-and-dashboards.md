@@ -95,6 +95,44 @@ export function Products() {
 }
 ```
 
+### Row density and sticky actions
+
+Every body row has a minimum height, so a row of text and a row holding a 30px button measure the
+same: `density="comfortable"` (default) is 48px and `"compact"` 40px, with cells centred vertically.
+Both set CSS variables on the table (`--row-min-h`, `--table-cell-py`) that `className` or `style` can
+override. `stickyActions` keeps the last column, the row actions, on the right edge while the other
+columns scroll under it; it engages from 24rem of the table's own width, so a phone-width table
+scrolls it along.
+
+```tsx region=density
+export function LongList() {
+  return (
+    <Table aria-label="Stock" density="compact" stickyActions>
+      <TableHead>
+        <tr>
+          <TableHeaderCell>Name</TableHeaderCell>
+          <TableHeaderCell alignRight>Stock</TableHeaderCell>
+          <TableHeaderCell>
+            <span className="sr-only">Actions</span>
+          </TableHeaderCell>
+        </tr>
+      </TableHead>
+      <TableBody>
+        {rows.map((row) => (
+          <TableRow key={row.id}>
+            <TableCell>{row.name}</TableCell>
+            <TableCell alignRight>{row.stock}</TableCell>
+            <TableActionsCell>
+              <Button size="sm">Restock</Button>
+            </TableActionsCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+```
+
 ## Pagination
 
 A footer for any list: rows per page, the range ("11–20 of 134") and first, previous, next and last buttons. Pages are 1-based. It does not slice your rows; use `page` and `pageSize` to do that or to request the page. Changing the page size returns to page 1. `DataGrid` keeps its own built-in footer.
