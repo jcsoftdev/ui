@@ -140,6 +140,50 @@ export function Forms() {
 
 Accessibility: `SelectMenu` and `Combobox` follow the WAI-ARIA combobox and listbox patterns (focus stays on the trigger or input, `aria-activedescendant`, arrows, Home/End, typeahead, Escape). Disabled options are skipped and options are 44px tall under touch density. Inside `Field` the listbox is named from the label. The calendar grid uses a roving tabindex with arrows, Home/End, PageUp/PageDown and Shift+Page for years; out-of-range dates stay focusable with `aria-disabled`. Weeks start on Monday for es-PE and en-GB, and on Sunday for US-style locales; override with `weekStartsOn`. `ChipGroup` is a named group of `aria-pressed` toggle buttons with roving focus; a check glyph marks selected chips.
 
+### Form layout
+
+A typical create or edit form is `Form > FormSection > FormGrid > Field`, closed by a `FormFooter`.
+
+| Component     | Props worth knowing                                                                                                                                                                                                                    |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FormSection` | `title`, `description`. The title column sits beside the fields from 640px of container width and stacks above them in a narrower one (a drawer, a split pane).                                                                        |
+| `FormGrid`    | `columns` 1 to 3 (default 2): the most columns it reaches, 2 from 620px and 3 from 900px of container width. `FormGridItem span` (1, 2, 3 or `"full"`) never adds a column the grid does not have.                                     |
+| `Fieldset`    | `legend`, `description`; a native `fieldset`, so `disabled` reaches every control inside.                                                                                                                                              |
+| `Field`       | `required` adds a visible `*` and `aria-required` on the control (native validation stays off); `disabled` disables the control and mutes the label.                                                                                   |
+| `FormFooter`  | Sticky by default (`sticky={false}` to opt out). `onCancel` shows Cancel, `submitLabel`, `submitDisabled`, `dirty` shows "Unsaved changes" in a polite status region, `busy` keeps the submit focusable but inert and disables Cancel. |
+
+```tsx region=form-layout
+export function CreateStudent({ saving, onCancel }: { saving: boolean; onCancel: () => void }) {
+  return (
+    <Form>
+      <FormSection title="Student" description="Shown on reports and certificates.">
+        <FormGrid columns={2}>
+          <Field label="First name" required>
+            <Input />
+          </Field>
+          <Field label="Last name" required>
+            <Input />
+          </Field>
+          <FormGridItem span="full">
+            <Field label="Notes" optional>
+              <Textarea />
+            </Field>
+          </FormGridItem>
+        </FormGrid>
+      </FormSection>
+      <FormSection title="Guardian">
+        <Fieldset legend="Primary contact" description="Receives every notice.">
+          <Field label="Email" required>
+            <Input type="email" />
+          </Field>
+        </Fieldset>
+      </FormSection>
+      <FormFooter dirty busy={saving} onCancel={onCancel} submitLabel="Create student" />
+    </Form>
+  );
+}
+```
+
 ## Navigation
 
 | Component                 | Props worth knowing                                                                                                                                                                                                                        |
@@ -184,19 +228,19 @@ The wizard heading takes focus on every step change, Enter in a single-line inpu
 
 ## Containers
 
-| Component                     | Props worth knowing                                                                                                                                                                                                                                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Banner`                      | `appearance="outline"`: page surface where only the border carries the tone (default `soft`).                                                                                                                                                                                                                                |
-| `Section`                     | `title`, `count`, `description`, `actions`, `divider` (default off), `padded`, `as`, `titleAs`. The heading level steps down per titled nesting; a section with no title takes no level. Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` replace the props when a part is a direct child.    |
-| `Kpi`                         | `label`, `value`, `suffix`, `description`, `tone`, `dot`, `icon`, `trend`, plus `trailing` (interactive content at the end of the label row) and `card` (border and radius). Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`.                                                                        |
-| `Timeline`                    | `items` or `Timeline.Item` children (both: items first). `status` per item: `done`, `current`, `error`, `pending`; `tone` still wins for the marker colour.                                                                                                                                                                  |
-| `Table`                       | `flush` (`true`, `"start"`, `"end"`), `stickyHeader` (needs `maxHeight`), `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (`menu`).                                                                            |
-| `Note`                        | `tone` (`neutral`, `info`, `success`, `warning`, `danger`), `divider`.                                                                                                                                                                                                                                                       |
-| `Aside` / `AsideHeader`       | Complementary region named by the localized "Related information" (or `aria-label`).                                                                                                                                                                                                                                         |
-| `DescriptionList`             | New `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3 pairs per row from 28rem), `valueAlign` (`end` default, `start`). `DescriptionListItem` has `term`, children as the value and a dash placeholder for `null`, `undefined`, `false` and `""` (0 is a value).                                                     |
-| `ListDetail`                  | Master-detail: `value`/`onValueChange` (never `null`), `onBack`, required `aria-label`, parts `ListDetailList`, `ListDetailItem`, `ListDetailTitle`, `ListDetailMeta`, `ListDetailDetail`, `ListDetailDetailHeader`, plus `useListDetail()`. One pane under 641px of its own width, with focus moved to the detail and back. |
-| `Feed` / `FeedEvent`          | Activity log: `icon`, `time` (ISO instant, calendar date or `Date`), `relative`, `now`, `timeZone`, `timeLabel`, `meta`.                                                                                                                                                                                                     |
-| `Shortcuts` / `ShortcutsItem` | Link or button tiles: `href`, `asChild`, `icon`, `count`, `kbd`.                                                                                                                                                                                                                                                             |
+| Component                     | Props worth knowing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Banner`                      | `appearance="outline"`: page surface where only the border carries the tone (default `soft`).                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Section`                     | `title`, `count`, `description`, `actions`, `divider` (default off), `padded`, `as`, `titleAs`. The heading level steps down per titled nesting; a section with no title takes no level. Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` replace the props when a part is a direct child.                                                                                                                                                                                                                  |
+| `Kpi`                         | `label`, `value`, `suffix`, `description`, `tone`, `dot`, `icon`, `trend`, plus `trailing` (interactive content at the end of the label row) and `card` (border and radius). Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`.                                                                                                                                                                                                                                                                                      |
+| `Timeline`                    | `items` or `Timeline.Item` children (both: items first). `status` per item: `done`, `current`, `error`, `pending`; `tone` still wins for the marker colour.                                                                                                                                                                                                                                                                                                                                                                                |
+| `Table`                       | `flush` (`true`, `"start"`, `"end"`), `stickyHeader` (needs `maxHeight`), `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (`menu`).                                                                                                                                                                                                                                                                                          |
+| `Note`                        | `tone` (`neutral`, `info`, `success`, `warning`, `danger`), `divider`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `Aside` / `AsideHeader`       | Complementary region named by the localized "Related information" (or `aria-label`).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `DescriptionList`             | New `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3 pairs per row from 28rem), `valueAlign` (`end` default, `start`). `DescriptionListItem` has `term`, children as the value and a dash placeholder for `null`, `undefined`, `false` and `""` (0 is a value).                                                                                                                                                                                                                                                                   |
+| `ListDetail`                  | Master-detail: `value`/`onValueChange` (never `null`), `onBack`, required `aria-label`, parts `ListDetailList` (`header`), `ListDetailHeader` (`count`), `ListDetailItem`, `ListDetailTitle`, `ListDetailMeta`, `ListDetailDetail`, `ListDetailDetailHeader`, `ListDetailEmpty`, plus `useListDetail()`. Layout: `listWidth` (rail, number = px), `ratio` (`1:1` default, `1:2`, `1:3`), `surface` (`flat` default, `card`), `stickyList`, `stickyOffset`. One pane under 641px of its own width, with focus moved to the detail and back. |
+| `Feed` / `FeedEvent`          | Activity log: `icon`, `time` (ISO instant, calendar date or `Date`), `relative`, `now`, `timeZone`, `timeLabel`, `meta`.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `Shortcuts` / `ShortcutsItem` | Link or button tiles: `href`, `asChild`, `icon`, `count`, `kbd`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ```tsx region=containers
 export function Containers() {
@@ -247,6 +291,133 @@ export function Inbox() {
 ```
 
 None of `Section`, `Note`, `Aside`, `DescriptionList` or `Feed` pads its inline edges; the caller owns the gutter.
+
+### List and detail as a rail
+
+By default `ListDetail` splits the width evenly and draws only a divider. For a catalogue, give the list a rail with `listWidth` (320px is a good start) or a proportion with `ratio`, and set `surface="card"` for raised panes. `stickyList` keeps the list column in view and scrolls it on its own below an optional `stickyOffset` (the height of a sticky top bar). Put search, filter chips and the result count in a `ListDetailHeader` passed as the list's `header`: it stays at the top while the items scroll, and its `count` is announced politely. `ListDetailEmpty` fills the detail pane until an item is chosen and renders nothing afterwards. The list column is now a wrapper around the named `ul`, so styling that targeted the `ul` through `ListDetailList` keeps working, while a selector for the list's parent no longer reaches the grid.
+
+```tsx region=list-detail-rail
+export function StudentRail({ rows }: { rows: { id: string; name: string }[] }) {
+  return (
+    <ListDetail aria-label="Students" listWidth={320} surface="card" stickyList>
+      <ListDetailList
+        header={
+          <ListDetailHeader count={rows.length}>
+            <ChipGroup
+              type="single"
+              aria-label="Status"
+              defaultValue="all"
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+              ]}
+            />
+          </ListDetailHeader>
+        }
+      >
+        {rows.map((row) => (
+          <ListDetailItem key={row.id} value={row.id}>
+            <ListDetailTitle>{row.name}</ListDetailTitle>
+          </ListDetailItem>
+        ))}
+      </ListDetailList>
+      <ListDetailDetail>
+        <ListDetailEmpty title="No student selected" description="Choose one from the list." />
+      </ListDetailDetail>
+    </ListDetail>
+  );
+}
+```
+
+### Page header with navigation
+
+`PageHeader` has slots for the rows around the title. `back` takes a `PageHeaderBack` (a real link; `href`, or `asChild` with your router's `Link`; the label defaults to the localized "Back"), shown before `breadcrumbs`. `meta` is a wrapping row of status chips and short facts under the title block. `tabs` takes a `TabsNav` or `Tabs` list across the full width, closing the header with its divider. `sticky` keeps the whole header, tabs included, at the top of its scroll container on an opaque page background; `stickyOffset` (px or any CSS length) leaves room for a sticky bar above it.
+
+```tsx region=page-header
+export function ApplicantHeader() {
+  return (
+    <PageHeader
+      sticky
+      back={<PageHeaderBack href="/applicants" />}
+      meta={
+        <>
+          <Chip tone="warning">In review</Chip>
+          <span>Grade 3 admission</span>
+        </>
+      }
+      tabs={
+        <TabsNav aria-label="Applicant sections" value="overview">
+          <TabsNavLink value="overview" href="#overview">
+            Overview
+          </TabsNavLink>
+          <TabsNavLink value="documents" href="#documents" count={4}>
+            Documents
+          </TabsNavLink>
+        </TabsNav>
+      }
+    >
+      <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      <PageHeaderActions>
+        <Button>Approve</Button>
+      </PageHeaderActions>
+    </PageHeader>
+  );
+}
+```
+
+### Page with a side rail
+
+`Page` takes an `aside` (usually an `Aside`) and lays the page out as a content column plus a rail, 20rem wide by default (`asideWidth`: pixels or any CSS length). The rail has a divider and the page background; `asideSticky` keeps it in view and scrolls it on its own beside the content. Page is the `page` container for the whole split and the rail does not change the width it measures, so a `Cols` or `SettingsLayout` in the content reacts the same with or without a rail, and an app that owns the page gutter on the content column gets the same gutter either way. Once the page is 1000px wide or less the rail falls under the content with a top divider. With an `aside`, `className` and `style` go to the content column. `Page` adds no outer padding or scrolling: the shell owns both.
+
+```tsx region=page-aside
+export function Applicant() {
+  return (
+    <Page
+      aside={
+        <Aside className="px-4">
+          <AsideHeader title="Related" />
+          <p>Notes and shortcuts.</p>
+        </Aside>
+      }
+    >
+      <PageHeader>
+        <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      </PageHeader>
+      <Section title="Guardians">Rosa Quispe</Section>
+    </Page>
+  );
+}
+```
+
+### Record header
+
+`DetailHeader` is the header of a record screen (an applicant, a person, a student): `avatar`, the `name` as a heading (`headingLevel`, default 2, the level under the page's `h1`), `status` beside it, a `subtitle`, `actions` and a `facts` row, usually a `Facts` list. The status and the buttons wrap under the name when the header's own width is 480px or less. It heads the record, not the page: keep the page title in `PageHeader`. `Avatar` only has two sizes, so pass `className="size-14"` for a larger picture.
+
+```tsx region=detail-header
+export function ApplicantRecord() {
+  return (
+    <DetailHeader
+      name="Ana Torres"
+      subtitle="Applicant 2041 · Grade 3"
+      avatar={<Avatar name="Ana Torres" size="lg" className="size-14" />}
+      status={<Chip tone="warning">In review</Chip>}
+      actions={<Button>Approve</Button>}
+      facts={
+        <Facts>
+          <div>
+            <dt>Guardian</dt>
+            <dd>Rosa Quispe</dd>
+          </div>
+          <div>
+            <dt>Applied</dt>
+            <dd>12 Oct 2026</dd>
+          </div>
+        </Facts>
+      }
+    />
+  );
+}
+```
 
 ### Tables, parts and statuses
 
@@ -411,7 +582,7 @@ export function RemoveStudent({ onRemove }: { onRemove: () => void }) {
 
 ## States
 
-`Skeleton` has the variants `list`, `kpis`, `key-value` and `bar` with a `count` (default 4, max 12); each renders one status region and hides its bars from assistive technology. `ErrorState` accepts an `actions` node rendered in the same wrapping row as the retry button. `RadioGroup` radios are now named from their labels and described by their descriptions.
+`Skeleton` has the variants `list`, `kpis`, `key-value` and `bar` with a `count` (default 4, max 12); each renders one status region and hides its bars from assistive technology. `EmptyState` takes an `icon` node or one of `"inbox"`, `"search"` and `"lock"`, and `size="sm"` renders the inline one-row form for a list, a table cell or a card body (a muted sentence with an optional action). `ErrorState` accepts an `actions` node rendered in the same wrapping row as the retry button. `RadioGroup` radios are now named from their labels and described by their descriptions.
 
 ```tsx region=states
 export function States({ onRetry }: { onRetry: () => void }) {
@@ -419,6 +590,8 @@ export function States({ onRetry }: { onRetry: () => void }) {
     <>
       <Skeleton variant="list" count={5} />
       <Skeleton variant="kpis" count={3} />
+      <EmptyState icon="search" title="No results" description="Try another term." />
+      <EmptyState size="sm" icon="inbox" title="No pending payments" />
       <ErrorState onRetry={onRetry} actions={<Button variant="ghost">Contact support</Button>} />
     </>
   );

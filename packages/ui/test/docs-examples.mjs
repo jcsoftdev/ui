@@ -45,6 +45,14 @@ const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md
   min: 3,
   required: ["login", "controlled", "solid", "looks", "statement"],
 });
+const data = check("docs/data.tsx", "../../../site/src/content/docs/docs/data-and-dashboards.md", {
+  min: 4,
+  required: ["dashboard", "sortable", "pagination", "filter-bar"],
+});
+const motion = check("docs/motion.tsx", "../../../site/src/content/docs/docs/motion.md", {
+  min: 6,
+  required: ["reveal", "stagger", "cross-fade", "presence", "count-up", "highlight-row"],
+});
 console.log(
-  `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block and ${auth} sign-in blocks match the type-checked source`,
+  `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block, ${auth} sign-in, ${data} data and ${motion} motion blocks match the type-checked source`,
 );

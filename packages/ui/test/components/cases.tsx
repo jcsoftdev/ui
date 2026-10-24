@@ -11,19 +11,46 @@ import { CopyField } from "../../src/forms/copy-field/copy-field.js";
 import { Topbar } from "../../src/shell/topbar/topbar.js";
 import { EmptyState } from "../../src/states/empty-state/empty-state.js";
 import { CardHeader } from "../../src/containers/card/card.js";
+import { DetailHeader } from "../../src/containers/detail-header/detail-header.js";
+import { Page } from "../../src/containers/page/page.js";
 import { PageHeader } from "../../src/containers/page-header/page-header.js";
+import { PageHeaderBack } from "../../src/containers/page-header/back.js";
 import { Segmented } from "../../src/navigation/segmented/segmented.js";
 import { ConfirmAction } from "../../src/containers/confirm-action/confirm-action.js";
 import { ResponsiveList } from "../../src/containers/responsive-list/responsive-list.js";
 import { Banner } from "../../src/containers/banner/banner.js";
 import { Field } from "../../src/forms/field/field.js";
 import { Input } from "../../src/forms/input/input.js";
+import { FormFooter } from "../../src/forms/form-footer/form-footer.js";
+import { FormGrid, FormGridItem } from "../../src/forms/form-grid/form-grid.js";
+import { FormSection } from "../../src/forms/form-section/form-section.js";
 import { ErrorState } from "../../src/states/error-state/error-state.js";
 import { RadioGroup } from "../../src/atoms/radio-group/radio-group.js";
 import { Switch } from "../../src/atoms/switch/switch.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 
 export const html = {
+  fieldRequired: () =>
+    renderToStaticMarkup(
+      <Field label="Name" required disabled>
+        <Input />
+      </Field>,
+    ),
+  formGrid: (columns?: 1 | 2 | 3) =>
+    renderToStaticMarkup(
+      <FormGrid columns={columns}>
+        <FormGridItem span="full" />
+        <FormGridItem span={3} />
+      </FormGrid>,
+    ),
+  formSection: () =>
+    renderToStaticMarkup(
+      <FormSection title="Contact" description="How we reach them">
+        <i data-fields />
+      </FormSection>,
+    ),
+  formFooter: (props: { busy?: boolean; dirty?: boolean }) =>
+    renderToStaticMarkup(<FormFooter onCancel={() => {}} {...props} />),
   skeletonDefault: () => renderToStaticMarkup(<Skeleton />),
   skeletonEs: () =>
     renderToStaticMarkup(
@@ -140,7 +167,37 @@ export const html = {
     ),
   emptyOutlined: () => renderToStaticMarkup(<EmptyState title="Vacío" variant="outlined" />),
   errorOutlined: () => renderToStaticMarkup(<ErrorState message="Falló" variant="outlined" />),
+  page: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <Page {...props}>
+        <p>content</p>
+      </Page>,
+    ),
+  detailHeader: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <DetailHeader
+        name="Ana Torres"
+        avatar={<span>AT</span>}
+        status={<span>In review</span>}
+        subtitle="Applicant 2041"
+        facts={<dl>facts</dl>}
+        actions={<button type="button">Approve</button>}
+        {...props}
+      />,
+    ),
   pageHeaderCompact: () => renderToStaticMarkup(<PageHeader compact />),
+  pageHeaderSlots: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <PageHeader
+        back={<PageHeaderBack href="/applicants" />}
+        breadcrumbs={<nav>crumbs</nav>}
+        meta={<span>facts</span>}
+        tabs={<nav>tabs</nav>}
+        {...props}
+      >
+        <h1>Title</h1>
+      </PageHeader>,
+    ),
   cardHeaderSlots: () =>
     renderToStaticMarkup(<CardHeader icon={<i data-icon />} title="Caja" action={<b data-action />} />),
   segmentedOptions: (block?: boolean) =>

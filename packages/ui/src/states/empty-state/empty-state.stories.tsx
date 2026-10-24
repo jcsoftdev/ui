@@ -17,6 +17,7 @@ const meta = {
     title: { control: "text" },
     description: { control: "text" },
     icon: { control: false },
+    size: { control: "inline-radio", options: ["md", "sm"] },
     action: { control: false },
   },
 } satisfies Meta<typeof EmptyState>;
@@ -50,3 +51,34 @@ export const Narrow: Story = {
 };
 
 export const Outlined: Story = { args: { variant: "outlined" } };
+
+export const DomainIcons: Story = {
+  render: () => (
+    <div className="grid gap-4">
+      <EmptyState icon="inbox" title="Nada por aquí" description="Aún no hay registros." />
+      <EmptyState icon="search" title="Sin resultados" description="Prueba con otro término." />
+      <EmptyState icon="lock" title="Sin acceso" description="Pide permiso a un administrador." />
+    </div>
+  ),
+};
+
+/** Replaces a muted one-line paragraph inside a list or card. */
+export const Inline: Story = {
+  args: {
+    size: "sm",
+    icon: "inbox",
+    title: "Sin pagos pendientes",
+    description: undefined,
+    action: undefined,
+  },
+};
+
+export const InlineWithAction: Story = {
+  args: {
+    size: "sm",
+    icon: "search",
+    title: "Sin resultados",
+    description: "con esos filtros.",
+    action: <Button variant="ghost">Limpiar filtros</Button>,
+  },
+};

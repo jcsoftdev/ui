@@ -3,6 +3,8 @@ export interface UiStrings {
   close: string;
   loading: string;
   optional: string;
+  save: string;
+  unsavedChanges: string;
   cancel: string;
   confirm: string;
   processing: string;
@@ -56,6 +58,36 @@ export interface UiStrings {
   selectAll: string;
   /** Name of the overflow menu trigger of a `TableActionsCell`. */
   rowActions: string;
+  /** Default body of a `TableEmpty` row. */
+  tableEmpty: string;
+  /** Label of the `TableColumnsMenu` trigger and its group. */
+  columns: string;
+  /** Name of the `Pagination` landmark. */
+  pagination: string;
+  /** Label of the page size picker of a `Pagination`. */
+  rowsPerPage: string;
+  /** Range text of a `Pagination`; `{first}`, `{last}` and `{total}` are replaced. */
+  pageRange: string;
+  firstPage: string;
+  previousPage: string;
+  nextPage: string;
+  lastPage: string;
+  /** Name of the search field of a `FilterBar`. */
+  search: string;
+  /** Label of the `FilterBar` button that opens every filter under a narrow container. */
+  filters: string;
+  /** Label of the `FilterBar` button that opens the extra filters. */
+  moreFilters: string;
+  /** Clears every active filter of a `FilterBar`. */
+  clearAllFilters: string;
+  /** Name of the remove button of an active filter chip; `{filter}` is replaced by its label. */
+  removeFilter: string;
+  /** Name of the list of active filter chips of a `FilterBar`. */
+  activeFilters: string;
+  /** Result count of a `FilterBar` for exactly one result. */
+  resultOne: string;
+  /** Result count of a `FilterBar`; `{count}` is replaced. */
+  resultMany: string;
   /** Name of the `PasswordInput` toggle; its pressed state says whether the password is visible. */
   showPassword: string;
   /** Default title of a `LoginForm`. */
@@ -98,6 +130,8 @@ export const uiStrings = {
     close: "Close",
     loading: "Loading",
     optional: "optional",
+    save: "Save",
+    unsavedChanges: "Unsaved changes",
     cancel: "Cancel",
     confirm: "Confirm",
     processing: "Processing…",
@@ -140,6 +174,23 @@ export const uiStrings = {
     selectRow: "Select {row}",
     selectAll: "Select all rows",
     rowActions: "Row actions",
+    tableEmpty: "No rows to show",
+    columns: "Columns",
+    pagination: "Pagination",
+    rowsPerPage: "Rows per page",
+    pageRange: "{first}–{last} of {total}",
+    firstPage: "First page",
+    previousPage: "Previous page",
+    nextPage: "Next page",
+    lastPage: "Last page",
+    search: "Search",
+    filters: "Filters",
+    moreFilters: "More filters",
+    clearAllFilters: "Clear all filters",
+    removeFilter: "Remove filter {filter}",
+    activeFilters: "Active filters",
+    resultOne: "1 result",
+    resultMany: "{count} results",
     showPassword: "Show password",
     signIn: "Sign in",
     signInAs: "Sign in as",
@@ -162,6 +213,8 @@ export const uiStrings = {
     close: "Cerrar",
     loading: "Cargando",
     optional: "opcional",
+    save: "Guardar",
+    unsavedChanges: "Cambios sin guardar",
     cancel: "Cancelar",
     confirm: "Confirmar",
     processing: "Procesando…",
@@ -204,6 +257,23 @@ export const uiStrings = {
     selectRow: "Seleccionar {row}",
     selectAll: "Seleccionar todas las filas",
     rowActions: "Acciones de la fila",
+    tableEmpty: "No hay filas para mostrar",
+    columns: "Columnas",
+    pagination: "Paginación",
+    rowsPerPage: "Filas por página",
+    pageRange: "{first}–{last} de {total}",
+    firstPage: "Primera página",
+    previousPage: "Página anterior",
+    nextPage: "Página siguiente",
+    lastPage: "Última página",
+    search: "Buscar",
+    filters: "Filtros",
+    moreFilters: "Más filtros",
+    clearAllFilters: "Limpiar todos los filtros",
+    removeFilter: "Quitar filtro {filter}",
+    activeFilters: "Filtros activos",
+    resultOne: "1 resultado",
+    resultMany: "{count} resultados",
     showPassword: "Mostrar contraseña",
     signIn: "Inicia sesión",
     signInAs: "Ingresar como",

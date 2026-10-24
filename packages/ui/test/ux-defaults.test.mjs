@@ -236,6 +236,61 @@ test("Topbar renders only the parts it is given", () => {
   assert.match(full, /aria-label="Buscar"/);
 });
 
+test("Page keeps its single column and adds an aside rail on request", () => {
+  const plain = html.page({ className: "gap-2" });
+  assert.match(plain, /^<div class="[^"]*@container\/page flex w-full min-w-0 flex-col gap-2/);
+  assert.doesNotMatch(plain, /data-page-rail|--page-aside-width/);
+  const split = html.page({ aside: "rail" });
+  assert.match(split, /^<div data-page-aside="" class="@container\/page w-full min-w-0">/);
+  assert.match(split, /grid-cols-\[minmax\(0,1fr\)_var\(--page-aside-width,20rem\)\]/);
+  assert.match(split, /@max-\[1000px\]\/page:grid-cols-\[minmax\(0,1fr\)\]/);
+  assert.match(
+    split,
+    /content<\/p><\/div><div data-page-rail="" class="[^"]*border-l-divider[^"]*">rail<\/div>/,
+  );
+  assert.match(split, /@max-\[1000px\]\/page:border-t-divider/);
+  assert.doesNotMatch(split, /sticky/);
+  assert.match(html.page({ aside: "rail", asideSticky: true }), /@min-\[1001px\]\/page:sticky/);
+  assert.match(html.page({ aside: "rail", asideWidth: 360 }), /--page-aside-width:360px/);
+  assert.match(html.page({ aside: "rail", asideWidth: "24rem" }), /--page-aside-width:24rem/);
+  assert.doesNotMatch(split, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
+test("DetailHeader names the record with a heading and keeps status, facts and actions in one header", () => {
+  const markup = html.detailHeader();
+  assert.match(markup, /^<header class="@container\/detail-header/);
+  assert.match(markup, /<h2 class="[^"]*">Ana Torres<\/h2><span>In review<\/span>/);
+  assert.ok(markup.indexOf("AT") < markup.indexOf("Ana Torres"));
+  assert.ok(markup.indexOf("Applicant 2041") < markup.indexOf("Approve"));
+  assert.ok(markup.indexOf("Approve") < markup.indexOf("<dl>facts"));
+  assert.match(markup, /@max-\[480px\]\/detail-header:basis-full/);
+  assert.match(html.detailHeader({ headingLevel: 3 }), /<h3 /);
+  const bare = html.detailHeader({
+    avatar: undefined,
+    subtitle: undefined,
+    status: undefined,
+    facts: undefined,
+    actions: undefined,
+  });
+  assert.doesNotMatch(bare, /<p |<button|<dl|<span/);
+  assert.doesNotMatch(markup, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
+test("PageHeader stacks back, breadcrumbs, title, meta and tabs, and can stick", () => {
+  const plain = html.pageHeaderSlots();
+  const at = (text) => plain.indexOf(text);
+  assert.ok(at("Back") > 0 && at("Back") < at("crumbs"));
+  assert.ok(at("crumbs") < at("<h1>") && at("<h1>") < at("facts") && at("facts") < at("tabs"));
+  assert.match(plain, /<a [^>]*href="\/applicants"/);
+  assert.doesNotMatch(plain, /data-sticky|sticky/);
+  assert.match(
+    html.pageHeaderSlots({ sticky: true }),
+    /data-sticky="".*sticky top-\(--page-header-top,0px\)/,
+  );
+  assert.match(html.pageHeaderSlots({ stickyOffset: 56 }), /--page-header-top:56px/);
+  assert.doesNotMatch(plain, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
 test("outlined, compact and slot variants add their markup", () => {
   assert.match(html.emptyOutlined(), /border-dashed/);
   assert.match(html.errorOutlined(), /border-danger/);
@@ -263,4 +318,50 @@ test("Button announces the UI string `loading` when no loadingLabel is given", (
     html.buttonLoadingDefaultEs(),
     /<span role="status" class="sr-only">Cargando<\/span>$/,
   );
+});
+
+test("Field required marks the label visibly and the control with aria-required", () => {
+  const markup = html.fieldRequired();
+  assert.match(markup, /Name<span aria-hidden="true"[^>]*>\*<\/span>/);
+  assert.match(markup, /<input[^>]*aria-required="true"/);
+  assert.match(markup, /<input[^>]*disabled/);
+});
+
+test("FormGrid keeps two columns by default and never adds a column it does not have", () => {
+  assert.match(
+    html.formGrid(),
+    /data-columns="2"[^>]*@min-\[620px\]\/form-grid:grid-cols-\[repeat\(2/,
+  );
+  assert.doesNotMatch(html.formGrid(), /repeat\(3/);
+  assert.match(html.formGrid(3), /@min-\[900px\]\/form-grid:grid-cols-\[repeat\(3/);
+  assert.doesNotMatch(html.formGrid(1), /grid-cols-\[repeat/);
+  assert.match(html.formGrid(1), /col-span-full/);
+  assert.match(html.formGrid(2), /group-data-\[columns=3\]\/form-grid:@min-\[900px\]/);
+});
+
+test("FormSection stacks in a narrow container and sits beside the fields from 640px", () => {
+  const markup = html.formSection();
+  assert.match(markup, /<h3[^>]*>Contact<\/h3>/);
+  assert.match(
+    markup,
+    /grid-cols-\[minmax\(0,1fr\)\] [^"]*@min-\[640px\]\/form-section:grid-cols-/,
+  );
+  assert.doesNotMatch(markup, /(?:sm|md|lg):grid-cols/);
+});
+
+test("FormFooter is sticky, localizes its labels and reports a busy submit", () => {
+  const idle = html.formFooter({});
+  assert.match(idle, /sticky bottom-0/);
+  assert.match(idle, />Cancel</);
+  assert.match(idle, /type="submit"[^>]*><span[^>]*>Save</);
+  assert.doesNotMatch(idle, /aria-busy="true"/);
+  assert.doesNotMatch(idle, /Unsaved changes/);
+  assert.match(html.formFooter({ dirty: true }), /role="status"[^>]*>Unsaved changes</);
+  const busy = html.formFooter({ busy: true });
+  assert.match(busy, /^<div[^>]*aria-busy="true"/);
+  assert.match(
+    busy,
+    /type="submit"[^>]*aria-disabled="true"|aria-disabled="true"[^>]*type="submit"/,
+  );
+  assert.match(busy, /type="button"[^>]*disabled/);
 });

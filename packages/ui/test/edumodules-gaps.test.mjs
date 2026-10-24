@@ -743,6 +743,37 @@ test("ListDetail collapses with container queries only and names its list", () =
   assert.doesNotMatch(markup, /class="[^"]*\b(?:sm|md|lg|xl):/);
 });
 
+test("ListDetail keeps the even split by default and opts into a rail, a ratio, card panes and a sticky list", () => {
+  assert.doesNotMatch(html.listDetail(), /--ld-list-width|data-sticky-list|data-surface="card"/);
+  const rail = html.listDetailRail({ listWidth: 320 });
+  assert.match(rail, /--ld-list-width:320px/);
+  assert.match(
+    rail,
+    /@min-\[641px\]\/list-detail:grid-cols-\[minmax\(0,var\(--ld-list-width\)\)_minmax\(0,1fr\)\]/,
+  );
+  assert.doesNotMatch(rail, /list-detail:grid-cols-2/);
+  assert.match(html.listDetailRail({ listWidth: "20rem" }), /--ld-list-width:20rem/);
+  assert.match(
+    html.listDetailRail({ ratio: "1:2" }),
+    /grid-cols-\[minmax\(0,1fr\)_minmax\(0,2fr\)\]/,
+  );
+  const card = html.listDetailRail({ surface: "card", stickyList: true, stickyOffset: 56 });
+  assert.match(card, /data-surface="card"/);
+  assert.match(card, /data-sticky-list=""/);
+  assert.match(card, /--ld-sticky-top:56px/);
+  assert.doesNotMatch(card, /class="[^"]*\b(?:sm|md|lg|xl):/);
+});
+
+test("ListDetail header sits above the named list and the empty state shows only without a selection", () => {
+  const none = html.listDetailRail();
+  assert.match(
+    none,
+    /data-list-detail-pane="list"[^>]*><div[^>]*>filters<span aria-live="polite"[^>]*>2<\/span><\/div><ul[^>]*aria-label="Students"/,
+  );
+  assert.match(none, /Pick one/);
+  assert.doesNotMatch(html.listDetailRail({ defaultValue: "a" }), /Pick one/);
+});
+
 test("due state is overdue before the reference day, soon through the window, ok beyond", () => {
   const at = (value, options) => due.dueStatus(value, { today: "2026-03-04", ...options });
   assert.deepEqual(at("2026-03-03"), { state: "overdue", days: -1 });

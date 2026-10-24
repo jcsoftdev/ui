@@ -1,9 +1,11 @@
 // Type-checks the examples in site/src/content/docs/docs/blocks.md against the built package.
 // Every ```tsx block in that page must equal one `#region` below (see test/docs-examples.mjs).
-import { Button, Chip, DueChip, IconButton, Kbd, Seal, Spinner } from "@jcsoftdev/ui/atoms";
+import { Avatar, Button, Chip, DueChip, IconButton, Kbd, Seal, Spinner } from "@jcsoftdev/ui/atoms";
 import {
   Aside,
   AsideHeader,
+  DetailHeader,
+  Facts,
   Banner,
   DescriptionList,
   DescriptionListItem,
@@ -13,10 +15,17 @@ import {
   ListDetail,
   ListDetailDetail,
   ListDetailDetailHeader,
+  ListDetailEmpty,
+  ListDetailHeader,
   ListDetailItem,
   ListDetailList,
   ListDetailTitle,
   Note,
+  Page,
+  PageHeader,
+  PageHeaderActions,
+  PageHeaderBack,
+  PageHeaderTitle,
   Section,
   Shortcuts,
   ShortcutsItem,
@@ -31,7 +40,22 @@ import {
   TableSelectCell,
   Timeline,
 } from "@jcsoftdev/ui/containers";
-import { ChipGroup, Combobox, DatePicker, DateTimePicker, Field, SelectMenu } from "@jcsoftdev/ui/forms";
+import {
+  ChipGroup,
+  Combobox,
+  DatePicker,
+  DateTimePicker,
+  Field,
+  Fieldset,
+  Form,
+  FormFooter,
+  FormGrid,
+  FormGridItem,
+  FormSection,
+  Input,
+  SelectMenu,
+  Textarea,
+} from "@jcsoftdev/ui/forms";
 import { Stepper, TabsNav, TabsNavLink, Wizard } from "@jcsoftdev/ui/navigation";
 import {
   AlertDialog,
@@ -44,7 +68,7 @@ import {
   toast,
   Tooltip,
 } from "@jcsoftdev/ui/overlays";
-import { ErrorState, Skeleton } from "@jcsoftdev/ui/states";
+import { EmptyState, ErrorState, Skeleton } from "@jcsoftdev/ui/states";
 import { DateCalendar } from "@jcsoftdev/ui/calendar";
 import { useState } from "react";
 
@@ -141,6 +165,38 @@ export function Forms() {
 }
 // #endregion
 
+// #region form-layout
+export function CreateStudent({ saving, onCancel }: { saving: boolean; onCancel: () => void }) {
+  return (
+    <Form>
+      <FormSection title="Student" description="Shown on reports and certificates.">
+        <FormGrid columns={2}>
+          <Field label="First name" required>
+            <Input />
+          </Field>
+          <Field label="Last name" required>
+            <Input />
+          </Field>
+          <FormGridItem span="full">
+            <Field label="Notes" optional>
+              <Textarea />
+            </Field>
+          </FormGridItem>
+        </FormGrid>
+      </FormSection>
+      <FormSection title="Guardian">
+        <Fieldset legend="Primary contact" description="Receives every notice.">
+          <Field label="Email" required>
+            <Input type="email" />
+          </Field>
+        </Fieldset>
+      </FormSection>
+      <FormFooter dirty busy={saving} onCancel={onCancel} submitLabel="Create student" />
+    </Form>
+  );
+}
+// #endregion
+
 // #region wizard
 export function Enrollment() {
   return (
@@ -221,12 +277,125 @@ export function Inbox() {
 }
 // #endregion
 
+// #region list-detail-rail
+export function StudentRail({ rows }: { rows: { id: string; name: string }[] }) {
+  return (
+    <ListDetail aria-label="Students" listWidth={320} surface="card" stickyList>
+      <ListDetailList
+        header={
+          <ListDetailHeader count={rows.length}>
+            <ChipGroup
+              type="single"
+              aria-label="Status"
+              defaultValue="all"
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+              ]}
+            />
+          </ListDetailHeader>
+        }
+      >
+        {rows.map((row) => (
+          <ListDetailItem key={row.id} value={row.id}>
+            <ListDetailTitle>{row.name}</ListDetailTitle>
+          </ListDetailItem>
+        ))}
+      </ListDetailList>
+      <ListDetailDetail>
+        <ListDetailEmpty title="No student selected" description="Choose one from the list." />
+      </ListDetailDetail>
+    </ListDetail>
+  );
+}
+// #endregion
+
+// #region page-header
+export function ApplicantHeader() {
+  return (
+    <PageHeader
+      sticky
+      back={<PageHeaderBack href="/applicants" />}
+      meta={
+        <>
+          <Chip tone="warning">In review</Chip>
+          <span>Grade 3 admission</span>
+        </>
+      }
+      tabs={
+        <TabsNav aria-label="Applicant sections" value="overview">
+          <TabsNavLink value="overview" href="#overview">
+            Overview
+          </TabsNavLink>
+          <TabsNavLink value="documents" href="#documents" count={4}>
+            Documents
+          </TabsNavLink>
+        </TabsNav>
+      }
+    >
+      <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      <PageHeaderActions>
+        <Button>Approve</Button>
+      </PageHeaderActions>
+    </PageHeader>
+  );
+}
+// #endregion
+
+// #region page-aside
+export function Applicant() {
+  return (
+    <Page
+      aside={
+        <Aside className="px-4">
+          <AsideHeader title="Related" />
+          <p>Notes and shortcuts.</p>
+        </Aside>
+      }
+    >
+      <PageHeader>
+        <PageHeaderTitle>Ana Torres</PageHeaderTitle>
+      </PageHeader>
+      <Section title="Guardians">Rosa Quispe</Section>
+    </Page>
+  );
+}
+// #endregion
+
+// #region detail-header
+export function ApplicantRecord() {
+  return (
+    <DetailHeader
+      name="Ana Torres"
+      subtitle="Applicant 2041 · Grade 3"
+      avatar={<Avatar name="Ana Torres" size="lg" className="size-14" />}
+      status={<Chip tone="warning">In review</Chip>}
+      actions={<Button>Approve</Button>}
+      facts={
+        <Facts>
+          <div>
+            <dt>Guardian</dt>
+            <dd>Rosa Quispe</dd>
+          </div>
+          <div>
+            <dt>Applied</dt>
+            <dd>12 Oct 2026</dd>
+          </div>
+        </Facts>
+      }
+    />
+  );
+}
+// #endregion
+
 // #region states
 export function States({ onRetry }: { onRetry: () => void }) {
   return (
     <>
       <Skeleton variant="list" count={5} />
       <Skeleton variant="kpis" count={3} />
+      <EmptyState icon="search" title="No results" description="Try another term." />
+      <EmptyState size="sm" icon="inbox" title="No pending payments" />
       <ErrorState onRetry={onRetry} actions={<Button variant="ghost">Contact support</Button>} />
     </>
   );
@@ -237,7 +406,14 @@ export function States({ onRetry }: { onRetry: () => void }) {
 export function Students({ rows }: { rows: { id: string; name: string }[] }) {
   const [selected, setSelected] = useState<string[]>([]);
   return (
-    <Table aria-label="Students" flush stickyHeader maxHeight="20rem" selectedKeys={selected} onSelectedKeysChange={setSelected}>
+    <Table
+      aria-label="Students"
+      flush
+      stickyHeader
+      maxHeight="20rem"
+      selectedKeys={selected}
+      onSelectedKeysChange={setSelected}
+    >
       <TableHead>
         <TableRow>
           <TableSelectAllCell rowKeys={rows.map((row) => row.id)} />
@@ -252,7 +428,13 @@ export function Students({ rows }: { rows: { id: string; name: string }[] }) {
           <TableRow key={row.id} rowKey={row.id}>
             <TableSelectCell rowKey={row.id} label={row.name} />
             <TableCell>{row.name}</TableCell>
-            <TableActionsCell menu={<Button size="sm" variant="ghost" aria-label="Row actions">...</Button>}>
+            <TableActionsCell
+              menu={
+                <Button size="sm" variant="ghost" aria-label="Row actions">
+                  ...
+                </Button>
+              }
+            >
               <Button size="sm">Charge</Button>
               <Button size="sm" variant="ghost">
                 Open file
@@ -283,7 +465,15 @@ export function Parts() {
         </Section.Body>
       </Section>
       <Kpi card tone="success" dot>
-        <Kpi.Label trailing={<Button size="sm" variant="ghost">Details</Button>}>Collected</Kpi.Label>
+        <Kpi.Label
+          trailing={
+            <Button size="sm" variant="ghost">
+              Details
+            </Button>
+          }
+        >
+          Collected
+        </Kpi.Label>
         <Kpi.Value mono suffix="/ 1,200">
           840
         </Kpi.Value>
@@ -322,7 +512,12 @@ export function UserMenu() {
           </DropdownMenuTrigger>
         </div>
       </DropdownMenuAnchor>
-      <DropdownMenuContent bare side="top" align="start" className="w-64 rounded-lg border border-line bg-surface">
+      <DropdownMenuContent
+        bare
+        side="top"
+        align="start"
+        className="w-64 rounded-lg border border-line bg-surface"
+      >
         <div className="px-3 py-2.5">ana@school.test</div>
         <DropdownMenuItem asChild>
           <a href="/profile" className={dropdownMenuItemClasses}>

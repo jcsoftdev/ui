@@ -9,12 +9,20 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { Checkbox } from "../../atoms/checkbox/checkbox.js";
 import { useUiStrings } from "../../i18n/index.js";
-import { ArrowLeftToLine, ArrowRightToLine, PinOff } from "../../icons/index.js";
+import {
+  ArrowDown,
+  ArrowLeftToLine,
+  ArrowRightToLine,
+  ArrowUp,
+  ChevronsUpDown,
+  PinOff,
+} from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import {
@@ -28,8 +36,16 @@ import {
 } from "./pin.js";
 
 import { formatSelectRow, selectAllState, setKeys, toggleKey } from "./selection.js";
+import { ariaSortFor, nextTableSort, type TableSort } from "./sort.js";
 
 export type { PinnedColumns, PinSide } from "./pin.js";
+export {
+  type AriaSort,
+  ariaSortFor,
+  nextTableSort,
+  type TableSort,
+  type TableSortDirection,
+} from "./sort.js";
 
 export interface TableLabels {
   pinLeft: string;
@@ -69,6 +85,17 @@ interface SelectionContextValue {
 /** `null` while the table has no selection props, so rows stay plain. */
 const SelectionContext = createContext<SelectionContextValue | null>(null);
 
+interface SortContextValue {
+  sort: TableSort | null;
+  toggle: (columnId: string) => void;
+}
+
+/** `null` while the table has no sort props, so `sortable` headers stay plain. */
+const SortContext = createContext<SortContextValue | null>(null);
+
+/** Ids of the columns the table hides; empty by default. */
+const HiddenContext = createContext<ReadonlySet<string>>(new Set());
+
 const FLUSH_START = "[&_:is(th,td):first-child]:pl-0 [&_td:first-child>a]:pl-0";
 const FLUSH_END = "[&_:is(th,td):last-child]:pr-0 [&_td:last-child>a]:pr-0";
 const STICKY_HEADER =
@@ -105,6 +132,17 @@ export interface TableProps extends ComponentPropsWithoutRef<"table"> {
   defaultSelectedKeys?: readonly string[];
   /** Called with the next keys. Setting it turns selection on. */
   onSelectedKeysChange?: (keys: string[]) => void;
+  /**
+   * Controlled sort state. Setting it, `defaultSort` or `onSortChange` turns sorting on for the
+   * headers marked `sortable`. The table only reports the state: sort your rows yourself.
+   */
+  sort?: TableSort | null;
+  /** Initial sort when uncontrolled. */
+  defaultSort?: TableSort | null;
+  /** Called with the next sort (`null` when the sort is cleared). */
+  onSortChange?: (sort: TableSort | null) => void;
+  /** Ids (`columnId`) of the columns to hide. Headers and cells with that id render nothing. */
+  hiddenColumns?: readonly string[];
 }
 
 function readStorage(key: string): string | null {
@@ -148,6 +186,10 @@ export function Table({
   selectedKeys,
   defaultSelectedKeys,
   onSelectedKeysChange,
+  sort,
+  defaultSort,
+  onSortChange,
+  hiddenColumns,
   ...props
 }: TableProps) {
   const strings = useUiStrings();
@@ -160,6 +202,18 @@ export function Table({
     defaultProp: defaultSelectedKeys ?? [],
     onChange: onSelectedKeysChange ? (keys) => onSelectedKeysChange([...keys]) : undefined,
   });
+  const sortOn = sort !== undefined || defaultSort !== undefined || onSortChange !== undefined;
+  const [currentSort, setSort] = useControllableState<TableSort | null>({
+    prop: sort,
+    defaultProp: defaultSort ?? null,
+    onChange: onSortChange,
+  });
+  const sortContext: SortContextValue | null = sortOn
+    ? { sort: currentSort, toggle: (columnId) => setSort(nextTableSort(currentSort, columnId)) }
+    : null;
+  const hiddenKey = (hiddenColumns ?? []).join("\u0000");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: hiddenKey is the content of hiddenColumns
+  const hidden = useMemo(() => new Set(hiddenColumns ?? []), [hiddenKey]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const controlled = pinnedColumns !== undefined;
@@ -266,29 +320,33 @@ export function Table({
   return (
     <PinContext.Provider value={context}>
       <SelectionContext.Provider value={selection}>
-        <div
-          ref={wrapperRef}
-          onScroll={measure}
-          style={maxHeight !== undefined ? { maxHeight } : undefined}
-          tabIndex={maxHeight !== undefined ? 0 : undefined}
-          className={cn(
-            "@container/table max-w-full overflow-x-auto",
-            maxHeight !== undefined && "overflow-y-auto focus-visible:focus-ring",
-            wrapperClassName,
-          )}
-        >
-          <table
-            ref={tableRef}
-            className={cn(
-              "w-full border-collapse text-fs-130",
-              (flush === true || flush === "start") && FLUSH_START,
-              (flush === true || flush === "end") && FLUSH_END,
-              stickyHeader && STICKY_HEADER,
-              className,
-            )}
-            {...props}
-          />
-        </div>
+        <SortContext.Provider value={sortContext}>
+          <HiddenContext.Provider value={hidden}>
+            <div
+              ref={wrapperRef}
+              onScroll={measure}
+              style={maxHeight !== undefined ? { maxHeight } : undefined}
+              tabIndex={maxHeight !== undefined ? 0 : undefined}
+              className={cn(
+                "@container/table max-w-full overflow-x-auto",
+                maxHeight !== undefined && "overflow-y-auto focus-visible:focus-ring",
+                wrapperClassName,
+              )}
+            >
+              <table
+                ref={tableRef}
+                className={cn(
+                  "w-full border-collapse text-fs-130",
+                  (flush === true || flush === "start") && FLUSH_START,
+                  (flush === true || flush === "end") && FLUSH_END,
+                  stickyHeader && STICKY_HEADER,
+                  className,
+                )}
+                {...props}
+              />
+            </div>
+          </HiddenContext.Provider>
+        </SortContext.Provider>
       </SelectionContext.Provider>
     </PinContext.Provider>
   );
@@ -377,19 +435,70 @@ function PinButtons({ columnId }: { columnId: string }) {
   );
 }
 
+function SortButton({
+  columnId,
+  context,
+  children,
+}: {
+  columnId: string;
+  context: SortContextValue;
+  children: ReactNode;
+}) {
+  const direction = ariaSortFor(context.sort, columnId);
+  const Icon =
+    direction === "ascending" ? ArrowUp : direction === "descending" ? ArrowDown : ChevronsUpDown;
+  return (
+    <button
+      type="button"
+      onClick={() => context.toggle(columnId)}
+      className={cn(
+        "-mx-1 inline-flex items-center gap-1 rounded-xs px-1 font-[inherit] text-[length:inherit] uppercase tracking-[inherit] hover:text-ink focus-visible:focus-ring",
+        direction !== "none" ? "text-ink" : "text-inherit",
+      )}
+    >
+      {children}
+      <Icon
+        aria-hidden="true"
+        className={cn("size-3.5 shrink-0", direction === "none" && "opacity-50")}
+      />
+    </button>
+  );
+}
+
 export function TableHeaderCell({
   className,
   alignRight,
   columnId,
   pinnable,
+  sortable,
   children,
   style,
   ...props
-}: ComponentPropsWithoutRef<"th"> & AlignProps & { pinnable?: boolean }): ReactNode {
+}: ComponentPropsWithoutRef<"th"> &
+  AlignProps & {
+    pinnable?: boolean;
+    /**
+     * Makes the header a button that cycles the sort (ascending, descending, off) and reports it
+     * as `aria-sort`. Needs a `columnId` and a `Table` with `sort`, `defaultSort` or `onSortChange`.
+     */
+    sortable?: boolean;
+  }): ReactNode {
   const pinned = usePinnedCell(columnId, true);
+  const hiddenIds = useContext(HiddenContext);
+  const sortContext = useContext(SortContext);
+  if (columnId && hiddenIds.has(columnId)) return null;
+  const sorting = sortable && columnId && sortContext ? { columnId, context: sortContext } : null;
+  const content = sorting ? (
+    <SortButton columnId={sorting.columnId} context={sorting.context}>
+      {children}
+    </SortButton>
+  ) : (
+    children
+  );
   const showPin = pinnable && columnId && pinned.context;
   return (
     <th
+      aria-sort={sorting ? ariaSortFor(sorting.context.sort, sorting.columnId) : undefined}
       className={cn(
         "whitespace-nowrap border-b-divider px-4 py-2.5 text-left font-[650] text-fs-110 text-ink-3 uppercase tracking-[.07em] @max-sm/table:px-2.5",
         alignRight && "text-right",
@@ -402,11 +511,11 @@ export function TableHeaderCell({
     >
       {showPin ? (
         <span className={cn("inline-flex items-center gap-1", alignRight && "flex-row-reverse")}>
-          {children}
+          {content}
           <PinButtons columnId={columnId} />
         </span>
       ) : (
-        children
+        content
       )}
     </th>
   );
@@ -533,6 +642,8 @@ export function TableCell({
   ...props
 }: ComponentPropsWithoutRef<"td"> & AlignProps) {
   const pinned = usePinnedCell(columnId, false);
+  const hiddenIds = useContext(HiddenContext);
+  if (columnId && hiddenIds.has(columnId)) return null;
   return (
     <td
       className={cn(
@@ -576,6 +687,7 @@ export function TableLinkRow({
   ...props
 }: TableLinkRowProps) {
   const pinned = usePinnedCell(primaryColumnId, false);
+  const hiddenIds = useContext(HiddenContext);
   const selection = useContext(SelectionContext);
   const isSelected =
     selection && rowKey !== undefined ? selection.selected.includes(rowKey) : undefined;
@@ -590,18 +702,20 @@ export function TableLinkRow({
       )}
       {...props}
     >
-      <td
-        className={cn("p-0 align-middle", pinned.className)}
-        style={pinned.style}
-        {...pinned.attrs}
-      >
-        <a
-          href={href}
-          className="block px-4 py-2.75 font-[650] text-ink no-underline before:absolute before:inset-0 before:content-[''] @max-sm/table:px-2.5"
+      {primaryColumnId && hiddenIds.has(primaryColumnId) ? null : (
+        <td
+          className={cn("p-0 align-middle", pinned.className)}
+          style={pinned.style}
+          {...pinned.attrs}
         >
-          {primary}
-        </a>
-      </td>
+          <a
+            href={href}
+            className="block px-4 py-2.75 font-[650] text-ink no-underline before:absolute before:inset-0 before:content-[''] @max-sm/table:px-2.5"
+          >
+            {primary}
+          </a>
+        </td>
+      )}
       {children}
     </tr>
   );

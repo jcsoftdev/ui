@@ -1,5 +1,114 @@
 # Changelog
 
+## Unreleased
+
+### Page structure (G1, G4, G9, G10)
+
+Additive; every new prop defaults to the previous behavior unless noted.
+
+- **`ListDetail` (G1).** New `listWidth` (fixed list rail, number = px or any CSS length), `ratio`
+  (`1:1` default, `1:2`, `1:3`), `surface` (`flat` default, `card`), `stickyList` and `stickyOffset`
+  (the list column stays in view and scrolls on its own from 641px of the component's width). New
+  parts `ListDetailHeader` (`count`; search, filter chips and a result count above the list, passed as
+  `ListDetailList` `header`) and `ListDetailEmpty` (detail placeholder while nothing is selected).
+  Default look is unchanged. Markup change to check: `ListDetailList` now renders a column wrapper
+  (`data-list-detail-pane="list"`, carrying the divider and the hide-when-detail classes) around the
+  `ul`; the `ul` keeps its `aria-label`, `className` and props, but `list.parentElement` is no longer
+  the grid.
+- **`PageHeader` (G4).** New slots `back` (with the new `PageHeaderBack` link: `href` or `asChild`,
+  localized "Back" label by default), `meta` (wrapping row of chips and facts) and `tabs` (full-width
+  `TabsNav` or `Tabs` list under the title), plus `sticky` and `stickyOffset` (the header, tabs
+  included, stays at the top of its scroll container on the page background). Without them the
+  header renders as before.
+- **`Page` (G9).** New `aside` (a rail beside the content; 20rem by default, `asideWidth` to change
+  it, `asideSticky` to keep it in view), with the rail falling under the content at 1000px of page
+  width or less. The rail does not change the width the `page` container measures, so `Cols` inside
+  react the same with or without it. Without `aside` the markup is unchanged. `PageProps` is now an
+  interface extending the div props.
+- **`DetailHeader` (G10), new in `@jcsoftdev/ui/containers`.** Record header for applicant, person and
+  student screens: `avatar`, `name` (heading, `headingLevel` default 2), `status`, `subtitle`,
+  `facts` (a `Facts` list) and `actions`; the actions wrap under the name from 480px of its own width
+  down.
+
+### Forms and empty states (G2, G7)
+
+Additive and source compatible; no default changed. New UI strings `save` and `unsavedChanges` (en, es).
+
+#### Added
+
+- **Forms.** `FormSection` (`title`, `description`: the title column sits beside the fields from
+  640px of container width and stacks above them in a narrower container), `Fieldset` (`legend`,
+  `description`, a native `fieldset`) and `FormFooter` (sticky by default; `onCancel`,
+  `cancelLabel`, `submitLabel`, `submitDisabled`, `dirty` for an "Unsaved changes" hint in a status
+  region, `busy` for a submit that stays focusable but inert and a disabled cancel). Typical form:
+  `Form > FormSection > FormGrid > Field`, then `FormFooter`.
+- **`FormGrid` `columns` and `FormGridItem`.** `columns` 1 to 3 (default `2`, as before): 2 columns
+  from 620px and 3 from 900px of container width. `FormGridItem` `span` (1, 2, 3 or `"full"`) never
+  adds a column the grid does not have.
+- **`Field` `required` and `disabled`.** `required` adds a visible `*` (hidden from assistive
+  tech) and `aria-required` on the control; native validation stays off. `disabled` disables the
+  control and mutes the label. Both reach the control the same way `error` does, also in a
+  multi-child field. New `required` part for `classNames`.
+- **`EmptyState`.** `size="sm"` is an inline row (icon, title, description, action) to replace a
+  muted one-line paragraph. `icon` also takes `"inbox"`, `"search"` or `"lock"` (exported type
+  `EmptyStateIconName`) for a default domain icon; a node still works as before.
+
+### Data and dashboards (G3, G5, G6, G11)
+
+Additive and source compatible, except for the barrel growth noted below. Guide: `/docs/data-and-dashboards/`.
+
+#### Added
+
+- **Dashboard blocks** (`@jcsoftdev/ui/containers`). `DashboardPage`, `KpiRow`, `CardGrid` (`columns` 2 or 3),
+  `ChartCard` (`height`) and `TableCard`, promoted from the stories. `KpiRow` is a named `group`;
+  `ChartCard` and `TableCard` are `section` landmarks named by their title (`headingLevel` 2 to 4).
+  Grids answer to the `page` container, never the viewport.
+- **Sortable `Table`.** `TableHeaderCell sortable` (with a `columnId`) cycles ascending, descending and off
+  and reports `aria-sort`; `Table` takes `sort`, `defaultSort` and `onSortChange` (`TableSort`,
+  `nextTableSort`, `ariaSortFor`). The table reports the state, the app sorts the rows.
+- **`TableEmpty`, `TableLoading` and column visibility.** `TableEmpty` is a row with an `EmptyState`
+  across `colSpan` columns; `TableLoading` renders placeholder rows with one status announcement;
+  `Table hiddenColumns` drops columns by `columnId` and `TableColumnsMenu` is the checkbox picker.
+- **`Pagination`.** Standalone footer (1-based `page` and `pageSize`, controlled or not, `pageSizeOptions`,
+  `total`, `labels`) with the range text, first, previous, next and last buttons. `DataGrid` keeps its own.
+- **`FilterBar`.** Search, `quickFilters` chips, a "More filters" popover (its `children`), removable
+  `activeFilters` chips, `onClearAll`, `resultCount` (polite status) and an `actions` slot. Under 40rem of
+  its own container width the chips and extra filters fold into one "Filters" button.
+- **UI strings.** `tableEmpty`, `columns`, `pagination`, `rowsPerPage`, `pageRange`, `firstPage`,
+  `previousPage`, `nextPage`, `lastPage`, `search`, `filters`, `moreFilters`, `clearAllFilters`,
+  `removeFilter`, `activeFilters`, `resultOne` and `resultMany` (en and es). A custom `UiStrings` object
+  must add them to type-check.
+
+#### Fixed
+
+- **Exports.** `BottomNav` (and its helpers) is now exported from `@jcsoftdev/ui/shell`, and
+  `BulletChart` and `LollipopChart` from `@jcsoftdev/ui/charts`; all three were implemented and
+  documented but missing from their barrels. The `shell` entry now includes `BottomNav` and its
+  `Drawer`, so it grows by about 6 kB gzip for apps that import the whole barrel.
+
+### Motion (G8)
+
+New `@jcsoftdev/ui/motion` entry, additive, no new dependency. Guide: `/docs/motion/`.
+
+#### Added
+
+- **`Reveal`** (`delay`, `inView`, `asChild`): fades content in with a 6px rise on a client mount,
+  or when it first scrolls into view.
+- **`Stagger`** (`delay`, `inView`, `maxStagger`, `as`): children enter one after another, a quarter
+  duration apart, with the whole sequence capped by `maxStagger` (default 1.5 durations).
+- **`CrossFade`** (`contentKey`) and **`Presence`** (`present`): keyed swap for list-detail panes and
+  tab panels. The old content fades out on top, out of the layout, `aria-hidden` and `inert`; focus
+  inside it moves to the new content.
+- **`CountUp`** (`value`, `formatter`, `from`): counts to its value with any `Intl.NumberFormat`-style
+  formatter (default: the UI strings locale); reads as the final value to assistive tech and
+  reserves the final width. Works as a `Kpi` `value`.
+- **`useHighlightRow(keys?)`** returning `{ highlight, rowProps }`, plus **`MotionStyles`**: an
+  accent pulse on inserted rows (automatic from `keys`) and updated rows (`highlight(key)`).
+- Every duration and easing comes from `--motion-duration` and `--motion-ease`; enter and leave
+  animate only `opacity` and `transform` (the pulse fades a background colour). Server HTML and
+  hydration never animate, reduced motion reaches each end state at once, and hidden states use
+  `opacity` only, so assistive tech keeps reading the content.
+
 ## 0.5.0 (2026-10-23)
 
 ### Busy buttons keep focus (behavior to check when upgrading)

@@ -31,6 +31,7 @@ Set these on `<html>` (or any element to restyle only its subtree); no rebuild i
 - Component groups: `@jcsoftdev/ui/atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `dashboards`, `utils`, each also per component (`@jcsoftdev/ui/atoms/button`).
 - `@jcsoftdev/ui/ai`: chat, prompt input, markdown and code block building blocks for AI interfaces.
 - `@jcsoftdev/ui/rich-text`: rich text editor with a sanitizer.
+- `@jcsoftdev/ui/motion`: `Reveal`, `Stagger`, `CrossFade`, `Presence`, `CountUp` and `useHighlightRow`, on the `--motion-*` tokens and reduced-motion aware.
 - `@jcsoftdev/ui/i18n`: `UiStringsProvider`, `useUiStrings` and the `en`/`es` string presets.
 - `@jcsoftdev/ui/xlsx`: dependency-free `.xlsx` writer.
 - `@jcsoftdev/ui/brand`: logo mark and logo forge utilities.
@@ -175,7 +176,10 @@ https://ui.jcsoftdev.com/docs/blocks/
 | `Wizard` | `navigation` | `Stepper` plus Back/Next/Finish: `steps`, async `canAdvance`, `onBeforeNext`, `onComplete`. |
 | `TabsNav`, `TabsNavLink` | `navigation` | Link-mode sub-navigation strip (`aria-current="page"`, `renderLink` or `asChild`). |
 | `Section`, `Note`, `Aside` | `containers` | Titled block with `actions` and optional `divider`, a text note with a `tone`, and a complementary region. |
-| `ListDetail` | `containers` | Master-detail that collapses to one pane under 641px of its own width. |
+| `ListDetail` | `containers` | Master-detail that collapses to one pane under 641px of its own width. `listWidth` or `ratio` for a list rail, `surface="card"`, `stickyList`, a `ListDetailHeader` above the list and a `ListDetailEmpty` detail placeholder. |
+| `PageHeader`, `PageHeaderBack` | `containers` | Page title block with `back`, `breadcrumbs`, `meta` and `tabs` rows and a `sticky` variant. |
+| `Page` | `containers` | The `page` container; `aside` adds a side rail that stacks under the content at 1000px of page width. |
+| `DetailHeader` | `containers` | Record header: `avatar`, `name`, `status`, `subtitle`, `facts` and `actions`. |
 | `Feed`, `FeedEvent` | `containers` | Activity log with a mark, text and `<time>` (absolute or `relative`). |
 | `Shortcuts`, `ShortcutsItem` | `containers` | Link or button tiles with `icon`, `count`, `kbd`. |
 

@@ -2,11 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
+import { ChipGroup } from "../../forms/chip-group/chip-group.js";
+import { Input } from "../../forms/input/input.js";
 import { UiStringsProvider } from "../../i18n/index.js";
 import {
   ListDetail,
   ListDetailDetail,
   ListDetailDetailHeader,
+  ListDetailEmpty,
+  ListDetailHeader,
   ListDetailItem,
   ListDetailList,
   ListDetailMeta,
@@ -35,7 +39,10 @@ function Detail() {
           <p className="m-0 text-body text-ink-2">Record of {student.name}.</p>
         </>
       ) : (
-        <p className="m-0 py-4 text-body text-ink-3">Pick a student.</p>
+        <>
+          <p className="m-0 py-4 text-body text-ink-3">Pick a student.</p>
+          <ListDetailEmpty title="No student selected" description="Choose one from the list." />
+        </>
       )}
     </ListDetailDetail>
   );
@@ -95,7 +102,7 @@ export const SideBySide: Story = {
     await expect(list).toBeVisible();
     await expect(canvas.getByRole("button", { name: /Luis/ })).toHaveFocus();
     await expect(
-      getComputedStyle(list.parentElement as Element).gridTemplateColumns.split(" "),
+      getComputedStyle(list.closest("[data-view]") as Element).gridTemplateColumns.split(" "),
     ).toHaveLength(2);
   },
 };
@@ -178,5 +185,73 @@ export const BackCallsOnBack: Story = {
     await expect(args.onBack).toHaveBeenCalledTimes(2);
     await expect(args.onValueChange).toHaveBeenCalledTimes(1);
     await expect(args.onValueChange).toHaveBeenCalledWith("luis");
+  },
+};
+
+const columns = (element: Element) =>
+  getComputedStyle(element.closest("[data-view]") as Element).gridTemplateColumns.split(" ");
+
+/** `listWidth` gives the list a fixed rail; the detail takes the rest. */
+export const ListRail: Story = {
+  decorators: inWidth("60rem"),
+  args: { listWidth: 320 },
+  play: async ({ canvasElement }) => {
+    const list = within(canvasElement).getByRole("list", { name: "Students" });
+    const [first, second] = columns(list);
+    await expect(first).toBe("320px");
+    await expect(Number.parseFloat(second ?? "0")).toBeGreaterThan(320);
+  },
+};
+
+/** `ratio` splits proportionally when no fixed width is wanted. */
+export const NarrowRatio: Story = {
+  decorators: inWidth("60rem"),
+  args: { ratio: "1:2" },
+  play: async ({ canvasElement }) => {
+    const list = within(canvasElement).getByRole("list", { name: "Students" });
+    const [first, second] = columns(list).map(Number.parseFloat);
+    await expect((second ?? 0) / (first ?? 1)).toBeCloseTo(2, 0);
+  },
+};
+
+/** A header above the list with a search field, filter chips and a result count; card panes. */
+export const CardWithHeader: Story = {
+  decorators: inWidth("60rem"),
+  args: { listWidth: "20rem", surface: "card", stickyList: true },
+  render: (args) => (
+    <ListDetail {...args}>
+      <ListDetailList
+        header={
+          <ListDetailHeader count={students.length}>
+            <Input aria-label="Search students" placeholder="Search" className="basis-full" />
+            <ChipGroup
+              type="single"
+              defaultValue="all"
+              aria-label="Status"
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+              ]}
+            />
+          </ListDetailHeader>
+        }
+      >
+        {students.map((s) => (
+          <ListDetailItem key={s.id} value={s.id} trailing={s.grade}>
+            <ListDetailTitle>{s.name}</ListDetailTitle>
+            <ListDetailMeta>Enrolled</ListDetailMeta>
+          </ListDetailItem>
+        ))}
+      </ListDetailList>
+      <Detail />
+    </ListDetail>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("textbox", { name: "Search students" })).toBeVisible();
+    await expect(canvas.getByRole("list", { name: "Students" })).toBeVisible();
+    await expect(canvas.getByText("No student selected")).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: /Ana/ }));
+    await expect(canvas.queryByText("No student selected")).toBeNull();
   },
 };

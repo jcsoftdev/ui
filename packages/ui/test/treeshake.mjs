@@ -224,6 +224,7 @@ for (const [entry, component] of [
   ["containers/aside", "Aside"],
   ["containers/description-list", "DescriptionListItem"],
   ["containers/list-detail", "ListDetail"],
+  ["containers/detail-header", "DetailHeader"],
   ["containers/feed", "Feed"],
   ["containers/shortcuts", "Shortcuts"],
   ["containers/kpi", "Kpi"],
