@@ -30,6 +30,7 @@ export * from "./page-header/index.js";
 export * from "./pagination/index.js";
 export * from "./resizable/index.js";
 export * from "./responsive-list/index.js";
+export * from "./row-actions/index.js";
 export * from "./scrolly/index.js";
 export * from "./section/index.js";
 export * from "./settings-layout/index.js";

@@ -133,6 +133,29 @@ export function LongList() {
 }
 ```
 
+### Row actions
+
+`RowActions` puts at most one inline action in a row and the rest in an overflow menu behind a
+30px "more" button. `label` names that button (name the row: "Actions for Ana Quispe"). Items are
+`{ id, label, onSelect, icon?, tone?, disabled? }`; `tone: "danger"` items sort last, behind a
+separator. The actions never wrap, and neither a click nor a key inside them (menu included)
+reaches the row, so a clickable row does not also activate. Put it in a `TableActionsCell`.
+
+```tsx region=row-actions
+export function PersonActions({ person }: { person: Person }) {
+  return (
+    <RowActions
+      label={`Actions for ${person.name}`}
+      primary={<Button size="sm">Open</Button>}
+      items={[
+        { id: "edit", label: "Edit", onSelect: () => edit(person) },
+        { id: "delete", label: "Delete", tone: "danger", onSelect: () => remove(person) },
+      ]}
+    />
+  );
+}
+```
+
 ## Pagination
 
 A footer for any list: rows per page, the range ("11–20 of 134") and first, previous, next and last buttons. Pages are 1-based. It does not slice your rows; use `page` and `pageSize` to do that or to request the page. Changing the page size returns to page 1. `DataGrid` keeps its own built-in footer.

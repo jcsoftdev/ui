@@ -29,6 +29,14 @@ patch in. Additive except for the visual changes listed under "Changed".
 - **`Table` `stickyActions`**: the last column (the row actions) sticks to the right edge while the
   table scrolls sideways, from 24rem of the table's own width; its row divider is redrawn and an edge
   shadow shows while columns are hidden underneath.
+- **`RowActions`, new in `@jcsoftdev/ui/containers`** (also `/containers/row-actions`): one row's
+  actions as at most one inline `primary` action plus an overflow menu (`DropdownMenu`) behind a 30px
+  "more" `IconButton`. Required `label` names the trigger; `items` are
+  `{ id, label, onSelect, icon?, tone?: "default" | "danger", disabled? }`, with `danger` items sorted
+  last behind a separator. It never wraps, renders no trigger without items, and stops click and key
+  events from reaching the row (portaled menu included). Exported types `RowActionItem`,
+  `RowActionsProps`. It brings the menu primitive into the `containers` barrel, which grows by about
+  4 kB gzip for apps that import the whole barrel; `@jcsoftdev/ui/containers/table` does not include it.
 - **`ChipGroup` `size`**: `"sm"` (default, 30px minimum) or `"md"` (38px minimum).
 
 #### Changed

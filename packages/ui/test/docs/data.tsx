@@ -9,6 +9,7 @@ import {
   KpiRow,
   Page,
   Pagination,
+  RowActions,
   Table,
   TableBody,
   TableCard,
@@ -35,6 +36,12 @@ declare const rows: Row[];
 declare const total: number;
 declare const loading: boolean;
 declare function PaymentsTable(): ReactElement;
+interface Person {
+  id: string;
+  name: string;
+}
+declare function edit(person: Person): void;
+declare function remove(person: Person): void;
 declare function sortRows(rows: Row[], sort: TableSort | null): Row[];
 
 // #region dashboard
@@ -139,6 +146,21 @@ export function LongList() {
         ))}
       </TableBody>
     </Table>
+  );
+}
+// #endregion
+
+// #region row-actions
+export function PersonActions({ person }: { person: Person }) {
+  return (
+    <RowActions
+      label={`Actions for ${person.name}`}
+      primary={<Button size="sm">Open</Button>}
+      items={[
+        { id: "edit", label: "Edit", onSelect: () => edit(person) },
+        { id: "delete", label: "Delete", tone: "danger", onSelect: () => remove(person) },
+      ]}
+    />
   );
 }
 // #endregion

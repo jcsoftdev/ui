@@ -252,6 +252,19 @@ for (const [entry, component] of [
   console.log(`${entry} (${component}): ${block.bytes} bytes, ${block.files.length} modules`);
 }
 
+const rowActions = await inputsFor(
+  `import { RowActions } from "@jcsoftdev/ui/containers/row-actions"; console.log(RowActions);`,
+);
+for (const banned of ["dialog", "popover", "toaster", "charts/", "containers/table/"]) {
+  assert.ok(
+    !rowActions.files.some((f) => f.includes(banned)),
+    `RowActions bundle must not include "${banned}"`,
+  );
+}
+console.log(
+  `containers/row-actions: ${rowActions.bytes} bytes, ${rowActions.files.length} modules`,
+);
+
 const group = await inputsFor(`import { Chip } from "@jcsoftdev/ui/atoms"; console.log(Chip);`);
 console.log(
   `atoms (group entry, only Chip used): ${group.bytes} bytes, ${group.files.length} modules`,
