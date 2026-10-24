@@ -21,6 +21,9 @@ Additive and source compatible; no default changed. New UI strings `save` and `u
   tech) and `aria-required` on the control; native validation stays off. `disabled` disables the
   control and mutes the label. Both reach the control the same way `error` does, also in a
   multi-child field. New `required` part for `classNames`.
+- **`EmptyState`.** `size="sm"` is an inline row (icon, title, description, action) to replace a
+  muted one-line paragraph. `icon` also takes `"inbox"`, `"search"` or `"lock"` (exported type
+  `EmptyStateIconName`) for a default domain icon; a node still works as before.
 
 ## 0.5.0 (2026-10-23)
 

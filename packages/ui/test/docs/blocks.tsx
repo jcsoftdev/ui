@@ -59,7 +59,7 @@ import {
   toast,
   Tooltip,
 } from "@jcsoftdev/ui/overlays";
-import { ErrorState, Skeleton } from "@jcsoftdev/ui/states";
+import { EmptyState, ErrorState, Skeleton } from "@jcsoftdev/ui/states";
 import { DateCalendar } from "@jcsoftdev/ui/calendar";
 import { useState } from "react";
 
@@ -274,6 +274,8 @@ export function States({ onRetry }: { onRetry: () => void }) {
     <>
       <Skeleton variant="list" count={5} />
       <Skeleton variant="kpis" count={3} />
+      <EmptyState icon="search" title="No results" description="Try another term." />
+      <EmptyState size="sm" icon="inbox" title="No pending payments" />
       <ErrorState onRetry={onRetry} actions={<Button variant="ghost">Contact support</Button>} />
     </>
   );

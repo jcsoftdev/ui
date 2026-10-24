@@ -455,7 +455,7 @@ export function RemoveStudent({ onRemove }: { onRemove: () => void }) {
 
 ## States
 
-`Skeleton` has the variants `list`, `kpis`, `key-value` and `bar` with a `count` (default 4, max 12); each renders one status region and hides its bars from assistive technology. `ErrorState` accepts an `actions` node rendered in the same wrapping row as the retry button. `RadioGroup` radios are now named from their labels and described by their descriptions.
+`Skeleton` has the variants `list`, `kpis`, `key-value` and `bar` with a `count` (default 4, max 12); each renders one status region and hides its bars from assistive technology. `EmptyState` takes an `icon` node or one of `"inbox"`, `"search"` and `"lock"`, and `size="sm"` renders the inline one-row form for a list, a table cell or a card body (a muted sentence with an optional action). `ErrorState` accepts an `actions` node rendered in the same wrapping row as the retry button. `RadioGroup` radios are now named from their labels and described by their descriptions.
 
 ```tsx region=states
 export function States({ onRetry }: { onRetry: () => void }) {
@@ -463,6 +463,8 @@ export function States({ onRetry }: { onRetry: () => void }) {
     <>
       <Skeleton variant="list" count={5} />
       <Skeleton variant="kpis" count={3} />
+      <EmptyState icon="search" title="No results" description="Try another term." />
+      <EmptyState size="sm" icon="inbox" title="No pending payments" />
       <ErrorState onRetry={onRetry} actions={<Button variant="ghost">Contact support</Button>} />
     </>
   );
