@@ -3,6 +3,7 @@ import { expect, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
 import { IconButton } from "../atoms/icon-button/icon-button.js";
 import { EllipsisVertical } from "../icons/index.js";
+import { ChipGroup } from "./chip-group/chip-group.js";
 import { Combobox } from "./combobox/combobox.js";
 import { DatePicker } from "./date-picker/date-picker.js";
 import { DateTimePicker } from "./date-picker/date-time-picker.js";
@@ -44,13 +45,24 @@ function Row({ size }: { size: Size }) {
       <div className="w-80">
         <DateTimePicker size={size} aria-label={`Inicio ${size}`} defaultValue="2026-03-01T09:30" />
       </div>
+      <ChipGroup
+        size={size}
+        aria-label={`Filtro ${size}`}
+        type="single"
+        defaultValue="open"
+        options={[
+          { value: "open", label: "Abiertos" },
+          { value: "closed", label: "Cerrados" },
+        ]}
+      />
     </div>
   );
 }
 
 /**
  * One height per size: at `sm` every control is 30px (`--control-height-sm`) and at `md` 38px
- * (`--control-height-md`), so a button, a field and a picker line up in a toolbar or a table row.
+ * (`--control-height-md`), so a button, a field, a picker and a filter chip line up in a toolbar or
+ * a table row.
  */
 const meta = {
   title: "Forms/Control sizes",
@@ -77,6 +89,12 @@ async function expectOneHeight(canvasElement: HTMLElement, size: Size) {
   ];
   for (const control of controls) {
     await expect(Math.round(control.getBoundingClientRect().height)).toBe(EXPECTED[size]);
+  }
+  for (const chip of [
+    canvas.getByRole("button", { name: "Abiertos" }),
+    canvas.getByRole("button", { name: "Cerrados" }),
+  ]) {
+    await expect(Math.round(chip.getBoundingClientRect().height)).toBe(EXPECTED[size]);
   }
   const iconButton = canvas.getByRole("button", { name: `Más acciones ${size}` });
   await expect(Math.round(iconButton.getBoundingClientRect().width)).toBe(EXPECTED[size]);

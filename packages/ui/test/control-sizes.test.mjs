@@ -65,3 +65,22 @@ test("the date picker's clear and calendar buttons have a 30px hit area", () => 
   assert.equal(buttons.length, 2, "clear and calendar");
   for (const classes of buttons) assert.match(classes, /\bmin-h-control-sm\b/);
 });
+
+test("ChipGroup chips are never below the 30px hit area and take md on request", () => {
+  const chips = (markup) =>
+    [...markup.matchAll(/<button[^>]*class="([^"]*)"/g)].map((m) => m[1].split(/\s+/));
+  for (const classes of chips(html.chipGroup())) {
+    assert.ok(classes.includes("min-h-control-sm"));
+    assert.ok(!classes.includes("min-h-7"), "the old 28px floor is gone");
+  }
+  for (const classes of chips(html.chipGroup("md")))
+    assert.ok(classes.includes("min-h-control-md"));
+});
+
+test("an interactive Chip has a 30px minimum height; a display chip keeps its size", () => {
+  assert.match(html.chip({ onClick: () => {} }), /\bmin-h-control-sm\b/);
+  assert.match(html.chip({ role: "button", size: "sm" }), /\bmin-h-control-sm\b/);
+  assert.doesNotMatch(html.chip({ role: "button", size: "sm" }), /\bmin-h-5\b/);
+  assert.doesNotMatch(html.chip(), /min-h-control-sm/);
+  assert.match(html.chip(), /\bh-6\b/);
+});

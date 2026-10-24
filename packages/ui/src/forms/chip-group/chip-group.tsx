@@ -33,6 +33,11 @@ interface ChipGroupCommon {
   "aria-labelledby"?: string | undefined;
   "aria-describedby"?: string | undefined;
   "aria-invalid"?: boolean | "true" | "false" | undefined;
+  /**
+   * Minimum chip height: `sm` (default) is 30px (`--control-height-sm`), `md` 38px
+   * (`--control-height-md`), the heights of `Button` and `Input` of the same size.
+   */
+  size?: "sm" | "md" | undefined;
   className?: string | undefined;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root. */
   classNames?: ClassNames<ChipGroupPart>;
@@ -71,6 +76,7 @@ export function ChipGroup(props: ChipGroupProps) {
     name,
     invalid,
     id,
+    size = "sm",
     className,
     classNames,
     "aria-label": ariaLabel,
@@ -156,7 +162,8 @@ export function ChipGroup(props: ChipGroupProps) {
             {...item}
             onClick={() => toggle(option.value)}
             className={cn(
-              "inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-badge border-control bg-surface-control px-3 font-medium text-fs-130 text-ink-2 hover:bg-surface-2 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent-ink group-data-[invalid]/chips:border-danger in-data-[density=touch]:min-h-11 [&_svg]:size-3",
+              "inline-flex cursor-pointer items-center gap-1.5 rounded-badge border-control bg-surface-control px-3 font-medium text-fs-130 text-ink-2 hover:bg-surface-2 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent-ink group-data-[invalid]/chips:border-danger in-data-[density=touch]:min-h-11 [&_svg]:size-3",
+              size === "md" ? "min-h-control-md" : "min-h-control-sm",
               classNames?.chip,
             )}
           >

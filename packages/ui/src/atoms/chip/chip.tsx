@@ -53,6 +53,11 @@ export interface ChipProps extends ComponentPropsWithRef<"span"> {
   icon?: ReactNode;
   /** Prefix `info`, `success`, `warning` and `danger` chips with their status glyph. */
   statusIcon?: boolean;
+  /**
+   * A chip with `onClick` (or `role="button"`) is interactive and never shorter than 30px
+   * (`--control-height-sm`), the smallest hit area of the kit, whatever its `size`.
+   */
+  onClick?: ComponentPropsWithRef<"span">["onClick"];
   /** Appends a remove button that calls this. */
   onRemove?: () => void;
   /** Accessible name of the remove button. Defaults to the localized "Remove". */
@@ -90,6 +95,7 @@ export function Chip({
         custom
           ? "bg-(--tone-c-soft) text-(--tone-c-ink)"
           : (chipToneClasses[tone as ChipBuiltinTone] ?? chipToneClasses.neutral),
+        interactive && "min-h-control-sm",
         (interactive || onRemove) && "in-data-[density=touch]:min-h-11",
         onRemove && "pr-1",
         className,
