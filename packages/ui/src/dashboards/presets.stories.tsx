@@ -73,14 +73,14 @@ const barberoColumns: DataGridColumn<Barbero>[] = [
 ];
 
 /** KPI row, one chart and a table snippet: the subset repeated in every gallery cell. */
-function MiniDashboard() {
+function MiniDashboard({ preset }: { preset: string }) {
   return (
     <DashboardPage>
       <KpiRow>
         <Kpi label="Ventas del día" value="S/ 1 280" description="+12% vs. ayer" />
         <Kpi label="Citas" value="18" suffix="/ 24" description="4 pendientes" />
       </KpiRow>
-      <ChartCard title="Ingresos" subtitle="Últimos 14 días" height={180}>
+      <ChartCard title={`Ingresos · ${preset}`} subtitle="Últimos 14 días" height={180}>
         <AreaChart
           height="fill"
           title="Ingresos de los últimos 14 días"
@@ -92,7 +92,7 @@ function MiniDashboard() {
           labels={{ empty: "Sin datos", category: "Día", value: "Ingresos" }}
         />
       </ChartCard>
-      <TableCard title="Barberos" subtitle="Octubre">
+      <TableCard title={`Barberos · ${preset}`} subtitle="Octubre">
         <DataGrid
           aria-label="Ventas por barbero"
           data={barberos}
@@ -114,7 +114,7 @@ function Gallery() {
             <h2 className="m-0 text-card-title text-ink">{name}</h2>
             <code className="select-all text-ink-3 text-meta">{`<html data-style="${id}">`}</code>
             <Scope style={id}>
-              <MiniDashboard />
+              <MiniDashboard preset={name} />
             </Scope>
           </section>
         ))}
