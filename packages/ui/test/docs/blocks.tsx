@@ -13,6 +13,8 @@ import {
   ListDetail,
   ListDetailDetail,
   ListDetailDetailHeader,
+  ListDetailEmpty,
+  ListDetailHeader,
   ListDetailItem,
   ListDetailList,
   ListDetailTitle,
@@ -215,6 +217,39 @@ export function Inbox() {
       <ListDetailDetail>
         <ListDetailDetailHeader title="Welcome" />
         <p>Body</p>
+      </ListDetailDetail>
+    </ListDetail>
+  );
+}
+// #endregion
+
+// #region list-detail-rail
+export function StudentRail({ rows }: { rows: { id: string; name: string }[] }) {
+  return (
+    <ListDetail aria-label="Students" listWidth={320} surface="card" stickyList>
+      <ListDetailList
+        header={
+          <ListDetailHeader count={rows.length}>
+            <ChipGroup
+              type="single"
+              aria-label="Status"
+              defaultValue="all"
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+              ]}
+            />
+          </ListDetailHeader>
+        }
+      >
+        {rows.map((row) => (
+          <ListDetailItem key={row.id} value={row.id}>
+            <ListDetailTitle>{row.name}</ListDetailTitle>
+          </ListDetailItem>
+        ))}
+      </ListDetailList>
+      <ListDetailDetail>
+        <ListDetailEmpty title="No student selected" description="Choose one from the list." />
       </ListDetailDetail>
     </ListDetail>
   );

@@ -2,6 +2,7 @@
 
 import {
   type ComponentPropsWithoutRef,
+  type CSSProperties,
   createContext,
   type ReactNode,
   useCallback,
@@ -39,6 +40,22 @@ export function useListDetail() {
   return { value, select, isSelected: (candidate: string) => candidate === value };
 }
 
+/** List-to-detail width ratio when `listWidth` is not set: `1:1` (default), `1:2` or `1:3`. */
+export type ListDetailRatio = "1:1" | "1:2" | "1:3";
+
+const ratioClasses: Record<ListDetailRatio, string> = {
+  "1:1": "@min-[641px]/list-detail:grid-cols-2",
+  "1:2": "@min-[641px]/list-detail:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]",
+  "1:3": "@min-[641px]/list-detail:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]",
+};
+
+const FIXED_LIST_COLUMNS =
+  "@min-[641px]/list-detail:grid-cols-[minmax(0,var(--ld-list-width))_minmax(0,1fr)]";
+
+function cssLength(value: number | string): string {
+  return typeof value === "number" ? `${value}px` : value;
+}
+
 export interface ListDetailProps
   extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange"> {
   /** Controlled selected item id; `null` means none (the single-pane view then shows the list). */
@@ -56,6 +73,26 @@ export interface ListDetailProps
   onBack?: (() => void) | undefined;
   /** Names the list of items. */
   "aria-label": string;
+  /**
+   * Fixed width of the list column beside the detail, from 641px of the component's own width: a
+   * number is pixels, a string any CSS length (`"20rem"`). A rail of 280-360px reads better than
+   * an even split for most catalogues. Wins over `ratio`.
+   */
+  listWidth?: number | string | undefined;
+  /** Proportional split when `listWidth` is not set. Defaults to `"1:1"` (the original even split). */
+  ratio?: ListDetailRatio | undefined;
+  /**
+   * `"flat"` (default) keeps the panes flush with a divider between them. `"card"` draws each pane
+   * as a raised card with a gap between them.
+   */
+  surface?: "flat" | "card" | undefined;
+  /**
+   * Keeps the list column in view while the page scrolls and gives it its own scroll, from 641px
+   * of the component's own width. The list header stays at the top of the column.
+   */
+  stickyList?: boolean | undefined;
+  /** Distance the sticky list keeps from the top of its scroll container (number = pixels). Default `0`. */
+  stickyOffset?: number | string | undefined;
   children: ReactNode;
 }
 
@@ -70,7 +107,13 @@ export function ListDetail({
   onValueChange,
   onBack,
   "aria-label": label,
+  listWidth,
+  ratio = "1:1",
+  surface = "flat",
+  stickyList = false,
+  stickyOffset,
   className,
+  style,
   children,
   ...props
 }: ListDetailProps) {
@@ -112,12 +155,27 @@ export function ListDetail({
 
   return (
     <ListDetailContext.Provider value={context}>
-      <div {...props} ref={rootRef} className={cn("@container/list-detail min-w-0", className)}>
+      <div
+        {...props}
+        ref={rootRef}
+        className={cn("@container/list-detail min-w-0", className)}
+        style={
+          {
+            ...style,
+            ...(listWidth !== undefined ? { "--ld-list-width": cssLength(listWidth) } : null),
+            ...(stickyOffset !== undefined ? { "--ld-sticky-top": cssLength(stickyOffset) } : null),
+          } as CSSProperties
+        }
+      >
         <div
           data-view={value === null ? "list" : "detail"}
+          data-surface={surface}
+          data-sticky-list={stickyList ? "" : undefined}
           className={cn(
-            "group/ld grid grid-cols-1 border-t-divider",
-            "@min-[641px]/list-detail:grid-cols-2",
+            "group/ld grid grid-cols-1",
+            surface === "flat" && "border-t-divider",
+            listWidth !== undefined ? FIXED_LIST_COLUMNS : ratioClasses[ratio],
+            surface === "card" && "@min-[641px]/list-detail:gap-4",
             "[&>*]:min-w-0",
           )}
         >
@@ -128,22 +186,65 @@ export function ListDetail({
   );
 }
 
-export type ListDetailListProps = Omit<ComponentPropsWithoutRef<"ul">, "aria-label">;
+export interface ListDetailListProps extends Omit<ComponentPropsWithoutRef<"ul">, "aria-label"> {
+  /** Sits above the items and stays put while they scroll: a `ListDetailHeader` with search, filters and a count. */
+  header?: ReactNode;
+}
 
-export function ListDetailList({ className, ...props }: ListDetailListProps) {
+/**
+ * The list column: an optional `header` above the item list. The `ul` is named by the
+ * `ListDetail`'s `aria-label`; `className` and the other props go to it.
+ */
+export function ListDetailList({ header, className, ...props }: ListDetailListProps) {
   const { label } = useListDetailContext("ListDetailList");
   return (
-    <ul
+    <div
       data-list-detail-pane="list"
-      aria-label={label}
       className={cn(
-        "m-0 flex list-none flex-col p-0",
+        "flex min-h-0 min-w-0 flex-col",
         "@min-[641px]/list-detail:border-r-divider",
         "group-data-[view=detail]/ld:@max-[640px]/list-detail:hidden",
+        "group-data-[surface=card]/ld:overflow-hidden group-data-[surface=card]/ld:rounded-card group-data-[surface=card]/ld:border-card group-data-[surface=card]/ld:shadow-card group-data-[surface=card]/ld:surface-card group-data-[surface=card]/ld:@min-[641px]/list-detail:border-r-0",
+        "group-data-[sticky-list]/ld:@min-[641px]/list-detail:sticky group-data-[sticky-list]/ld:@min-[641px]/list-detail:top-(--ld-sticky-top,0px) group-data-[sticky-list]/ld:@min-[641px]/list-detail:max-h-[calc(100dvh-var(--ld-sticky-top,0px))] group-data-[sticky-list]/ld:@min-[641px]/list-detail:self-start",
+      )}
+    >
+      {header}
+      <ul
+        aria-label={label}
+        className={cn(
+          "m-0 flex min-h-0 list-none flex-col p-0",
+          "group-data-[sticky-list]/ld:@min-[641px]/list-detail:overflow-y-auto",
+          "group-data-[surface=card]/ld:p-2",
+          className,
+        )}
+        {...props}
+      />
+    </div>
+  );
+}
+
+export interface ListDetailHeaderProps extends ComponentPropsWithoutRef<"div"> {
+  /** End slot showing how many items match, e.g. `12`. Announced politely when it changes. */
+  count?: ReactNode;
+}
+
+/** Controls row of the list column: a search field, filter chips and a result count. */
+export function ListDetailHeader({ count, className, children, ...props }: ListDetailHeaderProps) {
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 flex-wrap items-center gap-2 border-b-divider py-2.5 group-data-[surface=card]/ld:px-3",
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {count !== undefined ? (
+        <span aria-live="polite" className="ml-auto text-count text-ink-3">
+          {count}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -172,6 +273,7 @@ export function ListDetailItem({
         onClick={composeHandlers(onClick, () => select(value))}
         className={cn(
           "grid min-h-11 w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b-divider py-2.5 text-start hover:bg-surface-2 focus-visible:-outline-offset-2 focus-visible:focus-ring aria-[current=true]:bg-accent-soft",
+          "group-data-[surface=card]/ld:rounded-button group-data-[surface=card]/ld:border-b-0 group-data-[surface=card]/ld:px-3",
           className,
         )}
         {...props}
@@ -234,6 +336,7 @@ export function ListDetailDetail({
         className={cn(
           "flex min-w-0 flex-col outline-none",
           "group-data-[view=list]/ld:@max-[640px]/list-detail:hidden",
+          "group-data-[surface=card]/ld:rounded-card group-data-[surface=card]/ld:border-card group-data-[surface=card]/ld:px-card group-data-[surface=card]/ld:pb-card group-data-[surface=card]/ld:shadow-card group-data-[surface=card]/ld:surface-card",
           className,
         )}
       >
@@ -288,6 +391,51 @@ export function ListDetailDetailHeader({
         ) : null}
       </div>
       {actions !== undefined ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+    </div>
+  );
+}
+
+export interface ListDetailEmptyProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+  /** Decorative icon; hidden from screen readers. */
+  icon?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  /** Call to action under the text. */
+  action?: ReactNode;
+}
+
+/**
+ * Placeholder for the detail pane while nothing is selected ("Choose an item"). Render it inside
+ * `ListDetailDetail`; it renders nothing once an item is selected, so it needs no condition.
+ */
+export function ListDetailEmpty({
+  icon,
+  title,
+  description,
+  action,
+  className,
+  ...props
+}: ListDetailEmptyProps) {
+  const { value } = useListDetailContext("ListDetailEmpty");
+  if (value !== null) return null;
+  return (
+    <div
+      className={cn(
+        "flex min-h-64 flex-1 flex-col items-center justify-center gap-2 px-6 py-12 text-center",
+        className,
+      )}
+      {...props}
+    >
+      {icon !== undefined ? (
+        <span aria-hidden="true" className="inline-flex text-ink-3 [&_svg]:size-8">
+          {icon}
+        </span>
+      ) : null}
+      <p className="m-0 font-semibold text-ink text-row-title">{title}</p>
+      {description !== undefined ? (
+        <p className="m-0 max-w-[44ch] text-ink-3 text-meta">{description}</p>
+      ) : null}
+      {action !== undefined ? <div className="mt-2">{action}</div> : null}
     </div>
   );
 }

@@ -15,7 +15,14 @@ import {
   DescriptionListItem,
 } from "../../src/containers/description-list/description-list.js";
 import { Feed, FeedEvent } from "../../src/containers/feed/feed.js";
-import { ListDetail, ListDetailDetail, ListDetailItem, ListDetailList } from "../../src/containers/list-detail/list-detail.js";
+import {
+  ListDetail,
+  ListDetailDetail,
+  ListDetailEmpty,
+  ListDetailHeader,
+  ListDetailItem,
+  ListDetailList,
+} from "../../src/containers/list-detail/list-detail.js";
 import { Note } from "../../src/containers/note/note.js";
 import { Kpi } from "../../src/containers/kpi/kpi.js";
 import { Section } from "../../src/containers/section/section.js";
@@ -366,6 +373,17 @@ export const html = {
           <ListDetailItem value="b">Bea</ListDetailItem>
         </ListDetailList>
         <ListDetailDetail>detail</ListDetailDetail>
+      </ListDetail>,
+    ),
+  listDetailRail: (props: Record<string, unknown> = {}) =>
+    renderToStaticMarkup(
+      <ListDetail aria-label="Students" {...props}>
+        <ListDetailList header={<ListDetailHeader count={2}>filters</ListDetailHeader>}>
+          <ListDetailItem value="a">Ana</ListDetailItem>
+        </ListDetailList>
+        <ListDetailDetail>
+          <ListDetailEmpty title="Pick one" description="From the list" />
+        </ListDetailDetail>
       </ListDetail>,
     ),
   dueChip: (props: Record<string, unknown> = {}) =>

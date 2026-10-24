@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Page structure (G1, G4, G9, G10)
+
+Additive; every new prop defaults to the previous behavior unless noted.
+
+- **`ListDetail` (G1).** New `listWidth` (fixed list rail, number = px or any CSS length), `ratio`
+  (`1:1` default, `1:2`, `1:3`), `surface` (`flat` default, `card`), `stickyList` and `stickyOffset`
+  (the list column stays in view and scrolls on its own from 641px of the component's width). New
+  parts `ListDetailHeader` (`count`; search, filter chips and a result count above the list, passed as
+  `ListDetailList` `header`) and `ListDetailEmpty` (detail placeholder while nothing is selected).
+  Default look is unchanged. Markup change to check: `ListDetailList` now renders a column wrapper
+  (`data-list-detail-pane="list"`, carrying the divider and the hide-when-detail classes) around the
+  `ul`; the `ul` keeps its `aria-label`, `className` and props, but `list.parentElement` is no longer
+  the grid.
+
 ## 0.5.0 (2026-10-23)
 
 ### Busy buttons keep focus (behavior to check when upgrading)

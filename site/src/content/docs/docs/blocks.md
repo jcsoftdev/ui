@@ -184,19 +184,19 @@ The wizard heading takes focus on every step change, Enter in a single-line inpu
 
 ## Containers
 
-| Component                     | Props worth knowing                                                                                                                                                                                                                                                                                                          |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Banner`                      | `appearance="outline"`: page surface where only the border carries the tone (default `soft`).                                                                                                                                                                                                                                |
-| `Section`                     | `title`, `count`, `description`, `actions`, `divider` (default off), `padded`, `as`, `titleAs`. The heading level steps down per titled nesting; a section with no title takes no level. Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` replace the props when a part is a direct child.    |
-| `Kpi`                         | `label`, `value`, `suffix`, `description`, `tone`, `dot`, `icon`, `trend`, plus `trailing` (interactive content at the end of the label row) and `card` (border and radius). Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`.                                                                        |
-| `Timeline`                    | `items` or `Timeline.Item` children (both: items first). `status` per item: `done`, `current`, `error`, `pending`; `tone` still wins for the marker colour.                                                                                                                                                                  |
-| `Table`                       | `flush` (`true`, `"start"`, `"end"`), `stickyHeader` (needs `maxHeight`), `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (`menu`).                                                                            |
-| `Note`                        | `tone` (`neutral`, `info`, `success`, `warning`, `danger`), `divider`.                                                                                                                                                                                                                                                       |
-| `Aside` / `AsideHeader`       | Complementary region named by the localized "Related information" (or `aria-label`).                                                                                                                                                                                                                                         |
-| `DescriptionList`             | New `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3 pairs per row from 28rem), `valueAlign` (`end` default, `start`). `DescriptionListItem` has `term`, children as the value and a dash placeholder for `null`, `undefined`, `false` and `""` (0 is a value).                                                     |
-| `ListDetail`                  | Master-detail: `value`/`onValueChange` (never `null`), `onBack`, required `aria-label`, parts `ListDetailList`, `ListDetailItem`, `ListDetailTitle`, `ListDetailMeta`, `ListDetailDetail`, `ListDetailDetailHeader`, plus `useListDetail()`. One pane under 641px of its own width, with focus moved to the detail and back. |
-| `Feed` / `FeedEvent`          | Activity log: `icon`, `time` (ISO instant, calendar date or `Date`), `relative`, `now`, `timeZone`, `timeLabel`, `meta`.                                                                                                                                                                                                     |
-| `Shortcuts` / `ShortcutsItem` | Link or button tiles: `href`, `asChild`, `icon`, `count`, `kbd`.                                                                                                                                                                                                                                                             |
+| Component                     | Props worth knowing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Banner`                      | `appearance="outline"`: page surface where only the border carries the tone (default `soft`).                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Section`                     | `title`, `count`, `description`, `actions`, `divider` (default off), `padded`, `as`, `titleAs`. The heading level steps down per titled nesting; a section with no title takes no level. Parts `Section.Header`, `.Title`, `.Count`, `.Description`, `.Actions`, `.Body` replace the props when a part is a direct child.                                                                                                                                                                                                                  |
+| `Kpi`                         | `label`, `value`, `suffix`, `description`, `tone`, `dot`, `icon`, `trend`, plus `trailing` (interactive content at the end of the label row) and `card` (border and radius). Parts `Kpi.Label`, `.Value` (`mono`, `suffix`, `trend`), `.Description`.                                                                                                                                                                                                                                                                                      |
+| `Timeline`                    | `items` or `Timeline.Item` children (both: items first). `status` per item: `done`, `current`, `error`, `pending`; `tone` still wins for the marker colour.                                                                                                                                                                                                                                                                                                                                                                                |
+| `Table`                       | `flush` (`true`, `"start"`, `"end"`), `stickyHeader` (needs `maxHeight`), `maxHeight`, selection (`selectedKeys`, `defaultSelectedKeys`, `onSelectedKeysChange`, `rowKey`, `TableSelectCell`, `TableSelectAllCell`), `TableActionsCell` (`menu`).                                                                                                                                                                                                                                                                                          |
+| `Note`                        | `tone` (`neutral`, `info`, `success`, `warning`, `danger`), `divider`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `Aside` / `AsideHeader`       | Complementary region named by the localized "Related information" (or `aria-label`).                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `DescriptionList`             | New `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3 pairs per row from 28rem), `valueAlign` (`end` default, `start`). `DescriptionListItem` has `term`, children as the value and a dash placeholder for `null`, `undefined`, `false` and `""` (0 is a value).                                                                                                                                                                                                                                                                   |
+| `ListDetail`                  | Master-detail: `value`/`onValueChange` (never `null`), `onBack`, required `aria-label`, parts `ListDetailList` (`header`), `ListDetailHeader` (`count`), `ListDetailItem`, `ListDetailTitle`, `ListDetailMeta`, `ListDetailDetail`, `ListDetailDetailHeader`, `ListDetailEmpty`, plus `useListDetail()`. Layout: `listWidth` (rail, number = px), `ratio` (`1:1` default, `1:2`, `1:3`), `surface` (`flat` default, `card`), `stickyList`, `stickyOffset`. One pane under 641px of its own width, with focus moved to the detail and back. |
+| `Feed` / `FeedEvent`          | Activity log: `icon`, `time` (ISO instant, calendar date or `Date`), `relative`, `now`, `timeZone`, `timeLabel`, `meta`.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `Shortcuts` / `ShortcutsItem` | Link or button tiles: `href`, `asChild`, `icon`, `count`, `kbd`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ```tsx region=containers
 export function Containers() {
@@ -247,6 +247,43 @@ export function Inbox() {
 ```
 
 None of `Section`, `Note`, `Aside`, `DescriptionList` or `Feed` pads its inline edges; the caller owns the gutter.
+
+### List and detail as a rail
+
+By default `ListDetail` splits the width evenly and draws only a divider. For a catalogue, give the list a rail with `listWidth` (320px is a good start) or a proportion with `ratio`, and set `surface="card"` for raised panes. `stickyList` keeps the list column in view and scrolls it on its own below an optional `stickyOffset` (the height of a sticky top bar). Put search, filter chips and the result count in a `ListDetailHeader` passed as the list's `header`: it stays at the top while the items scroll, and its `count` is announced politely. `ListDetailEmpty` fills the detail pane until an item is chosen and renders nothing afterwards. The list column is now a wrapper around the named `ul`, so styling that targeted the `ul` through `ListDetailList` keeps working, while a selector for the list's parent no longer reaches the grid.
+
+```tsx region=list-detail-rail
+export function StudentRail({ rows }: { rows: { id: string; name: string }[] }) {
+  return (
+    <ListDetail aria-label="Students" listWidth={320} surface="card" stickyList>
+      <ListDetailList
+        header={
+          <ListDetailHeader count={rows.length}>
+            <ChipGroup
+              type="single"
+              aria-label="Status"
+              defaultValue="all"
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+              ]}
+            />
+          </ListDetailHeader>
+        }
+      >
+        {rows.map((row) => (
+          <ListDetailItem key={row.id} value={row.id}>
+            <ListDetailTitle>{row.name}</ListDetailTitle>
+          </ListDetailItem>
+        ))}
+      </ListDetailList>
+      <ListDetailDetail>
+        <ListDetailEmpty title="No student selected" description="Choose one from the list." />
+      </ListDetailDetail>
+    </ListDetail>
+  );
+}
+```
 
 ### Tables, parts and statuses
 
