@@ -77,6 +77,31 @@ patch in. Additive except for the visual changes listed under "Changed".
   is now the control size. A native `<select size={n}>` list box was never styled by `Select` (it
   draws a single-line trigger with a chevron); use a plain `<select>` for that.
 
+### Overlay enter and exit motion
+
+#### Changed
+
+- **Overlays animate in and out.** `DropdownMenu` content and submenus, `ContextMenu` content, `Popover`,
+  the `SelectMenu` and `Combobox` listbox, `Tooltip` and `HoverCard` fade in while they
+  grow from 96% at their anchor (`transform-origin: var(--ui-popper-transform-origin)`) and slide 4px
+  in from the side they open on (`data-side`). `Dialog` and `AlertDialog` fade and settle from 97%;
+  `Drawer` slides in from the right; the scrim fades. The exit is the reverse at two thirds of the
+  duration and plays before the node unmounts. Timing is `--motion-duration` (180ms by default) and
+  `--motion-ease` from the theme, so style presets and `[data-motion]` retune it;
+  `prefers-reduced-motion: reduce` turns it off and unmounts at once. Enter uses `@starting-style`,
+  so it needs no stylesheet beyond what consumers already compile: `@jcsoftdev/ui/styles/tokens.css`,
+  `@jcsoftdev/ui/styles/theme.css` and the `@source` for the package's `dist`.
+- **Menu items and listbox options fade their highlight** (120ms at the default duration). **Table
+  rows fade their hover background**, a sticky actions cell follows it, and the `RowActions` "more"
+  glyph is muted until its row is hovered or focused on devices that hover (never hidden).
+- **Exit waits for the longest effect.** `usePresence` used to unmount on the first exit-relevant
+  `transitionend`/`animationend`; it now waits until no exit animation or transition on the node is
+  still running, so a consumer's own longer exit animation is not cut short by the built-in one.
+- **Tests that query an overlay right after opening it in a real browser** may see it at opacity 0
+  (`toBeVisible()` from jest-dom fails) or still mounted for a moment after closing; wrap those
+  assertions in `waitFor`. jsdom and Playwright's `toBeVisible` are unaffected. The `forms`,
+  `overlays` and `shell` entries grow by a few hundred bytes gzip.
+
 ### Page structure (G1, G4, G9, G10)
 
 Additive; every new prop defaults to the previous behavior unless noted.

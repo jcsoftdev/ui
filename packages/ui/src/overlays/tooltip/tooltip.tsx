@@ -16,6 +16,7 @@ import type { Align, Side } from "../../primitives/popper/geometry.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { POPPER_MOTION } from "../../utils/overlay-motion.js";
 import { Slot } from "../../utils/slot.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { opensOnFocus, opensOnHover } from "./model.js";
@@ -152,6 +153,7 @@ export function Tooltip({
           onMouseLeave={() => schedule(false, closeDelay)}
           className={cn(
             "z-85 flex w-max max-w-[min(16rem,var(--ui-popper-available-width))] items-center gap-2 rounded-popover surface-overlay px-2.5 py-1.5 text-meta text-ink shadow-overlay",
+            POPPER_MOTION,
             materialClass(material, "surface-solid"),
             classNames?.content,
             className,

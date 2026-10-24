@@ -336,7 +336,7 @@ export const ClassNameOverrideWins: Story = {
     await userEvent.click(trigger(canvasElement));
     const menu = await screen.findByRole("menu");
     await expect(getComputedStyle(menu).paddingTop).toBe("32px");
-    await expect(menu.getBoundingClientRect().width).toBeGreaterThanOrEqual(300);
+    await expect(menu.offsetWidth).toBeGreaterThanOrEqual(300);
   },
 };
 

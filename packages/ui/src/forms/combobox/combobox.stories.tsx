@@ -97,7 +97,7 @@ export const EscapeKeepsTheSelection: Story = {
     await list();
     await userEvent.keyboard("zzz");
     await expect(input(canvas)).toHaveValue("zzz");
-    await expect(await screen.findByText("No results")).toBeVisible();
+    await waitFor(() => expect(screen.getByText("No results")).toBeVisible());
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(screen.queryByRole("listbox", { hidden: true })).toBeNull());
     await userEvent.tab();
@@ -179,7 +179,7 @@ export const GroupsAndCustomEmptyText: Story = {
     await userEvent.keyboard("cusco");
     await waitFor(() => expect(within(box).getAllByRole("group")).toHaveLength(1));
     await userEvent.keyboard("x");
-    await expect(await screen.findByText("Nothing here")).toBeVisible();
+    await waitFor(() => expect(screen.getByText("Nothing here")).toBeVisible());
   },
 };
 
@@ -228,7 +228,7 @@ export const AsyncOptions: Story = {
     const control = canvas.getByRole("combobox", { name: "Person" });
     await userEvent.click(control);
     await userEvent.keyboard("b");
-    await expect(await screen.findByText("Loading")).toBeVisible();
+    await waitFor(() => expect(screen.getByText("Loading")).toBeVisible());
     const box = await screen.findByRole("listbox");
     await waitFor(() => expect(within(box).getAllByRole("option")).toHaveLength(2));
     await waitFor(() => expect(screen.queryByText("Loading")).toBeNull());
@@ -251,7 +251,7 @@ export const Spanish: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(input(canvas));
     await userEvent.keyboard("zzz");
-    await expect(await screen.findByText("Sin resultados")).toBeVisible();
+    await waitFor(() => expect(screen.getByText("Sin resultados")).toBeVisible());
   },
 };
 

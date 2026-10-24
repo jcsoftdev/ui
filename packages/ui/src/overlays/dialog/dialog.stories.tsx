@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, screen } from "storybook/test";
+import { expect, screen, waitFor } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
 import {
   Dialog,
@@ -90,6 +90,10 @@ export const CloseHitArea: Story = {
   ),
   play: async () => {
     const close = await screen.findByRole("button", { name: "Cerrar" });
+    // Measure once the enter transition (a scale) has settled.
+    await waitFor(() =>
+      expect(getComputedStyle(screen.getByRole("dialog")).scale).toMatch(/^(none|1)$/),
+    );
     const box = close.getBoundingClientRect();
     await expect(Math.round(box.width)).toBe(30);
     await expect(Math.round(box.height)).toBe(30);

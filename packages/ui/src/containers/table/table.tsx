@@ -120,7 +120,7 @@ const ROW_MIN_HEIGHT = "[&>tbody>tr]:h-(--row-min-h)";
 // Written out in full (no interpolation) so Tailwind finds every class in the source.
 const STICKY_ACTIONS = cn(
   "@sm/table:[&_:is(th,td):last-child]:sticky @sm/table:[&_:is(th,td):last-child]:right-0 @sm/table:[&_:is(th,td):last-child]:bg-surface",
-  "@sm/table:[&_td:last-child]:z-1 @sm/table:[&_th:last-child]:z-2",
+  "@sm/table:[&_td:last-child]:z-1 @sm/table:[&_th:last-child]:z-2 @sm/table:[&_td:last-child]:transition-colors @sm/table:[&_td:last-child]:duration-(--motion-duration)",
   "@sm/table:[&_tr:hover>td:last-child]:bg-surface-2 @sm/table:[&_tr[data-selected]>td:last-child]:bg-accent-soft",
   "@sm/table:[&_:is(th,td):last-child]:[box-shadow:var(--sticky-divider,0_0_transparent),var(--sticky-edge,0_0_transparent)]",
   "[&_th:last-child]:[--sticky-divider:inset_0_-1px_0_var(--border-color-divider)] [&_tbody>tr:not(:last-child)>td:last-child]:[--sticky-divider:inset_0_-1px_0_var(--border-color-divider)]",
@@ -425,7 +425,7 @@ function usePinnedCell(columnId: string | undefined, header: boolean) {
   const shadowed =
     position.edge && (position.side === "left" ? context.scrolledStart : context.scrolledEnd);
   const className = cn(
-    "sticky bg-surface",
+    "sticky bg-surface transition-colors duration-(--motion-duration) motion-reduce:transition-none",
     header
       ? "z-2"
       : "z-1 group-hover/row:bg-surface-2 group-aria-selected/row:bg-accent-soft group-data-[selected=true]/row:bg-accent-soft",
@@ -584,7 +584,7 @@ export function TableRow({ className, rowKey, ...props }: TableRowProps) {
       aria-selected={isSelected}
       data-selected={isSelected || undefined}
       className={cn(
-        "group/row border-b-divider last:border-b-0 hover:bg-surface-2",
+        "group/row border-b-divider transition-colors duration-(--motion-duration) ease-(--motion-ease) last:border-b-0 hover:bg-surface-2 motion-reduce:transition-none",
         isSelected && "bg-accent-soft hover:bg-accent-soft",
         className,
       )}
@@ -746,7 +746,7 @@ export function TableLinkRow({
       aria-selected={isSelected}
       data-selected={isSelected || undefined}
       className={cn(
-        "group/row relative border-b-divider last:border-b-0 hover:bg-surface-2",
+        "group/row relative border-b-divider transition-colors duration-(--motion-duration) ease-(--motion-ease) last:border-b-0 hover:bg-surface-2 motion-reduce:transition-none",
         isSelected && "bg-accent-soft hover:bg-accent-soft",
         className,
       )}

@@ -20,6 +20,7 @@ import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { DIALOG_MOTION, OVERLAY_MOTION } from "../../utils/overlay-motion.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import {
   PreviousFocusProvider,
@@ -278,7 +279,9 @@ function AlertDialogPanel({
   const previousFocusRef = usePreviousFocus();
   return (
     <DialogPrimitive.Portal container={container}>
-      <DialogPrimitive.Overlay className={cn("fixed inset-0 z-70 bg-scrim", classNames?.overlay)} />
+      <DialogPrimitive.Overlay
+        className={cn("fixed inset-0 z-70 bg-scrim", OVERLAY_MOTION, classNames?.overlay)}
+      />
       <DialogPrimitive.Content
         ref={panelRef}
         role="alertdialog"
@@ -290,6 +293,7 @@ function AlertDialogPanel({
         onCloseAutoFocus={(event) => restoreFocusOnClose(event, previousFocusRef)}
         className={cn(
           "@container/dialog fixed top-[9dvh] left-1/2 z-70 flex max-h-[84dvh] w-[min(420px,100%)] max-w-full -translate-x-1/2 flex-col overflow-auto rounded-dialog outline-none surface-overlay shadow-overlay",
+          DIALOG_MOTION,
           materialClass(material, "surface-solid"),
           classNames?.root,
           className,

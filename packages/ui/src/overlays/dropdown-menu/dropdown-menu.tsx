@@ -5,6 +5,7 @@ import { Check, ChevronRight } from "../../icons/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { ITEM_MOTION, POPPER_MOTION } from "../../utils/overlay-motion.js";
 
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
@@ -29,8 +30,8 @@ export const dropdownMenuSurfaceClasses = "rounded-popover surface-overlay p-1.5
 export const dropdownMenuItemClasses =
   "flex w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2";
 
-const surface = `${placement} ${dropdownMenuSurfaceClasses}`;
-const itemBase = dropdownMenuItemClasses;
+const surface = `${placement} ${POPPER_MOTION} ${dropdownMenuSurfaceClasses}`;
+const itemBase = `${dropdownMenuItemClasses} ${ITEM_MOTION}`;
 
 export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
@@ -67,7 +68,7 @@ export function DropdownMenuContent({
         collisionPadding={collisionPadding}
         className={
           bare
-            ? cn(placement, className)
+            ? cn(placement, POPPER_MOTION, className)
             : cn(surface, materialClass(material, "surface-solid"), className)
         }
         {...props}

@@ -72,7 +72,14 @@ export function RowActions({ label, primary, items, className, ...props }: RowAc
       {items.length > 0 ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <IconButton size="sm" variant="secondary" label={label}>
+            <IconButton
+              size="sm"
+              variant="secondary"
+              label={label}
+              // Reveal: on a pointer that hovers, the glyph is muted until its row is hovered or
+              // holds focus; it never hides, so touch and keyboard users always see it.
+              className="transition-[scale,color] duration-(--motion-duration) ease-(--motion-ease) motion-reduce:transition-none [@media(hover:hover)]:text-ink-3 [@media(hover:hover)]:group-focus-within/row:text-ink [@media(hover:hover)]:group-hover/row:text-ink data-[state=open]:text-ink"
+            >
               <EllipsisVertical aria-hidden="true" />
             </IconButton>
           </DropdownMenuTrigger>

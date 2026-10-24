@@ -17,6 +17,7 @@ import {
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { POPPER_MOTION } from "../../utils/overlay-motion.js";
 import { Slot } from "../../utils/slot.js";
 
 interface HoverCardContextValue {
@@ -187,6 +188,7 @@ export function HoverCardContent({
         }}
         className={cn(
           "z-85 w-72 max-w-(--ui-popper-available-width) rounded-popover border-card surface-overlay p-card text-body text-ink shadow-overlay",
+          POPPER_MOTION,
           materialClass(material, "surface-solid"),
           className,
         )}
