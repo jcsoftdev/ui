@@ -51,6 +51,7 @@ export default defineConfig({
             { slug: "docs/blocks" },
             { slug: "docs/auth" },
             { slug: "docs/data-and-dashboards" },
+            { slug: "docs/motion" },
           ],
         },
         {

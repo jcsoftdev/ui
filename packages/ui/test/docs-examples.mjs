@@ -49,6 +49,10 @@ const data = check("docs/data.tsx", "../../../site/src/content/docs/docs/data-an
   min: 4,
   required: ["dashboard", "sortable", "pagination", "filter-bar"],
 });
+const motion = check("docs/motion.tsx", "../../../site/src/content/docs/docs/motion.md", {
+  min: 6,
+  required: ["reveal", "stagger", "cross-fade", "presence", "count-up", "highlight-row"],
+});
 console.log(
-  `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block and ${auth} sign-in and ${data} data blocks match the type-checked source`,
+  `docs-examples: ${primitives} primitives, ${glass} glass, ${blocks} building-block, ${auth} sign-in, ${data} data and ${motion} motion blocks match the type-checked source`,
 );

@@ -31,6 +31,7 @@ Set these on `<html>` (or any element to restyle only its subtree); no rebuild i
 - Component groups: `@jcsoftdev/ui/atoms`, `forms`, `overlays`, `navigation`, `containers`, `states`, `shell`, `palette`, `calendar`, `charts`, `dashboards`, `utils`, each also per component (`@jcsoftdev/ui/atoms/button`).
 - `@jcsoftdev/ui/ai`: chat, prompt input, markdown and code block building blocks for AI interfaces.
 - `@jcsoftdev/ui/rich-text`: rich text editor with a sanitizer.
+- `@jcsoftdev/ui/motion`: `Reveal`, `Stagger`, `CrossFade`, `Presence`, `CountUp` and `useHighlightRow`, on the `--motion-*` tokens and reduced-motion aware.
 - `@jcsoftdev/ui/i18n`: `UiStringsProvider`, `useUiStrings` and the `en`/`es` string presets.
 - `@jcsoftdev/ui/xlsx`: dependency-free `.xlsx` writer.
 - `@jcsoftdev/ui/brand`: logo mark and logo forge utilities.

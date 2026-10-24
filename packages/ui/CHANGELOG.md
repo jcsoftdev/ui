@@ -86,6 +86,29 @@ Additive and source compatible, except for the barrel growth noted below. Guide:
   documented but missing from their barrels. The `shell` entry now includes `BottomNav` and its
   `Drawer`, so it grows by about 6 kB gzip for apps that import the whole barrel.
 
+### Motion (G8)
+
+New `@jcsoftdev/ui/motion` entry, additive, no new dependency. Guide: `/docs/motion/`.
+
+#### Added
+
+- **`Reveal`** (`delay`, `inView`, `asChild`): fades content in with a 6px rise on a client mount,
+  or when it first scrolls into view.
+- **`Stagger`** (`delay`, `inView`, `maxStagger`, `as`): children enter one after another, a quarter
+  duration apart, with the whole sequence capped by `maxStagger` (default 1.5 durations).
+- **`CrossFade`** (`contentKey`) and **`Presence`** (`present`): keyed swap for list-detail panes and
+  tab panels. The old content fades out on top, out of the layout, `aria-hidden` and `inert`; focus
+  inside it moves to the new content.
+- **`CountUp`** (`value`, `formatter`, `from`): counts to its value with any `Intl.NumberFormat`-style
+  formatter (default: the UI strings locale); reads as the final value to assistive tech and
+  reserves the final width. Works as a `Kpi` `value`.
+- **`useHighlightRow(keys?)`** returning `{ highlight, rowProps }`, plus **`MotionStyles`**: an
+  accent pulse on inserted rows (automatic from `keys`) and updated rows (`highlight(key)`).
+- Every duration and easing comes from `--motion-duration` and `--motion-ease`; enter and leave
+  animate only `opacity` and `transform` (the pulse fades a background colour). Server HTML and
+  hydration never animate, reduced motion reaches each end state at once, and hidden states use
+  `opacity` only, so assistive tech keeps reading the content.
+
 ## 0.5.0 (2026-10-23)
 
 ### Busy buttons keep focus (behavior to check when upgrading)
