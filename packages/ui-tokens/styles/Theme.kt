@@ -217,6 +217,7 @@ object UiSizes {
     val topHeight = 58.dp
     val controlHeight = 36.dp
     val controlHeightSm = 30.dp
+    val controlHeightMd = 38.dp
     val controlHeightLg = 52.dp
     val inputHeight = 38.dp
     val agendaHour = 48.dp

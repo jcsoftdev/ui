@@ -93,6 +93,7 @@
   --spacing-top-height: var(--top-height);
   --spacing-control-height: var(--control-height);
   --spacing-control-height-sm: var(--control-height-sm);
+  --spacing-control-height-md: var(--control-height-md);
   --spacing-control-height-lg: var(--control-height-lg);
   --spacing-input-height: var(--input-height);
   --spacing-agenda-hour: var(--agenda-hour);
@@ -193,6 +194,7 @@
   --ease-style: var(--motion-ease);
   --spacing-control: var(--control-height);
   --spacing-control-sm: var(--control-height-sm);
+  --spacing-control-md: var(--control-height-md);
   --spacing-control-lg: var(--control-height-lg);
   --spacing-input: var(--input-height);
   --spacing-control-x: var(--pad-control-x);

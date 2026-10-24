@@ -100,6 +100,15 @@ test("density scales heights and paddings through a unitless factor", () => {
   assert.equal(rule(":root {").get("density"), "1");
 });
 
+test("the md control height matches the field height, so a button lines up with an input", () => {
+  assert.equal(rule(":root {").get("control-height-md"), rule(":root {").get("input-height"));
+  assert.equal(
+    rule(':root[data-density="compact"]').get("control-height-md"),
+    "calc(38px * var(--density))",
+  );
+  assert.match(themeCss, /--spacing-control-md: var\(--control-height-md\);/);
+});
+
 test("the touch density gives every control a 44px hit area and inputs 48px", () => {
   const touch = rule(':root[data-density="touch"]');
   assert.equal(touch.get("density"), "1.125");
@@ -108,6 +117,7 @@ test("the touch density gives every control a 44px hit area and inputs 48px", ()
   assert.equal(touch.get("touch-target"), "44px");
   assert.equal(touch.get("control-height-lg"), "52px");
   assert.equal(touch.get("input-height"), "48px");
+  assert.equal(touch.get("control-height-md"), touch.get("input-height"));
   assert.equal(touch.get("pad-control-x"), "calc(16px * var(--density))");
   assert.deepEqual([...touch.keys()], [...rule(':root[data-density="compact"]').keys()]);
   assert.ok(css.includes('[data-density="touch"] {'), "matches a nested element too");
