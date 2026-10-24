@@ -31,7 +31,22 @@ import {
   TableSelectCell,
   Timeline,
 } from "@jcsoftdev/ui/containers";
-import { ChipGroup, Combobox, DatePicker, DateTimePicker, Field, SelectMenu } from "@jcsoftdev/ui/forms";
+import {
+  ChipGroup,
+  Combobox,
+  DatePicker,
+  DateTimePicker,
+  Field,
+  Fieldset,
+  Form,
+  FormFooter,
+  FormGrid,
+  FormGridItem,
+  FormSection,
+  Input,
+  SelectMenu,
+  Textarea,
+} from "@jcsoftdev/ui/forms";
 import { Stepper, TabsNav, TabsNavLink, Wizard } from "@jcsoftdev/ui/navigation";
 import {
   AlertDialog,
@@ -137,6 +152,38 @@ export function Forms() {
       />
       <DateCalendar value="2026-10-17" onSelect={(date) => void date} />
     </>
+  );
+}
+// #endregion
+
+// #region form-layout
+export function CreateStudent({ saving, onCancel }: { saving: boolean; onCancel: () => void }) {
+  return (
+    <Form>
+      <FormSection title="Student" description="Shown on reports and certificates.">
+        <FormGrid columns={2}>
+          <Field label="First name" required>
+            <Input />
+          </Field>
+          <Field label="Last name" required>
+            <Input />
+          </Field>
+          <FormGridItem span="full">
+            <Field label="Notes" optional>
+              <Textarea />
+            </Field>
+          </FormGridItem>
+        </FormGrid>
+      </FormSection>
+      <FormSection title="Guardian">
+        <Fieldset legend="Primary contact" description="Receives every notice.">
+          <Field label="Email" required>
+            <Input type="email" />
+          </Field>
+        </Fieldset>
+      </FormSection>
+      <FormFooter dirty busy={saving} onCancel={onCancel} submitLabel="Create student" />
+    </Form>
   );
 }
 // #endregion

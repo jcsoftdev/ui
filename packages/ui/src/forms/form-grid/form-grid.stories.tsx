@@ -4,7 +4,7 @@ import { Input } from "../input/index.js";
 import { Select } from "../select/index.js";
 import { Textarea } from "../textarea/index.js";
 import { TimeInput } from "../time-input/index.js";
-import { FormGrid } from "./form-grid.js";
+import { FormGrid, FormGridItem } from "./form-grid.js";
 
 const meta = {
   title: "Forms/FormGrid",
@@ -78,4 +78,53 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const ThreeColumns: Story = {
+  decorators: [
+    (Story) => (
+      <div className="max-w-4xl">
+        <Story />
+      </div>
+    ),
+  ],
+  render: (args) => (
+    <FormGrid {...args} columns={3}>
+      <Field label="Nombre">
+        <Input />
+      </Field>
+      <Field label="Apellido">
+        <Input />
+      </Field>
+      <Field label="Teléfono">
+        <Input type="tel" />
+      </Field>
+      <FormGridItem span={2}>
+        <Field label="Dirección">
+          <Input />
+        </Field>
+      </FormGridItem>
+      <Field label="Distrito">
+        <Input />
+      </Field>
+      <FormGridItem span="full">
+        <Field label="Notas">
+          <Textarea />
+        </Field>
+      </FormGridItem>
+    </FormGrid>
+  ),
+};
+
+export const SingleColumn: Story = {
+  render: (args) => (
+    <FormGrid {...args} columns={1}>
+      <Field label="Nombre">
+        <Input />
+      </Field>
+      <Field label="Apellido">
+        <Input />
+      </Field>
+    </FormGrid>
+  ),
 };

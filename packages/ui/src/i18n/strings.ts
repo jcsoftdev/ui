@@ -3,6 +3,8 @@ export interface UiStrings {
   close: string;
   loading: string;
   optional: string;
+  save: string;
+  unsavedChanges: string;
   cancel: string;
   confirm: string;
   processing: string;
@@ -98,6 +100,8 @@ export const uiStrings = {
     close: "Close",
     loading: "Loading",
     optional: "optional",
+    save: "Save",
+    unsavedChanges: "Unsaved changes",
     cancel: "Cancel",
     confirm: "Confirm",
     processing: "Processing…",
@@ -162,6 +166,8 @@ export const uiStrings = {
     close: "Cerrar",
     loading: "Cargando",
     optional: "opcional",
+    save: "Guardar",
+    unsavedChanges: "Cambios sin guardar",
     cancel: "Cancelar",
     confirm: "Confirmar",
     processing: "Procesando…",

@@ -21,6 +21,8 @@ const meta = {
     hint: { control: "text" },
     error: { control: "text" },
     optional: { control: "boolean" },
+    required: { control: "boolean" },
+    disabled: { control: "boolean" },
     id: { control: "text" },
     children: { control: false },
   },
@@ -138,4 +140,17 @@ export const ExplicitControlId: Story = {
     await expect(control).toHaveAttribute("id", "qty-control");
     await expect(control).toHaveAccessibleDescription("Entre 1 y 10");
   },
+};
+
+export const Required: Story = {
+  args: { label: "Nombre del cliente", required: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const control = await canvas.findByRole("textbox", { name: /Nombre del cliente/ });
+    await expect(control).toHaveAttribute("aria-required", "true");
+  },
+};
+
+export const Disabled: Story = {
+  args: { label: "Código", hint: "Lo asigna el sistema", disabled: true },
 };
