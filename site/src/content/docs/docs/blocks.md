@@ -94,8 +94,8 @@ export function afterEachTest() {
 | `SelectMenu`     | Custom listbox select: `options` (option or `{ label, options }` group), `value`/`defaultValue`/`onValueChange`, `placeholder`, `name` (hidden input), `required`, `invalid`, `size`. Use the native `Select` when the system picker is wanted. |
 | `Combobox`       | `options`, `value`/`onValueChange(value, option)`, `onSearchChange` (debounce is yours), `filter` (`true`, `false` for server-side, or a function), `maxVisible` (50), `loading`, `emptyText`, `clearable`, `valueLabel`, `name`.               |
 | `DateCalendar`   | Standalone date grid: `value`, `onSelect`, `min`, `max`, `isDateDisabled`, `locale`, `weekStartsOn`.                                                                                                                                            |
-| `DatePicker`     | Typed masked input plus calendar popover. ISO `YYYY-MM-DD` values, `min`, `max`, `isDateDisabled`, `clearable`, `name`, `invalid`.                                                                                                              |
-| `DateTimePicker` | Date plus time, value `YYYY-MM-DDTHH:mm` (no zone, `""` while incomplete), `step` in minutes.                                                                                                                                                   |
+| `DatePicker`     | Typed masked input plus calendar popover. ISO `YYYY-MM-DD` values, `min`, `max`, `isDateDisabled`, `clearable`, `name`, `invalid`, `size`.                                                                                                      |
+| `DateTimePicker` | Date plus time, value `YYYY-MM-DDTHH:mm` (no zone, `""` while incomplete), `step` in minutes, `size` for both halves, `classNames` down to the inner date parts.                                                                                |
 | `ChipGroup`      | Toggle chips: `options` (`value`, `label`, `count`, `icon`, `disabled`), `type` (`multiple` default, or `single` with `allowDeselect`), `name`.                                                                                                 |
 
 ```tsx region=forms
@@ -139,6 +139,31 @@ export function Forms() {
 ```
 
 Accessibility: `SelectMenu` and `Combobox` follow the WAI-ARIA combobox and listbox patterns (focus stays on the trigger or input, `aria-activedescendant`, arrows, Home/End, typeahead, Escape). Disabled options are skipped and options are 44px tall under touch density. Inside `Field` the listbox is named from the label. The calendar grid uses a roving tabindex with arrows, Home/End, PageUp/PageDown and Shift+Page for years; out-of-range dates stay focusable with `aria-disabled`. Weeks start on Monday for es-PE and en-GB, and on Sunday for US-style locales; override with `weekStartsOn`. `ChipGroup` is a named group of `aria-pressed` toggle buttons with roving focus; a check glyph marks selected chips.
+
+### Control sizes
+
+Every control has the same height at the same `size`: 30px at `sm` (`--control-height-sm`) and 38px
+at `md` (`--control-height-md`, the default). That holds for `Button`, `IconButton`, `Input`, `Select`,
+`SelectMenu`, `Combobox`, `DatePicker`, `DateTimePicker` (both halves) and `TimeInput`, so a toolbar or
+a table row lines up without height overrides. Under `data-density="touch"` both grow to the touch
+sizes.
+
+```tsx region=control-sizes
+export function Toolbar() {
+  return (
+    <div className="flex items-center gap-2">
+      <Input size="sm" aria-label="Search" placeholder="Search" />
+      <Select size="sm" aria-label="Status">
+        <option>Open</option>
+        <option>Closed</option>
+      </Select>
+      <DatePicker size="sm" aria-label="From" />
+      <TimeInput size="sm" aria-label="At" />
+      <Button size="sm">Apply</Button>
+    </div>
+  );
+}
+```
 
 ### Form layout
 

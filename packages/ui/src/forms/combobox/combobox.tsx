@@ -271,7 +271,7 @@ export function Combobox({
             onKeyDown={handleKeyDown}
             className={cn(
               "w-full min-w-0 rounded-input border-control bg-surface-control pl-3 text-control text-ink placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
-              size === "sm" ? "h-control-sm" : "h-input min-h-(--touch-target)",
+              size === "sm" ? "h-control-sm" : "h-control-md min-h-(--touch-target)",
               hasClear ? "pr-8" : "pr-3",
               classNames?.input,
             )}

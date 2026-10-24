@@ -39,7 +39,16 @@ const glass = check("docs/glass.tsx", "../../../site/src/content/docs/docs/glass
 });
 const blocks = check("docs/blocks.tsx", "../../../site/src/content/docs/docs/blocks.md", {
   min: 6,
-  required: ["atoms", "overlays", "testing", "forms", "wizard", "containers", "states"],
+  required: [
+    "atoms",
+    "overlays",
+    "testing",
+    "forms",
+    "control-sizes",
+    "wizard",
+    "containers",
+    "states",
+  ],
 });
 const auth = check("docs/auth.tsx", "../../../site/src/content/docs/docs/auth.md", {
   min: 3,

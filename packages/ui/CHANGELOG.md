@@ -12,12 +12,27 @@ patch in. Additive except for the visual changes listed under "Changed".
 - **`--control-height-md` token** (`@jcsoftdev/ui-tokens`, Tailwind `h-control-md` / `w-control-md`):
   38px, scaled by `data-density` like the other control heights and 48px under `touch`, the same as
   `--input-height`. With `--control-height-sm` (30px) it is the one height of each control size.
+- **`size` on every field** (`"sm"` 30px, `"md"` 38px, default `md`): new on `Select`, `DatePicker`,
+  `TimeInput` and `DateTimePicker` (which passes it to both halves); `Input` gains `sm` (the same as
+  `xs`, which stays). `Button`, `IconButton`, `Input`, `Select`, `SelectMenu`, `NativeSelect`,
+  `Combobox`, `DatePicker`, `DateTimePicker` and `TimeInput` now render the same token per size
+  (`h-control-sm`, `h-control-md`), so they line up in a toolbar or a table row. Story:
+  `Forms/Control sizes` measures them.
+- **`DateTimePicker` `classNames` reach the inner parts**: new parts `dateInput`, `clear`, `trigger`,
+  `content`, `calendar` (the inner `DatePicker`) and `timeInput`.
 
 #### Changed
 
 - **`Button` and `IconButton` `size="md"` (the default) are 38px instead of 36px** (`h-control-md`,
   `w-control-md`), so a default button lines up with a default field. `sm` (30px) and `lg` (52px) are
   unchanged. `--control-height` (36px) still exists for code that uses it directly.
+- **Fields at `md` use `h-control-md` instead of `h-input`.** Same 38px in every density, so nothing
+  moves; a `className` that overrode `h-input` on these controls still wins through `cn`.
+- **`DatePicker` clear and calendar buttons have a 30px hit area** (`min-h-control-sm`); the glyphs
+  stay where they were.
+- **Type change: `Select` and `TimeInput` no longer accept the native numeric `size` attribute**; `size`
+  is now the control size. A native `<select size={n}>` list box was never styled by `Select` (it
+  draws a single-line trigger with a chevron); use a plain `<select>` for that.
 
 ### Page structure (G1, G4, G9, G10)
 

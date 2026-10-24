@@ -26,3 +26,42 @@ test("Button and IconButton take the shared height at sm and md", () => {
   assert.match(html.iconButton("sm"), /\bw-control-sm\b/);
   assert.deepEqual(heights(html.button("md")), [["h-control-md"]]);
 });
+
+test("every field takes the same height token as the button of its size", () => {
+  for (const control of ["input", "select", "combobox", "datePicker", "timeInput"]) {
+    for (const size of ["sm", "md"]) {
+      const found = heights(html[control](size)).flat();
+      assert.deepEqual(found, [`h-control-${size}`], `${control} at ${size}`);
+    }
+    assert.deepEqual(heights(html[control]()).flat(), ["h-control-md"], `${control} default`);
+  }
+});
+
+test("DateTimePicker passes its size to both halves", () => {
+  for (const size of ["sm", "md"]) {
+    assert.deepEqual(heights(html.dateTimePicker(size)).flat(), [
+      `h-control-${size}`,
+      `h-control-${size}`,
+    ]);
+  }
+});
+
+test("DateTimePicker forwards per-part classes to its inner DatePicker and time field", () => {
+  const markup = html.dateTimePicker("md", {
+    dateInput: "x-date-input",
+    clear: "x-clear",
+    trigger: "x-trigger",
+    timeInput: "x-time-input",
+  });
+  assert.match(markup, /<input[^>]*maxLength="10"[^>]*class="[^"]*x-date-input/);
+  assert.match(markup, /<button[^>]*class="[^"]*x-clear/);
+  assert.match(markup, /<button[^>]*class="[^"]*x-trigger/);
+  assert.match(markup, /class="[^"]*x-time-input/);
+});
+
+test("the date picker's clear and calendar buttons have a 30px hit area", () => {
+  const markup = html.datePicker("md");
+  const buttons = [...markup.matchAll(/<button[^>]*class="([^"]*)"/g)].map((m) => m[1]);
+  assert.equal(buttons.length, 2, "clear and calendar");
+  for (const classes of buttons) assert.match(classes, /\bmin-h-control-sm\b/);
+});

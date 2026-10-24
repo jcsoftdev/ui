@@ -49,6 +49,8 @@ export interface DatePickerProps
   locale?: string;
   /** First day of the week in the calendar, 0 (Sunday) to 6. Defaults from the locale (es-PE: Monday). */
   weekStartsOn?: WeekStart;
+  /** `sm` is 30px and `md` (default) 38px, the heights of `Button` and `Input` of the same size. */
+  size?: "sm" | "md";
   /** Shows a button that clears the date. Default `true`. */
   clearable?: boolean;
   clearLabel?: string;
@@ -63,8 +65,9 @@ export interface DatePickerProps
   classNames?: ClassNames<DatePickerPart>;
 }
 
+// The clear and calendar buttons wrap a 14-16px glyph; `min-h-control-sm` gives each a 30px hit area.
 const ICON_BUTTON =
-  "flex w-8 items-center justify-center rounded-input text-ink-3 outline-none hover:text-ink focus-visible:focus-ring disabled:pointer-events-none disabled:opacity-50";
+  "flex min-h-control-sm w-8 items-center justify-center rounded-input text-ink-3 outline-none hover:text-ink focus-visible:focus-ring disabled:pointer-events-none disabled:opacity-50";
 
 /**
  * Typed date field plus a calendar popover. The value is an ISO "YYYY-MM-DD" string end to end,
@@ -80,6 +83,7 @@ export function DatePicker({
   isDateDisabled,
   locale: localeProp,
   weekStartsOn,
+  size = "md",
   clearable = true,
   clearLabel,
   name,
@@ -167,7 +171,8 @@ export function DatePicker({
             }}
             onKeyDown={handleKeyDown}
             className={cn(
-              "h-input min-h-(--touch-target) w-full min-w-0 rounded-input border-control bg-surface-control pl-3 text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
+              size === "sm" ? "h-control-sm" : "h-control-md",
+              "min-h-(--touch-target) w-full min-w-0 rounded-input border-control bg-surface-control pl-3 text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
               hasClear ? "pr-16" : "pr-9",
               classNames?.input,
               className,
