@@ -176,6 +176,56 @@ export function PagedFooter() {
 }
 ```
 
+### Page numbers, client-side paging and cursors
+
+`variant="pages"` swaps the icon buttons for Previous, page numbers (with gaps on long lists) and
+Next, and reads the range as "Showing 1–25 of 134". It renders nothing while every row fits on one
+page (`hideOnSinglePage`) and shows the page size picker only when you pass `pageSizeOptions`.
+`usePagination(rows, resetKey, pageSize)` slices a client-side list: the page is clamped when the
+list shrinks and returns to 1 whenever `resetKey` (the search, a filter) changes.
+
+```tsx region=pagination-pages
+export function StudentList({ students, query }: { students: Row[]; query: string }) {
+  const pager = usePagination(students, query, 25);
+  return (
+    <>
+      <ul>
+        {pager.items.map((student) => (
+          <li key={student.id}>{student.name}</li>
+        ))}
+      </ul>
+      <Pagination
+        variant="pages"
+        total={pager.total}
+        pageSize={pager.pageSize}
+        page={pager.page}
+        onPageChange={pager.setPage}
+      />
+    </>
+  );
+}
+```
+
+`CursorPagination` is for server-side cursor paging, where the total is unknown: it shows the range
+on screen ("Showing 26–50") and Previous / Next, and renders nothing on a first page without a next
+cursor. Keep the cursor trail yourself; it only reports the clicks. Strings come from
+`UiStringsProvider` (Spanish: "Mostrando 26–50", "Anterior", "Siguiente").
+
+```tsx region=cursor-pagination
+export function ServerList() {
+  const [page, setPage] = useState(1);
+  return (
+    <CursorPagination
+      page={page}
+      count={rows.length}
+      hasNext={hasNextCursor}
+      onPrevious={() => setPage(page - 1)}
+      onNext={() => setPage(page + 1)}
+    />
+  );
+}
+```
+
 ## FilterBar
 
 Search, single-choice quick chips (`quickFilters`), a "More filters" popover (its `children`), the applied filters as removable chips (`activeFilters`) with "Clear all" (`onClearAll`) and a polite result count. Under 40 rem of its own container width the quick chips and the extra filters fold into one "Filters" button and only the search stays inline. The bar keeps no filter state besides the search text: you own the filters and apply them to your rows.

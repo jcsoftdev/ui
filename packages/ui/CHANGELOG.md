@@ -37,6 +37,21 @@ patch in. Additive except for the visual changes listed under "Changed".
   events from reaching the row (portaled menu included). Exported types `RowActionItem`,
   `RowActionsProps`. It brings the menu primitive into the `containers` barrel, which grows by about
   4 kB gzip for apps that import the whole barrel; `@jcsoftdev/ui/containers/table` does not include it.
+- **`Pagination` `variant="pages"`**: the range as "Showing 1–25 of 134" ("Mostrando 1–25 de 134"),
+  then Previous, page number buttons (`aria-current="page"` on the current one, gaps on long lists)
+  and Next, all 30px `Button`s. It renders nothing on a single page (`hideOnSinglePage`, default
+  `true` for this variant and `false` for the default one) and shows the page size picker only when
+  `pageSizeOptions` is passed. New `labels` keys `showing`, `previousLabel`, `nextLabel`,
+  `pageNumber`. The default variant is unchanged.
+- **`CursorPagination`**, new in `@jcsoftdev/ui/containers`: server-side cursor paging with an unknown
+  total. `page`, `count` (rows on this page), `pageSize` (default 25), `hasNext`, `onPrevious`,
+  `onNext`, `labels`. Shows "Showing 26–50" and Previous / Next; renders nothing on a first page
+  without a next cursor.
+- **`usePagination(rows, resetKey?, pageSize = 25)`**, new in `@jcsoftdev/ui/containers`: client-side
+  paging returning `{ page, pageCount, total, pageSize, items, setPage }`; the page is clamped when
+  the list shrinks and returns to 1 when `resetKey` changes. Type `PaginationState`.
+- **New UI strings** (en, es): `showingRange`, `showingRangeOpen`, `previous`, `pageNumber`. They grow
+  every entry that carries the string table by a few dozen bytes gzip.
 - **`ChipGroup` `size`**: `"sm"` (default, 30px minimum) or `"md"` (38px minimum).
 
 #### Changed

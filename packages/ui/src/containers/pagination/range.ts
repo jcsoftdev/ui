@@ -30,3 +30,39 @@ export function formatPageRange(
     .replace("{last}", values.last)
     .replace("{total}", values.total);
 }
+
+/** A page number button, or a gap between two runs of them. */
+export type PageItem = number | "gap";
+
+/**
+ * The page buttons to show: the first and last page, the current one with `siblings` on each side,
+ * and a `"gap"` where pages are left out. A gap never hides a single page (that page shows instead),
+ * so the list keeps the same length while the current page moves through the middle.
+ */
+export function pageItems(page: number, pages: number, siblings = 1): PageItem[] {
+  const total = Math.max(1, Math.trunc(pages));
+  const current = clampPage(page, total);
+  const slots = siblings * 2 + 5;
+  if (total <= slots) return Array.from({ length: total }, (_, i) => i + 1);
+  const start = Math.max(Math.min(current - siblings, total - siblings * 2 - 2), 3);
+  const end = Math.min(Math.max(current + siblings, siblings * 2 + 3), total - 2);
+  const middle = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  return [
+    1,
+    start > 3 ? ("gap" as const) : 2,
+    ...middle,
+    end < total - 2 ? ("gap" as const) : total - 1,
+    total,
+  ];
+}
+
+/** Fills `{first}` and `{last}` (and `{total}` when given) in a range template. */
+export function formatRange(
+  template: string,
+  values: { first: string; last: string; total?: string },
+): string {
+  return template
+    .replace("{first}", values.first)
+    .replace("{last}", values.last)
+    .replace("{total}", values.total ?? "");
+}

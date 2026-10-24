@@ -59,7 +59,7 @@
       "id": "ui/auth",
       "kind": "js",
       "file": "packages/ui/dist/auth/index.js",
-      "maxGzip": 24650
+      "maxGzip": 24900
     },
     {
       "id": "ui/auth/looks",
@@ -95,7 +95,7 @@
       "id": "ui/auth/statement",
       "kind": "js",
       "file": "packages/ui/dist/auth/statement/index.js",
-      "maxGzip": 3650
+      "maxGzip": 3720
     },
     {
       "id": "ui/atoms",
@@ -137,13 +137,13 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 2050
+      "maxGzip": 2150
     },
     {
       "id": "ui/motion",
       "kind": "js",
       "file": "packages/ui/dist/motion/index.js",
-      "maxGzip": 5600
+      "maxGzip": 5700
     },
     {
       "id": "ui/navigation",

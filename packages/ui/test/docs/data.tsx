@@ -3,6 +3,7 @@
 import {
   CardGrid,
   ChartCard,
+  CursorPagination,
   DashboardPage,
   FilterBar,
   Kpi,
@@ -22,6 +23,7 @@ import {
   TableLoading,
   TableRow,
   type TableSort,
+  usePagination,
 } from "@jcsoftdev/ui/containers";
 import { Button } from "@jcsoftdev/ui/atoms";
 import { BarChart } from "@jcsoftdev/ui/charts";
@@ -35,6 +37,7 @@ interface Row {
 declare const rows: Row[];
 declare const total: number;
 declare const loading: boolean;
+declare const hasNextCursor: boolean;
 declare function PaymentsTable(): ReactElement;
 interface Person {
   id: string;
@@ -176,6 +179,43 @@ export function PagedFooter() {
       onPageChange={setPage}
       pageSize={pageSize}
       onPageSizeChange={setPageSize}
+    />
+  );
+}
+// #endregion
+
+// #region pagination-pages
+export function StudentList({ students, query }: { students: Row[]; query: string }) {
+  const pager = usePagination(students, query, 25);
+  return (
+    <>
+      <ul>
+        {pager.items.map((student) => (
+          <li key={student.id}>{student.name}</li>
+        ))}
+      </ul>
+      <Pagination
+        variant="pages"
+        total={pager.total}
+        pageSize={pager.pageSize}
+        page={pager.page}
+        onPageChange={pager.setPage}
+      />
+    </>
+  );
+}
+// #endregion
+
+// #region cursor-pagination
+export function ServerList() {
+  const [page, setPage] = useState(1);
+  return (
+    <CursorPagination
+      page={page}
+      count={rows.length}
+      hasNext={hasNextCursor}
+      onPrevious={() => setPage(page - 1)}
+      onNext={() => setPage(page + 1)}
     />
   );
 }
