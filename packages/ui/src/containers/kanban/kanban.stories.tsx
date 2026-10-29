@@ -143,3 +143,22 @@ export const GlassCompact: Story = {
     ),
   ],
 };
+
+/** A wide lane lays its cards out in a grid; a narrow one stays a column. */
+export const CardGrid: StoryObj<typeof Kanban> = {
+  render: () => (
+    <div className="w-[56rem] max-w-full">
+      <Kanban
+        cardGrid
+        defaultColumns={[
+          {
+            id: "new",
+            title: "Nuevos",
+            cards: Array.from({ length: 7 }, (_, i) => ({ id: `n${i}`, title: `Pedido ${i + 1}` })),
+          },
+          { id: "doing", title: "En preparación", cards: [{ id: "d1", title: "Pedido 8" }] },
+        ]}
+      />
+    </div>
+  ),
+};

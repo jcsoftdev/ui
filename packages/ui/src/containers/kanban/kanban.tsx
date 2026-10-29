@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
   type PointerEvent as ReactPointerEvent,
@@ -17,6 +18,7 @@ import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
   dropIndex,
+  dropIndexGrid,
   type KanbanCardData,
   type KanbanColumnData,
   type KanbanKey,
@@ -60,6 +62,14 @@ export interface KanbanProps {
   cardActions?: (card: KanbanCardData) => ReactNode;
   /** Accessible name of the grip button when `cardActions` is set; defaults to "Mover tarjeta: <title>". */
   gripLabel?: (card: KanbanCardData) => string;
+  /**
+   * Lays the cards of a lane out as a responsive grid once the lane is 30rem (480 px) wide,
+   * with columns of at least `cardGridMinWidth`; a narrower lane stays a single column. Dropping with the pointer
+   * follows reading order; arrow keys still move a held card one place up or down the lane.
+   */
+  cardGrid?: boolean;
+  /** Minimum card width (px) of the grid lane. Defaults to 224. */
+  cardGridMinWidth?: number;
   emptyLabel?: string;
   "aria-label"?: string;
   className?: string;
@@ -115,6 +125,8 @@ export function Kanban({
   renderCard,
   cardActions,
   gripLabel = (card) => `Mover tarjeta: ${card.title}`,
+  cardGrid = false,
+  cardGridMinWidth = 224,
   emptyLabel = "Sin tarjetas",
   className,
   classNames,
@@ -223,12 +235,17 @@ export function Kanban({
       const column = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-column-id]");
       const columnId = column?.dataset.columnId;
       if (!column || !columnId) return null;
-      const mids = Array.from(column.querySelectorAll<HTMLElement>("[data-card-id]"))
-        .filter((el) => el.dataset.cardId !== card.id)
-        .map((el) => {
-          const r = el.getBoundingClientRect();
-          return r.top + r.height / 2;
-        });
+      const others = Array.from(column.querySelectorAll<HTMLElement>("[data-card-id]")).filter(
+        (el) => el.dataset.cardId !== card.id,
+      );
+      if (column.hasAttribute("data-card-grid")) {
+        const rects = others.map((el) => el.getBoundingClientRect());
+        return { columnId, index: dropIndexGrid(rects, x, y) };
+      }
+      const mids = others.map((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top + r.height / 2;
+      });
       return { columnId, index: dropIndex(mids, y) };
     };
 
@@ -420,9 +437,10 @@ export function Kanban({
             <section
               key={column.id}
               data-column-id={column.id}
+              data-card-grid={cardGrid ? "" : undefined}
               aria-label={column.title}
               className={cn(
-                "flex w-[min(18rem,85cqw)] shrink-0 snap-start flex-col gap-density-sm rounded-card bg-surface-sunken p-density-sm @4xl/kanban:w-auto @4xl/kanban:min-w-56 @4xl/kanban:flex-1",
+                "@container/lane flex w-[min(18rem,85cqw)] shrink-0 snap-start flex-col gap-density-sm rounded-card bg-surface-sunken p-density-sm @4xl/kanban:w-auto @4xl/kanban:min-w-56 @4xl/kanban:flex-1",
                 classNames?.column,
               )}
             >
@@ -455,8 +473,15 @@ export function Kanban({
                 </Chip>
               </header>
               <ul
+                style={
+                  cardGrid
+                    ? ({ "--lane-card-min": `${cardGridMinWidth}px` } as CSSProperties)
+                    : undefined
+                }
                 className={cn(
                   "m-0 flex min-h-16 list-none flex-col gap-density-sm p-0",
+                  cardGrid &&
+                    "@min-[30rem]/lane:grid @min-[30rem]/lane:grid-cols-[repeat(auto-fill,minmax(var(--lane-card-min),1fr))] @min-[30rem]/lane:items-start",
                   classNames?.cards,
                 )}
               >
