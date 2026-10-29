@@ -1179,6 +1179,11 @@
    "grafito": "chart-cat-6"
   }
  },
+ "containers": {
+  "page-m": "720px",
+  "page-w": "1280px",
+  "page-xw": "1600px"
+ },
  "styles": {
   "default": "soft",
   "tokens": [

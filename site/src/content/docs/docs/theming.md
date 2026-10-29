@@ -106,6 +106,16 @@ Add named tones beyond the built-in ones with an optional `tonePalettes` section
 
 The build emits `--tone-mint`, `--tone-mint-soft` and `--tone-mint-ink` (plus `--color-tone-mint*` in `theme.css`). Pass the name as `tone="mint"` to `Chip`, `StatusDot`, `Kpi` and `Avatar`.
 
+### Container breakpoints
+
+The optional `containers` section emits literal `--container-<name>` widths in `theme.css`, which Tailwind turns into container-query variants. `tokens/default.json` ships the page breakpoints the layout containers use: `page-m` (720 px), `page-w` (1280 px) and `page-xw` (1600 px).
+
+```json
+{ "containers": { "page-m": "720px", "page-w": "1280px", "page-xw": "1600px" } }
+```
+
+Inside a `@container/page` ancestor, `@min-page-w/page:grid-cols-3` and `@max-page-m/page:hidden` then work like the built-in `@md` sizes. Values must be literal `px` or `rem` widths, because container queries cannot read `var()`. `Cols variant="thirds"`, `ListDetail` and `ContextRail` use the same cuts, written as arbitrary values so they also work with a theme built before this section existed. `Cols` keeps its original 940 / 1080 / 1500 cuts for the other variants.
+
 ## Runtime switching with persistence
 
 ```ts

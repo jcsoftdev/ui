@@ -28,7 +28,7 @@ const meta = {
     ),
   },
   argTypes: {
-    variant: { control: "inline-radio", options: [undefined, "rail", "half", "calc"] },
+    variant: { control: "inline-radio", options: [undefined, "rail", "half", "calc", "thirds"] },
     children: { control: false },
   },
   decorators: [
@@ -50,6 +50,20 @@ export const Rail: Story = { args: { variant: "rail" } };
 export const Half: Story = { args: { variant: "half" } };
 
 export const Calc: Story = { args: { variant: "calc" } };
+
+/** Three equal columns from 1280 px of page width, two from 720 px (the odd last one spans both), one below. */
+export const Thirds: Story = {
+  args: {
+    variant: "thirds",
+    children: (
+      <>
+        <Panel title="Por cobrar">2 cuentas, S/ 134.</Panel>
+        <Panel title="Pagos por revisar">1 pago Yape.</Panel>
+        <Panel title="Listos para entregar">2 pedidos.</Panel>
+      </>
+    ),
+  },
+};
 
 export const WithStack: Story = {
   render: (args) => (

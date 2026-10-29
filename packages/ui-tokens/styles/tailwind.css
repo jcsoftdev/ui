@@ -183,6 +183,9 @@
   --text-fs-220: 22px;
   --text-fs-300: 30px;
   --text-fs-440: 44px;
+  --container-page-m: 720px;
+  --container-page-w: 1280px;
+  --container-page-xw: 1600px;
   --color-surface-card: var(--surface-card);
   --color-surface-control: var(--surface-control);
   --color-surface-overlay: var(--surface-overlay);

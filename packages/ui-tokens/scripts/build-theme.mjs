@@ -357,6 +357,17 @@ export function buildThemeCss(tokens) {
   for (const s of tokens.type?.sizeScale ?? []) {
     lines.push(`  --text-${s.name}: ${s.fontSize};`);
   }
+  for (const [name, width] of Object.entries(tokens.containers ?? {})) {
+    if (!TONE_NAME.test(name)) {
+      throw new Error(
+        `containers: "${name}" must be kebab-case (lowercase letters, digits, hyphens)`,
+      );
+    }
+    if (!/^\d+(\.\d+)?(px|rem)$/.test(width)) {
+      throw new Error(`containers.${name}: "${width}" must be a literal px or rem width`);
+    }
+    lines.push(`  --container-${name}: ${width};`);
+  }
   const styles = stylesOf(tokens);
   for (const [themeVar, name] of Object.entries(tokens.styles?.tailwind ?? {})) {
     if (!styles.byName.has(name)) throw new Error(`styles.tailwind: unknown token "${name}"`);
