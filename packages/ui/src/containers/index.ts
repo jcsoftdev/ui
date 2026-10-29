@@ -33,6 +33,7 @@ export * from "./responsive-list/index.js";
 export * from "./row-actions/index.js";
 export * from "./scrolly/index.js";
 export * from "./section/index.js";
+export * from "./selectable-card/index.js";
 export * from "./settings-layout/index.js";
 export * from "./settings-row/index.js";
 export * from "./shortcuts/index.js";
