@@ -4,6 +4,7 @@ export * from "./banner/index.js";
 export * from "./card/index.js";
 export * from "./carousel/index.js";
 export * from "./cell/index.js";
+export * from "./chat-thread/index.js";
 export * from "./cols/index.js";
 export * from "./comment/index.js";
 export * from "./confirm-action/index.js";
