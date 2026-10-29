@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { CircleCheck } from "../../icons/index.js";
 import { StatusPill } from "./status-pill.js";
 
 const meta = {
@@ -28,3 +29,6 @@ export const Idle: Story = { args: { status: "idle", label: "Inactivo" } };
 export const Decorative: Story = {
   args: { onSelect: undefined, label: "Sucursal Miraflores" },
 };
+
+/** The icon is decorative and leads the pill; the label still names the status. */
+export const WithIcon: Story = { args: { icon: <CircleCheck /> } };

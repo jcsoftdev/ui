@@ -1,16 +1,18 @@
 "use client";
 
-import type { ComponentPropsWithRef } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { Led, type LedStatus } from "../led/index.js";
 
-export type StatusPillPart = "root" | "dot" | "label";
+export type StatusPillPart = "root" | "icon" | "dot" | "label";
 
 export interface StatusPillProps
   extends Omit<ComponentPropsWithRef<"button">, "children" | "onSelect"> {
   status: LedStatus;
   label: string;
+  /** Decorative leading icon, hidden from screen readers; the label still names the status. */
+  icon?: ReactNode;
   /** Without this the pill is decorative (disabled). */
   onSelect?: () => void;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -21,6 +23,7 @@ export interface StatusPillProps
 export function StatusPill({
   status,
   label,
+  icon,
   onSelect,
   className,
   classNames,
@@ -38,6 +41,14 @@ export function StatusPill({
         className,
       )}
     >
+      {icon ? (
+        <span
+          aria-hidden="true"
+          className={cn("inline-flex shrink-0 [&_svg]:size-3.5", classNames?.icon)}
+        >
+          {icon}
+        </span>
+      ) : null}
       <Led status={status} label={label} classNames={{ dot: classNames?.dot }} />
       <span aria-hidden="true" className={cn("@max-[700px]:hidden", classNames?.label)}>
         {label}
