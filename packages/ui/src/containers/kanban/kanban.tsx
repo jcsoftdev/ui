@@ -37,6 +37,7 @@ export type KanbanPart =
   | "cards"
   | "card"
   | "grip"
+  | "actions"
   | "empty"
   | "indicator"
   | "ghost";
@@ -51,6 +52,14 @@ export interface KanbanProps {
   enforceLimit?: boolean;
   /** Replaces the default card body. */
   renderCard?: (card: KanbanCardData) => ReactNode;
+  /**
+   * Buttons shown under each card. When set, the card is no longer one `role="button"`: its body
+   * is plain content, the actions are real, separately focusable controls, and keyboard
+   * pick-up moves to a grip button. Without it the card keeps the single-button behaviour.
+   */
+  cardActions?: (card: KanbanCardData) => ReactNode;
+  /** Accessible name of the grip button when `cardActions` is set; defaults to "Mover tarjeta: <title>". */
+  gripLabel?: (card: KanbanCardData) => string;
   emptyLabel?: string;
   "aria-label"?: string;
   className?: string;
@@ -104,6 +113,8 @@ export function Kanban({
   onColumnsChange,
   enforceLimit = false,
   renderCard,
+  cardActions,
+  gripLabel = (card) => `Mover tarjeta: ${card.title}`,
   emptyLabel = "Sin tarjetas",
   className,
   classNames,
@@ -137,7 +148,8 @@ export function Kanban({
   useLayoutEffect(() => {
     const id = focusId.current;
     if (!id) return;
-    const el = rootRef.current?.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(id)}"]`);
+    const card = rootRef.current?.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(id)}"]`);
+    const el = card?.querySelector<HTMLElement>("[data-card-grip]") ?? card;
     if (el && document.activeElement !== el) el.focus();
     if (!grabbedId) focusId.current = null;
   });
@@ -196,6 +208,7 @@ export function Kanban({
 
   const startPointerDrag = (event: ReactPointerEvent<HTMLElement>, card: KanbanCardData) => {
     if (event.button !== 0 || grabbedId) return;
+    if ((event.target as HTMLElement).closest("[data-card-actions]")) return;
     if (event.pointerType === "touch" && !(event.target as HTMLElement).closest("[data-grip]")) {
       return;
     }
@@ -322,37 +335,82 @@ export function Kanban({
             const grabbed = grabbedId === card.id;
             items.push(
               <li key={card.id} className="min-w-0">
-                {/* biome-ignore lint/a11y/useSemanticElements: draggable card is a custom widget */}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  data-card-id={card.id}
-                  aria-pressed={grabbed}
-                  aria-roledescription="tarjeta arrastrable"
-                  aria-describedby={instructionsId}
-                  onKeyDown={(e) => onCardKeyDown(e, card)}
-                  onPointerDown={(e) => startPointerDrag(e, card)}
-                  className={cn(
-                    "pressable relative flex cursor-grab select-none gap-1 rounded-input border-card surface-card p-density shadow-card focus-visible:focus-ring",
-                    isDragged && "opacity-40",
-                    grabbed && "shadow-selected",
-                    classNames?.card,
-                  )}
-                >
-                  <span
-                    data-grip=""
-                    aria-hidden="true"
+                {cardActions ? (
+                  // biome-ignore lint/a11y/noStaticElementInteractions: pointer drag; the grip button is the keyboard control
+                  <div
+                    data-card-id={card.id}
+                    onPointerDown={(e) => startPointerDrag(e, card)}
                     className={cn(
-                      "-ml-1 flex w-4 shrink-0 touch-none items-start pt-0.5 text-ink-3",
-                      classNames?.grip,
+                      "relative flex cursor-grab select-none flex-col gap-density-sm rounded-input border-card surface-card p-density shadow-card",
+                      isDragged && "opacity-40",
+                      grabbed && "shadow-selected",
+                      classNames?.card,
                     )}
                   >
-                    <GripVertical className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    {renderCard ? renderCard(card) : <DefaultCard card={card} />}
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        data-card-grip=""
+                        data-grip=""
+                        aria-label={gripLabel(card)}
+                        aria-pressed={grabbed}
+                        aria-roledescription="tarjeta arrastrable"
+                        aria-describedby={instructionsId}
+                        onKeyDown={(e) => onCardKeyDown(e, card)}
+                        className={cn(
+                          "-ml-1 flex min-h-8 w-6 shrink-0 touch-none items-start justify-center rounded-control pt-0.5 text-ink-3 focus-visible:focus-ring",
+                          classNames?.grip,
+                        )}
+                      >
+                        <GripVertical aria-hidden="true" className="size-4" />
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        {renderCard ? renderCard(card) : <DefaultCard card={card} />}
+                      </div>
+                    </div>
+                    <div
+                      data-card-actions=""
+                      className={cn(
+                        "flex cursor-auto flex-wrap items-center gap-density-sm",
+                        classNames?.actions,
+                      )}
+                    >
+                      {cardActions(card)}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  // biome-ignore lint/a11y/useSemanticElements: draggable card is a custom widget
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    data-card-id={card.id}
+                    aria-pressed={grabbed}
+                    aria-roledescription="tarjeta arrastrable"
+                    aria-describedby={instructionsId}
+                    onKeyDown={(e) => onCardKeyDown(e, card)}
+                    onPointerDown={(e) => startPointerDrag(e, card)}
+                    className={cn(
+                      "pressable relative flex cursor-grab select-none gap-1 rounded-input border-card surface-card p-density shadow-card focus-visible:focus-ring",
+                      isDragged && "opacity-40",
+                      grabbed && "shadow-selected",
+                      classNames?.card,
+                    )}
+                  >
+                    <span
+                      data-grip=""
+                      aria-hidden="true"
+                      className={cn(
+                        "-ml-1 flex w-4 shrink-0 touch-none items-start pt-0.5 text-ink-3",
+                        classNames?.grip,
+                      )}
+                    >
+                      <GripVertical className="size-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      {renderCard ? renderCard(card) : <DefaultCard card={card} />}
+                    </div>
+                  </div>
+                )}
               </li>,
             );
           }

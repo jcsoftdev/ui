@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Button } from "../../atoms/button/index.js";
 import { Kanban } from "./kanban.js";
 import type { KanbanColumnData } from "./model.js";
 
@@ -77,6 +78,8 @@ const meta = {
     defaultColumns: { control: false },
     onColumnsChange: { control: false },
     renderCard: { control: false },
+    cardActions: { control: false },
+    gripLabel: { control: false },
   },
   decorators: [
     (Story) => (
@@ -95,6 +98,20 @@ export const Default: Story = {};
 /** Drops into a column at its WIP limit are refused and announced. */
 export const EnforcedLimit: Story = {
   args: { enforceLimit: true },
+};
+
+/** Real buttons under each card: the card body is not interactive and a grip button carries keyboard pick-up. */
+export const WithActions: Story = {
+  args: {
+    cardActions: (card) => (
+      <>
+        <Button size="sm">Cobrar</Button>
+        <Button size="sm" variant="ghost">
+          Editar {card.title}
+        </Button>
+      </>
+    ),
+  },
 };
 
 export const Narrow: Story = {
