@@ -141,7 +141,7 @@ export function Pagination({
             setSize(Number(event.target.value));
             setPage(1);
           }}
-          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-fs-125 text-ink"
+          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-fs-120 text-ink"
         >
           {sizes.map((option) => (
             <option key={option} value={option}>
@@ -156,7 +156,7 @@ export function Pagination({
       <nav
         aria-label={text.nav}
         className={cn(
-          "flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2 text-fs-125 text-ink-2",
+          "flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2 text-fs-120 text-ink-2",
           className,
         )}
         {...props}
@@ -210,7 +210,7 @@ export function Pagination({
     <nav
       aria-label={text.nav}
       className={cn(
-        "@container/pagination flex min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-1 px-2 py-1.5 text-fs-125 text-ink-2",
+        "@container/pagination flex min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-1 px-2 py-1.5 text-fs-120 text-ink-2",
         className,
       )}
       {...props}

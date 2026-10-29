@@ -13,7 +13,7 @@ import type { CellValue, DataGridColumn } from "./types.js";
 
 export type SheetControls = Pick<DataGridProps<Venta>, "density" | "height">;
 
-export const note = "text-fs-125 text-ink-3";
+export const note = "text-fs-120 text-ink-3";
 
 export function Stack({ children }: { children: ReactNode }) {
   return <div className="grid gap-2">{children}</div>;

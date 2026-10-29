@@ -434,7 +434,7 @@ function RosePlot({
             x={cx + 4}
             y={cy - ring.r - 3}
             {...DECORATIVE}
-            className="pointer-events-none fill-ink-3 text-fs-95 tabular-nums"
+            className="pointer-events-none fill-ink-3 text-fs-100 tabular-nums"
             style={{ paintOrder: "stroke", stroke: "var(--surface)", strokeWidth: 3 }}
           >
             {axisFormat(ring.value)}

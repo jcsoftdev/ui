@@ -165,7 +165,7 @@ export function KpiValue({ suffix, trend, mono, className, children, ...props }:
     <span
       {...props}
       className={cn(
-        "break-words text-kpi-number tabular-nums @max-[9rem]/kpi:text-fs-220",
+        "break-words text-kpi-number tabular-nums @max-[9rem]/kpi:text-fs-200",
         mono && "font-mono tracking-normal",
         valueTone,
         classNames?.value,

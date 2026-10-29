@@ -231,42 +231,38 @@ object UiSizes {
 const val UiFontFamilyName = "Figtree"
 
 object UiTypography {
-    val kpiNumber = TextStyle(fontSize = 30.sp, fontWeight = FontWeight(800), lineHeight = 34.5.sp, letterSpacing = (-0.03).em)
-    val pageTitle = TextStyle(fontSize = 26.sp, fontWeight = FontWeight(800), lineHeight = 30.68.sp, letterSpacing = (-0.025).em)
+    val kpiNumber = TextStyle(fontSize = 24.sp, fontWeight = FontWeight(800), lineHeight = 28.8.sp, letterSpacing = (-0.025).em)
+    val pageTitle = TextStyle(fontSize = 22.sp, fontWeight = FontWeight(800), lineHeight = 27.5.sp, letterSpacing = (-0.02).em)
     val dialogTitle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight(750), lineHeight = 22.4.sp)
-    val cardTitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight(700), lineHeight = 21.sp, letterSpacing = (-0.01).em)
-    val lede = TextStyle(fontSize = 14.5.sp, fontWeight = FontWeight(400), lineHeight = 21.75.sp)
+    val cardTitle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight(700), lineHeight = 21.sp, letterSpacing = (-0.01).em)
+    val lede = TextStyle(fontSize = 14.sp, fontWeight = FontWeight(400), lineHeight = 21.sp)
     val body = TextStyle(fontSize = 14.sp, fontWeight = FontWeight(400), lineHeight = 21.sp)
-    val rowTitle = TextStyle(fontSize = 13.5.sp, fontWeight = FontWeight(650), lineHeight = 20.25.sp)
+    val rowTitle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight(650), lineHeight = 21.sp)
     val control = TextStyle(fontSize = 13.sp, fontWeight = FontWeight(650), lineHeight = 19.5.sp)
-    val meta = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight(400), lineHeight = 18.75.sp)
+    val meta = TextStyle(fontSize = 12.sp, fontWeight = FontWeight(400), lineHeight = 18.sp)
     val chipText = TextStyle(fontSize = 12.sp, fontWeight = FontWeight(650), lineHeight = 12.sp)
     val overline = TextStyle(fontSize = 11.sp, fontWeight = FontWeight(700), lineHeight = 16.5.sp, letterSpacing = (0.08).em)
-    val clock = TextStyle(fontSize = 17.sp, fontWeight = FontWeight(700), lineHeight = 17.sp)
-    val data = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight(600), lineHeight = 20.sp)
+    val clock = TextStyle(fontSize = 16.sp, fontWeight = FontWeight(700), lineHeight = 16.sp)
+    val data = TextStyle(fontSize = 13.sp, fontWeight = FontWeight(600), lineHeight = 19.5.sp)
     val count = TextStyle(fontSize = 12.sp, fontWeight = FontWeight(700), lineHeight = 14.4.sp)
-    val mTitle = TextStyle(fontSize = 34.sp, fontWeight = FontWeight(800), lineHeight = 41.sp, letterSpacing = (-0.025).em)
-    val mCardTitle = TextStyle(fontSize = 26.sp, fontWeight = FontWeight(800), lineHeight = 28.6.sp, letterSpacing = (-0.02).em)
-    val mRowTitle = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight(700), lineHeight = 20.15.sp)
+    val mTitle = TextStyle(fontSize = 22.sp, fontWeight = FontWeight(800), lineHeight = 27.5.sp, letterSpacing = (-0.02).em)
+    val mCardTitle = TextStyle(fontSize = 20.sp, fontWeight = FontWeight(800), lineHeight = 24.sp, letterSpacing = (-0.015).em)
+    val mRowTitle = TextStyle(fontSize = 15.sp, fontWeight = FontWeight(700), lineHeight = 19.5.sp)
     val mBody = TextStyle(fontSize = 15.sp, fontWeight = FontWeight(400), lineHeight = 21.75.sp)
-    val mButton = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight(700), lineHeight = 15.5.sp)
+    val mButton = TextStyle(fontSize = 15.sp, fontWeight = FontWeight(700), lineHeight = 15.sp)
     val mMeta = TextStyle(fontSize = 13.sp, fontWeight = FontWeight(400), lineHeight = 18.2.sp)
 }
 
 object UiFontSizes {
-    val fs95 = 9.5.sp
     val fs100 = 10.sp
-    val fs105 = 10.5.sp
     val fs110 = 11.sp
-    val fs115 = 11.5.sp
     val fs120 = 12.sp
-    val fs125 = 12.5.sp
     val fs130 = 13.sp
     val fs140 = 14.sp
     val fs150 = 15.sp
     val fs160 = 16.sp
-    val fs220 = 22.sp
-    val fs300 = 30.sp
+    val fs200 = 20.sp
+    val fs240 = 24.sp
     val fs440 = 44.sp
 }
 

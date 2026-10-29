@@ -90,7 +90,7 @@ export function CodeBlock({
         // biome-ignore lint/a11y/noNoninteractiveTabindex: scrollable region must be keyboard reachable
         tabIndex={0}
         className={cn(
-          "m-0 p-3 font-mono text-fs-125 leading-relaxed focus-visible:focus-ring",
+          "m-0 p-3 font-mono text-fs-120 leading-relaxed focus-visible:focus-ring",
           wrap ? "whitespace-pre-wrap break-words" : "overflow-x-auto",
           classNames?.pre,
         )}

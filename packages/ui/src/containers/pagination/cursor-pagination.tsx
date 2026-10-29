@@ -55,7 +55,7 @@ export function CursorPagination({
     <nav
       aria-label={labels?.nav ?? strings.pagination}
       className={cn(
-        "flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2 text-fs-125 text-ink-2",
+        "flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2 text-fs-120 text-ink-2",
         className,
       )}
       {...props}

@@ -443,7 +443,7 @@ function FunnelPlot({
                     x={x}
                     y={y + 4}
                     textAnchor="middle"
-                    className={cn("fill-ink-2 font-bold text-fs-105 tabular-nums")}
+                    className={cn("fill-ink-2 font-bold text-fs-110 tabular-nums")}
                   >
                     {formatPercent(conversion, { decimals: 0 })}
                   </text>

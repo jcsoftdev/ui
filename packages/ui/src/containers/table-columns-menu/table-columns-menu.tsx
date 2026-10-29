@@ -34,7 +34,7 @@ export function TableColumnsMenu({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex h-control-sm items-center gap-1.5 rounded-control bg-surface-control px-2.5 text-fs-125 text-ink shadow-control hover:bg-surface-2 focus-visible:focus-ring [&_svg]:size-4"
+          className="inline-flex h-control-sm items-center gap-1.5 rounded-control bg-surface-control px-2.5 text-fs-120 text-ink shadow-control hover:bg-surface-2 focus-visible:focus-ring [&_svg]:size-4"
         >
           <Columns3 aria-hidden="true" />
           {name}

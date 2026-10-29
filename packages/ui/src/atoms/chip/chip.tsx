@@ -37,7 +37,7 @@ export type ChipSize = "sm" | "md";
 /** Class map behind each `size`; exported like `chipToneClasses`. */
 export const chipSizeClasses: Readonly<Record<ChipSize, string>> = {
   md: "h-6 px-2.5 font-[650] text-fs-120",
-  sm: "h-auto min-h-5 px-1.5 py-px font-medium text-fs-115 tabular-nums",
+  sm: "h-auto min-h-5 px-1.5 py-px font-medium text-fs-120 tabular-nums",
 };
 
 export interface ChipProps extends ComponentPropsWithRef<"span"> {

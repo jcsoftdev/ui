@@ -120,7 +120,7 @@ export const AxisLeft = memo(function AxisLeft({ ticks, offset, title, color }: 
           x={-10}
           y={-16}
           textAnchor="end"
-          className="fill-ink-3 font-bold text-fs-105"
+          className="fill-ink-3 font-bold text-fs-110"
           style={color ? { fill: color } : undefined}
         >
           {title}
@@ -152,7 +152,7 @@ export const AxisRight = memo(function AxisRight({ ticks, offset, title, color }
           x={10}
           y={-16}
           textAnchor="start"
-          className="fill-ink-3 font-bold text-fs-105"
+          className="fill-ink-3 font-bold text-fs-110"
           style={color ? { fill: color } : undefined}
         >
           {title}

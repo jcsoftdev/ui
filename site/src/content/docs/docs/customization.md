@@ -54,7 +54,7 @@ For a whole new look, copy `tokens/default.json`, edit it and run `npx ui-theme 
 
 ### Font sizes
 
-Dense UI text uses a size-only scale: `text-fs-95`, `text-fs-100`, `text-fs-105`, `text-fs-110`, `text-fs-115`, `text-fs-120`, `text-fs-125`, `text-fs-130`, `text-fs-140`, `text-fs-150`, `text-fs-160`, `text-fs-220`, `text-fs-300`, `text-fs-440` (the number is the pixel size times 10). They set `font-size` only, so weight and line height stay with the component. Redefine them in your own `@theme` block to rescale every component:
+Dense UI text uses a size-only scale: `text-fs-100`, `text-fs-110`, `text-fs-120`, `text-fs-130`, `text-fs-140`, `text-fs-150`, `text-fs-160`, `text-fs-200`, `text-fs-240`, `text-fs-440` (the number is the pixel size times 10). They set `font-size` only, so weight and line height stay with the component. Redefine them in your own `@theme` block to rescale every component:
 
 ```css
 @theme inline {

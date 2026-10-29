@@ -416,7 +416,7 @@ function CandlePlot({
                 y={4}
                 dy="0.34em"
                 textAnchor="end"
-                className="fill-ink-3 font-medium text-fs-105 tabular-nums"
+                className="fill-ink-3 font-medium text-fs-110 tabular-nums"
               >
                 {vfmt(maxVolume)}
               </text>
@@ -499,7 +499,7 @@ function CandlePlot({
                     y={0}
                     dy="0.34em"
                     textAnchor="middle"
-                    className="font-bold text-fs-105 tabular-nums"
+                    className="font-bold text-fs-110 tabular-nums"
                     style={{ fill: "var(--surface)" }}
                   >
                     {fmt(last.close)}

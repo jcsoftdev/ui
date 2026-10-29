@@ -14,7 +14,7 @@ export function Facts({ className, ...props }: FactsProps) {
       <dl
         className={cn(
           "mt-3.5 grid grid-cols-3 gap-3.5 border-t-divider border-dashed pt-3.5",
-          "[&_dt]:font-semibold [&_dt]:text-fs-115 [&_dt]:text-ink-3",
+          "[&_dt]:font-semibold [&_dt]:text-fs-120 [&_dt]:text-ink-3",
           "[&_dd]:mt-0.5 [&_dd]:font-[620] [&_dd]:text-fs-130",
           "[&_dt]:break-words [&_dd]:break-words @max-[560px]/facts:grid-cols-1",
           className,

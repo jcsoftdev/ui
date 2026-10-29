@@ -59,7 +59,7 @@ export function ErrorState({
         <p className="max-w-[42ch] text-fs-130 text-ink-3 [overflow-wrap:anywhere]">{detail}</p>
       ) : null}
       {correlationId ? (
-        <p className="max-w-full text-fs-115 text-ink-3 tabular-nums [overflow-wrap:anywhere]">
+        <p className="max-w-full text-fs-120 text-ink-3 tabular-nums [overflow-wrap:anywhere]">
           {correlationLabel ?? strings.correlationPrefix} {correlationId}
         </p>
       ) : null}
