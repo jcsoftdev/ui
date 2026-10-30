@@ -395,7 +395,7 @@ export function OperationsBento() {
         rows={4}
         index={0}
         flush
-        aside={<StatusPill status="success" label="Caja abierta" />}
+        aside={<StatusPill status="success" label="Caja abierta" collapseLabel />}
       >
         <div className="h-full pl-3">
           <WeekView
@@ -443,7 +443,7 @@ export function OperationsBento() {
                 </div>
                 <Progress value={barbero.carga} aria-label={`Carga de ${barbero.name}`} />
               </div>
-              <StatusPill status={barbero.estado} label={barbero.texto} />
+              <StatusPill status={barbero.estado} label={barbero.texto} collapseLabel />
             </li>
           ))}
         </ul>

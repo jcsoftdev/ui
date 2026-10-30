@@ -13,6 +13,10 @@ export interface StatusPillProps
   label: string;
   /** Decorative leading icon, hidden from screen readers; the label still names the status. */
   icon?: ReactNode;
+  /** Shows the status dot. Defaults to `true` without an `icon` and `false` with one, where the icon carries the look; the label still names the status either way. */
+  dot?: boolean;
+  /** Hides the visible label when the surrounding container is narrower than 700 px (the status stays announced). Defaults to `false`: the label is always visible. */
+  collapseLabel?: boolean;
   /** Makes the pill a button. Without it, and without `onClick`, the pill is a plain `span`. */
   onSelect?: () => void;
   /**
@@ -24,11 +28,13 @@ export interface StatusPillProps
   classNames?: ClassNames<StatusPillPart>;
 }
 
-/** Pill showing a status LED and its label; the label is hidden when the surrounding container (e.g. the topbar) is narrow. */
+/** Pill showing a status LED and its label; `collapseLabel` hides the label when the surrounding container is narrow. */
 export function StatusPill({
   status,
   label,
   icon,
+  dot,
+  collapseLabel = false,
   onSelect,
   interactive,
   className,
@@ -36,6 +42,7 @@ export function StatusPill({
   ...props
 }: StatusPillProps) {
   const isButton = interactive ?? (onSelect !== undefined || props.onClick !== undefined);
+  const showDot = dot ?? icon == null;
   const rootClass = cn(
     "flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge border-divider bg-surface-control px-2.5 font-semibold text-fs-120 text-ink-2",
     isButton && "hover:enabled:border-line-strong disabled:cursor-default",
@@ -52,8 +59,15 @@ export function StatusPill({
           {icon}
         </span>
       ) : null}
-      <Led status={status} label={label} classNames={{ dot: classNames?.dot }} />
-      <span aria-hidden="true" className={cn("@max-[700px]:hidden", classNames?.label)}>
+      <Led
+        status={status}
+        label={label}
+        classNames={{ dot: cn(!showDot && "hidden", classNames?.dot) }}
+      />
+      <span
+        aria-hidden="true"
+        className={cn(collapseLabel && "@max-[700px]:hidden", classNames?.label)}
+      >
         {label}
       </span>
     </>

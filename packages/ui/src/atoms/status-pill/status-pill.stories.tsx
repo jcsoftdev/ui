@@ -31,5 +31,17 @@ export const Decorative: Story = {
   args: { onSelect: undefined, label: "Sucursal Miraflores" },
 };
 
-/** The icon is decorative and leads the pill; the label still names the status. */
+/** The icon is decorative and leads the pill in place of the dot; the label still names the status. `dot` brings the dot back. */
 export const WithIcon: Story = { args: { icon: <CircleCheck /> } };
+
+/** `collapseLabel` hides the visible label under 700 px of container width; the status stays announced. The default keeps the label visible. */
+export const CollapsingLabel: Story = {
+  args: { collapseLabel: true },
+  decorators: [
+    (Story) => (
+      <div className="@container w-[360px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};
