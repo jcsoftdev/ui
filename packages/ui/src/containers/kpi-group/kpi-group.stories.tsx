@@ -59,6 +59,12 @@ export const Narrow: Story = {
   ],
 };
 
+/** `minColumns={2}` keeps two tiles across on the narrowest containers. */
+export const TwoColumnsWhenNarrow: Story = {
+  args: { minColumns: 2 },
+  decorators: Narrow.decorators,
+};
+
 export const TwoColumns: Story = {
   decorators: [
     (Story) => (

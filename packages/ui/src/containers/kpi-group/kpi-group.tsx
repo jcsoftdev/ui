@@ -32,6 +32,11 @@ export interface KpiGroupProps extends Omit<ComponentPropsWithoutRef<"dl">, "chi
   layout?: KpiGroupLayout;
   /** Minimum tile width in px for `layout="auto-fit"`. */
   minItemWidth?: number;
+  /**
+   * Columns on the narrowest containers. `1` (default) stacks the tiles; `2` keeps two across
+   * (and `auto-fit` never goes below two) for short tiles on a phone.
+   */
+  minColumns?: 1 | 2;
   /** Animate numeric values counting up. */
   animate?: boolean;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root wrapper and is merged last. */
@@ -46,6 +51,7 @@ export function KpiGroup({
   items,
   layout = "divided",
   minItemWidth = 150,
+  minColumns = 1,
   animate = true,
   className,
   classNames,
@@ -60,7 +66,11 @@ export function KpiGroup({
         style={
           autoFit
             ? {
-                gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${minItemWidth}px), 1fr))`,
+                gridTemplateColumns: `repeat(auto-fit, minmax(min(${
+                  minColumns === 2
+                    ? `${minItemWidth}px, calc((100% - var(--gap-density)) / 2)`
+                    : `100%, ${minItemWidth}px`
+                }), 1fr))`,
                 ...style,
               }
             : style
@@ -69,7 +79,12 @@ export function KpiGroup({
           "m-0 grid",
           autoFit
             ? "gap-density"
-            : "grid-cols-1 gap-px overflow-hidden rounded-card border-card bg-divider shadow-card @sm/kpi-group:grid-cols-2 @3xl/kpi-group:grid-cols-4",
+            : cn(
+                "gap-px overflow-hidden rounded-card border-card bg-divider shadow-card @sm/kpi-group:grid-cols-2 @3xl/kpi-group:grid-cols-4",
+                minColumns === 2
+                  ? "grid-cols-2 @max-sm/kpi-group:[&>:last-child:nth-child(odd)]:col-span-2"
+                  : "grid-cols-1",
+              ),
           classNames?.list,
         )}
       >
