@@ -18,7 +18,13 @@ const constant = (name) => {
 };
 
 test("each motion recipe has an enter, an exit on data-state=closed and a reduced-motion fallback", () => {
-  for (const name of ["POPPER_MOTION", "OVERLAY_MOTION", "DIALOG_MOTION", "DRAWER_MOTION"]) {
+  for (const name of [
+    "POPPER_MOTION",
+    "OVERLAY_MOTION",
+    "DIALOG_MOTION",
+    "DRAWER_MOTION",
+    "SHEET_MOTION",
+  ]) {
     const classes = constant(name);
     assert.ok(
       classes.some((c) => c.startsWith("starting:")),
@@ -51,7 +57,7 @@ test("every overlay surface uses the shared recipes", () => {
     "forms/internal/listbox-items.tsx": ["POPPER_MOTION", "ITEM_MOTION"],
     "overlays/dialog/dialog.tsx": ["OVERLAY_MOTION", "DIALOG_MOTION"],
     "overlays/alert-dialog/alert-dialog.tsx": ["OVERLAY_MOTION", "DIALOG_MOTION"],
-    "overlays/drawer/drawer.tsx": ["OVERLAY_MOTION", "DRAWER_MOTION"],
+    "overlays/drawer/drawer.tsx": ["OVERLAY_MOTION", "DRAWER_MOTION", "SHEET_MOTION"],
   };
   for (const [file, names] of Object.entries(uses)) {
     const source = read(file);

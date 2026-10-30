@@ -27,3 +27,7 @@ export const DRAWER_MOTION =
 /** Highlight of a menu item or listbox option: 120ms at the default 180ms motion duration. */
 export const ITEM_MOTION =
   "transition-colors duration-[calc(var(--motion-duration)*2/3)] motion-reduce:transition-none";
+
+/** A bottom sheet: slides up from the bottom edge. */
+export const SHEET_MOTION =
+  "transition-[translate] duration-(--motion-duration) ease-(--motion-ease) starting:translate-y-full data-[state=closed]:translate-y-full data-[state=closed]:duration-[calc(var(--motion-duration)*2/3)] motion-reduce:transition-none";

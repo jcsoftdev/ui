@@ -39,6 +39,8 @@ const meta = {
   args: { blocking: false, closeLabel: "Cerrar" },
   argTypes: {
     blocking: { control: "boolean" },
+    side: { control: "inline-radio", options: ["right", "bottom"] },
+    handle: { control: "boolean" },
     closeLabel: { control: "text" },
     children: { control: false },
   },
@@ -73,6 +75,21 @@ export const OpenByDefault: Story = {
 
 /** Open on load with the trigger, title and close button all on screen. */
 export const WithTriggerOpen: Story = {
+  render: (args) => (
+    <Drawer defaultOpen>
+      <DrawerTrigger asChild>
+        <Button variant="secondary">Ver cita</Button>
+      </DrawerTrigger>
+      <DrawerContent {...args}>
+        <AppointmentDetail />
+      </DrawerContent>
+    </Drawer>
+  ),
+};
+
+/** `side="bottom"`: a sheet across the width with the safe-area inset, a grab handle and its own scroll. */
+export const BottomSheet: Story = {
+  args: { side: "bottom", handle: true },
   render: (args) => (
     <Drawer defaultOpen>
       <DrawerTrigger asChild>
