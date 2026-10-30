@@ -50,6 +50,11 @@ export interface KanbanProps {
   defaultColumns?: KanbanColumnData[];
   /** Called after a drop (pointer release or keyboard drop) with the new board and the move. */
   onColumnsChange?: (columns: KanbanColumnData[], move: KanbanMove) => void;
+  /**
+   * Set to `false` for a board that only displays: no drag handle, no pointer or keyboard
+   * pick-up, and cards are plain content (with `cardActions` still rendered). Defaults to `true`.
+   */
+  draggable?: boolean;
   /** Refuse drops into another column that already reached its WIP limit. */
   enforceLimit?: boolean;
   /** Replaces the default card body. */
@@ -121,6 +126,7 @@ export function Kanban({
   columns: controlled,
   defaultColumns = [],
   onColumnsChange,
+  draggable = true,
   enforceLimit = false,
   renderCard,
   cardActions,
@@ -314,10 +320,12 @@ export function Kanban({
         }
       }}
     >
-      <p id={instructionsId} className="sr-only">
-        Presiona Espacio para tomar una tarjeta, las flechas para moverla y Espacio para soltarla.
-        Escape cancela.
-      </p>
+      {draggable ? (
+        <p id={instructionsId} className="sr-only">
+          Presiona Espacio para tomar una tarjeta, las flechas para moverla y Espacio para soltarla.
+          Escape cancela.
+        </p>
+      ) : null}
       <div role="status" aria-live="assertive" className="sr-only">
         {status}
       </div>
@@ -353,34 +361,38 @@ export function Kanban({
             items.push(
               <li key={card.id} className="min-w-0">
                 {cardActions ? (
-                  // biome-ignore lint/a11y/noStaticElementInteractions: pointer drag; the grip button is the keyboard control
                   <div
                     data-card-id={card.id}
-                    onPointerDown={(e) => startPointerDrag(e, card)}
+                    onPointerDown={(e) => {
+                      if (draggable) startPointerDrag(e, card);
+                    }}
                     className={cn(
-                      "relative flex cursor-grab select-none flex-col gap-density-sm rounded-input border-card surface-card p-density shadow-card",
+                      "relative flex flex-col gap-density-sm rounded-input border-card surface-card p-density shadow-card",
+                      draggable && "cursor-grab select-none",
                       isDragged && "opacity-40",
                       grabbed && "shadow-selected",
                       classNames?.card,
                     )}
                   >
                     <div className="flex gap-1">
-                      <button
-                        type="button"
-                        data-card-grip=""
-                        data-grip=""
-                        aria-label={gripLabel(card)}
-                        aria-pressed={grabbed}
-                        aria-roledescription="tarjeta arrastrable"
-                        aria-describedby={instructionsId}
-                        onKeyDown={(e) => onCardKeyDown(e, card)}
-                        className={cn(
-                          "-ml-1 flex min-h-8 w-6 shrink-0 touch-none items-start justify-center rounded-control pt-0.5 text-ink-3 focus-visible:focus-ring",
-                          classNames?.grip,
-                        )}
-                      >
-                        <GripVertical aria-hidden="true" className="size-4" />
-                      </button>
+                      {draggable ? (
+                        <button
+                          type="button"
+                          data-card-grip=""
+                          data-grip=""
+                          aria-label={gripLabel(card)}
+                          aria-pressed={grabbed}
+                          aria-roledescription="tarjeta arrastrable"
+                          aria-describedby={instructionsId}
+                          onKeyDown={(e) => onCardKeyDown(e, card)}
+                          className={cn(
+                            "-ml-1 flex min-h-8 w-6 shrink-0 touch-none items-start justify-center rounded-control pt-0.5 text-ink-3 focus-visible:focus-ring",
+                            classNames?.grip,
+                          )}
+                        >
+                          <GripVertical aria-hidden="true" className="size-4" />
+                        </button>
+                      ) : null}
                       <div className="min-w-0 flex-1">
                         {renderCard ? renderCard(card) : <DefaultCard card={card} />}
                       </div>
@@ -395,7 +407,7 @@ export function Kanban({
                       {cardActions(card)}
                     </div>
                   </div>
-                ) : (
+                ) : draggable ? (
                   // biome-ignore lint/a11y/useSemanticElements: draggable card is a custom widget
                   <div
                     role="button"
@@ -423,6 +435,18 @@ export function Kanban({
                     >
                       <GripVertical className="size-4" />
                     </span>
+                    <div className="min-w-0 flex-1">
+                      {renderCard ? renderCard(card) : <DefaultCard card={card} />}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    data-card-id={card.id}
+                    className={cn(
+                      "relative flex gap-1 rounded-input border-card surface-card p-density shadow-card",
+                      classNames?.card,
+                    )}
+                  >
                     <div className="min-w-0 flex-1">
                       {renderCard ? renderCard(card) : <DefaultCard card={card} />}
                     </div>

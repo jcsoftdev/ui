@@ -114,6 +114,14 @@ export const WithActions: Story = {
   },
 };
 
+/** `draggable={false}`: a display-only board with no grip column and no pick-up. */
+export const NotDraggable: Story = {
+  args: {
+    draggable: false,
+    cardActions: (card) => <Button size="sm">Abrir {card.title}</Button>,
+  },
+};
+
 export const Narrow: Story = {
   decorators: [
     (Story) => (
