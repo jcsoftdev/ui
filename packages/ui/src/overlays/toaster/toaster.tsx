@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   useEffect,
@@ -36,12 +37,28 @@ export type ToasterPosition =
   | "bottom-center"
   | "bottom-right";
 
+/**
+ * One position, or one per viewport width: `base` always applies, `sm` from 640 px and `lg` from
+ * 1024 px of viewport width (a toast is anchored to the viewport, so these are media queries).
+ */
+export type ToasterResponsivePosition =
+  | ToasterPosition
+  | { base: ToasterPosition; sm?: ToasterPosition; lg?: ToasterPosition };
+
+/** Distance from the viewport edges: a number is px, a string is any CSS length (`calc(env(safe-area-inset-bottom) + 4rem)`). */
+export type ToasterOffset = number | string | { x?: number | string; y?: number | string };
+
 export type ToasterPart = "root" | "list" | "toast" | "title" | "description" | "action";
 
 export interface ToasterProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ToasterPart>;
-  position?: ToasterPosition;
+  position?: ToasterResponsivePosition;
+  /**
+   * Distance from the edges the region is anchored to. Defaults to 1rem on both axes; `y` is
+   * measured from the top or the bottom edge, whichever the position uses.
+   */
+  offset?: ToasterOffset;
   /** Default auto dismiss delay in ms; `Infinity` disables it. */
   duration?: number;
   /** Toasts shown at once; older ones wait until a newer one leaves. */
@@ -94,13 +111,96 @@ const EXIT_MS = 200;
 const SWIPE_THRESHOLD = 60;
 
 const POSITION: Record<ToasterPosition, string> = {
-  "top-left": "top-4 left-4 items-start",
-  "top-center": "top-4 left-1/2 -translate-x-1/2 items-center",
-  "top-right": "top-4 right-4 items-end",
-  "bottom-left": "bottom-4 left-4 items-start",
-  "bottom-center": "bottom-4 left-1/2 -translate-x-1/2 items-center",
-  "bottom-right": "bottom-4 right-4 items-end",
+  "top-left":
+    "top-[var(--toast-y,1rem)] bottom-auto left-[var(--toast-x,1rem)] right-auto translate-x-0 items-start",
+  "top-center":
+    "top-[var(--toast-y,1rem)] bottom-auto left-1/2 right-auto -translate-x-1/2 items-center",
+  "top-right":
+    "top-[var(--toast-y,1rem)] bottom-auto right-[var(--toast-x,1rem)] left-auto translate-x-0 items-end",
+  "bottom-left":
+    "bottom-[var(--toast-y,1rem)] top-auto left-[var(--toast-x,1rem)] right-auto translate-x-0 items-start",
+  "bottom-center":
+    "bottom-[var(--toast-y,1rem)] top-auto left-1/2 right-auto -translate-x-1/2 items-center",
+  "bottom-right":
+    "bottom-[var(--toast-y,1rem)] top-auto right-[var(--toast-x,1rem)] left-auto translate-x-0 items-end",
 };
+
+const POSITION_SM: Record<ToasterPosition, string> = {
+  "top-left":
+    "min-[640px]:top-[var(--toast-y,1rem)] min-[640px]:bottom-auto min-[640px]:left-[var(--toast-x,1rem)] min-[640px]:right-auto min-[640px]:translate-x-0 min-[640px]:items-start",
+  "top-center":
+    "min-[640px]:top-[var(--toast-y,1rem)] min-[640px]:bottom-auto min-[640px]:left-1/2 min-[640px]:right-auto min-[640px]:-translate-x-1/2 min-[640px]:items-center",
+  "top-right":
+    "min-[640px]:top-[var(--toast-y,1rem)] min-[640px]:bottom-auto min-[640px]:right-[var(--toast-x,1rem)] min-[640px]:left-auto min-[640px]:translate-x-0 min-[640px]:items-end",
+  "bottom-left":
+    "min-[640px]:bottom-[var(--toast-y,1rem)] min-[640px]:top-auto min-[640px]:left-[var(--toast-x,1rem)] min-[640px]:right-auto min-[640px]:translate-x-0 min-[640px]:items-start",
+  "bottom-center":
+    "min-[640px]:bottom-[var(--toast-y,1rem)] min-[640px]:top-auto min-[640px]:left-1/2 min-[640px]:right-auto min-[640px]:-translate-x-1/2 min-[640px]:items-center",
+  "bottom-right":
+    "min-[640px]:bottom-[var(--toast-y,1rem)] min-[640px]:top-auto min-[640px]:right-[var(--toast-x,1rem)] min-[640px]:left-auto min-[640px]:translate-x-0 min-[640px]:items-end",
+};
+
+const POSITION_LG: Record<ToasterPosition, string> = {
+  "top-left":
+    "min-[1024px]:top-[var(--toast-y,1rem)] min-[1024px]:bottom-auto min-[1024px]:left-[var(--toast-x,1rem)] min-[1024px]:right-auto min-[1024px]:translate-x-0 min-[1024px]:items-start",
+  "top-center":
+    "min-[1024px]:top-[var(--toast-y,1rem)] min-[1024px]:bottom-auto min-[1024px]:left-1/2 min-[1024px]:right-auto min-[1024px]:-translate-x-1/2 min-[1024px]:items-center",
+  "top-right":
+    "min-[1024px]:top-[var(--toast-y,1rem)] min-[1024px]:bottom-auto min-[1024px]:right-[var(--toast-x,1rem)] min-[1024px]:left-auto min-[1024px]:translate-x-0 min-[1024px]:items-end",
+  "bottom-left":
+    "min-[1024px]:bottom-[var(--toast-y,1rem)] min-[1024px]:top-auto min-[1024px]:left-[var(--toast-x,1rem)] min-[1024px]:right-auto min-[1024px]:translate-x-0 min-[1024px]:items-start",
+  "bottom-center":
+    "min-[1024px]:bottom-[var(--toast-y,1rem)] min-[1024px]:top-auto min-[1024px]:left-1/2 min-[1024px]:right-auto min-[1024px]:-translate-x-1/2 min-[1024px]:items-center",
+  "bottom-right":
+    "min-[1024px]:bottom-[var(--toast-y,1rem)] min-[1024px]:top-auto min-[1024px]:right-[var(--toast-x,1rem)] min-[1024px]:left-auto min-[1024px]:translate-x-0 min-[1024px]:items-end",
+};
+
+const LIST_ORDER: Record<ToasterVertical, string> = {
+  top: "flex-col-reverse",
+  bottom: "flex-col",
+};
+
+const LIST_ORDER_SM: Record<ToasterVertical, string> = {
+  top: "min-[640px]:flex-col-reverse",
+  bottom: "min-[640px]:flex-col",
+};
+
+const LIST_ORDER_LG: Record<ToasterVertical, string> = {
+  top: "min-[1024px]:flex-col-reverse",
+  bottom: "min-[1024px]:flex-col",
+};
+type ToasterVertical = "top" | "bottom";
+
+const verticalOf = (position: ToasterPosition): ToasterVertical =>
+  position.startsWith("top") ? "top" : "bottom";
+
+function sideValue(value: number | string | undefined): string | undefined {
+  return typeof value === "number" ? `${value}px` : value;
+}
+
+/** Region classes, list direction and offset variables for a position and an offset. */
+export function toasterPlacement(
+  position: ToasterResponsivePosition,
+  offset?: ToasterOffset,
+): { region: string; list: string; style: CSSProperties } {
+  const base = typeof position === "string" ? position : position.base;
+  const sm = typeof position === "string" ? undefined : position.sm;
+  const lg = typeof position === "string" ? undefined : position.lg;
+  const x = sideValue(typeof offset === "object" ? offset.x : offset);
+  const y = sideValue(typeof offset === "object" ? offset.y : offset);
+  return {
+    region: cn(POSITION[base], sm && POSITION_SM[sm], lg && POSITION_LG[lg]),
+    list: cn(
+      LIST_ORDER[verticalOf(base)],
+      sm && LIST_ORDER_SM[verticalOf(sm)],
+      lg && LIST_ORDER_LG[verticalOf(lg)],
+    ),
+    style: {
+      ...(x !== undefined ? { "--toast-x": x } : {}),
+      ...(y !== undefined ? { "--toast-y": y } : {}),
+    } as CSSProperties,
+  };
+}
 
 function documentDir(): "ltr" | "rtl" | undefined {
   if (typeof document === "undefined") return undefined;
@@ -252,7 +352,7 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
         <button
           type="button"
           className={cn(
-            "h-8 shrink-0 rounded-button px-3 font-bold focus-ring",
+            "h-8 shrink-0 rounded-button px-3 font-bold focus-visible:focus-ring",
             toneActionClasses[tone],
             classNames?.action,
           )}
@@ -274,6 +374,7 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
  */
 export function Toaster({
   position = "bottom-center",
+  offset,
   duration = 6000,
   visibleToasts = 2,
   className,
@@ -287,7 +388,7 @@ export function Toaster({
   const records = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const regionRef = useRef<HTMLElement>(null);
   const shown = selectVisible(records, visibleToasts);
-  const fromTop = position.startsWith("top");
+  const placement = toasterPlacement(position, offset);
 
   useEffect(() => {
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -306,20 +407,15 @@ export function Toaster({
         data-ui-layer-branch=""
         aria-label={label ?? strings.notifications}
         tabIndex={-1}
+        style={placement.style}
         className={cn(
           "pointer-events-none fixed z-[1000] flex outline-none",
-          POSITION[position],
+          placement.region,
           classNames?.root,
           className,
         )}
       >
-        <div
-          className={cn(
-            "m-0 flex list-none gap-2 p-0",
-            fromTop ? "flex-col-reverse" : "flex-col",
-            classNames?.list,
-          )}
-        >
+        <div className={cn("m-0 flex list-none gap-2 p-0", placement.list, classNames?.list)}>
           {shown.map((record) => (
             <ToastItem
               key={record.id}
