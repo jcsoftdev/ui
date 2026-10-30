@@ -26,6 +26,7 @@ export const Danger: Story = { args: { status: "danger", label: "Sin conexión" 
 
 export const Idle: Story = { args: { status: "idle", label: "Inactivo" } };
 
+/** Without `onSelect` or `onClick` the pill is a plain `span`; `interactive` forces either element. */
 export const Decorative: Story = {
   args: { onSelect: undefined, label: "Sucursal Miraflores" },
 };
