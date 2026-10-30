@@ -116,6 +116,12 @@ export const PanelLayout: Story = {
   },
 };
 
+/** `start` renders before the breadcrumbs, after the menu button. */
+export const WithStartSlot: Story = {
+  args: { start: <strong className="text-ink">Don Lucho</strong> },
+  parameters: { a11y: { test: "todo" } },
+};
+
 export const Narrow: Story = {
   decorators: [
     (Story) => (
