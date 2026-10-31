@@ -7,6 +7,7 @@ export * from "./cell/index.js";
 export * from "./cols/index.js";
 export * from "./comment/index.js";
 export * from "./confirm-action/index.js";
+export * from "./context-rail/index.js";
 export * from "./dashboard/index.js";
 export * from "./data-grid/index.js";
 export * from "./description-list/index.js";
