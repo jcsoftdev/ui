@@ -176,7 +176,7 @@ export function TabsTrigger({
         }
       })}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-2.5 @max-[420px]/tabs:px-2 pt-2.75 pb-2.5 text-control text-ink-3 hover:text-ink focus-visible:-outline-offset-2 data-[state=active]:border-accent-word data-[state=active]:text-ink",
+        "inline-flex min-h-(--touch-target) shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-2.5 @max-[420px]/tabs:px-2 pt-2.75 pb-2.5 text-control text-ink-3 hover:text-ink focus-visible:-outline-offset-2 data-[state=active]:border-accent-word data-[state=active]:text-ink",
         className,
       )}
     >

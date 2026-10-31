@@ -6,13 +6,13 @@ section: Theming
 
 The whole look comes from one tokens file, `tokens/default.json`. A build step turns it into CSS custom properties (`tokens.css`) and a Tailwind v4 theme (`theme.css`). At runtime nothing is computed in JavaScript: five attributes only remap CSS variables.
 
-| Attribute      | Values                                                        | Default (no attribute)         |
-| -------------- | ------------------------------------------------------------- | ------------------------------ |
-| `data-theme`   | `light`, `dark`                                               | follows `prefers-color-scheme` |
-| `data-accent`  | `durazno`, `menta`, `cielo`, `lavanda`, `orquidea`, `grafito` | Coral                          |
-| `data-style`   | `soft`, `bordered`, `elevated`, `flat`, `glass`, `brutal`     | `soft`                         |
-| `data-density` | `compact` (x0.875), `normal`, `comfortable` (x1.125), `touch` | `normal`                       |
-| `data-radius`  | `none`, `sm`, `md`, `lg`, `full`                              | the preset's own radii         |
+| Attribute      | Values                                                                | Default (no attribute)         |
+| -------------- | --------------------------------------------------------------------- | ------------------------------ |
+| `data-theme`   | `light`, `dark`                                                       | follows `prefers-color-scheme` |
+| `data-accent`  | `durazno`, `menta`, `cielo`, `lavanda`, `orquidea`, `grafito`         | Coral                          |
+| `data-style`   | `soft`, `bordered`, `elevated`, `flat`, `glass`, `brutal`             | `soft`                         |
+| `data-density` | `compact` (x0.875), `normal`, `comfortable` (x1.125), `touch`, `auto` | `normal`                       |
+| `data-radius`  | `none`, `sm`, `md`, `lg`, `full`                                      | the preset's own radii         |
 
 ```html
 <html data-theme="dark" data-style="brutal" data-accent="cielo" data-density="comfortable">
@@ -54,6 +54,14 @@ On a single element the order is source order at equal specificity: theme, then 
 Density is a unitless `--density` that scales control heights, control and card padding and the `gap-density*` scale with `calc()`. Tailwind's global `--spacing` scale is not scaled.
 
 `touch` is built for thumbs: it also pins absolute sizes (controls 44px, large buttons 52px, inputs 48px) because one multiplier cannot lift 30px and 36px controls to the same 44px target. Fixed-size hit areas (Checkbox, Switch, radio rows, interactive Chip, dialog close buttons) grow to 44px under it. Portaled content leaves the subtree, so set the attribute on `<html>` or pass `container` to keep dialogs inside.
+
+`auto` follows the input device with CSS only: `normal` sizes on a fine pointer and `touch` sizes under `@media (pointer: coarse)`. It is opt-in (with no attribute the kit stays on `normal`), and an explicit level on a subtree always wins over an `auto` ancestor. Recommended setup:
+
+- `auto` on `<html>`, so phones and tablets get 44px targets and mouse desktops stay compact.
+- `touch` forced on operational screens (POS, kitchen display, kiosk).
+- `compact` or `normal` forced on dense admin tables.
+
+Fixed hit areas read `--touch-target` (0 or 44px) and a 0/1 `--touch` token instead of a selector, so they follow the nearest level. A custom token file retunes the two sides with `styles.density.auto` (`{ "fine": "normal", "coarse": "touch" }`, level ids) or omits the key to drop `auto`.
 
 ## Using tokens in your own code
 

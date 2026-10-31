@@ -80,7 +80,7 @@ export function Skeleton({
           {items(count, (id, index) => (
             <div
               key={id}
-              className="grid min-h-11 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b-divider py-2.5 in-data-[density=touch]:min-h-14"
+              className="grid min-h-[calc(2.75rem+0.75rem*var(--touch))] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b-divider py-2.5"
             >
               <span className="flex flex-col gap-1.5">
                 <Bar className={index % 2 === 0 ? "w-2/5" : "w-1/2"} />

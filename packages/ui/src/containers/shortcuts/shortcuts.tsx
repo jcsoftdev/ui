@@ -31,7 +31,7 @@ export interface ShortcutsItemProps extends ComponentPropsWithoutRef<"a"> {
 }
 
 const itemClasses =
-  "flex min-h-control-sm w-full cursor-pointer items-center gap-2 rounded-button px-2 text-start text-fs-130 text-ink-2 no-underline hover:bg-surface-2 hover:text-ink focus-visible:focus-ring in-data-[density=touch]:min-h-11";
+  "flex min-h-control-sm w-full cursor-pointer items-center gap-2 rounded-button px-2 text-start text-fs-130 text-ink-2 no-underline hover:bg-surface-2 hover:text-ink focus-visible:focus-ring";
 
 export function ShortcutsItem({
   icon,

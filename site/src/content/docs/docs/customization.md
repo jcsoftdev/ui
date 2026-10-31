@@ -34,7 +34,7 @@ Components only read semantic tokens (`bg`, `surface`, `ink`, `accent`, `--radiu
 }
 ```
 
-Density and touch sizing work the same way. `data-density="touch"` (or `compact`, `comfortable`) rescales `--control-height`, `--input-height` and the paddings.
+Density and touch sizing work the same way. `data-density="touch"` (or `compact`, `comfortable`, or `auto` to follow the pointer type) rescales `--control-height`, `--input-height` and the paddings.
 
 Specificity matters: the kit sets density, accent and style values on attribute selectors such as `:root[data-density="touch"]`, which beat a plain `:root` or `[data-density="touch"]` rule. Match the kit's selector (or higher) and load your CSS after the kit's:
 

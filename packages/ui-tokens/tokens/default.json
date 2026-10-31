@@ -1976,8 +1976,20 @@
      "name": "touch-target",
      "value": "0px",
      "usage": "Alto mínimo de un control interactivo pequeño: 0 salvo en data-density=touch, donde es 44px."
+    },
+    {
+     "name": "touch",
+     "value": "0",
+     "usage": "Interruptor 0/1 del nivel táctil (1 en data-density=touch, y en auto con puntero grueso). Los componentes con área de pulsación fija lo leen para crecer a 44px."
     }
    ],
+   "fixed": [
+    "touch"
+   ],
+   "auto": {
+    "fine": "normal",
+    "coarse": "touch"
+   },
    "scaled": [
     "control-height",
     "control-height-sm",
@@ -2017,7 +2029,8 @@
       "control-height-md": "48px",
       "control-height-lg": "52px",
       "input-height": "48px",
-      "touch-target": "44px"
+      "touch-target": "44px",
+      "touch": "1"
      }
     }
    ]

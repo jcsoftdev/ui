@@ -179,8 +179,8 @@ export function Sidebar({
                     "aria-current": item.active ? "page" : undefined,
                     title: rail ? item.label : undefined,
                     className: cn(
-                      "flex items-center gap-2.5 rounded-control px-2.5 py-2 text-control text-ink-2 hover:bg-surface-2 hover:text-ink [&_svg]:size-4.25 [&_svg]:shrink-0",
-                      rail && "relative justify-center in-data-[density=touch]:min-h-11",
+                      "flex min-h-(--touch-target) items-center gap-2.5 rounded-control px-2.5 py-2 text-control text-ink-2 hover:bg-surface-2 hover:text-ink [&_svg]:size-4.25 [&_svg]:shrink-0",
+                      rail && "relative justify-center",
                       item.active && "bg-accent-soft font-bold text-accent-ink",
                       classNames?.link,
                     ),

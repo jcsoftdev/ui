@@ -95,8 +95,7 @@ export function Chip({
         custom
           ? "bg-(--tone-c-soft) text-(--tone-c-ink)"
           : (chipToneClasses[tone as ChipBuiltinTone] ?? chipToneClasses.neutral),
-        interactive && "min-h-control-sm",
-        (interactive || onRemove) && "in-data-[density=touch]:min-h-11",
+        interactive ? "min-h-control-sm" : onRemove && "min-h-(--touch-target)",
         onRemove && "pr-1",
         className,
       )}
@@ -110,7 +109,7 @@ export function Chip({
           type="button"
           aria-label={removeLabel ?? strings.remove}
           onClick={onRemove}
-          className="grid size-4 shrink-0 cursor-pointer place-items-center self-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:focus-ring in-data-[density=touch]:size-11 in-data-[density=touch]:-mr-2"
+          className="-mr-[calc(0.5rem*var(--touch))] grid size-[calc(1rem+1.75rem*var(--touch))] shrink-0 cursor-pointer place-items-center self-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:focus-ring"
         >
           <X aria-hidden="true" />
         </button>

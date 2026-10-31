@@ -113,7 +113,7 @@ export function DrawerContent({
           <DialogPrimitive.Close
             aria-label={closeLabel ?? strings.close}
             className={cn(
-              "absolute top-2.25 right-2.25 flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink in-data-[density=touch]:top-0.5 in-data-[density=touch]:right-0.5",
+              "absolute top-[calc(0.5625rem-0.4375rem*var(--touch))] right-[calc(0.5625rem-0.4375rem*var(--touch))] flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink",
               classNames?.close,
             )}
           >

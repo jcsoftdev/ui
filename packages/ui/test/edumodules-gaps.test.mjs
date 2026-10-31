@@ -963,7 +963,10 @@ test("Skeleton list, kpis and key-value render N decorative items in one labelle
     assert.match(markup, /aria-label="Loading"/);
     assert.ok((markup.match(/aria-hidden="true"/g) ?? []).length >= 6, variant);
   }
-  assert.equal((html.skeleton({ variant: "list", count: 3 }).match(/min-h-11/g) ?? []).length, 3);
+  assert.equal(
+    (html.skeleton({ variant: "list", count: 3 }).match(/min-h-\[calc\(2\.75rem/g) ?? []).length,
+    3,
+  );
   assert.equal(
     (html.skeleton({ variant: "kpis", count: 5 }).match(/rounded-card/g) ?? []).length,
     5,
@@ -981,7 +984,10 @@ test("Skeleton variants never pad the inline edges and the list rows grow under 
   // KPI cards pad their own content; the grid and the status root stay flush.
   const kpis = html.skeleton({ variant: "kpis", count: 3 });
   assert.equal((kpis.match(/(?:^|[\s"])px-4/g) ?? []).length, 3);
-  assert.match(html.skeleton({ variant: "list" }), /in-data-\[density=touch\]:min-h-14/);
+  assert.match(
+    html.skeleton({ variant: "list" }),
+    /min-h-\[calc\(2\.75rem\+0\.75rem\*var\(--touch\)\)\]/,
+  );
 });
 
 test("Skeleton bar is one block sized by className and the label follows the locale", () => {

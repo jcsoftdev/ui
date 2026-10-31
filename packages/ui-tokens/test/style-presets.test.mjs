@@ -126,6 +126,62 @@ test("the touch density gives every control a 44px hit area and inputs 48px", ()
   );
 });
 
+test("touch is a 0/1 switch that only the touch level turns on", () => {
+  assert.equal(rule(":root {").get("touch"), "0");
+  for (const id of ["compact", "normal", "comfortable"])
+    assert.equal(rule(`:root[data-density="${id}"]`).get("touch"), "0");
+  assert.equal(rule(':root[data-density="touch"]').get("touch"), "1");
+});
+
+test('data-density="auto" is normal on fine pointers and touch under a coarse pointer', () => {
+  const head = ':root[data-density="auto"],\n[data-density="auto"] {';
+  assert.ok(css.includes(head), "matches :root and a nested element");
+  const fine = rule(head);
+  assert.deepEqual([...fine], [...rule(':root[data-density="normal"]')]);
+
+  const media = css.indexOf("@media (pointer: coarse) {");
+  assert.notEqual(media, -1, "the coarse side is a media query");
+  const coarse = rule(`  ${head.replace("\n", "\n  ")}`);
+  assert.deepEqual([...coarse], [...rule(':root[data-density="touch"]')]);
+  assert.equal(coarse.get("control-height"), "44px");
+  assert.equal(coarse.get("touch"), "1");
+
+  assert.ok(css.indexOf(head) < media, "the coarse block comes after the fine one");
+  assert.ok(media > css.indexOf(':root[data-density="touch"]'));
+  assert.ok(media < css.indexOf(':root[data-radius="none"]'), "radius still wins over density");
+});
+
+test("an explicit level on a nested element wins over an auto ancestor", () => {
+  const nested = (id) => css.includes(`[data-density="${id}"] {`);
+  assert.ok(nested("touch") && nested("normal") && nested("compact"));
+  // Each level redeclares the whole governed set on the element itself, so nothing is
+  // inherited from the auto root's coarse values.
+  const governed = stylesOf(theme).densityGoverned;
+  for (const id of ["normal", "touch", "compact", "comfortable"])
+    assert.deepEqual([...rule(`:root[data-density="${id}"]`).keys()], governed);
+});
+
+test("auto must name existing levels and cannot shadow a level", () => {
+  const unknown = structuredClone(theme);
+  unknown.styles.density.auto.coarse = "huge";
+  assert.throws(() => buildTheme(unknown), /unknown level "huge"/);
+  const clash = structuredClone(theme);
+  clash.styles.density.levels.push({ id: "auto", density: 1 });
+  assert.throws(() => buildTheme(clash), /reserved/);
+});
+
+test("a token file can retarget both sides of auto, or omit it", () => {
+  const custom = structuredClone(theme);
+  custom.styles.density.auto = { fine: "compact", coarse: "comfortable" };
+  const { "tokens.css": out } = buildTheme(custom);
+  const at = out.indexOf('[data-density="auto"] {');
+  assert.match(out.slice(at, at + 200), /--control-height: calc\(36px \* var\(--density\)\)/);
+  assert.match(out.slice(at, out.indexOf("@media (pointer: coarse)")), /--density: 0.875;/);
+  const none = structuredClone(theme);
+  delete none.styles.density.auto;
+  assert.doesNotMatch(buildTheme(none)["tokens.css"], /data-density="auto"|pointer: coarse/);
+});
+
 test("a density level cannot override a token density does not scale", () => {
   const bad = structuredClone(theme);
   bad.styles.density.levels.find((l) => l.id === "touch").values["radius-card"] = "4px";

@@ -28,7 +28,7 @@ export const dropdownMenuSurfaceClasses = "rounded-popover surface-overlay p-1.5
 
 /** The default look of a menu item, for your own `DropdownMenuItem asChild` or `MenuPrimitive.Item`. */
 export const dropdownMenuItemClasses =
-  "flex w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2";
+  "flex min-h-(--touch-target) w-full cursor-pointer items-center gap-2 rounded-event px-2.5 py-1.75 text-body text-ink outline-none data-highlighted:bg-surface-2";
 
 const surface = `${placement} ${POPPER_MOTION} ${dropdownMenuSurfaceClasses}`;
 const itemBase = `${dropdownMenuItemClasses} ${ITEM_MOTION}`;
