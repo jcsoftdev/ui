@@ -32,7 +32,7 @@ export const buttonVariantClasses: Readonly<Record<ButtonVariant, string>> = {
  * `Input`, `Select`, `Combobox`, `DatePicker` or `TimeInput` of the same size.
  */
 export const buttonSizeClasses: Readonly<Record<ButtonSize, string>> = {
-  sm: "h-control-sm px-3 text-fs-125 [&_svg]:size-3.5",
+  sm: "h-control-sm px-3 text-fs-120 [&_svg]:size-3.5",
   md: "h-control-md px-control-x text-fs-130",
   lg: "h-control-lg px-control-x text-fs-140",
 };

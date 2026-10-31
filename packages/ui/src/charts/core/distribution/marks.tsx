@@ -7,7 +7,7 @@ import type { DistributionLabels } from "./labels.js";
 import type { CategoryLayout, XYLayout } from "./layout.js";
 import type { BoxStats } from "./stats.js";
 
-const TITLE = "fill-ink-3 font-bold text-fs-105";
+const TITLE = "fill-ink-3 font-bold text-fs-110";
 
 /** Gridlines along the value axis plus both axes of a `categoryLayout`. */
 export const CategoryAxes = memo(function CategoryAxes({

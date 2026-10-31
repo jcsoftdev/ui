@@ -43,7 +43,7 @@ export function DetailHeader({
         {avatar !== undefined ? <div className="shrink-0">{avatar}</div> : null}
         <div className="min-w-0 flex-1 basis-56">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <Heading className="m-0 min-w-0 break-words font-semibold text-fs-220 text-ink [text-wrap:balance]">
+            <Heading className="m-0 min-w-0 break-words font-semibold text-fs-200 text-ink [text-wrap:balance]">
               {name}
             </Heading>
             {status}

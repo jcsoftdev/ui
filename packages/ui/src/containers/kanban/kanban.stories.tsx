@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Button } from "../../atoms/button/index.js";
 import { Kanban } from "./kanban.js";
 import type { KanbanColumnData } from "./model.js";
 
@@ -77,6 +78,8 @@ const meta = {
     defaultColumns: { control: false },
     onColumnsChange: { control: false },
     renderCard: { control: false },
+    cardActions: { control: false },
+    gripLabel: { control: false },
   },
   decorators: [
     (Story) => (
@@ -95,6 +98,28 @@ export const Default: Story = {};
 /** Drops into a column at its WIP limit are refused and announced. */
 export const EnforcedLimit: Story = {
   args: { enforceLimit: true },
+};
+
+/** Real buttons under each card: the card body is not interactive and a grip button carries keyboard pick-up. */
+export const WithActions: Story = {
+  args: {
+    cardActions: (card) => (
+      <>
+        <Button size="sm">Cobrar</Button>
+        <Button size="sm" variant="ghost">
+          Editar {card.title}
+        </Button>
+      </>
+    ),
+  },
+};
+
+/** `draggable={false}`: a display-only board with no grip column and no pick-up. */
+export const NotDraggable: Story = {
+  args: {
+    draggable: false,
+    cardActions: (card) => <Button size="sm">Abrir {card.title}</Button>,
+  },
 };
 
 export const Narrow: Story = {
@@ -125,4 +150,23 @@ export const GlassCompact: Story = {
       </div>
     ),
   ],
+};
+
+/** A wide lane lays its cards out in a grid; a narrow one stays a column. */
+export const CardGrid: StoryObj<typeof Kanban> = {
+  render: () => (
+    <div className="w-[56rem] max-w-full">
+      <Kanban
+        cardGrid
+        defaultColumns={[
+          {
+            id: "new",
+            title: "Nuevos",
+            cards: Array.from({ length: 7 }, (_, i) => ({ id: `n${i}`, title: `Pedido ${i + 1}` })),
+          },
+          { id: "doing", title: "En preparación", cards: [{ id: "d1", title: "Pedido 8" }] },
+        ]}
+      />
+    </div>
+  ),
 };

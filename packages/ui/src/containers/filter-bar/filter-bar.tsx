@@ -162,7 +162,7 @@ export function FilterBar({
         ) : null}
         <div className="ml-auto flex min-w-0 flex-wrap items-center gap-2">
           {resultCount !== undefined ? (
-            <p role="status" aria-live="polite" className="m-0 text-fs-125 text-ink-3 tabular-nums">
+            <p role="status" aria-live="polite" className="m-0 text-fs-120 text-ink-3 tabular-nums">
               {resultCount === 1
                 ? text.resultOne
                 : fill(text.resultMany, { count: format.format(resultCount) })}

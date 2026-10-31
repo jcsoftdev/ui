@@ -82,7 +82,9 @@ Compose names are in `com.jcsoftdev.ui.<package>`; each styled component has a m
 | `PageHeader` (`Eyebrow`, `Title`, `Lede`, `Actions`) | both | `containers.PageHeader` | Adds a back button. |
 | `Cell`, `GenericRow` | both | `containers.ListRow` | Leading, title, subtitle, meta, trailing. |
 | `ActionBar`, `Toolbar` | web-only | none | |
+| `SelectableCard` | web-only | none | Compose uses the clickable `Card`. |
 | `Carousel`, `Kanban`, `Scrolly`, `Resizable*`, `FileTree` | web-only | none | |
+| `ContextRail`, `ChatThread` | web-only | none | Container-width layout and the shop chat; Compose apps use window size classes. |
 | `Table*`, `DataGrid`, `ResponsiveList` | web-only | none | Out of scope for the Compose kit; the web container-width switch has no counterpart. |
 | `Kpi`, `KpiGroup`, `HBars`, `Facts`, `HighlightLine`, `DescriptionList` | web-only | none | |
 | `Comment`, `Timeline`, `ItemCardGroup` | web-only | none | |

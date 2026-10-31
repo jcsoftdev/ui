@@ -36,7 +36,7 @@ function Pill({
         y={y}
         dy="0.35em"
         textAnchor="middle"
-        className="font-bold text-fs-105"
+        className="font-bold text-fs-110"
         style={{ fill: ink }}
       >
         {text}
@@ -111,7 +111,7 @@ export const AnnotationLayer = memo(function AnnotationLayer({
                 <text
                   x={(horizontal ? 0 : note.from) + 6}
                   y={(horizontal ? note.from : 0) + 13}
-                  className="font-bold text-fs-105"
+                  className="font-bold text-fs-110"
                   style={{ fill: ink }}
                 >
                   {note.label}

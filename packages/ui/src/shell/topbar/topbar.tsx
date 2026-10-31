@@ -15,6 +15,7 @@ export type TopbarPart =
   | "root"
   | "inner"
   | "menuButton"
+  | "start"
   | "breadcrumbs"
   | "crumb"
   | "separator"
@@ -24,6 +25,8 @@ export type TopbarPart =
   | "shortcut";
 
 export interface TopbarProps {
+  /** Slot at the far start, after the menu button and before the breadcrumbs (a logo, a venue switcher). */
+  start?: ReactNode;
   /** Breadcrumb trail in order; the last entry is the current view. Nothing renders when absent or empty. */
   breadcrumbs?: string[];
   /** Accessible name of the breadcrumb landmark. */
@@ -57,6 +60,7 @@ export interface TopbarProps {
 }
 
 export function Topbar({
+  start,
   breadcrumbs,
   breadcrumbsLabel,
   onOpenMenu,
@@ -122,6 +126,10 @@ export function Topbar({
           >
             <Menu className="size-5" aria-hidden="true" />
           </button>
+        ) : null}
+
+        {start ? (
+          <div className={cn("flex shrink-0 items-center", classNames?.start)}>{start}</div>
         ) : null}
 
         {trail.length > 0 ? (

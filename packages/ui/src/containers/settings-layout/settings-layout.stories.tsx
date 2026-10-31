@@ -51,7 +51,11 @@ const meta = {
       </>
     ),
   },
-  argTypes: { children: { control: false } },
+  argTypes: {
+    children: { control: false },
+    breakpoint: { control: "select", options: [720, 940, 1080, 1280, "never"] },
+    container: { control: "inline-radio", options: ["page", "self"] },
+  },
   decorators: [
     (Story) => (
       <div className="@container/page">
@@ -81,6 +85,18 @@ export const Narrow: Story = {
   decorators: [
     (Story) => (
       <div className="@container/page w-[320px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** `container="self"` measures the layout itself, so it needs no `@container/page` ancestor. */
+export const OwnContainer: Story = {
+  args: { container: "self", breakpoint: 720 },
+  decorators: [
+    (Story) => (
+      <div className="w-[600px] max-w-full">
         <Story />
       </div>
     ),

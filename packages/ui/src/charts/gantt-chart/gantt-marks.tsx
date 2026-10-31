@@ -118,7 +118,7 @@ export const TimelineHeader = memo(function TimelineHeader({
                 x={x}
                 y={HEADER_ROW / 2}
                 dy="0.34em"
-                className="fill-ink-2 font-semibold text-fs-115"
+                className="fill-ink-2 font-semibold text-fs-120"
               >
                 {cell.label}
               </text>
@@ -150,7 +150,7 @@ export const TimelineHeader = memo(function TimelineHeader({
                 y={HEADER_ROW + HEADER_ROW / 2}
                 dy="0.34em"
                 textAnchor="middle"
-                className="fill-ink-3 font-medium text-fs-105 tabular-nums"
+                className="fill-ink-3 font-medium text-fs-110 tabular-nums"
               >
                 {cell.label}
               </text>
@@ -698,7 +698,7 @@ export const AnnotationLayer = memo(function AnnotationLayer({
               x={item.x0 + 10}
               y={y + 7.5}
               dy="0.34em"
-              className="fill-ink font-semibold text-fs-105"
+              className="fill-ink font-semibold text-fs-110"
             >
               {item.label}
             </text>

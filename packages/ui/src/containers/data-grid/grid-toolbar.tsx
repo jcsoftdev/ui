@@ -22,7 +22,7 @@ import type { DataGridColumn, Density } from "./types.js";
 const DENSITIES: Density[] = ["compact", "normal", "comfortable"];
 
 const buttonClass =
-  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-125 text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
+  "inline-flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-120 text-ink-2 hover:border-line-strong hover:text-ink [&_svg]:size-3.5";
 
 export interface GridToolbarProps<T> {
   labels: DataGridLabels;

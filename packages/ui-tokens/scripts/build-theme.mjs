@@ -91,6 +91,10 @@ const decls = (list) => list.map(([k, v]) => `  --${k}: ${v};`).join("\n");
 // that references another one is resolved where it is declared: a nested [data-style] must
 // re-declare the whole set instead of relying on :root's already-computed values.
 //
+// data-density="auto" follows the pointer: the `fine` level, or the `coarse` one under
+// @media (pointer: coarse). An explicit level on a nested element wins because it declares the
+// same properties on that element itself.
+//
 // Precedence on one element follows source order at equal specificity (:root[x] on the root,
 // [x] on a nested element): themes < accents < presets < density < radius. A preset's dark
 // values use :root[data-theme] in front of the attribute, so they outrank the theme block.
@@ -140,12 +144,22 @@ export function stylesOf(tokens) {
 
   const density = styles.density ?? { levels: [] };
   const densityGoverned = new Set(
-    density.levels.length ? ["density", ...(density.scaled ?? [])] : [],
+    density.levels.length ? ["density", ...(density.scaled ?? []), ...(density.fixed ?? [])] : [],
   );
   for (const name of densityGoverned) {
     known(name, "density");
     if (isThemed(byName.get(name).value))
       throw new Error(`styles: density token "${name}" is themed`);
+  }
+
+  const levelIds = new Set(density.levels.map((l) => l.id));
+  if (density.auto) {
+    if (levelIds.has("auto"))
+      throw new Error('styles: "auto" is reserved and cannot be a density level');
+    for (const side of ["fine", "coarse"]) {
+      if (!levelIds.has(density.auto[side]))
+        throw new Error(`styles: density auto.${side} names unknown level "${density.auto[side]}"`);
+    }
   }
 
   for (const level of density.levels) {
@@ -208,12 +222,28 @@ function buildStyleBlocks(tokens) {
     blocks.push(...variantBlocks("data-style", p.id, entries, themes));
   }
 
-  for (const level of s.density.levels) {
-    const entries = s.densityGoverned.map((name) => {
+  const fixed = new Set(s.density.fixed ?? []);
+  const densityEntries = (level) =>
+    s.densityGoverned.map((name) => {
       if (name === "density") return [name, String(level.density)];
-      return [name, level.values?.[name] ?? `calc(${s.byName.get(name).value} * var(--density))`];
+      const base = s.byName.get(name).value;
+      return [
+        name,
+        level.values?.[name] ?? (fixed.has(name) ? base : `calc(${base} * var(--density))`),
+      ];
     });
-    blocks.push(...variantBlocks("data-density", level.id, entries, themes));
+  for (const level of s.density.levels) {
+    blocks.push(...variantBlocks("data-density", level.id, densityEntries(level), themes));
+  }
+
+  // data-density="auto": one side per pointer type. Both sides redeclare the whole set, so a
+  // nested [data-density="auto"] resets whatever an explicit level above it declared.
+  const auto = s.density.auto;
+  if (auto) {
+    const side = (id) => densityEntries(s.density.levels.find((l) => l.id === id));
+    blocks.push(...variantBlocks("data-density", "auto", side(auto.fine), themes));
+    const coarse = variantBlocks("data-density", "auto", side(auto.coarse), themes)[0];
+    blocks.push(`@media (pointer: coarse) {\n${indent(coarse)}\n}`);
   }
 
   for (const level of s.radiusLevels) {
@@ -326,6 +356,17 @@ export function buildThemeCss(tokens) {
   }
   for (const s of tokens.type?.sizeScale ?? []) {
     lines.push(`  --text-${s.name}: ${s.fontSize};`);
+  }
+  for (const [name, width] of Object.entries(tokens.containers ?? {})) {
+    if (!TONE_NAME.test(name)) {
+      throw new Error(
+        `containers: "${name}" must be kebab-case (lowercase letters, digits, hyphens)`,
+      );
+    }
+    if (!/^\d+(\.\d+)?(px|rem)$/.test(width)) {
+      throw new Error(`containers.${name}: "${width}" must be a literal px or rem width`);
+    }
+    lines.push(`  --container-${name}: ${width};`);
   }
   const styles = stylesOf(tokens);
   for (const [themeVar, name] of Object.entries(tokens.styles?.tailwind ?? {})) {

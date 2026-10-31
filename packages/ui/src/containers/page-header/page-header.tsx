@@ -100,7 +100,7 @@ export function PageHeaderTitle({ className, ...props }: PageHeaderTitleProps) {
   return (
     <h1
       className={cn(
-        "m-0 break-words text-page-title [text-wrap:balance] in-data-compact:text-fs-220",
+        "m-0 break-words text-page-title [text-wrap:balance] in-data-compact:text-fs-200",
         className,
       )}
       {...props}

@@ -221,6 +221,7 @@
   --gap-density: 12px;
   --gap-density-lg: 18px;
   --touch-target: 0px;
+  --touch: 0;
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -1700,6 +1701,7 @@
   --gap-density: calc(12px * var(--density));
   --gap-density-lg: calc(18px * var(--density));
   --touch-target: calc(0px * var(--density));
+  --touch: 0;
 }
 
 :root[data-density="normal"],
@@ -1716,6 +1718,7 @@
   --gap-density: calc(12px * var(--density));
   --gap-density-lg: calc(18px * var(--density));
   --touch-target: calc(0px * var(--density));
+  --touch: 0;
 }
 
 :root[data-density="comfortable"],
@@ -1732,6 +1735,7 @@
   --gap-density: calc(12px * var(--density));
   --gap-density-lg: calc(18px * var(--density));
   --touch-target: calc(0px * var(--density));
+  --touch: 0;
 }
 
 :root[data-density="touch"],
@@ -1748,6 +1752,43 @@
   --gap-density: calc(12px * var(--density));
   --gap-density-lg: calc(18px * var(--density));
   --touch-target: 44px;
+  --touch: 1;
+}
+
+:root[data-density="auto"],
+[data-density="auto"] {
+  --control-height: calc(36px * var(--density));
+  --control-height-sm: calc(30px * var(--density));
+  --control-height-md: calc(38px * var(--density));
+  --control-height-lg: calc(52px * var(--density));
+  --input-height: calc(38px * var(--density));
+  --density: 1;
+  --pad-control-x: calc(16px * var(--density));
+  --pad-card: calc(16px * var(--density));
+  --gap-density-sm: calc(8px * var(--density));
+  --gap-density: calc(12px * var(--density));
+  --gap-density-lg: calc(18px * var(--density));
+  --touch-target: calc(0px * var(--density));
+  --touch: 0;
+}
+
+@media (pointer: coarse) {
+  :root[data-density="auto"],
+  [data-density="auto"] {
+    --control-height: 44px;
+    --control-height-sm: 44px;
+    --control-height-md: 48px;
+    --control-height-lg: 52px;
+    --input-height: 48px;
+    --density: 1.125;
+    --pad-control-x: calc(16px * var(--density));
+    --pad-card: calc(16px * var(--density));
+    --gap-density-sm: calc(8px * var(--density));
+    --gap-density: calc(12px * var(--density));
+    --gap-density-lg: calc(18px * var(--density));
+    --touch-target: 44px;
+    --touch: 1;
+  }
 }
 
 :root[data-radius="none"],

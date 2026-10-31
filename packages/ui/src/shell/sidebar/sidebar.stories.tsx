@@ -79,6 +79,13 @@ export const WithoutHeaderAndFooter: Story = { args: { header: undefined, footer
 
 export const Rail: Story = { args: { collapsed: true } };
 
+/** `collapsible` turns the group label into a toggle; the group holding the active page starts open. */
+export const CollapsibleGroups: Story = {
+  args: {
+    groups: groups.map((group) => ({ ...group, collapsible: true, defaultCollapsed: true })),
+  },
+};
+
 export const CustomLink: Story = {
   args: {
     renderLink: ({ children, ...props }) => (

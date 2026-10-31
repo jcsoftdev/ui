@@ -110,7 +110,7 @@ export function HBars({
       >
         {rows.map((row) => (
           <Fragment key={row.id}>
-            <span className="truncate font-semibold text-fs-125">{row.name}</span>
+            <span className="truncate font-semibold text-fs-120">{row.name}</span>
             <div className="relative flex h-5.5 items-center border-r-divider bg-[linear-gradient(to_right,var(--line)_1px,transparent_1px)] [background-size:20%_100%]">
               {paired ? (
                 <div className="flex h-6.5 w-full flex-col items-start justify-center gap-0.75">
@@ -164,7 +164,7 @@ export function HBars({
               {ticks.map((tick) => (
                 <span
                   key={tick.position}
-                  className="-translate-x-1/2 absolute font-medium text-fs-105 text-ink-3 leading-none tabular-nums"
+                  className="-translate-x-1/2 absolute font-medium text-fs-110 text-ink-3 leading-none tabular-nums"
                   style={{ left: `${tick.position}%` }}
                 >
                   {tick.label}

@@ -117,14 +117,32 @@ https://ui.jcsoftdev.com/docs/customization/
 fixed hit areas (Checkbox, Switch, RadioGroup rows, an interactive Chip, the Dialog and Drawer close
 buttons) grow to at least 44px under it and are unchanged under every other level.
 
+`data-density="auto"` picks the level from the input device, with CSS only: `normal` sizes on a fine
+pointer (mouse, trackpad) and `touch` sizes under `@media (pointer: coarse)` (phones, tablets).
+It is opt-in, not the default: with no attribute the kit keeps `normal` everywhere, so upgrading
+never resizes an existing app on touch devices.
+
 ```html
-<html data-density="touch"> <!-- or any subtree: <main data-density="touch"> -->
+<html data-density="auto"> <!-- or any subtree: <main data-density="touch"> -->
 ```
+
+Recommended setup:
+
+- Put `auto` on `<html>` so every screen adapts to the device.
+- Force `touch` on operational screens (POS, kitchen display, kiosk) that are used by finger even
+  when a mouse is plugged in.
+- Force `compact` or `normal` on dense admin tables.
+
+An explicit level on a subtree always beats an `auto` ancestor, because each level redeclares the
+whole set of density tokens on its own element. Fixed hit areas read `--touch-target` (0 or 44px) and
+the `--touch` switch (0 or 1) instead of a selector, so they follow whichever level is nearest, `auto` included.
 
 Portaled content (Dialog, Drawer) leaves the subtree, so set the attribute on `<html>` or pass the
 `container` prop to keep it inside. Custom token files can declare absolute sizes per level:
 `{ "id": "touch", "density": 1.125, "values": { "control-height": "44px" } }`; the keys must be
-tokens listed in `styles.density.scaled`.
+tokens listed in `styles.density.scaled` or `styles.density.fixed`. Both sides of `auto` are level
+ids in `styles.density.auto` (`{ "fine": "normal", "coarse": "touch" }`); point them at other levels
+to retune them, or remove the key to emit no `auto` level. `auto` is reserved and cannot be a level id.
 
 ## Localized default strings
 

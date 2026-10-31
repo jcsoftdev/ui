@@ -405,7 +405,7 @@ function RadarPlot({
                 x={cx + 4}
                 y={cy - ring.r - 2}
                 {...DECORATIVE}
-                className="fill-ink-3 text-fs-95 tabular-nums"
+                className="fill-ink-3 text-fs-100 tabular-nums"
               >
                 {axisFormat(ring.value)}
               </text>

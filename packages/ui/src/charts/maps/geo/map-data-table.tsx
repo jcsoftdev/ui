@@ -82,7 +82,7 @@ export function MapDataTable({
   );
   return (
     <div className="@container/table overflow-auto rounded-event border-divider" style={{ height }}>
-      <table className="w-full border-collapse text-fs-125">
+      <table className="w-full border-collapse text-fs-120">
         <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b-divider">

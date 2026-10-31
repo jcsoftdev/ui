@@ -132,7 +132,7 @@ export const ClientSide: Story = {
           onChange={(event) => setQuery(event.target.value)}
           className="h-control-sm rounded-input border-control px-2"
         />
-        <ul data-testid="rows" className="m-0 list-none p-0 text-fs-125">
+        <ul data-testid="rows" className="m-0 list-none p-0 text-fs-120">
           {pager.items.map((name) => (
             <li key={name}>{name}</li>
           ))}

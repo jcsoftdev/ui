@@ -175,3 +175,20 @@ test("tonePalettes reject names that are not kebab-case and incomplete palettes"
 test("a theme without tonePalettes builds exactly as before", () => {
   assert.doesNotMatch(buildTheme(tokens)["tokens.css"], /--tone-/);
 });
+
+test("containers emit literal --container-<name> widths in theme.css", () => {
+  const css = buildTheme({ ...tokens, containers: { "page-m": "720px", "page-w": "80rem" } })[
+    "theme.css"
+  ];
+  assert.match(css, /--container-page-m: 720px;/);
+  assert.match(css, /--container-page-w: 80rem;/);
+});
+
+test("containers reject non-kebab names and non-literal widths", () => {
+  assert.throws(() => buildTheme({ ...tokens, containers: { Page: "720px" } }), /kebab/);
+  assert.throws(() => buildTheme({ ...tokens, containers: { page: "var(--x)" } }), /literal/);
+});
+
+test("a theme without containers builds exactly as before", () => {
+  assert.doesNotMatch(buildTheme(tokens)["theme.css"], /--container-/);
+});

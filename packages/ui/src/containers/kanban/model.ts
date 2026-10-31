@@ -139,3 +139,23 @@ export function dropIndex(midpoints: number[], y: number): number {
   }
   return index;
 }
+
+export interface CardRect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/**
+ * Insert index for a pointer at (`x`, `y`) over a lane that lays its cards out as a grid, from the
+ * rectangles of the cards left in the lane in reading order: a card is passed when the pointer is
+ * below its row, or inside its row and past its horizontal midpoint.
+ */
+export function dropIndexGrid(rects: CardRect[], x: number, y: number): number {
+  let index = 0;
+  for (const rect of rects) {
+    if (y > rect.bottom || (y >= rect.top && x > (rect.left + rect.right) / 2)) index += 1;
+  }
+  return index;
+}

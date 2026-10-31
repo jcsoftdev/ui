@@ -2255,19 +2255,15 @@ public final class com/jcsoftdev/ui/theme/UiFontSizes {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/jcsoftdev/ui/theme/UiFontSizes;
 	public final fun getFs100-XSAIIZE ()J
-	public final fun getFs105-XSAIIZE ()J
 	public final fun getFs110-XSAIIZE ()J
-	public final fun getFs115-XSAIIZE ()J
 	public final fun getFs120-XSAIIZE ()J
-	public final fun getFs125-XSAIIZE ()J
 	public final fun getFs130-XSAIIZE ()J
 	public final fun getFs140-XSAIIZE ()J
 	public final fun getFs150-XSAIIZE ()J
 	public final fun getFs160-XSAIIZE ()J
-	public final fun getFs220-XSAIIZE ()J
-	public final fun getFs300-XSAIIZE ()J
+	public final fun getFs200-XSAIIZE ()J
+	public final fun getFs240-XSAIIZE ()J
 	public final fun getFs440-XSAIIZE ()J
-	public final fun getFs95-XSAIIZE ()J
 }
 
 public final class com/jcsoftdev/ui/theme/UiGlass {

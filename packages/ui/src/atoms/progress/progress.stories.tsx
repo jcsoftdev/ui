@@ -9,6 +9,10 @@ const meta = {
   argTypes: {
     value: { control: { type: "range", min: 0, max: 100, step: 1 } },
     max: { control: "number" },
+    tone: {
+      control: "select",
+      options: ["accent", "neutral", "success", "warning", "danger", "info"],
+    },
     "aria-label": { control: "text" },
   },
   decorators: [
@@ -42,6 +46,16 @@ export const Comparison: Story = {
     <div className="grid gap-3">
       <Progress {...args} />
       <Meter {...args} />
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  render: (args) => (
+    <div className="grid gap-3">
+      {(["neutral", "success", "warning", "danger", "info"] as const).map((tone) => (
+        <Progress key={tone} {...args} tone={tone} aria-label={`Progreso ${tone}`} />
+      ))}
     </div>
   ),
 };

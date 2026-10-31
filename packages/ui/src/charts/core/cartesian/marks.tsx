@@ -146,7 +146,7 @@ export const DataLabels = memo(function DataLabels({ geometry, dimmed }: DataLab
           strokeWidth={label.inside ? 0 : 3}
           strokeLinejoin="round"
           className={cn(
-            "font-bold text-fs-105 tabular-nums",
+            "font-bold text-fs-110 tabular-nums",
             label.inside ? "fill-surface" : "fill-ink-2 stroke-surface",
           )}
         >

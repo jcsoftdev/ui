@@ -1,6 +1,134 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2026-10-30)
+
+### App shells, layout containers and adaptive density
+
+Pieces a phone-first operations app kept patching in: a bottom bar the shell knows about, a side
+rail that collapses to a sheet, selectable lists, a chat thread, density that follows the pointer,
+and a product type scale. Additive except for the changes listed under "Changed".
+
+#### Added
+
+- **`AppShell` `bottomBar`**: phone navigation, usually a `BottomNav`. The shell renders it after
+  its children, fixed to the bottom edge and hidden from 900 px of shell width. While compact it
+  reserves the bar's height plus the safe-area inset at the bottom and publishes it as
+  `--app-bottom-bar` on the shell and on the document root.
+- **`ContextRail`**, new in `@jcsoftdev/ui/containers` (also `/containers/context-rail`): a work area
+  with a sticky side rail (`stickyTop`, its own scroll). `width` is a number or `{ m, w, xw }`
+  (default 360 / 400 / 440 from 720 / 1280 / 1600 px of container width). Under `breakpoint` (720,
+  960 or 1280; `"never"` keeps the rail beside the work area, `"always"` always collapses it) the
+  rail stacks below the work area, or with `collapse="sheet"` it is replaced by a `summary` bar that
+  opens it as a bottom sheet (`sheetOpen` / `onSheetOpenChange`, `sheetLabel`, `railLabel`). The
+  summary bar sticks at `bottom: var(--app-bottom-bar, 0px)`, above an `AppShell` bottom bar.
+- **`ChatThread`**, new in `@jcsoftdev/ui/containers`: business chat with `customer` (incoming),
+  `bot` and `staff` (outgoing) authors, day separators (Today / Yesterday / date, by `timeZone`),
+  `note` items for system lines, optional delivery status (`sending`, `sent`, `delivered`, `read`,
+  `failed` with `onRetry`), a `composer` slot, an `empty` slot and a live `log` that stays at the
+  bottom. Texts come from `labels` (`chatThreadLabels.en` / `.es`). The `ai/` chat parts are
+  unchanged.
+- **`SelectableCard`**, new in `@jcsoftdev/ui/containers`: a card that is itself one `button`. No
+  `selected` makes it a plain button; `selected` makes it a toggle (`aria-pressed`) or, with
+  `semantics="radio"`, a radio (`aria-checked`). `disabled` with `disabledReason` keeps it focusable
+  (`aria-disabled`), ignores clicks and announces the reason.
+- **`ResponsiveList` selection and layout**: `onSelect` with `selectedKey` makes rows selectable
+  (click, Enter, Space; arrows, Home and End move focus; `selectOnFocus` selects as well), with one
+  tab stop per list. Without `renderActions` the cards are a `listbox` of `option`s and the table a
+  `grid` with `aria-selected`; with it the rows keep list and table semantics and the selected one
+  has `aria-current="true"`. `layout="cards"` always renders cards (a list in a narrow pane);
+  `breakpoint` (480, 640, 672, 768, 960 or 1280; default 672, the previous 42rem) sets the
+  container width where the table starts; `cardLabels="hidden"` keeps the field labels for screen
+  readers only. Lists without these props render as before.
+- **`Cols variant="thirds"`**: three equal columns from 1280 px of `page` width, two from 720 px (an
+  odd last item spans both) and one below. The other variants keep their 940 / 1080 / 1500 px cuts.
+- **Container breakpoint tokens** (`@jcsoftdev/ui-tokens`): the optional `containers` section of a
+  token file emits `--container-<name>` widths in `theme.css`; `tokens/default.json` ships
+  `page-m` 720, `page-w` 1280 and `page-xw` 1600 (`@min-page-w/page:`). Files without the section
+  build byte-identically.
+- **`data-density="auto"`** (opt-in, `@jcsoftdev/ui-tokens`): `normal` values on a fine pointer and
+  `touch` values under `@media (pointer: coarse)`, CSS only. An explicit level on a subtree still
+  wins. Token files set both sides with `styles.density.auto` (`{ "fine", "coarse" }`, level ids)
+  or omit it; `auto` is reserved as a level id.
+- **`--touch` token** (0, or 1 under `touch` and under `auto` on a coarse pointer), from the new
+  `styles.density.fixed` list of density tokens that are not scaled.
+- **`Kanban`**: `cardActions` renders real buttons under each card (the card is no longer a
+  `role="button"` wrapper and keyboard pick-up moves to a grip button named by `gripLabel`);
+  `cardGrid` lays a lane's cards out as a grid once the lane is 30rem wide (`cardGridMinWidth`,
+  default 224 px), with drops in reading order (`dropIndexGrid` in `model.ts`); `draggable={false}`
+  makes a display-only board with no grip, no pick-up and no drag instructions. Boards without
+  these props are unchanged.
+- **`DrawerContent` `side="bottom"`**: a bottom sheet across the width, padded by the safe-area
+  inset, capped at 85dvh with its own scroll, sliding up (`SHEET_MOTION`). `handle` adds a
+  decorative grab handle; dragging it down closes the sheet unless `blocking`. New `handle` part and
+  `DrawerSide` type. `side="right"` (default) is unchanged.
+- **`Sidebar` collapsible groups**: `collapsible`, `defaultCollapsed` and controlled `collapsed` /
+  `onCollapsedChange` on a group. The label becomes a toggle (`aria-expanded`, `aria-controls`); a
+  group holding the active page starts open, and an uncontrolled group opens when one of its items
+  becomes active later. The rail (`collapsed` sidebar) keeps every item visible. New `groupToggle`
+  and `groupItems` parts.
+- **`Toaster`**: `offset` (px, a CSS length, or `{ x, y }`) and `position` per viewport width
+  (`{ base, sm?, lg? }`, from 640 / 1024 px). Bottom positions without an explicit `offset.y` clear
+  the `AppShell` bottom bar (`--app-bottom-bar + 1rem`).
+- **`SettingsLayout` / `SettingsLayoutNav` `breakpoint`** (720, 940, 1080 or 1280; default 940, or
+  `"never"`) and `container="self"` to measure its own `@container/settings`. The component is now a
+  client component.
+- **`Progress` / `Meter` `tone`** (`accent` default, `neutral`, `success`, `warning`, `danger`,
+  `info`, or a `tonePalettes` name); non-default tones set `data-tone` on the root.
+- **`KpiGroup` `minColumns={2}`**: two tiles across on the narrowest containers (an odd last tile
+  spans both); with `layout="auto-fit"` it never goes under two columns.
+- **`Topbar` `start`**: a slot between the menu button and the breadcrumbs; new `start` part.
+- **`StatusPill`**: `icon` (decorative, hidden from screen readers), `dot` (default `true` without
+  `icon`, `false` with one) and `collapseLabel` (hides the label under 700 px of container width).
+
+#### Changed
+
+- **Type scale (breaking, visual)**: product text is one tighter scale and no mobile role exceeds
+  its desktop counterpart. Density never changes text size.
+
+  | Role | Before | After |
+  | --- | --- | --- |
+  | `kpi-number` | 30 / 1.15 / -0.03em | 24 / 1.2 / -0.025em |
+  | `page-title` | 26 / 1.18 / -0.025em | 22 / 1.25 / -0.02em |
+  | `card-title` | 14 / 1.5 | 15 / 1.4 |
+  | `lede` | 14.5 | 14 |
+  | `row-title` | 13.5 | 14 |
+  | `meta` | 12.5 | 12 |
+  | `data` | 12.5 / 1.6 | 13 / 1.5 |
+  | `clock` | 17 | 16 |
+  | `m-title` | 34 / 41px | 22 / 1.25 / -0.02em |
+  | `m-card-title` | 26 / 1.1 | 20 / 1.2 / -0.015em |
+  | `m-row-title`, `m-button` | 15.5 | 15 |
+
+  `dialog-title`, `body`, `control`, `chip-text`, `overline`, `count`, `m-body` and `m-meta` keep
+  their sizes. The size-only steps (`text-fs-*`) go from 14 to 10: `fs-100`, `110`, `120`, `130`,
+  `140`, `150`, `160`, `200`, `240`, `440`. Removed steps map to the nearest survivor: `fs-95` to
+  `fs-100`, `fs-105` to `fs-110`, `fs-115` and `fs-125` to `fs-120`, `fs-220` to `fs-200`, `fs-300`
+  to `fs-240`. Components moved to the new steps (the small `Button` and the pagination, filter bar
+  and columns-menu texts 12.5 to 12 px; the small `Chip` 11.5 to 12 px; `DetailHeader` and the narrow `Kpi` 22 to 20 px; `BigDate`
+  30 / 22 to 24 / 20 px; chart and grid micro-text to the 10 / 11 / 12 steps). Compose
+  `UiFontSizes` loses `fs95`, `fs105`, `fs115`, `fs125`, `fs220` and `fs300` and gains `fs200` and
+  `fs240`.
+- **`StatusPill` (breaking)**: without `onSelect` or `onClick` it renders a plain `span` instead of
+  a disabled `button`; `interactive` forces either element. Its label stays visible at every width
+  unless `collapseLabel` is set (it used to hide under 700 px unconditionally), and a pill with an
+  `icon` no longer repeats the status as icon plus dot.
+- **Touch sizing reads tokens, not an ancestor selector**: `Checkbox`, `Switch`, `RadioGroup`
+  rows, `Chip` (interactive and removable), `ChipGroup`, `Shortcuts`, the `Dialog` and `Drawer` close
+  buttons, `SettingsLayout` nav items, `Sidebar` links, `Tabs` triggers, `DropdownMenu` items and the
+  `Skeleton` list rows read `--touch-target` or `--touch` instead of `in-data-[density=touch]:`, so
+  they follow the nearest density level, `auto` included. `Sidebar` links, `Tabs` triggers,
+  `DropdownMenu` items and `SettingsLayout` nav items now reach 44 px under touch. Default density
+  renders the same sizes as before.
+- **`Toaster`**: the action button shows its focus ring on `:focus-visible` only.
+
+#### Migration
+
+- Replace any `text-fs-95`, `-105`, `-115`, `-125`, `-220` or `-300` class with the step above, and
+  drop overrides of the removed `--text-fs-*` names.
+- A `StatusPill` used as a button needs `onSelect`, `onClick` or `interactive`; pass
+  `collapseLabel` to keep the old icon-only look on narrow containers.
+- To get the bottom bar reservation, move a `BottomNav` from the page column to `AppShell`'s
+  `bottomBar`.
 
 ### Control sizes, table density, row actions and pagination
 

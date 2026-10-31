@@ -739,19 +739,15 @@
    "sans": "\"Figtree\", ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
   },
   "sizeScale": [
-   { "name": "fs-95", "fontSize": "9.5px" },
    { "name": "fs-100", "fontSize": "10px" },
-   { "name": "fs-105", "fontSize": "10.5px" },
    { "name": "fs-110", "fontSize": "11px" },
-   { "name": "fs-115", "fontSize": "11.5px" },
    { "name": "fs-120", "fontSize": "12px" },
-   { "name": "fs-125", "fontSize": "12.5px" },
    { "name": "fs-130", "fontSize": "13px" },
    { "name": "fs-140", "fontSize": "14px" },
    { "name": "fs-150", "fontSize": "15px" },
    { "name": "fs-160", "fontSize": "16px" },
-   { "name": "fs-220", "fontSize": "22px" },
-   { "name": "fs-300", "fontSize": "30px" },
+   { "name": "fs-200", "fontSize": "20px" },
+   { "name": "fs-240", "fontSize": "24px" },
    { "name": "fs-440", "fontSize": "44px" }
   ],
   "groups": [
@@ -761,19 +757,19 @@
     "styles": [
      {
       "name": "kpi-number",
-      "fontSize": "30px",
-      "lineHeight": 1.15,
+      "fontSize": "24px",
+      "lineHeight": 1.2,
       "fontWeight": 800,
-      "letterSpacing": "-0.03em",
+      "letterSpacing": "-0.025em",
       "usage": "Cifra de un indicador: citas de hoy, en espera, ítems bajo mínimo.",
       "sample": "18"
      },
      {
       "name": "page-title",
-      "fontSize": "26px",
-      "lineHeight": 1.18,
+      "fontSize": "22px",
+      "lineHeight": 1.25,
       "fontWeight": 800,
-      "letterSpacing": "-0.025em",
+      "letterSpacing": "-0.02em",
       "usage": "Título de página del panel. Uno por vista; puede llevar una palabra en accent-word.",
       "sample": "Agenda de hoy"
      },
@@ -787,8 +783,8 @@
      },
      {
       "name": "card-title",
-      "fontSize": "14px",
-      "lineHeight": 1.5,
+      "fontSize": "15px",
+      "lineHeight": 1.4,
       "fontWeight": 700,
       "letterSpacing": "-0.01em",
       "usage": "Título de tarjeta.",
@@ -802,7 +798,7 @@
     "styles": [
      {
       "name": "lede",
-      "fontSize": "14.5px",
+      "fontSize": "14px",
       "lineHeight": 1.5,
       "fontWeight": 400,
       "usage": "Frase bajo el título de página, en ink-2. Máximo 68 caracteres por línea.",
@@ -818,7 +814,7 @@
      },
      {
       "name": "row-title",
-      "fontSize": "13.5px",
+      "fontSize": "14px",
       "lineHeight": 1.5,
       "fontWeight": 650,
       "usage": "Nombre del cliente, del servicio o del ítem en filas y tablas.",
@@ -834,7 +830,7 @@
      },
      {
       "name": "meta",
-      "fontSize": "12.5px",
+      "fontSize": "12px",
       "lineHeight": 1.5,
       "fontWeight": 400,
       "usage": "Metadatos bajo un título de fila, en ink-3.",
@@ -865,7 +861,7 @@
     "styles": [
      {
       "name": "clock",
-      "fontSize": "17px",
+      "fontSize": "16px",
       "lineHeight": 1,
       "fontWeight": 700,
       "usage": "Número del día en la tira de la semana. Cifras tabulares.",
@@ -873,8 +869,8 @@
      },
      {
       "name": "data",
-      "fontSize": "12.5px",
-      "lineHeight": 1.6,
+      "fontSize": "13px",
+      "lineHeight": 1.5,
       "fontWeight": 600,
       "usage": "Horas, duraciones, cantidades, precios y códigos. Misma familia, con cifras tabulares (clase mono).",
       "sample": "15:30 · 45 min · S/ 35.00"
@@ -895,25 +891,25 @@
     "styles": [
      {
       "name": "m-title",
-      "fontSize": "34px",
-      "lineHeight": "41px",
+      "fontSize": "22px",
+      "lineHeight": 1.25,
       "fontWeight": 800,
-      "letterSpacing": "-0.025em",
+      "letterSpacing": "-0.02em",
       "usage": "Título de pantalla en la app, con una palabra en accent-word.",
       "sample": "Hoy tienes 6 citas"
      },
      {
       "name": "m-card-title",
-      "fontSize": "26px",
-      "lineHeight": 1.1,
+      "fontSize": "20px",
+      "lineHeight": 1.2,
       "fontWeight": 800,
-      "letterSpacing": "-0.02em",
+      "letterSpacing": "-0.015em",
       "usage": "Nombre del cliente en la tarjeta principal.",
       "sample": "Renzo Quispe"
      },
      {
       "name": "m-row-title",
-      "fontSize": "15.5px",
+      "fontSize": "15px",
       "lineHeight": 1.3,
       "fontWeight": 700,
       "usage": "Nombre en un bloque de la línea de tiempo y en filas.",
@@ -929,7 +925,7 @@
      },
      {
       "name": "m-button",
-      "fontSize": "15.5px",
+      "fontSize": "15px",
       "lineHeight": 1,
       "fontWeight": 700,
       "usage": "Etiqueta del botón principal de 54 px.",
@@ -1178,6 +1174,11 @@
    "orquidea": "chart-cat-5",
    "grafito": "chart-cat-6"
   }
+ },
+ "containers": {
+  "page-m": "720px",
+  "page-w": "1280px",
+  "page-xw": "1600px"
  },
  "styles": {
   "default": "soft",
@@ -1976,8 +1977,20 @@
      "name": "touch-target",
      "value": "0px",
      "usage": "Alto mínimo de un control interactivo pequeño: 0 salvo en data-density=touch, donde es 44px."
+    },
+    {
+     "name": "touch",
+     "value": "0",
+     "usage": "Interruptor 0/1 del nivel táctil (1 en data-density=touch, y en auto con puntero grueso). Los componentes con área de pulsación fija lo leen para crecer a 44px."
     }
    ],
+   "fixed": [
+    "touch"
+   ],
+   "auto": {
+    "fine": "normal",
+    "coarse": "touch"
+   },
    "scaled": [
     "control-height",
     "control-height-sm",
@@ -2017,7 +2030,8 @@
       "control-height-md": "48px",
       "control-height-lg": "52px",
       "input-height": "48px",
-      "touch-target": "44px"
+      "touch-target": "44px",
+      "touch": "1"
      }
     }
    ]

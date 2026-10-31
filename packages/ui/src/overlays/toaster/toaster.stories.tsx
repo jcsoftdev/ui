@@ -95,6 +95,22 @@ export const TopRightStack: Story = {
   ),
 };
 
+/** Bottom centre on phones, bottom right from 640 px, lifted above a bottom tab bar. */
+export const ResponsivePositionAndOffset: Story = {
+  args: {
+    position: { base: "bottom-center", sm: "bottom-right" },
+    offset: { x: 16, y: "calc(env(safe-area-inset-bottom) + 4.5rem)" },
+  },
+  render: (args) => (
+    <>
+      <Toaster {...args} />
+      <Button variant="secondary" onClick={() => toast("Pedido enviado a cocina")}>
+        Lanzar aviso
+      </Button>
+    </>
+  ),
+};
+
 const cleanUp = () => reset();
 
 const withToaster =

@@ -30,7 +30,7 @@ export type DemoControls = Pick<
   "density" | "selectable" | "loading" | "hideToolbar" | "height"
 >;
 
-const note = "text-fs-125 text-ink-3";
+const note = "text-fs-120 text-ink-3";
 
 function Stack({ children }: { children: ReactNode }) {
   return <div className="grid gap-2">{children}</div>;
@@ -231,7 +231,7 @@ function PersistenceGrid({ density, height, onReset }: DemoControls & { onReset:
           <button
             type="button"
             onClick={reset}
-            className="inline-flex h-control-sm items-center rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-125 text-ink-2 hover:border-line-strong hover:text-ink"
+            className="inline-flex h-control-sm items-center rounded-control border-divider bg-surface-control px-2.5 font-[600] text-fs-120 text-ink-2 hover:border-line-strong hover:text-ink"
           >
             Restablecer todo
           </button>
@@ -308,7 +308,7 @@ export function KeyboardDemo({ density }: DemoControls) {
       <p className="text-fs-130 text-ink" aria-live="polite">
         Celda activa: <b className="font-[650]">{where}</b>
       </p>
-      <table className="w-full border-collapse text-left text-fs-125">
+      <table className="w-full border-collapse text-left text-fs-120">
         <caption className="sr-only">Atajos de teclado</caption>
         <tbody>
           {SHORTCUTS.map(([keys, action]) => (
@@ -487,7 +487,7 @@ export function FilterBuilderDemo({ density, height }: DemoControls) {
             return column ? distinctValues(ventas, column) : [];
           }}
         />
-        <p className="mt-3 border-t-divider pt-2 text-fs-125 text-ink-3">
+        <p className="mt-3 border-t-divider pt-2 text-fs-120 text-ink-3">
           {text ? `Filtro: ${text}` : "Sin filtro activo."}{" "}
           <button
             type="button"

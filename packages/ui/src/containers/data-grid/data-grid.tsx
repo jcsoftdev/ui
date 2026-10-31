@@ -3080,7 +3080,7 @@ export function DataGrid<T>({
           <span className="min-w-0 flex-1">{labels.loadError}</span>
           <button
             type="button"
-            className="rounded-control border border-danger px-2.5 py-1 font-[600] text-fs-125 hover:bg-surface"
+            className="rounded-control border border-danger px-2.5 py-1 font-[600] text-fs-120 hover:bg-surface"
             onClick={remote.retry}
           >
             {labels.retry}
@@ -3183,7 +3183,7 @@ export function DataGrid<T>({
                       {sourceActive && remote.failed ? (
                         <button
                           type="button"
-                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-fs-125 text-ink-2 hover:text-ink"
+                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-fs-120 text-ink-2 hover:text-ink"
                           onClick={remote.retry}
                         >
                           {labels.retry}
@@ -3191,7 +3191,7 @@ export function DataGrid<T>({
                       ) : emptyFiltered ? (
                         <button
                           type="button"
-                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-fs-125 text-ink-2 hover:text-ink"
+                          className="rounded-control border-divider px-2.5 py-1 font-[600] text-fs-120 text-ink-2 hover:text-ink"
                           onClick={() => {
                             setFiltersState({});
                             setSearch("");
@@ -3230,7 +3230,7 @@ export function DataGrid<T>({
         </div>
       </div>
       {rangeSelection ? (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-divider px-3 py-1.5 text-fs-125 text-ink-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t-divider px-3 py-1.5 text-fs-120 text-ink-2">
           {stats && cellRange ? (
             <>
               <span className="font-[650] text-ink">{labels.rangeCells(rangeCellCount)}</span>
@@ -3355,14 +3355,14 @@ function Pagination({
   return (
     <nav
       aria-label={labels.rowsPerPage}
-      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-t-divider px-2 py-1.5 text-fs-125 text-ink-2"
+      className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1 border-t-divider px-2 py-1.5 text-fs-120 text-ink-2"
     >
       <label className="flex items-center gap-2">
         <span>{labels.rowsPerPage}</span>
         <select
           value={pageSize}
           onChange={(event) => onPageSize(Number(event.target.value))}
-          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-fs-125 text-ink"
+          className="h-control-sm rounded-input border-control bg-surface-control px-1.5 text-fs-120 text-ink"
         >
           {[...new Set([...options, pageSize])]
             .sort((a, b) => a - b)

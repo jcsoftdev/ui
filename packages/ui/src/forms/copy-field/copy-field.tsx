@@ -67,7 +67,7 @@ export function CopyField({
             onCopy?.(value);
           }}
           className={cn(
-            "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 rounded-button px-2.5 font-semibold text-ink-2 text-meta hover:bg-surface-2 hover:text-ink focus-visible:focus-ring in-data-[density=touch]:h-11",
+            "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 rounded-button px-2.5 font-semibold text-ink-2 text-meta hover:bg-surface-2 hover:text-ink focus-visible:focus-ring",
             copied && "text-success",
             classNames?.button,
           )}

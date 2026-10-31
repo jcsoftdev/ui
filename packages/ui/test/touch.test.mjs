@@ -1,26 +1,50 @@
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
 const { html } = await loadCases("cases.tsx");
 
-test("checkbox and switch add an invisible 44px hit target under data-density=touch only", () => {
+test("checkbox and switch add an invisible hit target sized by --touch-target", () => {
   for (const markup of [html.checkbox(), html.switch()]) {
     assert.match(markup, /size-10/);
     assert.match(markup, /\brelative\b/);
-    assert.match(markup, /in-data-\[density=touch\]:after:size-11/);
-    assert.match(markup, /in-data-\[density=touch\]:after:absolute/);
-    assert.doesNotMatch(markup, /in-data-\[density=touch\]:size-11/);
+    assert.match(markup, /after:size-\(--touch-target\)/);
+    assert.match(markup, /after:absolute/);
+    assert.doesNotMatch(markup, /density=/);
   }
 });
 
-test("radio options keep a 44px row under touch", () => {
-  assert.match(html.radio(), /in-data-\[density=touch\]:min-h-11/);
+test("radio options keep a 44px row under touch through --touch-target", () => {
+  assert.match(html.radio(), /min-h-\(--touch-target\)/);
+  assert.doesNotMatch(html.radio(), /density=/);
 });
 
 test("only an interactive chip enlarges under touch", () => {
-  assert.match(html.chipInteractive(), /in-data-\[density=touch\]:min-h-11/);
-  assert.doesNotMatch(html.chipStatic(), /min-h-11/);
+  assert.match(html.chipInteractive(), /min-h-control-sm/);
+  assert.doesNotMatch(html.chipStatic(), /min-h-|--touch/);
+});
+
+test("nav-like lists reach 44px under touch through --touch-target", () => {
+  const sources = [
+    "src/containers/settings-layout/settings-layout.tsx",
+    "src/shell/sidebar/sidebar.tsx",
+    "src/navigation/tabs/tabs.tsx",
+    "src/overlays/dropdown-menu/dropdown-menu.tsx",
+  ];
+  for (const file of sources) {
+    const source = readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+    assert.match(source, /min-h-\(--touch-target\)/, file);
+  }
+});
+
+test("no component reads data-density=touch directly, so data-density=auto reaches them", () => {
+  const offenders = readdirSync(new URL("../src", import.meta.url), { recursive: true })
+    .filter((file) => /\.tsx?$/.test(file) && !/\.stories\.tsx$/.test(file))
+    .filter((file) =>
+      readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8").includes("density=touch"),
+    );
+  assert.deepEqual(offenders, []);
 });
 
 test("checkbox is a square box filled with the accent, not a round success badge", () => {

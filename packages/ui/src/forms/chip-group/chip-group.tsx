@@ -162,7 +162,7 @@ export function ChipGroup(props: ChipGroupProps) {
             {...item}
             onClick={() => toggle(option.value)}
             className={cn(
-              "inline-flex cursor-pointer items-center gap-1.5 rounded-badge border-control bg-surface-control px-3 font-medium text-fs-130 text-ink-2 hover:bg-surface-2 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent-ink group-data-[invalid]/chips:border-danger in-data-[density=touch]:min-h-11 [&_svg]:size-3",
+              "inline-flex cursor-pointer items-center gap-1.5 rounded-badge border-control bg-surface-control px-3 font-medium text-fs-130 text-ink-2 hover:bg-surface-2 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent-ink group-data-[invalid]/chips:border-danger min-h-(--touch-target) [&_svg]:size-3",
               size === "md" ? "min-h-control-md" : "min-h-control-sm",
               classNames?.chip,
             )}

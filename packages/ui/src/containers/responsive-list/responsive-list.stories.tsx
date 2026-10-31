@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import { ResponsiveList, type ResponsiveListColumn } from "./responsive-list.js";
@@ -62,13 +63,31 @@ export const WithActions: Story = {
   },
 };
 
+/** `onSelect` makes rows selectable: listbox cards and a grid of rows, arrows move focus, Enter or Space selects. */
+export const Selectable: Story = {
+  render: (args) => {
+    const [key, setKey] = useState<string | null>("A-102");
+    return <ResponsiveList {...args} selectedKey={key} onSelect={setKey} />;
+  },
+};
+
+/** Arrow keys select the row they land on, as a master list next to its detail does. */
+export const SelectOnFocus: Story = {
+  render: (args) => {
+    const [key, setKey] = useState<string | null>("A-101");
+    return (
+      <ResponsiveList {...args} layout="cards" selectedKey={key} onSelect={setKey} selectOnFocus />
+    );
+  },
+};
+
 export const HighlightedRow: Story = {
   args: {
     rowClassName: (o: Order) => (o.status === "pending" ? "bg-warning-soft" : undefined),
   },
 };
 
-/** Under 42rem of container width the same data renders as stacked cards. */
+/** Under the container breakpoint (672 px, 42rem, by default) the same data renders as stacked cards. */
 export const Phone: Story = {
   args: { renderActions: (o: Order) => <Button size="sm">Ver {o.id}</Button> },
   decorators: [
@@ -78,4 +97,25 @@ export const Phone: Story = {
       </div>
     ),
   ],
+};
+
+/** The switch follows the list's own width: a narrow pane on a wide screen still gets cards. */
+export const NarrowPane: Story = {
+  decorators: [
+    (Story) => (
+      <div className="w-[520px] max-w-full">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+export const EarlierBreakpoint: Story = {
+  args: { breakpoint: 480 },
+  decorators: NarrowPane.decorators,
+};
+
+/** Labels stay in the accessibility tree and leave the card. */
+export const HiddenCardLabels: Story = {
+  args: { layout: "cards", cardLabels: "hidden" },
 };
