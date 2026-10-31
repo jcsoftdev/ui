@@ -118,11 +118,11 @@ const POSITION: Record<ToasterPosition, string> = {
   "top-right":
     "top-[var(--toast-y,1rem)] bottom-auto right-[var(--toast-x,1rem)] left-auto translate-x-0 items-end",
   "bottom-left":
-    "bottom-[var(--toast-y,1rem)] top-auto left-[var(--toast-x,1rem)] right-auto translate-x-0 items-start",
+    "bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] top-auto left-[var(--toast-x,1rem)] right-auto translate-x-0 items-start",
   "bottom-center":
-    "bottom-[var(--toast-y,1rem)] top-auto left-1/2 right-auto -translate-x-1/2 items-center",
+    "bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] top-auto left-1/2 right-auto -translate-x-1/2 items-center",
   "bottom-right":
-    "bottom-[var(--toast-y,1rem)] top-auto right-[var(--toast-x,1rem)] left-auto translate-x-0 items-end",
+    "bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] top-auto right-[var(--toast-x,1rem)] left-auto translate-x-0 items-end",
 };
 
 const POSITION_SM: Record<ToasterPosition, string> = {
@@ -133,11 +133,11 @@ const POSITION_SM: Record<ToasterPosition, string> = {
   "top-right":
     "min-[640px]:top-[var(--toast-y,1rem)] min-[640px]:bottom-auto min-[640px]:right-[var(--toast-x,1rem)] min-[640px]:left-auto min-[640px]:translate-x-0 min-[640px]:items-end",
   "bottom-left":
-    "min-[640px]:bottom-[var(--toast-y,1rem)] min-[640px]:top-auto min-[640px]:left-[var(--toast-x,1rem)] min-[640px]:right-auto min-[640px]:translate-x-0 min-[640px]:items-start",
+    "min-[640px]:bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] min-[640px]:top-auto min-[640px]:left-[var(--toast-x,1rem)] min-[640px]:right-auto min-[640px]:translate-x-0 min-[640px]:items-start",
   "bottom-center":
-    "min-[640px]:bottom-[var(--toast-y,1rem)] min-[640px]:top-auto min-[640px]:left-1/2 min-[640px]:right-auto min-[640px]:-translate-x-1/2 min-[640px]:items-center",
+    "min-[640px]:bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] min-[640px]:top-auto min-[640px]:left-1/2 min-[640px]:right-auto min-[640px]:-translate-x-1/2 min-[640px]:items-center",
   "bottom-right":
-    "min-[640px]:bottom-[var(--toast-y,1rem)] min-[640px]:top-auto min-[640px]:right-[var(--toast-x,1rem)] min-[640px]:left-auto min-[640px]:translate-x-0 min-[640px]:items-end",
+    "min-[640px]:bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] min-[640px]:top-auto min-[640px]:right-[var(--toast-x,1rem)] min-[640px]:left-auto min-[640px]:translate-x-0 min-[640px]:items-end",
 };
 
 const POSITION_LG: Record<ToasterPosition, string> = {
@@ -148,11 +148,11 @@ const POSITION_LG: Record<ToasterPosition, string> = {
   "top-right":
     "min-[1024px]:top-[var(--toast-y,1rem)] min-[1024px]:bottom-auto min-[1024px]:right-[var(--toast-x,1rem)] min-[1024px]:left-auto min-[1024px]:translate-x-0 min-[1024px]:items-end",
   "bottom-left":
-    "min-[1024px]:bottom-[var(--toast-y,1rem)] min-[1024px]:top-auto min-[1024px]:left-[var(--toast-x,1rem)] min-[1024px]:right-auto min-[1024px]:translate-x-0 min-[1024px]:items-start",
+    "min-[1024px]:bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] min-[1024px]:top-auto min-[1024px]:left-[var(--toast-x,1rem)] min-[1024px]:right-auto min-[1024px]:translate-x-0 min-[1024px]:items-start",
   "bottom-center":
-    "min-[1024px]:bottom-[var(--toast-y,1rem)] min-[1024px]:top-auto min-[1024px]:left-1/2 min-[1024px]:right-auto min-[1024px]:-translate-x-1/2 min-[1024px]:items-center",
+    "min-[1024px]:bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] min-[1024px]:top-auto min-[1024px]:left-1/2 min-[1024px]:right-auto min-[1024px]:-translate-x-1/2 min-[1024px]:items-center",
   "bottom-right":
-    "min-[1024px]:bottom-[var(--toast-y,1rem)] min-[1024px]:top-auto min-[1024px]:right-[var(--toast-x,1rem)] min-[1024px]:left-auto min-[1024px]:translate-x-0 min-[1024px]:items-end",
+    "min-[1024px]:bottom-[var(--toast-y,calc(var(--app-bottom-bar,0px)_+_1rem))] min-[1024px]:top-auto min-[1024px]:right-[var(--toast-x,1rem)] min-[1024px]:left-auto min-[1024px]:translate-x-0 min-[1024px]:items-end",
 };
 
 const LIST_ORDER: Record<ToasterVertical, string> = {
