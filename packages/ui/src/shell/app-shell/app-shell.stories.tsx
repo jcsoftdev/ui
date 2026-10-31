@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ReactNode, useState } from "react";
 import { Button } from "../../atoms/button/index.js";
 import { CalendarDays, Scissors, Users } from "../../icons/index.js";
+import { BottomNav } from "../bottom-nav/index.js";
 import { Sidebar, type SidebarGroup } from "../sidebar/index.js";
 import { Topbar } from "../topbar/index.js";
 import { AppShell, useAppShell } from "./app-shell.js";
@@ -30,7 +31,10 @@ function Mode() {
 function ShellDemo({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <AppShell className={className}>
+    <AppShell
+      className={className}
+      bottomBar={<BottomNav ariaLabel="Navegación móvil" items={groups[0].items} />}
+    >
       <Sidebar
         groups={groups}
         ariaLabel="Navegación principal"
@@ -96,7 +100,7 @@ export const Default: Story = {
   ),
 };
 
-/** 375 px wrapper: under 900 px of container width the sidebar becomes a drawer opened from the menu button. */
+/** 375 px wrapper: under 900 px of container width the sidebar becomes a drawer opened from the menu button and the bottom bar appears. */
 export const Compact: Story = {
   render: (args) => (
     <Frame width={375}>
