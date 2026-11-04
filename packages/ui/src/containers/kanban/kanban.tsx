@@ -16,6 +16,7 @@ import { Chip } from "../../atoms/chip/chip.js";
 import { GripVertical } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useFocusRescue } from "../../utils/focus-rescue.js";
 import {
   dropIndex,
   dropIndexGrid,
@@ -148,6 +149,7 @@ export function Kanban({
   const [status, setStatus] = useState("");
 
   const rootRef = useRef<HTMLDivElement>(null);
+  useFocusRescue(rootRef, { item: "[data-card-id]", group: "ul" });
   const focusId = useRef<string | null>(null);
   const columnsRef = useRef(columns);
   columnsRef.current = columns;

@@ -4,10 +4,12 @@ import {
   type ChangeEvent,
   type ChangeEventHandler,
   type KeyboardEvent,
+  useEffect,
   useId,
   useRef,
   useState,
 } from "react";
+import { useUiStrings } from "../../i18n/index.js";
 import { Minus, Plus } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -16,7 +18,20 @@ import { canStep, parseNumber, stepText } from "./model.js";
 
 export type NumberStepperPart = "root" | "decrement" | "increment" | "input" | "unit";
 
+export type NumberStepperSize = "sm" | "md";
+
+const sizeClasses: Readonly<Record<NumberStepperSize, { root: string; button: string }>> = {
+  sm: { root: "h-control-sm", button: "w-7" },
+  md: { root: "h-input", button: "w-9" },
+};
+
 interface NumberStepperBaseProps {
+  /** `sm` (30px) matches a small `Button` or `Input` for dense rows; `md` (default) is the regular field height. */
+  size?: NumberStepperSize;
+  /** Accessible name of the plus button. Defaults to the localized verb followed by the field label. */
+  incrementLabel?: string;
+  /** Accessible name of the minus button. Defaults to the localized verb followed by the field label. */
+  decrementLabel?: string;
   min?: number;
   max?: number;
   step?: number;
@@ -68,6 +83,9 @@ export type NumberStepperProps = NumberStepperNumberProps | NumberStepperStringP
  */
 export function NumberStepper(props: NumberStepperProps) {
   const {
+    size = "md",
+    incrementLabel,
+    decrementLabel,
     min = Number.NEGATIVE_INFINITY,
     max = Number.POSITIVE_INFINITY,
     step = 1,
@@ -85,9 +103,33 @@ export function NumberStepper(props: NumberStepperProps) {
     "aria-describedby": ariaDescribedBy,
     "aria-invalid": ariaInvalid,
   } = props;
+  const strings = useUiStrings();
   const autoId = useId();
   const id = idProp ?? autoId;
+  const decrementId = `${autoId}-decrement`;
+  const incrementId = `${autoId}-increment`;
+  const [fieldLabel, setFieldLabel] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (ariaLabel || ariaLabelledBy) return;
+    const labels = Array.from(inputRef.current?.labels ?? []);
+    setFieldLabel(
+      labels
+        .map((label) => label.textContent?.trim() ?? "")
+        .filter(Boolean)
+        .join(" "),
+    );
+  });
+
+  const stepButtonName = (verb: string, custom: string | undefined, buttonId: string) => {
+    if (custom) return { "aria-label": custom };
+    if (ariaLabelledBy) {
+      return { "aria-label": verb, "aria-labelledby": `${buttonId} ${ariaLabelledBy}` };
+    }
+    const subject = ariaLabel ?? fieldLabel;
+    return { "aria-label": subject ? `${verb} ${subject}` : verb };
+  };
   const isString = props.mode === "string";
   const [innerNumber, setInnerNumber] = useState(isString ? 0 : (props.defaultValue ?? 0));
   const [innerText, setInnerText] = useState(isString ? (props.defaultValue ?? "") : "");
@@ -148,13 +190,14 @@ export function NumberStepper(props: NumberStepperProps) {
   };
 
   const button =
-    "grid h-full w-9 shrink-0 place-items-center text-ink-2 outline-none hover:bg-surface-sunken hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-40";
+    "grid h-full shrink-0 place-items-center text-ink-2 outline-none hover:bg-surface-sunken hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-40";
   const valid = !Number.isNaN(number);
 
   return (
     <div
       className={cn(
-        "inline-flex h-input min-w-32 max-w-full items-stretch overflow-hidden rounded-input border-control bg-surface-control",
+        "inline-flex min-w-32 max-w-full items-stretch overflow-hidden rounded-input border-control bg-surface-control",
+        sizeClasses[size].root,
         disabled && "opacity-60",
         (invalid || ariaInvalid) && "border-danger",
         classNames?.root,
@@ -164,11 +207,12 @@ export function NumberStepper(props: NumberStepperProps) {
       <button
         type="button"
         tabIndex={-1}
-        aria-label="Disminuir"
+        id={decrementId}
+        {...stepButtonName(strings.decrease, decrementLabel, decrementId)}
         aria-controls={id}
         disabled={disabled || !canStep(text, -1, { min, max })}
         onClick={() => move(-1)}
-        className={cn(button, "pressable", classNames?.decrement)}
+        className={cn(button, sizeClasses[size].button, "pressable", classNames?.decrement)}
       >
         <Minus aria-hidden="true" className="size-3.5" />
       </button>
@@ -210,11 +254,12 @@ export function NumberStepper(props: NumberStepperProps) {
       <button
         type="button"
         tabIndex={-1}
-        aria-label="Aumentar"
+        id={incrementId}
+        {...stepButtonName(strings.increase, incrementLabel, incrementId)}
         aria-controls={id}
         disabled={disabled || !canStep(text, 1, { min, max })}
         onClick={() => move(1)}
-        className={cn(button, "pressable", classNames?.increment)}
+        className={cn(button, sizeClasses[size].button, "pressable", classNames?.increment)}
       >
         <Plus aria-hidden="true" className="size-3.5" />
       </button>

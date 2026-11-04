@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.7.0 (2026-11-03)
+
+### Demo gaps
+
+#### Added
+
+- **Focus restoration**: a toast's action, dismissal or timeout returns focus to the element that
+  was focused when the toast was published, or to its nearest surviving ancestor (a list). When the
+  focused item of a `ListDetail`, `ResponsiveList` or `Kanban` leaves the DOM (approved, started,
+  moved to another lane) focus moves to the item that took its place, the previous one when it was
+  the last, or the list when it empties. Focus that moved elsewhere on purpose is never touched.
+- **`NumberStepper` `size`** (`sm` 30px, `md` default) and `incrementLabel` / `decrementLabel`.
+  New `increase` and `decrease` UI strings (en, es).
+- **`SkeletonGroup`** and **`Skeleton` `announce`**: one status per loading region.
+- **`Avatar` `decorative`**; `aria-hidden` passed to `Avatar` also drops its image role and label.
+
+#### Changed
+
+- `NumberStepper` plus and minus buttons are named by the verb and the field label (`Aumentar
+  billetes de S/ 100`) and follow the UI strings locale; they were a fixed Spanish "Aumentar" and
+  "Disminuir".
+- `DialogHeader` stacks its children vertically (title above description) at every width; it was a
+  centred row. Pass `flex-row items-center` in `className` to keep the old layout.
+
 ## 0.6.0 (2026-10-30)
 
 ### App shells, layout containers and adaptive density
