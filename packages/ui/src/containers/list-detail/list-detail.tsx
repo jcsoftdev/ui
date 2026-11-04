@@ -18,6 +18,7 @@ import { useUiStrings } from "../../i18n/index.js";
 import { ChevronLeft } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers } from "../../utils/compose.js";
+import { useFocusRescue } from "../../utils/focus-rescue.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 
 interface ListDetailContextValue {
@@ -135,6 +136,7 @@ export function ListDetail({
   );
   const rootRef = useRef<HTMLDivElement>(null);
   const previous = useRef<string | null>(value);
+  useFocusRescue(rootRef, { item: "[data-list-detail-item]", group: "ul" });
 
   useEffect(() => {
     const before = previous.current;

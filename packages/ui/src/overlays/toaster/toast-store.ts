@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { focusChain } from "../../utils/focus-chain.js";
 
 /** `error` is the danger toast (kept under its original name); `info` and `warning` are neutral-status additions. */
 export type ToastTone = "default" | "success" | "error" | "info" | "warning";
@@ -26,6 +27,8 @@ export interface ToastRecord extends Omit<ToastOptions, "id"> {
   state: "open" | "closed";
   /** Bumped on every update so timers restart. */
   revision: number;
+  /** Where focus was, nearest first, when the toast was published; focus returns there once the toast leaves. */
+  origin: readonly HTMLElement[];
 }
 
 const EMPTY: readonly ToastRecord[] = [];
@@ -53,6 +56,10 @@ export function getServerSnapshot(): readonly ToastRecord[] {
   return EMPTY;
 }
 
+function currentFocusChain(): readonly HTMLElement[] {
+  return typeof document === "undefined" ? [] : focusChain(document.activeElement);
+}
+
 /** Adds a toast, or updates and reopens the one sharing `options.id`. Returns its id. */
 export function publish(
   message: ReactNode,
@@ -68,6 +75,7 @@ export function publish(
     tone,
     state: "open",
     revision: (existing?.revision ?? 0) + 1,
+    origin: existing?.origin ?? currentFocusChain(),
   };
   commit(existing ? toasts.map((t) => (t.id === id ? record : t)) : [...toasts, record]);
   return id;

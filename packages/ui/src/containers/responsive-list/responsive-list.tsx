@@ -1,9 +1,10 @@
 "use client";
 
-import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
+import { type KeyboardEvent, type MouseEvent, type ReactNode, useRef } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useFocusRescue } from "../../utils/focus-rescue.js";
 import { focusRowByKey } from "../../utils/list-navigation.js";
 import {
   Table,
@@ -124,6 +125,8 @@ export function ResponsiveList<T>({
   classNames,
 }: ResponsiveListProps<T>) {
   const strings = useUiStrings();
+  const rootRef = useRef<HTMLDivElement>(null);
+  useFocusRescue(rootRef, { item: "[data-row-key]", group: "tbody, ul" });
   const primary = columns.find((column) => column.primary) ?? columns[0];
   const details = columns.filter((column) => column !== primary);
   const selectable = onSelect !== undefined;
@@ -177,7 +180,10 @@ export function ResponsiveList<T>({
   };
 
   return (
-    <div className={cn("@container/responsive-list min-w-0", classNames?.root, className)}>
+    <div
+      ref={rootRef}
+      className={cn("@container/responsive-list min-w-0", classNames?.root, className)}
+    >
       {layout === "auto" ? (
         <div
           className={cn(

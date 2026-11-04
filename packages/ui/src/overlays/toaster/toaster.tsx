@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -14,6 +15,7 @@ import { useUiStrings } from "../../i18n/ui-strings-provider.js";
 import { Portal } from "../../primitives/portal.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { restoreFocusFromChain } from "../../utils/focus-chain.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import {
   dismiss,
@@ -254,10 +256,21 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
   const [entered, setEntered] = useState(false);
   const [dragX, setDragX] = useState(0);
   const drag = useRef<{ x: number; pointerId: number } | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const hidden = useDocumentHidden();
   const effectiveDuration = record.duration ?? duration;
 
   useDismissTimer(record, effectiveDuration, hovered || focused || hidden);
+
+  const originRef = useRef(record.origin);
+  originRef.current = record.origin;
+  useLayoutEffect(
+    () => () => {
+      const current = document.activeElement;
+      if (current && rootRef.current?.contains(current)) restoreFocusFromChain(originRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntered(true));
@@ -305,6 +318,7 @@ function ToastItem({ record, duration, reducedMotion, classNames }: ToastItemPro
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: role is status/alert; handlers only pause the timer, swipe and Escape.
     <div
+      ref={rootRef}
       role={isError ? "alert" : "status"}
       aria-live={isError ? "assertive" : "polite"}
       aria-atomic="true"
