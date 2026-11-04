@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Phone bottom bar counts
+
+#### Changed
+
+- **`BottomNav` shows numeric badges as a count chip** on the icon corner (capped at `99+`,
+  `bg-danger` for `badgeTone="danger"`, `bg-warning` otherwise); it rendered a dot for every badge.
+  Non-numeric badges (nodes, `true`) keep the dot. Behavior change from 0.7.0: pass
+  `badgeStyle="dot"` to keep dots everywhere.
+
+#### Added
+
+- **`BottomNav` `badgeStyle`** (`"count"` default, `"dot"`).
+- **"More" total**: the button sums the numeric badges of the items it hides and shows the count
+  chip (danger when any hidden item is danger, a dot when only non-numeric badges exist, nothing
+  without badges). Its screen-reader text comes from the new `morePending` UI string (`{count}
+  pending` / `{count} pendientes`) or the new `moreBadgeLabel` prop.
+
 ## 0.7.0 (2026-11-03)
 
 ### Demo gaps

@@ -67,6 +67,36 @@ export const html = {
         }))}
       />,
     ),
+  bottomNavBadges: (props = {}, overrides = {}) =>
+    renderToStaticMarkup(
+      <BottomNav
+        ariaLabel="Sections"
+        items={[
+          { id: "a", label: "A", href: "/a", badge: 5, badgeLabel: "new" },
+          { id: "b", label: "B", href: "/b", badge: "120", badgeTone: "danger" },
+          { id: "c", label: "C", href: "/c", badge: true },
+          { id: "d", label: "D", href: "/d", badge: 3 },
+          { id: "e", label: "E", href: "/e", badge: 4, badgeTone: overrides.tone },
+          { id: "f", label: "F", href: "/f", badge: overrides.overflowNode ? <i /> : 6 },
+          { id: "g", label: "G", href: "/g" },
+        ]}
+        {...props}
+      />,
+    ),
+  bottomNavEs: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <BottomNav
+          ariaLabel="Secciones"
+          maxSlots={2}
+          items={[
+            { id: "a", label: "A", href: "/a" },
+            { id: "b", label: "B", href: "/b", badge: 2 },
+            { id: "c", label: "C", href: "/c", badge: 3 },
+          ]}
+        />
+      </UiStringsProvider>,
+    ),
   appShellReader: () => {
     function Reader() {
       return <i>{String(useAppShell()?.compact)}</i>;
