@@ -187,6 +187,7 @@ export function Crystal() {
 
 - `refraction` goes from 0 to 2 for this profile (the other profiles treat anything above 1 as 1). A minifying map `p -> p (1 + k s(t))` has a positive Jacobian for every `k`, so it cannot fold; the offset is capped at 260 px to bound the work.
 - Minification samples outside the surface, which a filter on the surface cannot see. The engine therefore puts the filter on a layer inside the surface that extends past it by the largest offset and is clipped back to the silhouette (`data-glass-lens-layer`), and moves the surface's background and inset rim under/over it. Give the surface child elements (a `span` around the label), not a lone text node, and keep `overflow` visible on it.
+- Inside a clipping ancestor (`overflow` other than visible, `clip-path`, `contain: paint`) the layer only extends as far as the clip allows. A side with less room than the largest offset bends less, eased across the surface, so the lens is flatter towards that edge instead of sampling backdrop that is not there.
 - There is **no contrast guarantee**: use short, bold labels with a text shadow, and nothing small. The surface uses the same budgets (8 lenses, area) as the others; the filter region of one crystal is larger than its box.
 
 ### Motion
