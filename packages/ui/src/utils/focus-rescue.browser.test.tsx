@@ -81,7 +81,7 @@ describe("toast action", () => {
     expect(document.activeElement).toBe(origin);
   });
 
-  test("lands on the surviving list when the origin row is gone", async () => {
+  test("lands on the nearest surviving row when the origin row is gone", async () => {
     function Screen() {
       const [rows, setRows] = useState(["a", "b"]);
       return (
@@ -114,7 +114,7 @@ describe("toast action", () => {
     action?.focus();
     await click(action);
     await settle(300);
-    expect(document.activeElement?.id).toBe("rows");
+    expect(document.activeElement?.id).toBe("row-b");
   });
 });
 
