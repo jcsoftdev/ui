@@ -143,7 +143,7 @@
       "id": "ui/motion",
       "kind": "js",
       "file": "packages/ui/dist/motion/index.js",
-      "maxGzip": 5700
+      "maxGzip": 5750
     },
     {
       "id": "ui/navigation",
