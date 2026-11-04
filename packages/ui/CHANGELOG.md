@@ -771,6 +771,7 @@ From 0.2.x: nothing changes unless you adopt Liquid Glass.
 ### Crystal lens
 
 - **`profile: "crystal"`** and the `crystal` preset (`data-glass="liquid-crystal"`): a thick, fully clear convex lens that minifies the backdrop, bends it hard towards the rim, splits colour at the edge and has no frost, veil or tint. `refraction` accepts 0 to 2 for it (defaults and the other profiles are unchanged; above 1 they behave as 1). The minifying map cannot fold; the filter runs on a layer that extends past the surface and is clipped to it. No contrast guarantee.
+- **Crystal near the edge of a clipping ancestor.** A side with less backdrop than the lens reaches (a surface at the edge of an `overflow` or `clip-path` stage) now bends less on that side, eased across the surface, so its silhouette still samples inside the backdrop. Before, every sample past the room was pinned to its edge, which smeared one column of backdrop over a band of the surface with a hard boundary. With the whole margin on every side the map is byte-identical to before.
 
 ### Configurable Liquid Glass and liquid motion
 

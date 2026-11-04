@@ -479,6 +479,53 @@ test("a crystal map with limited room never samples past the backdrop that exist
   }
 });
 
+// A clamp that pins every sample past the room to its edge smears one column of backdrop over a
+// band of the surface, with a crease where the band starts: the source must keep advancing instead.
+test("a crystal map near the edge of its backdrop bends less on that side instead of smearing its edge", () => {
+  const [width, height] = [400, 88];
+  const amplitude = glass.crystalAmplitude(width, height, 1.67);
+  const reach = 1.036;
+  const margin = glass.crystalMargin(amplitude, reach - 1);
+  for (const room of [
+    { left: margin, right: 24, top: 120, bottom: 192 },
+    { left: 12, right: margin, top: margin, bottom: margin },
+    { left: margin, right: margin, top: 0, bottom: 12 },
+    { left: 0, right: 0, top: 24, bottom: 0 },
+  ]) {
+    const field = glass.computeCrystalField({ width, height, amplitude, margin, room, reach });
+    // Wider than one 8-bit code of the offset (about 2 px), like the quantised fold test above.
+    const step = 4;
+    for (let y = room.top; y < room.top + height - step; y += step) {
+      for (let x = room.left; x < room.left + width - step; x += step) {
+        const [ax, ay] = crystalSource(field, amplitude, x, y);
+        const [bx] = crystalSource(field, amplitude, x + step, y);
+        const [, by] = crystalSource(field, amplitude, x, y + step);
+        assert.ok(
+          bx - ax > 0.25 * step && by - ay > 0.25 * step,
+          `smeared at ${x},${y} with room ${JSON.stringify(room)}: ${bx - ax}, ${by - ay}`,
+        );
+      }
+    }
+  }
+});
+
+test("a crystal map with the whole margin on every side keeps the offsets of the plain lens", () => {
+  const [width, height] = [300, 96];
+  const amplitude = glass.crystalAmplitude(width, height, 1.67);
+  const margin = glass.crystalMargin(amplitude, 0.036);
+  const room = { left: margin, right: margin, top: margin, bottom: margin };
+  const full = glass.computeCrystalField({ width, height, amplitude, margin, room, reach: 1.036 });
+  const plain = glass.computeCrystalField({ width, height, amplitude, margin });
+  assert.equal(full.width, plain.width);
+  // Inside the surface, short of the rim pixels where the 3 px edge slack may still bite.
+  for (let y = margin + 4; y < margin + height - 4; y += 3) {
+    for (let x = margin + 4; x < margin + width - 4; x += 3) {
+      const o = (y * full.width + x) * 4;
+      assert.deepEqual([full.data[o], full.data[o + 1]], [plain.data[o], plain.data[o + 1]]);
+    }
+  }
+});
+
 test("the crystal amplitude follows refraction up to a fixed cap and is zero for no refraction", () => {
   assert.equal(glass.crystalAmplitude(300, 96, 0), 0);
   assert.ok(glass.crystalAmplitude(300, 96, 1) < glass.crystalAmplitude(300, 96, 2));
