@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.8.0 (2026-11-04)
+
+### Floor plan
+
+A salon plan for table-service apps: a live timer, a table glyph and a plan that shows the tables and
+lets an operator rearrange them.
+
+#### Added
+
+- **`ElapsedTime`** (`atoms`): a live `<time>` on one shared 1 s ticker. `since`, `serverOffsetMs`
+  (corrects a skewed device clock), `format`, `warnAt` and `dangerAt` (tone thresholds),
+  `countdownTo` (counts down to a target, then reports the overrun). No `aria-live`, so a screen
+  reader is not interrupted every second.
+- **`TableGlyph`** (`atoms`): an SVG table with its chairs placed from `shape` (`round`, `square`,
+  `rect`, `bar`) and `seats`; `occupied`, `size` and `pattern`. Exports `glyphLayout`.
+- **`FloorPlan`** (`containers`), read-only: a salon plan on a grid-unit canvas. Items are roving-focus
+  buttons with a seat count, landmarks, group outlines (`groupId`, two or more items) and `late` and
+  `selected` rings. Labels sit inside the table body when they fit and below it otherwise.
+- **`FloorPlan`, editable**: pass `onChange(items, landmarks)` to drag, resize and rotate items and
+  landmarks. The plan stays controlled by `items` and `landmarks`. Keyboard: Alt with arrows moves,
+  Alt and Shift with arrows resizes, R rotates. Exports the pure helpers `moveBox`, `resizeBox`,
+  `rotateBox`, `snapTo`, `editKey`.
+- **11 UI strings** (en, es): `elapsedMinutesOne`, `elapsedMinutes`, `minutesShort`, `countdownLeft`,
+  `countdownOver`, `seats`, `seatsOne`, `late`, `floorPlan`, `rotate`, `floorPlanEditHint`.
+
+#### Changed
+
+- **Size budgets raised** for `ui/atoms` (23000 to 26000 B gzip) and `ui/containers` (117500 to 124000
+  B), the entries that hold the new components, and by 200 to 600 B for `ui/auth`, `ui/auth/statement`,
+  `ui/brand`, `ui/calendar`, `ui/forms`, `ui/i18n`, `ui/motion`, `ui/navigation`, `ui/overlays`,
+  `ui/shell` and `ui/states`, which bundle the larger string table.
+
 ## 0.7.1 (2026-11-03)
 
 ### Phone bottom bar counts
