@@ -20,6 +20,8 @@ export interface UiStrings {
   copy: string;
   copied: string;
   more: string;
+  /** Accessible total on the bottom bar "More" button; `{count}` is replaced. */
+  morePending: string;
   remove: string;
   noResults: string;
   clear: string;
@@ -159,6 +161,7 @@ export const uiStrings = {
     copy: "Copy",
     copied: "Copied",
     more: "More",
+    morePending: "{count} pending",
     remove: "Remove",
     noResults: "No results",
     clear: "Clear",
@@ -248,6 +251,7 @@ export const uiStrings = {
     copy: "Copiar",
     copied: "Copiado",
     more: "Más",
+    morePending: "{count} pendientes",
     remove: "Quitar",
     noResults: "Sin resultados",
     clear: "Limpiar",

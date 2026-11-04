@@ -90,6 +90,39 @@ test("BottomNav renders a landmark with the current page and a More button only 
   assert.doesNotMatch(overflowing, /Item 4/);
 });
 
+test("BottomNav shows numeric badges as capped count chips and keeps the dot for non-numeric ones", () => {
+  const markup = html.bottomNavBadges();
+  assert.match(markup, /bg-warning">5<\/span><span class="sr-only">new<\/span>/);
+  assert.match(markup, /bg-danger">99\+<\/span><span class="sr-only">120<\/span>/);
+  assert.match(markup, /size-2 rounded-pill bg-warning"><\/span><span class="sr-only"><\/span>/);
+});
+
+test("BottomNav badgeStyle dot drops the count chips", () => {
+  const markup = html.bottomNavBadges({ badgeStyle: "dot" });
+  assert.doesNotMatch(markup, /99\+|text-count/);
+  assert.match(markup, /size-2 rounded-pill bg-danger/);
+});
+
+test("BottomNav More sums the overflow badges and names the total", () => {
+  const markup = html.bottomNavBadges();
+  assert.match(
+    markup,
+    /bg-warning">10<\/span><\/span><span>More<\/span><span class="sr-only">10 pending<\/span>/,
+  );
+  assert.match(html.bottomNavBadges({ moreBadgeLabel: (n) => `${n} open` }), /10 open/);
+  assert.match(html.bottomNavEs(), /5 pendientes/);
+});
+
+test("BottomNav More is danger if an overflow item is danger and a dot for non-numeric overflow", () => {
+  assert.match(
+    html.bottomNavBadges({}, { tone: "danger" }),
+    /bg-danger">10<\/span><\/span><span>More<\/span><span class="sr-only">10 pending/,
+  );
+  const nodes = html.bottomNavBadges({}, { overflowNode: true });
+  assert.match(nodes, /<span class="sr-only">4 pending/);
+  assert.doesNotMatch(html.bottomNav(7, 1), /pending/);
+});
+
 test("More is marked active when the current page is behind it", () => {
   assert.match(html.bottomNav(7, 6), /<button[^>]*data-active="true"/);
 });

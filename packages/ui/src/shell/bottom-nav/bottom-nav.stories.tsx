@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { expect, userEvent, within } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
 import { CalendarDays, Package, Scissors, Settings, Users } from "../../icons/index.js";
 import { AppShell } from "../app-shell/index.js";
@@ -66,4 +67,78 @@ export const NoOverflow: Story = {
       </AppShell>
     </Frame>
   ),
+};
+
+const badgedItems: SidebarItem[] = [
+  { id: "agenda", label: "Agenda", href: "#agenda", icon: <CalendarDays />, active: true },
+  {
+    id: "clients",
+    label: "Clients",
+    href: "#clients",
+    icon: <Users />,
+    badge: 7,
+    badgeLabel: "new",
+  },
+  {
+    id: "services",
+    label: "Services",
+    href: "#services",
+    icon: <Scissors />,
+    badge: 120,
+    badgeTone: "danger",
+  },
+  { id: "stock", label: "Stock", href: "#stock", icon: <Package /> },
+  { id: "settings", label: "Settings", href: "#settings", icon: <Settings />, badge: 3 },
+  { id: "billing", label: "Billing", href: "#billing", icon: <Package />, badge: 4 },
+];
+
+function badgeFrame(args: ComponentProps<typeof BottomNav>) {
+  return (
+    <Frame>
+      <AppShell className="min-h-full flex-col">
+        <main className="flex-1 p-4 text-ink" />
+        <BottomNav {...args} />
+      </AppShell>
+    </Frame>
+  );
+}
+
+/** Numeric badges show as count chips on the icon, capped at 99+. */
+export const NumericBadges: Story = {
+  args: { items: badgedItems, maxSlots: 6 },
+  render: badgeFrame,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("7", { selector: "[aria-hidden=true]" })).toBeInTheDocument();
+    await expect(canvas.getByText("99+")).toBeInTheDocument();
+    await expect(canvas.getByText("new")).toBeInTheDocument();
+  },
+};
+
+/** The badges of the items behind "More" are summed on the button. */
+export const OverflowBadgesSumOnMore: Story = {
+  args: { items: badgedItems },
+  render: badgeFrame,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const more = canvas.getByRole("button", { name: "More 7 pending" });
+    await expect(
+      within(more).getByText("7", { selector: "[aria-hidden=true]" }),
+    ).toBeInTheDocument();
+    await userEvent.click(more);
+  },
+};
+
+/** `badgeStyle="dot"` keeps the previous small dots. */
+export const DotBadges: Story = {
+  args: { items: badgedItems, badgeStyle: "dot" },
+  render: badgeFrame,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText("99+")).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText("7", { selector: "[aria-hidden=true]" }),
+    ).not.toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "More 7 pending" })).toBeInTheDocument();
+  },
 };

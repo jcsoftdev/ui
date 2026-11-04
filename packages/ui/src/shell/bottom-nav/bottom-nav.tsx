@@ -36,6 +36,10 @@ export interface BottomNavProps {
   maxSlots?: number;
   /** Text of the "More" button and the drawer title. Defaults to the localized "More". */
   moreLabel?: string;
+  /** Accessible text of the total on "More"; defaults to the localized "{count} pending". */
+  moreBadgeLabel?: (count: number) => string;
+  /** `count` (default) shows numeric badges as a count chip on the phone bar; `dot` keeps the small dot. */
+  badgeStyle?: "count" | "dot";
   /** Pinned at the bottom of the "More" drawer, e.g. the account or a sign-out button. */
   moreFooter?: ReactNode;
   /** Link renderer; defaults to a plain anchor. */
@@ -43,6 +47,45 @@ export interface BottomNavProps {
   className?: string;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<BottomNavPart>;
+}
+
+const BADGE_CAP = 99;
+
+function numericBadge(badge: ReactNode): number | undefined {
+  if (typeof badge === "number") return Number.isFinite(badge) ? badge : undefined;
+  if (typeof badge === "string" && /^\s*\d+\s*$/.test(badge)) return Number(badge);
+  return undefined;
+}
+
+function formatCount(count: number): string {
+  return count > BADGE_CAP ? `${BADGE_CAP}+` : String(count);
+}
+
+const dotClasses = "absolute -top-0.5 -right-1 size-2 rounded-pill";
+
+const chipClasses =
+  "absolute -top-1.5 -right-2.5 inline-flex h-4 min-w-4 items-center justify-center rounded-pill px-1 font-bold text-count text-surface leading-none";
+
+function BadgeMark({
+  count,
+  danger,
+  asDot,
+  className,
+}: {
+  count: number | undefined;
+  danger: boolean;
+  asDot: boolean;
+  className?: string;
+}) {
+  const tone = danger ? "bg-danger" : "bg-warning";
+  if (count === undefined || asDot) {
+    return <span aria-hidden="true" className={cn(dotClasses, tone, className)} />;
+  }
+  return (
+    <span aria-hidden="true" className={cn(chipClasses, tone, className)}>
+      {formatCount(count)}
+    </span>
+  );
 }
 
 const defaultRenderLink: BottomNavRenderLink = ({ children, ...props }) => (
@@ -63,6 +106,8 @@ export function BottomNav({
   ariaLabel,
   maxSlots = BOTTOM_NAV_MAX_SLOTS,
   moreLabel,
+  moreBadgeLabel,
+  badgeStyle = "count",
   moreFooter,
   renderLink = defaultRenderLink,
   className,
@@ -73,6 +118,20 @@ export function BottomNav({
   const { visible, overflow } = splitBottomNavItems(items, maxSlots);
   const more = moreLabel ?? strings.more;
   const moreActive = overflow.some((item) => item.active);
+  const badged = overflow.filter((item) => item.badge !== undefined);
+  const overflowCounts = badged.map((item) => numericBadge(item.badge));
+  const overflowTotal = overflowCounts.reduce<number | undefined>(
+    (sum, count) => (count === undefined ? sum : (sum ?? 0) + count),
+    undefined,
+  );
+  const overflowDanger = badged.some((item) => item.badgeTone === "danger");
+  const overflowBadgeText =
+    overflowTotal === undefined
+      ? undefined
+      : (
+          moreBadgeLabel ??
+          ((count: number) => strings.morePending.replace("{count}", String(count)))
+        )(overflowTotal);
 
   return (
     <>
@@ -102,13 +161,11 @@ export function BottomNav({
                       {item.icon}
                       {item.badge !== undefined ? (
                         <>
-                          <span
-                            aria-hidden="true"
-                            className={cn(
-                              "absolute -top-0.5 -right-1 size-2 rounded-pill",
-                              item.badgeTone === "danger" ? "bg-danger" : "bg-warning",
-                              classNames?.badge,
-                            )}
+                          <BadgeMark
+                            count={numericBadge(item.badge)}
+                            danger={item.badgeTone === "danger"}
+                            asDot={badgeStyle === "dot"}
+                            className={classNames?.badge}
                           />
                           <span className="sr-only">{item.badgeLabel ?? item.badge}</span>
                         </>
@@ -130,8 +187,21 @@ export function BottomNav({
                 onClick={() => setMoreOpen(true)}
                 className={cn(slotClasses, classNames?.moreButton)}
               >
-                <Menu aria-hidden="true" />
+                <span className="relative">
+                  <Menu aria-hidden="true" />
+                  {badged.length > 0 ? (
+                    <BadgeMark
+                      count={overflowTotal}
+                      danger={overflowDanger}
+                      asDot={badgeStyle === "dot"}
+                      className={classNames?.badge}
+                    />
+                  ) : null}
+                </span>
                 <span>{more}</span>
+                {badged.length > 0 && overflowBadgeText ? (
+                  <span className="sr-only">{overflowBadgeText}</span>
+                ) : null}
               </button>
             </li>
           ) : null}

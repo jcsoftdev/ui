@@ -162,6 +162,12 @@ import { UiStringsProvider } from "@jcsoftdev/ui/i18n";
 provider inherits its parent and overrides only the keys it passes. Hard-coded Spanish labels that
 older components already ship (Carousel, AI set) are not routed through it yet.
 
+## Phone bottom bar badges
+
+`BottomNav` renders numeric `SidebarItem.badge` values as count chips (`99+` cap) and sums the badges
+of the items behind "More" onto that button; `badgeStyle="dot"` restores plain dots, and
+`moreBadgeLabel={(count) => ...}` replaces the localized `morePending` text read by screen readers.
+
 ## Status, forms and states (additive props)
 
 | Component | Added |
