@@ -1,12 +1,31 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 
 export type SkeletonVariant = "lines" | "table" | "card" | "list" | "kpis" | "key-value" | "bar";
 
 const PLACEHOLDER_IDS = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"] as const;
+
+const SkeletonGroupContext = createContext(false);
+
+export interface SkeletonGroupProps {
+  /** Text announced once for the whole region. Defaults to the localized "Loading". */
+  label?: string;
+  className?: string;
+  children: ReactNode;
+}
+
+/** One status announcement for every `Skeleton` inside; they render silent. */
+export function SkeletonGroup({ label, className, children }: SkeletonGroupProps) {
+  const strings = useUiStrings();
+  return (
+    <div role="status" aria-busy="true" aria-label={label ?? strings.loading} className={className}>
+      <SkeletonGroupContext.Provider value={true}>{children}</SkeletonGroupContext.Provider>
+    </div>
+  );
+}
 
 export interface SkeletonProps {
   variant?: SkeletonVariant;
@@ -18,6 +37,12 @@ export interface SkeletonProps {
   count?: number;
   /** Text announced to screen readers while loading. */
   label?: string;
+  /**
+   * Whether this skeleton is its own status region. Defaults to `true`, except inside a
+   * `SkeletonGroup`, which announces once. Set `false` on repeated skeletons so a screen reader
+   * does not say "Loading" for each; wrap them in a `SkeletonGroup` or a status of your own.
+   */
+  announce?: boolean;
   /**
    * Classes on the root. The `bar` variant is one block sized by them (`h-8 w-32`), 12px tall and
    * full width otherwise.
@@ -42,14 +67,17 @@ export function Skeleton({
   rows = 4,
   count = 4,
   label,
+  announce,
   className,
 }: SkeletonProps) {
   const strings = useUiStrings();
+  const grouped = useContext(SkeletonGroupContext);
+  const silent = !(announce ?? !grouped);
   return (
     <div
-      role="status"
-      aria-busy="true"
-      aria-label={label ?? strings.loading}
+      {...(silent
+        ? { "aria-hidden": true }
+        : { role: "status", "aria-busy": true, "aria-label": label ?? strings.loading })}
       className={cn(
         "animate-pulse",
         variant === "bar" && "block h-3 w-full rounded-xs bg-surface-2",
