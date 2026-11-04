@@ -98,6 +98,11 @@ export interface AvatarProps extends Omit<ComponentPropsWithRef<"span">, "childr
   tone?: AvatarTone;
   /** Small status dot at the bottom-right corner. */
   status?: StatusDotTone;
+  /**
+   * Hides the avatar from assistive technology, for one beside a visible name that already says
+   * who it is. `aria-hidden` passed directly does the same.
+   */
+  decorative?: boolean;
   /** Accessible text for the status dot; defaults to the status name. */
   statusLabel?: string;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
@@ -112,6 +117,7 @@ export function Avatar({
   tone = "neutral",
   status: statusTone,
   statusLabel,
+  decorative,
   className,
   classNames,
   style,
@@ -126,8 +132,8 @@ export function Avatar({
 
   const avatar = (
     <span
-      role="img"
-      aria-label={name}
+      {...(decorative || props["aria-hidden"] ? {} : { role: "img", "aria-label": name })}
+      {...(decorative ? { "aria-hidden": true } : {})}
       {...props}
       style={customToneStyle(tone, builtinTones, style)}
       className={cn(
