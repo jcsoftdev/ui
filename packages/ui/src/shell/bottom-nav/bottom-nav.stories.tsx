@@ -121,7 +121,7 @@ export const OverflowBadgesSumOnMore: Story = {
   render: badgeFrame,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const more = canvas.getByRole("button", { name: "7 pending More" });
+    const more = canvas.getByRole("button", { name: "More 7 pending" });
     await expect(
       within(more).getByText("7", { selector: "[aria-hidden=true]" }),
     ).toBeInTheDocument();
@@ -139,6 +139,6 @@ export const DotBadges: Story = {
     await expect(
       canvas.queryByText("7", { selector: "[aria-hidden=true]" }),
     ).not.toBeInTheDocument();
-    await expect(canvas.getByRole("button", { name: "7 pending More" })).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "More 7 pending" })).toBeInTheDocument();
   },
 };

@@ -105,7 +105,7 @@ test("BottomNav badgeStyle dot drops the count chips", () => {
 
 test("BottomNav More sums the overflow badges and names the total", () => {
   const markup = html.bottomNavBadges();
-  assert.match(markup, /bg-warning">10<\/span><span class="sr-only">10 pending<\/span>/);
+  assert.match(markup, /bg-warning">10<\/span><\/span><span>More<\/span><span class="sr-only">10 pending<\/span>/);
   assert.match(html.bottomNavBadges({ moreBadgeLabel: (n) => `${n} open` }), /10 open/);
   assert.match(html.bottomNavEs(), /5 pendientes/);
 });
@@ -113,7 +113,7 @@ test("BottomNav More sums the overflow badges and names the total", () => {
 test("BottomNav More is danger if an overflow item is danger and a dot for non-numeric overflow", () => {
   assert.match(
     html.bottomNavBadges({}, { tone: "danger" }),
-    /bg-danger">10<\/span><span class="sr-only">10 pending/,
+    /bg-danger">10<\/span><\/span><span>More<\/span><span class="sr-only">10 pending/,
   );
   const nodes = html.bottomNavBadges({}, { overflowNode: true });
   assert.match(nodes, /<span class="sr-only">4 pending/);

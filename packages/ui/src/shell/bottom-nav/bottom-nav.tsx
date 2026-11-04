@@ -190,20 +190,18 @@ export function BottomNav({
                 <span className="relative">
                   <Menu aria-hidden="true" />
                   {badged.length > 0 ? (
-                    <>
-                      <BadgeMark
-                        count={overflowTotal}
-                        danger={overflowDanger}
-                        asDot={badgeStyle === "dot"}
-                        className={classNames?.badge}
-                      />
-                      {overflowBadgeText ? (
-                        <span className="sr-only">{overflowBadgeText}</span>
-                      ) : null}
-                    </>
+                    <BadgeMark
+                      count={overflowTotal}
+                      danger={overflowDanger}
+                      asDot={badgeStyle === "dot"}
+                      className={classNames?.badge}
+                    />
                   ) : null}
                 </span>
                 <span>{more}</span>
+                {badged.length > 0 && overflowBadgeText ? (
+                  <span className="sr-only">{overflowBadgeText}</span>
+                ) : null}
               </button>
             </li>
           ) : null}
