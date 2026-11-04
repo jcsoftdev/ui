@@ -111,7 +111,7 @@ export const StringModeCallerOwned: Story = {
     // Empty is a real state: ArrowUp goes to the minimum, the buttons step from there.
     await userEvent.type(input, "{ArrowUp}");
     await expect(canvas.getByText("Text: [1]")).toBeVisible();
-    await userEvent.click(canvas.getByRole("button", { name: "Aumentar" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Increase Cupos" }));
     await expect(canvas.getByText("Text: [2]")).toBeVisible();
     // Typing is never rewritten, not even half-typed text.
     await userEvent.clear(input);
@@ -123,7 +123,7 @@ export const StringModeCallerOwned: Story = {
     // The ceiling holds.
     await userEvent.clear(input);
     await userEvent.type(input, "5");
-    await expect(canvas.getByRole("button", { name: "Aumentar" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "Increase Cupos" })).toBeDisabled();
   },
 };
 
@@ -136,7 +136,7 @@ export const StringModeUncontrolledForm: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "Aumentar" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Increase Cupos" }));
     const form = canvas.getByTestId("form") as HTMLFormElement;
     await expect(new FormData(form).get("seats")).toBe("5");
   },
