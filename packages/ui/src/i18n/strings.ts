@@ -42,6 +42,10 @@ export interface UiStrings {
   steps: string;
   /** Default accessible name of an `Aside`. */
   aside: string;
+  /** Verb of the `NumberStepper` plus button; the field label follows it. */
+  increase: string;
+  /** Verb of the `NumberStepper` minus button; the field label follows it. */
+  decrease: string;
   /** Back action of a single-pane `ListDetail`. */
   backToList: string;
   /** Screen-reader state of a `DueChip` past its date. */
@@ -174,6 +178,8 @@ export const uiStrings = {
     stepOf: "Step {current} of {total}: {label}",
     steps: "Steps",
     aside: "Related information",
+    increase: "Increase",
+    decrease: "Decrease",
     backToList: "Back to list",
     overdue: "Overdue",
     dueSoon: "Due soon",
@@ -261,6 +267,8 @@ export const uiStrings = {
     stepOf: "Paso {current} de {total}: {label}",
     steps: "Pasos",
     aside: "Información relacionada",
+    increase: "Aumentar",
+    decrease: "Disminuir",
     backToList: "Volver a la lista",
     overdue: "Vencido",
     dueSoon: "Vence pronto",
