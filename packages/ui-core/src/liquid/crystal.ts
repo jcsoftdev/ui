@@ -70,7 +70,9 @@ export interface CrystalMapOptions {
    * Margin past each side of the surface, in px (default: `margin` on all four). A surface inside
    * a clipping ancestor (an `overflow` or `clip-path` stage) only has the backdrop within it: a
    * layer that reaches past the clip is cut by the browser and its filter is shifted, so the map
-   * covers only the backdrop that exists, and the offsets are clamped so no sample lands beyond it.
+   * covers only the backdrop that exists. A side with less room than the margin scales its offsets
+   * down so its silhouette still samples inside the room, eased across the surface; the hard clamp
+   * that remains only bites in the margin, which the layer clips away.
    */
   room?: Partial<Record<"left" | "right" | "top" | "bottom", number>>;
   /** Largest factor the offset is multiplied by (chromatic dispersion pulls red this much further). Default 1. */
@@ -121,17 +123,33 @@ export function computeCrystalField({
   const [minY, maxY] = [-hy - top + slack, hy + bottom - slack];
   const unit = Math.max(amplitude, 1e-6);
   const f = Math.max(reach, 1);
+  // Share of the offset a side keeps so its silhouette, where the offset peaks at `amplitude
+  // extent / half`, still samples inside the room. A side with the whole margin keeps all of it.
+  const keep = (free: number, extent: number) =>
+    free >= m ? 1 : clamp((free - EDGE_SLACK) / Math.max((f * unit * extent) / half, 1e-6), 0, 1);
+  const shares = {
+    x: [keep(left, hx), keep(right, hx)],
+    y: [keep(top, hy), keep(bottom, hy)],
+  } as const;
+  // Eased from one side's share to the other across the surface, so the lens bends less towards
+  // a short side without a crease down the middle (a hard per-side switch would put one there).
+  const share = ([low, high]: readonly [number, number], p: number, extent: number) => {
+    const u = clamp((p + extent) / (2 * extent), 0, 1);
+    return low + (high - low) * u * u * (3 - 2 * u);
+  };
   // Offset (as a fraction of `amplitude`, what the channel encodes) that keeps the source in the room.
   const within = (p: number, offset: number, lo: number, hi: number) =>
     clamp((bounded ? clamp(offset, (lo - p) / f, (hi - p) / f) : offset) / unit, -1, 1);
   for (let j = 0; j < ph; j++) {
     const py = (j + 0.5) / ry - top - hy;
+    const ky = share(shares.y, py, hy);
     for (let i = 0; i < pw; i++) {
       const px = (i + 0.5) / rx - left - hx;
+      const kx = share(shares.x, px, hx);
       const s = crystalShape(crystalRadius(px, py, hx, hy));
       const o = (j * pw + i) * 4;
-      data[o] = 128 + within(px, (s * px * amplitude) / half, minX, maxX) * 127;
-      data[o + 1] = 128 + within(py, (s * py * amplitude) / half, minY, maxY) * 127;
+      data[o] = 128 + within(px, ((s * px * amplitude) / half) * kx, minX, maxX) * 127;
+      data[o + 1] = 128 + within(py, ((s * py * amplitude) / half) * ky, minY, maxY) * 127;
       data[o + 2] = 255;
       data[o + 3] = 255;
     }
