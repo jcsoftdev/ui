@@ -14,6 +14,7 @@ export {
   rectSideCounts,
   squareSideCounts,
 } from "../../src/atoms/table-glyph/layout.js";
+export { editKey, moveBox, resizeBox, rotateBox, snapTo } from "../../src/containers/floor-plan/edit-model.js";
 export {
   groupOutlines,
   labelPlacement,
@@ -31,6 +32,10 @@ const since = (minutes) => new Date(Date.now() - minutes * 60000 - 5000);
 
 export const html = {
   glyph: (props) => renderToStaticMarkup(<TableGlyph {...props} />),
+  editable: (props = {}) =>
+    renderToStaticMarkup(
+      <FloorPlan width={12} height={8} items={items} landmarks={landmarks} editable selectedId="t2" {...props} />,
+    ),
   plan: (props = {}) =>
     renderToStaticMarkup(
       <FloorPlan width={12} height={8} items={items} landmarks={landmarks} {...props} />,

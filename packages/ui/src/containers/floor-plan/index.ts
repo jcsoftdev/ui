@@ -1,4 +1,13 @@
 export {
+  type EditBounds,
+  editKey,
+  moveBox,
+  type ResizeHandle,
+  resizeBox,
+  rotateBox,
+  snapTo,
+} from "./edit-model.js";
+export {
   FloorPlan,
   type FloorPlanBuiltinTone,
   type FloorPlanItem,

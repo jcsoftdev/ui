@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fireEvent, userEvent, within } from "storybook/test";
 import { UiStringsProvider } from "../../i18n/index.js";
 import { CircleCheck, Clock, Lock, TriangleAlert, Users } from "../../icons/index.js";
 import {
@@ -228,4 +228,120 @@ export const Spanish: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByRole("group")).toHaveAccessibleName("Plano de sala");
   },
+};
+
+const editItems: FloorPlanItem[] = [
+  table("E1", 1, 1, 1, { width: 2, height: 2, shape: "round" }),
+  table("E2", 5, 1, 4, { width: 2, height: 2, shape: "square" }),
+  table("E3", 9, 1, 6, { width: 4, height: 2, shape: "rect", seats: 6, occupied: 2 }),
+  table("E4", 1, 6, 0, { width: 2, height: 2, shape: "square" }),
+  table("E5", 5, 6, 2, { width: 2, height: 2, shape: "square", groupId: "pair" }),
+  table("E6", 7, 6, 2, { width: 2, height: 2, shape: "square", groupId: "pair" }),
+];
+
+const editLandmarks: FloorPlanLandmark[] = [
+  { id: "door", kind: "door", label: "Door", x: 14, y: 5, width: 1, height: 3 },
+  { id: "bar", kind: "bar", label: "Bar", x: 1, y: 9, width: 8, height: 1 },
+];
+
+function Editor(props: FloorPlanProps) {
+  const [items, setItems] = useState(props.items);
+  const [landmarks, setLandmarks] = useState(props.landmarks ?? []);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [changes, setChanges] = useState(0);
+  return (
+    <div className="flex flex-col gap-3">
+      <FloorPlan
+        {...props}
+        items={items}
+        landmarks={landmarks}
+        selectedId={selected}
+        onSelect={setSelected}
+        onChange={(nextItems, nextLandmarks) => {
+          setItems(nextItems);
+          setLandmarks(nextLandmarks);
+          setChanges((count) => count + 1);
+        }}
+      />
+      <output className="text-ink-2 text-meta" data-testid="changes">
+        {changes} changes
+      </output>
+    </div>
+  );
+}
+
+const boxOf = (element: HTMLElement) => element.getBoundingClientRect();
+
+export const Editable: Story = {
+  args: { width: 16, height: 11, items: editItems, landmarks: editLandmarks, editable: true },
+  render: (args) => <Editor {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const e1 = canvasElement.querySelector("[data-item=E1]") as HTMLElement;
+    const before = boxOf(e1);
+    const unit = boxOf(canvasElement.querySelector("[role=group]") as HTMLElement).width / 16;
+
+    e1.focus();
+    await userEvent.keyboard("{Alt>}{ArrowRight}{/Alt}");
+    await expect(boxOf(e1).left - before.left).toBeCloseTo(unit, 0);
+    await userEvent.keyboard("{Alt>}{Shift>}{ArrowDown}{/Shift}{/Alt}");
+    await expect(boxOf(e1).height).toBeCloseTo(before.height + unit, 0);
+    await expect(canvas.getByTestId("changes")).toHaveTextContent("2 changes");
+
+    const e3 = canvasElement.querySelector("[data-item=E3]") as HTMLElement;
+    e3.focus();
+    const wide = boxOf(e3);
+    await userEvent.keyboard("r");
+    await expect(boxOf(e3).width).toBeCloseTo(wide.height, 0);
+    await expect(boxOf(e3).height).toBeCloseTo(wide.width, 0);
+
+    const e2 = canvasElement.querySelector("[data-item=E2]") as HTMLElement;
+    const start = boxOf(e2);
+    const cx = start.left + start.width / 2;
+    const cy = start.top + start.height / 2;
+    await fireEvent.pointerDown(e2, { clientX: cx, clientY: cy, button: 0, pointerId: 7 });
+    await fireEvent.pointerMove(e2, {
+      clientX: cx + unit * 2.2,
+      clientY: cy + unit * 3.1,
+      pointerId: 7,
+    });
+    await fireEvent.pointerUp(e2, {
+      clientX: cx + unit * 2.2,
+      clientY: cy + unit * 3.1,
+      pointerId: 7,
+    });
+    const moved = boxOf(e2);
+    await expect((moved.left - start.left) / unit).toBeCloseTo(2, 1);
+    await expect((moved.top - start.top) / unit).toBeCloseTo(3, 1);
+    await expect(e2).toHaveAttribute("aria-pressed", "true");
+
+    const handle = canvasElement.querySelector("[data-handle=se]") as HTMLElement;
+    const hb = boxOf(handle);
+    await fireEvent.pointerDown(handle, {
+      clientX: hb.left + 4,
+      clientY: hb.top + 4,
+      button: 0,
+      pointerId: 8,
+    });
+    await fireEvent.pointerMove(handle, {
+      clientX: hb.left + 4 + unit,
+      clientY: hb.top + 4 + unit,
+      pointerId: 8,
+    });
+    await fireEvent.pointerUp(handle, {
+      clientX: hb.left + 4 + unit,
+      clientY: hb.top + 4 + unit,
+      pointerId: 8,
+    });
+    await expect(boxOf(e2).width / unit).toBeCloseTo(3, 1);
+
+    await userEvent.click(canvas.getByRole("button", { name: "Rotate 90°" }));
+    await expect(boxOf(e2).width / unit).toBeCloseTo(3, 1);
+  },
+};
+
+export const EditableDark: Story = {
+  globals: { theme: "dark" },
+  args: { width: 16, height: 11, items: editItems, landmarks: editLandmarks, editable: true },
+  render: (args) => <Editor {...args} />,
 };
