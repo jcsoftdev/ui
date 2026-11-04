@@ -44,6 +44,26 @@ export interface UiStrings {
   rotate: string;
   /** Keyboard help of an editable `FloorPlan`. */
   floorPlanEditHint: string;
+  orderTicketNumber: string;
+  orderTicketGuests: string;
+  orderTicketGuestsOne: string;
+  orderTicketPart: string;
+  orderTicketContinued: string;
+  orderTicketOnTime: string;
+  orderTicketDueSoon: string;
+  orderTicketLate: string;
+  orderTicketLateBy: string;
+  orderTicketProgress: string;
+  orderTicketProgressValue: string;
+  orderTicketItems: string;
+  orderTicketPending: string;
+  orderTicketInProgress: string;
+  orderTicketDone: string;
+  orderTicketNote: string;
+  orderTicketAllergy: string;
+  orderTicketRecovered: string;
+  orderTicketStartAll: string;
+  orderTicketReadyAll: string;
   remove: string;
   noResults: string;
   clear: string;
@@ -195,6 +215,26 @@ export const uiStrings = {
     floorPlan: "Floor plan",
     rotate: "Rotate 90°",
     floorPlanEditHint: "Alt with arrows moves, Alt and Shift with arrows resizes, R rotates.",
+    orderTicketNumber: "No. {number}",
+    orderTicketGuests: "{count} guests",
+    orderTicketGuestsOne: "{count} guest",
+    orderTicketPart: "({index} of {count})",
+    orderTicketContinued: "(cont.)",
+    orderTicketOnTime: "on time",
+    orderTicketDueSoon: "due soon",
+    orderTicketLate: "late",
+    orderTicketLateBy: "Late +{time}",
+    orderTicketProgress: "Time against the {target} min target",
+    orderTicketProgressValue: "{elapsed} of {target} min",
+    orderTicketItems: "Items",
+    orderTicketPending: "Queued",
+    orderTicketInProgress: "Preparing",
+    orderTicketDone: "Ready",
+    orderTicketNote: "Note: {note}",
+    orderTicketAllergy: "Allergy: {allergy}",
+    orderTicketRecovered: "Recalled",
+    orderTicketStartAll: "Start all",
+    orderTicketReadyAll: "All ready",
     remove: "Remove",
     noResults: "No results",
     clear: "Clear",
@@ -296,6 +336,26 @@ export const uiStrings = {
     floorPlan: "Plano de sala",
     rotate: "Girar 90°",
     floorPlanEditHint: "Alt con flechas mueve, Alt y Mayús con flechas cambia el tamaño, R gira.",
+    orderTicketNumber: "N.º {number}",
+    orderTicketGuests: "{count} personas",
+    orderTicketGuestsOne: "{count} persona",
+    orderTicketPart: "({index} de {count})",
+    orderTicketContinued: "(cont.)",
+    orderTicketOnTime: "a tiempo",
+    orderTicketDueSoon: "por vencer",
+    orderTicketLate: "demorada",
+    orderTicketLateBy: "Demorada +{time}",
+    orderTicketProgress: "Tiempo contra los {target} min objetivo",
+    orderTicketProgressValue: "{elapsed} de {target} min",
+    orderTicketItems: "Platos",
+    orderTicketPending: "En cola",
+    orderTicketInProgress: "Preparando",
+    orderTicketDone: "Listo",
+    orderTicketNote: "Nota: {note}",
+    orderTicketAllergy: "Alergia: {allergy}",
+    orderTicketRecovered: "Recuperada",
+    orderTicketStartAll: "Empezar todo",
+    orderTicketReadyAll: "Listo todo",
     remove: "Quitar",
     noResults: "Sin resultados",
     clear: "Limpiar",
