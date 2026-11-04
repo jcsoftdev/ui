@@ -59,7 +59,7 @@
       "id": "ui/auth",
       "kind": "js",
       "file": "packages/ui/dist/auth/index.js",
-      "maxGzip": 24900
+      "maxGzip": 25100
     },
     {
       "id": "ui/auth/looks",
@@ -95,25 +95,25 @@
       "id": "ui/auth/statement",
       "kind": "js",
       "file": "packages/ui/dist/auth/statement/index.js",
-      "maxGzip": 3720
+      "maxGzip": 3990
     },
     {
       "id": "ui/atoms",
       "kind": "js",
       "file": "packages/ui/dist/atoms/index.js",
-      "maxGzip": 23000
+      "maxGzip": 26000
     },
     {
       "id": "ui/brand",
       "kind": "js",
       "file": "packages/ui/dist/brand/index.js",
-      "maxGzip": 19450
+      "maxGzip": 19900
     },
     {
       "id": "ui/calendar",
       "kind": "js",
       "file": "packages/ui/dist/calendar/index.js",
-      "maxGzip": 15000
+      "maxGzip": 15400
     },
     {
       "id": "ui/charts",
@@ -125,37 +125,37 @@
       "id": "ui/containers",
       "kind": "js",
       "file": "packages/ui/dist/containers/index.js",
-      "maxGzip": 117500
+      "maxGzip": 124000
     },
     {
       "id": "ui/forms",
       "kind": "js",
       "file": "packages/ui/dist/forms/index.js",
-      "maxGzip": 43800
+      "maxGzip": 44400
     },
     {
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 2150
+      "maxGzip": 2450
     },
     {
       "id": "ui/motion",
       "kind": "js",
       "file": "packages/ui/dist/motion/index.js",
-      "maxGzip": 5750
+      "maxGzip": 6050
     },
     {
       "id": "ui/navigation",
       "kind": "js",
       "file": "packages/ui/dist/navigation/index.js",
-      "maxGzip": 16100
+      "maxGzip": 16550
     },
     {
       "id": "ui/overlays",
       "kind": "js",
       "file": "packages/ui/dist/overlays/index.js",
-      "maxGzip": 32950
+      "maxGzip": 33450
     },
     {
       "id": "ui/palette",
@@ -173,13 +173,13 @@
       "id": "ui/shell",
       "kind": "js",
       "file": "packages/ui/dist/shell/index.js",
-      "maxGzip": 20150
+      "maxGzip": 20650
     },
     {
       "id": "ui/states",
       "kind": "js",
       "file": "packages/ui/dist/states/index.js",
-      "maxGzip": 12600
+      "maxGzip": 12950
     },
     {
       "id": "ui/utils",
