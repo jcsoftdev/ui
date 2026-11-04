@@ -2,6 +2,7 @@
 // One lazy loader per glyph: the bundler splits each into its own chunk, so rendering one icon
 // fetches this map and that glyph only. The map itself is behind import() in icon.ts.
 export const registry = {
+  "alarm-clock": () => import("./glyphs/alarm-clock.js"),
   alert: () => import("./glyphs/alert.js"),
   "alert-triangle": () => import("./glyphs/alert-triangle.js"),
   archive: () => import("./glyphs/archive.js"),
@@ -82,6 +83,7 @@ export const registry = {
   grid: () => import("./glyphs/grid.js"),
   "grip-vertical": () => import("./glyphs/grip-vertical.js"),
   "heading-2": () => import("./glyphs/heading-2.js"),
+  hourglass: () => import("./glyphs/hourglass.js"),
   house: () => import("./glyphs/house.js"),
   inbox: () => import("./glyphs/inbox.js"),
   info: () => import("./glyphs/info.js"),

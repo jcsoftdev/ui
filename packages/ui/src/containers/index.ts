@@ -28,6 +28,7 @@ export * from "./kpi/index.js";
 export * from "./kpi-group/index.js";
 export * from "./list-detail/index.js";
 export * from "./note/index.js";
+export * from "./order-ticket/index.js";
 export * from "./page/index.js";
 export * from "./page-header/index.js";
 export * from "./pagination/index.js";

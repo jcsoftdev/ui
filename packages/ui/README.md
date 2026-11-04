@@ -192,6 +192,7 @@ https://ui.jcsoftdev.com/docs/blocks/
 | `ElapsedTime` | `atoms` | Live `<time>` timer on one shared 1 s ticker: `since`, `serverOffsetMs`, `format`, `warnAt`, `dangerAt`, `countdownTo`; no `aria-live`. |
 | `TableGlyph` | `atoms` | SVG table with chairs placed from `shape` (`round`, `square`, `rect`, `bar`) and `seats`; `occupied`, `size`, `pattern`. |
 | `FloorPlan` | `containers` | Read-only salon plan on a grid-unit canvas: items as roving-focus buttons, landmarks, group outlines, `late`/`selected` rings. |
+| `OrderTicket` | `containers` | Paper kitchen ticket: table or channel + number title, `ElapsedTime`, progress against `targetMinutes`, ok/warn/late state (late is a filled band), lines with `aria-pressed` toggles, `readOnly`, `part`/`parts` continuation; `orderTicketState` and `splitTicketLines` helpers. |
 | `Seal` | `atoms` | Stamp mark: `title`, `icon`, `tone`, optional named `label`. |
 | `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. |
 | `AlertDialog` | `overlays` | `role="alertdialog"` with cancel and confirm, `tone="danger"`, async `onConfirm` with a pending state. |
