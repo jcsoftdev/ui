@@ -105,7 +105,10 @@ test("BottomNav badgeStyle dot drops the count chips", () => {
 
 test("BottomNav More sums the overflow badges and names the total", () => {
   const markup = html.bottomNavBadges();
-  assert.match(markup, /bg-warning">10<\/span><\/span><span>More<\/span><span class="sr-only">10 pending<\/span>/);
+  assert.match(
+    markup,
+    /bg-warning">10<\/span><\/span><span>More<\/span><span class="sr-only">10 pending<\/span>/,
+  );
   assert.match(html.bottomNavBadges({ moreBadgeLabel: (n) => `${n} open` }), /10 open/);
   assert.match(html.bottomNavEs(), /5 pendientes/);
 });
