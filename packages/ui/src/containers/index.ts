@@ -17,6 +17,7 @@ export * from "./facts/index.js";
 export * from "./feed/index.js";
 export * from "./file-tree/index.js";
 export * from "./filter-bar/index.js";
+export * from "./floor-plan/index.js";
 export * from "./generic-row/index.js";
 export * from "./grid/index.js";
 export * from "./hbars/index.js";

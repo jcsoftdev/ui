@@ -22,6 +22,28 @@ export interface UiStrings {
   more: string;
   /** Accessible total on the bottom bar "More" button; `{count}` is replaced. */
   morePending: string;
+  /** Accessible text of an `ElapsedTime` at exactly one minute; `{count}` is replaced. */
+  elapsedMinutesOne: string;
+  /** Accessible text of an `ElapsedTime`; `{count}` is replaced. */
+  elapsedMinutes: string;
+  /** Visible text of an `ElapsedTime` with `format="minutes"`; `{count}` is replaced. */
+  minutesShort: string;
+  /** Accessible text of a countdown `ElapsedTime`; `{time}` is the remaining time. */
+  countdownLeft: string;
+  /** Accessible text of a countdown `ElapsedTime` past its target; `{time}` is the overrun. */
+  countdownOver: string;
+  /** Seat count of a floor plan table; `{count}` is replaced. */
+  seats: string;
+  /** Seat count of a one-seat floor plan table; `{count}` is replaced. */
+  seatsOne: string;
+  /** Screen-reader state of a floor plan item ringed as late. */
+  late: string;
+  /** Default accessible name of a `FloorPlan`. */
+  floorPlan: string;
+  /** Accessible name of the rotate button of an editable `FloorPlan` item. */
+  rotate: string;
+  /** Keyboard help of an editable `FloorPlan`. */
+  floorPlanEditHint: string;
   remove: string;
   noResults: string;
   clear: string;
@@ -162,6 +184,17 @@ export const uiStrings = {
     copied: "Copied",
     more: "More",
     morePending: "{count} pending",
+    elapsedMinutesOne: "{count} minute",
+    elapsedMinutes: "{count} minutes",
+    minutesShort: "{count} min",
+    countdownLeft: "{time} left",
+    countdownOver: "{time} over",
+    seats: "{count} seats",
+    seatsOne: "{count} seat",
+    late: "Late",
+    floorPlan: "Floor plan",
+    rotate: "Rotate 90°",
+    floorPlanEditHint: "Alt with arrows moves, Alt and Shift with arrows resizes, R rotates.",
     remove: "Remove",
     noResults: "No results",
     clear: "Clear",
@@ -252,6 +285,17 @@ export const uiStrings = {
     copied: "Copiado",
     more: "Más",
     morePending: "{count} pendientes",
+    elapsedMinutesOne: "{count} minuto",
+    elapsedMinutes: "{count} minutos",
+    minutesShort: "{count} min",
+    countdownLeft: "faltan {time}",
+    countdownOver: "{time} de retraso",
+    seats: "{count} asientos",
+    seatsOne: "{count} asiento",
+    late: "Con retraso",
+    floorPlan: "Plano de sala",
+    rotate: "Girar 90°",
+    floorPlanEditHint: "Alt con flechas mueve, Alt y Mayús con flechas cambia el tamaño, R gira.",
     remove: "Quitar",
     noResults: "Sin resultados",
     clear: "Limpiar",

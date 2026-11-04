@@ -189,6 +189,9 @@ https://ui.jcsoftdev.com/docs/blocks/
 | `Spinner`, `Kbd` | `atoms` | Loading ring (`size`, `label`, `label={false}` for decorative) and a styled `<kbd>`. |
 | `IconButton` | `atoms` | Square `Button` with a required `label` (`aria-label`), `variant`, `size`, `loading`. |
 | `DueChip` | `atoms` | Due-date chip: overdue, soon (`soonDays`) and ok states with a glyph and sr-only suffix; time-zone safe. |
+| `ElapsedTime` | `atoms` | Live `<time>` timer on one shared 1 s ticker: `since`, `serverOffsetMs`, `format`, `warnAt`, `dangerAt`, `countdownTo`; no `aria-live`. |
+| `TableGlyph` | `atoms` | SVG table with chairs placed from `shape` (`round`, `square`, `rect`, `bar`) and `seats`; `occupied`, `size`, `pattern`. |
+| `FloorPlan` | `containers` | Read-only salon plan on a grid-unit canvas: items as roving-focus buttons, landmarks, group outlines, `late`/`selected` rings. |
 | `Seal` | `atoms` | Stamp mark: `title`, `icon`, `tone`, optional named `label`. |
 | `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. |
 | `AlertDialog` | `overlays` | `role="alertdialog"` with cancel and confirm, `tone="danger"`, async `onConfirm` with a pending state. |
