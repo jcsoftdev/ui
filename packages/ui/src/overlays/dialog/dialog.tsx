@@ -129,10 +129,11 @@ export function DialogContent({
   );
 }
 
+/** Title above description at every width; pass `flex-row items-center` in `className` for a side-by-side layout. */
 export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex items-center gap-2.5 border-b-divider py-3.5 pr-10 pl-4.5", className)}
+      className={cn("flex flex-col gap-1 border-b-divider py-3.5 pr-10 pl-4.5", className)}
       {...props}
     />
   );
