@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.9.0 (2026-11-04)
+
+### Kitchen ticket
+
+A paper-style kitchen display ticket for order queues and wall screens.
+
+#### Added
+
+- **`OrderTicket`** (`containers`): a ticket with a table title, or the channel icon plus «N.º n» for
+  orders without a table, and a meta line with channel, guests and server. The header shows the
+  elapsed time and progress against `targetMinutes`. `warn` uses an hourglass and warning text.
+  `late` fills the header band with danger and shows «Demorada +m:ss». Lines carry quantity,
+  modifiers, note and an allergy callout (danger outline, never warning amber). Each line has a
+  toggle with `aria-pressed` for pending, in progress and done. «Empezar todo» and «Listo todo»
+  act only on the lines of the card shown. `readOnly` renders no buttons. `partIndex` and
+  `partCount` label continued tickets «(1 de n)» and «(cont.)». Also takes `recovered`, `chip`,
+  an `actions` slot and `viewTransitionName`. Motion is off under reduced motion.
+- **Helpers**: `orderTicketState`, `warnLeadSeconds` (max of 2 minutes and 25% of the target),
+  `splitTicketLines` and `ticketLineCost`.
+- **Icons**: `AlarmClock` and `Hourglass`.
+- **UI strings** (en, es) for the ticket.
+
+#### Changed
+
+- **Size budgets raised** by about 2% for 13 entries that carry the larger string table or the new
+  container.
+
 ## 0.8.0 (2026-11-04)
 
 ### Floor plan
