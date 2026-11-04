@@ -160,7 +160,7 @@ import { UiStringsProvider } from "@jcsoftdev/ui/i18n";
 
 `uiStrings.en` and `uiStrings.es` export the presets; `useUiStrings()` reads the active set. A nested
 provider inherits its parent and overrides only the keys it passes. Hard-coded Spanish labels that
-older components already ship (NumberStepper, Carousel, AI set) are not routed through it yet.
+older components already ship (Carousel, AI set) are not routed through it yet.
 
 ## Status, forms and states (additive props)
 
@@ -207,7 +207,11 @@ Additive props on existing components:
 | --- | --- |
 | `DescriptionList` | `layout` (`auto`, `inline`, `stacked`), `columns` (1 to 3), `valueAlign` (`end`, `start`); `DescriptionListItem` with a dash placeholder for empty values. |
 | `Chip` | `size="sm"` (compact; a tag is `<Chip size="sm" square>`). |
-| `Skeleton` | `variant` `list`, `kpis`, `key-value`, `bar` and `count`. |
+| `Skeleton` | `variant` `list`, `kpis`, `key-value`, `bar` and `count`; `announce={false}` makes it silent (`aria-hidden`), and `SkeletonGroup` announces once for every skeleton inside it. |
+| `NumberStepper` | `size` (`sm` 30px, `md`), `incrementLabel` / `decrementLabel`; the plus and minus buttons are named by the localized verb plus the field label (`aria-label`, `aria-labelledby` or the `<label>`). |
+| `Avatar` | `decorative` (or `aria-hidden`) drops the image role and label, for an avatar beside a visible name. |
+| `DialogHeader` | Stacks its title above the description at every width; pass `flex-row items-center` in `className` for the side-by-side layout. |
+| `Toaster`, `ListDetail`, `ResponsiveList`, `Kanban` | Focus never falls to `<body>`: a toast action or dismissal returns it to the element focused when the toast was published (or its nearest surviving ancestor); an item removed while focused hands focus to the next one, the previous one, or the list. |
 | `ErrorState` | `actions` node, rendered in the same row as the retry button (the retry button now sits inside a wrapper `div`). |
 | `RadioGroup` | Each radio is named by its label and described by its description. |
 | `Checkbox`, `Switch` | The 44px touch target is an invisible `::after`; under touch density the layout box stays 40px. |
