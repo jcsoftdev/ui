@@ -26,7 +26,8 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
 ## Tasks
 - [x] T1 PRODUCT.md at the repo root (interview: users = developers; positioning = defaults plus
       extension to any color or UI standard). Route: inline, one file.
-- [ ] T2 DESIGN.md from the incumbent code (`impeccable document`), covering tokens and component rules.
+- [x] T2 DESIGN.md from the incumbent code (`impeccable document`), covering tokens and component rules.
+      Commit 2cc2f3cb. Route: delegated writer.
 - [ ] T3 Component families, one slice each (order to confirm with the user after T2): atoms, forms,
       navigation, overlays, containers and data, charts, ai, `site` landing and docs.
 
@@ -36,6 +37,8 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
 
 ## Verification evidence
 T1: PRODUCT.md written; init interview answers recorded; not yet committed.
+T2: DESIGN.md + .impeccable/design.json (2cc2f3cb). 28 hex values and 26 CSS variables cited were found in
+the token files via rg. North Star and color character left open for the user.
 
 ## Next step
-Commit T1, then run `document` for T2.
+Confirm component family order (T3) and the DESIGN.md North Star.
