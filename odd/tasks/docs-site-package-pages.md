@@ -29,7 +29,7 @@ one, inside `theming/theme-generator`. Their READMEs (`packages/*/README.md`) ar
 - Delivery: ask-on-risk; forecast under 400 changed lines.
 
 ## Tasks
-- [ ] T1 Three pages + sidebar + frontmatter + site/README mention. One `docs(site): ...` commit.
+- [x] T1 (a0c16657) Three pages + sidebar + frontmatter + site/README mention. One `docs(site): ...` commit.
       Route: delegated writer (sonnet), 4+ non-trivial files.
 
 ## Acceptance criteria
@@ -38,7 +38,7 @@ one, inside `theming/theme-generator`. Their READMEs (`packages/*/README.md`) ar
 - Links in the new pages resolve.
 
 ## Verification evidence
-(none yet)
+- T1 a0c16657: pages under docs/packages/, `Packages` sidebar group, `section: Packages` (llms.txt picks it up via getDocPages/sectionOf, appended after SECTION_ORDER). Link targets checked on disk. Site build/typecheck not run (no node_modules; needs ui build). Prettier not run.
 
 ## Next step
 Run T1 through the delegated writer.
