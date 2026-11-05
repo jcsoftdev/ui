@@ -109,7 +109,7 @@ export function Chip({
           type="button"
           aria-label={removeLabel ?? strings.remove}
           onClick={onRemove}
-          className="-mr-[calc(0.5rem*var(--touch))] grid size-[calc(1rem+1.75rem*var(--touch))] shrink-0 cursor-pointer place-items-center self-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:focus-ring"
+          className="-ml-[calc(0.25rem-0.25rem*var(--touch))] -mr-[calc(0.25rem+0.25rem*var(--touch))] grid size-[calc(1.5rem+1.25rem*var(--touch))] shrink-0 cursor-pointer place-items-center self-center rounded-full text-current opacity-70 hover:opacity-100 focus-visible:focus-ring"
         >
           <X aria-hidden="true" />
         </button>

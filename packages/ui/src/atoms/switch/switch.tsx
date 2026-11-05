@@ -70,7 +70,7 @@ export function Switch({
         ref={composedRef}
         className={cn(
           touchHitArea,
-          "group inline-flex size-10 shrink-0 items-center justify-center",
+          "group inline-flex size-10 shrink-0 items-center justify-center focus-visible:outline-hidden! disabled:cursor-not-allowed disabled:opacity-50",
           classNames?.root,
           className,
         )}
@@ -81,7 +81,7 @@ export function Switch({
       >
         <span
           className={cn(
-            "relative block h-5 w-8.5 rounded-pill bg-line-strong transition-colors group-data-[state=checked]:bg-accent",
+            "relative block h-5 w-8.5 rounded-pill bg-line-strong transition-colors group-focus-visible:focus-ring group-data-[state=checked]:bg-accent",
             classNames?.track,
           )}
         >

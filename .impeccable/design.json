@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T03:23:03Z",
+  "title": "Design System: @jcsoftdev/ui",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Rose Accent",
+        "canonical": "#faa2a2"
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Rose Ink",
+        "canonical": "#a43a41"
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Cool Canvas",
+        "canonical": "#f4f4f8"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White Surface",
+        "canonical": "#ffffff"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#000000"
+      }
+    },
+    "typographyMeta": {
+      "page-title": {
+        "displayName": "Page title",
+        "purpose": "One per view; may carry one accent-word word."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default 14px text."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Button and field text, 13px at weight 650."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-flat",
+        "value": "0 0 0 .67px rgba(0,0,0,.11),0 1px 2px rgba(0,0,0,.04)",
+        "purpose": "Cards and secondary buttons."
+      },
+      {
+        "name": "shadow-hero",
+        "value": "0 0 0 .67px rgba(0,0,0,.11),0 4px 18px rgba(0,0,0,.10)",
+        "purpose": "The one elevated card per view."
+      },
+      {
+        "name": "shadow-cta",
+        "value": "0 8px 36px rgba(0,0,0,.065)",
+        "purpose": "Large primary button; neutral grey."
+      },
+      {
+        "name": "shadow-sel",
+        "value": "0 2px 8px rgba(0,0,0,.10)",
+        "purpose": "Selected pill in a segmented control."
+      },
+      {
+        "name": "shadow-pop",
+        "value": "0 0 0 .67px rgba(0,0,0,.11),0 18px 48px -12px rgba(0,0,0,.22)",
+        "purpose": "Dialogs, sheets, menus."
+      }
+    ],
+    "motion": [
+      {
+        "name": "motion-duration",
+        "value": "180ms",
+        "purpose": "Default transition duration."
+      },
+      {
+        "name": "motion-ease",
+        "value": "cubic-bezier(.2,.8,.2,1)",
+        "purpose": "Default easing."
+      },
+      {
+        "name": "press-scale",
+        "value": ".97",
+        "purpose": "Scale applied while a pressable is active."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main action; accent fill, pill shape.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--control-height-md,38px);padding:0 var(--pad-control-x,16px);border:0;border-radius:var(--radius-button,999px);font:650 13px/1.5 var(--font-sans);cursor:pointer;transition:scale var(--motion-duration,180ms) var(--motion-ease,ease);background:var(--accent);color:var(--on-accent);font-weight:700}.ds-btn-primary:hover{background:var(--accent-ink);color:var(--surface)}.ds-btn-primary:active{scale:var(--press-scale,.97)}.ds-btn-primary:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default button; surface fill with a hairline shadow.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--control-height-md,38px);padding:0 var(--pad-control-x,16px);border:0;border-radius:var(--radius-button,999px);font:650 13px/1.5 var(--font-sans);cursor:pointer;transition:scale var(--motion-duration,180ms) var(--motion-ease,ease);background:var(--surface);color:var(--ink);box-shadow:var(--shadow-flat)}.ds-btn-secondary:hover{background:var(--surface-2)}.ds-btn-secondary:active{scale:var(--press-scale,.97)}.ds-btn-secondary:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action; soft danger wash.",
+      "html": "<button class=\"ds-btn-danger\">Delete</button>",
+      "css": ".ds-btn-danger{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--control-height-md,38px);padding:0 var(--pad-control-x,16px);border:0;border-radius:var(--radius-button,999px);font:650 13px/1.5 var(--font-sans);cursor:pointer;transition:scale var(--motion-duration,180ms) var(--motion-ease,ease);background:var(--danger-soft);color:var(--danger)}.ds-btn-danger:hover{opacity:.85}.ds-btn-danger:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text input with a 12px radius and an inset focus outline.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search\">",
+      "css": ".ds-input{height:var(--input-height,38px);padding:0 12px;border-radius:var(--radius-input,12px);border:1px solid var(--line-control);background:var(--surface);color:var(--ink);font:650 13px/1.5 var(--font-sans)}.ds-input::placeholder{color:var(--ink-3)}.ds-input:focus{border-color:transparent;outline:2px solid var(--accent-ink);outline-offset:-1px}"
+    },
+    {
+      "name": "Accent Chip",
+      "kind": "chip",
+      "refersTo": "chip-accent",
+      "description": "Tinted status or filter chip.",
+      "html": "<span class=\"ds-chip\">Active</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:var(--radius-badge,999px);background:var(--accent-soft);color:var(--accent-ink);font:650 12px/1 var(--font-sans)}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat surface with a hairline edge.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Queue</div><p>Three people waiting.</p></div>",
+      "css": ".ds-card{padding:var(--pad-card,16px);border-radius:var(--radius-card,16px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow-card,var(--shadow-flat));font:400 14px/1.5 var(--font-sans)}.ds-card-title{font:700 15px/1.4 var(--font-sans);letter-spacing:-.01em;margin-bottom:6px}.ds-card p{margin:0;color:var(--ink-2)}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "nav",
+      "refersTo": "segmented",
+      "description": "Tray with a selected pill.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-seg-on\">Day</button><button>Week</button></div>",
+      "css": ".ds-seg{display:inline-flex;padding:3px;border-radius:var(--radius-button,999px);background:var(--seg-track)}.ds-seg button{height:var(--control-height-sm,30px);padding:0 14px;border:0;border-radius:var(--radius-button,999px);background:transparent;color:var(--ink-2);font:650 13px/1.5 var(--font-sans);cursor:pointer}.ds-seg button:hover{color:var(--ink)}.ds-seg .ds-seg-on{background:var(--seg-on);color:var(--ink);box-shadow:var(--shadow-sel)}.ds-seg button:focus-visible{outline:2px solid var(--accent-ink);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "keyCharacteristics": [
+      "Hairline-first depth: a 0.67px edge plus at most a faint shadow in the default style.",
+      "Pill controls (--radius-button: 999px), 12px fields, 16px cards, 20px dialogs.",
+      "One accent per screen, chosen from six families and re-derived for dark.",
+      "Figtree only, weights 400 to 800, tight tracking on large numerals and titles.",
+      "Density, radius, style, accent and theme are independent switches on data-* attributes.",
+      "Dark is true black (AMOLED); depth there is carried by lines, not shadows."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "One accent family is active at a time; never mix two --pal-* families on one screen.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Pairing Rule",
+        "body": "Colored text uses the -ink (or status solid) value, never the fill value, so contrast holds (4.5:1 text, 3:1 UI components per the generator).",
+        "section": "colors"
+      },
+      {
+        "name": "The Tokens-Only Rule",
+        "body": "Components reference semantic variables; a literal hex in component code is a defect.",
+        "section": "colors"
+      },
+      {
+        "name": "The Weight Ladder Rule",
+        "body": "Emphasis moves between 650, 700, 750 and 800; avoid 500 and 600 for headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Scale Switch Rule",
+        "body": "Text sizes scale through --font-scale; never hardcode a px size outside the fs-* steps.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Hero Rule",
+        "body": "Only one card per view takes --shadow-hero; everything else is flat.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Hairline Rule",
+        "body": "Separation is a hairline edge, not a border, unless the active style is bordered.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Material Opt-In Rule",
+        "body": "Glass is applied to overlay and chrome surfaces (surface-overlay, material prop), not to content cards.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do read color, radius, shadow and spacing from semantic tokens (--surface, --radius-card, --shadow-card).",
+      "Do use --accent-ink for accent text and --accent for fills with --on-accent text.",
+      "Do keep control heights on --control-height-sm/md/lg so mixed rows align.",
+      "Do keep the focus ring on every interactive element; use focus-ring or global :focus-visible.",
+      "Do make Liquid Glass opt-in via the material prop or data-glass; it must degrade to --glass-regular-fallback.",
+      "Do re-theme through data-accent, data-style, data-radius, data-density and the theme generator."
+    ],
+    "donts": [
+      "Don't put brand tint in --shadow-cta; it is neutral grey.",
+      "Don't use drop shadows in dark mode; use the 1px light edge.",
+      "Don't pair --pal-*-fill with text; use the matching -ink.",
+      "Don't hardcode hex, px radii or font sizes in component code; add a token instead.",
+      "Don't add a second elevated hero card to a view.",
+      "Don't rename token variables or component --ui-<component>-<prop> hooks; they are public API."
+    ],
+    "overview": "This file documents the incumbent system as the code defines it: the generated tokens in `packages/ui-tokens`\n(source `tokens/default.json`, theme name \"Barbershop default\"), the React components in `packages/ui/src`, and the\nsite styles in `site/src/styles`. It is a record, not a redesign. Values are the light theme unless a dark value is\nnamed.\n\nThe default look is the `soft` style: depth comes from hairline edges instead of borders, shadows are nearly\nabsent, controls are pills, and cards sit on a cool grey canvas. A single rose accent carries every action and\nselection; it is one of six interchangeable accent families, so the system is meant to be re-themed, not restyled\nby hand. Liquid Glass is a material the kit provides for overlays and chrome, not the default surface.\n\nEvery visual decision is a CSS custom property. Components read semantic tokens (`--surface`, `--ink`, `--accent`,\n`--radius-card`) and expose component variables as `--ui-<component>-<prop>`; presets, accents, density and radius\nlevels change tokens, never component code."
+  }
+}
