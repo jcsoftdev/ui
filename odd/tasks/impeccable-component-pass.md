@@ -32,7 +32,10 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
       states (6), containers (48), charts (52), ai (15), auth (10), calendar (7), shell (4), primitives (5),
       then `site` landing and docs. Each slice: critique + polish, rendered check in Storybook, one commit,
       one PR.
-  - [ ] T3.1 atoms
+  - [x] T3.1 atoms. Commit 055c46b1. Route: delegated writer. Rendered check in Storybook (light/dark, focus,
+        disabled); contrast scan clean on 34 stories; fixed focus ring on Checkbox/Switch, disabled cues on
+        Switch/RadioGroup/StatusPill, Chip remove hit area. Evidence: typecheck ok, lint 10 pre-existing
+        warnings, atoms stories 168/168, `pnpm build` + check-size all ok.
   - [ ] T3.2 forms
   - [ ] T3.3 navigation + overlays + states
 
