@@ -66,6 +66,14 @@ export default defineConfig({
             { slug: "docs/theming/theme-generator" },
           ],
         },
+        {
+          label: "Packages",
+          items: [
+            { slug: "docs/packages/ui-core" },
+            { slug: "docs/packages/ui-elements" },
+            { slug: "docs/packages/ui-compose" },
+          ],
+        },
         { label: "Components", items: componentGroups },
         { label: "Reference", items: [{ slug: "docs/reference/exports" }, { slug: "docs/llms" }] },
       ],
