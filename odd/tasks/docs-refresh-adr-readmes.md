@@ -27,7 +27,7 @@ Bring the top-level documentation in line with the repository as it is on `main`
 - Delivery: ask-on-risk; forecast well under 400 changed lines.
 
 ## Tasks
-- [ ] T1 ADR 0001 status update + root README + site/README + docs/README.md index. One commit
+- [x] T1 ADR 0001 status update + root README + site/README + docs/README.md index. One commit
       `docs: ...`. Route: delegated writer (sonnet), 4 non-trivial files.
 
 ## Acceptance criteria
@@ -37,7 +37,12 @@ Bring the top-level documentation in line with the repository as it is on `main`
 - Sidebar page count in `site/README.md` matches `site/astro.config.mjs`.
 
 ## Verification evidence
-(none yet)
+T1 commit 7a72745a: `docs: refresh the ADR status, the root README and the site README`.
+- Relative link check over README.md, site/README.md, docs/README.md, docs/adr/0001-package-split.md: all targets exist.
+- `git diff --stat` (pre-commit): 4 files (3 modified, docs/README.md new), 34 insertions, 9 deletions plus the new index.
+- Versions quoted: ui, ui-tokens, ui-core, ui-elements 0.9.0 (package.json); ui-compose 0.2.0 (gradle.properties, no package.json, outside pnpm-workspace and release-plan).
+- publish-packages.json quoted as `{ "packages": ["packages/ui"] }`, matches the file.
+- Sidebar: 15 hand-written entries counted from astro.config.mjs and the docs directory.
 
 ## Next step
-Run T1 through the delegated writer.
+T1 done; review the diff.
