@@ -27,7 +27,7 @@ All four npm packages are published in lockstep at 0.9.0 but only `packages/ui` 
 - Delivery: ask-on-risk; forecast under 400 changed lines.
 
 ## Tasks
-- [ ] T1 Three changelogs, one commit `docs: add changelogs for ui-tokens, ui-core and ui-elements`.
+- [x] T1 Three changelogs, one commit `docs: add changelogs for ui-tokens, ui-core and ui-elements`.
       Route: delegated writer (sonnet), reading git history for 3 packages.
 
 ## Acceptance criteria
@@ -35,7 +35,7 @@ All four npm packages are published in lockstep at 0.9.0 but only `packages/ui` 
 - No entry that cannot be traced to a commit.
 
 ## Verification evidence
-(none yet)
+T1 commit ea9eed25: 3 files (+224 lines). Version headings 0.4.0 to 0.9.0 present in all three, matching the release commits that bump each package.json (0.4.0 absorbs pre-bump history; first version in git is 0.2.0). 7 entries spot-checked with git show --stat. Prettier not installed in the worktree, not run. Route: delegated writer.
 
 ## Next step
-Run T1 through the delegated writer.
+Review and push at the user's decision.
