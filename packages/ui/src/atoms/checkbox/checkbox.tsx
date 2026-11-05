@@ -88,7 +88,7 @@ export function Checkbox({
         ref={composedRef}
         className={cn(
           touchHitArea,
-          "group inline-flex size-10 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50",
+          "group inline-flex size-10 shrink-0 items-center justify-center focus-visible:outline-hidden! disabled:cursor-not-allowed disabled:opacity-50",
           classNames?.root,
           className,
         )}
@@ -103,7 +103,7 @@ export function Checkbox({
       >
         <span
           className={cn(
-            "grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent",
+            "grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-focus-visible:focus-ring group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent",
             classNames?.box,
           )}
         >

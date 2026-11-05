@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Atoms polish
+
+#### Fixed
+
+- **`Checkbox` and `Switch`**: the keyboard focus ring now follows the visible box and track instead of the
+  invisible 40px hit area.
+- **`Switch`, `RadioGroup` options and `StatusPill` buttons**: a disabled control now dims and shows the
+  not-allowed cursor like `Checkbox` and `Button` already did; before there was no cue.
+- **`Chip` remove button**: the hit area is 24px at the default density (was 16px). The chip keeps its width
+  and the icon its place; the touch density still gets 44px.
+
 ## 0.9.0 (2026-11-04)
 
 ### Kitchen ticket

@@ -53,7 +53,7 @@ export function RadioGroup({ options, className, classNames, ...props }: RadioGr
             key={option.value}
             htmlFor={id}
             className={cn(
-              "flex cursor-pointer items-start gap-2 rounded-control border-divider p-2.5 text-body min-h-(--touch-target) has-[[data-state=checked]]:border-accent has-[[data-state=checked]]:shadow-[inset_0_0_0_1px_var(--accent)]",
+              "flex cursor-pointer items-start gap-2 rounded-control border-divider p-2.5 text-body min-h-(--touch-target) has-disabled:cursor-not-allowed has-disabled:opacity-50 has-[[data-state=checked]]:border-accent has-[[data-state=checked]]:shadow-[inset_0_0_0_1px_var(--accent)]",
               classNames?.option,
             )}
           >
