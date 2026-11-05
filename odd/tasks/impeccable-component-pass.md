@@ -28,8 +28,13 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
       extension to any color or UI standard). Route: inline, one file.
 - [x] T2 DESIGN.md from the incumbent code (`impeccable document`), covering tokens and component rules.
       Commit 2cc2f3cb. Route: delegated writer.
-- [ ] T3 Component families, one slice each (order to confirm with the user after T2): atoms, forms,
-      navigation, overlays, containers and data, charts, ai, `site` landing and docs.
+- [ ] T3 Component families, one slice each. Order: atoms (25), forms (31), navigation (6), overlays (11),
+      states (6), containers (48), charts (52), ai (15), auth (10), calendar (7), shell (4), primitives (5),
+      then `site` landing and docs. Each slice: critique + polish, rendered check in Storybook, one commit,
+      one PR.
+  - [ ] T3.1 atoms
+  - [ ] T3.2 forms
+  - [ ] T3.3 navigation + overlays + states
 
 ## Acceptance criteria
 - PRODUCT.md and DESIGN.md exist and match the repo.
