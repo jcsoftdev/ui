@@ -31,18 +31,18 @@ defineCheckbox({ prefix: "acme" }); // <acme-checkbox>
 
 ## Elements
 
-| Entry           | Elements                                                                  |
-| --------------- | ------------------------------------------------------------------------- |
-| `./button`      | `ui-button`                                                               |
-| `./input`       | `ui-input` (wraps a native `<input>`)                                     |
-| `./checkbox`    | `ui-checkbox`                                                             |
-| `./switch`      | `ui-switch`                                                               |
-| `./radio-group` | `ui-radio-group` + `ui-radio`                                             |
-| `./dialog`      | `ui-dialog` on native `<dialog>.showModal()`                              |
-| `./popover`     | `ui-popover` on the Popover API                                           |
-| `./tooltip`     | `ui-tooltip for="id"`                                                     |
-| `./tabs`        | `ui-tabs` + `ui-tab-list`, `ui-tab`, `ui-tab-panel`                       |
-| `./toast`       | `ui-toaster` live region + `toast()`, `toast.success`, `toast.error`      |
+| Entry           | Elements                                                             |
+| --------------- | -------------------------------------------------------------------- |
+| `./button`      | `ui-button`                                                          |
+| `./input`       | `ui-input` (wraps a native `<input>`)                                |
+| `./checkbox`    | `ui-checkbox`                                                        |
+| `./switch`      | `ui-switch`                                                          |
+| `./radio-group` | `ui-radio-group` + `ui-radio`                                        |
+| `./dialog`      | `ui-dialog` on native `<dialog>.showModal()`                         |
+| `./popover`     | `ui-popover` on the Popover API                                      |
+| `./tooltip`     | `ui-tooltip for="id"`                                                |
+| `./tabs`        | `ui-tabs` + `ui-tab-list`, `ui-tab`, `ui-tab-panel`                  |
+| `./toast`       | `ui-toaster` live region + `toast()`, `toast.success`, `toast.error` |
 
 The form controls are form-associated: they submit with their `name`, take part in `reset`, `disabled` fieldsets and constraint validation, and expose their role and state through `ElementInternals`. Attributes, DOM mode (shadow or light) and the Liquid Glass attributes (`material="liquid"`, `lens`, ...) are in the README.
 

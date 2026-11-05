@@ -18,14 +18,14 @@ pnpm add @jcsoftdev/ui-core
 
 Each entry is its own subpath, so you bundle only what you import.
 
-| Entry                          | What it does                                                       |
-| ------------------------------ | ------------------------------------------------------------------ |
+| Entry                          | What it does                                                         |
+| ------------------------------ | -------------------------------------------------------------------- |
 | `@jcsoftdev/ui-core/focus`     | `createFocusScope` (move in, trap Tab, return focus), `getTabbables` |
-| `@jcsoftdev/ui-core/roving`    | `createRovingFocus` (one tab stop, arrow keys), `getRovingIntent`  |
-| `@jcsoftdev/ui-core/popper`    | `computePlacement` (flip, shift, arrow; pure), `autoPosition`      |
-| `@jcsoftdev/ui-core/dismiss`   | `createDismissLayer` (Escape, outside press/focus, stacking)       |
-| `@jcsoftdev/ui-core/typeahead` | `createTypeahead`, `nextTypeaheadIndex`                            |
-| `@jcsoftdev/ui-core/state`     | `createControllable` (controlled/uncontrolled value)               |
+| `@jcsoftdev/ui-core/roving`    | `createRovingFocus` (one tab stop, arrow keys), `getRovingIntent`    |
+| `@jcsoftdev/ui-core/popper`    | `computePlacement` (flip, shift, arrow; pure), `autoPosition`        |
+| `@jcsoftdev/ui-core/dismiss`   | `createDismissLayer` (Escape, outside press/focus, stacking)         |
+| `@jcsoftdev/ui-core/typeahead` | `createTypeahead`, `nextTypeaheadIndex`                              |
+| `@jcsoftdev/ui-core/state`     | `createControllable` (controlled/uncontrolled value)                 |
 
 ## Usage
 
