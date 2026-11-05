@@ -39,7 +39,7 @@ How it works:
 3. Storybook CSF files are parsed statically for stories, story ids and a usage snippet synthesized from the args.
 4. Pages are plain Markdown, so the same body serves the HTML page and its `.md` copy. When a component has a story, its frontmatter carries `example: { file, story }` and a Starlight override renders it as a live React island (`client:visible`).
 
-The generated files are git-ignored: they are derived from the library and rebuilt on every run. Hand-written pages live in `src/content/docs/docs/`: `index`, `getting-started`, `container-queries`, `accessibility`, `blocks`, `auth`, `data-and-dashboards`, `motion`, `llms`, and the theming set `theming`, `customization`, `glass`, `primitives`, `theming/contract`, `theming/theme-generator` (15 in the sidebar). The generated ones are listed above plus `subpaths`.
+The generated files are git-ignored: they are derived from the library and rebuilt on every run. Hand-written pages live in `src/content/docs/docs/`: `index`, `getting-started`, `container-queries`, `accessibility`, `blocks`, `auth`, `data-and-dashboards`, `motion`, `llms`, the theming set `theming`, `customization`, `glass`, `primitives`, `theming/contract`, `theming/theme-generator`, and `packages/` for `ui-core`, `ui-elements` and `ui-compose` (18 in the sidebar). The generated ones are listed above plus `subpaths`.
 
 ### Routes
 
@@ -47,6 +47,7 @@ The generated files are git-ignored: they are derived from the library and rebui
 - `/docs/` and the guides: `getting-started`, `subpaths`, `container-queries`, `accessibility`, `blocks`, `auth`, `data-and-dashboards`, `motion`
 - Theming: `theming`, `customization`, `glass`, `primitives`, `theming/tokens`, `theming/contract`, `theming/theme-generator`
 - Reference: `reference/exports`, `llms`
+- `/docs/packages/<name>/`: `ui-core`, `ui-elements`, `ui-compose`
 - `/docs/components/<slug>/`: one page per component
 - `/docs/<page>.md`: Markdown for every docs page (the docs root is `/docs/index.md`)
 - `/llms.txt`, `/llms-full.txt`, `/manifest.json`
