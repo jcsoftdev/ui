@@ -36,7 +36,11 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
         disabled); contrast scan clean on 34 stories; fixed focus ring on Checkbox/Switch, disabled cues on
         Switch/RadioGroup/StatusPill, Chip remove hit area. Evidence: typecheck ok, lint 10 pre-existing
         warnings, atoms stories 168/168, `pnpm build` + check-size all ok.
-  - [ ] T3.2 forms
+  - [x] T3.2 forms. Route: delegated writer. Rendered check of 140+ forms stories (light/dark, 900px and 320px)
+        with a headless Playwright audit (chrome-devtools MCP hung): contrast scan clean, no horizontal scroll at
+        320, focus rings hug the control (adornment wrappers draw the ring by design). Fixed missing disabled cues
+        on Input, Textarea, Select, TimeInput, AccentPicker, NumberStepper opacity/cursor, Slider track hit area
+        24px. Left: Rating stars 16-20px (pointer shortcut; keyboard path is the slider).
   - [ ] T3.3 navigation + overlays + states
 
 ## Acceptance criteria

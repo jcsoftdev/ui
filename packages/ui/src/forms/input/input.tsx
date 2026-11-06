@@ -69,7 +69,7 @@ export function Input({
     return (
       <input
         className={cn(
-          "w-full",
+          "w-full disabled:cursor-not-allowed disabled:opacity-50",
           TEXT,
           bare
             ? [
