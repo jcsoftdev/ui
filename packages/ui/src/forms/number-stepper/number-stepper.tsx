@@ -198,7 +198,7 @@ export function NumberStepper(props: NumberStepperProps) {
       className={cn(
         "inline-flex min-w-32 max-w-full items-stretch overflow-hidden rounded-input border-control bg-surface-control",
         sizeClasses[size].root,
-        disabled && "opacity-60",
+        disabled && "cursor-not-allowed opacity-50",
         (invalid || ariaInvalid) && "border-danger",
         classNames?.root,
         className,

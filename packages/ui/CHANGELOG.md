@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Forms polish
+
+#### Fixed
+
+- **`Input` (plain and bare), `Textarea`, `Select`, `TimeInput` and `AccentPicker` options**: a disabled control
+  now dims and shows the not-allowed cursor like `NativeSelect` and `SelectMenu` already did; before there was
+  no cue. `NumberStepper` dims at 0.5 with the not-allowed cursor (was 0.6, default cursor).
+- **`Slider`**: the track pointer area is 24px (was 20px); the root keeps its height.
+
 ### Atoms polish
 
 #### Fixed
