@@ -176,29 +176,31 @@ export function HBars({
         ) : null}
       </div>
 
-      <table className="sr-only">
-        <caption>{description}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{nameHeader}</th>
-            {series.map((item) => (
-              <th key={item.id} scope="col">
-                {item.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              <th scope="row">{row.name}</th>
-              {row.values.map((value, index) => (
-                <td key={series[index]?.id ?? index}>{value}</td>
+      <div className="sr-only">
+        <table>
+          <caption>{description}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{nameHeader}</th>
+              {series.map((item) => (
+                <th key={item.id} scope="col">
+                  {item.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.id}>
+                <th scope="row">{row.name}</th>
+                {row.values.map((value, index) => (
+                  <td key={series[index]?.id ?? index}>{value}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

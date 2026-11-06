@@ -74,7 +74,7 @@ export interface PaginationProps extends Omit<ComponentPropsWithoutRef<"nav">, "
 const DEFAULT_OPTIONS = [10, 25, 50, 100] as const;
 
 const stepButton =
-  "grid size-8 place-items-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:focus-ring disabled:pointer-events-none disabled:opacity-35 [&_svg]:size-4";
+  "grid size-8 place-items-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-ink-2 [&_svg]:size-4";
 
 /**
  * Footer of a list or table: rows per page, the range shown ("11–20 of 134") and first, previous,
@@ -170,7 +170,7 @@ export function Pagination({
         </span>
         <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {picker}
-          <span className="flex items-center gap-1">
+          <span className="flex flex-wrap items-center gap-1">
             <Button size="sm" disabled={atStart} onClick={() => setPage(at - 1)}>
               {text.previousLabel}
             </Button>
