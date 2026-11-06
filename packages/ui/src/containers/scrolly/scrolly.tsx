@@ -195,7 +195,7 @@ export function ScrollyStep({ children, minHeight = "70svh", className }: Scroll
       aria-current={active ? "step" : undefined}
       className={cn(
         "flex min-w-0 flex-col justify-center py-6 text-ink",
-        "opacity-60 motion-safe:transition-opacity motion-safe:duration-300 data-[active]:opacity-100",
+        "opacity-80 motion-safe:transition-opacity motion-safe:duration-300 data-[active]:opacity-100",
         className,
       )}
       style={{ minHeight }}

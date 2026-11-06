@@ -68,7 +68,7 @@ export function SelectableCard({
       className={cn(
         "pressable flex w-full min-w-0 flex-col gap-1 rounded-card border-card p-card text-left shadow-card surface-card focus-visible:focus-ring",
         selected && "border-accent-line bg-accent-soft shadow-selected",
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         classNames?.root,
         className,
       )}

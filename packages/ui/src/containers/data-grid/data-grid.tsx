@@ -2427,7 +2427,7 @@ export function DataGrid<T>({
     const pinSide = pinnedSideOf(pinnedRowIds, row.key);
     const name = labelOfRow(row.key);
     const tool =
-      "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:pointer-events-none disabled:opacity-35 [&_svg]:size-3.5";
+      "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface-2 hover:text-ink focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-ink-3 [&_svg]:size-3.5";
     return (
       <td
         key={TOOLS_ID}
@@ -3351,7 +3351,7 @@ function Pagination({
   const first = page * pageSize + 1;
   const last = Math.min(total, (page + 1) * pageSize);
   const button =
-    "grid size-8 place-items-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-35 [&_svg]:size-4";
+    "grid size-8 place-items-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-ink-2 [&_svg]:size-4";
   return (
     <nav
       aria-label={labels.rowsPerPage}
