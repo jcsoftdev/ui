@@ -41,7 +41,14 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
         320, focus rings hug the control (adornment wrappers draw the ring by design). Fixed missing disabled cues
         on Input, Textarea, Select, TimeInput, AccentPicker, NumberStepper opacity/cursor, Slider track hit area
         24px. Left: Rating stars 16-20px (pointer shortcut; keyboard path is the slider).
-  - [ ] T3.3 navigation + overlays + states
+  - [x] T3.3 navigation + overlays + states. Route: delegated writer. Headless Playwright audit of 148 stories
+        (light/dark, 900 and 320px): contrast scan clean except disabled text (exempt), no horizontal scroll at
+        320, dialog/drawer/alert-dialog/popover/menu verified at 320 (focus moves in, Escape closes, focus returns to
+        trigger, body scroll lock, no overflow), Banner/LiveStatusBar/Toaster/Skeleton carry status/alert roles,
+        reduced motion covered by base.css. Fixed: no disabled cue on TabsTrigger and SegmentedItem, Breadcrumbs
+        link hit area 18px to 30px. Left: story-composed small targets (HoverCard trigger link, ErrorState action
+        link, menu trigger in a story), FloatingToc narrow story links 22px wide (story container), tooltip
+        open/close left to its existing tests.
 
 ## Acceptance criteria
 - PRODUCT.md and DESIGN.md exist and match the repo.

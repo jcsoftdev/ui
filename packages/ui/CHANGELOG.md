@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Navigation, overlays and states polish
+
+#### Fixed
+
+- **`TabsTrigger` and `SegmentedItem`**: a disabled tab or segment now dims and shows the not-allowed cursor;
+  before there was no cue.
+- **`Breadcrumbs` links**: the pointer area is 30px tall (was 18px) through an invisible extension; the row
+  keeps its height and layout.
+
 ### Forms polish
 
 #### Fixed
