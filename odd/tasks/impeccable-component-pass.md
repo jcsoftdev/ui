@@ -41,7 +41,24 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
         320, focus rings hug the control (adornment wrappers draw the ring by design). Fixed missing disabled cues
         on Input, Textarea, Select, TimeInput, AccentPicker, NumberStepper opacity/cursor, Slider track hit area
         24px. Left: Rating stars 16-20px (pointer shortcut; keyboard path is the slider).
-  - [ ] T3.3 navigation + overlays + states
+  - [x] T3.3 navigation + overlays + states. Route: delegated writer. Headless Playwright audit of 148 stories
+        (light/dark, 900 and 320px): contrast scan clean except disabled text (exempt), no horizontal scroll at
+        320, dialog/drawer/alert-dialog/popover/menu verified at 320 (focus moves in, Escape closes, focus returns to
+        trigger, body scroll lock, no overflow), Banner/LiveStatusBar/Toaster/Skeleton carry status/alert roles,
+        reduced motion covered by base.css. Fixed: no disabled cue on TabsTrigger and SegmentedItem, Breadcrumbs
+        link hit area 18px to 30px. Left: story-composed small targets (HoverCard trigger link, ErrorState action
+        link, menu trigger in a story), FloatingToc narrow story links 22px wide (story container), tooltip
+        open/close left to its existing tests.
+  - [x] T3.4 containers. Route: delegated writer. Headless Playwright audit of 304 stories (light/dark, 900 and
+        320px, real Tab presses for focus): fixed Carousel dot, Table sort/pin button and Resizable handle hit
+        areas (24px), ActionBar clear button shrinking to 16px, Pagination pages row overflowing at 320, HBars
+        sr-only table adding horizontal scroll, Scrolly inactive step contrast (0.6 to 0.8), disabled cues
+        (0.5 + not-allowed) on Pagination, DataGrid toolbar/step/tool buttons, formula bar, Carousel arrows,
+        SelectableCard. Left: DataGrid dense checkbox (16px) and tree toggle (20px) (pointer shortcuts, keyboard is
+        the cell), FloorPlan tables 23px tall, story-fixed widths overflowing at 320 (ListDetail, Page, Feed,
+        DescriptionList, DataGrid narrow), story markup targets (KPI actions, Aside link), "Paso" label contrast
+        in the Scrolly story. Evidence: typecheck ok, lint 10 pre-existing warnings, containers stories 304/304,
+        `pnpm build` + check:size ok.
 
 ## Acceptance criteria
 - PRODUCT.md and DESIGN.md exist and match the repo.

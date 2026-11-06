@@ -154,7 +154,7 @@ export function SegmentedItem({
           context.setValue(nextSegmentedValue(context.value, value, context.allowDeselect));
       })}
       className={cn(
-        "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-button px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",
+        "inline-flex h-control-sm shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-button px-3.5 @max-[420px]:px-2.5 text-control text-ink-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 data-[state=on]:bg-seg-on data-[state=on]:text-ink data-[state=on]:shadow-sel",
         context.block && "h-control flex-1 shrink justify-center",
         className,
       )}

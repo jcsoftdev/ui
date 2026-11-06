@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+### Containers polish
+
+#### Fixed
+
+- **`Carousel` dots**: each dot has a 24px tall pointer area (was 8px) through an invisible extension; the dots
+  keep their size and spacing. The disabled arrows now dim at 0.5 like the rest of the kit (was 0.4).
+- **`Table` sort and pin buttons, `Resizable` handle**: the sort button, the pin buttons and the resize handle
+  have a 24px pointer area (17px, 20px and 8px before) through an invisible extension, without changing layout.
+- **`ActionBar` clear button**: it no longer shrinks to 16px wide in a narrow bar.
+- **`Pagination` (`variant="pages"`)**: the page buttons wrap instead of overflowing a 320px screen.
+- **`HBars`**: the screen-reader table is clipped, so it no longer adds horizontal scroll on a narrow screen.
+- **`Scrolly` steps**: inactive steps dim to 0.8 (was 0.6) so their text keeps 4.5:1 contrast.
+- **Disabled cues**: `Pagination` and `DataGrid` step buttons, the `DataGrid` toolbar buttons, the formula bar and the
+  tool panel and column menu buttons now dim at 0.5 with the not-allowed cursor (the toolbar buttons had no
+  cue; the others dimmed at 0.3 to 0.4 with the default cursor). `SelectableCard` dims at 0.5 (was 0.6).
+
+### Navigation, overlays and states polish
+
+#### Fixed
+
+- **`TabsTrigger` and `SegmentedItem`**: a disabled tab or segment now dims and shows the not-allowed cursor;
+  before there was no cue.
+- **`Breadcrumbs` links**: the pointer area is 30px tall (was 18px) through an invisible extension; the row
+  keeps its height and layout.
+
 ### Forms polish
 
 #### Fixed
