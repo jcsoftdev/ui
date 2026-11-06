@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Charts polish
+
+#### Fixed
+
+- **`ScatterChart` trend-line R² label**: it wears the ink color with a surface halo instead of the series color,
+  so it keeps 4.5:1 contrast and stays readable over data points.
+- **Pointer areas**: the chart breadcrumb buttons and the map data table sort buttons are 30px tall (18px before),
+  the `Crossfilter` clear button is 24px (21px), the `BarRaceChart` slider is 24px (6px), and the `TreeChart`
+  collapse badge and the `GanttChart` row toggle get a 24px area through an invisible extension.
+- **Loading skeleton (`shape="ring"`)**: the ring is clipped instead of overflowing a container narrower than
+  its height.
+
 ### Containers polish
 
 #### Fixed

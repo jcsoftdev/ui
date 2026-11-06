@@ -25,7 +25,7 @@ export function ChartSkeleton({ height, label, shape = "bars", className }: Char
         <span className="h-3 w-12 rounded-xs bg-surface-2" />
       </div>
       {shape === "ring" ? (
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex min-w-0 flex-1 items-center justify-center overflow-hidden">
           <span
             className="aspect-square h-[78%] rounded-pill border-[18px] border-surface-2"
             aria-hidden="true"

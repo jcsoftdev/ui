@@ -179,7 +179,7 @@ function ChartHeader({
             onClick={() => {
               for (const id of owned) xf.clear(id);
             }}
-            className="cursor-pointer rounded-button border-0 bg-surface-2 px-2 py-0.5 font-semibold text-fs-110 text-ink-2 hover:text-ink"
+            className="cursor-pointer rounded-button border-0 bg-surface-2 px-2 py-1 font-semibold text-fs-110 text-ink-2 hover:text-ink"
           >
             {labels.clear}
           </button>

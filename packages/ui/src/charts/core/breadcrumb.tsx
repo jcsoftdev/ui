@@ -54,7 +54,7 @@ export function ChartBreadcrumb({ items, onSelect, label, className }: ChartBrea
                 <button
                   type="button"
                   onClick={() => onSelect(item.id)}
-                  className="cursor-pointer truncate rounded-xs border-0 bg-transparent p-0 font-semibold text-ink-3 outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
+                  className="cursor-pointer truncate rounded-xs border-0 bg-transparent -my-1.5 px-0 py-1.5 font-semibold text-ink-3 outline-none hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
                 >
                   {item.name}
                 </button>
