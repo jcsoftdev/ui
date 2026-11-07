@@ -65,6 +65,12 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
         sort, Crossfilter clear, BarRace slider, TreeChart badge, Gantt row toggle), ring skeleton overflow. Left:
         story-fixed widths overflowing at 320 (all `narrow`/`fill-parent` stories), palette-token contrast
         (BubbleMap cluster counts, ComboChart colored axis labels), Gantt splitter 10px.
+  - [x] T3.6 ai + auth + calendar + shell + primitives. Route: delegated writer. Headless Playwright audit of 190
+        stories (light/dark, 900 and 320px, real Tab presses, DateCalendar keyboard, reduced motion): fixed CodeBlock
+        function/type token contrast in dark (1.02:1), 24px hit areas (Attachment remove, Disclosure header,
+        Sidebar group toggle, LoginForm links), disabled cues (DateCalendar arrows, PromptInput, ai icon actions).
+        Left: dense calendar event chips and month dots (16-18px, 8px), inline markdown links, story-fixed widths
+        overflowing at 320. Evidence: typecheck ok, lint 10 pre-existing warnings.
 
 
 ## Acceptance criteria

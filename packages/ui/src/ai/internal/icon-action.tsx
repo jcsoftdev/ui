@@ -14,7 +14,7 @@ export function IconAction({ label, className, children, ...props }: IconActionP
       aria-label={label}
       title={label}
       className={cn(
-        "inline-grid size-7 shrink-0 cursor-pointer place-items-center rounded-button text-ink-3 pressable hover:bg-surface-2 hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-45 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:size-3.5",
+        "inline-grid size-7 shrink-0 cursor-pointer place-items-center rounded-button text-ink-3 pressable hover:bg-surface-2 hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:size-3.5",
         className,
       )}
       {...props}

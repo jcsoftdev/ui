@@ -15,8 +15,8 @@ const tokenClasses: Record<TokenType, string> = {
   string: "text-success",
   comment: "text-ink-3 italic",
   number: "text-warning",
-  function: "text-pal-cielo-deep",
-  type: "text-pal-orquidea-deep",
+  function: "text-info",
+  type: "text-pal-orquidea-ink",
   property: "text-pal-cielo-ink",
   variable: "text-warning",
 };
