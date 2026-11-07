@@ -71,7 +71,7 @@ export function MapDataTable({
         type="button"
         onClick={() => toggle(key)}
         aria-label={labels.sortBy(text)}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-xs border-0 bg-transparent p-0 font-bold text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-xs border-0 bg-transparent -my-1.5 px-0 py-1.5 font-bold text-ink outline-none focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-2"
       >
         {text}
         <span aria-hidden="true" className="text-fs-100 text-ink-3">
