@@ -980,8 +980,10 @@ function XYPointPlot({
               x={Math.min(trend.x2, innerWidth) - 4}
               y={trend.y2 - 8}
               textAnchor="end"
-              className="font-bold text-fs-110 tabular-nums"
-              style={{ fill: trend.series.color }}
+              paintOrder="stroke"
+              strokeWidth={3}
+              strokeLinejoin="round"
+              className="fill-ink-2 stroke-surface font-bold text-fs-110 tabular-nums"
             >
               {`R² ${formatNumber(trend.fit.r2, { maximumFractionDigits: 2 })}`}
             </text>

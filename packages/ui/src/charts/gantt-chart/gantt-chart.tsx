@@ -1192,7 +1192,7 @@ function GanttBody({
                           event.stopPropagation();
                           onToggle(row.task.id);
                         }}
-                        className="grid size-5 shrink-0 cursor-pointer place-items-center rounded-xs text-ink-3 hover:bg-surface-2 hover:text-ink"
+                        className="relative grid size-5 shrink-0 cursor-pointer place-items-center rounded-xs before:absolute before:-inset-0.5 before:content-[''] text-ink-3 hover:bg-surface-2 hover:text-ink"
                       >
                         <svg
                           aria-hidden="true"

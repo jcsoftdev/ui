@@ -146,7 +146,7 @@ export function PromptInput({
           onChange={(event) => set(event.target.value)}
           onKeyDown={onKeyDown}
           className={cn(
-            "block max-h-none w-full min-w-0 resize-none bg-transparent px-1 py-1 text-body leading-normal text-ink outline-none placeholder:text-ink-3 disabled:cursor-not-allowed",
+            "block max-h-none w-full min-w-0 resize-none bg-transparent px-1 py-1 text-body leading-normal text-ink outline-none placeholder:text-ink-3 disabled:cursor-not-allowed disabled:opacity-50",
             classNames?.textarea,
           )}
         />
@@ -173,7 +173,7 @@ export function PromptInput({
               aria-label="Enviar mensaje"
               disabled={!canSend}
               className={cn(
-                "inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button bg-accent text-on-accent pressable focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-45",
+                "inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button bg-accent text-on-accent pressable focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50",
                 classNames?.send,
               )}
             >
