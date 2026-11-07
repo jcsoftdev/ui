@@ -44,7 +44,7 @@ export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"section">,
 }
 
 const iconButton =
-  "pressable inline-flex size-control-sm shrink-0 cursor-pointer items-center justify-center rounded-button border-control bg-surface-control text-ink-2 hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-40";
+  "pressable inline-flex size-control-sm shrink-0 cursor-pointer items-center justify-center rounded-button border-control bg-surface-control text-ink-2 hover:text-ink focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
  * Scroll-snap carousel. Native scrolling and swipe work with no JS; buttons, dots, arrow keys
@@ -218,7 +218,7 @@ export function Carousel({
                   aria-current={i === index ? "true" : undefined}
                   onClick={() => goTo(i)}
                   className={cn(
-                    "h-2 cursor-pointer rounded-badge transition-all duration-(--motion-duration) ease-style focus-visible:focus-ring",
+                    "relative h-2 cursor-pointer rounded-badge transition-all before:absolute before:-inset-x-[3px] before:-inset-y-2 before:content-[''] duration-(--motion-duration) ease-style focus-visible:focus-ring",
                     i === index ? "w-5 bg-accent" : "w-2 bg-line-strong hover:bg-ink-3",
                     classNames?.dot,
                   )}

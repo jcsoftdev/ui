@@ -23,7 +23,7 @@ export function Select({ size = "md", className, children, ...props }: SelectPro
     <span className="relative flex w-full items-center">
       <select
         className={cn(
-          "w-full min-w-0 appearance-none rounded-input border-control bg-surface-control py-0 pr-7 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
+          "w-full min-w-0 appearance-none rounded-input border-control bg-surface-control py-0 pr-7 text-control text-ink focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
           selectSizeClasses[size],
           className,
         )}

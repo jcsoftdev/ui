@@ -260,7 +260,7 @@ export function LoginFormPassword({
     (forgotHref ? (
       <a
         href={forgotHref}
-        className="font-medium text-accent-ink text-control underline underline-offset-3 focus-visible:focus-ring"
+        className="inline-flex min-h-6 items-center font-medium text-accent-ink text-control underline underline-offset-3 focus-visible:focus-ring"
       >
         {strings.forgotPassword}
       </a>
@@ -397,7 +397,7 @@ export function LoginFormOptions({
     (helpHref ? (
       <a
         href={helpHref}
-        className="font-medium text-accent-ink text-control underline underline-offset-3 focus-visible:focus-ring"
+        className="inline-flex min-h-6 items-center font-medium text-accent-ink text-control underline underline-offset-3 focus-visible:focus-ring"
       >
         {strings.needHelp}
       </a>

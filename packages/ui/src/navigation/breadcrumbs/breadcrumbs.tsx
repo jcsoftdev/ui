@@ -79,7 +79,7 @@ export function Breadcrumbs({
                 renderLink({
                   href: item.href,
                   className: cn(
-                    "rounded-xs underline-offset-2 hover:text-ink hover:underline focus-visible:focus-ring",
+                    "relative rounded-xs underline-offset-2 before:absolute before:-inset-y-1.5 before:inset-x-0 hover:text-ink hover:underline focus-visible:focus-ring",
                     classNames?.link,
                   ),
                   children: item.label,

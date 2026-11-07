@@ -94,7 +94,7 @@ export function ActionBar({
           aria-label="Limpiar selección"
           onClick={onClear}
           className={cn(
-            "pressable inline-flex size-control-sm cursor-pointer items-center justify-center rounded-button text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:focus-ring",
+            "pressable inline-flex size-control-sm shrink-0 cursor-pointer items-center justify-center rounded-button text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:focus-ring",
             classNames?.clear,
           )}
         >

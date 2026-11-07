@@ -121,7 +121,7 @@ export function Attachment({
           label={`Quitar ${name}`}
           onClick={onRemove}
           className={cn(
-            "size-5",
+            "size-6",
             preview && "absolute right-2.5 top-2.5 surface-overlay shadow-control",
             classNames?.remove,
           )}

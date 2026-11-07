@@ -10,6 +10,66 @@
   directive, so importing them from a Next.js Server Component failed. They now declare it like the
   other 20 context-using modules.
 
+### AI, auth, calendar, shell and primitives polish
+
+#### Fixed
+
+- **`CodeBlock` dark theme**: function and type names use `text-info` and `text-pal-orquidea-ink` instead of the
+  fixed dark `-deep` swatches, which were nearly invisible on the dark code surface (1.02:1).
+- **Pointer areas**: the `Attachment` and `PromptInput` remove button is 24px (20px before), the disclosure
+  header of `ChainOfThought` and `ToolCall` is at least 24px tall (18px), the collapsible `Sidebar`
+  group toggle is at least 24px tall (23px), and the `LoginForm` forgot-password and help links are at least
+  24px tall (16px).
+- **Disabled cues**: the `DateCalendar` month arrows dim at 0.5 with the not-allowed cursor (0.4 and the default
+  cursor before), the `PromptInput` send button and the `ai` icon actions dim at 0.5 (0.45), and the disabled
+  `PromptInput` textarea dims at 0.5 like the other text controls.
+
+### Charts polish
+
+#### Fixed
+
+- **`ScatterChart` trend-line R² label**: it wears the ink color with a surface halo instead of the series color,
+  so it keeps 4.5:1 contrast and stays readable over data points.
+- **Pointer areas**: the chart breadcrumb buttons and the map data table sort buttons are 30px tall (18px before),
+  the `Crossfilter` clear button is 24px (21px), the `BarRaceChart` slider is 24px (6px), and the `TreeChart`
+  collapse badge and the `GanttChart` row toggle get a 24px area through an invisible extension.
+- **Loading skeleton (`shape="ring"`)**: the ring is clipped instead of overflowing a container narrower than
+  its height.
+
+### Containers polish
+
+#### Fixed
+
+- **`Carousel` dots**: each dot has a 24px tall pointer area (was 8px) through an invisible extension; the dots
+  keep their size and spacing. The disabled arrows now dim at 0.5 like the rest of the kit (was 0.4).
+- **`Table` sort and pin buttons, `Resizable` handle**: the sort button, the pin buttons and the resize handle
+  have a 24px pointer area (17px, 20px and 8px before) through an invisible extension, without changing layout.
+- **`ActionBar` clear button**: it no longer shrinks to 16px wide in a narrow bar.
+- **`Pagination` (`variant="pages"`)**: the page buttons wrap instead of overflowing a 320px screen.
+- **`HBars`**: the screen-reader table is clipped, so it no longer adds horizontal scroll on a narrow screen.
+- **`Scrolly` steps**: inactive steps dim to 0.8 (was 0.6) so their text keeps 4.5:1 contrast.
+- **Disabled cues**: `Pagination` and `DataGrid` step buttons, the `DataGrid` toolbar buttons, the formula bar and the
+  tool panel and column menu buttons now dim at 0.5 with the not-allowed cursor (the toolbar buttons had no
+  cue; the others dimmed at 0.3 to 0.4 with the default cursor). `SelectableCard` dims at 0.5 (was 0.6).
+
+### Navigation, overlays and states polish
+
+#### Fixed
+
+- **`TabsTrigger` and `SegmentedItem`**: a disabled tab or segment now dims and shows the not-allowed cursor;
+  before there was no cue.
+- **`Breadcrumbs` links**: the pointer area is 30px tall (was 18px) through an invisible extension; the row
+  keeps its height and layout.
+
+### Forms polish
+
+#### Fixed
+
+- **`Input` (plain and bare), `Textarea`, `Select`, `TimeInput` and `AccentPicker` options**: a disabled control
+  now dims and shows the not-allowed cursor like `NativeSelect` and `SelectMenu` already did; before there was
+  no cue. `NumberStepper` dims at 0.5 with the not-allowed cursor (was 0.6, default cursor).
+- **`Slider`**: the track pointer area is 24px (was 20px); the root keeps its height.
+
 ### Atoms polish
 
 #### Fixed
