@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### AI, auth, calendar, shell and primitives polish
+
+#### Fixed
+
+- **`CodeBlock` dark theme**: function and type names use `text-info` and `text-pal-orquidea-ink` instead of the
+  fixed dark `-deep` swatches, which were nearly invisible on the dark code surface (1.02:1).
+- **Pointer areas**: the `Attachment` and `PromptInput` remove button is 24px (20px before), the disclosure
+  header of `ChainOfThought` and `ToolCall` is at least 24px tall (18px), the collapsible `Sidebar`
+  group toggle is at least 24px tall (23px), and the `LoginForm` forgot-password and help links are at least
+  24px tall (16px).
+- **Disabled cues**: the `DateCalendar` month arrows dim at 0.5 with the not-allowed cursor (0.4 and the default
+  cursor before), the `PromptInput` send button and the `ai` icon actions dim at 0.5 (0.45), and the disabled
+  `PromptInput` textarea dims at 0.5 like the other text controls.
+
 ### Charts polish
 
 #### Fixed

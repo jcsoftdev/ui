@@ -140,7 +140,7 @@ function SidebarGroupSection({ group, rail, renderLink, classNames }: SidebarGro
           aria-controls={itemsId}
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "flex w-full items-center gap-1 rounded-control px-2.5 pb-1.5 text-left text-overline text-ink-3 hover:text-ink focus-visible:focus-ring",
+            "flex min-h-6 w-full items-center gap-1 rounded-control px-2.5 pb-1.5 text-left text-overline text-ink-3 hover:text-ink focus-visible:focus-ring",
             classNames?.groupLabel,
             classNames?.groupToggle,
           )}
