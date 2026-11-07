@@ -107,7 +107,7 @@ export function TimeInput({
       placeholder={placeholder}
       className={cn(
         size === "sm" ? "h-control-sm" : "h-control-md",
-        "w-full min-w-0 rounded-input border-control bg-surface-control px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
+        "w-full min-w-0 rounded-input border-control bg-surface-control px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger",
         className,
       )}
       {...props}

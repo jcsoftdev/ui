@@ -206,7 +206,7 @@ export function Slider(props: SliderProps) {
   return (
     <div
       className={cn(
-        "@container/slider w-full min-w-0 py-2",
+        "@container/slider w-full min-w-0 py-1.5",
         showValue && "pt-8",
         marks?.some((m) => m.label) && "pb-7",
         disabled && "opacity-50",
@@ -217,7 +217,7 @@ export function Slider(props: SliderProps) {
       <div
         ref={trackRef}
         className={cn(
-          "relative h-5 w-full touch-none select-none",
+          "relative h-6 w-full touch-none select-none",
           disabled ? "cursor-not-allowed" : "cursor-pointer",
           classNames?.track,
         )}
