@@ -1,3 +1,5 @@
+"use client";
+
 import { type ComponentPropsWithoutRef, createContext, type ReactNode, useContext } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";

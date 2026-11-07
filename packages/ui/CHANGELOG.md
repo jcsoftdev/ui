@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Client directive
+
+#### Fixed
+
+- **`Kpi` and the showcase `Bento`**: both use `createContext` but shipped without a `"use client"`
+  directive, so importing them from a Next.js Server Component failed. They now declare it like the
+  other 20 context-using modules.
+
 ### Atoms polish
 
 #### Fixed
