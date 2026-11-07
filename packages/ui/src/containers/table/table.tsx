@@ -440,7 +440,7 @@ function PinButtons({ columnId }: { columnId: string }) {
   if (!context) return null;
   const side = context.positions[columnId]?.side;
   const button =
-    "grid size-5 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface-2 hover:text-ink focus-visible:text-ink";
+    "relative grid size-5 shrink-0 place-items-center rounded-xs text-ink-3 before:absolute before:-inset-0.5 before:content-[''] hover:bg-surface-2 hover:text-ink focus-visible:text-ink";
   if (side) {
     return (
       <button
@@ -498,7 +498,7 @@ function SortButton({
       type="button"
       onClick={() => context.toggle(columnId)}
       className={cn(
-        "-mx-1 inline-flex items-center gap-1 rounded-xs px-1 font-[inherit] text-[length:inherit] uppercase tracking-[inherit] hover:text-ink focus-visible:focus-ring",
+        "relative -mx-1 inline-flex items-center gap-1 rounded-xs px-1 before:absolute before:-inset-y-1 before:inset-x-0 before:content-[''] font-[inherit] text-[length:inherit] uppercase tracking-[inherit] hover:text-ink focus-visible:focus-ring",
         direction !== "none" ? "text-ink" : "text-inherit",
       )}
     >

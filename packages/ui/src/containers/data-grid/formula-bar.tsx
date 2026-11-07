@@ -66,7 +66,7 @@ export function FormulaBar({
           }
         }}
         className={cn(
-          "h-control-sm min-w-0 flex-1 rounded-input border-control bg-surface-control px-2 font-mono text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none disabled:opacity-60",
+          "h-control-sm min-w-0 flex-1 rounded-input border-control bg-surface-control px-2 font-mono text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
           error && "border-danger",
         )}
       />
