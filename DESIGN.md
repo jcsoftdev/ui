@@ -178,6 +178,12 @@ Every visual decision is a CSS custom property. Components read semantic tokens 
 `--radius-card`) and expose component variables as `--ui-<component>-<prop>`; presets, accents, density and radius
 levels change tokens, never component code.
 
+**Creative North Star: "The Dial Set".** The identity is the switchboard, not a single look. Style, accent, density, radius
+and theme are independent switches on `data-*` attributes, so a product makes the kit its own by turning dials, never by
+editing components. Hairline-first depth and the rose accent are the default dial positions, and Liquid Glass is one of
+the positions, not the baseline. Work that touches the landing page or the docs should let a visitor turn a dial and see
+the whole kit change.
+
 **Key Characteristics:**
 - Hairline-first depth: a 0.67px edge plus at most a faint shadow in the default style.
 - Pill controls (`--radius-button: 999px`), 12px fields, 16px cards, 20px dialogs.

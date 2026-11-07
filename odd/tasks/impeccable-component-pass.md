@@ -73,6 +73,14 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
         overflowing at 320. Evidence: typecheck ok, lint 10 pre-existing warnings.
 
 
+- [ ] T4 `site`: landing (Persuade) built around the Dial Set live selector, docs (Read) polish. North Star
+      chosen by the user 2026-11-07: "The Dial Set" (recorded in DESIGN.md Overview). Agents use opus (user
+      request: "Usa opus para toda esta sesion").
+- [ ] T5 Storybook: every component works with all its props editable as controls. Measured on origin/main:
+      228 of 254 story files have `argTypes`; 26 missing (Divider, LoginForm, FilterBar, Pagination, RowActions,
+      SelectableCard, Fieldset, Form, FormFooter, FormGrid, FormSection, PasswordInput, FloorPlan, plus demo
+      compositions). Also audit that files with `argTypes` cover all props.
+
 ## Acceptance criteria
 - PRODUCT.md and DESIGN.md exist and match the repo.
 - Each slice lists what the pass changed and what it left alone; checks green.
