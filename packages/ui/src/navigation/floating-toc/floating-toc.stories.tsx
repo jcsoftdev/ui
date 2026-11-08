@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
-import { FloatingToc } from "./floating-toc.js";
+import { FloatingToc, type FloatingTocProps } from "./floating-toc.js";
 import type { TocItem } from "./model.js";
 
 const items: TocItem[] = [
@@ -23,13 +23,14 @@ const meta = {
     scrollRoot: { control: false },
     onActiveChange: { control: false },
     offsetTop: { control: "number" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof FloatingToc>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function Article({ narrow }: { narrow?: boolean }) {
+function Article({ narrow, toc }: { narrow?: boolean; toc?: Partial<FloatingTocProps> }) {
   const scroller = useRef<HTMLDivElement>(null);
   return (
     <div
@@ -40,7 +41,7 @@ function Article({ narrow }: { narrow?: boolean }) {
       }
     >
       <div className="self-start">
-        <FloatingToc items={items} scrollRoot={scroller} />
+        <FloatingToc items={items} {...toc} scrollRoot={scroller} />
       </div>
       <section
         ref={scroller}
@@ -66,7 +67,7 @@ function Article({ narrow }: { narrow?: boolean }) {
   );
 }
 
-export const Default: Story = { render: () => <Article /> };
+export const Default: Story = { render: (args) => <Article toc={args} /> };
 
 export const Narrow: Story = { render: () => <Article narrow /> };
 

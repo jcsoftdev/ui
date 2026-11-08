@@ -21,6 +21,9 @@ const meta = {
     correlationLabel: { control: "text" },
     retryLabel: { control: "text" },
     onRetry: { action: "retry" },
+    actions: { control: false },
+    variant: { control: "inline-radio", options: ["plain", "outlined"] },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof ErrorState>;
 

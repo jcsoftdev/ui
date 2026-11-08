@@ -12,6 +12,7 @@ const meta = {
   argTypes: {
     title: { control: "text" },
     reason: { control: "text" },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof ForbiddenState>;
 

@@ -12,8 +12,11 @@ const meta = {
     shape: { control: "inline-radio", options: ["round", "square", "rect", "bar"] },
     seats: { control: { type: "number", min: 1, max: 12 } },
     occupied: { control: { type: "number", min: 0, max: 12 } },
-    size: { control: "inline-radio", options: ["sm", "md", "lg"] },
+    size: { control: "inline-radio", options: ["sm", "md", "lg", "fill"] },
     pattern: { control: "inline-radio", options: ["dashed", "solid", "soft", "strong"] },
+    width: { control: "number" },
+    height: { control: "number" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof TableGlyph>;
 

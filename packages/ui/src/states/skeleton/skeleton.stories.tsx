@@ -16,6 +16,8 @@ const meta = {
     rows: { control: { type: "number", min: 1, max: 12 } },
     count: { control: { type: "number", min: 1, max: 12 } },
     label: { control: "text" },
+    announce: { control: "boolean" },
+    className: { control: "text" },
   },
   decorators: [
     (Story) => (

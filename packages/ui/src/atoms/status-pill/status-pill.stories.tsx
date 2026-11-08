@@ -12,6 +12,12 @@ const meta = {
     status: { control: "inline-radio", options: ["success", "warning", "danger", "idle"] },
     label: { control: "text" },
     onSelect: { control: false },
+    icon: { control: false },
+    dot: { control: "boolean" },
+    collapseLabel: { control: "boolean" },
+    interactive: { control: "boolean" },
+    classNames: { control: false },
+    disabled: { control: "boolean" },
   },
 } satisfies Meta<typeof StatusPill>;
 

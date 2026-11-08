@@ -15,6 +15,9 @@ const meta = {
     warnAt: { control: { type: "number", min: 0 } },
     dangerAt: { control: { type: "number", min: 0 } },
     serverOffsetMs: { control: { type: "number" } },
+    since: { control: "text" },
+    countdownTo: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof ElapsedTime>;
 

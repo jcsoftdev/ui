@@ -5,6 +5,7 @@ import { Segmented, SegmentedItem } from "./segmented.js";
 const meta = {
   title: "Navigation/Segmented",
   component: Segmented,
+  subcomponents: { SegmentedItem },
   tags: ["autodocs"],
   args: { defaultValue: "semana", "aria-label": "Vista de agenda" },
   argTypes: {
@@ -14,6 +15,12 @@ const meta = {
     allowDeselect: { control: "boolean" },
     onValueChange: { control: false },
     children: { control: false },
+    rovingFocus: { control: "boolean" },
+    options: { control: "object" },
+    block: { control: "boolean" },
+    orientation: { control: "inline-radio", options: ["horizontal", "vertical"] },
+    dir: { control: "inline-radio", options: ["ltr", "rtl"] },
+    loop: { control: "boolean" },
   },
   render: (args) => (
     <Segmented {...args}>
