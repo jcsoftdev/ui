@@ -1,25 +1,16 @@
 import { Button } from "@jcsoftdev/ui/atoms";
 import { Card } from "@jcsoftdev/ui/containers";
 import { LIQUID_PRESETS, LiquidGlass, liquidStyle } from "@jcsoftdev/ui/liquid";
+import { CompactDials } from "../landing/PresetSwitcher";
 import { Photo } from "./Photo";
 import { sceneById } from "./scenes";
 
 const install = "pnpm add @jcsoftdev/ui react react-dom";
 const photo = sceneById("wilderness");
 const card = liquidStyle({ ...LIQUID_PRESETS.regular, radius: 32 });
-const crystal = liquidStyle({ ...LIQUID_PRESETS.crystal, radius: 40, interactive: "drag" });
 
-interface Stat {
-  value: number;
-  label: string;
-}
-
-/** The hero: a real photo, a liquid-glass card with the pitch, and a crystal pill that can be dragged and springs back. */
+/** The hero: a real photo, a liquid-glass card with the pitch, and the dial panel that restyles the whole page. */
 export default function HeroGlass({ components, charts }: { components: number; charts: number }) {
-  const stats: Stat[] = [
-    { value: components, label: "web components" },
-    { value: charts, label: "chart types" },
-  ];
   return (
     <div className="hero-stage" id="hero">
       <LiquidGlass />
@@ -30,11 +21,12 @@ export default function HeroGlass({ components, charts }: { components: number; 
           <p className="landing-kicker">
             <span className="pole w-10" aria-hidden="true" /> React, Tailwind and Compose
           </p>
-          <h1 className="landing-h1 hero-title">Liquid Glass, and everything around it.</h1>
+          <h1 className="landing-h1 hero-title">Turn a dial. The whole kit changes.</h1>
           <p className="landing-lead hero-lead">
-            A token-driven design system with {components} accessible components, {charts} chart
-            types, six style presets and real Liquid Glass lensing. Zero runtime dependencies on the
-            web, a Compose Multiplatform twin on mobile.
+            {components} accessible React components and {charts} chart types that restyle from
+            attributes on <code>&lt;html&gt;</code>: style, accent, density, radius, glass and
+            theme. Liquid Glass is one position of the dial. Zero runtime dependencies on the web, a
+            Compose Multiplatform twin on mobile.
           </p>
           <div className="hero-actions">
             <a
@@ -58,16 +50,7 @@ export default function HeroGlass({ components, charts }: { components: number; 
           </div>
         </Card>
         <div className="hero-side">
-          <div className="liquid hero-pill" style={crystal} data-testid="hero-pill">
-            <span>Drag me</span>
-          </div>
-          <ul className="hero-stats" role="list">
-            {stats.map((s) => (
-              <li key={s.label}>
-                <strong>{s.value}</strong> {s.label}
-              </li>
-            ))}
-          </ul>
+          <CompactDials />
         </div>
       </div>
     </div>

@@ -73,6 +73,25 @@ Primary user: developers. Differentiator: defaults plus extension to any color o
         overflowing at 320. Evidence: typecheck ok, lint 10 pre-existing warnings.
 
 
+- [x] T4 `site`: landing (Persuade) built around the Dial Set live selector, docs (Read) polish. North Star
+      chosen by the user 2026-11-07: "The Dial Set" (recorded in DESIGN.md Overview). Agents use opus (user
+      request: "Usa opus para toda esta sesion"). Route: delegated writer, branch `design/impeccable-site`.
+      Dial model in `site/src/lib/preset-script.mjs` (+ `dials.ts`): density touch/auto, radius sm/lg, data-glass
+      (liquid, liquid-clear, liquid-thick; crystal left out, no contrast guarantee), stored presets backward
+      compatible and sanitized (test/preset-script.test.mjs). Hero leads with "Turn a dial. The whole kit changes."
+      and a compact dial panel (glass showcase section kept); dock links to the full panel; docs header gets a
+      "Look" menu with all five dials, synced through the same storage. Fixed: hero panel unclickable (photo
+      painted over the grid), white hero copy over a light-theme veil, docs sidebar current page under 3:1 in
+      light, PresetsGallery Spanish copy and 320px overflow, "web components", "Change the look above", the
+      #theming "no JavaScript" claim. #theming and #live moved up; ids unchanged. Evidence: headless Playwright
+      at 1280/320 light/dark (dials set data-*, persist on reload, docs follow both ways, no console errors, no
+      horizontal overflow, Tab reaches every dial with a ring), site typecheck 0 errors, lint ok, tests 32/32,
+      build 570 pages. Left: Spanish demo data in ChartsGallery, AiShowcase, DashboardTile and other tiles.
+- [ ] T5 Storybook: every component works with all its props editable as controls. Measured on origin/main:
+      228 of 254 story files have `argTypes`; 26 missing (Divider, LoginForm, FilterBar, Pagination, RowActions,
+      SelectableCard, Fieldset, Form, FormFooter, FormGrid, FormSection, PasswordInput, FloorPlan, plus demo
+      compositions). Also audit that files with `argTypes` cover all props.
+
 ## Acceptance criteria
 - PRODUCT.md and DESIGN.md exist and match the repo.
 - Each slice lists what the pass changed and what it left alone; checks green.
