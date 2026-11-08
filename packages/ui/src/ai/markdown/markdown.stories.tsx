@@ -35,6 +35,7 @@ const meta = {
   argTypes: {
     children: { control: "text" },
     streaming: { control: "boolean" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

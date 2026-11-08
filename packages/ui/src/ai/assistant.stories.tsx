@@ -77,7 +77,32 @@ const STEPS = [
   { id: "3", label: "Redactar la respuesta" },
 ];
 
-function Assistant() {
+interface AssistantProps {
+  /** Name shown on the person's messages. */
+  userName?: string;
+  /** Name shown on the assistant's messages. */
+  assistantName?: string;
+  /** First assistant message. */
+  greeting?: string;
+  /** System line at the top of the conversation. */
+  contextLine?: string;
+  /** Placeholder of the prompt input. */
+  placeholder?: string;
+  /** Hint under the prompt input. */
+  hint?: string;
+  /** Shows the chat history rail on wide containers. */
+  showHistory?: boolean;
+}
+
+function Assistant({
+  userName = "Luis Paredes",
+  assistantName = "Asistente",
+  greeting = "Hola, soy el asistente de la barbería. Puedo revisar la agenda, los ingresos y el inventario.",
+  contextLine = "Hoy, 20 de junio · Sede Miraflores",
+  placeholder = "Pregunta por turnos, clientes o ingresos…",
+  hint = "Enter envía · Shift+Enter agrega una línea",
+  showHistory = true,
+}: AssistantProps) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [files, setFiles] = useState(["agenda-sabado.pdf"]);
@@ -120,27 +145,25 @@ function Assistant() {
 
   return (
     <div className="@container/demo h-[640px] max-w-5xl overflow-hidden rounded-card bg-bg text-ink border-card shadow-card">
-      <div className="grid h-full @3xl/demo:grid-cols-[16rem_1fr]">
-        <aside className="hidden overflow-y-auto border-r border-line p-card @3xl/demo:block">
-          <ChatList
-            items={HISTORY}
-            activeId="a"
-            now={new Date(2026, 5, 20, 12)}
-            onNew={() => setTurns([])}
-            onSelect={() => {}}
-          />
-        </aside>
+      <div className={showHistory ? "grid h-full @3xl/demo:grid-cols-[16rem_1fr]" : "grid h-full"}>
+        {showHistory ? (
+          <aside className="hidden overflow-y-auto border-r border-line p-card @3xl/demo:block">
+            <ChatList
+              items={HISTORY}
+              activeId="a"
+              now={new Date(2026, 5, 20, 12)}
+              onNew={() => setTurns([])}
+              onSelect={() => {}}
+            />
+          </aside>
+        ) : null}
         <section
           aria-label="Asistente de la barbería"
           className="grid min-h-0 min-w-0 grid-rows-[1fr_auto]"
         >
           <Conversation label="Conversación con el asistente">
-            <ChatMessage author="system" content="Hoy, 20 de junio · Sede Miraflores" />
-            <ChatMessage
-              author="assistant"
-              name="Asistente"
-              content="Hola, soy el asistente de la barbería. Puedo revisar la agenda, los ingresos y el inventario."
-            />
+            <ChatMessage author="system" content={contextLine} />
+            <ChatMessage author="assistant" name={assistantName} content={greeting} />
             {turns.length === 0 ? (
               <PromptSuggestionList>
                 <PromptSuggestion onSelect={send}>¿Qué turnos libres hay mañana?</PromptSuggestion>
@@ -156,10 +179,10 @@ function Assistant() {
               };
               return (
                 <div key={turn.id} className="grid gap-density-lg">
-                  <ChatMessage author="user" name="Luis Paredes" content={turn.user} />
+                  <ChatMessage author="user" name={userName} content={turn.user} />
                   <ChatMessage
                     author="assistant"
-                    name="Asistente"
+                    name={assistantName}
                     status={turn.stage === "done" ? "done" : "streaming"}
                     footer={
                       turn.stage === "done" ? (
@@ -222,8 +245,8 @@ function Assistant() {
               streaming={streaming}
               onStop={stop}
               onSubmit={send}
-              placeholder="Pregunta por turnos, clientes o ingresos…"
-              hint="Enter envía · Shift+Enter agrega una línea"
+              placeholder={placeholder}
+              hint={hint}
               attachments={files.map((name) => (
                 <Attachment
                   key={name}
@@ -253,6 +276,25 @@ const meta = {
   title: "AI/Asistente",
   component: Assistant,
   parameters: { layout: "fullscreen" },
+  args: {
+    userName: "Luis Paredes",
+    assistantName: "Asistente",
+    greeting:
+      "Hola, soy el asistente de la barbería. Puedo revisar la agenda, los ingresos y el inventario.",
+    contextLine: "Hoy, 20 de junio · Sede Miraflores",
+    placeholder: "Pregunta por turnos, clientes o ingresos…",
+    hint: "Enter envía · Shift+Enter agrega una línea",
+    showHistory: true,
+  },
+  argTypes: {
+    userName: { control: "text" },
+    assistantName: { control: "text" },
+    greeting: { control: "text" },
+    contextLine: { control: "text" },
+    placeholder: { control: "text" },
+    hint: { control: "text" },
+    showHistory: { control: "boolean" },
+  },
   decorators: [
     (Story) => (
       <div className="p-card">

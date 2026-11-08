@@ -20,6 +20,7 @@ const meta = {
     marker: { control: "object" },
     onOpen: { action: "open" },
     className: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

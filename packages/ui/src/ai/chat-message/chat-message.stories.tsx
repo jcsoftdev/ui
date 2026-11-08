@@ -24,6 +24,7 @@ const meta = {
     avatarSrc: { control: "text" },
     footer: { control: false },
     children: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

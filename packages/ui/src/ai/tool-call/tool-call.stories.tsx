@@ -21,6 +21,7 @@ const meta = {
     defaultOpen: { control: "boolean" },
     args: { control: "object" },
     result: { control: "object" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

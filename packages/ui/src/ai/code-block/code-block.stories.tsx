@@ -28,6 +28,7 @@ const meta = {
     code: { control: "text" },
     filename: { control: "text" },
     wrap: { control: "boolean" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

@@ -23,6 +23,7 @@ const meta = {
     status: { control: "inline-radio", options: ["done", "uploading", "error"] },
     progress: { control: { type: "range", min: 0, max: 100, step: 5 } },
     onRemove: { control: false },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Attachment>;
 

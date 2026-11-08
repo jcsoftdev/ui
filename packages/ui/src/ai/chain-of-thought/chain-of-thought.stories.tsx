@@ -30,8 +30,9 @@ const meta = {
     duration: { control: "text" },
     defaultOpen: { control: "boolean" },
     steps: { control: "object" },
-    open: { control: false },
+    open: { control: "boolean" },
     onOpenChange: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

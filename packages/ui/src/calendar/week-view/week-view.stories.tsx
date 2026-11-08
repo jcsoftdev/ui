@@ -174,6 +174,7 @@ const meta = {
     workingHours: { control: "object" },
     onOpenEvent: { action: "openEvent" },
     onOpenMarker: { action: "openMarker" },
+    classNames: { control: false },
   },
   parameters: { layout: "fullscreen" },
   decorators: [
