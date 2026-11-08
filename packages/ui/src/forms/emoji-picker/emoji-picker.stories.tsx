@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { EmojiPicker } from "./emoji-picker.js";
 
 const meta = {
@@ -11,13 +11,16 @@ const meta = {
     searchPlaceholder: { control: "text" },
     categories: { control: false },
     onSelect: { control: false },
+    defaultCategory: { control: "text" },
+    className: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof EmojiPicker>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function WithPreview(props: { className?: string }) {
+function WithPreview(props: Partial<ComponentProps<typeof EmojiPicker>>) {
   const [picked, setPicked] = useState("✂️");
   return (
     <div className="flex flex-col gap-density">
@@ -29,7 +32,7 @@ function WithPreview(props: { className?: string }) {
   );
 }
 
-export const Default: Story = { render: () => <WithPreview /> };
+export const Default: Story = { render: (args) => <WithPreview {...args} /> };
 
 export const Narrow: Story = {
   decorators: [

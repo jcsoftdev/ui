@@ -16,6 +16,11 @@ const meta = {
     placeholder: { control: "text" },
     disabled: { control: "boolean" },
     "aria-invalid": { control: "boolean" },
+    classNames: { control: false },
+    size: { control: "inline-radio", options: ["xs", "sm", "md", "lg"] },
+    required: { control: "boolean" },
+    readOnly: { control: "boolean" },
+    variant: { control: "inline-radio", options: ["default", "bare"] },
   },
   decorators: [
     (Story) => (

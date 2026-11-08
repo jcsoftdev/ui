@@ -35,6 +35,7 @@ function AppointmentDetail() {
 const meta = {
   title: "Overlays/Drawer",
   component: DrawerContent,
+  subcomponents: { Drawer, DrawerTrigger, DrawerTitle, DrawerClose },
   tags: ["autodocs"],
   args: { blocking: false, closeLabel: "Cerrar" },
   argTypes: {
@@ -43,6 +44,18 @@ const meta = {
     handle: { control: "boolean" },
     closeLabel: { control: "text" },
     children: { control: false },
+    classNames: { control: false },
+    material: {
+      control: "select",
+      options: ["solid", "glass", "glass-clear", "liquid", "liquid-clear"],
+    },
+    forceMount: { control: "boolean" },
+    onOpenAutoFocus: { control: false },
+    onCloseAutoFocus: { control: false },
+    onEscapeKeyDown: { control: false },
+    onPointerDownOutside: { control: false },
+    onFocusOutside: { control: false },
+    onInteractOutside: { control: false },
   },
   parameters: { layout: "centered" },
 } satisfies Meta<typeof DrawerContent>;

@@ -15,6 +15,7 @@ const meta = {
     disabled: { control: "boolean" },
     readOnly: { control: "boolean" },
     "aria-invalid": { control: "boolean" },
+    required: { control: "boolean" },
   },
   decorators: [
     (Story) => (

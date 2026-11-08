@@ -14,6 +14,8 @@ const meta = {
     defaultValue: { control: "text" },
     statusLabel: { control: false },
     onValueChange: { control: false },
+    className: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

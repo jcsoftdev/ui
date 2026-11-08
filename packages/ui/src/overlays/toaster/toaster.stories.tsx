@@ -26,6 +26,10 @@ const meta = {
     visibleToasts: { control: "number" },
     label: { control: "text" },
     className: { control: false },
+    classNames: { control: false },
+    offset: { control: "object" },
+    container: { control: false },
+    dir: { control: "inline-radio", options: ["ltr", "rtl"] },
   },
   parameters: { layout: "centered" },
 } satisfies Meta<typeof Toaster>;

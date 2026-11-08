@@ -18,6 +18,18 @@ const meta = {
     children: { control: false },
     open: { control: false },
     onOpenChange: { control: false },
+    content: { control: "text" },
+    shortcut: { control: "text" },
+    sideOffset: { control: "number" },
+    defaultOpen: { control: "boolean" },
+    disabled: { control: "boolean" },
+    container: { control: false },
+    material: {
+      control: "select",
+      options: ["solid", "glass", "glass-clear", "liquid", "liquid-clear"],
+    },
+    className: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

@@ -19,6 +19,8 @@ const meta = {
     children: { control: false },
     disabled: { control: "boolean" },
     "aria-invalid": { control: "boolean" },
+    size: { control: "inline-radio", options: ["sm", "md"] },
+    required: { control: "boolean" },
   },
   decorators: [
     (Story) => (
