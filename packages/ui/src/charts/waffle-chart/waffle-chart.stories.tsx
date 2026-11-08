@@ -39,6 +39,10 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     cellShape: { control: "inline-radio", options: ["square", "rounded", "circle"] },
     order: { control: "inline-radio", options: ["row", "column"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
@@ -46,7 +50,7 @@ const meta = {
     columns: { control: { type: "range", min: 2, max: 30, step: 1 } },
     gap: { control: { type: "range", min: 0, max: 0.5, step: 0.02 } },
     height: { control: { type: "range", min: 120, max: 420, step: 10 } },
-    data: { control: false },
+    data: { control: "object" },
   },
   decorators: [
     (Story) => (

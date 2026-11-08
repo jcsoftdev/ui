@@ -43,7 +43,8 @@ const meta = {
     sort: { control: "inline-radio", options: ["none", "desc", "asc"] },
     valueFormat: { control: "select", options: ["number", "integer", "currency", "compact"] },
     dotSize: { control: { type: "range", min: 3, max: 12, step: 1 } },
-    items: { control: false },
+    items: { control: "object" },
+    height: { control: { type: "range", min: 160, max: 560, step: 10 } },
   },
   decorators: [
     (Story) => (

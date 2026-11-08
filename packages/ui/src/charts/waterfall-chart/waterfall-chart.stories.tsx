@@ -47,7 +47,7 @@ const meta = {
   },
   argTypes: {
     valueFormat: { control: "select", options: ["number", "integer", "currency", "compact"] },
-    steps: { control: false },
+    steps: { control: "object" },
     orientation: { control: "inline-radio", options: ["vertical", "horizontal"] },
     height: { control: { type: "range", min: 200, max: 560, step: 10 } },
   },

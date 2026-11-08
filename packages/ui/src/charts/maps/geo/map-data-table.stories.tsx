@@ -44,7 +44,7 @@ const meta = {
   },
   argTypes: {
     rows: { control: "object" },
-    labels: { control: false },
+    labels: { control: "object" },
     onRowClick: { action: "row" },
     height: { control: { type: "number", min: 120 } },
   },

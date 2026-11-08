@@ -31,7 +31,10 @@ const meta = {
     value: { control: { type: "range", min: 0, max: 5, step: 0.1 } },
     size: { control: { type: "range", min: 12, max: 48, step: 1 } },
     step: { control: { type: "number", min: 0, step: 0.25 } },
-    valueFormat: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
   },
   decorators: [
     (Story) => (

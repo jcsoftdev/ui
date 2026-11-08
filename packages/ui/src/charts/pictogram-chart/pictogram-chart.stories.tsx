@@ -57,6 +57,10 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     icon: {
       control: "select",
       options: Object.keys(UNIT_ICONS),
@@ -67,7 +71,7 @@ const meta = {
     unitSize: { control: { type: "range", min: 12, max: 56, step: 1 } },
     gap: { control: { type: "range", min: 0, max: 0.8, step: 0.05 } },
     height: { control: { type: "range", min: 120, max: 420, step: 10 } },
-    data: { control: false },
+    data: { control: "object" },
   },
   decorators: [
     (Story) => (
