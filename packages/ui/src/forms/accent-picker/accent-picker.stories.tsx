@@ -20,6 +20,13 @@ const meta = {
     defaultValue: { control: "text" },
     disabled: { control: "boolean" },
     onValueChange: { control: false },
+    classNames: { control: false },
+    form: { control: "text" },
+    dir: { control: "inline-radio", options: ["ltr", "rtl"] },
+    name: { control: "text" },
+    orientation: { control: "inline-radio", options: ["horizontal", "vertical"] },
+    required: { control: "boolean" },
+    loop: { control: "boolean" },
   },
 } satisfies Meta<typeof AccentPicker>;
 

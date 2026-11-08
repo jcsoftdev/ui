@@ -8,6 +8,20 @@ const meta = {
   component: PasswordInput,
   tags: ["autodocs"],
   args: { "aria-label": "Contraseña", defaultValue: "correcto-caballo" },
+  argTypes: {
+    revealed: { control: "boolean" },
+    defaultRevealed: { control: "boolean" },
+    onRevealedChange: { control: false },
+    revealLabel: { control: "text" },
+    disabled: { control: "boolean" },
+    size: { control: "inline-radio", options: ["xs", "sm", "md", "lg"] },
+    required: { control: "boolean" },
+    placeholder: { control: "text" },
+    readOnly: { control: "boolean" },
+    start: { control: false },
+    classNames: { control: false },
+    variant: { control: "inline-radio", options: ["default", "bare"] },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-sm">

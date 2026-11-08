@@ -19,6 +19,8 @@ const meta = {
     icon: { control: false },
     size: { control: "inline-radio", options: ["md", "sm"] },
     action: { control: false },
+    variant: { control: "inline-radio", options: ["plain", "outlined"] },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof EmptyState>;
 

@@ -15,6 +15,11 @@ const meta = {
     checked: { control: false },
     onCheckedChange: { control: false },
     "aria-label": { control: "text" },
+    classNames: { control: false },
+    name: { control: "text" },
+    value: { control: "text" },
+    form: { control: "text" },
+    label: { control: "text" },
   },
 } satisfies Meta<typeof Checkbox>;
 

@@ -18,6 +18,7 @@ const meta = {
     steps: { control: "object" },
     currentStepId: { control: "inline-radio", options: steps.map((s) => s.id) },
     className: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Stepper>;
 

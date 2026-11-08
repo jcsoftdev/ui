@@ -16,9 +16,23 @@ import {
 const meta = {
   title: "Overlays/ContextMenu",
   component: ContextMenu,
+  subcomponents: {
+    ContextMenuTrigger,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuCheckboxItem,
+    ContextMenuLabel,
+    ContextMenuShortcut,
+    ContextMenuSeparator,
+  },
   tags: ["autodocs"],
   args: { children: null },
-  argTypes: { children: { control: false }, onOpenChange: { control: false } },
+  argTypes: {
+    children: { control: false },
+    onOpenChange: { control: false },
+    defaultOpen: { control: "boolean" },
+    position: { control: "object" },
+  },
 } satisfies Meta<typeof ContextMenu>;
 
 export default meta;
@@ -29,7 +43,7 @@ function Area({
   menu,
 }: {
   container?: HTMLElement | null;
-  menu?: Pick<ContextMenuProps, "defaultOpen" | "position">;
+  menu?: Omit<ContextMenuProps, "children">;
 }) {
   const [confirmada, setConfirmada] = useState(true);
   const [last, setLast] = useState("ninguna");
@@ -75,9 +89,9 @@ function Area({
 }
 
 export const Default: Story = {
-  render: () => (
+  render: ({ children: _children, ...menu }) => (
     <div className="w-full max-w-md">
-      <Area />
+      <Area key={JSON.stringify(menu)} menu={menu} />
     </div>
   ),
 };

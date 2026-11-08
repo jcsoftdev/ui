@@ -6,6 +6,7 @@ import { TabsNav, TabsNavLink } from "./tabs-nav.js";
 const meta = {
   title: "Navigation/TabsNav",
   component: TabsNav,
+  subcomponents: { TabsNavLink },
   tags: ["autodocs"],
   args: {
     "aria-label": "Student sections",
@@ -24,7 +25,12 @@ const meta = {
       </>
     ),
   },
-  argTypes: { children: { control: false } },
+  argTypes: {
+    children: { control: false },
+    "aria-label": { control: "text" },
+    value: { control: "text" },
+    renderLink: { control: false },
+  },
 } satisfies Meta<typeof TabsNav>;
 
 export default meta;

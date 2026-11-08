@@ -15,6 +15,8 @@ const meta = {
     message: { control: "text" },
     queuedChanges: { control: "number" },
     queuedLabel: { control: "text" },
+    action: { control: false },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof OfflineBanner>;
 

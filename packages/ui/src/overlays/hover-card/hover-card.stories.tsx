@@ -7,6 +7,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card.js";
 const meta = {
   title: "Overlays/HoverCard",
   component: HoverCard,
+  subcomponents: { HoverCardTrigger, HoverCardContent },
   tags: ["autodocs"],
   args: { openDelay: 300, closeDelay: 150, children: null },
   argTypes: {
@@ -15,6 +16,7 @@ const meta = {
     children: { control: false },
     open: { control: false },
     onOpenChange: { control: false },
+    defaultOpen: { control: "boolean" },
   },
   decorators: [
     (Story) => (

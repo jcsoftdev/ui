@@ -11,6 +11,11 @@ const meta = {
   component: FormSection,
   tags: ["autodocs"],
   args: { title: "Contacto", description: "Cómo nos comunicamos con la familia.", children: null },
+  argTypes: {
+    title: { control: "text" },
+    description: { control: "text" },
+    children: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-3xl">

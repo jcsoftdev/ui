@@ -28,6 +28,9 @@ const meta = {
     invalid: { control: "boolean" },
     disabled: { control: "boolean" },
     options: { control: false },
+    placeholder: { control: "text" },
+    classNames: { control: false },
+    required: { control: "boolean" },
   },
   decorators: [
     (Story) => (

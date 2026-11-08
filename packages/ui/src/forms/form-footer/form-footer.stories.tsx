@@ -10,6 +10,17 @@ const meta = {
   component: FormFooter,
   tags: ["autodocs"],
   args: { onCancel: () => {}, dirty: false, busy: false },
+  argTypes: {
+    onCancel: { control: false },
+    cancelLabel: { control: "text" },
+    submitLabel: { control: "text" },
+    busy: { control: "boolean" },
+    dirty: { control: "boolean" },
+    submitDisabled: { control: "boolean" },
+    hint: { control: "text" },
+    children: { control: "text" },
+    sticky: { control: "boolean" },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-md">

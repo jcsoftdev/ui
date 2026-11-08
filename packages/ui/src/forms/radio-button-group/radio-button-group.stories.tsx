@@ -19,6 +19,12 @@ const meta = {
     options: { control: false },
     value: { control: false },
     onValueChange: { control: false },
+    defaultValue: { control: "text" },
+    name: { control: "text" },
+    "aria-label": { control: "text" },
+    "aria-labelledby": { control: "text" },
+    className: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

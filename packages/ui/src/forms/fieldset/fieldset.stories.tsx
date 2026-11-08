@@ -9,6 +9,12 @@ const meta = {
   component: Fieldset,
   tags: ["autodocs"],
   args: { legend: "Apoderado", description: "Quien firma la matrícula.", children: null },
+  argTypes: {
+    legend: { control: "text" },
+    description: { control: "text" },
+    disabled: { control: "boolean" },
+    children: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-sm">

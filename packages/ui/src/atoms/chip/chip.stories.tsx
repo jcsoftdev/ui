@@ -26,6 +26,9 @@ const meta = {
     statusIcon: { control: "boolean" },
     icon: { control: false },
     children: { control: "text" },
+    onClick: { control: false },
+    onRemove: { control: false },
+    removeLabel: { control: "text" },
   },
 } satisfies Meta<typeof Chip>;
 

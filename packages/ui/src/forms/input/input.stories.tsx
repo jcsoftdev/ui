@@ -13,6 +13,12 @@ const meta = {
     disabled: { control: "boolean" },
     readOnly: { control: "boolean" },
     "aria-invalid": { control: "boolean" },
+    size: { control: "inline-radio", options: ["xs", "sm", "md", "lg"] },
+    variant: { control: "inline-radio", options: ["default", "bare"] },
+    start: { control: false },
+    end: { control: false },
+    classNames: { control: false },
+    required: { control: "boolean" },
   },
   decorators: [
     (Story) => (
