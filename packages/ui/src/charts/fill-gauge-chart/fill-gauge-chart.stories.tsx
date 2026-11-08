@@ -31,6 +31,7 @@ const meta = {
     animate: true,
     loading: false,
     labels: spanishLabels,
+    max: 1,
   },
   argTypes: {
     shape: {
@@ -40,8 +41,11 @@ const meta = {
     level: { control: "inline-radio", options: ["wave", "flat"] },
     height: { control: { type: "range", min: 100, max: 400, step: 10 } },
     minItemWidth: { control: { type: "range", min: 60, max: 240, step: 4 } },
-    data: { control: false },
-    valueFormat: { control: false },
+    data: { control: "object" },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
   },
   decorators: [
     (Story) => (

@@ -63,9 +63,15 @@ const meta = {
     gap: { control: { type: "range", min: 0, max: 4, step: 0.25 } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 160, max: 640, step: 10 } },
-    valueFormat: { control: false },
-    sizeFormat: { control: false },
-    series: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    sizeFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    series: { control: "object" },
   },
   decorators: [
     (Story) => (

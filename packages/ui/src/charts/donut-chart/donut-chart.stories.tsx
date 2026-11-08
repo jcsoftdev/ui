@@ -43,6 +43,11 @@ const meta = {
     loading: false,
     animate: true,
     labels: spanishLabels,
+    monochrome: false,
+    fill: "solid",
+    drilldown: true,
+    breadcrumbLabel: "Drill-down path",
+    sliceLabels: false,
   },
   argTypes: {
     variant: { control: "inline-radio", options: ["donut", "pie"] },
@@ -58,9 +63,9 @@ const meta = {
     sliceLabels: { control: "select", options: [false, true, "percent", "value"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 200, max: 520, step: 10 } },
-    data: { control: false },
+    data: { control: "object" },
     onSliceClick: { control: false },
-    labels: { control: false },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (

@@ -41,6 +41,8 @@ const meta = {
     loading: false,
     animate: true,
     labels: spanishLabels,
+    tickMarks: false,
+    minorTicks: 4,
   },
   argTypes: {
     value: { control: { type: "range", min: 0, max: 100, step: 1 } },
@@ -54,9 +56,12 @@ const meta = {
     roundedCaps: { control: "boolean" },
     minMaxLabels: { control: "boolean" },
     height: { control: { type: "range", min: 160, max: 480, step: 10 } },
-    ranges: { control: false },
-    valueFormat: { control: false },
-    labels: { control: false },
+    ranges: { control: "object" },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (

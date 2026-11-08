@@ -87,8 +87,8 @@ const meta = {
     levels: { control: "inline-radio", options: [1, 2] },
     height: { control: { type: "range", min: 240, max: 560, step: 10 } },
     gap: { control: { type: "range", min: 0, max: 6, step: 1 } },
-    data: { control: false },
-    labels: { control: false },
+    data: { control: "object" },
+    labels: { control: "object" },
     onModeChange: { control: false },
   },
   decorators: [
