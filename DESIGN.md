@@ -195,7 +195,9 @@ the whole kit change.
 ## Colors
 
 A cool neutral stack with one warm rose accent and a set of paired status colors. Each colored role has a
-solid value for fills and a separate "ink" value tuned for text contrast.
+solid value for fills and a separate "ink" value tuned for text contrast. The default accent family is named
+`coral` in the tokens (`--pal-coral-*`, "Por defecto es Coral" in `tokens/default.json`) and "Coral" on the site;
+this file calls its roles Rose for description only, and code and copy use the token name.
 
 ### Primary
 - **Rose Accent** (`--accent` #faa2a2): fill for primary buttons, switch-on, selected controls. Text on it uses
