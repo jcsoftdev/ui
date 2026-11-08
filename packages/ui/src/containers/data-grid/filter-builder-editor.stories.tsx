@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { useArgs } from "storybook/preview-api";
 import { type Venta, ventaColumns, ventas } from "./data-grid.fixtures.js";
 import { describeFilter, emptyGroup, type FilterGroup } from "./filter-builder.js";
 import { FilterBuilder } from "./filter-builder-editor.js";
@@ -62,15 +63,34 @@ const meta = {
   args: { columns: ventaColumns as never, value: initial, onChange: () => {} },
   argTypes: {
     columns: { control: false },
-    value: { control: false },
+    value: { control: "object" },
     onChange: { control: false },
     valuesOf: { control: false },
-    labels: { control: false },
+    labels: { control: "object" },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof FilterBuilder>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** Every prop from the Controls panel; edits in the builder write back to the `value` control. */
+export const Playground: Story = {
+  render: function Render(args) {
+    const [, updateArgs] = useArgs();
+    return (
+      <FilterBuilder<Venta>
+        {...args}
+        columns={ventaColumns}
+        onChange={(value) => updateArgs({ value })}
+        valuesOf={(id) => {
+          const column = ventaColumns.find((c) => c.id === id);
+          return column ? distinctValues(ventas, column) : [];
+        }}
+      />
+    );
+  },
+};
 
 /** Nested AND / OR groups over the ventas columns. */
 export const Default: Story = { render: () => <Demo start={initial} /> };

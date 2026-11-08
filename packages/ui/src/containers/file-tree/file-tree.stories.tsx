@@ -45,11 +45,13 @@ const meta = {
   },
   argTypes: {
     label: { control: "text" },
-    nodes: { control: false },
-    selectedId: { control: false },
-    expandedIds: { control: false },
+    nodes: { control: "object" },
+    selectedId: { control: "text" },
+    expandedIds: { control: "object" },
     onSelect: { control: false },
     onExpandedChange: { control: false },
+    defaultSelectedId: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

@@ -34,7 +34,11 @@ const meta = {
   component: KpiGroup,
   tags: ["autodocs"],
   args: { items, animate: true },
-  argTypes: { animate: { control: "boolean" }, items: { control: false } },
+  argTypes: {
+    animate: { control: "boolean" },
+    items: { control: "object" },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="w-full max-w-4xl">

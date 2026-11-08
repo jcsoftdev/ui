@@ -60,7 +60,11 @@ const meta = {
   component: Timeline,
   tags: ["autodocs"],
   args: { items },
-  argTypes: { items: { control: false } },
+  argTypes: {
+    items: { control: false },
+    children: { control: false },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="w-full max-w-md">
