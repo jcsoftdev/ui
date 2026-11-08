@@ -1,60 +1,193 @@
 ---
 import Default from "@astrojs/starlight/components/ThemeSelect.astro";
-const styles = ["soft", "bordered", "elevated", "flat", "glass", "brutal"];
+import { DIAL_KEYS, DIAL_NAMES, dialOptions } from "../../lib/dials";
 ---
 
 <div class="look">
-  <label class="look__label">
-    <span class="sr-only">Style preset</span>
-    <select id="look-style" class="look__select" data-look="style" aria-label="Style preset">
-      {styles.map((s) => (
-        <option value={s}>{s}</option>
+  <details class="look__details">
+    <summary class="look__toggle">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16">
+        <path
+          d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        ></path>
+      </svg>
+      Look
+    </summary>
+    <div class="look__panel" role="group" aria-label="Look and feel dials">
+      {DIAL_KEYS.map((key) => (
+        <label class="look__row">
+          <span>{DIAL_NAMES[key]}</span>
+          <select class="look__select" data-dial={key}>
+            {dialOptions(key).map((o) => (
+              <option value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </label>
       ))}
-    </select>
-  </label>
+      <button type="button" class="look__reset" data-look-reset>
+        Reset the look
+      </button>
+      <p class="look__note">Shared with the landing page. Theme is the select beside this menu.</p>
+    </div>
+  </details>
   <Default />
 </div>
 
 <script>
-  import { PRESET_STORAGE_KEY } from "../../lib/preset-script.mjs";
+  import { applyDial, DIAL_KEYS, type DialKey, readDials, resetDials } from "../../lib/dials";
 
-  const select = document.querySelector<HTMLSelectElement>("#look-style");
-  if (select) {
-    select.value = document.documentElement.dataset.style ?? "soft";
-    select.addEventListener("change", () => {
-      document.documentElement.dataset.style = select.value;
-      try {
-        const prev = JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || "{}");
-        localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify({ ...prev, style: select.value }));
-      } catch {
-        /* storage blocked: the choice just does not persist */
-      }
+  // Starlight renders this component twice (header and mobile menu), so every control is synced as a set.
+  const root = document.documentElement;
+  const selects = () => document.querySelectorAll<HTMLSelectElement>("select[data-dial]");
+  const openMenus = () => document.querySelectorAll<HTMLDetailsElement>(".look__details[open]");
+
+  function sync() {
+    const dials = readDials(root);
+    selects().forEach((select) => {
+      select.value = dials[select.dataset.dial as DialKey];
     });
   }
+
+  sync();
+  selects().forEach((select) =>
+    select.addEventListener("change", () =>
+      applyDial(select.dataset.dial as DialKey, select.value),
+    ),
+  );
+  document
+    .querySelectorAll("[data-look-reset]")
+    .forEach((button) => button.addEventListener("click", resetDials));
+  new MutationObserver(sync).observe(root, {
+    attributes: true,
+    attributeFilter: DIAL_KEYS.map((key) => `data-${key}`),
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    openMenus().forEach((menu) => {
+      const hadFocus = menu.contains(document.activeElement);
+      menu.open = false;
+      if (hadFocus) menu.querySelector("summary")?.focus();
+    });
+  });
+  document.addEventListener("click", (event) => {
+    openMenus().forEach((menu) => {
+      if (!menu.contains(event.target as Node)) menu.open = false;
+    });
+  });
 </script>
 
 <style>
   .look {
     display: flex;
     align-items: center;
+    gap: 0.75rem;
+  }
+  .look__details {
+    position: relative;
+  }
+  .look__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-button, 999px);
+    color: var(--ink-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .look__toggle::-webkit-details-marker {
+    display: none;
+  }
+  .look__toggle:hover,
+  .look__details[open] .look__toggle {
+    color: var(--ink);
+    background: var(--surface-2);
+  }
+  .look__toggle:focus-visible,
+  .look__select:focus-visible,
+  .look__reset:focus-visible {
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, var(--accent-ink));
+    outline-offset: var(--focus-ring-offset, 2px);
+  }
+  .look__panel {
+    position: absolute;
+    z-index: 30;
+    inset-inline-start: 0;
+    bottom: calc(100% + 0.5rem);
+    display: grid;
+    gap: 0.6rem;
+    width: min(17rem, calc(100vw - 2rem));
+    padding: 0.875rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-popover, 16px);
+    background: var(--surface-overlay, var(--surface));
+    box-shadow: var(--shadow-overlay);
+    color: var(--ink);
+  }
+  /* In the mobile menu footer the panel spans the screen above the footer; in the header it drops down from the
+     right edge. */
+  @media (max-width: 49.99rem) {
+    .look__panel {
+      position: fixed;
+      inset-inline: 1rem;
+      bottom: 4.5rem;
+      width: auto;
+    }
+  }
+  @media (min-width: 50rem) {
+    :global(.right-group) .look__panel {
+      bottom: auto;
+      top: calc(100% + 0.5rem);
+      inset-inline-start: auto;
+      inset-inline-end: 0;
+    }
+  }
+  .look__row {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    align-items: center;
     gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--ink-2);
   }
   .look__select {
+    min-width: 0;
     height: 2rem;
     padding: 0 0.6rem;
-    border-radius: var(--radius-button, 999px);
+    border-radius: var(--radius-input, 12px);
     border: 1px solid var(--line-strong);
     background: var(--surface);
     color: var(--ink);
     font: inherit;
     font-size: 0.8125rem;
-    text-transform: capitalize;
   }
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
+  .look__reset {
+    justify-self: start;
+    min-height: 2rem;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--radius-button, 999px);
+    background: var(--surface-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .look__note {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--ink-3);
   }
 </style>
