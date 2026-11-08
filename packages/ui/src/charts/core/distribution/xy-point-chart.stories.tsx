@@ -49,6 +49,11 @@ const meta = {
     loading: false,
     animate: true,
     labels,
+    xType: "linear",
+    seed: 17,
+    renderer: "svg",
+    shading: "flat",
+    showLabels: false,
   },
   argTypes: {
     radius: { control: { type: "range", min: 2, max: 9, step: 0.5 } },
@@ -56,11 +61,20 @@ const meta = {
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     trendLine: { control: "boolean" },
     sized: { control: "boolean" },
-    series: { control: false },
-    xFormat: { control: false },
-    yFormat: { control: false },
-    sizeFormat: { control: false },
-    quadrants: { control: false },
+    series: { control: "object" },
+    xFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    yFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    sizeFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    quadrants: { control: "object" },
   },
   decorators: [
     (Story) => (

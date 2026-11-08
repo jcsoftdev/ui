@@ -63,7 +63,15 @@ const meta = {
   title: "Charts/Primitives/ChartFrame",
   component: ChartFrame,
   tags: ["autodocs"],
-  args: { height: 260, labels, children: Columns },
+  args: {
+    height: 260,
+    labels,
+    children: Columns,
+    skeleton: "bars",
+    legendPosition: "top",
+    legendAside: false,
+    dock: "auto",
+  },
   argTypes: {
     height: { control: "number" },
     aspectRatio: { control: "number" },

@@ -35,7 +35,7 @@ const meta = {
   },
   argTypes: {
     caption: { control: "text" },
-    labels: { control: false },
+    labels: { control: "object" },
     rows: { control: false },
   },
   decorators: [

@@ -30,10 +30,10 @@ const root = buildHierarchy({
 const labels = resolveHierarchyLabels({ breadcrumb: "Ruta de navegación" });
 const deepest = findNode(root, "root/Miraflores/Kevin") ?? root;
 
-function HeaderDemo({ start }: { start: string }) {
+function HeaderDemo({ start, texts = labels }: { start: string; texts?: typeof labels }) {
   const [focusId, setFocusId] = useState(start);
   const focus = findNode(root, focusId) ?? root;
-  return <HierarchyHeader path={ancestors(focus)} onSelect={setFocusId} labels={labels} />;
+  return <HierarchyHeader path={ancestors(focus)} onSelect={setFocusId} labels={texts} />;
 }
 
 const meta = {
@@ -42,9 +42,10 @@ const meta = {
   tags: ["autodocs"],
   args: { path: ancestors(deepest), onSelect: () => {}, labels },
   argTypes: {
+    // Hierarchy nodes link back to their parent, which the JSON editor cannot hold.
     path: { control: false },
     onSelect: { control: false },
-    labels: { control: false },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (
@@ -60,7 +61,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Drill-down path: every ancestor is a button; selecting one goes back up to it. */
 export const Default: Story = {
-  render: () => <HeaderDemo start={deepest.id} />,
+  render: (args) => <HeaderDemo start={deepest.id} texts={args.labels} />,
 };
 
 export const AtRoot: Story = {

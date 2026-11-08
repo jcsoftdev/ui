@@ -33,7 +33,7 @@ const meta = {
     root: { control: false },
     caption: { control: "text" },
     format: { control: false },
-    labels: { control: false },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (
