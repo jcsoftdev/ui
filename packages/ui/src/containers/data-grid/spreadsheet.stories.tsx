@@ -33,6 +33,27 @@ const meta = {
   argTypes: {
     density: { control: "inline-radio", options: ["compact", "normal", "comfortable"] },
     height: { control: { type: "number", min: 160, step: 40 } },
+    getRowId: { control: false },
+    onSortChange: { control: false },
+    onFiltersChange: { control: false },
+    onGroupByChange: { control: false },
+    onDensityChange: { control: false },
+    onSelectionChange: { control: false },
+    onCellChange: { control: false },
+    onCellsChange: { control: false },
+    onHistoryChange: { control: false },
+    createRow: { control: false },
+    onRowsChange: { control: false },
+    onExpandedRowsChange: { control: false },
+    renderDetail: { control: false },
+    onPinnedRowsChange: { control: false },
+    onRowReorder: { control: false },
+    onAdvancedFilterChange: { control: false },
+    onPivotChange: { control: false },
+    emptyMessage: { control: "text" },
+    onExport: { control: false },
+    onExportXlsx: { control: false },
+    toolbarActions: { control: false },
   },
   parameters: {
     docs: {
@@ -62,6 +83,11 @@ const preset = (Story: () => ReactNode) => (
     <Story />
   </section>
 );
+
+/** Every DataGrid prop from the Controls panel, with the spreadsheet features switched on. */
+export const Playground: Story = {
+  args: { history: true, formulas: true, rangeSelection: true, charts: true },
+};
 
 export const UndoRedo: Story = {
   name: "Undo / redo",

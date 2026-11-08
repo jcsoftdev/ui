@@ -47,6 +47,9 @@ const meta = {
     state: { control: "inline-radio", options: AUTH_STATES },
     progress: { control: { type: "range", min: 0, max: 1, step: 0.05 } },
     activeIndex: { control: "inline-radio", options: [0, 1, 2] },
+    headline: { control: "text" },
+    caption: { control: "text" },
+    action: { control: false },
   },
   decorators: [
     (Story) => (

@@ -85,7 +85,8 @@ const meta = {
     formatMore: { control: false },
     onOpenEvent: { action: "openEvent" },
     onOpenMarker: { action: "openMarker" },
-    onSelectDate: { action: "selectDate" },
+    onSelectDate: { action: "selectDate", control: false },
+    classNames: { control: false },
   },
   parameters: { layout: "fullscreen" },
   decorators: [

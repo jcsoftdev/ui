@@ -60,6 +60,7 @@ const meta = {
     footer: { control: false },
     renderLink: { control: false },
     onClose: { action: "close" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

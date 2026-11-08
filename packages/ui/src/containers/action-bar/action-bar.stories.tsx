@@ -16,12 +16,15 @@ const meta = {
   title: "Containers/ActionBar",
   component: ActionBar,
   tags: ["autodocs"],
-  args: { selectedCount: 3, position: "absolute" },
+  args: { selectedCount: 3, position: "absolute", noun: ["cliente", "clientes"] },
   argTypes: {
     selectedCount: { control: { type: "number", min: 0 } },
     position: { control: "inline-radio", options: ["absolute", "fixed", "static"] },
-    noun: { control: false },
+    noun: { control: "object" },
     onClear: { control: false },
+    ref: { control: false },
+    children: { control: false },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof ActionBar>;
 
@@ -65,6 +68,22 @@ function Demo({ width }: { width?: string }) {
     </div>
   );
 }
+
+/** Every prop from the Controls panel; the bar renders nothing while `selectedCount` is 0. */
+export const Playground: Story = {
+  render: (args) => (
+    <div className="relative min-h-40 w-[32rem] max-w-full rounded-card border-card bg-surface-card shadow-card">
+      <ActionBar {...args}>
+        <Button size="sm" variant="primary">
+          <Send aria-hidden="true" /> Enviar promo
+        </Button>
+        <Button size="sm">
+          <Archive aria-hidden="true" /> Archivar
+        </Button>
+      </ActionBar>
+    </div>
+  ),
+};
 
 export const Default: Story = { render: () => <Demo width="32rem" /> };
 

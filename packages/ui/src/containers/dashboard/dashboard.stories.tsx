@@ -16,6 +16,7 @@ import { CardGrid, ChartCard, DashboardPage, KpiRow, TableCard } from "./dashboa
 const meta = {
   title: "Containers/Dashboard blocks",
   component: DashboardPage,
+  subcomponents: { KpiRow, CardGrid, ChartCard, TableCard },
   tags: ["autodocs"],
   parameters: { layout: "padded" },
   decorators: [
@@ -42,6 +43,84 @@ function Collected() {
     />
   );
 }
+
+interface PlaygroundArgs {
+  /** `aria-label` of the `KpiRow`. */
+  kpiRowLabel: string;
+  /** `columns` of the `CardGrid`. */
+  columns: 2 | 3;
+  /** `title` of the first `ChartCard`. */
+  title: string;
+  /** `subtitle` of the `ChartCard`. */
+  subtitle: string;
+  /** `headingLevel` of the cards. */
+  headingLevel: 2 | 3 | 4;
+  /** `height` of the `ChartCard`, in px. */
+  height: number;
+  /** `title` of the `TableCard`. */
+  tableTitle: string;
+  /** `subtitle` of the `TableCard`. */
+  tableSubtitle: string;
+}
+
+/** The props of every block from the Controls panel. */
+export const Playground: StoryObj<PlaygroundArgs> = {
+  args: {
+    kpiRowLabel: "Cifras clave",
+    columns: 2,
+    title: "Recaudación",
+    subtitle: "Miles de soles por mes",
+    headingLevel: 2,
+    height: 260,
+    tableTitle: "Últimos pagos",
+    tableSubtitle: "Hoy",
+  },
+  argTypes: {
+    kpiRowLabel: { control: "text" },
+    columns: { control: "inline-radio", options: [2, 3] },
+    title: { control: "text" },
+    subtitle: { control: "text" },
+    headingLevel: { control: "inline-radio", options: [2, 3, 4] },
+    height: { control: { type: "range", min: 160, max: 480, step: 20 } },
+    tableTitle: { control: "text" },
+    tableSubtitle: { control: "text" },
+  },
+  render: (args) => (
+    <DashboardPage>
+      <KpiRow aria-label={args.kpiRowLabel}>
+        <Kpi label="Matrícula" value="1 240" description="+32 este mes" />
+        <Kpi label="Recaudación" value="86%" description="Meta 90%" />
+      </KpiRow>
+      <CardGrid columns={args.columns}>
+        {[args.title, "Morosidad", "Admisiones"].slice(0, args.columns).map((title) => (
+          <ChartCard
+            key={title}
+            title={title}
+            subtitle={args.subtitle}
+            headingLevel={args.headingLevel}
+            height={args.height}
+          >
+            <Collected />
+          </ChartCard>
+        ))}
+      </CardGrid>
+      <TableCard
+        title={args.tableTitle}
+        subtitle={args.tableSubtitle}
+        headingLevel={args.headingLevel}
+      >
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell>Quispe</TableCell>
+              <TableCell alignRight>S/ 450</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableCard>
+    </DashboardPage>
+  ),
+};
 
 /** The blocks together: a named KPI row, a pair of cards and a table card. */
 export const Default: Story = {

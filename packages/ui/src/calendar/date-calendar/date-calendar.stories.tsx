@@ -9,7 +9,11 @@ const meta = {
   component: DateCalendar,
   tags: ["autodocs"],
   args: { value: "2026-09-07", today: "2026-09-10", onSelect: fn() },
-  argTypes: { onSelect: { control: false }, isDateDisabled: { control: false } },
+  argTypes: {
+    onSelect: { control: false },
+    isDateDisabled: { control: false },
+    classNames: { control: false },
+  },
 } satisfies Meta<typeof DateCalendar>;
 
 export default meta;

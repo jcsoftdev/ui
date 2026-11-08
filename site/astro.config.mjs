@@ -88,6 +88,9 @@ export default defineConfig({
         "storybook/test": fileURLToPath(
           new URL("./src/lib/storybook-test-stub.ts", import.meta.url),
         ),
+        "storybook/preview-api": fileURLToPath(
+          new URL("./src/lib/storybook-preview-api-stub.ts", import.meta.url),
+        ),
       },
     },
     ssr: { noExternal: ["@jcsoftdev/ui"] },

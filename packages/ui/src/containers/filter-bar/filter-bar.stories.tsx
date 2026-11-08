@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { Button } from "../../atoms/button/button.js";
 import { NativeSelect } from "../../forms/native-select/native-select.js";
 import { FilterBar } from "./filter-bar.js";
@@ -8,6 +8,19 @@ import { FilterBar } from "./filter-bar.js";
 const meta = {
   title: "Containers/FilterBar",
   component: FilterBar,
+  argTypes: {
+    search: { control: "text" },
+    defaultSearch: { control: "text" },
+    searchPlaceholder: { control: "text" },
+    quickFilters: { control: "object" },
+    activeFilters: { control: "object" },
+    resultCount: { control: { type: "number", min: 0 } },
+    labels: { control: "object" },
+    onSearchChange: { control: false },
+    children: { control: false },
+    onClearAll: { control: false },
+    actions: { control: false },
+  },
   tags: ["autodocs"],
   parameters: { layout: "padded" },
 } satisfies Meta<typeof FilterBar>;
@@ -80,6 +93,28 @@ function Demo() {
     </FilterBar>
   );
 }
+
+/** Every prop from the Controls panel. Chips edited as JSON get a no-op `onRemove`. */
+export const Playground: Story = {
+  args: {
+    defaultSearch: "",
+    searchPlaceholder: "Buscar alumno",
+    quickFilters: { label: "Estado", options: statuses, defaultValue: "pending" },
+    activeFilters: [{ id: "status", label: "Estado: Pendientes", onRemove: fn() }],
+    resultCount: 1240,
+    labels: { search: "Buscar", filters: "Filtros", clearAll: "Limpiar todo" },
+  },
+  render: ({ activeFilters, ...args }) => (
+    <FilterBar
+      {...args}
+      activeFilters={activeFilters?.map((chip) => ({
+        ...chip,
+        onRemove: chip.onRemove ?? (() => {}),
+      }))}
+      actions={<Button size="sm">Exportar</Button>}
+    />
+  ),
+};
 
 /** Removing a chip or clearing all resets the filter it stands for. */
 export const Default: Story = {

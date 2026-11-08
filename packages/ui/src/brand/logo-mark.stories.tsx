@@ -33,7 +33,7 @@ const meta = {
     name: { control: "text" },
     tagline: { control: "text" },
     size: { control: "text" },
-    wordmark: { control: false },
+    wordmark: { control: "object" },
   },
 } satisfies Meta<typeof LogoMark>;
 

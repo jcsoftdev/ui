@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { ChartAnnotation } from "../../charts/core/types.js";
 import { LineChart } from "../../charts/line-chart/line-chart.js";
-import { Scrolly, ScrollyStep } from "./scrolly.js";
+import { Scrolly, type ScrollyProps, ScrollyStep } from "./scrolly.js";
 
 const days = Array.from({ length: 30 }, (_, i) => new Date(2026, 8, 1 + i));
 const sales = days.map((date, i) => {
@@ -92,10 +92,15 @@ function SalesGraphic({ step }: { step: number }) {
   );
 }
 
-function Narrative({ side = "end" }: { side?: "start" | "end" }) {
+type NarrativeProps = Partial<Omit<ScrollyProps, "graphic" | "children">> & {
+  side?: "start" | "end";
+};
+
+function Narrative({ side = "end", ...props }: NarrativeProps) {
   return (
     <Scrolly
       aria-label="Historia de septiembre"
+      {...props}
       graphicSide={side}
       graphic={({ step }) => <SalesGraphic step={step} />}
     >
@@ -125,6 +130,10 @@ const meta = {
     onStepChange: { control: false },
     offset: { control: { type: "range", min: 0, max: 1, step: 0.05 } },
     graphicSide: { control: "inline-radio", options: ["start", "end"] },
+    graphicHeight: { control: "text" },
+    step: { control: { type: "number", min: 0, max: 3, step: 1 } },
+    "aria-label": { control: "text" },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof Scrolly>;
 
@@ -137,9 +146,9 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   parameters: { a11y: { test: "todo" } },
-  render: (args) => (
+  render: ({ graphic: _graphic, children: _children, ...args }) => (
     <div style={{ padding: 16 }}>
-      <Narrative side={args.graphicSide} />
+      <Narrative {...args} side={args.graphicSide} />
     </div>
   ),
 };

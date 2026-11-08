@@ -45,6 +45,7 @@ const meta = {
     showArrows: { control: "boolean" },
     slideClassName: { control: "text" },
     children: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

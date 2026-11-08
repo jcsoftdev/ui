@@ -10,6 +10,7 @@ const meta = {
     variant: { control: "inline-radio", options: ["dots", "typing"] },
     size: { control: "inline-radio", options: ["sm", "md"] },
     label: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Loader>;
 

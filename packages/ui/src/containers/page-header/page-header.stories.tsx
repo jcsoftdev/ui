@@ -36,7 +36,14 @@ const meta = {
       </>
     ),
   },
-  argTypes: { children: { control: false } },
+  argTypes: {
+    children: { control: false },
+    breadcrumbs: { control: false },
+    back: { control: false },
+    meta: { control: "text" },
+    tabs: { control: false },
+    stickyOffset: { control: "text" },
+  },
 } satisfies Meta<typeof PageHeader>;
 
 export default meta;

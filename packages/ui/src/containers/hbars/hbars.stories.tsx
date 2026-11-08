@@ -34,9 +34,9 @@ const meta = {
     threshold: { control: "number" },
     description: { control: "text" },
     nameHeader: { control: "text" },
-    series: { control: false },
-    rows: { control: false },
-    ticks: { control: false },
+    series: { control: "object" },
+    rows: { control: "object" },
+    ticks: { control: "object" },
   },
   decorators: [
     (Story) => (

@@ -30,6 +30,8 @@ const meta = {
     menuButtonRef: { control: false },
     actions: { control: false },
     end: { control: false },
+    start: { control: false },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Topbar>;
 

@@ -18,6 +18,8 @@ const meta = {
     icon: { control: false },
     action: { control: false },
     children: { control: "text" },
+    title: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

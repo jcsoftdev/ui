@@ -25,6 +25,7 @@ const meta = {
   argTypes: {
     children: { control: false },
     className: { control: "text" },
+    ref: { control: false },
   },
   decorators: [
     (Story) => (

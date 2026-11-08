@@ -57,10 +57,11 @@ const meta = {
     label: { control: "text" },
     emptyText: { control: "text" },
     items: { control: "object" },
-    now: { control: false },
+    now: { control: "date" },
     onNew: { control: false },
     onSelect: { control: false },
     onDelete: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

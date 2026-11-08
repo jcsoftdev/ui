@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, within } from "storybook/test";
 import { Switch } from "../atoms/switch/switch.js";
-import { Banner } from "../containers/banner/banner.js";
+import { Banner, type BannerProps } from "../containers/banner/banner.js";
 import { Field } from "../forms/field/field.js";
 import { Input } from "../forms/input/index.js";
 import { Dialog, DialogBody, DialogContent, DialogTitle } from "../overlays/dialog/dialog.js";
@@ -18,6 +18,26 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** Edit the `classNames` map and `className` from the Controls panel and watch each part restyle. */
+export const Playground: StoryObj<BannerProps> = {
+  parameters: { controls: { disable: false } },
+  args: {
+    tone: "info",
+    title: "Heads up",
+    children: "Body text",
+    classNames: { root: "rounded-none", title: "font-normal italic", body: "", icon: "" },
+    className: "",
+  },
+  argTypes: {
+    tone: { control: "inline-radio", options: ["info", "success", "warning", "danger"] },
+    title: { control: "text" },
+    children: { control: "text" },
+    classNames: { control: "object" },
+    className: { control: "text" },
+  },
+  render: (args) => <Banner {...args} />,
+};
 
 export const BannerParts: Story = {
   render: () => (

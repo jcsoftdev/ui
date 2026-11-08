@@ -15,6 +15,15 @@ const meta = {
     value: { control: "text" },
     suffix: { control: "text" },
     description: { control: "text" },
+    tone: {
+      control: "select",
+      options: ["neutral", "accent", "success", "warning", "danger", "info"],
+    },
+    icon: { control: false },
+    trailing: { control: false },
+    trend: { control: false },
+    children: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

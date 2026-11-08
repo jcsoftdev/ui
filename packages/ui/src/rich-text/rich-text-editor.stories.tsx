@@ -15,9 +15,10 @@ const meta = {
     placeholder: { control: "text" },
     minHeightRem: { control: "number" },
     disabled: { control: "boolean" },
-    value: { control: false },
-    defaultValue: { control: false },
+    value: { control: "text" },
+    defaultValue: { control: "text" },
     onChange: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (
