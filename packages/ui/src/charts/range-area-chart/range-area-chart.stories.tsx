@@ -68,9 +68,12 @@ const meta = {
     curve: { control: "inline-radio", options: ["smooth", "linear"] },
     xScale: { control: "inline-radio", options: ["auto", "point", "time"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
-    valueFormat: { control: false },
-    categories: { control: false },
-    bands: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    categories: { control: "object" },
+    bands: { control: "object" },
     height: { control: { type: "range", min: 160, max: 520, step: 10 } },
   },
   decorators: [

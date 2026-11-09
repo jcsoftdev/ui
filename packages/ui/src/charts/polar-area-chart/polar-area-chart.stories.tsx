@@ -42,6 +42,10 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     scale: { control: "inline-radio", options: ["radius", "area"] },
     innerRadius: { control: { type: "range", min: 0, max: 0.5, step: 0.01 } },
     cornerRadius: { control: { type: "range", min: 0, max: 16, step: 1 } },
@@ -51,8 +55,8 @@ const meta = {
     startAngle: { control: { type: "range", min: -90, max: 90, step: 5 } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 240, max: 560, step: 10 } },
-    data: { control: false },
-    labels: { control: false },
+    data: { control: "object" },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (

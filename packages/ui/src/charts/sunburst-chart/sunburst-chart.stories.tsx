@@ -106,7 +106,7 @@ const meta = {
     levels: { control: { type: "range", min: 1, max: 4, step: 1 } },
     height: { control: { type: "range", min: 220, max: 560, step: 10 } },
     gap: { control: { type: "range", min: 0, max: 6, step: 0.5 } },
-    data: { control: false },
+    data: { control: "object" },
     onFocusChange: { control: false },
     onNodeClick: { control: false },
   },
