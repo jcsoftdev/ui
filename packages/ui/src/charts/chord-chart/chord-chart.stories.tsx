@@ -53,10 +53,11 @@ const meta = {
     animate: true,
     loading: false,
     labels: spanishLabels,
+    exportable: false,
   },
   argTypes: {
-    groups: { control: false },
-    matrix: { control: false },
+    groups: { control: "object" },
+    matrix: { control: "object" },
     sortGroups: { control: "inline-radio", options: ["input", "ascending", "descending"] },
     sortSubgroups: { control: "inline-radio", options: ["input", "ascending", "descending"] },
     padAngle: { control: { type: "range", min: 0, max: 10, step: 0.5 } },

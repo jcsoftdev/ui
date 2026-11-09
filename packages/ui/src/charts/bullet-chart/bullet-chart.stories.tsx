@@ -71,7 +71,7 @@ const meta = {
     orientation: { control: "inline-radio", options: ["horizontal", "vertical"] },
     scale: { control: "inline-radio", options: ["row", "shared"] },
     rowHeight: { control: { type: "range", min: 30, max: 80, step: 2 } },
-    items: { control: false },
+    items: { control: "object" },
   },
   decorators: [
     (Story) => (

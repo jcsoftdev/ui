@@ -71,8 +71,8 @@ const meta = {
     maxColumns: { control: { type: "range", min: 1, max: 6, step: 1 } },
     panelHeight: { control: { type: "range", min: 90, max: 320, step: 10 } },
     children: { control: false },
-    panels: { control: false },
-    legend: { control: false },
+    panels: { control: "object" },
+    legend: { control: "object" },
   },
   decorators: [
     (Story) => (

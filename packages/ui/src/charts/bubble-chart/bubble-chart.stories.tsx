@@ -71,10 +71,52 @@ const meta = {
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 220, max: 560, step: 10 } },
     xFormat: { control: false },
-    yFormat: { control: false },
-    sizeFormat: { control: false },
-    series: { control: false },
-    quadrants: { control: false },
+    yFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    sizeFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    series: { control: "object" },
+    quadrants: { control: "object" },
+    aspectRatio: {
+      control: "number",
+      description:
+        'Width / height ratio; sizes the drawing from the container width when `height` is not "fill".',
+    },
+    brush: {
+      control: false,
+      description: "Rectangular brush over the plot (pointer drag plus keyboard).",
+    },
+    className: { control: "text" },
+    xType: {
+      control: "inline-radio",
+      options: ["linear", "time"],
+      description: '"time": `x` is epoch milliseconds and the axis shows calendar ticks.',
+    },
+    jitter: {
+      control: "number",
+      description:
+        "Deterministic displacement in pixels that separates overlapping points (a number applies to both axes).",
+    },
+    seed: {
+      control: "number",
+      description: "Seed of the jitter, so points are stable between renders.",
+    },
+    renderer: {
+      control: "inline-radio",
+      options: ["svg", "canvas"],
+      description:
+        '"canvas" paints the marks on a canvas for tens of thousands of points; axes, tooltip and keyboard stay SVG/HTML.',
+    },
+    shading: {
+      control: "inline-radio",
+      options: ["flat", "shaded"],
+      description:
+        '"shaded" fills bubbles with an off-centre radial gradient so they read as spheres.',
+    },
   },
   decorators: [
     (Story) => (

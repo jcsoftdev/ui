@@ -94,6 +94,7 @@ const meta = {
     upColor: { control: "text" },
     downColor: { control: "text" },
     height: { control: { type: "range", min: 220, max: 600, step: 10 } },
+    xFormat: { control: false },
   },
   decorators: [
     (Story) => (

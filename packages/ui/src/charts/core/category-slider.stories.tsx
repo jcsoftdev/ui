@@ -14,7 +14,14 @@ const WIDTH = 420;
 const HEIGHT = 180;
 const SLOT = WIDTH / services.length;
 
-function Demo() {
+interface DemoProps {
+  label: string;
+  /** Overrides the announced value; empty follows the active category. */
+  valueText?: string;
+  className?: string;
+}
+
+function Demo({ label, valueText, className }: DemoProps) {
   const explorer = useCategoryExplorer({
     count: services.length,
     anchor: (index) => ({ x: index * SLOT + SLOT / 2, y: HEIGHT / 2 }),
@@ -52,9 +59,12 @@ function Demo() {
       </svg>
       <CategorySlider
         explorer={explorer}
-        label="Recorrer servicios con las flechas"
+        label={label}
         count={services.length}
-        valueText={active ? `${active.name}: ${active.sales} ventas` : "Sin selección"}
+        valueText={
+          valueText || (active ? `${active.name}: ${active.sales} ventas` : "Sin selección")
+        }
+        className={className}
       />
       {active && explorer.position ? (
         <ChartTooltip
@@ -99,12 +109,18 @@ const meta = {
   argTypes: {
     explorer: { control: false },
     label: { control: "text" },
+    // The demo's bars fix the count; the explorer hook owns the slider state.
     count: { control: false },
     valueText: { control: "text" },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof CategorySlider>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <Demo /> };
+export const Default: Story = {
+  render: (args) => (
+    <Demo label={args.label} valueText={args.valueText} className={args.className} />
+  ),
+};

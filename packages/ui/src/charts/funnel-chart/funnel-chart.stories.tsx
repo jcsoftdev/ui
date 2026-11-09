@@ -46,8 +46,8 @@ const meta = {
     tone: { control: "inline-radio", options: ["categorical", "accent"] },
     gap: { control: { type: "range", min: 0, max: 16, step: 1 } },
     height: { control: { type: "range", min: 200, max: 560, step: 10 } },
-    stages: { control: false },
-    labels: { control: false },
+    stages: { control: "object" },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (

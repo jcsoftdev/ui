@@ -38,12 +38,19 @@ const traffic = hours.map((_, i) =>
   ),
 );
 
-function InkDemo({ kind, tool }: { kind: Kind; tool?: "ruler" | "ink" }) {
+interface InkDemoProps {
+  kind: Kind;
+  tool?: "ruler" | "ink";
+  /** `className` of the toolbar, from the Controls panel. */
+  className?: string;
+}
+
+function InkDemo({ kind, tool, className }: InkDemoProps) {
   const ink = useChartInk({ labels: spanish, tool });
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <ChartInkToolbar ink={ink} />
+        <ChartInkToolbar ink={ink} className={className} />
         <ExportMenu
           title={kind === "line" ? "Ventas diarias" : "Cortes por barbero"}
           texts={{ export: "Exportar", svg: "SVG", png: "PNG" }}
@@ -96,7 +103,11 @@ const meta = {
   component: ChartInkToolbar,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
-  argTypes: { ink: { control: false }, className: { control: false } },
+  argTypes: {
+    // The `useChartInk` hook returns the toolbar state; the demo creates it.
+    ink: { control: false },
+    className: { control: "text" },
+  },
   decorators: [
     (Story) => (
       <div data-ink-demo="" style={{ maxWidth: 640, padding: 16 }}>
@@ -118,7 +129,7 @@ const placeholder = {} as never;
  */
 export const Default: Story = {
   args: { ink: placeholder },
-  render: () => <InkDemo kind="line" tool="ruler" />,
+  render: (args) => <InkDemo kind="line" tool="ruler" className={args.className} />,
 };
 
 /** Con el lápiz activo, sobre barras: la regla mide en barberos (eje categórico) y en cortes. */

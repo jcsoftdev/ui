@@ -24,8 +24,8 @@ const meta = {
     valueText: "Día 11 al día 31",
   },
   argTypes: {
-    count: { control: false },
-    series: { control: false },
+    count: { control: "number" },
+    series: { control: "object" },
     range: { control: false },
     width: { control: { type: "range", min: 240, max: 720 } },
     left: { control: "number" },

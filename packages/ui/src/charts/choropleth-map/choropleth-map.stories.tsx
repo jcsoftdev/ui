@@ -110,6 +110,7 @@ const meta = {
     animate: true,
     loading: false,
     labels: spanishLabels,
+    center: 0,
   },
   argTypes: {
     scale: { control: "inline-radio", options: ["sequential", "diverging"] },
@@ -123,10 +124,13 @@ const meta = {
     height: { control: { type: "range", min: 220, max: 720, step: 10 } },
     maxZoom: { control: { type: "range", min: 2, max: 24, step: 1 } },
     map: { control: false },
-    data: { control: false },
-    ranges: { control: false },
-    colors: { control: false },
-    valueFormat: { control: false },
+    data: { control: "object" },
+    ranges: { control: "object" },
+    colors: { control: "object" },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     onRegionClick: { control: false },
   },
   decorators: [
