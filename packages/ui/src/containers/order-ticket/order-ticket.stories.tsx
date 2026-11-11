@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect } from "storybook/test";
+import { expect, within } from "storybook/test";
 import { UiStringsProvider } from "../../i18n/index.js";
 import { ShoppingBag, Truck } from "../../icons/index.js";
 import { type OrderTicketLine, type OrderTicketLineStatus, splitTicketLines } from "./model.js";
@@ -172,6 +172,35 @@ export const Late: Story = {
   play: async ({ canvasElement }) => {
     await expect(canvasElement.querySelector("article")).toHaveAttribute("data-state", "late");
     await expect(canvasElement).toHaveTextContent(/Late \+\d+:\d{2}/);
+  },
+};
+
+export const SharedTable: Story = {
+  render: () => (
+    <UiStringsProvider locale="es">
+      <div className="flex gap-4">
+        <OrderTicket
+          table="Mesa 1"
+          number={4}
+          since={secondsAgo(60)}
+          targetMinutes={20}
+          lines={seed}
+        />
+        <OrderTicket
+          table="Mesa 1"
+          number={5}
+          since={secondsAgo(60)}
+          targetMinutes={20}
+          lines={seed}
+        />
+      </div>
+    </UiStringsProvider>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { name: "Mesa 1 · N.º 4" })).toBeInTheDocument();
+    const article = canvas.getByRole("article", { name: "Mesa 1 · N.º 4" });
+    await expect(article).toHaveAccessibleDescription(/a tiempo/);
   },
 };
 

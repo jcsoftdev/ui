@@ -4,6 +4,7 @@ import { UiStringsProvider } from "../../src/i18n/index.js";
 import { Truck } from "../../src/icons/index.js";
 export {
   orderTicketState,
+  orderTicketTitle,
   splitTicketLines,
   ticketLineCost,
   warnLeadSeconds,

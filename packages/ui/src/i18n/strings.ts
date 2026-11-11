@@ -45,6 +45,7 @@ export interface UiStrings {
   /** Keyboard help of an editable `FloorPlan`. */
   floorPlanEditHint: string;
   orderTicketNumber: string;
+  orderTicketTableAndNumber: string;
   orderTicketGuests: string;
   orderTicketGuestsOne: string;
   orderTicketPart: string;
@@ -216,6 +217,7 @@ export const uiStrings = {
     rotate: "Rotate 90°",
     floorPlanEditHint: "Alt with arrows moves, Alt and Shift with arrows resizes, R rotates.",
     orderTicketNumber: "No. {number}",
+    orderTicketTableAndNumber: "{table} · No. {number}",
     orderTicketGuests: "{count} guests",
     orderTicketGuestsOne: "{count} guest",
     orderTicketPart: "({index} of {count})",
@@ -337,6 +339,7 @@ export const uiStrings = {
     rotate: "Girar 90°",
     floorPlanEditHint: "Alt con flechas mueve, Alt y Mayús con flechas cambia el tamaño, R gira.",
     orderTicketNumber: "N.º {number}",
+    orderTicketTableAndNumber: "{table} · N.º {number}",
     orderTicketGuests: "{count} personas",
     orderTicketGuestsOne: "{count} persona",
     orderTicketPart: "({index} de {count})",

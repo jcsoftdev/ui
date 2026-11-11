@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type ReactNode, useId, useSyncExternalStore } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId, useSyncExternalStore } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import { ElapsedTime } from "../../atoms/elapsed-time/elapsed-time.js";
@@ -18,14 +18,17 @@ import {
   Square,
   TriangleAlert,
 } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import {
   type OrderTicketLine,
   type OrderTicketLineStatus,
   type OrderTicketState,
   orderTicketState,
+  orderTicketTitle,
 } from "./model.js";
 
 export type OrderTicketPart =
@@ -46,7 +49,8 @@ export interface OrderTicketChannel {
 }
 
 export interface OrderTicketProps
-  extends Omit<ComponentPropsWithoutRef<"article">, "title" | "children"> {
+  extends Omit<ComponentPropsWithRef<"article">, "title" | "children">,
+    IntentProps {
   table?: string | undefined;
   number?: string | number | undefined;
   channel?: OrderTicketChannel | undefined;
@@ -273,11 +277,18 @@ export function OrderTicket({
   classNames,
   className,
   style,
+  intent,
+  intentKey,
+  ref,
+  "aria-describedby": describedBy,
   ...props
 }: OrderTicketProps) {
   const strings = useUiStrings();
   const reducedMotion = usePrefersReducedMotion();
   const headingId = useId();
+  const stateId = useId();
+  const intentRef = useIntentTarget<HTMLElement>({ intent, intentKey }, { role: "article" });
+  const articleRef = useComposedRefs<HTMLElement>(ref, intentRef);
   const now = useSyncExternalStore(subscribeTicker, getTickerSnapshot, getTickerSnapshot);
   const { seconds } = readElapsed({ since, now, serverOffsetMs });
   const targetSeconds = Math.max(1, targetMinutes * 60);
@@ -285,7 +296,7 @@ export function OrderTicket({
   const late = state === "late";
   const overrun = Math.max(0, seconds - targetSeconds);
   const Heading = `h${headingLevel}` as const;
-  const title = table ?? fill(strings.orderTicketNumber, { number: number ?? "" });
+  const title = orderTicketTitle({ table, number }, strings);
   const titleIcon = table ? null : channel?.icon;
   const guestsText =
     guests === undefined
@@ -308,7 +319,10 @@ export function OrderTicket({
 
   return (
     <article
+      ref={articleRef}
       aria-labelledby={headingId}
+      aria-describedby={[stateId, describedBy].filter(Boolean).join(" ")}
+      {...intentAttributes({ intent, intentKey })}
       data-state={state}
       data-read-only={readOnly ? "" : undefined}
       data-part-index={split ? (partIndex ?? 1) : undefined}
@@ -352,8 +366,10 @@ export function OrderTicket({
                 {titleIcon}
                 <span>{title}</span>
                 {split && <span className="text-control">{partLabel}</span>}
-                <span className="sr-only">{`, ${strings[stateWord[state]]}`}</span>
               </Heading>
+              <span id={stateId} className="sr-only">
+                {strings[stateWord[state]]}
+              </span>
               {meta && (
                 <span
                   className={cn(
