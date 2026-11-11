@@ -16,6 +16,8 @@ export const html = {
   switchBare: renderToStaticMarkup(<Switch id="sw" aria-label="Notify" />),
   switchLabelled: renderToStaticMarkup(<Switch id="sw" label="Notify" />),
   switchGeneratedId: renderToStaticMarkup(<Switch label="Notify" />),
+  switchUndefinedId: renderToStaticMarkup(<Switch id={undefined} label="Notify" />),
+  checkboxUndefinedId: renderToStaticMarkup(<Checkbox id={undefined} label="Agree" />),
   switchDescribed: renderToStaticMarkup(
     <Switch id="sw" label="Notify" description="One day before" />,
   ),

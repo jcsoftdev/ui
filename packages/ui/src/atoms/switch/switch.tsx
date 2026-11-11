@@ -84,9 +84,9 @@ export function Switch({
         data-disabled={disabledAttr}
         disabled={disabled}
         value={value}
-        {...(label === undefined ? {} : { id: controlId })}
         {...intentAttributes({ intent, intentKey })}
         {...props}
+        {...(label === undefined ? {} : { id: controlId })}
         {...describedByProps(props["aria-describedby"], descriptionId, description)}
         ref={composedRef}
         className={cn(

@@ -97,3 +97,15 @@ test("attribute order matches 0.9.0 without a label or description", () => {
   assert.equal(legacy.checkboxLabelBeforeId, checkboxLabelBeforeIdSnapshot);
   assert.equal(legacy.checkboxDescribedBy, checkboxDescribedBySnapshot);
 });
+
+test("an explicit undefined id still gives a labelled switch its generated id and name", () => {
+  const id = attr(html.switchUndefinedId, "switch", "id");
+  assert.ok(id);
+  assert.ok(html.switchUndefinedId.includes(`<label for="${id}"`));
+});
+
+test("an explicit undefined id still gives a labelled checkbox its generated id and name", () => {
+  const id = attr(html.checkboxUndefinedId, "checkbox", "id");
+  assert.ok(id);
+  assert.ok(html.checkboxUndefinedId.includes(`<label for="${id}"`));
+});
