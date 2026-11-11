@@ -19,21 +19,31 @@
 
 #### Changed
 
-- **`IntentBridge` timing**: `registerTarget`'s unregister runs one microtask after the element detaches; a re-attach of the same element with the same role and `requireName` in the same commit reuses the registration. Stale entries of other identities may stay live until that microtask. Await `act` (or flush microtasks) before asserting that a target is gone. A ref forwarder that passes only non-null nodes leaks one registration on unmount. A development warning fires once for a duplicate live intent and key.
-- **WithRef families**: components now use `ComponentPropsWithRef`, and `ref` reaches the element that carries the role.
-- **`MonthView`** is a client component.
-- **`DataGridProps`** is now `DataGridOwnProps & DataGridRootAttributes`.
+- **`IntentBridge` timing**: `registerTarget`'s unregister runs one microtask after the element detaches; a re-attach of the same element with the same role and `requireName` in the same commit reuses the registration. Stale entries of other identities may stay live until that microtask. Await `act` (or flush microtasks) before asserting that a target is gone. A ref forwarder that passes only non-null nodes leaks one registration on unmount, so forward `null` too. A development warning fires once for a duplicate live intent and key. Keep the bridge object stable (memoize it): when its identity changes, the old bridge unregisters one microtask after the new one registers.
+- **Ref typing**: every interactive component's props now extend `ComponentPropsWithRef` instead of `ComponentPropsWithoutRef`, so `ref` is a typed prop (React 19 `ref` as a prop) and reaches the element that carries the component's role and accessible name: the button, the input, the thumb, the panel. Components that did not take a ref before accept one now; `DataGrid`'s `ref` lands on its root `div`, which contains `table[role=grid]`.
+- **`DataGridProps`** is now `DataGridOwnProps & DataGridRootAttributes`: root `div` attributes that 0.9.0 silently dropped now reach the root. `data-col-id` is rendered on every header and gridcell whether or not intents are used, except the select and tools columns.
+- **`MonthView`** keeps its 0.9.0 props and stays a server component: it computes the weekday names, month title, full dates and `formatMore` labels, then hands only serializable data and the optional handlers to a client `MonthGrid`.
 - **Biome**: `biome.json` overrides turn off `useSemanticElements` and `useFocusableInteractive` for the calendar grid views.
-- **Internal**: the shared `isProduction` helper is not exported.
-- **Size budgets** raised to the measured gzip size plus about 5% for `ui/ai`, `ui/atoms`, `ui/auth`, `ui/brand`, `ui/calendar`, `ui/containers`, `ui/forms`, `ui/glass`, `ui/navigation`, `ui/overlays`, `ui/shell` and `ui-tokens styles/base.css`: intent attributes, registration and the new accessibility semantics grew each entry, and `ui/glass` was already 31 B over before this work.
+- **Size budgets** raised to the measured gzip size plus about 5% for `ui/ai`, `ui/atoms`, `ui/auth`, `ui/brand`, `ui/calendar`, `ui/containers`, `ui/forms`, `ui/glass`, `ui/navigation`, `ui/overlays`, `ui/shell` and `ui-tokens styles/base.css`. Against the 0.9.0 dist, `ui/calendar` grew 15643 to 18360 B gzip (+17%) and `ui/navigation` 16734 to 18626 B (+11%). Nothing accidental is bundled: the intent runtime (target registrations, attributes and the registration hook, about 3.5 kB minified) now ships with every client component family, and calendar adds the grid keyboard and ARIA semantics on top. `ui/glass` was already 31 B over before this work.
 
 #### Fixed
 
-- **`OrderTicket`**: the ticket state no longer leaks into the heading name, and the number shows beside the table.
-- **Table plus number** naming on tickets.
+- **`OrderTicket`**: the ticket state no longer leaks into the heading name.
 - **`FloorPlan`** tables are named with their status and seats.
 - **`Tooltip`** keeps an existing `aria-describedby`.
-- **Charts** without a data table now have one.
+- **Charts**: every chart component exported from `@jcsoftdev/ui/charts` now has a data-table alternative.
+- **`Switch`** and **`Checkbox`** with a `label` keep their name when `id` is explicitly `undefined`.
+- **Range `Slider`** with `intent` registers its two thumbs under distinct keys: `start` and `end`, or `<intentKey>:start` and `<intentKey>:end`.
+
+#### Upgrade notes from 0.9.0
+
+- **`OrderTicket` titles**: a ticket that receives both `table` and `number` now reads "Mesa 1 · N.º 4" (en: "T1 · No. 4"). 0.9.0 showed only the table. An app that already appends the number itself now shows it twice: remove that workaround, or pass `number` only for tickets without a table. The article always carries `aria-describedby`.
+- **`FloorPlan` names**: each item is named `"<label>, <status>, <n> seats"` (plus the late text) through `aria-label`; the sr-only seats span is gone. Queries and tests that used the old computed name or DOM must use the new name, built by `floorPlanItemName`.
+- **`MonthView` and `WeekView` DOM**: the grid has `role="row"` wrappers (CSS subgrid), the day number is `aria-hidden` and a screen-reader date replaces it, and the grid adds one tab stop before the event buttons (arrow keys, Home and End move between days). Enter on a focused day calls `onSelectDate`. Selectors tied to the old flat structure must be updated.
+- **`DataGrid`**: see Changed for `data-col-id` and the root props spread.
+- **Popper anchors (`Slot` and `PopperPrimitive.Anchor`)**: the last mounted anchor wins, and it registers from a layout effect, so a hand-forwarded ref called with `null` no longer leaves a detached anchor. `Slot` clears object refs on detach.
+- **`PopoverContent`**: it renders `role="dialog"` as before and now registers that role as its expectation. The intent attributes are spread before the consumer's props and the `ref` is composed after them, so a consumer-passed `data-intent` overrides the component's and a consumer `ref` still receives the node.
+- **Command primitive**: an element inside the command root with `data-ui-command-skip-keys` bypasses the command key handling (used by the palette's `inputEnd`), and an item's derived value no longer resets to an empty string when its text is not available.
 
 ## 0.9.0 (2026-11-04)
 

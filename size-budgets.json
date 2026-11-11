@@ -113,7 +113,7 @@
       "id": "ui/calendar",
       "kind": "js",
       "file": "packages/ui/dist/calendar/index.js",
-      "maxGzip": 19100
+      "maxGzip": 19300
     },
     {
       "id": "ui/charts",
