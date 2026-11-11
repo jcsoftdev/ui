@@ -87,3 +87,8 @@ export function keyboardValue(
       return null;
   }
 }
+
+export function thumbKey(intentKey: string | undefined, index: 0 | 1): string {
+  const name = index === 0 ? "start" : "end";
+  return intentKey ? `${intentKey}:${name}` : name;
+}

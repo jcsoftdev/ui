@@ -14,6 +14,7 @@ import {
   ratioOf,
   setRangeThumb,
   snapToStep,
+  thumbKey,
   valueFromRatio,
 } from "./model.js";
 
@@ -168,8 +169,7 @@ export function Slider(props: SliderProps) {
       range && baseLabel ? `${baseLabel} (${index === 0 ? "mínimo" : "máximo"})` : baseLabel;
     const lo = range && index === 1 ? current[0] + minGap : min;
     const hi = range && index === 0 ? current[1] - minGap : max;
-    const thumbIntentKey =
-      range && intentKey ? `${intentKey}-${index === 0 ? "min" : "max"}` : intentKey;
+    const thumbIntentKey = range ? thumbKey(intentKey, index) : intentKey;
     return (
       <span
         key={index}
