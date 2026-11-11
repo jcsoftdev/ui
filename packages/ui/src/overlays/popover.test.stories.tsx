@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { type ComponentProps, type ReactElement, useState } from "react";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
 import {
@@ -393,7 +393,20 @@ export const ClassNameOverrideWins: Story = {
   },
 };
 
-function Controlled() {
+function HandForwardedButton({ ref, ...props }: ComponentProps<"button">) {
+  return (
+    <button
+      type="button"
+      {...props}
+      ref={(node) => {
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
+    />
+  );
+}
+
+function Controlled({ trigger = <Button>Abrir</Button> }: { trigger?: ReactElement }) {
   const [isOpen, setOpen] = useState(false);
   return (
     <div className="p-24">
@@ -403,9 +416,7 @@ function Controlled() {
             Ancla
           </div>
         </PopoverAnchor>
-        <PopoverTrigger asChild>
-          <Button>Abrir</Button>
-        </PopoverTrigger>
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
         <PopoverContent aria-label="Ficha" align="start" />
       </Popover>
       <output data-testid="state">{String(isOpen)}</output>
@@ -413,23 +424,30 @@ function Controlled() {
   );
 }
 
+const expectContentAtCustomAnchor = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  await open(canvasElement);
+  const content = await screen.findByRole("dialog", { name: "Ficha" });
+  await expect(within(canvasElement).getByTestId("state")).toHaveTextContent("true");
+  const anchor = within(canvasElement).getByTestId("anchor").getBoundingClientRect();
+  await waitFor(() => {
+    const rect = content.getBoundingClientRect();
+    expect(Math.abs(rect.left - anchor.left)).toBeLessThan(1.5);
+    expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
+  });
+  await userEvent.keyboard("{Escape}");
+  await waitFor(() =>
+    expect(within(canvasElement).getByTestId("state")).toHaveTextContent("false"),
+  );
+};
+
 export const ControlledWithCustomAnchor: Story = {
   render: () => <Controlled />,
-  play: async ({ canvasElement }) => {
-    await open(canvasElement);
-    const content = await screen.findByRole("dialog", { name: "Ficha" });
-    await expect(within(canvasElement).getByTestId("state")).toHaveTextContent("true");
-    const anchor = within(canvasElement).getByTestId("anchor").getBoundingClientRect();
-    await waitFor(() => {
-      const rect = content.getBoundingClientRect();
-      expect(Math.abs(rect.left - anchor.left)).toBeLessThan(1.5);
-      expect(rect.top).toBeGreaterThanOrEqual(anchor.bottom);
-    });
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() =>
-      expect(within(canvasElement).getByTestId("state")).toHaveTextContent("false"),
-    );
-  },
+  play: expectContentAtCustomAnchor,
+};
+
+export const CustomAnchorWithHandForwardedTriggerRef: Story = {
+  render: () => <Controlled trigger={<HandForwardedButton>Abrir</HandForwardedButton>} />,
+  play: expectContentAtCustomAnchor,
 };
 
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

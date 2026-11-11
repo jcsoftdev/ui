@@ -71,11 +71,9 @@ export interface PopperAnchorProps extends ComponentProps<"div"> {
 /** The element the content is positioned against. */
 export function Anchor({ asChild, ref, ...props }: PopperAnchorProps) {
   const { registerAnchor } = usePopperContext("PopperAnchor");
-  const anchorRef = useCallback(
-    (node: HTMLDivElement | null) => (node ? registerAnchor(node) : undefined),
-    [registerAnchor],
-  );
-  const composedRef = useComposedRefs<HTMLDivElement>(ref, anchorRef);
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const composedRef = useComposedRefs<HTMLDivElement>(ref, setNode);
+  useLayoutEffect(() => (node ? registerAnchor(node) : undefined), [node, registerAnchor]);
   const Comp = asChild ? Slot : "div";
   return <Comp {...props} ref={composedRef as never} />;
 }

@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../atoms/button/button.js";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "./context-menu/context-menu.js";
 import {
   Dialog,
   DialogBody,
@@ -942,5 +948,34 @@ export const DialogFocusScopeRecoversWhenFocusedNodeIsRemoved: Story = {
     await userEvent.click(node);
     await waitFor(() => expect(within(dialog).queryByText("Quitar nodo")).toBeNull());
     await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+  },
+};
+
+export const ContextMenuOpensAtThePointer: Story = {
+  render: () => (
+    <div className="p-24">
+      <ContextMenu>
+        <ContextMenuTrigger data-testid="area" className="h-48 w-96 border">
+          Área
+        </ContextMenuTrigger>
+        <ContextMenuContent aria-label="Acciones">
+          <ContextMenuItem>Editar</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const area = within(canvasElement).getByTestId("area");
+    const box = area.getBoundingClientRect();
+    const point = { x: box.left + 120, y: box.top + 60 };
+    await fireEvent.contextMenu(area, { clientX: point.x, clientY: point.y });
+    const menu = await screen.findByRole("menu", { name: "Acciones" });
+    await waitFor(() => {
+      const rect = menu.getBoundingClientRect();
+      expect(Math.abs(rect.left - point.x)).toBeLessThan(1.5);
+      expect(rect.top).toBeGreaterThanOrEqual(point.y);
+      expect(rect.top - point.y).toBeLessThan(12);
+    });
+    await userEvent.keyboard("{Escape}");
   },
 };
