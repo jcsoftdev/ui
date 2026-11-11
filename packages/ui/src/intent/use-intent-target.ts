@@ -22,9 +22,17 @@ function createTargetRef<E extends Element>(
 ): RefCallback<E> | undefined {
   const ref = intentTargetRef(props);
   if (ref === undefined || bridge === noopIntentBridge) return undefined;
+  let current: (() => void) | undefined;
+  const release = () => {
+    const run = current;
+    current = undefined;
+    run?.();
+  };
   return (element) => {
+    release();
     if (element === null) return undefined;
-    return attachTarget(bridge, ref, element, resolveExpectation(expectation, element));
+    current = attachTarget(bridge, ref, element, resolveExpectation(expectation, element));
+    return release;
   };
 }
 
@@ -64,12 +72,19 @@ export function useIntentTargets(): IntentTargetBinder {
         if (cached !== undefined) return cached as RefCallback<E>;
         const inner = createTargetRef<Element>(bridge, props, expectation);
         if (inner === undefined) return undefined;
+        const forget = () => {
+          if (cache.get(cacheKey) === bound) cache.delete(cacheKey);
+        };
         const bound: RefCallback<Element> = (element) => {
-          const unregister = inner(element);
+          const release = inner(element);
+          if (element === null) {
+            forget();
+            return undefined;
+          }
           cache.set(cacheKey, bound);
           return () => {
-            if (cache.get(cacheKey) === bound) cache.delete(cacheKey);
-            if (typeof unregister === "function") unregister();
+            forget();
+            if (typeof release === "function") release();
           };
         };
         cache.set(cacheKey, bound);

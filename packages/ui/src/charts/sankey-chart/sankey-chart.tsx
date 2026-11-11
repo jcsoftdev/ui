@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { isProduction } from "../../utils/is-production.js";
 import { DECORATIVE } from "../core/a11y.js";
 import { estimateTextWidth } from "../core/axes.js";
 import { ChartFrame } from "../core/chart-frame.js";
@@ -291,10 +292,6 @@ export function SankeyChart({
       )}
     </ChartFrame>
   );
-}
-
-function isProduction(): boolean {
-  return typeof process !== "undefined" && process.env?.NODE_ENV === "production";
 }
 
 function nodeColors(nodes: readonly SankeyNodeInput[]): Map<string, string> {

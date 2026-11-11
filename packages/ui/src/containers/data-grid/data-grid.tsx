@@ -52,6 +52,7 @@ import {
 } from "../../intent/index.js";
 import { cn } from "../../utils/cn.js";
 import { useComposedRefs } from "../../utils/compose.js";
+import { isProduction } from "../../utils/is-production.js";
 import { computePinOffsets, type PinPosition, sanitizePinned } from "../table/pin.js";
 import { type GridChartKind, type RangeChartData, rangeToChart } from "./chart-range.js";
 import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
@@ -370,10 +371,6 @@ export type DataGridProps<T> = DataGridOwnProps<T> & DataGridRootAttributes<T>;
 
 const ROW_EXPECTATION = { role: "row", requireName: false } as const;
 const ROW_INTENT_NEEDS_ROW_ID = "DataGrid: rowIntent needs getRowId";
-
-function isProduction(): boolean {
-  return typeof process !== "undefined" && process.env?.NODE_ENV === "production";
-}
 
 const ROW_HEIGHT: Record<Density, number> = { compact: 32, normal: 40, comfortable: 48 };
 const SELECT_ID = "__select";

@@ -1,3 +1,4 @@
+import { isProduction } from "../utils/is-production.js";
 import type { IntentBridge, IntentSemanticExpectation, IntentTargetRef } from "./types.js";
 
 const IDENTITY_SEPARATOR = "\u0000";
@@ -13,6 +14,7 @@ interface Registration {
 export interface BridgeRegistrations {
   readonly byIdentity: Map<string, Registration[]>;
   readonly awaitingSweep: Set<Registration>;
+  readonly warnedDuplicates: Set<string>;
 }
 
 const registrationsByBridge = new WeakMap<IntentBridge, BridgeRegistrations>();
@@ -20,7 +22,11 @@ const registrationsByBridge = new WeakMap<IntentBridge, BridgeRegistrations>();
 export function registrationsOf(bridge: IntentBridge): BridgeRegistrations {
   const existing = registrationsByBridge.get(bridge);
   if (existing) return existing;
-  const created: BridgeRegistrations = { byIdentity: new Map(), awaitingSweep: new Set() };
+  const created: BridgeRegistrations = {
+    byIdentity: new Map(),
+    awaitingSweep: new Set(),
+    warnedDuplicates: new Set(),
+  };
   registrationsByBridge.set(bridge, created);
   return created;
 }
@@ -48,6 +54,24 @@ function drop(state: BridgeRegistrations, entry: Registration): void {
   } catch (error) {
     reportBridgeError(error);
   }
+}
+
+function duplicateTargetWarning(ref: IntentTargetRef): string {
+  const key = ref.key === undefined ? "" : ` with key "${ref.key}"`;
+  return `Intent target "${ref.intent}"${key} is already registered on another element. An intent and key must name one element at a time.`;
+}
+
+function warnOnLiveDuplicate(
+  state: BridgeRegistrations,
+  ref: IntentTargetRef,
+  identity: string,
+  element: Element,
+): void {
+  if (isProduction() || state.warnedDuplicates.has(identity)) return;
+  const live = state.byIdentity.get(identity) ?? [];
+  if (!live.some((entry) => !entry.released && entry.element !== element)) return;
+  state.warnedDuplicates.add(identity);
+  console.warn(duplicateTargetWarning(ref));
 }
 
 function sweepDisconnected(state: BridgeRegistrations): void {
@@ -87,6 +111,7 @@ export function attachTarget(
   );
   for (const entry of released) if (entry !== revivable) drop(state, entry);
   if (element.isConnected) sweepDisconnected(state);
+  warnOnLiveDuplicate(state, ref, identity, element);
   if (revivable) return releaseLater(state, revive(state, revivable));
   const entry: Registration = {
     identity,

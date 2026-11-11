@@ -1,4 +1,12 @@
-import { act, createRef, type ReactNode, StrictMode, useMemo, useState } from "react";
+import {
+  act,
+  type ComponentProps,
+  createRef,
+  type ReactNode,
+  StrictMode,
+  useMemo,
+  useState,
+} from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { Slot } from "../utils/slot.js";
@@ -593,6 +601,116 @@ test("shifting 3,000 index-keyed targets in one commit sweeps each released entr
   expect(reads).toBeLessThan(size * 3);
   expect(recorder.duplicates).toEqual([]);
   expect(recorder.live.size).toBe(size);
+});
+
+function HandForwardingButton({ ref, ...props }: ComponentProps<"button">) {
+  return (
+    <button
+      type="button"
+      {...props}
+      ref={(node) => {
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      }}
+    />
+  );
+}
+
+function HandForwardedTarget(props: { asChild: boolean; label: string }) {
+  const ref = useIntentTarget<HTMLButtonElement>({ intent: "save" });
+  if (props.asChild) {
+    return (
+      <Slot ref={ref}>
+        <HandForwardingButton>{props.label}</HandForwardingButton>
+      </Slot>
+    );
+  }
+  return <HandForwardingButton ref={ref}>{props.label}</HandForwardingButton>;
+}
+
+function HandForwardedList(props: { ids: readonly string[]; label: string }) {
+  const bind = useIntentTargets();
+  return (
+    <>
+      {props.ids.map((id) => (
+        <HandForwardingButton key={id} ref={bind({ intent: "row", intentKey: id })}>
+          {`${props.label} ${id}`}
+        </HandForwardingButton>
+      ))}
+    </>
+  );
+}
+
+describe("a target whose ref is forwarded by hand and called with null", () => {
+  const cases = [
+    { asChild: false, strict: false },
+    { asChild: false, strict: true },
+    { asChild: true, strict: false },
+    { asChild: true, strict: true },
+  ];
+  for (const { asChild, strict } of cases) {
+    const name = `${asChild ? "through Slot" : "directly"}${strict ? " in strict mode" : ""}`;
+    test(`keeps one registration across re-renders and releases it on unmount, ${name}`, async () => {
+      const recorder = uniqueBridge();
+      const Wrapper = strict ? StrictMode : PassThrough;
+      for (const label of ["a", "b", "c"]) {
+        await mount(
+          <Wrapper>
+            <IntentBridgeProvider bridge={recorder.bridge}>
+              <HandForwardedTarget asChild={asChild} label={label} />
+            </IntentBridgeProvider>
+          </Wrapper>,
+        );
+        expect(recorder.live.get("save|")).toBe(host.querySelector("button"));
+      }
+      expect(recorder.count("register")).toBe(1);
+      expect(recorder.duplicates).toEqual([]);
+      await mount(null);
+      expect(recorder.unregisterCalls).toEqual([1]);
+      expect(recorder.live.size).toBe(0);
+      expect(registrationsOf(recorder.bridge).byIdentity.size).toBe(0);
+    });
+  }
+
+  test("keeps one registration per row through the list binder and releases each on unmount", async () => {
+    const recorder = uniqueBridge();
+    const render = (label: string) => (
+      <IntentBridgeProvider bridge={recorder.bridge}>
+        <HandForwardedList ids={["1", "2", "3"]} label={label} />
+      </IntentBridgeProvider>
+    );
+    await mount(render("a"));
+    await mount(render("b"));
+    await mount(render("c"));
+    expect(recorder.count("register")).toBe(3);
+    expect(recorder.duplicates).toEqual([]);
+    await mount(null);
+    expect(recorder.unregisterCalls).toEqual([1, 1, 1]);
+    expect(recorder.live.size).toBe(0);
+  });
+});
+
+test("warns once in development when an intent and key are already live on another element", async () => {
+  const warnings: unknown[] = [];
+  const original = console.warn;
+  console.warn = (...args: unknown[]) => void warnings.push(args[0]);
+  const recorder = uniqueBridge();
+  const render = (label: string) => (
+    <IntentBridgeProvider bridge={recorder.bridge}>
+      <IntentButton intent="save" intentKey={label} />
+      <IntentButton intent="save" intentKey="twin" />
+      <IntentButton intent="save" intentKey="twin" />
+    </IntentBridgeProvider>
+  );
+  try {
+    await mount(render("one"));
+    await mount(render("two"));
+  } finally {
+    console.warn = original;
+  }
+  expect(warnings).toEqual([
+    'Intent target "save" with key "twin" is already registered on another element. An intent and key must name one element at a time.',
+  ]);
 });
 
 describe("Slot object refs", () => {
