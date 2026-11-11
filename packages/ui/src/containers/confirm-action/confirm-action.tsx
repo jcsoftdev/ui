@@ -3,8 +3,12 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Button, type ButtonVariant } from "../../atoms/button/button.js";
 import { useUiStrings } from "../../i18n/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { Banner } from "../banner/banner.js";
 import { type ConfirmResult, runConfirm } from "./model.js";
 
@@ -17,7 +21,7 @@ export type ConfirmActionPart =
   | "confirm"
   | "cancel";
 
-export interface ConfirmActionProps {
+export interface ConfirmActionProps extends IntentProps {
   /** Trigger label, a verb in the user's words ("Cancel order"). */
   label: string;
   /** What will happen, said plainly, shown before the user commits. */
@@ -43,10 +47,14 @@ export function ConfirmAction({
   triggerVariant = "secondary",
   className,
   classNames,
+  intent,
+  intentKey,
 }: ConfirmActionProps) {
   const strings = useUiStrings();
   const consequenceId = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const intentRef = useIntentTarget<HTMLButtonElement>({ intent, intentKey });
+  const composedTriggerRef = useComposedRefs(triggerRef, intentRef);
   const wasConfirming = useRef(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -75,7 +83,8 @@ export function ConfirmAction({
           </Banner>
         )}
         <Button
-          ref={triggerRef}
+          {...intentAttributes({ intent, intentKey })}
+          ref={composedTriggerRef}
           variant={triggerVariant}
           className={classNames?.trigger}
           onClick={() => setConfirming(true)}

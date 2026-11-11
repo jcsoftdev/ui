@@ -1,8 +1,8 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import type { ComponentPropsWithRef, CSSProperties } from "react";
 import { cn } from "../../utils/cn.js";
 import { type StackGap, stackGapClasses } from "../stack/stack.js";
 
-export interface GridProps extends ComponentPropsWithoutRef<"div"> {
+export interface GridProps extends ComponentPropsWithRef<"div"> {
   /** Fixed number of equal columns. Without it the grid fits as many columns as `minColumnWidth` allows. */
   columns?: number;
   /** Narrowest a column may get before the grid drops one (any CSS length). Defaults to `16rem`. */

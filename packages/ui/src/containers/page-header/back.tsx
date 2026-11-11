@@ -1,12 +1,12 @@
 "use client";
 
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { ChevronLeft } from "../../icons/index.js";
 import { cn } from "../../utils/cn.js";
 import { Slot } from "../../utils/slot.js";
 
-export interface PageHeaderBackProps extends ComponentPropsWithoutRef<"a"> {
+export interface PageHeaderBackProps extends ComponentPropsWithRef<"a"> {
   /** Renders the single child element (a router `Link`) with the link's look. The child supplies the label. */
   asChild?: boolean | undefined;
 }

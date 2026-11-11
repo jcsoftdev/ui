@@ -1,7 +1,11 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, createContext, use } from "react";
+import { type ComponentPropsWithRef, createContext, use } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 /** Container widths (px) under which the layout stacks. The set is closed so every query is a literal class. */
 export type SettingsLayoutBreakpoint = 720 | 940 | 1080 | 1280;
@@ -66,7 +70,7 @@ function stackFor(config: SettingsLayoutConfig, part: "grid" | "nav") {
     : stackClasses[config.container][config.breakpoint][part];
 }
 
-export interface SettingsLayoutProps extends ComponentPropsWithoutRef<"div"> {
+export interface SettingsLayoutProps extends ComponentPropsWithRef<"div"> {
   /**
    * Container width (px) under which the nav and the content stack. `"never"` keeps two columns.
    * Defaults to 940. `SettingsLayoutNav` follows it without being told.
@@ -107,7 +111,7 @@ export function SettingsLayout({
   );
 }
 
-export interface SettingsLayoutNavProps extends ComponentPropsWithoutRef<"nav"> {
+export interface SettingsLayoutNavProps extends ComponentPropsWithRef<"nav"> {
   /** Overrides the breakpoint the surrounding `SettingsLayout` set. */
   breakpoint?: SettingsLayoutBreakpoint | "never";
 }
@@ -130,7 +134,7 @@ export function SettingsLayoutNav({
   );
 }
 
-export interface SettingsLayoutNavItemProps extends ComponentPropsWithoutRef<"button"> {
+export interface SettingsLayoutNavItemProps extends ComponentPropsWithRef<"button">, IntentProps {
   /** Currently visible section. */
   active?: boolean;
 }
@@ -139,10 +143,15 @@ export function SettingsLayoutNavItem({
   active,
   className,
   type = "button",
+  intent,
+  intentKey,
+  ref,
   ...props
 }: SettingsLayoutNavItemProps) {
+  const targetRef = useComposedRefs(ref, useIntentTarget<HTMLButtonElement>({ intent, intentKey }));
   return (
     <button
+      {...intentAttributes({ intent, intentKey })}
       type={type}
       aria-current={active ? "true" : undefined}
       className={cn(
@@ -151,11 +160,12 @@ export function SettingsLayoutNavItem({
         className,
       )}
       {...props}
+      ref={targetRef}
     />
   );
 }
 
-export type SettingsLayoutMainProps = ComponentPropsWithoutRef<"div">;
+export type SettingsLayoutMainProps = ComponentPropsWithRef<"div">;
 
 /**
  * Content column: a single stack that becomes a 2-column masonry at 1180px of

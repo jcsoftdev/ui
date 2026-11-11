@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useId, useMemo } from "react";
+import { type ComponentPropsWithRef, useId, useMemo } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "../../icons/index.js";
@@ -44,7 +44,7 @@ export interface PaginationLabels {
   pageNumber: string;
 }
 
-export interface PaginationProps extends Omit<ComponentPropsWithoutRef<"nav">, "onChange"> {
+export interface PaginationProps extends Omit<ComponentPropsWithRef<"nav">, "onChange"> {
   /** Total rows across every page. */
   total: number;
   /** Controlled 1-based page. Pair it with `onPageChange`. */

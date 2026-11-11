@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type ColsVariant = "rail" | "half" | "calc" | "thirds";
@@ -39,7 +39,7 @@ const variantClasses: Record<"base" | ColsVariant, string> = {
   ),
 };
 
-export interface ColsProps extends ComponentPropsWithoutRef<"div"> {
+export interface ColsProps extends ComponentPropsWithRef<"div"> {
   /** Column proportions. Omit for the base main + side split. */
   variant?: ColsVariant;
 }
@@ -53,7 +53,7 @@ export function Cols({ variant, className, ...props }: ColsProps) {
   );
 }
 
-export interface ColsStackProps extends ComponentPropsWithoutRef<"div"> {
+export interface ColsStackProps extends ComponentPropsWithRef<"div"> {
   /**
    * From 1500px of page width the stack becomes 2 columns and its first
    * child spans both rows.

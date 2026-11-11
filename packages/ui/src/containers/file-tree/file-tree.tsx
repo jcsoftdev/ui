@@ -11,6 +11,8 @@ import {
   FolderOpen,
   type IconComponent,
 } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import { useIntentTargets } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
@@ -82,6 +84,7 @@ export function FileTree({
   const [focusId, setFocusId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const typed = useRef({ text: "", at: 0 });
+  const bind = useIntentTargets();
 
   const tabStop =
     rows.find((r) => r.node.id === focusId)?.node.id ??
@@ -146,6 +149,14 @@ export function FileTree({
           return (
             <div
               key={row.node.id}
+              {...intentAttributes({
+                intent: row.node.intent,
+                intentKey: row.node.intentKey ?? row.node.id,
+              })}
+              ref={bind(
+                { intent: row.node.intent, intentKey: row.node.intentKey ?? row.node.id },
+                { role: "treeitem" },
+              )}
               role="treeitem"
               data-node-id={row.node.id}
               tabIndex={row.node.id === tabStop ? 0 : -1}

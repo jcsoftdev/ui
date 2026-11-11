@@ -2,7 +2,7 @@
 
 import {
   Children,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type KeyboardEvent,
   type ReactNode,
   useCallback,
@@ -27,7 +27,7 @@ export type CarouselPart =
   | "dots"
   | "dot";
 
-export interface CarouselProps extends Omit<ComponentPropsWithoutRef<"section">, "children"> {
+export interface CarouselProps extends Omit<ComponentPropsWithRef<"section">, "children"> {
   children: ReactNode;
   /** Accessible name of the carousel. */
   label: string;

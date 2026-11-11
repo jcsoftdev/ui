@@ -1,15 +1,15 @@
-import { type ComponentPropsWithoutRef, type ReactNode, useId } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId } from "react";
 import { cn } from "../../utils/cn.js";
 import { Card, CardBody, CardHeader } from "../card/card.js";
 
-export type DashboardPageProps = ComponentPropsWithoutRef<"div">;
+export type DashboardPageProps = ComponentPropsWithRef<"div">;
 
 /** Vertical rhythm of a dashboard page. Put it inside `Page` so the `page` container query applies. */
 export function DashboardPage({ className, ...props }: DashboardPageProps) {
   return <div className={cn("flex min-w-0 flex-col gap-4", className)} {...props} />;
 }
 
-export interface KpiRowProps extends ComponentPropsWithoutRef<"div"> {
+export interface KpiRowProps extends ComponentPropsWithRef<"div"> {
   /** Accessible name of the group of figures, e.g. "Key figures". */
   "aria-label"?: string;
 }
@@ -37,7 +37,7 @@ const gridClasses = {
   3: "grid-cols-1 @min-[720px]/page:grid-cols-2 @min-[1180px]/page:grid-cols-3",
 } as const;
 
-export interface CardGridProps extends ComponentPropsWithoutRef<"div"> {
+export interface CardGridProps extends ComponentPropsWithRef<"div"> {
   /** Columns at the widest container: 2 (from 720 px) or 3 (2 from 720 px, 3 from 1180 px). Default 2. */
   columns?: 2 | 3;
 }

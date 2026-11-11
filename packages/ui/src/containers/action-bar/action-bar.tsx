@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, KeyboardEvent, ReactNode, Ref } from "react";
+import type { ComponentPropsWithRef, KeyboardEvent, ReactNode, Ref } from "react";
 import { X } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -8,7 +8,7 @@ import { type Material, materialClass } from "../../utils/material.js";
 
 export type ActionBarPart = "root" | "count" | "actions" | "clear";
 
-export interface ActionBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface ActionBarProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   ref?: Ref<HTMLDivElement>;
   /** Number of selected items. The bar renders nothing while it is 0. */
   selectedCount: number;

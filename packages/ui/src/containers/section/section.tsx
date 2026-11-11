@@ -2,7 +2,7 @@
 
 import {
   Children,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   createContext,
   isValidElement,
   type ReactNode,
@@ -11,8 +11,12 @@ import {
   useId,
   useState,
 } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 /** Heading depth: how many titled sections enclose this point. A titleless wrapper adds nothing. */
 const SectionDepth = createContext(0);
@@ -46,7 +50,7 @@ export type SectionPart =
   | "actions"
   | "body";
 
-export interface SectionProps extends Omit<ComponentPropsWithoutRef<"section">, "title"> {
+export interface SectionProps extends Omit<ComponentPropsWithRef<"section">, "title">, IntentProps {
   as?: "section" | "div" | "article";
   title?: ReactNode;
   /** Outlined count next to the title (a record total, say). */
@@ -111,8 +115,15 @@ export function Section({
   className,
   classNames,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: SectionProps) {
+  const targetRef = useComposedRefs(
+    ref,
+    useIntentTarget<HTMLElement>({ intent, intentKey }, { requireName: false }),
+  );
   const outerDepth = useContext(SectionDepth);
   const titleId = useId();
   const [registered, setRegistered] = useState(false);
@@ -138,7 +149,9 @@ export function Section({
         }}
       >
         <Tag
+          {...intentAttributes({ intent, intentKey })}
           {...props}
+          ref={targetRef}
           data-depth={outerDepth}
           aria-labelledby={named && props["aria-label"] === undefined ? titleId : undefined}
           className={cn(
@@ -165,7 +178,7 @@ export function Section({
   );
 }
 
-export interface SectionHeaderProps extends ComponentPropsWithoutRef<"div"> {}
+export interface SectionHeaderProps extends ComponentPropsWithRef<"div"> {}
 
 /** Header row of a composed `Section`: title, count and description wrap, actions go to the end. */
 export function SectionHeader({ className, ...props }: SectionHeaderProps) {
@@ -183,7 +196,7 @@ export function SectionHeader({ className, ...props }: SectionHeaderProps) {
   );
 }
 
-export interface SectionTitleProps extends ComponentPropsWithoutRef<"h2"> {
+export interface SectionTitleProps extends ComponentPropsWithRef<"h2"> {
   /** Heading element. Defaults to `h2`, one level deeper per enclosing titled section. */
   as?: SectionHeadingTag | undefined;
 }
@@ -211,7 +224,7 @@ export function SectionTitle({ as, className, ...props }: SectionTitleProps) {
   );
 }
 
-export interface SectionCountProps extends ComponentPropsWithoutRef<"span"> {}
+export interface SectionCountProps extends ComponentPropsWithRef<"span"> {}
 
 /** Outlined count next to the title. */
 export function SectionCount({ className, ...props }: SectionCountProps) {
@@ -228,7 +241,7 @@ export function SectionCount({ className, ...props }: SectionCountProps) {
   );
 }
 
-export interface SectionDescriptionProps extends ComponentPropsWithoutRef<"p"> {}
+export interface SectionDescriptionProps extends ComponentPropsWithRef<"p"> {}
 
 export function SectionDescription({ className, ...props }: SectionDescriptionProps) {
   const { classNames } = useSectionParts("Description");
@@ -240,7 +253,7 @@ export function SectionDescription({ className, ...props }: SectionDescriptionPr
   );
 }
 
-export interface SectionActionsProps extends ComponentPropsWithoutRef<"div"> {}
+export interface SectionActionsProps extends ComponentPropsWithRef<"div"> {}
 
 /** Slot at the end of the header; takes the full row under 560px of the section's own width. */
 export function SectionActions({ className, ...props }: SectionActionsProps) {
@@ -257,7 +270,7 @@ export function SectionActions({ className, ...props }: SectionActionsProps) {
   );
 }
 
-export interface SectionBodyProps extends ComponentPropsWithoutRef<"div"> {
+export interface SectionBodyProps extends ComponentPropsWithRef<"div"> {
   /** Vertical padding. Defaults to the section's `padded`. */
   padded?: boolean | undefined;
 }

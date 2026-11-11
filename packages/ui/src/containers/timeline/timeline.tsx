@@ -2,7 +2,7 @@
 
 import {
   Children,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   createContext,
   isValidElement,
   type ReactElement,
@@ -11,8 +11,12 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { Check, X } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 export type TimelineFeedTone = "neutral" | "accent" | "success" | "warning" | "danger";
 
@@ -59,7 +63,7 @@ export type TimelinePart =
   | "actor"
   | "description";
 
-export interface TimelineProps extends Omit<ComponentPropsWithoutRef<"ol">, "children"> {
+export interface TimelineProps extends Omit<ComponentPropsWithRef<"ol">, "children"> {
   /** Data-driven entries. Rendered before `children`. */
   items?: TimelineFeedItem[];
   /**
@@ -96,7 +100,8 @@ const TimelinePositionContext = createContext<TimelinePosition>({ last: true, sh
 
 export interface TimelineItemProps
   extends Omit<TimelineFeedItem, "id">,
-    Omit<ComponentPropsWithoutRef<"li">, "title" | "children"> {
+    Omit<ComponentPropsWithRef<"li">, "title" | "children">,
+    IntentProps {
   /** Kept so a `TimelineFeedItem` can be spread as is; React uses it as the key. */
   id?: string;
 }
@@ -114,8 +119,15 @@ export function TimelineItem({
   group,
   children,
   className,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: TimelineItemProps) {
+  const targetRef = useComposedRefs(
+    ref,
+    useIntentTarget<HTMLLIElement>({ intent, intentKey }, { requireName: false }),
+  );
   const classNames = useContext(TimelineClasses);
   const { last, showGroup } = useContext(TimelinePositionContext);
   const strings = useUiStrings();
@@ -133,9 +145,11 @@ export function TimelineItem({
     status === "done" ? strings.stepDone : status === "error" ? strings.stepError : null;
   return (
     <li
+      {...intentAttributes({ intent, intentKey })}
       aria-current={status === "current" ? "step" : undefined}
       data-status={status}
       {...props}
+      ref={targetRef}
       className={cn("flex min-w-0 flex-col", classNames?.item, className)}
     >
       {group && showGroup ? (

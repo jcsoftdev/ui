@@ -1,5 +1,5 @@
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   cloneElement,
   isValidElement,
   type ReactElement,
@@ -9,14 +9,14 @@ import { Kbd } from "../../atoms/kbd/kbd.js";
 import { cn } from "../../utils/cn.js";
 import { Slot } from "../../utils/slot.js";
 
-export type ShortcutsProps = ComponentPropsWithoutRef<"ul">;
+export type ShortcutsProps = ComponentPropsWithRef<"ul">;
 
 /** A short list of quick links or actions, flush to its container. Items go in `ShortcutsItem`. */
 export function Shortcuts({ className, ...props }: ShortcutsProps) {
   return <ul className={cn("m-0 flex list-none flex-col gap-0.5 p-0", className)} {...props} />;
 }
 
-export interface ShortcutsItemProps extends ComponentPropsWithoutRef<"a"> {
+export interface ShortcutsItemProps extends ComponentPropsWithRef<"a"> {
   /** Decorative glyph before the label. */
   icon?: ReactNode;
   /** Keyboard hint at the end (`G P`, `⌘K`). */
@@ -75,7 +75,7 @@ export function ShortcutsItem({
         <button
           type="button"
           className={classes}
-          {...(props as unknown as ComponentPropsWithoutRef<"button">)}
+          {...(props as unknown as ComponentPropsWithRef<"button">)}
         >
           {content(children)}
         </button>

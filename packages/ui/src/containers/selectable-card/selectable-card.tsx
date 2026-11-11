@@ -1,13 +1,18 @@
 "use client";
 
 import { type ComponentPropsWithRef, type MouseEvent, type ReactNode, useId } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 export type SelectableCardPart = "root" | "content" | "reason";
 
 export interface SelectableCardProps
-  extends Omit<ComponentPropsWithRef<"button">, "children" | "role" | "aria-checked"> {
+  extends Omit<ComponentPropsWithRef<"button">, "children" | "role" | "aria-checked">,
+    IntentProps {
   /** Card content. It sits inside a button, so use phrasing content only (spans, text, icons). */
   children: ReactNode;
   /**
@@ -40,8 +45,12 @@ export function SelectableCard({
   className,
   classNames,
   "aria-describedby": describedBy,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: SelectableCardProps) {
+  const targetRef = useComposedRefs(ref, useIntentTarget<HTMLButtonElement>({ intent, intentKey }));
   const reasonId = useId();
   const showReason = disabled && Boolean(disabledReason);
   const radio = semantics === "radio" && selected !== undefined;
@@ -56,7 +65,9 @@ export function SelectableCard({
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-checked is only set together with role="radio"
     <button
       type="button"
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={targetRef}
       role={radio ? "radio" : undefined}
       aria-checked={radio ? selected : undefined}
       aria-pressed={!radio && selected !== undefined ? selected : undefined}

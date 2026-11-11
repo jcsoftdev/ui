@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type CommentTone = "pending" | "reply";
@@ -13,7 +13,7 @@ const toneAuthorClasses: Record<CommentTone, string> = {
   reply: "text-ink",
 };
 
-export interface CommentProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
+export interface CommentProps extends Omit<ComponentPropsWithRef<"div">, "role"> {
   tone?: CommentTone;
   /** Name of the commenter. */
   author: string;

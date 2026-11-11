@@ -1,10 +1,12 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type SettingsRowPart = "root" | "body" | "title" | "description" | "control";
 
-export interface SettingsRowProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface SettingsRowProps extends Omit<ComponentPropsWithRef<"div">, "title">, IntentProps {
   title: ReactNode;
   description?: ReactNode;
   /** Control on the right: a switch, a button, etc. */
@@ -22,10 +24,13 @@ export function SettingsRow({
   titleId,
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: SettingsRowProps) {
   return (
     <div
+      {...intentAttributes({ intent, intentKey })}
       className={cn(
         "flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 border-t-divider px-4 py-3.25 first:border-t-0",
         classNames?.root,

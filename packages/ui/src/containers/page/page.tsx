@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
-export interface PageProps extends ComponentPropsWithoutRef<"div"> {
+export interface PageProps extends ComponentPropsWithRef<"div"> {
   /**
    * A fixed column beside the page content, usually an `Aside`. The column draws a divider and the
    * page background, never narrows the width the `page` container measures (so `Cols` inside the

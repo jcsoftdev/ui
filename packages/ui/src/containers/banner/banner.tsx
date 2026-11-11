@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { statusIcon } from "../../atoms/internal/status-icons.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -45,7 +45,7 @@ const toneRole: Record<BannerTone, "status" | "alert"> = {
 
 export type BannerPart = "root" | "icon" | "body" | "title" | "action";
 
-export interface BannerProps extends Omit<ComponentPropsWithoutRef<"div">, "role" | "title"> {
+export interface BannerProps extends Omit<ComponentPropsWithRef<"div">, "role" | "title"> {
   tone?: BannerTone;
   /** `soft` (default) tints the whole banner; `outline` keeps the surface and tints only the border. */
   appearance?: BannerAppearance;

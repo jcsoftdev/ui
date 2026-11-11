@@ -5,6 +5,8 @@ export interface KanbanCardData {
   tag?: string;
   assignee?: string;
   meta?: string;
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export interface KanbanColumnData {

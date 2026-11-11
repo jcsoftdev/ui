@@ -1,4 +1,6 @@
-import { type ComponentPropsWithoutRef, createContext, type ReactNode, useContext } from "react";
+"use client";
+
+import { type ComponentPropsWithRef, createContext, type ReactNode, useContext } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { customToneStyle, isCustomTone } from "../../utils/tone.js";
@@ -54,7 +56,7 @@ const KpiContext = createContext<KpiContextValue>({
   classNames: undefined,
 });
 
-export interface KpiProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface KpiProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** Short label describing the metric. Optional when you compose `Kpi.Label` as children. */
   label?: ReactNode;
   /** Highlighted number, already formatted by the consumer. Optional when you compose `Kpi.Value`. */
@@ -85,7 +87,7 @@ export interface KpiProps extends Omit<ComponentPropsWithoutRef<"div">, "childre
   classNames?: ClassNames<KpiPart>;
 }
 
-export interface KpiLabelProps extends ComponentPropsWithoutRef<"span"> {
+export interface KpiLabelProps extends ComponentPropsWithRef<"span"> {
   /** Decorative icon at the end of the row (`aria-hidden`). */
   icon?: ReactNode;
   /** Interactive or labelled content at the end of the row. */
@@ -146,7 +148,7 @@ export function KpiLabel({
   );
 }
 
-export interface KpiValueProps extends ComponentPropsWithoutRef<"span"> {
+export interface KpiValueProps extends ComponentPropsWithRef<"span"> {
   /** Small suffix next to the number. */
   suffix?: ReactNode;
   /** Change indicator next to the value. */
@@ -194,7 +196,7 @@ export function KpiValue({ suffix, trend, mono, className, children, ...props }:
   );
 }
 
-export interface KpiDescriptionProps extends ComponentPropsWithoutRef<"span"> {}
+export interface KpiDescriptionProps extends ComponentPropsWithRef<"span"> {}
 
 export function KpiDescription({ className, ...props }: KpiDescriptionProps) {
   const { classNames } = useContext(KpiContext);
