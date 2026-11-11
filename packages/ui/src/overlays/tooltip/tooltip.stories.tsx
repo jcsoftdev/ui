@@ -137,3 +137,15 @@ export const InSpanish: Story = {
     </UiStringsProvider>
   ),
 };
+
+export const PersistentDescription: Story = {
+  args: {
+    content: "Duplica la orden",
+    describeTrigger: "always",
+    children: <Button>Copiar</Button>,
+  },
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole("button", { name: "Copiar" });
+    await expect(trigger).toHaveAccessibleDescription("Duplica la orden");
+  },
+};
