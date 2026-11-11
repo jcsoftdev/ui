@@ -33,6 +33,7 @@ const TAG_ROLES: Readonly<Record<string, string>> = {
   th: "columnheader",
   table: "table",
   article: "article",
+  fieldset: "group",
   form: "form",
   dialog: "dialog",
   li: "listitem",

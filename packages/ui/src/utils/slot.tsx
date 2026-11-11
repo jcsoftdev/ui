@@ -37,6 +37,29 @@ export function composeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<
   };
 }
 
+type ComposedCache = WeakMap<object, RefCallback<never>>;
+
+const pairCache = new WeakMap<object, ComposedCache>();
+const loneRefs = new WeakMap<object, RefCallback<never>>();
+
+function composePair<T>(first: Ref<T>, second: Ref<T> | undefined | null): RefCallback<T> {
+  const firstKey = first as object;
+  if (second === undefined || second === null) {
+    const cached = loneRefs.get(firstKey);
+    if (cached) return cached as RefCallback<T>;
+    const composed = composeRefs(first);
+    loneRefs.set(firstKey, composed as RefCallback<never>);
+    return composed;
+  }
+  const inner = pairCache.get(firstKey) ?? new WeakMap();
+  pairCache.set(firstKey, inner);
+  const cached = inner.get(second as object);
+  if (cached) return cached as RefCallback<T>;
+  const composed = composeRefs(first, second);
+  inner.set(second as object, composed as RefCallback<never>);
+  return composed;
+}
+
 function mergeProps(slotProps: AnyProps, childProps: AnyProps): AnyProps {
   const merged: AnyProps = { ...childProps };
   for (const name of Object.keys(childProps)) {
@@ -85,7 +108,7 @@ export function Slot({ children, ref, ...slotProps }: SlotProps) {
   const child = children as ReactElement<AnyProps & { ref?: Ref<HTMLElement> }>;
   const merged = mergeProps(slotProps, child.props);
   if (child.type !== Fragment) {
-    merged.ref = ref ? composeRefs(ref, child.props.ref) : child.props.ref;
+    merged.ref = ref ? composePair(ref, child.props.ref) : child.props.ref;
   }
   return cloneElement(child, merged);
 }

@@ -1,12 +1,15 @@
-import { act, type ReactNode, StrictMode, useState } from "react";
+import { act, type ReactNode, StrictMode, useMemo, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { Slot } from "../utils/slot.js";
 import { intentAttributes } from "./attributes.js";
 import { IntentBridgeProvider } from "./bridge.js";
 import type { IntentBridge, IntentSemanticExpectation, IntentTargetRef } from "./types.js";
 import { useIntentTarget, useIntentTargets } from "./use-intent-target.js";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const PassThrough = ({ children }: { children: ReactNode }) => children;
 
 interface Registration {
   ref: IntentTargetRef;
@@ -79,6 +82,148 @@ function List(props: { ids: string[] }) {
     </ul>
   );
 }
+
+function HostWithOwnBridge(props: {
+  ids: string[];
+  setOn: "register" | "unregister";
+  renders: { count: number };
+  live: { count: number };
+  strict: boolean;
+}) {
+  const Wrapper = props.strict ? StrictMode : PassThrough;
+  return (
+    <Wrapper>
+      <InnerHost {...props} />
+    </Wrapper>
+  );
+}
+
+function InnerHost(props: {
+  ids: string[];
+  setOn: "register" | "unregister";
+  renders: { count: number };
+  live: { count: number };
+  strict: boolean;
+}) {
+  const [, setTick] = useState(0);
+  props.renders.count += 1;
+  const bridge = useMemo<IntentBridge>(
+    () => ({
+      registerTarget() {
+        props.live.count += 1;
+        if (props.setOn === "register") setTick((tick) => tick + 1);
+        return () => {
+          props.live.count -= 1;
+          if (props.setOn === "unregister") setTick((tick) => tick + 1);
+        };
+      },
+    }),
+    [props.setOn, props.live],
+  );
+  return (
+    <IntentBridgeProvider bridge={bridge}>
+      <Targets ids={props.ids} />
+    </IntentBridgeProvider>
+  );
+}
+
+function Targets(props: { ids: string[] }) {
+  const single = useIntentTarget<HTMLButtonElement>({ intent: "single" });
+  return (
+    <>
+      <button type="button" ref={single}>
+        one
+      </button>
+      <List ids={props.ids} />
+    </>
+  );
+}
+
+describe("a bridge that updates React state", () => {
+  const cases = [
+    { setOn: "register", strict: false },
+    { setOn: "unregister", strict: false },
+    { setOn: "register", strict: true },
+    { setOn: "unregister", strict: true },
+  ] as const;
+  for (const { setOn, strict } of cases) {
+    test(`settles when ${setOn} sets state${strict ? " in strict mode" : ""}`, async () => {
+      const renders = { count: 0 };
+      const live = { count: 0 };
+      await mount(
+        <HostWithOwnBridge
+          ids={["1", "2", "3"]}
+          setOn={setOn}
+          renders={renders}
+          live={live}
+          strict={strict}
+        />,
+      );
+      const afterMount = renders.count;
+      expect(afterMount).toBeLessThan(20);
+      expect(live.count).toBe(4);
+      await mount(
+        <HostWithOwnBridge
+          ids={["1", "2", "3"]}
+          setOn={setOn}
+          renders={renders}
+          live={live}
+          strict={strict}
+        />,
+      );
+      expect(renders.count - afterMount).toBeLessThan(10);
+      expect(live.count).toBe(4);
+    });
+  }
+});
+
+function SlotTarget(props: { intent: string; children: ReactNode }) {
+  const ref = useIntentTarget<HTMLElement>({ intent: props.intent });
+  return <Slot ref={ref}>{props.children}</Slot>;
+}
+
+function ButtonAsChildHost(props: {
+  strict: boolean;
+  renders: { count: number };
+  live: { count: number };
+}) {
+  const [, setTick] = useState(0);
+  props.renders.count += 1;
+  const bridge = useMemo<IntentBridge>(
+    () => ({
+      registerTarget() {
+        props.live.count += 1;
+        setTick((tick) => tick + 1);
+        return () => {
+          props.live.count -= 1;
+        };
+      },
+    }),
+    [props.live],
+  );
+  const Wrapper = props.strict ? StrictMode : PassThrough;
+  return (
+    <Wrapper>
+      <IntentBridgeProvider bridge={bridge}>
+        <SlotTarget intent="go-link">
+          <a href="/go">go</a>
+        </SlotTarget>
+      </IntentBridgeProvider>
+    </Wrapper>
+  );
+}
+
+describe("a Slot target under a bridge that updates React state", () => {
+  for (const strict of [false, true]) {
+    test(`settles with one live registration${strict ? " in strict mode" : ""}`, async () => {
+      const renders = { count: 0 };
+      const live = { count: 0 };
+      await mount(<ButtonAsChildHost strict={strict} renders={renders} live={live} />);
+      expect(renders.count).toBeLessThan(10);
+      expect(live.count).toBe(1);
+    });
+  }
+});
 
 describe("intent bridge", () => {
   test("registers on mount and unregisters on unmount", async () => {

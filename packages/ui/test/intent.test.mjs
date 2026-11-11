@@ -65,6 +65,7 @@ test("implicit roles follow the element", () => {
     [source("TH"), "columnheader"],
     [source("TABLE"), "table"],
     [source("ARTICLE"), "article"],
+    [source("FIELDSET"), "group"],
     [source("FORM"), "form"],
     [source("DIALOG"), "dialog"],
     [source("LI"), "listitem"],
