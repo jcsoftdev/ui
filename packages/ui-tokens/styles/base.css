@@ -33,6 +33,40 @@ body {
   outline-offset: var(--focus-ring-offset, 2px);
 }
 
+@keyframes intent-highlight {
+  from {
+    background-color: var(--intent-highlight-tint, var(--accent-soft));
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+[data-intent-highlight] {
+  outline: var(--intent-highlight-width, 3px) solid
+    var(--intent-highlight-color, var(--focus-ring-color, var(--accent-ink)));
+  outline-offset: var(--intent-highlight-offset, 3px);
+  animation: intent-highlight var(--intent-highlight-duration, 350ms) ease-out;
+}
+
+[data-intent-changed] {
+  outline: 2px dashed var(--intent-highlight-color, var(--focus-ring-color, var(--accent-ink)));
+  outline-offset: var(--intent-highlight-offset, 3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-intent-highlight] {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-intent-highlight],
+  [data-intent-changed] {
+    outline-color: Highlight;
+  }
+}
+
 /* The menu surface itself takes programmatic focus and its items carry the visible ring, so the
    surface drops the ring normally. Under more contrast and forced colors it keeps it. */
 @media (not (prefers-contrast: more)) and (not (forced-colors: active)) {
