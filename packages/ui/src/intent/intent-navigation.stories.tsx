@@ -18,7 +18,7 @@ function RecordingBridge({ children }: { children: ReactNode }) {
   const bridge = useMemo<IntentBridge>(
     () => ({
       registerTarget(ref, _element, expectation) {
-        const entry = `${ref.intent}:${ref.key ?? ""}:${expectation.role}`;
+        const entry = `${ref.intent}:${ref.key ?? ""}:${expectation.role}:${expectation.requireName}`;
         setLog((current) => [...current, entry]);
         return () => setLog((current) => current.filter((item) => item !== entry));
       },
@@ -132,7 +132,10 @@ export const BreadcrumbsRegisterLinkAndCurrent: Story = {
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", { name: "Restaurants" });
     await expect(link).toHaveAttribute("data-intent", "crumb-home");
-    await waitFor(() => expect(logOf(canvasElement)).toHaveTextContent("crumb-home:h:link"));
+    await waitFor(() => {
+      expect(logOf(canvasElement)).toHaveTextContent("crumb-home:h:link:true");
+      expect(logOf(canvasElement)).toHaveTextContent("crumb-current:c:generic:false");
+    });
   },
 };
 
@@ -200,8 +203,8 @@ export const WizardRegistersItsSteps: Story = {
     const steps = within(canvasElement).getAllByRole("listitem");
     await expect(steps[0]).toHaveAttribute("data-intent-key", "details");
     await waitFor(() => {
-      expect(logOf(canvasElement)).toHaveTextContent("wiz-details:details:listitem");
-      expect(logOf(canvasElement)).toHaveTextContent("wiz-pay:p:listitem");
+      expect(logOf(canvasElement)).toHaveTextContent("wiz-details:details:listitem:false");
+      expect(logOf(canvasElement)).toHaveTextContent("wiz-pay:p:listitem:false");
     });
   },
 };

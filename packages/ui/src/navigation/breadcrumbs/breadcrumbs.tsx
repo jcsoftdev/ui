@@ -80,7 +80,7 @@ export function Breadcrumbs({
               {current || item.href === undefined ? (
                 <span
                   {...intentAttributes(target)}
-                  ref={bind<HTMLSpanElement>(target)}
+                  ref={bind<HTMLSpanElement>(target, { requireName: false })}
                   aria-current={current ? "page" : undefined}
                   className={cn(current && "font-semibold text-ink", classNames?.current)}
                 >

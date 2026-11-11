@@ -39,7 +39,7 @@ export function PopoverContent({
 }: PopoverContentProps) {
   const composedRef = useComposedRefs<HTMLDivElement>(
     ref,
-    useIntentTarget<HTMLDivElement>({ intent, intentKey }),
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "dialog" }),
   );
   return (
     <PopoverPrimitive.Portal container={container}>

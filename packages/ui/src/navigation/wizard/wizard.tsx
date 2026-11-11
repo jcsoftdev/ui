@@ -171,7 +171,7 @@ export function Wizard({
           label: stepLabel,
           intent,
           intentKey: intentKey ?? id,
-          ref: bind<HTMLLIElement>({ intent, intentKey: intentKey ?? id }),
+          ref: bind<HTMLLIElement>({ intent, intentKey: intentKey ?? id }, { requireName: false }),
         }))}
         currentStepId={current.id}
         className={classNames?.stepper}
