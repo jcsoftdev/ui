@@ -11,7 +11,7 @@ import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { touchHitArea } from "../internal/hit-area.js";
-import { describedBy, LabelledControl } from "../internal/labelled-control.js";
+import { describedByProps, LabelledControl } from "../internal/labelled-control.js";
 
 export type CheckedState = boolean | "indeterminate";
 
@@ -107,7 +107,7 @@ export function Checkbox({
         id={controlId}
         {...intentAttributes({ intent, intentKey })}
         {...props}
-        aria-describedby={describedBy(props["aria-describedby"], descriptionId, description)}
+        {...describedByProps(props["aria-describedby"], descriptionId, description)}
         ref={composedRef}
         className={cn(
           touchHitArea,

@@ -2,6 +2,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Checkbox } from "../../src/atoms/checkbox/checkbox.js";
 import { Switch } from "../../src/atoms/switch/switch.js";
 
+export const legacy = {
+  switchLabelBeforeId: renderToStaticMarkup(<Switch aria-label="Notify" id="sw" />),
+  switchDescribedBy: renderToStaticMarkup(<Switch aria-describedby="err" aria-label="Notify" id="sw" />),
+  checkboxLabelBeforeId: renderToStaticMarkup(<Checkbox aria-label="Agree" id="cb" />),
+  checkboxDescribedBy: renderToStaticMarkup(<Checkbox aria-describedby="err" aria-label="Agree" id="cb" />),
+};
+
 export const html = {
   checkboxLabelled: renderToStaticMarkup(<Checkbox id="cb" label="Agree" />),
   checkboxLabelledDisabled: renderToStaticMarkup(<Checkbox id="cb" label="Agree" disabled />),

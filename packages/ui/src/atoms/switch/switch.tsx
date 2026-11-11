@@ -10,7 +10,7 @@ import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { touchHitArea } from "../internal/hit-area.js";
-import { describedBy, LabelledControl } from "../internal/labelled-control.js";
+import { describedByProps, LabelledControl } from "../internal/labelled-control.js";
 
 export type SwitchPart = "root" | "track" | "thumb" | "wrapper" | "label" | "description";
 
@@ -47,7 +47,6 @@ export function Switch({
   form,
   label,
   description,
-  id,
   onClick,
   intent,
   intentKey,
@@ -70,7 +69,7 @@ export function Switch({
   const state = checked ? "checked" : "unchecked";
   const disabledAttr = disabled ? "" : undefined;
   const generatedId = useId();
-  const controlId = label === undefined ? id : (id ?? generatedId);
+  const controlId = label === undefined ? props.id : (props.id ?? generatedId);
   const descriptionId = `${generatedId}-description`;
 
   const control = (
@@ -85,10 +84,10 @@ export function Switch({
         data-disabled={disabledAttr}
         disabled={disabled}
         value={value}
-        id={controlId}
+        {...(label === undefined ? {} : { id: controlId })}
         {...intentAttributes({ intent, intentKey })}
         {...props}
-        aria-describedby={describedBy(props["aria-describedby"], descriptionId, description)}
+        {...describedByProps(props["aria-describedby"], descriptionId, description)}
         ref={composedRef}
         className={cn(
           touchHitArea,

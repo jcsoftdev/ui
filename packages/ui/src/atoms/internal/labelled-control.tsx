@@ -17,13 +17,22 @@ export interface LabelledControlProps {
 const labelClasses =
   "cursor-pointer select-none text-control text-ink data-disabled:cursor-not-allowed data-disabled:opacity-50";
 
-export function describedBy(
+function describedBy(
   consumerIds: string | undefined,
   descriptionId: string,
   description: ReactNode,
 ): string | undefined {
   if (description === undefined) return consumerIds;
   return consumerIds ? `${consumerIds} ${descriptionId}` : descriptionId;
+}
+
+export function describedByProps(
+  consumerIds: string | undefined,
+  descriptionId: string,
+  description: ReactNode,
+): { "aria-describedby"?: string } {
+  if (description === undefined) return {};
+  return { "aria-describedby": describedBy(consumerIds, descriptionId, description) };
 }
 
 export function LabelledControl({

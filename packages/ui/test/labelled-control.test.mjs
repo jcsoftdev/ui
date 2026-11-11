@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { html } = await loadCases("labelled-control-cases.tsx");
+const { html, legacy } = await loadCases("labelled-control-cases.tsx");
 
 const checkboxLabelledSnapshot =
   '<span class="inline-flex items-center"><button type="button" role="checkbox" aria-checked="false" data-state="unchecked" value="on" id="cb" class="relative after:absolute after:top-1/2 after:left-1/2 after:size-(--touch-target) after:-translate-1/2 after:content-[&#x27;&#x27;] group inline-flex size-10 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"><span class="grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent"></span></button><input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;pointer-events:none;opacity:0;margin:0;transform:translateX(-100%)" value="on"/><label for="cb" class="cursor-pointer select-none text-control text-ink data-disabled:cursor-not-allowed data-disabled:opacity-50">Agree</label></span>';
@@ -15,6 +15,18 @@ const checkboxBareSnapshot =
 
 const switchBareSnapshot =
   '<button type="button" role="switch" aria-checked="false" data-state="unchecked" value="on" id="sw" aria-label="Notify" class="relative after:absolute after:top-1/2 after:left-1/2 after:size-(--touch-target) after:-translate-1/2 after:content-[&#x27;&#x27;] group inline-flex size-10 shrink-0 items-center justify-center"><span class="relative block h-5 w-8.5 rounded-pill bg-line-strong transition-colors group-data-[state=checked]:bg-accent"><span data-state="unchecked" class="absolute top-0.75 left-0.75 block size-3.5 rounded-pill bg-surface transition-transform data-[state=checked]:translate-x-3.5"></span></span></button><input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;pointer-events:none;opacity:0;margin:0;transform:translateX(-100%)" value="on"/>';
+
+const switchLabelBeforeIdSnapshot =
+  '<button type="button" role="switch" aria-checked="false" data-state="unchecked" value="on" aria-label="Notify" id="sw" class="relative after:absolute after:top-1/2 after:left-1/2 after:size-(--touch-target) after:-translate-1/2 after:content-[&#x27;&#x27;] group inline-flex size-10 shrink-0 items-center justify-center"><span class="relative block h-5 w-8.5 rounded-pill bg-line-strong transition-colors group-data-[state=checked]:bg-accent"><span data-state="unchecked" class="absolute top-0.75 left-0.75 block size-3.5 rounded-pill bg-surface transition-transform data-[state=checked]:translate-x-3.5"></span></span></button><input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;pointer-events:none;opacity:0;margin:0;transform:translateX(-100%)" value="on"/>';
+
+const switchDescribedBySnapshot =
+  '<button type="button" role="switch" aria-checked="false" data-state="unchecked" value="on" aria-describedby="err" aria-label="Notify" id="sw" class="relative after:absolute after:top-1/2 after:left-1/2 after:size-(--touch-target) after:-translate-1/2 after:content-[&#x27;&#x27;] group inline-flex size-10 shrink-0 items-center justify-center"><span class="relative block h-5 w-8.5 rounded-pill bg-line-strong transition-colors group-data-[state=checked]:bg-accent"><span data-state="unchecked" class="absolute top-0.75 left-0.75 block size-3.5 rounded-pill bg-surface transition-transform data-[state=checked]:translate-x-3.5"></span></span></button><input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;pointer-events:none;opacity:0;margin:0;transform:translateX(-100%)" value="on"/>';
+
+const checkboxLabelBeforeIdSnapshot =
+  '<button type="button" role="checkbox" aria-checked="false" data-state="unchecked" value="on" id="cb" aria-label="Agree" class="relative after:absolute after:top-1/2 after:left-1/2 after:size-(--touch-target) after:-translate-1/2 after:content-[&#x27;&#x27;] group inline-flex size-10 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"><span class="grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent"></span></button><input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;pointer-events:none;opacity:0;margin:0;transform:translateX(-100%)" value="on"/>';
+
+const checkboxDescribedBySnapshot =
+  '<button type="button" role="checkbox" aria-checked="false" data-state="unchecked" value="on" id="cb" aria-describedby="err" aria-label="Agree" class="relative after:absolute after:top-1/2 after:left-1/2 after:size-(--touch-target) after:-translate-1/2 after:content-[&#x27;&#x27;] group inline-flex size-10 shrink-0 items-center justify-center disabled:cursor-not-allowed disabled:opacity-50"><span class="grid size-4.5 place-items-center rounded-xs border-[1.5px] border-line-strong group-data-[state=checked]:border-accent group-data-[state=checked]:bg-accent group-data-[state=indeterminate]:border-accent group-data-[state=indeterminate]:bg-accent"></span></button><input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;pointer-events:none;opacity:0;margin:0;transform:translateX(-100%)" value="on"/>';
 
 const attr = (markup, tag, name) =>
   markup
@@ -77,4 +89,11 @@ test("no label and no description render the 0.9.0 markup", () => {
   assert.equal(html.checkboxLabelledDisabled, checkboxLabelledDisabledSnapshot);
   assert.equal(html.checkboxBare, checkboxBareSnapshot);
   assert.equal(html.switchBare, switchBareSnapshot);
+});
+
+test("attribute order matches 0.9.0 without a label or description", () => {
+  assert.equal(legacy.switchLabelBeforeId, switchLabelBeforeIdSnapshot);
+  assert.equal(legacy.switchDescribedBy, switchDescribedBySnapshot);
+  assert.equal(legacy.checkboxLabelBeforeId, checkboxLabelBeforeIdSnapshot);
+  assert.equal(legacy.checkboxDescribedBy, checkboxDescribedBySnapshot);
 });
