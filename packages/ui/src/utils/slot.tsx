@@ -27,8 +27,10 @@ export function composeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<
     const cleanups: Array<() => void> = [];
     for (const ref of refs) {
       const result = typeof ref === "function" ? (ref as RefCallback<T>)(node) : undefined;
-      if (typeof ref !== "function") setRef(ref, node);
-      else if (typeof result === "function") cleanups.push(result as () => void);
+      if (typeof ref !== "function") {
+        setRef(ref, node);
+        cleanups.push(() => setRef(ref, null));
+      } else if (typeof result === "function") cleanups.push(result as () => void);
       else cleanups.push(() => setRef(ref, null));
     }
     return () => {
@@ -40,23 +42,16 @@ export function composeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<
 type ComposedCache = WeakMap<object, RefCallback<never>>;
 
 const pairCache = new WeakMap<object, ComposedCache>();
-const loneRefs = new WeakMap<object, RefCallback<never>>();
 
-function composePair<T>(first: Ref<T>, second: Ref<T> | undefined | null): RefCallback<T> {
-  const firstKey = first as object;
-  if (second === undefined || second === null) {
-    const cached = loneRefs.get(firstKey);
-    if (cached) return cached as RefCallback<T>;
-    const composed = composeRefs(first);
-    loneRefs.set(firstKey, composed as RefCallback<never>);
-    return composed;
-  }
-  const inner = pairCache.get(firstKey) ?? new WeakMap();
-  pairCache.set(firstKey, inner);
-  const cached = inner.get(second as object);
+function composePair<T>(first: NonNullable<Ref<T>>, second: Ref<T> | undefined): Ref<T> {
+  if (second === undefined || second === null) return first;
+  const existing = pairCache.get(first);
+  const inner = existing ?? new WeakMap();
+  if (!existing) pairCache.set(first, inner);
+  const cached = inner.get(second);
   if (cached) return cached as RefCallback<T>;
   const composed = composeRefs(first, second);
-  inner.set(second as object, composed as RefCallback<never>);
+  inner.set(second, composed as RefCallback<never>);
   return composed;
 }
 

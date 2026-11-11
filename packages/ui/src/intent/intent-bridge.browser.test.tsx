@@ -1,4 +1,4 @@
-import { act, type ReactNode, StrictMode, useMemo, useState } from "react";
+import { act, createRef, type ReactNode, StrictMode, useMemo, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { Slot } from "../utils/slot.js";
@@ -175,6 +175,78 @@ describe("a bridge that updates React state", () => {
       expect(live.count).toBe(4);
     });
   }
+});
+
+function InlineRefHost(props: {
+  strict: boolean;
+  renders: { count: number };
+  live: { count: number };
+  seen: Array<Element | null>;
+}) {
+  const [, setTick] = useState(0);
+  props.renders.count += 1;
+  const bridge = useMemo<IntentBridge>(
+    () => ({
+      registerTarget() {
+        props.live.count += 1;
+        setTick((tick) => tick + 1);
+        return () => {
+          props.live.count -= 1;
+        };
+      },
+    }),
+    [props.live],
+  );
+  const Wrapper = props.strict ? StrictMode : PassThrough;
+  return (
+    <Wrapper>
+      <IntentBridgeProvider bridge={bridge}>
+        <SlotTarget intent="go-link">
+          <a href="/go" ref={(element) => void props.seen.push(element)}>
+            go
+          </a>
+        </SlotTarget>
+      </IntentBridgeProvider>
+    </Wrapper>
+  );
+}
+
+describe("a Slot target with an inline child ref under a bridge that updates React state", () => {
+  for (const strict of [false, true]) {
+    test(`settles and keeps feeding the consumer ref${strict ? " in strict mode" : ""}`, async () => {
+      const renders = { count: 0 };
+      const live = { count: 0 };
+      const seen: Array<Element | null> = [];
+      await mount(<InlineRefHost strict={strict} renders={renders} live={live} seen={seen} />);
+      expect(renders.count).toBeLessThan(10);
+      expect(live.count).toBe(1);
+      expect(seen.some((element) => element instanceof HTMLAnchorElement)).toBe(true);
+      const anchor = host.querySelector("a");
+      const last = seen.filter((element) => element !== null).at(-1);
+      expect(last).toBe(anchor);
+    });
+  }
+});
+
+describe("Slot object refs", () => {
+  test("are cleared on unmount and when the child is swapped", async () => {
+    const slotRef = createRef<HTMLElement>();
+    const childRef = createRef<HTMLElement>();
+    const render = (tag: "section" | "aside") => (
+      <Slot ref={slotRef}>
+        {tag === "section" ? <section ref={childRef} /> : <aside ref={childRef} />}
+      </Slot>
+    );
+    await mount(render("section"));
+    expect(slotRef.current).toBe(host.querySelector("section"));
+    expect(childRef.current).toBe(host.querySelector("section"));
+    await mount(render("aside"));
+    expect(slotRef.current).toBe(host.querySelector("aside"));
+    expect(childRef.current).toBe(host.querySelector("aside"));
+    await act(async () => root.render(null));
+    expect(slotRef.current).toBeNull();
+    expect(childRef.current).toBeNull();
+  });
 });
 
 function SlotTarget(props: { intent: string; children: ReactNode }) {

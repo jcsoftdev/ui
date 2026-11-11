@@ -8,11 +8,68 @@ import type {
   IntentExpectationInput,
   IntentProps,
   IntentTargetBinder,
+  IntentTargetRef,
 } from "./types.js";
 
 const CACHE_SEPARATOR = "\u0000";
 
 const ignoreElement: RefCallback<Element> = () => undefined;
+
+interface Registration {
+  readonly element: Element;
+  readonly role: string;
+  readonly requireName: boolean;
+  readonly unregister: () => void;
+  released: boolean;
+}
+
+const registrations = new WeakMap<IntentBridge, Map<string, Registration[]>>();
+
+function registrationsFor(bridge: IntentBridge, identity: string): Registration[] {
+  const byIdentity = registrations.get(bridge) ?? new Map<string, Registration[]>();
+  registrations.set(bridge, byIdentity);
+  const list = byIdentity.get(identity) ?? [];
+  byIdentity.set(identity, list);
+  return list;
+}
+
+function drop(list: Registration[], entry: Registration): void {
+  entry.unregister();
+  list.splice(list.indexOf(entry), 1);
+}
+
+function attach(
+  bridge: IntentBridge,
+  ref: IntentTargetRef,
+  element: Element,
+  expectation: IntentExpectationInput | undefined,
+): () => void {
+  const resolved = resolveExpectation(expectation, element);
+  const list = registrationsFor(bridge, `${ref.intent}${CACHE_SEPARATOR}${ref.key ?? ""}`);
+  const revivable = list.find(
+    (entry) =>
+      entry.released &&
+      entry.element === element &&
+      entry.role === resolved.role &&
+      entry.requireName === resolved.requireName,
+  );
+  if (revivable) revivable.released = false;
+  for (const entry of [...list]) if (entry.released && entry !== revivable) drop(list, entry);
+  const entry: Registration = revivable ?? {
+    element,
+    role: resolved.role,
+    requireName: resolved.requireName,
+    unregister: bridge.registerTarget(ref, element, resolved),
+    released: false,
+  };
+  if (!revivable) list.push(entry);
+  return () => {
+    entry.released = true;
+    queueMicrotask(() => {
+      if (entry.released && list.includes(entry)) drop(list, entry);
+    });
+  };
+}
 
 function createTargetRef<E extends Element>(
   bridge: IntentBridge,
@@ -23,7 +80,7 @@ function createTargetRef<E extends Element>(
   if (ref === undefined || bridge === noopIntentBridge) return undefined;
   return (element) => {
     if (element === null) return undefined;
-    return bridge.registerTarget(ref, element, resolveExpectation(expectation, element));
+    return attach(bridge, ref, element, expectation);
   };
 }
 

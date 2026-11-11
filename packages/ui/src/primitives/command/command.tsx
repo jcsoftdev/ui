@@ -417,7 +417,8 @@ export function Item({
     onSelectRef.current = onSelect;
   });
   useLayoutEffect(() => {
-    if (valueProp === undefined) setDerived(elementRef.current?.textContent?.trim() ?? "");
+    const text = elementRef.current?.textContent?.trim();
+    if (valueProp === undefined && text !== undefined) setDerived(text);
   });
   useLayoutEffect(() => () => store.removeItem(id), [store, id]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: keywordsKey stands for keywords
