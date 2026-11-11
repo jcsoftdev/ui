@@ -278,6 +278,25 @@ A table from `md` up (library `Table` styling) and a stack of cards below it; th
 (default: the first) titles each card and the other columns become label/value rows. Every row
 carries `data-row-key`; `rowClassName` applies to both layouts.
 
+## Intent targets
+
+Components accept optional `intent` and `intentKey` props. When `intent` is a non-empty string the component renders `data-intent="<intent>"`, and `data-intent-key="<key>"` when `intentKey` is also non-empty; with no `intent` nothing is rendered or registered, even if `intentKey` is set. The attributes sit on the element that carries the component's role and accessible name, which is the element that receives the rest props. `DataGrid` is the exception: root props go on the wrapper while the intent goes on `table[role=grid]`. For `DateTimePicker` and `CopyField` the attributes sit on the inner input. `MessageActions` takes `actionIntents` to target each action by name.
+
+```tsx
+<Button intent="order-save">Save</Button>
+<DataGrid data={orders} getRowId={(row) => row.id} rowIntent="order-row" columns={columns} />
+```
+
+`@jcsoftdev/ui/intent` exports `IntentBridge`, `{ registerTarget(ref, element, expectation): () => void }`, and `IntentBridgeProvider`. Without a provider the bridge is a no-op (`noopIntentBridge`), so nothing changes for apps that do not use it. `ref` is `{ intent, key? }` and `expectation` is `{ role, requireName }`.
+
+Client components register through the bridge. Server-safe components (`Input`, `Textarea`, `Select`, `NativeSelect`, `Form`, `Card`, `DayChip`, `EventBlock` and similar) render the attributes but do not register, so a consumer must also be able to find them by `[data-intent][data-intent-key]`.
+
+`rowIntent` on `DataGrid` needs `getRowId`: rows then carry `data-row-id` and cells `data-col-id`. Without `getRowId`, index-based ids are unstable, so `rowIntent` is ignored and a development warning is logged.
+
+An unregister runs one microtask after the element detaches, and a re-attach of the same element with the same role in that window reuses the registration. A ref forwarder that passes only non-null nodes leaks one registration on unmount, so forward `null` too. In development a duplicate live intent and key logs one warning.
+
+Highlights are driven by `data-intent-highlight` (a pulse) and `data-intent-changed` (a dashed outline), styled by the base stylesheet. Tune them with `--intent-highlight-color`, `--intent-highlight-width`, `--intent-highlight-offset`, `--intent-highlight-duration` and `--intent-highlight-tint`. Apps that vendor `base.css` must regenerate it to get them.
+
 ## Install a single component (tree shaking)
 
 The package is unbundled ESM, `"sideEffects": ["**/*.css"]`, and every component has its own entry point:

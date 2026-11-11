@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.10.0 (2026-11-11)
+
+### Intent-aware components and accessibility
+
+#### Added
+
+- **`@jcsoftdev/ui/intent`**: `IntentBridge` (`registerTarget(ref, element, expectation)`), `IntentBridgeProvider`, a no-op default bridge, `intentAttributes`, `useIntentTarget` and `useIntentTargets`. See the README section «Intent targets».
+- **Intent props per family**: optional `intent` and `intentKey` on atoms, forms, containers, overlays, navigation, shell, AI and palette components. `MessageActions` takes `actionIntents`. `DateTimePicker` and `CopyField` put `data-intent` on their inner input. `Step` accepts `ref`, and `renderLink` callbacks receive a `ref` and `data-intent` attributes to spread on the link.
+- **`DataGrid`**: `rowIntent`, `data-row-id` (needs `getRowId`), `data-col-id`, and the rest of the root `div` props. Select and tools columns have no `data-col-id`.
+- **`FloorPlan`**: item `intent` and `intentKey`, and `floorPlanItemName` for table names that include status and seats.
+- **`CommandPalette`**: `onSubmitQuery`, `inputEnd` and `keepOpenOnSelect`.
+- **`Tooltip`**: `describeTrigger` (`"whileOpen"` or `"always"`); an existing `aria-describedby` on the trigger is kept.
+- **`Switch`** `label` and `description`, **`Checkbox`** `description`, wired through `aria-describedby`.
+- **Calendar**: `MonthView` and `WeekView` have ARIA grid semantics, a roving keyboard and `dayIntent`.
+- **`orderTicketTitle`**.
+- **Highlight styles**: `data-intent-highlight` and `data-intent-changed` outlines with `--intent-highlight-*` custom properties, reduced-motion and forced-colors fallbacks.
+
+#### Changed
+
+- **`IntentBridge` timing**: `registerTarget`'s unregister runs one microtask after the element detaches; a re-attach of the same element with the same role and `requireName` in the same commit reuses the registration. Stale entries of other identities may stay live until that microtask. Await `act` (or flush microtasks) before asserting that a target is gone. A ref forwarder that passes only non-null nodes leaks one registration on unmount. A development warning fires once for a duplicate live intent and key.
+- **WithRef families**: components now use `ComponentPropsWithRef`, and `ref` reaches the element that carries the role.
+- **`MonthView`** is a client component.
+- **`DataGridProps`** is now `DataGridOwnProps & DataGridRootAttributes`.
+- **Biome**: `biome.json` overrides turn off `useSemanticElements` and `useFocusableInteractive` for the calendar grid views.
+- **Internal**: the shared `isProduction` helper is not exported.
+- **Size budgets** raised to the measured gzip size plus about 5% for `ui/ai`, `ui/atoms`, `ui/auth`, `ui/brand`, `ui/calendar`, `ui/containers`, `ui/forms`, `ui/glass`, `ui/navigation`, `ui/overlays`, `ui/shell` and `ui-tokens styles/base.css`: intent attributes, registration and the new accessibility semantics grew each entry, and `ui/glass` was already 31 B over before this work.
+
+#### Fixed
+
+- **`OrderTicket`**: the ticket state no longer leaks into the heading name, and the number shows beside the table.
+- **Table plus number** naming on tickets.
+- **`FloorPlan`** tables are named with their status and seats.
+- **`Tooltip`** keeps an existing `aria-describedby`.
+- **Charts** without a data table now have one.
+
 ## 0.9.0 (2026-11-04)
 
 ### Kitchen ticket
