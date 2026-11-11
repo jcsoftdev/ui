@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { nextGridCell, monthHtml, weekHtml } = await loadCases("calendar-grid-cases.tsx");
+const { nextGridCell, monthHtml, weekHtml, monthFromServerContext, crowdedMonthHtml } =
+  await loadCases("calendar-grid-cases.tsx");
 
 const count = (html, pattern) => (html.match(pattern) ?? []).length;
 const size = { rows: 3, cols: 4 };
@@ -92,4 +94,26 @@ test("week view is a named grid with header, all-day and timed rows", () => {
   assert.equal(count(rows[1], /role="gridcell"/g), 7);
   assert.equal(count(rows[2], /role="gridcell"/g), 7);
   assert.match(html, /aria-hidden="true" class="[^"]*sticky left-0/);
+});
+
+test("MonthView stays a server component: formatMore is applied on the server and never crosses the client boundary", () => {
+  const read = (name) =>
+    readFileSync(new URL(`../src/calendar/month-view/${name}`, import.meta.url), "utf8");
+  assert.doesNotMatch(read("month-view.tsx"), /^\s*["']use client["']/);
+  assert.match(read("month-grid.tsx"), /^\s*["']use client["']/);
+  const element = monthFromServerContext();
+  assert.equal(typeof element.type, "function");
+  const functionProps = Object.entries(element.props)
+    .filter(([, value]) => typeof value === "function")
+    .map(([name]) => name);
+  assert.deepEqual(functionProps, []);
+  assert.equal(element.props.formatMore, undefined);
+  assert.equal(element.props.labels.more["2026-11-12"], "+2 more");
+});
+
+test("MonthView renders the server-computed overflow label, weekdays and title", () => {
+  const html = crowdedMonthHtml();
+  assert.match(html, />\+2 more<\/button>/);
+  assert.match(html, /aria-label="November 2026"/);
+  assert.match(html, />Mon<\/div>/);
 });

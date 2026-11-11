@@ -19,7 +19,7 @@
   "overrides": [
     {
       "includes": [
-        "src/calendar/month-view/month-view.tsx",
+        "src/calendar/month-view/month-grid.tsx",
         "src/calendar/week-view/week-view.tsx"
       ],
       "linter": {

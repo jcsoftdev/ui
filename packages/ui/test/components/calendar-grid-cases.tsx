@@ -36,3 +36,22 @@ export const weekHtml = (props: Record<string, unknown> = {}) =>
       {...props}
     />,
   );
+
+const crowded = [1, 2, 3, 4, 5].map((n) => ({
+  id: `c${n}`,
+  date: "2026-11-12",
+  start: `0${n}:00`,
+  title: `Crowded ${n}`,
+}));
+
+export const serverMonthProps = {
+  month: "2026-11-12",
+  today: "2026-11-12",
+  events: crowded,
+  locale: "en",
+  formatMore: (count: number) => `+${count} more`,
+};
+
+export const monthFromServerContext = () => MonthView(serverMonthProps);
+
+export const crowdedMonthHtml = () => renderToStaticMarkup(<MonthView {...serverMonthProps} />);
