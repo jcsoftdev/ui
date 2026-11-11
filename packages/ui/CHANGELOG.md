@@ -7,7 +7,7 @@
 #### Added
 
 - **`@jcsoftdev/ui/intent`**: `IntentBridge` (`registerTarget(ref, element, expectation)`), `IntentBridgeProvider`, a no-op default bridge, `intentAttributes`, `useIntentTarget` and `useIntentTargets`. See the README section «Intent targets».
-- **Intent props per family**: optional `intent` and `intentKey` on atoms, forms, containers, overlays, navigation, shell, AI and palette components. `MessageActions` takes `actionIntents`. `DateTimePicker` and `CopyField` put `data-intent` on their inner input. `Step` accepts `ref`, and `renderLink` callbacks receive a `ref` and `data-intent` attributes to spread on the link.
+- **Intent props per family**: optional `intent` and `intentKey` on atoms, forms, containers, overlays, navigation, shell, AI and palette components. `MessageActions` takes `actionIntents`. A range `Slider` with `intent` registers its two thumbs under the keys `start` and `end`, or `<intentKey>:start` and `<intentKey>:end`. `DateTimePicker` and `CopyField` put `data-intent` on their inner input. `Step` accepts `ref`, and `renderLink` callbacks receive a `ref` and `data-intent` attributes to spread on the link.
 - **`DataGrid`**: `rowIntent`, `data-row-id` (needs `getRowId`), `data-col-id`, and the rest of the root `div` props. Select and tools columns have no `data-col-id`.
 - **`FloorPlan`**: item `intent` and `intentKey`, and `floorPlanItemName` for table names that include status and seats.
 - **`CommandPalette`**: `onSubmitQuery`, `inputEnd` and `keepOpenOnSelect`.
@@ -20,7 +20,7 @@
 #### Changed
 
 - **`IntentBridge` timing**: `registerTarget`'s unregister runs one microtask after the element detaches; a re-attach of the same element with the same role and `requireName` in the same commit reuses the registration. Stale entries of other identities may stay live until that microtask. Await `act` (or flush microtasks) before asserting that a target is gone. A ref forwarder that passes only non-null nodes leaks one registration on unmount, so forward `null` too. A development warning fires once for a duplicate live intent and key. Keep the bridge object stable (memoize it): when its identity changes, the old bridge unregisters one microtask after the new one registers.
-- **Ref typing**: every interactive component's props now extend `ComponentPropsWithRef` instead of `ComponentPropsWithoutRef`, so `ref` is a typed prop (React 19 `ref` as a prop) and reaches the element that carries the component's role and accessible name: the button, the input, the thumb, the panel. Components that did not take a ref before accept one now; `DataGrid`'s `ref` lands on its root `div`, which contains `table[role=grid]`.
+- **Ref typing**: the props of the components that gained intent props now extend `ComponentPropsWithRef` instead of `ComponentPropsWithoutRef`, so `ref` is a typed prop (React 19 `ref` as a prop) and reaches the element that carries the component's role and accessible name: the button, the input, the thumb, the panel. Components that did not take a ref before accept one now; `DataGrid`'s `ref` lands on its root `div`, which contains `table[role=grid]`.
 - **`DataGridProps`** is now `DataGridOwnProps & DataGridRootAttributes`: root `div` attributes that 0.9.0 silently dropped now reach the root. `data-col-id` is rendered on every header and gridcell whether or not intents are used, except the select and tools columns.
 - **`MonthView`** keeps its 0.9.0 props and stays a server component: it computes the weekday names, month title, full dates and `formatMore` labels, then hands only serializable data and the optional handlers to a client `MonthGrid`.
 - **Biome**: `biome.json` overrides turn off `useSemanticElements` and `useFocusableInteractive` for the calendar grid views.
@@ -32,14 +32,12 @@
 - **`FloorPlan`** tables are named with their status and seats.
 - **`Tooltip`** keeps an existing `aria-describedby`.
 - **Charts**: every chart component exported from `@jcsoftdev/ui/charts` now has a data-table alternative.
-- **`Switch`** and **`Checkbox`** with a `label` keep their name when `id` is explicitly `undefined`.
-- **Range `Slider`** with `intent` registers its two thumbs under distinct keys: `start` and `end`, or `<intentKey>:start` and `<intentKey>:end`.
 
 #### Upgrade notes from 0.9.0
 
 - **`OrderTicket` titles**: a ticket that receives both `table` and `number` now reads "Mesa 1 · N.º 4" (en: "T1 · No. 4"). 0.9.0 showed only the table. An app that already appends the number itself now shows it twice: remove that workaround, or pass `number` only for tickets without a table. The article always carries `aria-describedby`.
 - **`FloorPlan` names**: each item is named `"<label>, <status>, <n> seats"` (plus the late text) through `aria-label`; the sr-only seats span is gone. Queries and tests that used the old computed name or DOM must use the new name, built by `floorPlanItemName`.
-- **`MonthView` and `WeekView` DOM**: the grid has `role="row"` wrappers (CSS subgrid), the day number is `aria-hidden` and a screen-reader date replaces it, and the grid adds one tab stop before the event buttons (arrow keys, Home and End move between days). Enter on a focused day calls `onSelectDate`. Selectors tied to the old flat structure must be updated.
+- **`MonthView` and `WeekView` DOM**: the grid has `role="row"` wrappers (CSS subgrid) and adds one tab stop before the event buttons (arrow keys, Home and End move between days). In `MonthView` only, the day number is `aria-hidden` with a screen-reader date in its place, and Enter on a focused day calls `onSelectDate`. Selectors tied to the old flat structure must be updated.
 - **`DataGrid`**: see Changed for `data-col-id` and the root props spread.
 - **Popper anchors (`Slot` and `PopperPrimitive.Anchor`)**: the last mounted anchor wins, and it registers from a layout effect, so a hand-forwarded ref called with `null` no longer leaves a detached anchor. `Slot` clears object refs on detach.
 - **`PopoverContent`**: it renders `role="dialog"` as before and now registers that role as its expectation. The intent attributes are spread before the consumer's props and the `ref` is composed after them, so a consumer-passed `data-intent` overrides the component's and a consumer `ref` still receives the node.

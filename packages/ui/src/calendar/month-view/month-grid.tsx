@@ -39,25 +39,19 @@ export interface MonthGridLabels {
 }
 
 export interface MonthGridProps {
-  /** Any "YYYY-MM-DD" date inside the month to show. */
   month: string;
-  /** "YYYY-MM-DD" date highlighted as today; the view never computes it. */
   today: string;
   events: CalendarEvent[];
   markers?: CalendarMarker[];
-  /** Dates ("YYYY-MM-DD") rendered with a hatch pattern (non-working days). */
   shadedDates?: string[];
-  /** First day of the week, 0 (Sunday) to 6 (Saturday). Defaults to 1 (Monday). */
   weekStartsOn?: WeekStart;
   labels: MonthGridLabels;
   onOpenEvent?: (id: string) => void;
   onOpenMarker?: (id: string) => void;
-  /** Called with the day's date when the overflow button is clicked. */
   onSelectDate?: (date: string) => void;
   dayIntent?: string;
   "aria-label"?: string;
   className?: string;
-  /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<MonthViewPart>;
 }
 
