@@ -3,96 +3,17 @@
 import { type RefCallback, useCallback, useMemo } from "react";
 import { intentTargetRef, resolveExpectation } from "./attributes.js";
 import { noopIntentBridge, useIntentBridge } from "./bridge.js";
+import { attachTarget } from "./target-registrations.js";
 import type {
   IntentBridge,
   IntentExpectationInput,
   IntentProps,
   IntentTargetBinder,
-  IntentTargetRef,
 } from "./types.js";
 
 const CACHE_SEPARATOR = "\u0000";
 
 const ignoreElement: RefCallback<Element> = () => undefined;
-
-interface Registration {
-  readonly element: Element;
-  readonly role: string;
-  readonly requireName: boolean;
-  readonly unregister: () => void;
-  released: boolean;
-}
-
-const registrations = new WeakMap<IntentBridge, Map<string, Registration[]>>();
-
-const identityOf = (ref: IntentTargetRef): string =>
-  `${ref.intent}${CACHE_SEPARATOR}${ref.key ?? ""}`;
-
-function registrationsFor(bridge: IntentBridge): Map<string, Registration[]> {
-  const byIdentity = registrations.get(bridge) ?? new Map<string, Registration[]>();
-  registrations.set(bridge, byIdentity);
-  return byIdentity;
-}
-
-function reportBridgeError(error: unknown): void {
-  if (typeof globalThis.reportError === "function") globalThis.reportError(error);
-  else console.error(error);
-}
-
-function drop(byIdentity: Map<string, Registration[]>, identity: string, entry: Registration) {
-  const list = byIdentity.get(identity) ?? [];
-  const index = list.indexOf(entry);
-  if (index < 0) return;
-  list.splice(index, 1);
-  if (list.length === 0) byIdentity.delete(identity);
-  try {
-    entry.unregister();
-  } catch (error) {
-    reportBridgeError(error);
-  }
-}
-
-function dropDisconnected(byIdentity: Map<string, Registration[]>): void {
-  for (const [identity, list] of [...byIdentity]) {
-    for (const entry of [...list]) {
-      if (entry.released && !entry.element.isConnected) drop(byIdentity, identity, entry);
-    }
-  }
-}
-
-function attach(
-  bridge: IntentBridge,
-  ref: IntentTargetRef,
-  element: Element,
-  expectation: IntentExpectationInput | undefined,
-): () => void {
-  const resolved = resolveExpectation(expectation, element);
-  const byIdentity = registrationsFor(bridge);
-  const identity = identityOf(ref);
-  const sameElement = (byIdentity.get(identity) ?? []).filter(
-    (entry) => entry.released && entry.element === element,
-  );
-  const revivable = sameElement.find(
-    (entry) => entry.role === resolved.role && entry.requireName === resolved.requireName,
-  );
-  if (revivable) revivable.released = false;
-  for (const entry of sameElement) if (entry !== revivable) drop(byIdentity, identity, entry);
-  dropDisconnected(byIdentity);
-  const entry: Registration = revivable ?? {
-    element,
-    role: resolved.role,
-    requireName: resolved.requireName,
-    unregister: bridge.registerTarget(ref, element, resolved),
-    released: false,
-  };
-  if (!revivable) byIdentity.set(identity, [...(byIdentity.get(identity) ?? []), entry]);
-  return () => {
-    entry.released = true;
-    queueMicrotask(() => {
-      if (entry.released) drop(byIdentity, identity, entry);
-    });
-  };
-}
 
 function createTargetRef<E extends Element>(
   bridge: IntentBridge,
@@ -103,7 +24,7 @@ function createTargetRef<E extends Element>(
   if (ref === undefined || bridge === noopIntentBridge) return undefined;
   return (element) => {
     if (element === null) return undefined;
-    return attach(bridge, ref, element, expectation);
+    return attachTarget(bridge, ref, element, resolveExpectation(expectation, element));
   };
 }
 

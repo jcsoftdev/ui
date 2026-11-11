@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { Slot } from "../utils/slot.js";
 import { intentAttributes } from "./attributes.js";
 import { IntentBridgeProvider } from "./bridge.js";
+import { registrationsOf } from "./target-registrations.js";
 import type { IntentBridge, IntentSemanticExpectation, IntentTargetRef } from "./types.js";
 import { useIntentTarget, useIntentTargets } from "./use-intent-target.js";
 
@@ -228,11 +229,234 @@ describe("a Slot target with an inline child ref under a bridge that updates Rea
   }
 });
 
-function TwinHost(props: {
-  renders: { count: number };
-  live: { count: number };
-  throwOnUnregister?: boolean;
-}) {
+function uniqueBridge() {
+  const live = new Map<string, Element>();
+  const duplicates: string[] = [];
+  const events: string[] = [];
+  const unregisterCalls: number[] = [];
+  const peak = { live: 0 };
+  const bridge: IntentBridge = {
+    registerTarget(ref, element, expectation) {
+      const identity = `${ref.intent}|${ref.key ?? ""}`;
+      if (live.has(identity)) duplicates.push(identity);
+      live.set(identity, element);
+      peak.live = Math.max(peak.live, live.size);
+      events.push(`register ${identity} ${expectation.role}`);
+      const index = unregisterCalls.push(0) - 1;
+      return () => {
+        unregisterCalls[index] = (unregisterCalls[index] ?? 0) + 1;
+        if (live.get(identity) === element) live.delete(identity);
+        events.push(`unregister ${identity}`);
+      };
+    },
+  };
+  const count = (kind: "register" | "unregister") =>
+    events.filter((event) => event.startsWith(`${kind} `)).length;
+  return { bridge, live, duplicates, events, unregisterCalls, count, peak };
+}
+
+function SaveButton(props: { label: string; intent: string | undefined; inline: boolean }) {
+  const ref = useIntentTarget<HTMLElement>({ intent: props.intent });
+  if (!props.inline) {
+    return (
+      <button type="button" ref={ref}>
+        {props.label}
+      </button>
+    );
+  }
+  return (
+    <Slot ref={ref}>
+      <button type="button" ref={(element) => void element}>
+        {props.label}
+      </button>
+    </Slot>
+  );
+}
+
+function MovingSave(props: { owner: number; inline: boolean }) {
+  return (
+    <>
+      <SaveButton
+        label="first"
+        intent={props.owner === 0 ? "save" : undefined}
+        inline={props.inline}
+      />
+      <SaveButton
+        label="second"
+        intent={props.owner === 1 ? "save" : undefined}
+        inline={props.inline}
+      />
+    </>
+  );
+}
+
+const buttonLabelled = (label: string) =>
+  [...host.querySelectorAll("button")].find((button) => button.textContent === label);
+
+describe("an identity that moves between elements that stay mounted", () => {
+  const cases = [
+    { strict: false, inline: false },
+    { strict: true, inline: false },
+    { strict: false, inline: true },
+    { strict: true, inline: true },
+  ];
+  for (const { strict, inline } of cases) {
+    const name = `${strict ? "in strict mode" : "plainly"}${inline ? " with inline child refs" : ""}`;
+    test(`never has two live registrations, ${name}`, async () => {
+      const recorder = uniqueBridge();
+      const Wrapper = strict ? StrictMode : PassThrough;
+      const render = (owner: number) => (
+        <Wrapper>
+          <IntentBridgeProvider bridge={recorder.bridge}>
+            <MovingSave owner={owner} inline={inline} />
+          </IntentBridgeProvider>
+        </Wrapper>
+      );
+      for (const owner of [0, 1, 0, 1]) {
+        await mount(render(owner));
+        expect(recorder.duplicates).toEqual([]);
+        expect(recorder.live.size).toBe(1);
+        expect(recorder.live.get("save|")).toBe(buttonLabelled(owner === 0 ? "first" : "second"));
+      }
+    });
+  }
+});
+
+const windowSlots = (size: number) =>
+  Array.from({ length: size }, (_, position) => `slot-${position}`);
+
+function IndexKeyedWindow(props: { start: number; slots: readonly string[] }) {
+  const bind = useIntentTargets();
+  return (
+    <ul>
+      {props.slots.map((slot, position) => {
+        const id = String(props.start + position);
+        return (
+          <li key={slot} ref={bind({ intent: "row", intentKey: id })}>
+            {id}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+const rowIdentities = (start: number, size: number) =>
+  Array.from({ length: size }, (_, position) => `row|${start + position}`).sort();
+
+describe("a list keyed by index whose window shifts", () => {
+  for (const strict of [false, true]) {
+    test(`never has two live registrations${strict ? " in strict mode" : ""}`, async () => {
+      const recorder = uniqueBridge();
+      const slots = windowSlots(5);
+      const Wrapper = strict ? StrictMode : PassThrough;
+      for (const start of [0, 1, 2, 1]) {
+        await mount(
+          <Wrapper>
+            <IntentBridgeProvider bridge={recorder.bridge}>
+              <IndexKeyedWindow start={start} slots={slots} />
+            </IntentBridgeProvider>
+          </Wrapper>,
+        );
+        expect(recorder.duplicates).toEqual([]);
+        expect([...recorder.live.keys()].sort()).toEqual(rowIdentities(start, 5));
+      }
+    });
+  }
+});
+
+function IdKeyedWindow(props: { start: number; size: number }) {
+  const bind = useIntentTargets();
+  const ids = Array.from({ length: props.size }, (_, position) => String(props.start + position));
+  return (
+    <ul>
+      {ids.map((id) => (
+        <li key={id} ref={bind({ intent: "row", intentKey: id })}>
+          {id}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+test("a scrolling window releases the rows that leave before the rows that enter register", async () => {
+  const recorder = uniqueBridge();
+  const size = 15;
+  for (const start of [0, 5, 10, 3]) {
+    await mount(
+      <IntentBridgeProvider bridge={recorder.bridge}>
+        <IdKeyedWindow start={start} size={size} />
+      </IntentBridgeProvider>,
+    );
+    expect([...recorder.live.keys()].sort()).toEqual(rowIdentities(start, size));
+  }
+  expect(recorder.peak.live).toBe(size);
+  expect(recorder.duplicates).toEqual([]);
+});
+
+function RoleTarget(props: { role: string }) {
+  const ref = useIntentTarget<HTMLButtonElement>({ intent: "toggle" }, { role: props.role });
+  return (
+    <button type="button" ref={ref}>
+      toggle
+    </button>
+  );
+}
+
+test("a role change on the same element unregisters before it registers again", async () => {
+  const recorder = uniqueBridge();
+  const render = (role: string) => (
+    <IntentBridgeProvider bridge={recorder.bridge}>
+      <RoleTarget role={role} />
+    </IntentBridgeProvider>
+  );
+  await mount(render("button"));
+  await mount(render("switch"));
+  expect(recorder.events).toEqual([
+    "register toggle| button",
+    "unregister toggle|",
+    "register toggle| switch",
+  ]);
+});
+
+function InlineRefList(props: { ids: readonly string[] }) {
+  const bind = useIntentTargets();
+  return (
+    <ul>
+      {props.ids.map((id) => (
+        <Slot
+          key={id}
+          ref={bind<HTMLElement>({ intent: "row", intentKey: id }, { role: "listitem" })}
+        >
+          <li ref={(element) => void element}>{id}</li>
+        </Slot>
+      ))}
+    </ul>
+  );
+}
+
+test("the list binder with inline child refs in strict mode keeps its registrations across re-renders, shrink and regrow", async () => {
+  const recorder = uniqueBridge();
+  const render = (ids: readonly string[]) => (
+    <StrictMode>
+      <IntentBridgeProvider bridge={recorder.bridge}>
+        <InlineRefList ids={ids} />
+      </IntentBridgeProvider>
+    </StrictMode>
+  );
+  await mount(render(["1", "2", "3", "4", "5"]));
+  expect(recorder.count("register")).toBe(5);
+  await mount(render(["1", "2", "3", "4", "5"]));
+  await mount(render(["1", "2", "3", "4", "5"]));
+  expect(recorder.count("register")).toBe(5);
+  await mount(render(["1", "2"]));
+  await mount(render(["2", "1", "6"]));
+  expect([...recorder.live.keys()].sort()).toEqual(["row|1", "row|2", "row|6"]);
+  expect(recorder.count("unregister")).toBe(3);
+  expect(recorder.duplicates).toEqual([]);
+});
+
+function SettlingHost(props: { renders: { count: number }; live: { count: number } }) {
   const [, setTick] = useState(0);
   props.renders.count += 1;
   const bridge = useMemo<IntentBridge>(
@@ -242,61 +466,133 @@ function TwinHost(props: {
         setTick((tick) => tick + 1);
         return () => {
           props.live.count -= 1;
-          if (props.throwOnUnregister) throw new Error("unregister failed");
         };
       },
     }),
-    [props.live, props.throwOnUnregister],
+    [props.live],
   );
   return (
     <IntentBridgeProvider bridge={bridge}>
       <SlotTarget intent="save">
         <button type="button" ref={(element) => void element}>
-          header
+          save
         </button>
       </SlotTarget>
-      <SlotTarget intent="save">
+      <SlotTarget intent="cancel">
         <button type="button" ref={(element) => void element}>
-          footer
+          cancel
         </button>
       </SlotTarget>
     </IntentBridgeProvider>
   );
 }
 
-describe("two targets sharing one identity with inline child refs", () => {
+test("distinct targets with inline child refs settle in a container outside the document", async () => {
+  const detached = createRoot(document.createElement("div"));
+  const renders = { count: 0 };
+  const live = { count: 0 };
+  try {
+    await act(async () => detached.render(<SettlingHost renders={renders} live={live} />));
+    expect(renders.count).toBeLessThan(10);
+    expect(live.count).toBe(2);
+  } finally {
+    await act(async () => detached.unmount());
+  }
+  expect(live.count).toBe(0);
+});
+
+describe("unmounting for good", () => {
   for (const strict of [false, true]) {
-    test(`settle with two live registrations${strict ? " in strict mode" : ""}`, async () => {
-      const renders = { count: 0 };
-      const live = { count: 0 };
+    test(`unregisters each registration exactly once over 200 cycles and keeps nothing${strict ? " in strict mode" : ""}`, async () => {
+      const recorder = uniqueBridge();
       const Wrapper = strict ? StrictMode : PassThrough;
-      await mount(
-        <Wrapper>
-          <TwinHost renders={renders} live={live} />
-        </Wrapper>,
-      );
-      expect(renders.count).toBeLessThan(10);
-      expect(live.count).toBe(2);
+      for (let cycle = 0; cycle < 200; cycle += 1) {
+        await mount(
+          <Wrapper>
+            <IntentBridgeProvider bridge={recorder.bridge}>
+              <IntentButton intent="save" intentKey={String(cycle)} />
+            </IntentBridgeProvider>
+          </Wrapper>,
+        );
+        await mount(null);
+      }
+      expect(recorder.unregisterCalls).toHaveLength(200);
+      expect(recorder.unregisterCalls.every((calls) => calls === 1)).toBe(true);
+      expect(recorder.live.size).toBe(0);
+      const state = registrationsOf(recorder.bridge);
+      expect(state.byIdentity.size).toBe(0);
+      expect(state.awaitingSweep.size).toBe(0);
     });
   }
 
-  test("a throwing unregister does not block later registrations", async () => {
+  test("a throwing unregister is reported and does not block later registrations", async () => {
     const reported: unknown[] = [];
     const original = globalThis.reportError;
     globalThis.reportError = (error: unknown) => void reported.push(error);
+    let registered = 0;
+    const bridge: IntentBridge = {
+      registerTarget() {
+        registered += 1;
+        return () => {
+          throw new Error("unregister failed");
+        };
+      },
+    };
+    const render = (shown: boolean) => (
+      <IntentBridgeProvider bridge={bridge}>
+        {shown ? <IntentButton intent="save" /> : null}
+      </IntentBridgeProvider>
+    );
     try {
-      const live = { count: 0 };
-      await mount(<TwinHost renders={{ count: 0 }} live={live} throwOnUnregister />);
-      await act(async () => root.render(null));
-      expect(reported.length).toBeGreaterThan(0);
-      const again = { count: 0 };
-      await mount(<TwinHost renders={{ count: 0 }} live={again} throwOnUnregister />);
-      expect(again.count).toBe(2);
-      await act(async () => root.render(null));
+      await mount(render(true));
+      await mount(render(false));
+      expect(reported).toHaveLength(1);
+      await mount(render(true));
+      expect(registered).toBe(2);
+      expect(reported).toHaveLength(1);
+      await mount(render(false));
+      expect(reported).toHaveLength(2);
+      expect(registrationsOf(bridge).byIdentity.size).toBe(0);
     } finally {
       globalThis.reportError = original;
     }
   });
+});
+
+async function countIsConnectedReads(run: () => Promise<void>): Promise<number> {
+  const descriptor = Object.getOwnPropertyDescriptor(Node.prototype, "isConnected");
+  const read = descriptor?.get;
+  if (!descriptor || !read) throw new Error("Node.prototype.isConnected has no getter");
+  let reads = 0;
+  Object.defineProperty(Node.prototype, "isConnected", {
+    ...descriptor,
+    get(this: Node) {
+      reads += 1;
+      return read.call(this);
+    },
+  });
+  try {
+    await run();
+  } finally {
+    Object.defineProperty(Node.prototype, "isConnected", descriptor);
+  }
+  return reads;
+}
+
+test("shifting 3,000 index-keyed targets in one commit sweeps each released entry once", async () => {
+  const size = 3000;
+  const recorder = uniqueBridge();
+  const slots = windowSlots(size);
+  const render = (start: number) => (
+    <IntentBridgeProvider bridge={recorder.bridge}>
+      <IndexKeyedWindow start={start} slots={slots} />
+    </IntentBridgeProvider>
+  );
+  await mount(render(0));
+  const reads = await countIsConnectedReads(() => mount(render(1)));
+  expect(reads).toBeLessThan(size * 3);
+  expect(recorder.duplicates).toEqual([]);
+  expect(recorder.live.size).toBe(size);
 });
 
 describe("Slot object refs", () => {
