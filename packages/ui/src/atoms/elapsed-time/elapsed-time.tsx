@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useSyncExternalStore } from "react";
+import { type ComponentPropsWithRef, useSyncExternalStore } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -10,7 +10,7 @@ import { getTickerSnapshot, subscribeTicker } from "./ticker.js";
 
 export type ElapsedTimePart = "root" | "text";
 
-export interface ElapsedTimeProps extends Omit<ComponentPropsWithoutRef<"time">, "children"> {
+export interface ElapsedTimeProps extends Omit<ComponentPropsWithRef<"time">, "children"> {
   /** Moment the timer counts from. */
   since: Date | string;
   /** Server clock minus the client clock in ms, so a skewed device still shows the server's elapsed time. */

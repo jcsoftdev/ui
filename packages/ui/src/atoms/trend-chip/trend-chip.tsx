@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -32,7 +32,7 @@ const directionIcons = { up: ArrowUpRight, down: ArrowDownRight, flat: ArrowRigh
 
 export type TrendChipPart = "root" | "arrow" | "value" | "label";
 
-export interface TrendChipProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface TrendChipProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   /** Change in percent, e.g. 12.5 for +12.5%. */
   value: number;
   /** Lower is better (cancelaciones, mermas): a drop reads as favorable. */

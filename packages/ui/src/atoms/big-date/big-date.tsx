@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type BigDateSize = "normal" | "compact";
@@ -8,7 +8,7 @@ const sizeClasses: Record<BigDateSize, string> = {
   compact: "text-fs-200",
 };
 
-export interface BigDateProps extends ComponentPropsWithoutRef<"div"> {
+export interface BigDateProps extends ComponentPropsWithRef<"div"> {
   size?: BigDateSize;
 }
 

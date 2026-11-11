@@ -2,6 +2,9 @@
 
 import { type ComponentProps, type ReactNode, useId, useRef } from "react";
 import { Check, Minus } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
@@ -15,9 +18,10 @@ export type CheckboxPart = "root" | "box" | "indicator" | "icon" | "wrapper" | "
 
 export interface CheckboxProps
   extends Omit<
-    ComponentProps<"button">,
-    "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
-  > {
+      ComponentProps<"button">,
+      "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
+    >,
+    IntentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CheckboxPart>;
   checked?: CheckedState;
@@ -54,6 +58,8 @@ export function Checkbox({
   id,
   onClick,
   onKeyDown,
+  intent,
+  intentKey,
   ref,
   ...props
 }: CheckboxProps) {
@@ -65,7 +71,11 @@ export function Checkbox({
   const bubble = useFormBubble(form);
   const initialRef = useRef(checked);
   useFormReset(bubble.control, form, () => setChecked(initialRef.current));
-  const composedRef = useComposedRefs(ref, bubble.setControl);
+  const composedRef = useComposedRefs(
+    ref,
+    bubble.setControl,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "checkbox" }),
+  );
   const state = getState(checked);
   const disabledAttr = disabled ? "" : undefined;
   const generatedId = useId();
@@ -84,6 +94,7 @@ export function Checkbox({
         disabled={disabled}
         value={value}
         id={controlId}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
         ref={composedRef}
         className={cn(

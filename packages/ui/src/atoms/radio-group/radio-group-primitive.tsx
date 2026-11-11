@@ -8,6 +8,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import {
@@ -107,7 +110,8 @@ export function RadioGroupRoot({
 const ItemContext = createContext<{ checked: boolean; disabled: boolean } | null>(null);
 
 export interface RadioGroupItemProps
-  extends Omit<ComponentProps<"button">, "value" | "defaultValue" | "checked" | "defaultChecked"> {
+  extends Omit<ComponentProps<"button">, "value" | "defaultValue" | "checked" | "defaultChecked">,
+    IntentProps {
   value: string;
 }
 
@@ -120,12 +124,18 @@ export function RadioGroupItem({
   onClick,
   onKeyDown,
   onFocus,
+  intent,
+  intentKey,
   ref,
   ...props
 }: RadioGroupItemProps) {
   const group = useRadioGroupContext();
   const bubble = useFormBubble(group.form);
-  const composedRef = useComposedRefs(ref, bubble.setControl);
+  const composedRef = useComposedRefs(
+    ref,
+    bubble.setControl,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "radio" }),
+  );
   const isDisabled = group.disabled || !!disabled;
   const checked = group.value === value;
   const roving = group.getItemProps(value, {
@@ -151,6 +161,7 @@ export function RadioGroupItem({
         data-disabled={isDisabled ? "" : undefined}
         disabled={isDisabled}
         value={value}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
         {...roving}
         ref={composedRef}

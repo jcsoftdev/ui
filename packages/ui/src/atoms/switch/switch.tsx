@@ -1,6 +1,9 @@
 "use client";
 
 import { type ComponentProps, useRef } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
@@ -12,9 +15,10 @@ export type SwitchPart = "root" | "track" | "thumb";
 
 export interface SwitchProps
   extends Omit<
-    ComponentProps<"button">,
-    "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
-  > {
+      ComponentProps<"button">,
+      "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
+    >,
+    IntentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SwitchPart>;
   checked?: boolean;
@@ -39,6 +43,8 @@ export function Switch({
   value = "on",
   form,
   onClick,
+  intent,
+  intentKey,
   ref,
   ...props
 }: SwitchProps) {
@@ -50,7 +56,11 @@ export function Switch({
   const bubble = useFormBubble(form);
   const initialRef = useRef(checked);
   useFormReset(bubble.control, form, () => setChecked(initialRef.current));
-  const composedRef = useComposedRefs(ref, bubble.setControl);
+  const composedRef = useComposedRefs(
+    ref,
+    bubble.setControl,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "switch" }),
+  );
   const state = checked ? "checked" : "unchecked";
   const disabledAttr = disabled ? "" : undefined;
 
@@ -66,6 +76,7 @@ export function Switch({
         data-disabled={disabledAttr}
         disabled={disabled}
         value={value}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
         ref={composedRef}
         className={cn(

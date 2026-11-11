@@ -1,6 +1,7 @@
 "use client";
 
 import type { ComponentPropsWithRef } from "react";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 import { Button, type ButtonSize, type ButtonVariant } from "../button/button.js";
 import { Spinner } from "../spinner/spinner.js";
@@ -15,7 +16,8 @@ export const iconButtonSizeClasses: Readonly<Record<IconButtonSize, string>> = {
 };
 
 export interface IconButtonProps
-  extends Omit<ComponentPropsWithRef<"button">, "aria-label" | "aria-labelledby" | "children"> {
+  extends Omit<ComponentPropsWithRef<"button">, "aria-label" | "aria-labelledby" | "children">,
+    IntentProps {
   /** Accessible name, announced in place of the icon. Required: an icon alone names nothing. */
   label: string;
   variant?: ButtonVariant;

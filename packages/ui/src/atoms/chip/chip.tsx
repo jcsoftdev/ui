@@ -3,7 +3,11 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { customToneStyle, isCustomTone } from "../../utils/tone.js";
 import { type StatusTone, statusIcon } from "../internal/status-icons.js";
 
@@ -40,7 +44,7 @@ export const chipSizeClasses: Readonly<Record<ChipSize, string>> = {
   sm: "h-auto min-h-5 px-1.5 py-px font-medium text-fs-120 tabular-nums",
 };
 
-export interface ChipProps extends ComponentPropsWithRef<"span"> {
+export interface ChipProps extends ComponentPropsWithRef<"span">, IntentProps {
   tone?: ChipTone;
   /**
    * `sm` is the compact tag: it grows with its content, tightens the padding and uses tabular
@@ -78,9 +82,13 @@ export function Chip({
   className,
   style,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: ChipProps) {
   const strings = useUiStrings();
+  const composedRef = useComposedRefs<HTMLSpanElement>(ref, useIntentTarget({ intent, intentKey }));
   const custom = isCustomTone(tone, builtinTones);
   const leading =
     icon ??
@@ -100,7 +108,9 @@ export function Chip({
         className,
       )}
       style={customToneStyle(tone, builtinTones, style)}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     >
       {leading}
       {children}

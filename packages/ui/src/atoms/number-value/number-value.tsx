@@ -1,11 +1,11 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useEffect, useRef, useState } from "react";
+import { type ComponentPropsWithRef, useEffect, useRef, useState } from "react";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import { formatNumber, type NumberFormatConfig, tweenValue } from "./format.js";
 
-export interface NumberValueProps extends Omit<ComponentPropsWithoutRef<"span">, "children"> {
+export interface NumberValueProps extends Omit<ComponentPropsWithRef<"span">, "children"> {
   value: number;
   /** Intl options plus `locale`, e.g. `{ style: "currency", currency: "PEN" }`. */
   format?: NumberFormatConfig;
