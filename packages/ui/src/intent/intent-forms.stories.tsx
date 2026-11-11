@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { createRef, useMemo, useRef } from "react";
+import { createRef, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { expect, within } from "storybook/test";
@@ -49,24 +49,18 @@ const swatches = itemsFor("forms-accent-item", "Accent").map((option) => ({
 }));
 
 function FormsIntentRows() {
-  const outputRef = useRef<HTMLOutputElement>(null);
-  const bridge = useMemo<IntentBridge>(() => {
-    let registrations: Registration[] = [];
-    const publish = () => {
-      if (outputRef.current) outputRef.current.textContent = JSON.stringify(registrations);
-    };
-    return {
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const bridge = useMemo<IntentBridge>(
+    () => ({
       registerTarget(ref, _element, expectation) {
         const entry = { intent: ref.intent, key: ref.key, role: expectation.role };
-        registrations = [...registrations, entry];
-        publish();
-        return () => {
-          registrations = registrations.filter((candidate) => candidate !== entry);
-          publish();
-        };
+        setRegistrations((current) => [...current, entry]);
+        return () =>
+          setRegistrations((current) => current.filter((candidate) => candidate !== entry));
       },
-    };
-  }, []);
+    }),
+    [],
+  );
   return (
     <IntentBridgeProvider bridge={bridge}>
       <div className="flex max-w-md flex-col gap-3">
@@ -115,7 +109,7 @@ function FormsIntentRows() {
         <EmojiReactionButton emoji="👍" count={1} intent="forms-reaction" />
         <Form aria-label="Form" intent="forms-form" />
       </div>
-      <output ref={outputRef} data-testid="registrations" />
+      <output data-testid="registrations">{JSON.stringify(registrations)}</output>
     </IntentBridgeProvider>
   );
 }
@@ -139,7 +133,7 @@ const expectedRegistrations: Registration[] = [
   { intent: "forms-combobox", key: undefined, role: "combobox" },
   { intent: "forms-select-menu", key: undefined, role: "combobox" },
   { intent: "forms-date", key: undefined, role: "textbox" },
-  { intent: "forms-date-time", key: undefined, role: "generic" },
+  { intent: "forms-date-time", key: undefined, role: "textbox" },
   { intent: "forms-time", key: undefined, role: "textbox" },
   { intent: "forms-number", key: undefined, role: "spinbutton" },
   { intent: "forms-slider", key: undefined, role: "slider" },
@@ -156,7 +150,7 @@ const expectedRegistrations: Registration[] = [
   { intent: "forms-accent", key: undefined, role: "radiogroup" },
   { intent: "forms-accent-item", key: "b", role: "radio" },
   { intent: "forms-dropzone", key: undefined, role: "button" },
-  { intent: "forms-copy", key: undefined, role: "generic" },
+  { intent: "forms-copy", key: undefined, role: "textbox" },
   { intent: "forms-emoji-picker", key: undefined, role: "group" },
   { intent: "forms-reaction", key: undefined, role: "button" },
 ];

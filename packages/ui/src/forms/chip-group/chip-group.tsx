@@ -127,7 +127,7 @@ export function ChipGroup(props: ChipGroupProps) {
   const composedRef = useComposedRefs<HTMLFieldSetElement>(
     rovingRef,
     localRef,
-    useIntentTarget({ intent, intentKey }, { role: "group" }),
+    useIntentTarget({ intent, intentKey }),
   );
   const bindOption = useIntentTargets();
 

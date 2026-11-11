@@ -118,7 +118,7 @@ export const intentCases: IntentCase[] = [
   {
     name: "DateTimePicker",
     element: <DateTimePicker {...named} {...intent} />,
-    expected: [probe("div")],
+    expected: [probe("input")],
   },
   { name: "TimeInput", element: <TimeInput {...named} {...intent} />, expected: [probe("input")] },
   {
@@ -189,7 +189,7 @@ export const intentCases: IntentCase[] = [
   {
     name: "CopyField",
     element: <CopyField {...intent} label="Link" value="x" />,
-    expected: [probe("div")],
+    expected: [probe("input")],
   },
   { name: "EmojiPicker", element: <EmojiPicker {...intent} />, expected: [probe("div", "group")] },
   {

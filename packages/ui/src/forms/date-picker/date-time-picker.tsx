@@ -3,12 +3,9 @@
 import { type ComponentProps, useEffect, useId, useMemo, useState } from "react";
 import { isIsoDate, type WeekStart } from "../../calendar/internal/date-utils.js";
 import { useUiStrings } from "../../i18n/index.js";
-import { intentAttributes } from "../../intent/attributes.js";
 import type { IntentProps } from "../../intent/types.js";
-import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { useComposedRefs } from "../../utils/compose.js";
 import type { Material } from "../../utils/material.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { TimeInput } from "../time-input/time-input.js";
@@ -103,11 +100,9 @@ export function DateTimePicker({
   "aria-invalid": ariaInvalid,
   intent,
   intentKey,
-  ref,
   ...props
 }: DateTimePickerProps) {
   const strings = useUiStrings();
-  const rootRef = useComposedRefs<HTMLDivElement>(ref, useIntentTarget({ intent, intentKey }));
   const autoId = useId();
   const dateId = id ?? autoId;
   const [current, setCurrent] = useControllableState<string>({
@@ -165,13 +160,13 @@ export function DateTimePicker({
 
   return (
     <div
-      {...intentAttributes({ intent, intentKey })}
       {...props}
-      ref={rootRef}
       className={cn("flex w-full min-w-0 flex-wrap gap-2", classNames?.root, className)}
     >
       <DatePicker
         {...shared}
+        intent={intent}
+        intentKey={intentKey}
         id={dateId}
         value={parts.date}
         onValueChange={(date) => update({ ...parts, date })}

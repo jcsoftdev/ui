@@ -46,7 +46,7 @@ export function CheckboxButtonGroup({
   intentKey,
   ...aria
 }: CheckboxButtonGroupProps) {
-  const rootRef = useIntentTarget<HTMLFieldSetElement>({ intent, intentKey }, { role: "group" });
+  const rootRef = useIntentTarget<HTMLFieldSetElement>({ intent, intentKey });
   const bindOption = useIntentTargets();
   const [inner, setInner] = useState(defaultValue);
   const value = valueProp ?? inner;
