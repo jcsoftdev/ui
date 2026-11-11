@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentProps, useRef } from "react";
+import { type ComponentProps, type ReactNode, useId, useRef } from "react";
 import { intentAttributes } from "../../intent/attributes.js";
 import type { IntentProps } from "../../intent/types.js";
 import { useIntentTarget } from "../../intent/use-intent-target.js";
@@ -10,8 +10,9 @@ import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { touchHitArea } from "../internal/hit-area.js";
+import { describedBy, LabelledControl } from "../internal/labelled-control.js";
 
-export type SwitchPart = "root" | "track" | "thumb";
+export type SwitchPart = "root" | "track" | "thumb" | "wrapper" | "label" | "description";
 
 export interface SwitchProps
   extends Omit<
@@ -29,6 +30,8 @@ export interface SwitchProps
   value?: string;
   /** Id of the `<form>` the switch belongs to when it is rendered outside it. */
   form?: string;
+  label?: ReactNode;
+  description?: ReactNode;
 }
 
 export function Switch({
@@ -42,6 +45,9 @@ export function Switch({
   name,
   value = "on",
   form,
+  label,
+  description,
+  id,
   onClick,
   intent,
   intentKey,
@@ -63,8 +69,11 @@ export function Switch({
   );
   const state = checked ? "checked" : "unchecked";
   const disabledAttr = disabled ? "" : undefined;
+  const generatedId = useId();
+  const controlId = label === undefined ? id : (id ?? generatedId);
+  const descriptionId = `${generatedId}-description`;
 
-  return (
+  const control = (
     <>
       {/* biome-ignore lint/a11y/useSemanticElements: custom control; the hidden input carries the native form value */}
       <button
@@ -76,8 +85,10 @@ export function Switch({
         data-disabled={disabledAttr}
         disabled={disabled}
         value={value}
+        id={controlId}
         {...intentAttributes({ intent, intentKey })}
         {...props}
+        aria-describedby={describedBy(props["aria-describedby"], descriptionId, description)}
         ref={composedRef}
         className={cn(
           touchHitArea,
@@ -119,5 +130,18 @@ export function Switch({
         />
       ) : null}
     </>
+  );
+
+  if (label === undefined && description === undefined) return control;
+  return (
+    <LabelledControl
+      control={control}
+      controlId={controlId}
+      label={label}
+      description={description}
+      descriptionId={descriptionId}
+      disabled={disabled}
+      classNames={classNames}
+    />
   );
 }
