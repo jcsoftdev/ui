@@ -19,7 +19,7 @@ export const html = {
   buttonOverride: renderToStaticMarkup(
     <Button {...probe} data-intent="mine">
       Save
-    </Button>
+    </Button>,
   ),
   buttonPlain: renderToStaticMarkup(<Button>Save</Button>),
   buttonEmptyIntent: renderToStaticMarkup(
