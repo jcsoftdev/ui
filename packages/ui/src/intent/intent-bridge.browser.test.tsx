@@ -228,6 +228,77 @@ describe("a Slot target with an inline child ref under a bridge that updates Rea
   }
 });
 
+function TwinHost(props: {
+  renders: { count: number };
+  live: { count: number };
+  throwOnUnregister?: boolean;
+}) {
+  const [, setTick] = useState(0);
+  props.renders.count += 1;
+  const bridge = useMemo<IntentBridge>(
+    () => ({
+      registerTarget() {
+        props.live.count += 1;
+        setTick((tick) => tick + 1);
+        return () => {
+          props.live.count -= 1;
+          if (props.throwOnUnregister) throw new Error("unregister failed");
+        };
+      },
+    }),
+    [props.live, props.throwOnUnregister],
+  );
+  return (
+    <IntentBridgeProvider bridge={bridge}>
+      <SlotTarget intent="save">
+        <button type="button" ref={(element) => void element}>
+          header
+        </button>
+      </SlotTarget>
+      <SlotTarget intent="save">
+        <button type="button" ref={(element) => void element}>
+          footer
+        </button>
+      </SlotTarget>
+    </IntentBridgeProvider>
+  );
+}
+
+describe("two targets sharing one identity with inline child refs", () => {
+  for (const strict of [false, true]) {
+    test(`settle with two live registrations${strict ? " in strict mode" : ""}`, async () => {
+      const renders = { count: 0 };
+      const live = { count: 0 };
+      const Wrapper = strict ? StrictMode : PassThrough;
+      await mount(
+        <Wrapper>
+          <TwinHost renders={renders} live={live} />
+        </Wrapper>,
+      );
+      expect(renders.count).toBeLessThan(10);
+      expect(live.count).toBe(2);
+    });
+  }
+
+  test("a throwing unregister does not block later registrations", async () => {
+    const reported: unknown[] = [];
+    const original = globalThis.reportError;
+    globalThis.reportError = (error: unknown) => void reported.push(error);
+    try {
+      const live = { count: 0 };
+      await mount(<TwinHost renders={{ count: 0 }} live={live} throwOnUnregister />);
+      await act(async () => root.render(null));
+      expect(reported.length).toBeGreaterThan(0);
+      const again = { count: 0 };
+      await mount(<TwinHost renders={{ count: 0 }} live={again} throwOnUnregister />);
+      expect(again.count).toBe(2);
+      await act(async () => root.render(null));
+    } finally {
+      globalThis.reportError = original;
+    }
+  });
+});
+
 describe("Slot object refs", () => {
   test("are cleared on unmount and when the child is swapped", async () => {
     const slotRef = createRef<HTMLElement>();

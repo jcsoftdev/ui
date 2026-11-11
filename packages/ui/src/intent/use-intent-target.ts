@@ -25,17 +25,39 @@ interface Registration {
 
 const registrations = new WeakMap<IntentBridge, Map<string, Registration[]>>();
 
-function registrationsFor(bridge: IntentBridge, identity: string): Registration[] {
+const identityOf = (ref: IntentTargetRef): string =>
+  `${ref.intent}${CACHE_SEPARATOR}${ref.key ?? ""}`;
+
+function registrationsFor(bridge: IntentBridge): Map<string, Registration[]> {
   const byIdentity = registrations.get(bridge) ?? new Map<string, Registration[]>();
   registrations.set(bridge, byIdentity);
-  const list = byIdentity.get(identity) ?? [];
-  byIdentity.set(identity, list);
-  return list;
+  return byIdentity;
 }
 
-function drop(list: Registration[], entry: Registration): void {
-  entry.unregister();
-  list.splice(list.indexOf(entry), 1);
+function reportBridgeError(error: unknown): void {
+  if (typeof globalThis.reportError === "function") globalThis.reportError(error);
+  else console.error(error);
+}
+
+function drop(byIdentity: Map<string, Registration[]>, identity: string, entry: Registration) {
+  const list = byIdentity.get(identity) ?? [];
+  const index = list.indexOf(entry);
+  if (index < 0) return;
+  list.splice(index, 1);
+  if (list.length === 0) byIdentity.delete(identity);
+  try {
+    entry.unregister();
+  } catch (error) {
+    reportBridgeError(error);
+  }
+}
+
+function dropDisconnected(byIdentity: Map<string, Registration[]>): void {
+  for (const [identity, list] of [...byIdentity]) {
+    for (const entry of [...list]) {
+      if (entry.released && !entry.element.isConnected) drop(byIdentity, identity, entry);
+    }
+  }
 }
 
 function attach(
@@ -45,16 +67,17 @@ function attach(
   expectation: IntentExpectationInput | undefined,
 ): () => void {
   const resolved = resolveExpectation(expectation, element);
-  const list = registrationsFor(bridge, `${ref.intent}${CACHE_SEPARATOR}${ref.key ?? ""}`);
-  const revivable = list.find(
-    (entry) =>
-      entry.released &&
-      entry.element === element &&
-      entry.role === resolved.role &&
-      entry.requireName === resolved.requireName,
+  const byIdentity = registrationsFor(bridge);
+  const identity = identityOf(ref);
+  const sameElement = (byIdentity.get(identity) ?? []).filter(
+    (entry) => entry.released && entry.element === element,
+  );
+  const revivable = sameElement.find(
+    (entry) => entry.role === resolved.role && entry.requireName === resolved.requireName,
   );
   if (revivable) revivable.released = false;
-  for (const entry of [...list]) if (entry.released && entry !== revivable) drop(list, entry);
+  for (const entry of sameElement) if (entry !== revivable) drop(byIdentity, identity, entry);
+  dropDisconnected(byIdentity);
   const entry: Registration = revivable ?? {
     element,
     role: resolved.role,
@@ -62,11 +85,11 @@ function attach(
     unregister: bridge.registerTarget(ref, element, resolved),
     released: false,
   };
-  if (!revivable) list.push(entry);
+  if (!revivable) byIdentity.set(identity, [...(byIdentity.get(identity) ?? []), entry]);
   return () => {
     entry.released = true;
     queueMicrotask(() => {
-      if (entry.released && list.includes(entry)) drop(list, entry);
+      if (entry.released) drop(byIdentity, identity, entry);
     });
   };
 }
