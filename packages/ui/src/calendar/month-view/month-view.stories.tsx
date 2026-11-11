@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import type { CalendarEvent, CalendarMarker } from "../internal/types.js";
 import { MonthView } from "./month-view.js";
 
@@ -123,4 +124,18 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const Keyboard: Story = {
+  args: { events: [], markers: [], onSelectDate: fn() },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.tab();
+    const todayCell = canvasElement.querySelector('[role="gridcell"][data-date="2026-10-08"]');
+    await expect(todayCell).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}{ArrowDown}");
+    const target = canvasElement.querySelector('[role="gridcell"][data-date="2026-10-16"]');
+    await waitFor(() => expect(target).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onSelectDate).toHaveBeenCalledWith("2026-10-16");
+  },
 };

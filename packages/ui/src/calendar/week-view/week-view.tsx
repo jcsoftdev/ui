@@ -1,18 +1,22 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { type FocusEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { intentAttributes, useIntentTargets } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { DayChip } from "../day-chip/index.js";
 import { EventBlock } from "../event-block/index.js";
 import {
   addDays,
+  formatFullDate,
   formatHour,
   formatWeekdayAndDay,
   minutesSinceMidnight,
   startOfWeek,
   type WeekStart,
 } from "../internal/date-utils.js";
+import { type GridCell, isGridKey, nextGridCell } from "../internal/grid-navigation.js";
+import { calendarItemIntent } from "../internal/intent.js";
 import { layoutDayEvents } from "../internal/layout.js";
 import { SHADED_DAY_CLASS } from "../internal/styles.js";
 import type { CalendarEvent, CalendarMarker } from "../internal/types.js";
@@ -26,6 +30,12 @@ const COLUMNS = cn(
   "@max-[40rem]/week:grid-cols-[52px_repeat(7,minmax(112px,1fr))]",
 );
 const GUTTER = "sticky left-0 z-10 bg-surface";
+const DAYS_PER_WEEK = 7;
+const GRID_SIZE = { rows: 2, cols: DAYS_PER_WEEK };
+const ALL_DAY_ROW = 0;
+const TIMED_ROW = 1;
+const DAY_EXPECTATION = { role: "gridcell" } as const;
+const ITEM_EXPECTATION = { role: "button" } as const;
 
 export type WeekViewPart =
   | "root"
@@ -60,6 +70,8 @@ export interface WeekViewProps {
   weekStartsOn?: WeekStart;
   /** Label of the all-day row. */
   allDayLabel: string;
+  dayIntent?: string;
+  "aria-label"?: string;
   onOpenEvent?: (id: string) => void;
   onOpenMarker?: (id: string) => void;
   className?: string;
@@ -78,15 +90,45 @@ export function WeekView({
   locale,
   weekStartsOn = 1,
   allDayLabel,
+  dayIntent,
+  "aria-label": ariaLabel,
   onOpenEvent,
   onOpenMarker,
   className,
   classNames,
 }: WeekViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const bind = useIntentTargets();
+  const [focused, setFocused] = useState<GridCell>();
   const first = startOfWeek(week, weekStartsOn);
   const days = Array.from({ length: 7 }, (_, index) => addDays(first, index));
   const shaded = new Set(shadedDates);
+  const todayCol = days.indexOf(today);
+  const tabStop = focused ?? { row: ALL_DAY_ROW, col: Math.max(todayCol, 0) };
+  const label =
+    ariaLabel ?? `${formatFullDate(first, locale)} – ${formatFullDate(days[6] ?? first, locale)}`;
+
+  const handleCellKeyDown = (event: KeyboardEvent<HTMLDivElement>, row: number, col: number) => {
+    if (event.target !== event.currentTarget || !isGridKey(event.key)) return;
+    event.preventDefault();
+    const next = nextGridCell({ row, col }, event.key, GRID_SIZE);
+    if (next === undefined) return;
+    const cells = gridRef.current?.querySelectorAll<HTMLElement>(
+      '[role="gridcell"][data-grid-cell]',
+    );
+    cells?.[next.row * DAYS_PER_WEEK + next.col]?.focus();
+  };
+
+  const cellProps = (row: number, col: number) => ({
+    role: "gridcell",
+    "data-grid-cell": "",
+    tabIndex: row === tabStop.row && col === tabStop.col ? 0 : -1,
+    onFocus: (event: FocusEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) setFocused({ row, col });
+    },
+    onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => handleCellKeyDown(event, row, col),
+  });
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -101,12 +143,21 @@ export function WeekView({
         data-hours-scroll
         className={cn("max-h-150 overflow-auto", classNames?.scroll)}
       >
-        <div className="flex min-w-205 flex-col @max-[40rem]/week:min-w-209">
-          <div className={cn("sticky top-0 z-20 grid bg-surface", COLUMNS, classNames?.header)}>
-            <div className={GUTTER} />
+        <div
+          ref={gridRef}
+          role="grid"
+          aria-label={label}
+          className="flex min-w-205 flex-col @max-[40rem]/week:min-w-209"
+        >
+          <div
+            role="row"
+            className={cn("sticky top-0 z-20 grid bg-surface", COLUMNS, classNames?.header)}
+          >
+            <div aria-hidden="true" className={GUTTER} />
             {days.map((date) => (
               <div
                 key={date}
+                role="columnheader"
                 data-date={date}
                 data-today={date === today || undefined}
                 className={cn(
@@ -121,10 +172,13 @@ export function WeekView({
           </div>
 
           <div
+            role="row"
+            aria-label={allDayLabel}
             data-all-day-row
             className={cn("sticky top-10 z-20 grid bg-surface", COLUMNS, classNames?.allDayRow)}
           >
             <div
+              aria-hidden="true"
               className={cn(
                 GUTTER,
                 "whitespace-nowrap border-b-divider px-1.5 pt-2.5 text-right text-meta text-ink-3",
@@ -133,24 +187,36 @@ export function WeekView({
             >
               {allDayLabel}
             </div>
-            {days.map((date) => (
+            {days.map((date, col) => (
               <div
                 key={date}
+                {...cellProps(ALL_DAY_ROW, col)}
                 className={cn(
                   "flex min-h-10 flex-col gap-1 border-b-divider border-l-divider p-1",
                   classNames?.allDayCell,
                 )}
               >
+                <span className="sr-only">{formatFullDate(date, locale)}</span>
                 {markers
                   .filter((marker) => marker.date === date)
                   .map((marker) => (
-                    <DayChip key={marker.id} marker={marker} onOpen={onOpenMarker} />
+                    <DayChip
+                      key={marker.id}
+                      ref={bind(calendarItemIntent(marker), ITEM_EXPECTATION)}
+                      marker={marker}
+                      onOpen={onOpenMarker}
+                    />
                   ))}
                 {events
                   .filter((event) => event.date === date && event.allDay)
                   .map((event) => (
                     <div key={event.id} data-event={event.id}>
-                      <EventBlock event={event} variant="compact" onOpen={onOpenEvent} />
+                      <EventBlock
+                        ref={bind(calendarItemIntent(event), ITEM_EXPECTATION)}
+                        event={event}
+                        variant="compact"
+                        onOpen={onOpenEvent}
+                      />
                     </div>
                   ))}
               </div>
@@ -158,8 +224,12 @@ export function WeekView({
           </div>
 
           <div>
-            <div className={cn("grid", COLUMNS)} style={{ height: HOURS.length * PX_PER_HOUR }}>
-              <div className={GUTTER}>
+            <div
+              role="row"
+              className={cn("grid", COLUMNS)}
+              style={{ height: HOURS.length * PX_PER_HOUR }}
+            >
+              <div aria-hidden="true" className={GUTTER}>
                 {HOURS.map((hour) => (
                   <span
                     key={hour}
@@ -174,8 +244,9 @@ export function WeekView({
                 ))}
               </div>
 
-              {days.map((date) => {
+              {days.map((date, col) => {
                 const isToday = date === today;
+                const dayProps = { intent: dayIntent, intentKey: date };
                 const positioned = layoutDayEvents(
                   events.filter((event) => event.date === date && !event.allDay),
                 );
@@ -185,7 +256,11 @@ export function WeekView({
                 return (
                   <div
                     key={date}
+                    ref={bind(dayProps, DAY_EXPECTATION)}
+                    {...cellProps(TIMED_ROW, col)}
+                    {...intentAttributes(dayProps)}
                     data-date={date}
+                    aria-current={isToday ? "date" : undefined}
                     data-hours-column
                     data-shaded={shaded.has(date) || undefined}
                     className={cn(
@@ -195,6 +270,7 @@ export function WeekView({
                       classNames?.column,
                     )}
                   >
+                    <span className="sr-only">{formatFullDate(date, locale)}</span>
                     {workingHours ? (
                       <div
                         data-working-hours
@@ -225,6 +301,7 @@ export function WeekView({
                           }}
                         >
                           <EventBlock
+                            ref={bind(calendarItemIntent(event), ITEM_EXPECTATION)}
                             event={event}
                             variant={short ? "compact" : "detailed"}
                             onOpen={onOpenEvent}
