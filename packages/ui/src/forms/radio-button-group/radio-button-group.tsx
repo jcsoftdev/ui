@@ -1,6 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget, useIntentTargets } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
@@ -14,7 +17,7 @@ export type RadioButtonOption = ButtonOption;
 
 export type RadioButtonGroupPart = "root" | ButtonOptionPart;
 
-export interface RadioButtonGroupProps {
+export interface RadioButtonGroupProps extends IntentProps {
   options: RadioButtonOption[];
   value?: string;
   defaultValue?: string;
@@ -42,9 +45,13 @@ export function RadioButtonGroup({
   disabled,
   className,
   classNames,
+  intent,
+  intentKey,
   ...aria
 }: RadioButtonGroupProps) {
   const generated = useId();
+  const rootRef = useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "radiogroup" });
+  const bindOption = useIntentTargets();
   const [inner, setInner] = useState(defaultValue);
   const value = valueProp ?? inner;
 
@@ -52,7 +59,9 @@ export function RadioButtonGroup({
     <div
       role="radiogroup"
       className={cn("@container/options", optionGridClass, classNames?.root, className)}
+      {...intentAttributes({ intent, intentKey })}
       {...aria}
+      ref={rootRef}
     >
       {options.map((option) => (
         <OptionShell
@@ -61,6 +70,14 @@ export function RadioButtonGroup({
           classNames={classNames}
           input={
             <input
+              {...intentAttributes({
+                intent: option.intent,
+                intentKey: option.intentKey ?? option.value,
+              })}
+              ref={bindOption({
+                intent: option.intent,
+                intentKey: option.intentKey ?? option.value,
+              })}
               type="radio"
               name={name ?? generated}
               value={option.value}

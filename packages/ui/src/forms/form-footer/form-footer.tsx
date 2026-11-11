@@ -1,11 +1,11 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Button } from "../../atoms/button/index.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 
-export interface FormFooterProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface FormFooterProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** Called by the cancel button; without it no cancel button renders. */
   onCancel?: () => void;
   cancelLabel?: string;

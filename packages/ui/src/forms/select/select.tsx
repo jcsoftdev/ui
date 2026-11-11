@@ -1,10 +1,12 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { ChevronDown } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 
 export type SelectSize = "sm" | "md";
 
-export interface SelectProps extends Omit<ComponentPropsWithoutRef<"select">, "size"> {
+export interface SelectProps extends Omit<ComponentPropsWithRef<"select">, "size">, IntentProps {
   /** `sm` is 30px and `md` (default) 38px, the heights of `Button` and `Input` of the same size. */
   size?: SelectSize;
 }
@@ -18,7 +20,14 @@ const selectSizeClasses: Readonly<Record<SelectSize, string>> = {
  * Wraps the native `<select>` (keeps the system picker on mobile) and draws
  * the chevron with an icon.
  */
-export function Select({ size = "md", className, children, ...props }: SelectProps) {
+export function Select({
+  size = "md",
+  className,
+  children,
+  intent,
+  intentKey,
+  ...props
+}: SelectProps) {
   return (
     <span className="relative flex w-full items-center">
       <select
@@ -27,6 +36,7 @@ export function Select({ size = "md", className, children, ...props }: SelectPro
           selectSizeClasses[size],
           className,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
       >
         {children}

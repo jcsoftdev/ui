@@ -1,14 +1,22 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 
-export type FormProps = ComponentPropsWithoutRef<"form">;
+export interface FormProps extends ComponentPropsWithRef<"form">, IntentProps {}
 
 /** Vertical form layout; every `<form>` attribute and handler passes through. */
-export function Form({ className, ...props }: FormProps) {
-  return <form className={cn("flex min-w-0 flex-col gap-4", className)} {...props} />;
+export function Form({ className, intent, intentKey, ...props }: FormProps) {
+  return (
+    <form
+      className={cn("flex min-w-0 flex-col gap-4", className)}
+      {...intentAttributes({ intent, intentKey })}
+      {...props}
+    />
+  );
 }
 
-interface FormMessageProps extends Omit<ComponentPropsWithoutRef<"p">, "role" | "children"> {
+interface FormMessageProps extends Omit<ComponentPropsWithRef<"p">, "role" | "children"> {
   /** Message text; `null`, `undefined` and an empty string render nothing. */
   message: ReactNode | null | undefined;
 }

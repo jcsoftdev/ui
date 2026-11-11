@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
-export interface FieldsetProps extends Omit<ComponentPropsWithoutRef<"fieldset">, "title"> {
+export interface FieldsetProps extends Omit<ComponentPropsWithRef<"fieldset">, "title"> {
   /** The group name; announced with each control inside. */
   legend: ReactNode;
   description?: ReactNode;

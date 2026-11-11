@@ -5,6 +5,9 @@ import { DateCalendar } from "../../calendar/date-calendar/date-calendar.js";
 import { isIsoDate, type WeekStart } from "../../calendar/internal/date-utils.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { Calendar as CalendarIcon, X } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -23,17 +26,18 @@ export type DatePickerPart = "root" | "input" | "clear" | "trigger" | "content" 
 
 export interface DatePickerProps
   extends Omit<
-    ComponentProps<"input">,
-    | "value"
-    | "defaultValue"
-    | "onChange"
-    | "type"
-    | "min"
-    | "max"
-    | "size"
-    | "inputMode"
-    | "maxLength"
-  > {
+      ComponentProps<"input">,
+      | "value"
+      | "defaultValue"
+      | "onChange"
+      | "type"
+      | "min"
+      | "max"
+      | "size"
+      | "inputMode"
+      | "maxLength"
+    >,
+    IntentProps {
   /** Selected date as "YYYY-MM-DD" (controlled); `""` means none. Never converted through a time zone. */
   value?: string;
   defaultValue?: string;
@@ -95,6 +99,8 @@ export function DatePicker({
   className,
   classNames,
   ref,
+  intent,
+  intentKey,
   onBlur,
   onKeyDown,
   "aria-invalid": ariaInvalid,
@@ -104,7 +110,11 @@ export function DatePicker({
   const locale = localeProp || strings.locale;
   const format = useMemo(() => dateFormatFor(locale), [locale]);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const composedRef = useComposedRefs<HTMLInputElement>(ref, inputRef);
+  const composedRef = useComposedRefs<HTMLInputElement>(
+    ref,
+    inputRef,
+    useIntentTarget({ intent, intentKey }),
+  );
   const [current, setCurrent] = useControllableState<string>({
     prop: valueProp,
     defaultProp: defaultValue,
@@ -147,6 +157,7 @@ export function DatePicker({
       <PopoverPrimitive.Anchor asChild>
         <div className={cn("relative flex w-full min-w-0", classNames?.root)}>
           <input
+            {...intentAttributes({ intent, intentKey })}
             {...props}
             ref={composedRef}
             type="text"

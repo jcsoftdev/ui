@@ -1,5 +1,7 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { ChevronsUpDown } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 
 export interface InlineSelectOption {
@@ -8,7 +10,9 @@ export interface InlineSelectOption {
   disabled?: boolean;
 }
 
-export interface InlineSelectProps extends Omit<ComponentPropsWithoutRef<"select">, "size"> {
+export interface InlineSelectProps
+  extends Omit<ComponentPropsWithRef<"select">, "size">,
+    IntentProps {
   options: InlineSelectOption[];
 }
 
@@ -16,7 +20,13 @@ export interface InlineSelectProps extends Omit<ComponentPropsWithoutRef<"select
  * Borderless select that reads as part of a sentence or a row ("Repetir cada [semana v]").
  * Native `<select>` underneath, so the system picker and keyboard behaviour are kept.
  */
-export function InlineSelect({ options, className, ...props }: InlineSelectProps) {
+export function InlineSelect({
+  options,
+  className,
+  intent,
+  intentKey,
+  ...props
+}: InlineSelectProps) {
   return (
     <span className="relative inline-flex max-w-full items-center rounded-chip hover:bg-surface-sunken has-[:focus-visible]:focus-ring">
       <select
@@ -24,6 +34,7 @@ export function InlineSelect({ options, className, ...props }: InlineSelectProps
           "h-control-sm max-w-full cursor-pointer appearance-none truncate rounded-chip bg-transparent py-0 pr-6 pl-2 font-semibold text-control text-ink outline-none disabled:cursor-not-allowed disabled:opacity-50",
           className,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
       >
         {options.map((o) => (

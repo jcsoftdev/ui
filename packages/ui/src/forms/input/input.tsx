@@ -1,4 +1,6 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
@@ -33,7 +35,7 @@ const RING =
   "focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1";
 const INVALID = "aria-[invalid=true]:border-danger";
 
-export interface InputProps extends Omit<ComponentPropsWithRef<"input">, "size"> {
+export interface InputProps extends Omit<ComponentPropsWithRef<"input">, "size">, IntentProps {
   /**
    * `sm` is the 30px compact field and `md` (default) the 38px one: the heights of `Button` `sm` and
    * `md`. `xs` is the same as `sm`; `lg` is the thumb-friendly field.
@@ -61,6 +63,8 @@ export function Input({
   end,
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: InputProps) {
   const bare = variant === "bare";
@@ -80,6 +84,7 @@ export function Input({
           classNames?.input,
           className,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
       />
     );
@@ -111,6 +116,7 @@ export function Input({
           size === "lg" && "text-fs-140",
           classNames?.input,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
         // The wrapper draws the ring; the unlayered base `:focus-visible` rule outranks `outline-none`.
         style={{ outline: "none", ...props.style }}

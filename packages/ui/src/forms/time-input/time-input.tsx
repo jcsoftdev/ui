@@ -2,18 +2,23 @@
 
 import {
   type ChangeEvent,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type FocusEvent,
   type KeyboardEvent,
   useState,
 } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 export interface TimeInputProps
   extends Omit<
-    ComponentPropsWithoutRef<"input">,
-    "type" | "value" | "defaultValue" | "onChange" | "step" | "inputMode" | "maxLength" | "size"
-  > {
+      ComponentPropsWithRef<"input">,
+      "type" | "value" | "defaultValue" | "onChange" | "step" | "inputMode" | "maxLength" | "size"
+    >,
+    IntentProps {
   /** `sm` is 30px and `md` (default) 38px, the heights of `Button` and `Input` of the same size. */
   size?: "sm" | "md";
   /** 24h "HH:MM" (controlled). */
@@ -57,8 +62,15 @@ export function TimeInput({
   onBlur,
   onKeyDown,
   placeholder = "HH:MM",
+  intent,
+  intentKey,
+  ref,
   ...props
 }: TimeInputProps) {
+  const composedRef = useComposedRefs<HTMLInputElement>(
+    ref,
+    useIntentTarget({ intent, intentKey }),
+  );
   const [inner, setInner] = useState(defaultValue);
   const committed = value ?? inner;
   const [draft, setDraft] = useState<string | null>(null);
@@ -110,7 +122,9 @@ export function TimeInput({
         "w-full min-w-0 rounded-input border-control bg-surface-control px-3 font-mono text-control text-ink tabular-nums placeholder:text-ink-3 focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1 aria-[invalid=true]:border-danger",
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
       value={draft ?? committed}
       onChange={handleChange}
       onBlur={handleBlur}

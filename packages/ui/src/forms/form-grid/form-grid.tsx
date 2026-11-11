@@ -1,10 +1,10 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type FormGridColumns = 1 | 2 | 3;
 export type FormGridSpan = 1 | 2 | 3 | "full";
 
-export interface FormGridProps extends ComponentPropsWithoutRef<"div"> {
+export interface FormGridProps extends ComponentPropsWithRef<"div"> {
   /**
    * Largest column count, reached by container width: 2 columns from 620px, 3 from 900px
    * (the wrapper is the size container). `1` never splits. Default `2`.
@@ -38,7 +38,7 @@ export function FormGrid({ columns = 2, className, ...props }: FormGridProps) {
   );
 }
 
-export interface FormGridItemProps extends ComponentPropsWithoutRef<"div"> {
+export interface FormGridItemProps extends ComponentPropsWithRef<"div"> {
   /**
    * Columns the item spans once the grid has them; it never adds a column the grid does not
    * have. `"full"` spans every column at any width. Default `1`.

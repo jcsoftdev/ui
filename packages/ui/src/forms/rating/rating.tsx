@@ -2,13 +2,16 @@
 
 import { type KeyboardEvent, type PointerEvent, useState } from "react";
 import { Star } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { ratingFromPointer, ratingKey, roundRating, starFill } from "./model.js";
 
 export type RatingPart = "root" | "stars" | "star" | "icon" | "fill" | "value";
 
-export interface RatingProps {
+export interface RatingProps extends IntentProps {
   value?: number;
   defaultValue?: number;
   onValueChange?: (value: number) => void;
@@ -44,6 +47,8 @@ export function Rating({
   showValue,
   className,
   classNames,
+  intent,
+  intentKey,
   ...aria
 }: RatingProps) {
   const [inner, setInner] = useState(defaultValue);
@@ -52,6 +57,10 @@ export function Rating({
   const shown = hover ?? value;
   const interactive = !readOnly && !disabled;
   const label = aria["aria-label"] ?? "Valoración";
+  const targetRef = useIntentTarget<HTMLDivElement>(
+    { intent, intentKey },
+    { role: interactive ? "slider" : "img" },
+  );
 
   const set = (next: number) => {
     if (valueProp === undefined) setInner(next);
@@ -124,6 +133,8 @@ export function Rating({
     >
       {interactive ? (
         <div
+          {...intentAttributes({ intent, intentKey })}
+          ref={targetRef}
           role="slider"
           tabIndex={0}
           aria-label={label}
@@ -142,6 +153,8 @@ export function Rating({
         </div>
       ) : (
         <div
+          {...intentAttributes({ intent, intentKey })}
+          ref={targetRef}
           role="img"
           aria-label={`${label}: ${text}`}
           aria-disabled={disabled || undefined}
