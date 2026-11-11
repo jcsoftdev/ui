@@ -1,26 +1,40 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useEffect, useId, useRef } from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  type RefCallback,
+  useEffect,
+  useId,
+  useRef,
+} from "react";
 import { ChevronDown } from "../../icons/index.js";
+import {
+  type IntentDataAttributes,
+  type IntentProps,
+  intentAttributes,
+  useIntentTargets,
+} from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { useAppShell, useCompactContainer } from "../app-shell/app-shell.js";
 
-export interface SidebarLinkProps {
+export interface SidebarLinkProps extends IntentDataAttributes {
   href: string;
   className: string;
   children: ReactNode;
   "aria-current"?: "page";
   /** Set in rail mode, where the label is visually hidden. */
   title?: string;
+  ref?: RefCallback<HTMLElement> | undefined;
 }
 
 /** Renders a navigation link; inject your router's link component here. */
 export type SidebarRenderLink = (props: SidebarLinkProps) => ReactNode;
 
-export interface SidebarItem {
+export interface SidebarItem extends IntentProps {
   id: string;
   label: string;
   href: string;
@@ -117,6 +131,7 @@ export function opensOnActivation(
 
 function SidebarGroupSection({ group, rail, renderLink, classNames }: SidebarGroupSectionProps) {
   const itemsId = useId();
+  const bind = useIntentTargets();
   const collapsible = group.collapsible === true && !rail;
   const holdsActive = group.items.some((item) => item.active);
   const [collapsedState, setCollapsed] = useControllableState<boolean>({
@@ -170,9 +185,12 @@ function SidebarGroupSection({ group, rail, renderLink, classNames }: SidebarGro
         {group.items.map((item) => {
           const badgeTone =
             item.badgeTone === "danger" ? "bg-danger-soft text-danger" : "bg-surface-2 text-ink-2";
+          const target = { intent: item.intent, intentKey: item.intentKey ?? item.id };
           return (
             <div key={item.id} className={classNames?.item}>
               {renderLink({
+                ...intentAttributes(target),
+                ref: bind<HTMLElement>(target),
                 href: item.href,
                 "aria-current": item.active ? "page" : undefined,
                 title: rail ? item.label : undefined,

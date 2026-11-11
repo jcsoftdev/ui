@@ -2,7 +2,7 @@
 
 import {
   type AnchorHTMLAttributes,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   cloneElement,
   createContext,
   isValidElement,
@@ -11,7 +11,9 @@ import {
   type Ref,
   useContext,
 } from "react";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
 
 /** Props handed to `renderLink`: spread them on your router's link component. */
@@ -31,7 +33,7 @@ const TabsNavContext = createContext<TabsNavContextValue>({
   renderLink: undefined,
 });
 
-export interface TabsNavProps extends ComponentPropsWithoutRef<"nav"> {
+export interface TabsNavProps extends ComponentPropsWithRef<"nav"> {
   /** Name of the strip (required: a page can have several navigations). */
   "aria-label": string;
   /** Value of the item that is the current page. */
@@ -61,7 +63,9 @@ export function TabsNav({ value, renderLink, className, children, ...props }: Ta
   );
 }
 
-export interface TabsNavLinkProps extends Omit<ComponentPropsWithoutRef<"a">, "children"> {
+export interface TabsNavLinkProps
+  extends Omit<ComponentPropsWithRef<"a">, "children">,
+    IntentProps {
   /** Matches the strip's `value` to mark this item as the current page. */
   value: string;
   /** Overrides the match for routers that report the active state themselves. */
@@ -83,12 +87,21 @@ export function TabsNavLink({
   asChild = false,
   className,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: TabsNavLinkProps) {
   const context = useContext(TabsNavContext);
+  const composedRef = useComposedRefs<HTMLAnchorElement>(
+    ref,
+    useIntentTarget<HTMLAnchorElement>({ intent, intentKey }),
+  );
   const isActive = active ?? (context.value !== undefined && context.value === value);
   const shared = {
+    ...intentAttributes({ intent, intentKey }),
     ...props,
+    ref: composedRef,
     "aria-current": isActive ? ("page" as const) : undefined,
     "data-active": isActive ? ("" as const) : undefined,
     className: cn(itemClasses, className),

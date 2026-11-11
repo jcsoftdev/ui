@@ -1,21 +1,28 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode, RefCallback } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { ChevronRight } from "../../icons/index.js";
+import {
+  type IntentDataAttributes,
+  type IntentProps,
+  intentAttributes,
+  useIntentTargets,
+} from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
-export interface BreadcrumbItem {
+export interface BreadcrumbItem extends IntentProps {
   label: ReactNode;
   /** Destination. Omit it on the last item, or on a crumb that is not navigable. */
   href?: string;
 }
 
-export interface BreadcrumbLinkProps {
+export interface BreadcrumbLinkProps extends IntentDataAttributes {
   href: string;
   className: string;
   children: ReactNode;
+  ref?: RefCallback<HTMLElement> | undefined;
 }
 
 /** Renders a breadcrumb link; inject your router's link component here. */
@@ -23,7 +30,7 @@ export type BreadcrumbRenderLink = (props: BreadcrumbLinkProps) => ReactNode;
 
 export type BreadcrumbsPart = "root" | "list" | "item" | "link" | "current" | "separator";
 
-export interface BreadcrumbsProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+export interface BreadcrumbsProps extends Omit<ComponentPropsWithRef<"nav">, "children"> {
   /** Trail in order; the last entry is the current page. */
   items: readonly BreadcrumbItem[];
   /** Link renderer; defaults to a plain anchor. */
@@ -50,6 +57,7 @@ export function Breadcrumbs({
   ...props
 }: BreadcrumbsProps) {
   const strings = useUiStrings();
+  const bind = useIntentTargets();
   const lastIndex = items.length - 1;
   return (
     <nav
@@ -65,11 +73,14 @@ export function Breadcrumbs({
       >
         {items.map((item, index) => {
           const current = index === lastIndex;
+          const target = { intent: item.intent, intentKey: item.intentKey };
           return (
             // biome-ignore lint/suspicious/noArrayIndexKey: crumbs are positional and may share a label
             <li key={index} className={cn("inline-flex items-center gap-1.5", classNames?.item)}>
               {current || item.href === undefined ? (
                 <span
+                  {...intentAttributes(target)}
+                  ref={bind<HTMLSpanElement>(target)}
                   aria-current={current ? "page" : undefined}
                   className={cn(current && "font-semibold text-ink", classNames?.current)}
                 >
@@ -77,6 +88,8 @@ export function Breadcrumbs({
                 </span>
               ) : (
                 renderLink({
+                  ...intentAttributes(target),
+                  ref: bind<HTMLElement>(target),
                   href: item.href,
                   className: cn(
                     "rounded-xs underline-offset-2 hover:text-ink hover:underline focus-visible:focus-ring",
