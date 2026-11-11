@@ -47,8 +47,8 @@ const isNonEmpty = (value: string | undefined): value is string =>
 
 export function intentAttributes(props: IntentProps): IntentDataAttributes {
   if (!isNonEmpty(props.intent)) return {};
-  if (!isNonEmpty(props.intentKey)) return { "data-intent": props.intent };
-  return { "data-intent": props.intent, "data-intent-key": props.intentKey };
+  if (!isNonEmpty(props.intentKey)) return { [INTENT_ATTRIBUTE]: props.intent };
+  return { [INTENT_ATTRIBUTE]: props.intent, [INTENT_KEY_ATTRIBUTE]: props.intentKey };
 }
 
 export function intentTargetRef(props: IntentProps): IntentTargetRef | undefined {
@@ -76,7 +76,10 @@ export function implicitRoleOf(source: RoleSource): string {
 }
 
 const nonEmptyOrUndefined = (value: string | null | undefined): string | undefined =>
-  value === null || value === "" ? undefined : value;
+  value === null || value === undefined || value.trim() === "" ? undefined : value.trim();
+
+const firstRoleToken = (value: string | null): string | undefined =>
+  nonEmptyOrUndefined(value?.split(/\s+/)[0]);
 
 export function resolveExpectation(
   input: IntentExpectationInput | undefined,
@@ -85,7 +88,7 @@ export function resolveExpectation(
   return {
     role:
       nonEmptyOrUndefined(input?.role) ??
-      nonEmptyOrUndefined(source.getAttribute("role")) ??
+      firstRoleToken(source.getAttribute("role")) ??
       implicitRoleOf(source),
     requireName: input?.requireName ?? true,
   };

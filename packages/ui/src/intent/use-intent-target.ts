@@ -65,8 +65,9 @@ export function useIntentTargets(): IntentTargetBinder {
         if (inner === undefined) return undefined;
         const bound: RefCallback<Element> = (element) => {
           const unregister = inner(element);
+          cache.set(cacheKey, bound);
           return () => {
-            cache.delete(cacheKey);
+            if (cache.get(cacheKey) === bound) cache.delete(cacheKey);
             if (typeof unregister === "function") unregister();
           };
         };

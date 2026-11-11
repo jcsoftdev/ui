@@ -1,4 +1,4 @@
-import { act, StrictMode, useState } from "react";
+import { act, type ReactNode, StrictMode, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { intentAttributes } from "./attributes.js";
@@ -21,10 +21,7 @@ function recordingBridge() {
     registerTarget(ref, element, expectation) {
       calls.push({ ref, element, expectation });
       live += 1;
-      let released = false;
       return () => {
-        if (released) return;
-        released = true;
         live -= 1;
       };
     },
@@ -46,7 +43,7 @@ afterEach(async () => {
   host.remove();
 });
 
-const mount = (node: React.ReactNode) => act(async () => root.render(node));
+const mount = (node: ReactNode) => act(async () => root.render(node));
 
 function IntentButton(props: { intent?: string; intentKey?: string }) {
   const ref = useIntentTarget<HTMLButtonElement>(props);
@@ -159,6 +156,24 @@ describe("intent bridge", () => {
     expect(recorder.live()).toBe(5);
     await mount(render(["1", "2"]));
     expect(recorder.live()).toBe(2);
+    expect(recorder.calls).toHaveLength(5);
+  });
+
+  test("the list binder does not churn registrations under strict mode", async () => {
+    const recorder = recordingBridge();
+    const render = (ids: string[]) => (
+      <StrictMode>
+        <IntentBridgeProvider bridge={recorder.bridge}>
+          <List ids={ids} />
+        </IntentBridgeProvider>
+      </StrictMode>
+    );
+    await mount(render(["1", "2", "3"]));
+    const afterMount = recorder.calls.length;
+    await mount(render(["1", "2", "3"]));
+    await mount(render(["1", "2", "3"]));
+    expect(recorder.calls).toHaveLength(afterMount);
+    expect(recorder.live()).toBe(3);
   });
 
   test("the default bridge is a no-op", async () => {
