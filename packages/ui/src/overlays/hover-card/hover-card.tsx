@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   createContext,
   type FocusEvent,
   type PointerEvent,
@@ -14,8 +14,10 @@ import {
   useRef,
   useState,
 } from "react";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { POPPER_MOTION } from "../../utils/overlay-motion.js";
 import { Slot } from "../../utils/slot.js";
@@ -98,7 +100,7 @@ export function HoverCard({
   );
 }
 
-export interface HoverCardTriggerProps extends ComponentPropsWithoutRef<"span"> {
+export interface HoverCardTriggerProps extends ComponentPropsWithRef<"span">, IntentProps {
   /** Use the child element as the trigger instead of wrapping it in a span. */
   asChild?: boolean;
 }
@@ -109,9 +111,16 @@ export function HoverCardTrigger({
   onPointerLeave,
   onFocus,
   onBlur,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: HoverCardTriggerProps) {
   const card = useHoverCard();
+  const composedRef = useComposedRefs<HTMLSpanElement>(
+    ref,
+    useIntentTarget<HTMLSpanElement>({ intent, intentKey }),
+  );
   const Comp = asChild ? Slot : "span";
   return (
     <PopoverPrimitive.Anchor asChild>
@@ -133,7 +142,9 @@ export function HoverCardTrigger({
           onBlur?.(event);
           card.schedule(false, 0);
         }}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        ref={composedRef}
       />
     </PopoverPrimitive.Anchor>
   );

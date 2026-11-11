@@ -1,11 +1,13 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type PointerEvent, useRef } from "react";
+import { type ComponentPropsWithRef, type PointerEvent, useRef } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { DRAWER_MOTION, OVERLAY_MOTION, SHEET_MOTION } from "../../utils/overlay-motion.js";
 import {
@@ -33,13 +35,13 @@ export const DrawerClose = DialogPrimitive.Close;
 export function DrawerTitle({
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+}: ComponentPropsWithRef<typeof DialogPrimitive.Title>) {
   return <DialogPrimitive.Title className={cn("m-0", className)} {...props} />;
 }
 export function DrawerDescription({
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+}: ComponentPropsWithRef<typeof DialogPrimitive.Description>) {
   return <DialogPrimitive.Description className={cn("m-0 text-ink-2", className)} {...props} />;
 }
 
@@ -60,7 +62,7 @@ export function drawerSideClass(side: DrawerSide): string {
   return sideClasses[side];
 }
 
-export interface DrawerContentProps extends DialogPrimitive.DialogContentProps {
+export interface DrawerContentProps extends DialogPrimitive.DialogContentProps, IntentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content and is merged last. */
   classNames?: ClassNames<DrawerContentPart>;
   /**
@@ -101,9 +103,16 @@ export function DrawerContent({
   onPointerDownOutside,
   onInteractOutside,
   onCloseAutoFocus,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: DrawerContentProps) {
   const previousFocusRef = usePreviousFocus();
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "dialog" }),
+  );
   const strings = useUiStrings();
   const closeRef = useRef<HTMLButtonElement>(null);
   const swipe = useRef<number | null>(null);
@@ -150,7 +159,9 @@ export function DrawerContent({
           onCloseAutoFocus?.(event);
           restoreFocusOnClose(event, previousFocusRef);
         }}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        ref={composedRef}
       >
         {showHandle ? (
           <div

@@ -1,9 +1,8 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   createContext,
-  type HTMLAttributes,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -15,8 +14,10 @@ import {
   useState,
 } from "react";
 import { Check } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { ITEM_MOTION, POPPER_MOTION } from "../../utils/overlay-motion.js";
 
@@ -95,7 +96,7 @@ export function ContextMenu({
   );
 }
 
-export interface ContextMenuTriggerProps extends HTMLAttributes<HTMLDivElement> {
+export interface ContextMenuTriggerProps extends ComponentPropsWithRef<"div">, IntentProps {
   disabled?: boolean;
 }
 
@@ -108,12 +109,19 @@ export function ContextMenuTrigger({
   onPointerMove,
   onPointerUp,
   onPointerCancel,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: ContextMenuTriggerProps) {
   const menu = useContext(ContextMenuContext);
   if (!menu) throw new Error("ContextMenuTrigger must be inside ContextMenu");
   const press = useRef<number | undefined>(undefined);
   const clearPress = () => window.clearTimeout(press.current);
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }),
+  );
   useEffect(() => () => window.clearTimeout(press.current), []);
 
   return (
@@ -153,13 +161,16 @@ export function ContextMenuTrigger({
         onPointerCancel?.(event);
         clearPress();
       }}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     />
   );
 }
 
 export interface ContextMenuContentProps
-  extends Omit<MenuPrimitive.MenuContentProps, "side" | "align"> {
+  extends Omit<MenuPrimitive.MenuContentProps, "side" | "align">,
+    IntentProps {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
   /**
@@ -177,8 +188,15 @@ export function ContextMenuContent({
   material,
   collisionPadding = 8,
   onCloseAutoFocus,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: ContextMenuContentProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menu" }),
+  );
   return (
     <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content
@@ -197,7 +215,9 @@ export function ContextMenuContent({
           materialClass(material, "surface-solid"),
           className,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        ref={composedRef}
       />
     </MenuPrimitive.Portal>
   );
@@ -205,29 +225,56 @@ export function ContextMenuContent({
 
 const itemBase = `relative flex min-h-control-sm w-full cursor-pointer select-none items-center gap-density-sm rounded-button px-control-x text-body outline-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-surface-2 [&_svg]:size-4 [&_svg]:shrink-0 ${ITEM_MOTION}`;
 
-export interface ContextMenuItemProps extends MenuPrimitive.MenuItemProps {
+export interface ContextMenuItemProps extends MenuPrimitive.MenuItemProps, IntentProps {
   /** Destructive action styling. */
   tone?: "default" | "danger";
 }
 
-export function ContextMenuItem({ className, tone = "default", ...props }: ContextMenuItemProps) {
+export function ContextMenuItem({
+  className,
+  tone = "default",
+  intent,
+  intentKey,
+  ref,
+  ...props
+}: ContextMenuItemProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menuitem" }),
+  );
   return (
     <MenuPrimitive.Item
       className={cn(itemBase, tone === "danger" ? "text-danger" : "text-ink", className)}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     />
   );
 }
 
-export type ContextMenuCheckboxItemProps = MenuPrimitive.MenuCheckboxItemProps;
+export interface ContextMenuCheckboxItemProps
+  extends MenuPrimitive.MenuCheckboxItemProps,
+    IntentProps {}
 
 export function ContextMenuCheckboxItem({
   className,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: ContextMenuCheckboxItemProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menuitemcheckbox" }),
+  );
   return (
-    <MenuPrimitive.CheckboxItem className={cn(itemBase, "ps-8 text-ink", className)} {...props}>
+    <MenuPrimitive.CheckboxItem
+      className={cn(itemBase, "ps-8 text-ink", className)}
+      {...intentAttributes({ intent, intentKey })}
+      {...props}
+      ref={composedRef}
+    >
       <span className="absolute inset-s-2 flex size-4 items-center justify-center">
         <MenuPrimitive.ItemIndicator>
           <Check aria-hidden="true" />
@@ -238,7 +285,7 @@ export function ContextMenuCheckboxItem({
   );
 }
 
-export function ContextMenuLabel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function ContextMenuLabel({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
       className={cn("px-control-x pt-1.5 pb-1 text-ink-3 text-overline uppercase", className)}
@@ -247,12 +294,12 @@ export function ContextMenuLabel({ className, ...props }: HTMLAttributes<HTMLDiv
   );
 }
 
-export function ContextMenuSeparator({ className, ...props }: ComponentPropsWithoutRef<"div">) {
+export function ContextMenuSeparator({ className, ...props }: ComponentPropsWithRef<"div">) {
   return <MenuPrimitive.Separator className={cn("my-1 h-px bg-divider", className)} {...props} />;
 }
 
 /** Right-aligned hint such as "Ctrl+D"; purely visual. */
-export function ContextMenuShortcut({ className, ...props }: HTMLAttributes<HTMLSpanElement>) {
+export function ContextMenuShortcut({ className, ...props }: ComponentPropsWithRef<"span">) {
   return (
     <span
       className={cn("ms-auto ps-density text-ink-3 text-meta tracking-wide", className)}

@@ -16,9 +16,11 @@ import { Button, type ButtonProps } from "../../atoms/button/button.js";
 import type { ConfirmResult } from "../../containers/confirm-action/model.js";
 import { runConfirm } from "../../containers/confirm-action/model.js";
 import { useUiStrings } from "../../i18n/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { DIALOG_MOTION, OVERLAY_MOTION } from "../../utils/overlay-motion.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
@@ -43,7 +45,7 @@ export type AlertDialogPart =
   | "cancel"
   | "confirm";
 
-export interface AlertDialogProps {
+export interface AlertDialogProps extends IntentProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -111,6 +113,8 @@ export function AlertDialog({
   container,
   className,
   classNames,
+  intent,
+  intentKey,
 }: AlertDialogProps) {
   const strings = useUiStrings();
   const [open, setOpen] = useControllableState({
@@ -184,6 +188,8 @@ export function AlertDialog({
           container={container}
           className={className}
           classNames={classNames}
+          intent={intent}
+          intentKey={intentKey}
           onEscape={(event) => {
             if (pendingRef.current) event.preventDefault();
             else onCancel?.();
@@ -255,7 +261,7 @@ export function AlertDialog({
   );
 }
 
-interface AlertDialogPanelProps {
+interface AlertDialogPanelProps extends IntentProps {
   children: ReactNode;
   panelRef: RefObject<HTMLDivElement | null>;
   material: Material | undefined;
@@ -273,18 +279,25 @@ function AlertDialogPanel({
   container,
   className,
   classNames,
+  intent,
+  intentKey,
   onEscape,
   onOpenAutoFocus,
 }: AlertDialogPanelProps) {
   const previousFocusRef = usePreviousFocus();
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    panelRef,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "alertdialog" }),
+  );
   return (
     <DialogPrimitive.Portal container={container}>
       <DialogPrimitive.Overlay
         className={cn("fixed inset-0 z-70 bg-scrim", OVERLAY_MOTION, classNames?.overlay)}
       />
       <DialogPrimitive.Content
-        ref={panelRef}
+        ref={composedRef}
         role="alertdialog"
+        {...intentAttributes({ intent, intentKey })}
         onEscapeKeyDown={onEscape}
         // Answered with the buttons: pressing outside never answers for the user.
         onPointerDownOutside={(event) => event.preventDefault()}
@@ -348,7 +361,7 @@ function AlertDialogTrigger(props: ComponentProps<typeof DialogPrimitive.Trigger
   return <DialogPrimitive.Trigger {...props} />;
 }
 
-export interface AlertDialogContentProps {
+export interface AlertDialogContentProps extends IntentProps {
   children?: ReactNode;
   material?: Material;
   container?: HTMLElement | null;
@@ -364,6 +377,8 @@ function AlertDialogContent({
   container,
   className,
   classNames,
+  intent,
+  intentKey,
 }: AlertDialogContentProps) {
   const cancelRef = useContext(CancelRefContext);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -374,6 +389,8 @@ function AlertDialogContent({
       container={container}
       className={className}
       classNames={classNames}
+      intent={intent}
+      intentKey={intentKey}
       onEscape={() => {}}
       onOpenAutoFocus={(event) => {
         if (!cancelRef?.current) return;

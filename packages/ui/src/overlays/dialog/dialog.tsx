@@ -1,11 +1,13 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as DialogPrimitive from "../../primitives/dialog/dialog.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { DIALOG_MOTION, OVERLAY_MOTION } from "../../utils/overlay-motion.js";
 import {
@@ -40,7 +42,7 @@ const widthClasses: Record<DialogWidth, string> = {
 
 export type DialogContentPart = "root" | "overlay" | "close";
 
-export interface DialogContentProps extends DialogPrimitive.DialogContentProps {
+export interface DialogContentProps extends DialogPrimitive.DialogContentProps, IntentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content and is merged last. */
   classNames?: ClassNames<DialogContentPart>;
   width?: DialogWidth;
@@ -75,9 +77,16 @@ export function DialogContent({
   onPointerDownOutside,
   onInteractOutside,
   onCloseAutoFocus,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: DialogContentProps) {
   const previousFocusRef = usePreviousFocus();
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "dialog" }),
+  );
   const strings = useUiStrings();
   return (
     <DialogPrimitive.Portal container={container}>
@@ -109,7 +118,9 @@ export function DialogContent({
           onCloseAutoFocus?.(event);
           restoreFocusOnClose(event, previousFocusRef);
         }}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        ref={composedRef}
       >
         {children}
         {!blocking && (
@@ -130,7 +141,7 @@ export function DialogContent({
 }
 
 /** Title above description at every width; pass `flex-row items-center` in `className` for a side-by-side layout. */
-export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function DialogHeader({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
       className={cn("flex flex-col gap-1 border-b-divider py-3.5 pr-10 pl-4.5", className)}
@@ -142,7 +153,7 @@ export function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElem
 export function DialogTitle({
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
+}: ComponentPropsWithRef<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       className={cn("m-0 min-w-0 break-words text-dialog-title text-ink", className)}
@@ -154,15 +165,15 @@ export function DialogTitle({
 export function DialogDescription({
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
+}: ComponentPropsWithRef<typeof DialogPrimitive.Description>) {
   return <DialogPrimitive.Description className={cn("m-0 text-ink-2", className)} {...props} />;
 }
 
-export function DialogBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function DialogBody({ className, ...props }: ComponentPropsWithRef<"div">) {
   return <div className={cn("flex flex-col gap-4 p-4.5", className)} {...props} />;
 }
 
-export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function DialogFooter({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
       className={cn(

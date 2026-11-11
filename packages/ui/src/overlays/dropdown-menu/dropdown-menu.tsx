@@ -1,9 +1,11 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, HTMLAttributes } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { Check, ChevronRight } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as MenuPrimitive from "../../primitives/menu/menu.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { ITEM_MOTION, POPPER_MOTION } from "../../utils/overlay-motion.js";
 
@@ -33,7 +35,7 @@ export const dropdownMenuItemClasses =
 const surface = `${placement} ${POPPER_MOTION} ${dropdownMenuSurfaceClasses}`;
 const itemBase = `${dropdownMenuItemClasses} ${ITEM_MOTION}`;
 
-export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps {
+export interface DropdownMenuContentProps extends MenuPrimitive.MenuContentProps, IntentProps {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
   /**
@@ -59,8 +61,15 @@ export function DropdownMenuContent({
   container,
   material,
   bare = false,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: DropdownMenuContentProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menu" }),
+  );
   return (
     <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content
@@ -71,15 +80,27 @@ export function DropdownMenuContent({
             ? cn(placement, POPPER_MOTION, className)
             : cn(surface, materialClass(material, "surface-solid"), className)
         }
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        ref={composedRef}
       />
     </MenuPrimitive.Portal>
   );
 }
 
-export interface DropdownMenuItemProps extends MenuPrimitive.MenuItemProps {}
+export interface DropdownMenuItemProps extends MenuPrimitive.MenuItemProps, IntentProps {}
 
-export function DropdownMenuItem({ className, ...props }: DropdownMenuItemProps) {
+export function DropdownMenuItem({
+  className,
+  intent,
+  intentKey,
+  ref,
+  ...props
+}: DropdownMenuItemProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menuitem" }),
+  );
   return (
     <MenuPrimitive.Item
       className={cn(
@@ -87,18 +108,29 @@ export function DropdownMenuItem({ className, ...props }: DropdownMenuItemProps)
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     />
   );
 }
 
-export interface DropdownMenuCheckboxItemProps extends MenuPrimitive.MenuCheckboxItemProps {}
+export interface DropdownMenuCheckboxItemProps
+  extends MenuPrimitive.MenuCheckboxItemProps,
+    IntentProps {}
 
 export function DropdownMenuCheckboxItem({
   className,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: DropdownMenuCheckboxItemProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menuitemcheckbox" }),
+  );
   return (
     <MenuPrimitive.CheckboxItem
       className={cn(
@@ -106,7 +138,9 @@ export function DropdownMenuCheckboxItem({
         "relative ps-8 data-disabled:pointer-events-none data-disabled:opacity-50",
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     >
       <span className="absolute inset-s-2 flex size-4 items-center justify-center">
         <MenuPrimitive.ItemIndicator>
@@ -118,10 +152,20 @@ export function DropdownMenuCheckboxItem({
   );
 }
 
-export interface DropdownMenuRadioItemProps extends MenuPrimitive.MenuRadioItemProps {}
+export interface DropdownMenuRadioItemProps extends MenuPrimitive.MenuRadioItemProps, IntentProps {}
 
 /** Exposes `role="menuitemradio"` and `aria-checked`: use it for single-value filters. */
-export function DropdownMenuRadioItem({ className, ...props }: DropdownMenuRadioItemProps) {
+export function DropdownMenuRadioItem({
+  className,
+  intent,
+  intentKey,
+  ref,
+  ...props
+}: DropdownMenuRadioItemProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menuitemradio" }),
+  );
   return (
     <MenuPrimitive.RadioItem
       className={cn(
@@ -129,12 +173,14 @@ export function DropdownMenuRadioItem({ className, ...props }: DropdownMenuRadio
         "data-[state=checked]:font-bold data-[state=checked]:text-accent-ink",
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     />
   );
 }
 
-export function DropdownMenuLabel({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+export function DropdownMenuLabel({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <MenuPrimitive.Label
       className={cn("px-2.5 pt-1.5 pb-1 text-overline text-ink-3", className)}
@@ -143,7 +189,7 @@ export function DropdownMenuLabel({ className, ...props }: HTMLAttributes<HTMLDi
   );
 }
 
-export interface DropdownMenuSeparatorProps extends ComponentPropsWithoutRef<"div"> {}
+export interface DropdownMenuSeparatorProps extends ComponentPropsWithRef<"div"> {}
 
 export function DropdownMenuSeparator({ className, ...props }: DropdownMenuSeparatorProps) {
   return (
@@ -151,14 +197,23 @@ export function DropdownMenuSeparator({ className, ...props }: DropdownMenuSepar
   );
 }
 
-export interface DropdownMenuSubTriggerProps extends MenuPrimitive.MenuSubTriggerProps {}
+export interface DropdownMenuSubTriggerProps
+  extends MenuPrimitive.MenuSubTriggerProps,
+    IntentProps {}
 
 /** Item that opens a nested menu; the chevron is added after the children. */
 export function DropdownMenuSubTrigger({
   className,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: DropdownMenuSubTriggerProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "menuitem" }),
+  );
   return (
     <MenuPrimitive.SubTrigger
       className={cn(
@@ -166,7 +221,9 @@ export function DropdownMenuSubTrigger({
         "data-disabled:pointer-events-none data-disabled:opacity-50 data-[state=open]:bg-surface-2",
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
     >
       {children}
       <ChevronRight aria-hidden="true" className="ms-auto size-4 rtl:rotate-180" />
