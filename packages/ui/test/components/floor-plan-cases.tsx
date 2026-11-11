@@ -17,6 +17,7 @@ export {
 export { editKey, moveBox, resizeBox, rotateBox, snapTo } from "../../src/containers/floor-plan/edit-model.js";
 export {
   groupOutlines,
+  floorPlanItemName,
   labelPlacement,
 } from "../../src/containers/floor-plan/model.js";
 

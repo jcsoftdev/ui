@@ -17,4 +17,10 @@ export {
   type FloorPlanRing,
   type FloorPlanTone,
 } from "./floor-plan.js";
-export { type GroupOutline, groupOutlines, type LabelPlacement, labelPlacement } from "./model.js";
+export {
+  floorPlanItemName,
+  type GroupOutline,
+  groupOutlines,
+  type LabelPlacement,
+  labelPlacement,
+} from "./model.js";

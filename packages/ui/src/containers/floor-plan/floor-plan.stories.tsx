@@ -136,6 +136,37 @@ export const Default: Story = {
   },
 };
 
+export const Named: Story = {
+  render: (args) => (
+    <UiStringsProvider locale="es">
+      <FloorPlan {...args} />
+    </UiStringsProvider>
+  ),
+  args: {
+    width: 6,
+    height: 4,
+    landmarks: [],
+    items: [
+      {
+        id: "m3",
+        x: 1,
+        y: 1,
+        width: 3,
+        height: 2,
+        shape: "rect",
+        seats: 4,
+        label: "Mesa 3",
+        statusLabel: "ocupada",
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole("button", { name: "Mesa 3, ocupada, 4 asientos" }),
+    ).toBeInTheDocument();
+  },
+};
+
 export const MergedTables: Story = { args: { items: salonGrouped } };
 
 function Interactive(props: FloorPlanProps) {
