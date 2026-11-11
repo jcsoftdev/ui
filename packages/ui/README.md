@@ -194,7 +194,7 @@ https://ui.jcsoftdev.com/docs/blocks/
 | `FloorPlan` | `containers` | Read-only salon plan on a grid-unit canvas: items as roving-focus buttons, landmarks, group outlines, `late`/`selected` rings. |
 | `OrderTicket` | `containers` | Paper kitchen ticket: table or channel + number title, `ElapsedTime`, progress against `targetMinutes`, ok/warn/late state (late is a filled band), lines with `aria-pressed` toggles, `readOnly`, `part`/`parts` continuation; `orderTicketState` and `splitTicketLines` helpers. |
 | `Seal` | `atoms` | Stamp mark: `title`, `icon`, `tone`, optional named `label`. |
-| `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. |
+| `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. `describeTrigger="always"` keeps the content as a hidden description of the trigger even while closed (default `"whileOpen"`); the trigger's own `aria-describedby` is always kept. |
 | `AlertDialog` | `overlays` | `role="alertdialog"` with cancel and confirm, `tone="danger"`, async `onConfirm` with a pending state. |
 | `SelectMenu` | `forms` | Custom listbox select over `options` (groups, disabled options, typeahead, hidden `name` input). |
 | `Combobox` | `forms` | Filterable, async-friendly (`onSearchChange`, `loading`), `clearable`, `emptyText`. |

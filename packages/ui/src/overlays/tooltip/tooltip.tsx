@@ -50,8 +50,8 @@ export interface TooltipProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the content and is merged last. */
   classNames?: ClassNames<TooltipPart>;
   /** The element that gets the tooltip. It receives `aria-describedby` while the tooltip is open. */
-  describeTrigger?: "whileOpen" | "always";
   children: ReactElement;
+  describeTrigger?: "whileOpen" | "always";
 }
 
 function focusIsVisible(element: Element): boolean {
