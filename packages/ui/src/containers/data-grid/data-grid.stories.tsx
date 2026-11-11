@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { expect, waitFor } from "storybook/test";
+import type { IntentBridge } from "../../intent/index.js";
+import { IntentBridgeProvider } from "../../intent/index.js";
 import {
   ExpansionDemo,
   ExportDemo,
@@ -470,4 +473,89 @@ export const ToolPanelNarrow: Story = {
 export const ExportCsv: Story = {
   name: "Export CSV",
   render: (args) => <ExportDemo {...controls(args)} />,
+};
+
+interface IntentRow {
+  id: string;
+  name: string;
+  total: number;
+}
+
+const intentRows: IntentRow[] = Array.from({ length: 1000 }, (_, index) => ({
+  id: `order-${index + 1}`,
+  name: `Order ${index + 1}`,
+  total: (index % 97) + 10,
+}));
+
+const intentColumns = [
+  { id: "name", header: "Order", accessor: "name" as const },
+  { id: "total", header: "Total", accessor: "total" as const, type: "number" as const },
+];
+
+function createRecordingBridge() {
+  const counts = new Map<string, number>();
+  let probe: HTMLElement | null = null;
+  let peak = 0;
+  const publish = () => {
+    const live = [...counts.values()].reduce((sum, value) => sum + value, 0);
+    peak = Math.max(peak, live);
+    probe?.setAttribute("data-live", String(live));
+    probe?.setAttribute("data-peak", String(peak));
+  };
+  const bridge: IntentBridge = {
+    registerTarget(ref) {
+      const key = `${ref.intent}:${ref.key}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      publish();
+      return () => {
+        const next = (counts.get(key) ?? 1) - 1;
+        if (next === 0) counts.delete(key);
+        else counts.set(key, next);
+        publish();
+      };
+    },
+  };
+  const attachProbe = (node: HTMLElement | null) => {
+    probe = node;
+    publish();
+  };
+  return { bridge, attachProbe };
+}
+
+function RowIntentsDemo() {
+  const { bridge, attachProbe } = useMemo(createRecordingBridge, []);
+  return (
+    <IntentBridgeProvider bridge={bridge}>
+      <div ref={attachProbe} data-probe="">
+        <DataGrid<IntentRow>
+          aria-label="Orders with row intents"
+          data={intentRows}
+          columns={intentColumns}
+          getRowId={(row) => row.id}
+          rowIntent="order-row"
+          height={320}
+          hideToolbar
+        />
+      </div>
+    </IntentBridgeProvider>
+  );
+}
+
+export const RowIntents: Story = {
+  render: () => <RowIntentsDemo />,
+  play: async ({ canvasElement }) => {
+    const probe = canvasElement.querySelector<HTMLElement>("[data-probe]");
+    const mounted = () => canvasElement.querySelectorAll("tr[data-row-id]").length;
+    const live = () => Number(probe?.getAttribute("data-live") ?? "0");
+    await waitFor(() => expect(mounted()).toBeGreaterThan(0));
+    await waitFor(() => expect(live()).toBe(mounted()));
+    const scroller = canvasElement.querySelector<HTMLElement>(".overflow-auto");
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+    await waitFor(() =>
+      expect(canvasElement.querySelector('tr[data-row-id="order-1000"]')).not.toBeNull(),
+    );
+    await waitFor(() => expect(live()).toBe(mounted()));
+    const peak = Number(probe?.getAttribute("data-peak") ?? "0");
+    await expect(peak).toBeLessThanOrEqual(mounted() * 2);
+  },
 };

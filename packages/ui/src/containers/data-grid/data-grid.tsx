@@ -6,6 +6,7 @@
 
 import {
   type ClipboardEvent,
+  type ComponentPropsWithRef,
   type CSSProperties,
   type DragEvent,
   type FocusEvent,
@@ -41,7 +42,16 @@ import {
   GripVertical,
   PinOff,
 } from "../../icons/index.js";
+import {
+  COLUMN_ID_ATTRIBUTE,
+  type IntentProps,
+  intentAttributes,
+  ROW_ID_ATTRIBUTE,
+  useIntentTarget,
+  useIntentTargets,
+} from "../../intent/index.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { computePinOffsets, type PinPosition, sanitizePinned } from "../table/pin.js";
 import { type GridChartKind, type RangeChartData, rangeToChart } from "./chart-range.js";
 import { buildHeaderGroups, groupPathOf } from "./column-groups.js";
@@ -206,7 +216,7 @@ export interface XlsxExportPayload {
   rowCount: number;
 }
 
-export interface DataGridProps<T> {
+export interface DataGridOwnProps<T> extends IntentProps {
   /** Rows to show. Optional with `dataSource`, which loads them. */
   data?: readonly T[];
   columns: readonly DataGridColumn<T>[];
@@ -348,6 +358,21 @@ export interface DataGridProps<T> {
   toolbarActions?: ReactNode;
   labels?: Partial<DataGridLabels>;
   className?: string;
+  rowIntent?: string;
+}
+
+export type DataGridRootAttributes<T> = Omit<
+  ComponentPropsWithRef<"div">,
+  keyof DataGridOwnProps<T> | "children" | "onChange" | "onSelect" | "defaultValue"
+>;
+
+export type DataGridProps<T> = DataGridOwnProps<T> & DataGridRootAttributes<T>;
+
+const ROW_EXPECTATION = { role: "row", requireName: false } as const;
+const ROW_INTENT_NEEDS_ROW_ID = "DataGrid: rowIntent needs getRowId";
+
+function isProduction(): boolean {
+  return typeof process !== "undefined" && process.env?.NODE_ENV === "production";
 }
 
 const ROW_HEIGHT: Record<Density, number> = { compact: 32, normal: 40, comfortable: 48 };
@@ -542,11 +567,20 @@ export function DataGrid<T>({
   toolbarActions,
   labels: labelsProp,
   className,
+  rowIntent,
+  intent,
+  intentKey,
+  ref,
+  ...rootProps
 }: DataGridProps<T>) {
   const labels = useMemo(() => ({ ...DEFAULT_DATA_GRID_LABELS, ...labelsProp }), [labelsProp]);
   const helpId = useId();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLTableElement>(null);
+  const gridIntentRef = useIntentTarget<HTMLTableElement>({ intent, intentKey }, { role: "grid" });
+  const gridRefs = useComposedRefs(gridRef, gridIntentRef);
+  const bindRow = useIntentTargets();
+  const warnedRowIntent = useRef(false);
 
   // ---- state -------------------------------------------------------------------------------
   const [sort, setSortState] = useControllable<readonly SortRule[]>(
@@ -690,6 +724,13 @@ export function DataGrid<T>({
     () => (pivotResult ? pivotResult.rows : dataProp) as readonly T[],
     [pivotResult, dataProp],
   );
+  const hasStableRowIds = getRowIdProp !== undefined && !pivotResult;
+  const rowIntentMisused = rowIntent !== undefined && rowIntent !== "" && !hasStableRowIds;
+  useEffect(() => {
+    if (!rowIntentMisused || warnedRowIntent.current || isProduction()) return;
+    warnedRowIntent.current = true;
+    console.error(ROW_INTENT_NEEDS_ROW_ID);
+  }, [rowIntentMisused]);
   const getRowId = useMemo(
     () => (pivotResult ? (row: T) => (row as unknown as PivotRow).id : getRowIdProp),
     [pivotResult, getRowIdProp],
@@ -2116,6 +2157,7 @@ export function DataGrid<T>({
           drop === "after" && "shadow-[inset_-2px_0_0_var(--accent)]",
         )}
         data-zone={zone}
+        {...{ [COLUMN_ID_ATTRIBUTE]: column.id }}
         {...common}
       >
         <div
@@ -2529,6 +2571,9 @@ export function DataGrid<T>({
     const isSelected = selected.has(row.key);
     const pinInfo = rowPinInfo(r);
     const isDropTarget = dropRow?.key === row.key;
+    const rowIdAttributes = hasStableRowIds ? { [ROW_ID_ATTRIBUTE]: row.key } : undefined;
+    const rowIntentProps = hasStableRowIds ? { intent: rowIntent, intentKey: row.key } : {};
+    const rowIntentRef = bindRow(rowIntentProps, ROW_EXPECTATION);
     const cells = renderColumns.map((entry, c) => {
       const position = pinOf(entry);
       const stuck = !!position || !!pinInfo;
@@ -2626,6 +2671,7 @@ export function DataGrid<T>({
           key={column.id}
           data-r={r}
           data-c={c}
+          {...{ [COLUMN_ID_ATTRIBUTE]: column.id }}
           tabIndex={tabIndexOf(r, c)}
           role="gridcell"
           aria-readonly={onCellChange && !editable ? true : undefined}
@@ -2685,6 +2731,9 @@ export function DataGrid<T>({
     return (
       <tr
         key={row.key}
+        ref={rowIntentRef}
+        {...rowIdAttributes}
+        {...intentAttributes(rowIntentProps)}
         aria-rowindex={ariaRowOf(r)}
         aria-selected={selectable ? isSelected : undefined}
         aria-level={tree && structured ? row.depth + 1 : undefined}
@@ -2973,6 +3022,8 @@ export function DataGrid<T>({
 
   return (
     <div
+      {...rootProps}
+      ref={ref}
       className={cn(
         "@container/grid flex min-w-0 max-w-full flex-col overflow-hidden rounded-card border-card shadow-card surface-card text-ink",
         className,
@@ -3118,7 +3169,8 @@ export function DataGrid<T>({
           style={paged ? undefined : { maxHeight: height }}
         >
           <table
-            ref={gridRef}
+            ref={gridRefs}
+            {...intentAttributes({ intent, intentKey })}
             role="grid"
             aria-label={ariaLabel}
             aria-describedby={helpId}
