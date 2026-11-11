@@ -1,7 +1,6 @@
-/// <reference types="@vitest/browser-playwright" />
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { CommandPalette, type CommandPaletteItem } from "./command-palette.js";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -54,7 +53,7 @@ async function mount(extra: Partial<React.ComponentProps<typeof CommandPalette>>
       />,
     ),
   );
-  await new Promise((resolve) => setTimeout(resolve, 30));
+  await vi.waitFor(() => expect(document.querySelector("input")).not.toBeNull());
 }
 
 test("inputEnd renders after the input", async () => {
@@ -78,4 +77,28 @@ test("item intents land on the option", async () => {
     "charge",
     null,
   ]);
+});
+
+test("Enter on the inputEnd control activates only that control", async () => {
+  const onSelect = vi.fn();
+  const onSubmitQuery = vi.fn();
+  const onMic = vi.fn();
+  await mount({
+    items: [{ id: "a", label: "Alpha", group: "G", onSelect }],
+    onSubmitQuery,
+    inputEnd: (
+      <button type="button" onClick={onMic}>
+        Mic
+      </button>
+    ),
+  });
+  const button = document.querySelector("[data-part='inputEnd'] button") as HTMLButtonElement;
+  button.focus();
+  await act(async () => {
+    button.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+    );
+  });
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(onSubmitQuery).not.toHaveBeenCalled();
 });

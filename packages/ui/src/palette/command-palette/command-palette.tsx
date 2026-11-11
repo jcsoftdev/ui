@@ -136,6 +136,7 @@ export function CommandPalette({
   const state = useRef<PaletteState>({ search: "", highlighted: "" });
   const submitOnEnter = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!onSubmitQuery) return;
+    if (event.target instanceof Element && event.target.closest("[data-part='inputEnd']")) return;
     const submit = shouldSubmitQuery({
       key: event.key,
       isComposing: isComposing(event),
@@ -182,7 +183,11 @@ export function CommandPalette({
           {...(onQueryChange ? { value: query ?? "", onValueChange: onQueryChange } : {})}
         />
         {inputEnd === undefined ? null : (
-          <span data-part="inputEnd" className={cn("shrink-0", classNames?.inputEnd)}>
+          <span
+            data-part="inputEnd"
+            data-ui-command-skip-keys=""
+            className={cn("shrink-0", classNames?.inputEnd)}
+          >
             {inputEnd}
           </span>
         )}

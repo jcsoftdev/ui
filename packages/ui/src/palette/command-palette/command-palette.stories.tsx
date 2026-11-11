@@ -189,19 +189,29 @@ export const SubmitQuery: Story = {
   },
 };
 
+const micClicks = fn();
+
 export const InputEnd: Story = {
   args: {
+    onClose: fn(),
+    onSubmitQuery: fn(),
     inputEnd: (
-      <IconButton label="Dictar">
+      <IconButton label="Dictar" onClick={micClicks}>
         <Sparkles />
       </IconButton>
     ),
   },
-  play: async () => {
+  play: async ({ args }) => {
     const box = await screen.findByRole("combobox");
     await userEvent.click(box);
     await userEvent.tab();
-    await expect(screen.getByRole("button", { name: "Dictar" })).toHaveFocus();
+    const mic = screen.getByRole("button", { name: "Dictar" });
+    await expect(mic).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(micClicks).toHaveBeenCalledTimes(1));
+    await expect(items[0]?.onSelect).not.toHaveBeenCalled();
+    await expect(args.onSubmitQuery).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 

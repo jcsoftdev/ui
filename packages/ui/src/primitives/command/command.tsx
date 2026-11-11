@@ -144,6 +144,8 @@ export function Root({
   const keyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
     if (event.defaultPrevented) return;
+    if (event.target instanceof Element && event.target.closest("[data-ui-command-skip-keys]"))
+      return;
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     const navigator = createNavigator(context);
     const key = event.key;
