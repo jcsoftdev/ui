@@ -1,4 +1,6 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import {
   HoverCard,
   HoverCardContent,
@@ -17,7 +19,9 @@ export type SourcePart =
   | "cardTitle"
   | "cardSnippet";
 
-export interface SourceProps extends Omit<ComponentPropsWithoutRef<"a">, "href" | "title"> {
+export interface SourceProps
+  extends Omit<ComponentPropsWithRef<"a">, "href" | "title">,
+    IntentProps {
   /** Citation number shown in the chip. */
   index?: number;
   title: string;
@@ -45,6 +49,8 @@ export function Source({
   snippet,
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: SourceProps) {
   const href = safeHref(url);
@@ -75,6 +81,7 @@ export function Source({
       <HoverCardTrigger asChild>
         {href ? (
           <a
+            {...intentAttributes({ intent, intentKey })}
             href={href}
             target="_blank"
             rel="noopener noreferrer nofollow"
@@ -84,7 +91,7 @@ export function Source({
             {chip}
           </a>
         ) : (
-          <button type="button" className={chipClass}>
+          <button type="button" {...intentAttributes({ intent, intentKey })} className={chipClass}>
             {chip}
           </button>
         )}

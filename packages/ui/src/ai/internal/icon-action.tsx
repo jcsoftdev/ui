@@ -1,15 +1,25 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 
-export interface IconActionProps extends ComponentPropsWithoutRef<"button"> {
+export interface IconActionProps extends ComponentPropsWithRef<"button">, IntentProps {
   /** Accessible name; the icon alone carries no text. */
   label: string;
 }
 
 /** Square ghost icon button used by the AI set (copy, regenerate, remove…). */
-export function IconAction({ label, className, children, ...props }: IconActionProps) {
+export function IconAction({
+  label,
+  className,
+  children,
+  intent,
+  intentKey,
+  ...props
+}: IconActionProps) {
   return (
     <button
+      {...intentAttributes({ intent, intentKey })}
       type="button"
       aria-label={label}
       title={label}
