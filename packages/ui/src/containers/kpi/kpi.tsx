@@ -1,60 +1,13 @@
-"use client";
-
-import { type ComponentPropsWithRef, createContext, type ReactNode, useContext } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
-import { customToneStyle, isCustomTone } from "../../utils/tone.js";
+import { customToneStyle } from "../../utils/tone.js";
+import { builtinTones, type KpiPart, type KpiTone, type KpiVariant } from "./kpi-model.js";
+import { KpiDescription, KpiLabel, KpiProvider, KpiValue } from "./kpi-parts.js";
 
-export type KpiVariant = "default" | "danger";
-
-export type KpiBuiltinTone = "neutral" | "accent" | "success" | "warning" | "danger" | "info";
-
-/** A built-in tone, or the name of a tone declared in `tonePalettes`. */
-export type KpiTone = KpiBuiltinTone | (string & {});
-
-const valueToneClasses: Record<KpiBuiltinTone, string> = {
-  neutral: "text-ink",
-  accent: "text-accent-ink",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
-  info: "text-info",
-};
-
-const dotToneClasses: Record<KpiBuiltinTone, string> = {
-  neutral: "bg-ink-3",
-  accent: "bg-accent",
-  success: "bg-success",
-  warning: "bg-warning",
-  danger: "bg-danger",
-  info: "bg-info",
-};
-
-const builtinTones = new Set<string>(Object.keys(valueToneClasses));
-
-export type KpiPart =
-  | "root"
-  | "header"
-  | "label"
-  | "dot"
-  | "icon"
-  | "trailing"
-  | "value"
-  | "suffix"
-  | "trend"
-  | "description";
-
-interface KpiContextValue {
-  tone: KpiTone;
-  dot: boolean;
-  classNames: ClassNames<KpiPart> | undefined;
-}
-
-const KpiContext = createContext<KpiContextValue>({
-  tone: "neutral",
-  dot: false,
-  classNames: undefined,
-});
+export type { KpiBuiltinTone, KpiPart, KpiTone, KpiVariant } from "./kpi-model.js";
+export type { KpiDescriptionProps, KpiLabelProps, KpiValueProps } from "./kpi-parts.js";
+export { KpiDescription, KpiLabel, KpiValue };
 
 export interface KpiProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** Short label describing the metric. Optional when you compose `Kpi.Label` as children. */
@@ -87,127 +40,6 @@ export interface KpiProps extends Omit<ComponentPropsWithRef<"div">, "children">
   classNames?: ClassNames<KpiPart>;
 }
 
-export interface KpiLabelProps extends ComponentPropsWithRef<"span"> {
-  /** Decorative icon at the end of the row (`aria-hidden`). */
-  icon?: ReactNode;
-  /** Interactive or labelled content at the end of the row. */
-  trailing?: ReactNode;
-  /** Overrides the tile's `dot`. */
-  dot?: boolean;
-}
-
-/** Label row of a composed `Kpi`: the label, then an optional icon and trailing slot at the end. */
-export function KpiLabel({
-  icon,
-  trailing,
-  dot: dotProp,
-  className,
-  children,
-  ...props
-}: KpiLabelProps) {
-  const { tone, dot: tileDot, classNames } = useContext(KpiContext);
-  const dot = dotProp ?? tileDot;
-  const dotTone = isCustomTone(tone, builtinTones)
-    ? "bg-(--tone-c)"
-    : (dotToneClasses[tone as KpiBuiltinTone] ?? dotToneClasses.neutral);
-  const labelNode = (
-    <span
-      {...props}
-      className={cn(
-        "min-w-0 break-words font-semibold text-fs-120 text-ink-2",
-        dot && "inline-flex items-center gap-1.5",
-        classNames?.label,
-        className,
-      )}
-    >
-      {dot ? (
-        <span
-          aria-hidden="true"
-          className={cn("size-1.5 shrink-0 rounded-pill", dotTone, classNames?.dot)}
-        />
-      ) : null}
-      {children}
-    </span>
-  );
-  if (!icon && !trailing) return labelNode;
-  return (
-    <div className={cn("flex items-center justify-between gap-2", classNames?.header)}>
-      {labelNode}
-      <span className="flex shrink-0 items-center gap-1.5">
-        {icon ? (
-          <span
-            aria-hidden="true"
-            className={cn("shrink-0 text-ink-3 [&_svg]:size-4", classNames?.icon)}
-          >
-            {icon}
-          </span>
-        ) : null}
-        {trailing ? <span className={cn("shrink-0", classNames?.trailing)}>{trailing}</span> : null}
-      </span>
-    </div>
-  );
-}
-
-export interface KpiValueProps extends ComponentPropsWithRef<"span"> {
-  /** Small suffix next to the number. */
-  suffix?: ReactNode;
-  /** Change indicator next to the value. */
-  trend?: ReactNode;
-  /** Monospaced digits at a steady weight, for amounts and codes. */
-  mono?: boolean;
-}
-
-/** The highlighted number of a composed `Kpi`, coloured by the tile's tone. */
-export function KpiValue({ suffix, trend, mono, className, children, ...props }: KpiValueProps) {
-  const { tone, classNames } = useContext(KpiContext);
-  const valueTone = isCustomTone(tone, builtinTones)
-    ? "text-(--tone-c-ink)"
-    : (valueToneClasses[tone as KpiBuiltinTone] ?? valueToneClasses.neutral);
-  const valueNode = (
-    <span
-      {...props}
-      className={cn(
-        "break-words text-kpi-number tabular-nums @max-[9rem]/kpi:text-fs-200",
-        mono && "font-mono tracking-normal",
-        valueTone,
-        classNames?.value,
-        className,
-      )}
-    >
-      {children}
-      {suffix ? (
-        <small
-          className={cn(
-            "ml-1 font-semibold text-fs-140 text-ink-3 tracking-normal",
-            classNames?.suffix,
-          )}
-        >
-          {suffix}
-        </small>
-      ) : null}
-    </span>
-  );
-  if (!trend) return valueNode;
-  return (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      {valueNode}
-      <span className={cn("shrink-0", classNames?.trend)}>{trend}</span>
-    </div>
-  );
-}
-
-export interface KpiDescriptionProps extends ComponentPropsWithRef<"span"> {}
-
-export function KpiDescription({ className, ...props }: KpiDescriptionProps) {
-  const { classNames } = useContext(KpiContext);
-  return (
-    <span
-      {...props}
-      className={cn("break-words text-fs-120 text-ink-3", classNames?.description, className)}
-    />
-  );
-}
-
 /**
  * One metric: a label, a big number and an optional description. Fill it with props, or compose
  * `Kpi.Label`, `Kpi.Value` and `Kpi.Description` as children when the parts need their own
@@ -233,7 +65,7 @@ export function Kpi({
 }: KpiProps) {
   const tone: KpiTone = toneProp ?? (variant === "danger" ? "danger" : "neutral");
   return (
-    <KpiContext.Provider value={{ tone, dot, classNames }}>
+    <KpiProvider tone={tone} dot={dot} classNames={classNames}>
       <div
         {...props}
         style={customToneStyle(tone, builtinTones, style)}
@@ -257,7 +89,7 @@ export function Kpi({
         {description ? <KpiDescription>{description}</KpiDescription> : null}
         {children}
       </div>
-    </KpiContext.Provider>
+    </KpiProvider>
   );
 }
 

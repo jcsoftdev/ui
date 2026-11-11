@@ -1,4 +1,4 @@
-import type { ComponentPropsWithRef } from "react";
+import type { ComponentPropsWithRef, Ref } from "react";
 import { intentAttributes } from "../../intent/attributes.js";
 import type { IntentProps } from "../../intent/types.js";
 import {
@@ -51,6 +51,7 @@ export function Source({
   classNames,
   intent,
   intentKey,
+  ref,
   ...props
 }: SourceProps) {
   const href = safeHref(url);
@@ -87,11 +88,17 @@ export function Source({
             rel="noopener noreferrer nofollow"
             className={chipClass}
             {...props}
+            ref={ref}
           >
             {chip}
           </a>
         ) : (
-          <button type="button" {...intentAttributes({ intent, intentKey })} className={chipClass}>
+          <button
+            type="button"
+            {...intentAttributes({ intent, intentKey })}
+            className={chipClass}
+            ref={ref as Ref<HTMLButtonElement>}
+          >
             {chip}
           </button>
         )}
