@@ -134,7 +134,7 @@ export const intentCases: IntentCase[] = [
   {
     name: "Slider range",
     element: <Slider {...named} {...intent} defaultValue={[10, 20]} />,
-    expected: [probe("span", "slider", "k1-min"), probe("span", "slider", "k1-max")],
+    expected: [probe("span", "slider", "k1:start"), probe("span", "slider", "k1:end")],
   },
   {
     name: "Rating editable",
