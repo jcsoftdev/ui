@@ -35,6 +35,12 @@ export const html = {
         <OrderTicket {...base} since={since(20 * 60 + 75)} />
       </UiStringsProvider>,
     ),
+  lateLong: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <OrderTicket {...base} since={since(20 * 60 + 22 * 3600 + 15 * 60 + 11)} />
+      </UiStringsProvider>,
+    ),
   takeaway: () =>
     renderToStaticMarkup(
       <UiStringsProvider locale="es">

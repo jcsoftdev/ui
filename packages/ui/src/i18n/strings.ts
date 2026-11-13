@@ -28,6 +28,10 @@ export interface UiStrings {
   elapsedMinutes: string;
   /** Visible text of an `ElapsedTime` with `format="minutes"`; `{count}` is replaced. */
   minutesShort: string;
+  hoursShort: string;
+  hoursMinutesShort: string;
+  elapsedHoursOne: string;
+  elapsedHours: string;
   /** Accessible text of a countdown `ElapsedTime`; `{time}` is the remaining time. */
   countdownLeft: string;
   /** Accessible text of a countdown `ElapsedTime` past its target; `{time}` is the overrun. */
@@ -208,6 +212,10 @@ export const uiStrings = {
     elapsedMinutesOne: "{count} minute",
     elapsedMinutes: "{count} minutes",
     minutesShort: "{count} min",
+    hoursShort: "{hours} h",
+    hoursMinutesShort: "{hours} h {minutes} min",
+    elapsedHoursOne: "{count} hour",
+    elapsedHours: "{count} hours",
     countdownLeft: "{time} left",
     countdownOver: "{time} over",
     seats: "{count} seats",
@@ -330,6 +338,10 @@ export const uiStrings = {
     elapsedMinutesOne: "{count} minuto",
     elapsedMinutes: "{count} minutos",
     minutesShort: "{count} min",
+    hoursShort: "{hours} h",
+    hoursMinutesShort: "{hours} h {minutes} min",
+    elapsedHoursOne: "{count} hora",
+    elapsedHours: "{count} horas",
     countdownLeft: "faltan {time}",
     countdownOver: "{time} de retraso",
     seats: "{count} asientos",

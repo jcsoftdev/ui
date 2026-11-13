@@ -4,7 +4,11 @@ import { type ComponentPropsWithRef, type ReactNode, useId, useSyncExternalStore
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import { ElapsedTime } from "../../atoms/elapsed-time/elapsed-time.js";
-import { readElapsed } from "../../atoms/elapsed-time/model.js";
+import {
+  formatMinutesText,
+  formatOverrunText,
+  readElapsed,
+} from "../../atoms/elapsed-time/model.js";
 import { getTickerSnapshot, subscribeTicker } from "../../atoms/elapsed-time/ticker.js";
 import { Progress, type ProgressBuiltinTone } from "../../atoms/progress/progress.js";
 import { type UiStrings, useUiStrings } from "../../i18n/index.js";
@@ -135,9 +139,6 @@ const fill = (template: string, values: Record<string, string | number>) =>
     (text, [key, value]) => text.replace(`{${key}}`, String(value)),
     template,
   );
-
-const clock = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 const noteClasses =
   "inline-flex max-w-full items-start gap-1 self-start rounded-chip px-1.5 py-0.5 text-meta font-medium [&_svg]:mt-0.5 [&_svg]:shrink-0";
@@ -313,8 +314,8 @@ export function OrderTicket({
       ? strings.orderTicketContinued
       : fill(strings.orderTicketPart, { index: 1, count: partCount ?? 1 });
   const overrunText = reducedMotion
-    ? fill(strings.minutesShort, { count: Math.ceil(overrun / 60) })
-    : clock(overrun);
+    ? formatMinutesText(Math.ceil(overrun / 60), strings)
+    : formatOverrunText(overrun, strings);
   const showActions = !readOnly && Boolean(actions || onStartAll || onReadyAll);
 
   return (

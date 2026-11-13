@@ -15,6 +15,7 @@
 - **`Switch`** `label` and `description`, **`Checkbox`** `description`, wired through `aria-describedby`.
 - **Calendar**: `MonthView` and `WeekView` have ARIA grid semantics, a roving keyboard and `dayIntent`.
 - **`orderTicketTitle`**.
+- **Durations in hours**: `ElapsedTime` and `OrderTicket` keep `mm:ss` and `N min` under 60 minutes and read "22 h 30 min", "9 h 28 min" or "1 h" from 60 minutes on (the clock drops seconds; the late overrun reads "+22 h 15 min"). The accessible text follows ("9 hours 28 minutes"). New `UiStrings` keys `hoursShort`, `hoursMinutesShort`, `elapsedHoursOne` and `elapsedHours` for `en` and `es`; custom locales must add them. The pure helpers `formatClockText`, `formatMinutesText`, `formatOverrunText` and `spokenDuration` live in the elapsed-time model; `formatClock` is unchanged.
 - **Highlight styles**: `data-intent-highlight` and `data-intent-changed` outlines with `--intent-highlight-*` custom properties, reduced-motion and forced-colors fallbacks.
 
 #### Changed

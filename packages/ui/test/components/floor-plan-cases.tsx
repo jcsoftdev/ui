@@ -3,7 +3,16 @@ import { ElapsedTime } from "../../src/atoms/elapsed-time/elapsed-time.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
 import { TableGlyph } from "../../src/atoms/table-glyph/table-glyph.js";
 import { FloorPlan } from "../../src/containers/floor-plan/floor-plan.js";
-export { formatClock, isoDuration, readElapsed, toneFor } from "../../src/atoms/elapsed-time/model.js";
+export {
+  formatClock,
+  formatClockText,
+  formatMinutesText,
+  formatOverrunText,
+  isoDuration,
+  readElapsed,
+  spokenDuration,
+  toneFor,
+} from "../../src/atoms/elapsed-time/model.js";
 export {
   getTickerSnapshot,
   subscribeTicker,

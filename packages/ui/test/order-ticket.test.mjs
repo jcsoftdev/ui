@@ -57,6 +57,13 @@ test("a late ticket fills its band and says how late with an alarm, never a stri
   assert.doesNotMatch(markup, /border-l-|border-s-|ring-2/);
 });
 
+test("a ticket open for hours reads the overrun in hours", () => {
+  const markup = html.lateLong();
+  assert.match(markup, /Demorada \+22 h 15 min/);
+  assert.match(markup, />22 h 35 min</);
+  assert.doesNotMatch(markup, /\d{3,}:\d\d/);
+});
+
 test("a ticket without a table titles itself with the channel icon and number", () => {
   const markup = html.takeaway();
   assert.match(markup, /<h3[^>]*><svg[^>]*>.*?<\/svg><span>N\.º 42<\/span>/);
