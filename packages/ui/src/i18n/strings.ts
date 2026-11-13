@@ -60,6 +60,7 @@ export interface UiStrings {
   orderTicketLateBy: string;
   orderTicketProgress: string;
   orderTicketProgressValue: string;
+  orderTicketProgressDuration: string;
   orderTicketItems: string;
   orderTicketPending: string;
   orderTicketInProgress: string;
@@ -236,6 +237,7 @@ export const uiStrings = {
     orderTicketLateBy: "Late +{time}",
     orderTicketProgress: "Time against the {target} min target",
     orderTicketProgressValue: "{elapsed} of {target} min",
+    orderTicketProgressDuration: "{elapsed} of {target}",
     orderTicketItems: "Items",
     orderTicketPending: "Queued",
     orderTicketInProgress: "Preparing",
@@ -362,6 +364,7 @@ export const uiStrings = {
     orderTicketLateBy: "Demorada +{time}",
     orderTicketProgress: "Tiempo contra los {target} min objetivo",
     orderTicketProgressValue: "{elapsed} de {target} min",
+    orderTicketProgressDuration: "{elapsed} de {target}",
     orderTicketItems: "Platos",
     orderTicketPending: "En cola",
     orderTicketInProgress: "Preparando",

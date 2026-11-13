@@ -411,9 +411,9 @@ export function OrderTicket({
           tone={progressTone[state]}
           aria-label={fill(strings.orderTicketProgress, { target: targetMinutes })}
           getValueLabel={() =>
-            fill(strings.orderTicketProgressValue, {
-              elapsed: Math.floor(seconds / 60),
-              target: targetMinutes,
+            fill(strings.orderTicketProgressDuration, {
+              elapsed: formatMinutesText(Math.floor(seconds / 60), strings),
+              target: formatMinutesText(targetMinutes, strings),
             })
           }
           className={classNames?.progress}

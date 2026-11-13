@@ -62,6 +62,17 @@ test("a ticket open for hours reads the overrun in hours", () => {
   assert.match(markup, /Demorada \+22 h 15 min/);
   assert.match(markup, />22 h 35 min</);
   assert.doesNotMatch(markup, /\d{3,}:\d\d/);
+  assert.match(markup, /aria-valuetext="22 h 35 min de 20 min"/);
+  assert.doesNotMatch(markup, /\d{3,} de/);
+});
+
+test("the progress value keeps minutes under an hour and reads the target in hours too", () => {
+  const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60000 - 30000);
+  assert.match(html.ticketEs({ since: minutesAgo(5) }), /aria-valuetext="5 min de 20 min"/);
+  assert.match(
+    html.ticketEs({ since: minutesAgo(61), targetMinutes: 90 }),
+    /aria-valuetext="1 h 1 min de 1 h 30 min"/,
+  );
 });
 
 test("a ticket without a table titles itself with the channel icon and number", () => {
