@@ -37,7 +37,14 @@ const meta = {
   tags: ["autodocs"],
   parameters: { layout: "centered" },
   args: { items, ariaLabel: "Sections" },
-  argTypes: { items: { control: false }, maxSlots: { control: "number" } },
+  argTypes: {
+    items: { control: false },
+    maxSlots: { control: "number" },
+    moreBadgeLabel: { control: false },
+    moreFooter: { control: false },
+    renderLink: { control: false },
+    classNames: { control: false },
+  },
 } satisfies Meta<typeof BottomNav>;
 
 export default meta;

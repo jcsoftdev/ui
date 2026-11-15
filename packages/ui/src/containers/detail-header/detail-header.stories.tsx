@@ -38,7 +38,14 @@ const meta = {
       </Facts>
     ),
   },
-  argTypes: { avatar: { control: false }, status: { control: false }, facts: { control: false } },
+  argTypes: {
+    avatar: { control: false },
+    status: { control: false },
+    facts: { control: false },
+    name: { control: "text" },
+    subtitle: { control: "text" },
+    actions: { control: false },
+  },
 } satisfies Meta<typeof DetailHeader>;
 
 export default meta;

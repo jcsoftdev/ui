@@ -12,7 +12,11 @@ const meta = {
   component: InlineSelect,
   tags: ["autodocs"],
   args: { options, defaultValue: "semana", "aria-label": "Frecuencia" },
-  argTypes: { disabled: { control: "boolean" }, options: { control: false } },
+  argTypes: {
+    disabled: { control: "boolean" },
+    options: { control: false },
+    required: { control: "boolean" },
+  },
   render: (args) => (
     <p className="flex flex-wrap items-center gap-x-1 text-body text-ink">
       Repetir la cita cada <InlineSelect {...args} /> con el mismo barbero.

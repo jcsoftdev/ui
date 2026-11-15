@@ -9,7 +9,7 @@ const meta = {
   argTypes: {
     defaultValue: { control: "object" },
     onChange: { control: false },
-    className: { control: false },
+    className: { control: "text" },
   },
 } satisfies Meta<typeof LogoForge>;
 

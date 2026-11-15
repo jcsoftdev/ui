@@ -16,6 +16,11 @@ const meta = {
       </>
     ),
   },
+  argTypes: {
+    onClick: { control: false },
+    children: { control: false },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="w-72">

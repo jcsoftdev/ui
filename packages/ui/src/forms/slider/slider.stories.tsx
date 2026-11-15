@@ -19,6 +19,13 @@ const meta = {
     marks: { control: false },
     formatValue: { control: false },
     onValueChange: { control: false },
+    pageStep: { control: "number" },
+    minGap: { control: "number" },
+    "aria-label": { control: "text" },
+    "aria-labelledby": { control: "text" },
+    name: { control: "text" },
+    className: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

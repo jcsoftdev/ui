@@ -23,6 +23,10 @@ const meta = {
       options: ["accent", "success", "warning", "danger", "neutral", "institutional"],
     },
     children: { control: false },
+    title: { control: "text" },
+    icon: { control: false },
+    label: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

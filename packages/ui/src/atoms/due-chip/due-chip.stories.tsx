@@ -8,7 +8,20 @@ const meta = {
   component: DueChip,
   tags: ["autodocs"],
   args: { date: "2026-03-20", today: "2026-03-04" },
-  argTypes: { soonDays: { control: { type: "number", min: 0 } } },
+  argTypes: {
+    soonDays: { control: { type: "number", min: 0 } },
+    date: { control: "text" },
+    today: { control: "text" },
+    state: { control: "inline-radio", options: ["overdue", "soon", "ok", "done"] },
+    done: { control: "boolean" },
+    children: { control: "text" },
+    locale: { control: "text" },
+    onClick: { control: false },
+    icon: { control: false },
+    size: { control: "inline-radio", options: ["sm", "md"] },
+    square: { control: "boolean" },
+    removeLabel: { control: "text" },
+  },
 } satisfies Meta<typeof DueChip>;
 
 export default meta;

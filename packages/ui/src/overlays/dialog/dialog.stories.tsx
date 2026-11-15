@@ -42,6 +42,15 @@ function CancelBody() {
 const meta = {
   title: "Overlays/Dialog",
   component: DialogContent,
+  subcomponents: {
+    Dialog,
+    DialogTrigger,
+    DialogHeader,
+    DialogTitle,
+    DialogBody,
+    DialogFooter,
+    DialogClose,
+  },
   tags: ["autodocs"],
   args: { width: "md", blocking: false, closeLabel: "Cerrar" },
   argTypes: {
@@ -49,6 +58,19 @@ const meta = {
     blocking: { control: "boolean" },
     closeLabel: { control: "text" },
     children: { control: false },
+    classNames: { control: false },
+    material: {
+      control: "select",
+      options: ["solid", "glass", "glass-clear", "liquid", "liquid-clear"],
+    },
+    container: { control: false },
+    forceMount: { control: "boolean" },
+    onOpenAutoFocus: { control: false },
+    onCloseAutoFocus: { control: false },
+    onEscapeKeyDown: { control: false },
+    onPointerDownOutside: { control: false },
+    onFocusOutside: { control: false },
+    onInteractOutside: { control: false },
   },
   parameters: { layout: "centered" },
 } satisfies Meta<typeof DialogContent>;

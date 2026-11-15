@@ -49,6 +49,9 @@ const meta = {
     rowKey: { control: false },
     renderActions: { control: false },
     rowClassName: { control: false },
+    selectedKey: { control: "text" },
+    onSelect: { control: false },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof ResponsiveList<Order>>;
 

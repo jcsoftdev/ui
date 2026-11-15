@@ -6,6 +6,10 @@ const meta = {
   title: "Atoms/Divider",
   component: Divider,
   tags: ["autodocs"],
+  argTypes: {
+    children: { control: "text" },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-sm">

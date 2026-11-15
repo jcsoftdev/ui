@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs.js";
 const meta = {
   title: "Navigation/Tabs",
   component: Tabs,
+  subcomponents: { TabsList, TabsTrigger, TabsContent },
   tags: ["autodocs"],
   args: { defaultValue: "citas" },
   argTypes: {
@@ -14,6 +15,7 @@ const meta = {
     activationMode: { control: "inline-radio", options: ["automatic", "manual"] },
     onValueChange: { control: false },
     children: { control: false },
+    dir: { control: "inline-radio", options: ["ltr", "rtl"] },
   },
   render: (args) => (
     <Tabs {...args}>

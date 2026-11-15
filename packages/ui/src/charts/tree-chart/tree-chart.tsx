@@ -746,7 +746,7 @@ function TreePlot({
                         event.stopPropagation();
                         if (!panZoom.wasDrag()) toggle(node);
                       }}
-                      className="absolute top-0 left-0 grid h-5 min-w-5 cursor-pointer place-items-center rounded-badge border-divider bg-surface-control px-1 font-bold text-fs-100 text-ink-2 tabular-nums shadow-control hover:text-ink"
+                      className="absolute top-0 left-0 grid h-5 min-w-5 cursor-pointer before:absolute before:-inset-0.5 before:content-[''] place-items-center rounded-badge border-divider bg-surface-control px-1 font-bold text-fs-100 text-ink-2 tabular-nums shadow-control hover:text-ink"
                       style={{
                         transform: `translate(${tx}px, ${ty}px) translate(-50%, -50%)`,
                         opacity: pose.opacity,

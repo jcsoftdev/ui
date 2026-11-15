@@ -14,6 +14,8 @@ const meta = {
       options: ["accent", "neutral", "success", "warning", "danger", "info"],
     },
     "aria-label": { control: "text" },
+    classNames: { control: false },
+    getValueLabel: { control: false },
   },
   decorators: [
     (Story) => (

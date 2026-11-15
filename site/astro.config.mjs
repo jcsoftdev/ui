@@ -66,6 +66,14 @@ export default defineConfig({
             { slug: "docs/theming/theme-generator" },
           ],
         },
+        {
+          label: "Packages",
+          items: [
+            { slug: "docs/packages/ui-core" },
+            { slug: "docs/packages/ui-elements" },
+            { slug: "docs/packages/ui-compose" },
+          ],
+        },
         { label: "Components", items: componentGroups },
         { label: "Reference", items: [{ slug: "docs/reference/exports" }, { slug: "docs/llms" }] },
       ],
@@ -79,6 +87,9 @@ export default defineConfig({
         // Stories import `fn` from Storybook's test package; the site has no Storybook runtime.
         "storybook/test": fileURLToPath(
           new URL("./src/lib/storybook-test-stub.ts", import.meta.url),
+        ),
+        "storybook/preview-api": fileURLToPath(
+          new URL("./src/lib/storybook-preview-api-stub.ts", import.meta.url),
         ),
       },
     },

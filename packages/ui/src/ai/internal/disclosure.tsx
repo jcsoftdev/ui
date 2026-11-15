@@ -43,7 +43,7 @@ export function Disclosure({
         aria-controls={panelId}
         onClick={toggle}
         className={cn(
-          "flex w-full min-w-0 cursor-pointer items-center gap-density-sm rounded-button text-left focus-visible:focus-ring",
+          "flex min-h-6 w-full min-w-0 cursor-pointer items-center gap-density-sm rounded-button text-left focus-visible:focus-ring",
           triggerClassName,
         )}
       >

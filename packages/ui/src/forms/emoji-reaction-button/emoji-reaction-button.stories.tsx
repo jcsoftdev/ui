@@ -13,6 +13,8 @@ const meta = {
     reacted: { control: "boolean" },
     disabled: { control: "boolean" },
     onToggle: { control: false },
+    className: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof EmojiReactionButton>;
 

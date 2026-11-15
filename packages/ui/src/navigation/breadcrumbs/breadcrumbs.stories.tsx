@@ -12,7 +12,11 @@ const meta = {
       { label: "Marco Salazar" },
     ],
   },
-  argTypes: { items: { control: false } },
+  argTypes: {
+    items: { control: false },
+    renderLink: { control: false },
+    classNames: { control: false },
+  },
 } satisfies Meta<typeof Breadcrumbs>;
 
 export default meta;

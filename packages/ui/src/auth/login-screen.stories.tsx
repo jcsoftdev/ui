@@ -103,6 +103,7 @@ const meta = {
     appearance: { control: "inline-radio", options: ["card", "open"] },
     state: { control: "inline-radio", options: AUTH_STATES },
     look: { control: "inline-radio", options: Object.keys(AUTH_LOOKS) },
+    progress: { control: { type: "range", min: 0, max: 1, step: 0.05 } },
     width: { control: { type: "number", min: 320, max: 1400, step: 10 } },
   },
 } satisfies Meta<typeof LoginScreen>;

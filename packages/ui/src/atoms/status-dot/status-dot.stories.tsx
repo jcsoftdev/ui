@@ -15,6 +15,7 @@ const meta = {
     label: { control: "text" },
     showLabel: { control: "boolean" },
     hollow: { control: "boolean" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof StatusDot>;
 

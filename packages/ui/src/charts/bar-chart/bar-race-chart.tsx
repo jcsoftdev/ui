@@ -172,7 +172,7 @@ export function BarRaceChart({
               setPlaying(false);
               setPosition(Number(event.currentTarget.value));
             }}
-            className="h-1.5 min-w-0 flex-1 cursor-pointer accent-(--accent)"
+            className="h-6 min-w-0 flex-1 cursor-pointer accent-(--accent)"
           />
           <span className="min-w-12 text-right font-bold text-fs-120 text-ink-2 tabular-nums">
             {caption}

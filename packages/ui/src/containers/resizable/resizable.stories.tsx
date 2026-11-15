@@ -1,10 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./resizable.js";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+  type ResizablePanelGroupProps,
+} from "./resizable.js";
 
 const meta = {
   title: "Containers/Resizable",
   component: ResizablePanelGroup,
+  subcomponents: { ResizablePanel, ResizableHandle },
   tags: ["autodocs"],
   args: { direction: "horizontal", children: null },
   argTypes: {
@@ -59,6 +65,50 @@ function Demo({ direction }: { direction: "horizontal" | "vertical" }) {
     </div>
   );
 }
+
+type PlaygroundArgs = ResizablePanelGroupProps & {
+  /** `defaultSize` of the first panel, in percent. */
+  panelDefaultSize: number;
+  /** `minSize` of the first panel, in percent. */
+  panelMinSize: number;
+  /** `maxSize` of the first panel, in percent. */
+  panelMaxSize: number;
+  /** `label` of the handle. */
+  handleLabel: string;
+};
+
+/** The group's `direction` plus the first panel's sizes and the handle's label. Size edits remount the group. */
+export const Playground: StoryObj<PlaygroundArgs> = {
+  args: {
+    direction: "horizontal",
+    panelDefaultSize: 30,
+    panelMinSize: 15,
+    panelMaxSize: 60,
+    handleLabel: "Redimensionar lista de barberos",
+  },
+  argTypes: {
+    panelDefaultSize: { control: { type: "range", min: 0, max: 100, step: 5 } },
+    panelMinSize: { control: { type: "range", min: 0, max: 100, step: 5 } },
+    panelMaxSize: { control: { type: "range", min: 0, max: 100, step: 5 } },
+    handleLabel: { control: "text" },
+  },
+  render: ({ panelDefaultSize, panelMinSize, panelMaxSize, handleLabel, ...args }) => (
+    <ResizablePanelGroup
+      key={`${panelDefaultSize}-${panelMinSize}-${panelMaxSize}`}
+      {...args}
+      aria-label="Agenda"
+      className="h-80"
+    >
+      <ResizablePanel defaultSize={panelDefaultSize} minSize={panelMinSize} maxSize={panelMaxSize}>
+        <Block title="Barberos">Diego Quispe, Rosa Mendoza y Luis Ramírez.</Block>
+      </ResizablePanel>
+      <ResizableHandle label={handleLabel} />
+      <ResizablePanel minSize={20}>
+        <Block title="Agenda del día">Siete citas hoy.</Block>
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  ),
+};
 
 export const Default: Story = { render: () => <Demo direction="horizontal" /> };
 

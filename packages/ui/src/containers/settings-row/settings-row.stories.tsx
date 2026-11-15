@@ -16,6 +16,7 @@ const meta = {
     title: { control: "text" },
     description: { control: "text" },
     control: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

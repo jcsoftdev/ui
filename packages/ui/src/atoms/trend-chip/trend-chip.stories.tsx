@@ -12,6 +12,7 @@ const meta = {
     epsilon: { control: "number" },
     label: { control: "text" },
     locale: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof TrendChip>;
 

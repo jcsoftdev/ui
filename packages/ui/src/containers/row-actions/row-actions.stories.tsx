@@ -27,6 +27,7 @@ const meta = {
       { id: "copy", label: "Duplicar", icon: <Copy />, onSelect: fn(), disabled: true },
     ],
   },
+  argTypes: { primary: { control: false } },
 } satisfies Meta<typeof RowActions>;
 
 export default meta;

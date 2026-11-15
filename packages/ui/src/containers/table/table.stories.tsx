@@ -58,7 +58,12 @@ const meta = {
       </>
     ),
   },
-  argTypes: { children: { control: false } },
+  argTypes: {
+    children: { control: false },
+    onPinnedColumnsChange: { control: false },
+    onSelectedKeysChange: { control: false },
+    onSortChange: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-3xl rounded-lg border border-line bg-surface">

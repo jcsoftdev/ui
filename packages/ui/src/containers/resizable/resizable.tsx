@@ -117,7 +117,9 @@ export function ResizableHandle({ label, className, ...props }: ResizableHandleP
       onPointerDown={(event) => group.startDrag(event, index)}
       className={cn(
         "group relative flex shrink-0 touch-none select-none items-center justify-center outline-none",
-        vertical ? "w-2 cursor-col-resize" : "h-2 cursor-row-resize",
+        vertical
+          ? "w-2 cursor-col-resize after:absolute after:inset-y-0 after:-inset-x-2 after:content-['']"
+          : "h-2 cursor-row-resize after:absolute after:inset-x-0 after:-inset-y-2 after:content-['']",
         "focus-visible:focus-ring",
         className,
       )}

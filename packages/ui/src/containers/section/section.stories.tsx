@@ -14,7 +14,15 @@ const meta = {
     count: 3,
     children: <p className="m-0 text-body text-ink-2">Section body.</p>,
   },
-  argTypes: { children: { control: false }, actions: { control: false } },
+  argTypes: {
+    children: { control: false },
+    actions: { control: false },
+    as: { control: "inline-radio", options: ["section", "div", "article"] },
+    title: { control: "text" },
+    count: { control: "number" },
+    description: { control: "text" },
+    classNames: { control: false },
+  },
 } satisfies Meta<typeof Section>;
 
 export default meta;

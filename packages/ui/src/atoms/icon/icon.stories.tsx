@@ -15,6 +15,9 @@ const meta = {
     icon: { control: false },
     label: { control: "text" },
     className: { control: "text" },
+    size: { control: "number" },
+    strokeWidth: { control: "number" },
+    absoluteStrokeWidth: { control: "boolean" },
   },
 } satisfies Meta<typeof Icon>;
 

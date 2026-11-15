@@ -13,6 +13,7 @@ const meta = {
     status: { control: "inline-radio", options: ["live", "reconnecting", "offline"] },
     children: { control: false },
     labels: { control: "object" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof LiveStatusBar>;
 

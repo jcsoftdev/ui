@@ -117,6 +117,12 @@ const meta = {
   component: FloorPlan,
   tags: ["autodocs"],
   args: { width: 36, height: 26, items: plan.items, landmarks: plan.landmarks },
+  argTypes: {
+    selectedId: { control: "text" },
+    onSelect: { control: false },
+    onChange: { control: false },
+    classNames: { control: false },
+  },
   parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (

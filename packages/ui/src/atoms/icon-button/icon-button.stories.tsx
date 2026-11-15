@@ -14,6 +14,9 @@ const meta = {
     loading: { control: "boolean" },
     children: { control: false },
     onClick: { control: false },
+    label: { control: "text" },
+    asChild: { control: false },
+    disabled: { control: "boolean" },
   },
 } satisfies Meta<typeof IconButton>;
 

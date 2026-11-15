@@ -34,7 +34,11 @@ const meta = {
       </>
     ),
   },
-  argTypes: { children: { control: false } },
+  argTypes: {
+    children: { control: false },
+    aside: { control: false },
+    asideWidth: { control: "text" },
+  },
 } satisfies Meta<typeof Page>;
 
 export default meta;

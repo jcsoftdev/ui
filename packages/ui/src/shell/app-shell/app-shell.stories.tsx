@@ -84,6 +84,7 @@ const meta = {
   argTypes: {
     className: { control: "text" },
     children: { control: false },
+    bottomBar: { control: false },
   },
 } satisfies Meta<typeof AppShell>;
 

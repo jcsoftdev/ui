@@ -86,7 +86,7 @@ export function AccentPicker({
             { role: "radio" },
           )}
           className={cn(
-            "flex items-center gap-2 rounded-control border-divider px-2.5 py-1.75 font-semibold text-chip-text text-ink data-[state=checked]:border-accent-ink data-[state=checked]:shadow-selected",
+            "flex items-center gap-2 rounded-control border-divider px-2.5 py-1.75 font-semibold text-chip-text text-ink disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:border-accent-ink data-[state=checked]:shadow-selected",
             classNames?.option,
           )}
         >

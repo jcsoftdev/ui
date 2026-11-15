@@ -379,7 +379,9 @@
   z-index: -1;
   background: linear-gradient(180deg, rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.45));
 }
+/* Positioned so the hero content paints above the absolutely placed photo and stays clickable. */
 .hero-grid {
+  position: relative;
   display: grid;
   gap: 2rem;
   align-items: center;
@@ -389,9 +391,13 @@
     grid-template-columns: 1.2fr 0.8fr;
   }
 }
+/* The hero copy is white in both themes, so the card keeps the dark liquid material (the dark-theme values of
+   --liquid-regular-tint and --liquid-regular-dim) even when the page is light. */
 .hero-card {
   padding: clamp(1.25rem, 3vw, 2.25rem);
   color: #fff;
+  --liquid-regular-tint: rgb(24 24 28 / 0.36);
+  --liquid-regular-dim: rgb(0 0 0 / 0.54);
 }
 .hero-card .landing-kicker,
 .hero-card .landing-lead,
@@ -425,29 +431,13 @@
 }
 .hero-side {
   display: grid;
-  gap: 1.25rem;
   justify-items: center;
+  min-width: 0;
 }
-.hero-pill {
-  display: grid;
-  place-items: center;
-  width: min(100%, 17rem);
-  height: 7rem;
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
-  touch-action: none;
-  cursor: grab;
-}
-.hero-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.9375rem;
-  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+/* The dial panel is a solid overlay surface over the photo, so it sets its own ink instead of the hero's white. */
+.hero-dials {
+  max-width: 30rem;
+  text-shadow: none;
 }
 
 /* ---- Landing: Liquid Glass showcase ---- */

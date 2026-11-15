@@ -21,6 +21,12 @@ const meta = {
     disabled: { control: "boolean" },
     required: { control: "boolean" },
     onValueChange: { control: false },
+    classNames: { control: false },
+    name: { control: "text" },
+    form: { control: "text" },
+    orientation: { control: "inline-radio", options: ["horizontal", "vertical"] },
+    dir: { control: "inline-radio", options: ["ltr", "rtl"] },
+    loop: { control: "boolean" },
   },
 } satisfies Meta<typeof RadioGroup>;
 

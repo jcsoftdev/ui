@@ -17,6 +17,7 @@ const meta = {
     title: { control: "text" },
     url: { control: "text" },
     snippet: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Source>;
 

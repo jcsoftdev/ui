@@ -16,6 +16,10 @@ const meta = {
     showValue: { control: "boolean" },
     value: { control: false },
     onValueChange: { control: false },
+    defaultValue: { control: "number" },
+    "aria-label": { control: "text" },
+    className: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Rating>;
 

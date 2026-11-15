@@ -1,7 +1,7 @@
 # ADR 0001: Split the library into lockstep-versioned packages
 
 - Status: accepted (user decision, 2026-10-12)
-- Scope: phases P0-P2 (tokens, theme engine, release plumbing). `ui-core` and `ui-elements` follow.
+- Scope: phases P0-P2 (tokens, theme engine, release plumbing). `ui-core` and `ui-elements` followed; see the status update at the end.
 
 ## Context
 
@@ -17,8 +17,8 @@ Four packages, one version number (lockstep), zero runtime dependencies each:
 | Package | Contents | Depends on |
 | --- | --- | --- |
 | `@jcsoftdev/ui-tokens` | token JSON, generated CSS (`tokens.css`, `theme.css`, `tailwind.css`, `fonts.css`, `Theme.kt`), `ui-theme` CLI, `createTheme` / `toCss` / `applyTheme` | nothing |
-| `@jcsoftdev/ui-core` (later) | framework-agnostic behaviour: focus management, roving focus, popper geometry, dismiss layers, state machines | nothing |
-| `@jcsoftdev/ui-elements` (later) | `ui-*` custom elements (button, input, checkbox, switch, radio-group, dialog, popover, tooltip, tabs, toast) with per-component precompiled CSS | ui-core, ui-tokens |
+| `@jcsoftdev/ui-core` | framework-agnostic behaviour: focus management, roving focus, popper geometry, dismiss layers, state machines | nothing |
+| `@jcsoftdev/ui-elements` | `ui-*` custom elements (button, input, checkbox, switch, radio-group, dialog, popover, tooltip, tabs, toast) with per-component precompiled CSS | ui-core, ui-tokens |
 | `@jcsoftdev/ui` | React components, rebuilt incrementally on core; keeps exporting `styles/*`, `tokens/*` and the `ui-theme` bin | react (peer) |
 
 Rules:
@@ -120,7 +120,7 @@ Sources:
 - All public packages share one version; `scripts/release-plan.mjs` fails if they diverge or if the `v<version>`
   tag does not match.
 - `.github/publish-packages.json` lists the packages that the `release` workflow publishes, in dependency order.
-  It currently contains only `packages/ui`, so the workflow behaves exactly as before. A package is added to the
+  It started with only `packages/ui` (see the status update for the current content). A package is added to the
   list **after** its trusted publisher is configured on npmjs.com (npm OIDC trusted publishing is per package name:
   repository `jcsoftdev/ui`, workflow `release.yml`).
 - Each package is packed with `pnpm pack` (which rewrites `workspace:` specifiers) and published with
@@ -133,3 +133,18 @@ Sources:
   guarantees; 0.2.x consumers unaffected.
 - Negative: more packages to version and publish; the `ui` package keeps a build-time copy of token assets;
   new package names need one-time npm trusted-publisher setup by the maintainer.
+
+## Status update (2026-11-04)
+
+- **Packages.** The four packages of the decision exist and are published in lockstep at 0.9.0:
+  `@jcsoftdev/ui-tokens`, `@jcsoftdev/ui-core`, `@jcsoftdev/ui-elements` and `@jcsoftdev/ui` (`packages/*/package.json`).
+- **`ui-compose`.** The Compose kit (`packages/ui-compose`) is a fifth package that this decision did not cover. It is a
+  separate Kotlin Multiplatform build with no `package.json`: it is not in `pnpm-workspace.yaml`, so
+  `scripts/release-plan.mjs` never sees it. It has its own version (`VERSION_NAME=0.2.0` in
+  `packages/ui-compose/gradle.properties`) and its own release workflow, triggered by `ui-compose-v*` tags
+  (`.github/workflows/ui-compose-release.yml`) and published to Maven Central. It is outside the npm lockstep.
+- **`ui-elements` scope.** It now covers many more elements than the ten listed in the table above; the current list is in
+  [packages/ui-elements/README.md](../../packages/ui-elements/README.md).
+- **Publish list.** `.github/publish-packages.json` currently contains only `{ "packages": ["packages/ui"] }`. The other
+  npm packages are versioned in lockstep but not yet enabled for publishing; they are added once their npm trusted
+  publisher is configured, as described in the release design.

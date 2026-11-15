@@ -30,6 +30,16 @@ const meta = {
   component: LoginForm,
   tags: ["autodocs"],
   args: { portals },
+  argTypes: {
+    onSubmit: { control: false },
+    onPortalChange: { control: false },
+    portals: { control: "object" },
+    portal: { control: "select", options: portals.map((p) => p.value) },
+    defaultPortal: { control: "select", options: portals.map((p) => p.value) },
+    error: { control: "text" },
+    children: { control: false },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-110 overflow-hidden rounded-card border-card bg-surface">
@@ -41,6 +51,22 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+/** Every root prop from the Controls panel, with all the parts rendered. */
+export const Playground: Story = {
+  args: { appearance: "card", loading: false, success: false, error: null },
+  render: (args) => (
+    <LoginForm {...args}>
+      <LoginForm.Header title="Bienvenido" description="Ingresa con tu cuenta del colegio." />
+      <LoginForm.Portals />
+      <LoginForm.Error />
+      <LoginForm.Identifier />
+      <LoginForm.Password forgotHref="#recuperar" />
+      <LoginForm.Options helpHref="#ayuda" />
+      <LoginForm.Submit>Ingresar</LoginForm.Submit>
+    </LoginForm>
+  ),
+};
 
 export const Standalone: Story = {
   args: { portals: [], onSubmit: fn() },

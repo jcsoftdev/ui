@@ -12,6 +12,7 @@ const meta = {
     copyLabel: { control: "text" },
     copiedLabel: { control: "text" },
     onCopy: { action: "copy" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

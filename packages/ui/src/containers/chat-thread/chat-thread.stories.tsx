@@ -55,7 +55,14 @@ const meta = {
   component: ChatThread,
   tags: ["autodocs"],
   args: { items, now, locale: "es", timeZone: "America/Lima" },
-  argTypes: { items: { control: false }, composer: { control: false } },
+  argTypes: {
+    items: { control: "object" },
+    composer: { control: false },
+    onRetry: { control: false },
+    empty: { control: "text" },
+    now: { control: "date" },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="h-[32rem] max-w-xl rounded-card border-card surface-card">

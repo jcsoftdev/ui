@@ -23,6 +23,7 @@ const meta = {
       options: ["primary", "secondary", "ghost", "danger"],
     },
     onConfirm: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

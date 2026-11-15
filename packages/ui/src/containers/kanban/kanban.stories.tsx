@@ -74,12 +74,13 @@ const meta = {
   argTypes: {
     enforceLimit: { control: "boolean" },
     emptyLabel: { control: "text" },
-    columns: { control: false },
-    defaultColumns: { control: false },
+    columns: { control: "object" },
+    defaultColumns: { control: "object" },
     onColumnsChange: { control: false },
     renderCard: { control: false },
     cardActions: { control: false },
     gripLabel: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

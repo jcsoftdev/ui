@@ -9,7 +9,14 @@ import { FormGrid, FormGridItem } from "./form-grid.js";
 const meta = {
   title: "Forms/FormGrid",
   component: FormGrid,
+  subcomponents: { FormGridItem },
   tags: ["autodocs"],
+  args: { columns: 2 },
+  argTypes: {
+    columns: { control: "inline-radio", options: [1, 2, 3] },
+    className: { control: "text" },
+    children: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="max-w-2xl">

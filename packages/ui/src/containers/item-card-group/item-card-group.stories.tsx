@@ -59,6 +59,7 @@ const meta = {
     description: { control: "text" },
     selectedId: { control: "text" },
     items: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

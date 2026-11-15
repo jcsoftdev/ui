@@ -42,6 +42,10 @@ const meta = {
     state: { control: "inline-radio", options: AUTH_STATES },
     progress: { control: { type: "range", min: 0, max: 1, step: 0.05 } },
     activeIndex: { control: "inline-radio", options: [0, 1, 2] },
+    onStateChange: { control: false },
+    onProgressChange: { control: false },
+    onActiveIndexChange: { control: false },
+    classNames: { control: false },
   },
   parameters: { layout: "fullscreen" },
 } satisfies Meta<typeof AuthLayout>;

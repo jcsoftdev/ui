@@ -25,6 +25,8 @@ const meta = {
     disabled: { control: "boolean" },
     id: { control: "text" },
     children: { control: false },
+    controlId: { control: "text" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

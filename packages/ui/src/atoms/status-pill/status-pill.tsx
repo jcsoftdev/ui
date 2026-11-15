@@ -45,7 +45,7 @@ export function StatusPill({
   const showDot = dot ?? icon == null;
   const rootClass = cn(
     "flex h-control-sm shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge border-divider bg-surface-control px-2.5 font-semibold text-fs-120 text-ink-2",
-    isButton && "hover:enabled:border-line-strong disabled:cursor-default",
+    isButton && "hover:enabled:border-line-strong disabled:cursor-default disabled:opacity-50",
     classNames?.root,
     className,
   );

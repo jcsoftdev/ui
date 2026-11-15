@@ -16,7 +16,24 @@ const meta = {
   component: ChipGroup,
   tags: ["autodocs"],
   args: { options, "aria-label": "Subjects" },
-  argTypes: { options: { control: "object" } },
+  argTypes: {
+    options: { control: "object" },
+    type: { control: "inline-radio", options: ["multiple", "single"] },
+    value: { control: "object" },
+    defaultValue: { control: "object" },
+    onValueChange: { control: false },
+    disabled: { control: "boolean" },
+    name: { control: "text" },
+    invalid: { control: "boolean" },
+    id: { control: "text" },
+    "aria-label": { control: "text" },
+    "aria-labelledby": { control: "text" },
+    "aria-describedby": { control: "text" },
+    "aria-invalid": { control: "boolean" },
+    size: { control: "inline-radio", options: ["sm", "md"] },
+    className: { control: "text" },
+    classNames: { control: false },
+  },
 } satisfies Meta<typeof ChipGroup>;
 
 export default meta;

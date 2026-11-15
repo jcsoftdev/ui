@@ -22,6 +22,12 @@ const meta = {
     onValueChange: { control: false },
     onBeforeNext: { control: false },
     onComplete: { control: false },
+    defaultValue: { control: "text" },
+    backLabel: { control: "text" },
+    nextLabel: { control: "text" },
+    finishLabel: { control: "text" },
+    buttonSize: { control: "inline-radio", options: ["sm", "md", "lg"] },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

@@ -54,7 +54,7 @@ const KEY_STEPS: Record<string, number> = {
 };
 
 const NAV =
-  "inline-flex size-8 min-h-(--touch-target) min-w-(--touch-target) items-center justify-center rounded-event text-ink-2 outline-none hover:bg-surface-2 focus-visible:focus-ring disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex size-8 min-h-(--touch-target) min-w-(--touch-target) items-center justify-center rounded-event text-ink-2 outline-none hover:bg-surface-2 focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent";
 
 /**
  * Month grid for picking one date (WAI-ARIA date picker grid). Dates are "YYYY-MM-DD" strings

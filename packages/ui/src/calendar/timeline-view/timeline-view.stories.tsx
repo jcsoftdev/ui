@@ -108,6 +108,7 @@ const meta = {
     hiddenDates: { control: "object" },
     onOpenEvent: { action: "openEvent" },
     onOpenMarker: { action: "openMarker" },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

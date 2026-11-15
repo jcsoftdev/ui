@@ -43,7 +43,7 @@ export interface GridToolPanelProps<T> {
 const selectClass =
   "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-fs-130 text-ink focus-visible:border-accent focus-visible:outline-none";
 const iconButton =
-  "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface hover:text-ink disabled:pointer-events-none disabled:opacity-30 [&_svg]:size-3.5";
+  "grid size-6 shrink-0 place-items-center rounded-xs text-ink-3 hover:bg-surface hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-ink-3 [&_svg]:size-3.5";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (

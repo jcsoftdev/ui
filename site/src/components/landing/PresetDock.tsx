@@ -1,10 +1,17 @@
 import { Segmented, SegmentedItem } from "@jcsoftdev/ui/navigation";
 import { AccentPicker } from "@jcsoftdev/ui/forms";
-import { Moon, Sun } from "@jcsoftdev/ui/icons";
+import { Moon, SlidersHorizontal, Sun } from "@jcsoftdev/ui/icons";
 import { useEffect, useState } from "react";
-import { ACCENTS, applyPreset, applyTheme, STYLES, usePreset } from "./PresetSwitcher";
+import { dialOptions } from "../../lib/dials";
+import { ACCENTS, applyPreset, applyTheme, usePreset } from "./PresetSwitcher";
 
-/** Compact floating bar that appears once the hero is out of view, so the look stays one click away. */
+const iconButton =
+  "inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button text-ink-2 no-underline pressable hover:bg-surface-2 hover:text-ink focus-visible:focus-ring";
+
+/**
+ * Compact floating bar that appears once the hero is out of view: the three most visible dials, and a link to the
+ * full panel for the rest.
+ */
 export default function PresetDock() {
   const p = usePreset();
   const [visible, setVisible] = useState(false);
@@ -25,6 +32,7 @@ export default function PresetDock() {
   return (
     <div
       data-visible={visible}
+      inert={!visible}
       className="landing-dock fixed inset-x-0 bottom-3 z-40 mx-auto flex w-fit max-w-[calc(100vw-1.5rem)] items-center gap-3 overflow-x-auto rounded-card border-card px-3 py-2 shadow-overlay surface-overlay"
       role="region"
       aria-label="Look and feel"
@@ -34,9 +42,9 @@ export default function PresetDock() {
         value={ready ? p.style : "soft"}
         onValueChange={(v) => v && applyPreset("style", v)}
       >
-        {STYLES.map((s) => (
-          <SegmentedItem key={s} value={s}>
-            {s}
+        {dialOptions("style").map((o) => (
+          <SegmentedItem key={o.value} value={o.value}>
+            {o.label}
           </SegmentedItem>
         ))}
       </Segmented>
@@ -50,10 +58,13 @@ export default function PresetDock() {
         type="button"
         aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
         onClick={() => applyTheme(dark ? "light" : "dark")}
-        className="inline-grid size-8 shrink-0 cursor-pointer place-items-center rounded-button text-ink-2 pressable hover:bg-surface-2 hover:text-ink focus-visible:focus-ring"
+        className={iconButton}
       >
         {dark ? <Moon aria-hidden className="size-4" /> : <Sun aria-hidden className="size-4" />}
       </button>
+      <a href="#theming" aria-label="All dials: density, radius and glass" className={iconButton}>
+        <SlidersHorizontal aria-hidden className="size-4" />
+      </a>
     </div>
   );
 }

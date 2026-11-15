@@ -11,6 +11,14 @@ const meta = {
     src: { control: "text" },
     size: { control: "inline-radio", options: ["md", "lg"] },
     highlighted: { control: "boolean" },
+    tone: {
+      control: "select",
+      options: ["neutral", "accent", "success", "warning", "danger", "info"],
+    },
+    status: { control: "select", options: ["neutral", "accent", "success", "warning", "danger"] },
+    decorative: { control: "boolean" },
+    statusLabel: { control: "text" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Avatar>;
 

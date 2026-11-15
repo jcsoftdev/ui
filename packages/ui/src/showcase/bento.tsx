@@ -1,3 +1,5 @@
+"use client";
+
 import { type CSSProperties, createContext, type ReactNode, useContext } from "react";
 import { cn } from "../utils/cn.js";
 

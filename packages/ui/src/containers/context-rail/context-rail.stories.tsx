@@ -33,7 +33,13 @@ const meta = {
   component: ContextRail,
   tags: ["autodocs"],
   args: { rail: cart, children: dishes, railLabel: "Pedido" },
-  argTypes: { rail: { control: false }, children: { control: false }, summary: { control: false } },
+  argTypes: {
+    rail: { control: false },
+    children: { control: false },
+    summary: { control: false },
+    onSheetOpenChange: { control: false },
+    classNames: { control: false },
+  },
   parameters: { layout: "padded" },
 } satisfies Meta<typeof ContextRail>;
 

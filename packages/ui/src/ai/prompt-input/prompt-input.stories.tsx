@@ -28,6 +28,7 @@ const meta = {
     onSubmit: { control: false },
     onStop: { control: false },
     onValueChange: { control: false },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

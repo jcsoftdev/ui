@@ -39,7 +39,11 @@ const meta = {
   component: Conversation,
   tags: ["autodocs"],
   args: { label: "Conversación con el asistente", jumpLabel: "Ir al último mensaje" },
-  argTypes: { label: { control: "text" }, jumpLabel: { control: "text" } },
+  argTypes: {
+    label: { control: "text" },
+    jumpLabel: { control: "text" },
+    classNames: { control: false },
+  },
   decorators: [
     (Story) => (
       <div className="h-[420px] max-w-xl rounded-card bg-bg border-card shadow-card">

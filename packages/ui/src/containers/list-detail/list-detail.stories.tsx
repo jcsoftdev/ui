@@ -69,7 +69,17 @@ const meta = {
   component: ListDetail,
   tags: ["autodocs"],
   args: { "aria-label": "Students", children: null },
-  argTypes: { children: { control: false } },
+  argTypes: {
+    children: { control: false },
+    value: { control: "text" },
+    defaultValue: { control: "text" },
+    onValueChange: { control: false },
+    onBack: { control: false },
+    listWidth: { control: "text" },
+    ratio: { control: "select", options: ["1:1", "1:2", "1:3"] },
+    stickyList: { control: "boolean" },
+    stickyOffset: { control: "text" },
+  },
   render: (args) => <Example {...args} />,
 } satisfies Meta<typeof ListDetail>;
 

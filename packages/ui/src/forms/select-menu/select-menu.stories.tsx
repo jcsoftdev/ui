@@ -23,6 +23,17 @@ const meta = {
     invalid: { control: "boolean" },
     size: { control: "inline-radio", options: ["sm", "md"] },
     onValueChange: { control: false },
+    value: { control: "text" },
+    defaultValue: { control: "text" },
+    placeholder: { control: "text" },
+    name: { control: "text" },
+    required: { control: "boolean" },
+    container: { control: false },
+    material: {
+      control: "select",
+      options: ["solid", "glass", "glass-clear", "liquid", "liquid-clear"],
+    },
+    classNames: { control: false },
   },
   decorators: [
     (Story) => (

@@ -68,6 +68,9 @@ const meta = {
   title: "Forms/Control sizes",
   component: Row,
   args: { size: "md" },
+  argTypes: {
+    size: { control: "inline-radio", options: ["sm", "md"] },
+  },
 } satisfies Meta<typeof Row>;
 
 export default meta;

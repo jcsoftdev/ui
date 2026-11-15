@@ -10,6 +10,7 @@ const meta = {
     status: { control: "inline-radio", options: ["success", "warning", "danger", "idle"] },
     label: { control: "text" },
     showLabel: { control: "boolean" },
+    classNames: { control: false },
   },
 } satisfies Meta<typeof Led>;
 

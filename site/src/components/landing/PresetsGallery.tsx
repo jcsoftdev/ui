@@ -15,7 +15,11 @@ export default function PresetsGallery() {
   return (
     <div className="grid gap-density sm:grid-cols-2 lg:grid-cols-3">
       {PRESETS.map((preset) => (
-        <div key={preset.id} data-style={preset.id} className="presets-cell rounded-card p-card">
+        <div
+          key={preset.id}
+          data-style={preset.id}
+          className="presets-cell min-w-0 rounded-card p-card"
+        >
           <article className="flex min-w-0 flex-col gap-density rounded-card border-card p-card shadow-card surface-card">
             <header className="flex items-center justify-between gap-density-sm">
               <div>
@@ -28,15 +32,15 @@ export default function PresetsGallery() {
               <Avatar name="Diego Quispe" />
               <div className="min-w-0 flex-1">
                 <p className="m-0 truncate text-ink text-row-title">Diego Quispe</p>
-                <p className="m-0 truncate text-ink-3 text-meta">16:00 · Corte + barba</p>
+                <p className="m-0 truncate text-ink-3 text-meta">16:00 · Design review</p>
               </div>
-              <StatusPill status="success" label="Confirmada" />
+              <StatusPill status="success" label="Confirmed" />
             </div>
-            <Kpi label="Ingresos de hoy" value="S/ 1 240" description="+12% vs. ayer" />
-            <Progress value={72} aria-label={`Ocupación en el estilo ${preset.id}`} />
+            <Kpi label="Revenue today" value="$1,240" description="+12% vs. yesterday" />
+            <Progress value={72} aria-label={`Capacity in the ${preset.id} style`} />
             <div className="flex flex-wrap gap-density-sm">
-              <Button variant="primary">Reservar</Button>
-              <Button>Cancelar</Button>
+              <Button variant="primary">Book</Button>
+              <Button>Cancel</Button>
             </div>
           </article>
         </div>

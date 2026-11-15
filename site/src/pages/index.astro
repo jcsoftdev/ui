@@ -28,7 +28,7 @@ const stats = [
   { value: manifest.counts.components, label: "components" },
   { value: chartCount, label: "chart types" },
   { value: manifest.counts.stories, label: "documented stories" },
-  { value: manifest.counts.entries, label: "tree-shakeable subpaths" },
+  { value: manifest.counts.entries, label: "tree-shakable subpaths" },
   { value: 6, label: "style presets" },
   { value: 0, label: "runtime theming JS" },
 ];
@@ -117,6 +117,68 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
     </div>
   </section>
 
+  <section class="landing-section" id="theming">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 grid items-end gap-6 lg:grid-cols-2">
+        <div>
+          <p class="landing-kicker">Zero runtime theming</p>
+          <h2 class="landing-h2">The same markup, six looks</h2>
+          <p class="landing-lead">
+            These cards are server-rendered with identical HTML. The only difference is one{" "}
+            <code>data-style</code> attribute on the wrapper. No theme provider, no CSS-in-JS, and
+            no JavaScript in the cards. The dial panel is the one island here, and all it does is
+            set attributes on <code>&lt;html&gt;</code>.
+          </p>
+        </div>
+        <div class="landing-code" role="group" aria-label="Example attributes">
+          <Code code={attrSnippet} lang="html" />
+        </div>
+      </div>
+      <div class="reveal">
+        <PresetsGallery />
+      </div>
+      <div class="reveal mt-10 grid items-start gap-density lg:grid-cols-2">
+        <div class="min-w-0">
+          <h3 class="landing-h3">Your brand colour, live</h3>
+          <p class="landing-lead">
+            Tokens are plain CSS variables. There is no <code>createTheme()</code>: author a tokens
+            JSON, run <code>ui-theme build</code>, and switch with data attributes. Or override a
+            few variables on any scope, as below.
+          </p>
+          <div class="landing-code">
+            <Code code={themeCli} lang="bash" />
+          </div>
+          <div class="mt-4">
+            <PresetSwitcher client:visible />
+          </div>
+        </div>
+        <ThemeColorDemo client:visible />
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="live">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Real components, not screenshots</p>
+        <h2 class="landing-h2">See it live</h2>
+        <p class="landing-lead">
+          Everything below is the published library running in your browser. Drag the Kanban cards,
+          edit a spreadsheet cell, hover the globe. Turn a dial in the panel above, or in the bar at
+          the bottom of the screen, and every tile follows.
+        </p>
+      </div>
+      <BentoGrid>
+        <DashboardTile client:visible />
+        <GlobeTile client:visible />
+        <CrossfilterTile client:visible />
+        <KanbanTile client:visible />
+        <CalendarTile client:visible />
+        <LogoForgeTile client:visible />
+      </BentoGrid>
+    </div>
+  </section>
+
   <section class="landing-section" id="included">
     <div class="landing-wrap">
       <div class="reveal mb-8 max-w-3xl">
@@ -146,64 +208,62 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
     </div>
   </section>
 
-  <section class="landing-section pt-0" id="live">
+  <section class="landing-section" id="charts">
     <div class="landing-wrap">
       <div class="reveal mb-8 max-w-3xl">
-        <p class="landing-kicker">Real components, not screenshots</p>
-        <h2 class="landing-h2">See it live</h2>
+        <p class="landing-kicker">{chartCount} chart types, zero chart dependencies</p>
+        <h2 class="landing-h2">Charts that fill their cell</h2>
         <p class="landing-lead">
-          Everything below is the published library running in your browser. Drag the Kanban cards,
-          edit a spreadsheet cell, hover the globe. Change the look above and watch every tile
-          follow.
+          SVG charts built on the same tokens, with keyboard navigation and accessible summaries. A
+          dozen of them below, each filling its container exactly.{" "}
+          <a href="/docs/components/line-chart/">Browse them all in the docs</a>.
         </p>
       </div>
-      <BentoGrid>
-        <DashboardTile client:visible />
-        <GlobeTile client:visible />
-        <CrossfilterTile client:visible />
-        <KanbanTile client:visible />
-        <CalendarTile client:visible />
-        <LogoForgeTile client:visible />
-      </BentoGrid>
+      <ChartsGallery client:visible />
     </div>
   </section>
 
-  <section class="landing-section" id="theming">
+  <section class="landing-section" id="grid">
     <div class="landing-wrap">
-      <div class="reveal mb-8 grid items-end gap-6 lg:grid-cols-2">
-        <div>
-          <p class="landing-kicker">Zero runtime theming</p>
-          <h2 class="landing-h2">The same markup, six looks</h2>
-          <p class="landing-lead">
-            These cards are server-rendered with identical HTML. The only difference is one{" "}
-            <code>data-style</code> attribute on the wrapper. No theme provider, no CSS-in-JS, no
-            JavaScript on this page for any of it.
-          </p>
-        </div>
-        <div class="landing-code" role="group" aria-label="Example attributes">
-          <Code code={attrSnippet} lang="html" />
-        </div>
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Spreadsheet-grade DataGrid</p>
+        <h2 class="landing-h2">Type = to write a formula</h2>
+        <p class="landing-lead">
+          Virtualized rows, range selection, undo and redo, copy and paste, and a formula engine
+          with <code>SUM</code>, <code>IF</code>, <code>ROUND</code> and friends. Edit a price and
+          every total recalculates. Export to XLSX from the toolbar.
+        </p>
       </div>
-      <div class="reveal">
-        <PresetsGallery />
+      <GridShowcase client:visible />
+    </div>
+  </section>
+
+  <section class="landing-section" id="ai">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">AI kit</p>
+        <h2 class="landing-h2">Chat, reasoning and tool calls</h2>
+        <p class="landing-lead">
+          Conversation, streaming Markdown, chain of thought, tool calls, sources, attachments and
+          message actions. Press a suggestion: the reply is simulated and streams token by token.
+        </p>
       </div>
-      <div class="reveal mt-10 grid items-start gap-density lg:grid-cols-2">
-        <div class="min-w-0">
-          <h3 class="landing-h3">Your brand colour, live</h3>
-          <p class="landing-lead">
-            Tokens are plain CSS variables. There is no <code>createTheme()</code>: author a tokens
-            JSON, run <code>ui-theme build</code>, and switch with data attributes. Or override a
-            few variables on any scope, as below.
-          </p>
-          <div class="landing-code">
-            <Code code={themeCli} lang="bash" />
-          </div>
-          <div class="mt-4">
-            <PresetSwitcher client:visible />
-          </div>
-        </div>
-        <ThemeColorDemo client:visible />
+      <AiShowcase client:visible />
+    </div>
+  </section>
+
+  <section class="landing-section" id="responsive">
+    <div class="landing-wrap">
+      <div class="reveal mb-8 max-w-3xl">
+        <p class="landing-kicker">Accessible + container queries</p>
+        <h2 class="landing-h2">Responsive to the container, not the screen</h2>
+        <p class="landing-lead">
+          Resize the frame: the KPI group reflows from four columns to one and the chart keeps its
+          height, all with <code>@container</code> rules. Focus rings, roles, keyboard paths and
+          reduced-motion handling are part of every component, not an add-on.
+        </p>
       </div>
+      <ResponsiveDemo client:visible />
     </div>
   </section>
 
@@ -277,65 +337,6 @@ const attrSnippet = `<section data-style="brutal" data-accent="lavanda">
           <span>Tokens, data attributes and class overrides, no fork needed.</span>
         </li>
       </ul>
-    </div>
-  </section>
-
-  <section class="landing-section" id="charts">
-    <div class="landing-wrap">
-      <div class="reveal mb-8 max-w-3xl">
-        <p class="landing-kicker">{chartCount} chart types, zero chart dependencies</p>
-        <h2 class="landing-h2">Charts that fill their cell</h2>
-        <p class="landing-lead">
-          SVG charts built on the same tokens, with keyboard navigation and accessible summaries. A
-          dozen of them below, each filling its container exactly.{" "}
-          <a href="/docs/components/line-chart/">Browse them all in the docs</a>.
-        </p>
-      </div>
-      <ChartsGallery client:visible />
-    </div>
-  </section>
-
-  <section class="landing-section" id="grid">
-    <div class="landing-wrap">
-      <div class="reveal mb-8 max-w-3xl">
-        <p class="landing-kicker">Spreadsheet-grade DataGrid</p>
-        <h2 class="landing-h2">Type = to write a formula</h2>
-        <p class="landing-lead">
-          Virtualized rows, range selection, undo and redo, copy and paste, and a formula engine
-          with <code>SUM</code>, <code>IF</code>, <code>ROUND</code> and friends. Edit a price and
-          every total recalculates. Export to XLSX from the toolbar.
-        </p>
-      </div>
-      <GridShowcase client:visible />
-    </div>
-  </section>
-
-  <section class="landing-section" id="ai">
-    <div class="landing-wrap">
-      <div class="reveal mb-8 max-w-3xl">
-        <p class="landing-kicker">AI kit</p>
-        <h2 class="landing-h2">Chat, reasoning and tool calls</h2>
-        <p class="landing-lead">
-          Conversation, streaming Markdown, chain of thought, tool calls, sources, attachments and
-          message actions. Press a suggestion: the reply is simulated and streams token by token.
-        </p>
-      </div>
-      <AiShowcase client:visible />
-    </div>
-  </section>
-
-  <section class="landing-section" id="responsive">
-    <div class="landing-wrap">
-      <div class="reveal mb-8 max-w-3xl">
-        <p class="landing-kicker">Accessible + container queries</p>
-        <h2 class="landing-h2">Responsive to the container, not the screen</h2>
-        <p class="landing-lead">
-          Resize the frame: the KPI group reflows from four columns to one and the chart keeps its
-          height, all with <code>@container</code> rules. Focus rings, roles, keyboard paths and
-          reduced-motion handling are part of every component, not an add-on.
-        </p>
-      </div>
-      <ResponsiveDemo client:visible />
     </div>
   </section>
 

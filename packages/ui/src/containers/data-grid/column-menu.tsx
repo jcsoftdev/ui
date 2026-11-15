@@ -57,7 +57,7 @@ export interface ColumnMenuProps<T> {
 }
 
 const itemClass =
-  "flex min-h-8 w-full items-center gap-2 rounded-xs px-2 text-left text-fs-130 text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:bg-surface-2 focus-visible:text-ink disabled:pointer-events-none disabled:opacity-40 aria-pressed:text-accent-ink [&_svg]:size-3.5 [&_svg]:shrink-0";
+  "flex min-h-8 w-full items-center gap-2 rounded-xs px-2 text-left text-fs-130 text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:bg-surface-2 focus-visible:text-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-ink-2 aria-pressed:text-accent-ink [&_svg]:size-3.5 [&_svg]:shrink-0";
 
 const inputClass =
   "h-control-sm w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-fs-130 text-ink placeholder:text-ink-3 focus-visible:border-accent focus-visible:outline-none";
