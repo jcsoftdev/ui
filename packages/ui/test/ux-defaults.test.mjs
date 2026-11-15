@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
@@ -364,4 +365,13 @@ test("FormFooter is sticky, localizes its labels and reports a busy submit", () 
     /type="submit"[^>]*aria-disabled="true"|aria-disabled="true"[^>]*type="submit"/,
   );
   assert.match(busy, /type="button"[^>]*disabled/);
+});
+
+test("Tabs keep their ring for the keyboard and silence it only for pointer focus", () => {
+  const strip = html.tabsStrip();
+  assert.match(strip, /role="tablist"/);
+  assert.match(strip, /overflow-x-auto/);
+  assert.doesNotMatch(strip, /data-pointer-focus/);
+  const base = readFileSync(new URL("../../ui-tokens/styles/base.css", import.meta.url), "utf8");
+  assert.match(base, /\[data-pointer-focus\]:focus-visible\s*\{\s*outline-color: transparent/);
 });

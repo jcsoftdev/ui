@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- **Dialog keeps its actions and its close button in view.** `DialogHeader` and `DialogFooter` no longer shrink away (`shrink-0`) and `DialogBody` scrolls on its own (`min-h-0 flex-1 overflow-y-auto overscroll-contain`), so a long form keeps the title and the actions reachable. The footer pads for the bottom safe-area inset. Content placed straight into `DialogContent` still scrolls as before.
+- **Tabs: no stray focus ring after a click.** A tab, the tab strip's own padding or a tab panel that was focused by a click no longer shows the ring a previous keyboard focus carried over (`data-pointer-focus`, silenced in `base.css` and cleared on the next key press or blur). Keyboard focus keeps its ring.
+- **Topbar buttons reach 44px under touch.** The menu button and the search button use `min-h-(--touch-target)` (and `min-w-(--touch-target)` in the collapsed search), so they follow `data-density="touch"` and `data-density="auto"` on coarse pointers like the other controls.
+
 ## 0.10.0 (2026-11-15)
 
 ### Intent-aware components and accessibility

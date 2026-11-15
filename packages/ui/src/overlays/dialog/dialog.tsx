@@ -144,7 +144,7 @@ export function DialogContent({
 export function DialogHeader({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1 border-b-divider py-3.5 pr-10 pl-4.5", className)}
+      className={cn("flex shrink-0 flex-col gap-1 border-b-divider py-3.5 pr-10 pl-4.5", className)}
       {...props}
     />
   );
@@ -170,14 +170,22 @@ export function DialogDescription({
 }
 
 export function DialogBody({ className, ...props }: ComponentPropsWithRef<"div">) {
-  return <div className={cn("flex flex-col gap-4 p-4.5", className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4.5",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function DialogFooter({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-t-divider px-4.5 py-3",
+        "flex shrink-0 flex-wrap items-center gap-2 border-t-divider px-4.5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
         "@max-sm/dialog:flex-col-reverse @max-sm/dialog:items-stretch @max-sm/dialog:[&>*]:w-full",
         className,
       )}

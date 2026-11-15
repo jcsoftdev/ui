@@ -33,6 +33,12 @@ body {
   outline-offset: var(--focus-ring-offset, 2px);
 }
 
+/* A click focuses a tab or a tab panel by script and would inherit the ring from a previous
+   keyboard focus; Tabs flags that focus with `data-pointer-focus` so the ring stays for the keyboard. */
+[data-pointer-focus]:focus-visible {
+  outline-color: transparent;
+}
+
 @keyframes intent-highlight {
   from {
     background-color: var(--intent-highlight-tint, var(--accent-soft));

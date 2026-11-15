@@ -28,6 +28,8 @@ import { ErrorState } from "../../src/states/error-state/error-state.js";
 import { RadioGroup } from "../../src/atoms/radio-group/radio-group.js";
 import { Switch } from "../../src/atoms/switch/switch.js";
 import { UiStringsProvider } from "../../src/i18n/index.js";
+import { DialogBody, DialogFooter, DialogHeader } from "../../src/overlays/dialog/dialog.js";
+import { Tabs, TabsList, TabsTrigger } from "../../src/navigation/tabs/tabs.js";
 
 export const html = {
   fieldRequired: () =>
@@ -82,6 +84,23 @@ export const html = {
   checkboxIndeterminate: () => renderToStaticMarkup(<Checkbox defaultChecked="indeterminate" />),
   checkboxChecked: () => renderToStaticMarkup(<Checkbox defaultChecked />),
   switch: () => renderToStaticMarkup(<Switch />),
+  dialogParts: () =>
+    renderToStaticMarkup(
+      <>
+        <DialogHeader>h</DialogHeader>
+        <DialogBody>b</DialogBody>
+        <DialogFooter>f</DialogFooter>
+      </>,
+    ),
+  tabsStrip: () =>
+    renderToStaticMarkup(
+      <Tabs defaultValue="a">
+        <TabsList>
+          <TabsTrigger value="a">A</TabsTrigger>
+          <TabsTrigger value="b">B</TabsTrigger>
+        </TabsList>
+      </Tabs>,
+    ),
   radio: () => renderToStaticMarkup(<RadioGroup options={[{ value: "a", label: "A" }]} />),
   chipStatic: () => renderToStaticMarkup(<Chip>Paid</Chip>),
   chipRemovable: () => renderToStaticMarkup(<Chip onRemove={() => {}}>Paid</Chip>),
@@ -165,6 +184,8 @@ export const html = {
     renderToStaticMarkup(
       <Topbar breadcrumbs={["A", "B"]} breadcrumbsLabel="Ruta" onSearch={() => {}} searchPlaceholder="Buscar" />,
     ),
+  topbarMenu: () =>
+    renderToStaticMarkup(<Topbar onOpenMenu={() => {}} menuLabel="Menú" onSearch={() => {}} />),
   emptyOutlined: () => renderToStaticMarkup(<EmptyState title="Vacío" variant="outlined" />),
   errorOutlined: () => renderToStaticMarkup(<ErrorState message="Falló" variant="outlined" />),
   page: (props: Record<string, unknown> = {}) =>
