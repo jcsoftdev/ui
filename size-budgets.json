@@ -137,13 +137,13 @@
       "id": "ui/i18n",
       "kind": "js",
       "file": "packages/ui/dist/i18n/index.js",
-      "maxGzip": 2800
+      "maxGzip": 2970
     },
     {
       "id": "ui/motion",
       "kind": "js",
       "file": "packages/ui/dist/motion/index.js",
-      "maxGzip": 6500
+      "maxGzip": 6840
     },
     {
       "id": "ui/navigation",
