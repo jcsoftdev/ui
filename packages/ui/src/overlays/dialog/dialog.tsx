@@ -64,6 +64,11 @@ export interface DialogContentProps extends DialogPrimitive.DialogContentProps, 
   container?: HTMLElement | null;
 }
 
+/**
+ * Keep it a flex column (the default): the sticky close anchor and the pinned `DialogHeader` and
+ * `DialogFooter` rely on it. A wrapper between them and this element, such as a `<form>`, needs
+ * `flex min-h-0 flex-col` too.
+ */
 export function DialogContent({
   className,
   classNames,

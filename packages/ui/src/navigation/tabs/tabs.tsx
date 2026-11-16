@@ -20,7 +20,7 @@ import {
 import { useControllableState } from "../../utils/use-controllable-state.js";
 
 /**
- * A click focuses a tab (or the panel) by script, and a script focus inherits `:focus-visible` when
+ * A click focuses a tab by script, and a script focus inherits `:focus-visible` when
  * the previous focus came from the keyboard, which would frame something that was only clicked.
  * `data-pointer-focus` (silenced in `base.css`) marks that focus; the next key press or blur
  * clears it so the ring stays for keyboard users.
@@ -135,13 +135,9 @@ export function TabsList({
         ref={composedRef}
         onFocus={composeHandlers(onFocus, rovingOnFocus)}
         onMouseDown={composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {
-          // A click on the strip's own padding focuses the strip, which hands focus to the
-          // selected tab by script.
-          if (event.target === event.currentTarget) {
-            markPointerFocus(
-              event.currentTarget.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]'),
-            );
-          }
+          // A click on the strip's own padding would focus the strip, and the roving focus would
+          // then move to (and select) the first tab. Focus stays where it was instead.
+          if (event.target === event.currentTarget) event.preventDefault();
         })}
         className={cn(
           "@container/tabs flex max-w-full gap-0.5 overflow-x-auto overscroll-x-contain border-b-divider px-2",
@@ -248,9 +244,6 @@ export function TabsContent({
   intent,
   intentKey,
   ref,
-  onMouseDown,
-  onKeyDown,
-  onBlur,
   ...props
 }: TabsContentProps) {
   const context = useTabsContext("TabsContent");
@@ -274,15 +267,6 @@ export function TabsContent({
       {...intentAttributes({ intent, intentKey })}
       {...props}
       ref={composedRef}
-      onMouseDown={composeHandlers(onMouseDown, (event: MouseEvent<HTMLDivElement>) => {
-        if (event.target === event.currentTarget) markPointerFocus(event.currentTarget);
-      })}
-      onKeyDown={composeHandlers(onKeyDown, (event: KeyboardEvent<HTMLDivElement>) =>
-        clearPointerFocus(event.currentTarget),
-      )}
-      onBlur={composeHandlers(onBlur, (event: FocusEvent<HTMLDivElement>) =>
-        clearPointerFocus(event.currentTarget),
-      )}
       className={cn(className)}
     >
       {children}

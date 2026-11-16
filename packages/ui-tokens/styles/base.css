@@ -33,9 +33,10 @@ body {
   outline-offset: var(--focus-ring-offset, 2px);
 }
 
-/* A click focuses a tab or a tab panel by script and would inherit the ring from a previous
-   keyboard focus; Tabs flags that focus with `data-pointer-focus` so the ring stays for the keyboard. */
-[data-pointer-focus]:focus-visible {
+/* A click focuses a tab by script and would inherit the ring from a previous keyboard focus;
+   Tabs flags that focus with `data-pointer-focus` so the ring stays for the keyboard. The intent
+   outlines are not focus rings and stay. */
+[data-pointer-focus]:focus-visible:not([data-intent-highlight], [data-intent-changed]) {
   outline-color: transparent;
 }
 

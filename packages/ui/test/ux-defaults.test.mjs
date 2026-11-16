@@ -373,5 +373,8 @@ test("Tabs keep their ring for the keyboard and silence it only for pointer focu
   assert.match(strip, /overflow-x-auto/);
   assert.doesNotMatch(strip, /data-pointer-focus/);
   const base = readFileSync(new URL("../../ui-tokens/styles/base.css", import.meta.url), "utf8");
-  assert.match(base, /\[data-pointer-focus\]:focus-visible\s*\{\s*outline-color: transparent/);
+  assert.match(
+    base,
+    /\[data-pointer-focus\]:focus-visible:not\(\[data-intent-highlight\], \[data-intent-changed\]\)\s*\{\s*outline-color: transparent/,
+  );
 });
