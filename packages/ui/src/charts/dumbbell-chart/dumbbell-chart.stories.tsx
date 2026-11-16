@@ -43,13 +43,14 @@ const meta = {
     animate: true,
     deltaLabel: "Cambio",
     labels: spanishLabels,
+    orientation: "horizontal",
   },
   argTypes: {
     sort: { control: "inline-radio", options: ["none", "delta", "abs-delta", "to"] },
     delta: { control: "inline-radio", options: ["absolute", "percent", false] },
     valueFormat: { control: "select", options: ["number", "integer", "currency", "compact"] },
     orientation: { control: "inline-radio", options: ["horizontal", "vertical"] },
-    items: { control: false },
+    items: { control: "object" },
     rowHeight: { control: { type: "range", min: 28, max: 64, step: 2 } },
   },
   decorators: [

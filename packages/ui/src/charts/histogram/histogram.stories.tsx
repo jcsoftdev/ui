@@ -47,6 +47,8 @@ const meta = {
     loading: false,
     animate: true,
     labels: spanishLabels,
+    defaultExploded: false,
+    explodeToggle: false,
   },
   argTypes: {
     bins: { control: "select", options: ["auto", "sturges", "freedman-diaconis", 5, 10, 20, 40] },
@@ -54,11 +56,15 @@ const meta = {
     mode: { control: "inline-radio", options: ["count", "density"] },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 180, max: 520, step: 10 } },
-    valueFormat: { control: false },
-    series: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    series: { control: "object" },
     exploded: { control: "boolean" },
     defaultExploded: { control: "boolean" },
     explodeToggle: { control: "boolean" },
+    onExplodedChange: { control: false },
   },
   decorators: [
     (Story) => (

@@ -336,13 +336,16 @@ const avances: GanttTask[] = [
   },
 ];
 
+/** Epoch milliseconds keep the tasks editable as JSON in the Controls panel (a `Date` would turn into a string). */
+const asEpoch = (task: GanttTask): GanttTask => ({ ...task, start: +task.start, end: +task.end });
+
 const meta = {
   title: "Charts/GanttChart",
   component: GanttChart,
   tags: ["autodocs"],
   args: {
     title: "Remodelación de la sede San Isidro",
-    tasks: remodelacion,
+    tasks: remodelacion.map(asEpoch),
     today: day(10, 8),
     defaultZoom: "day",
     rowHeight: 36,
@@ -353,16 +356,21 @@ const meta = {
     animate: true,
     texts: spanishTexts,
     labels: spanishLabels,
+    showCriticalPath: false,
+    showBaselines: false,
+    exportable: false,
   },
   argTypes: {
-    tasks: { control: false },
-    today: { control: false },
-    holidays: { control: false },
+    tasks: { control: "object" },
+    today: { control: "date" },
+    holidays: { control: "object" },
     defaultZoom: {
       control: "inline-radio",
       options: ["hour", "day", "week", "month", "quarter"],
     },
     rowHeight: { control: { type: "range", min: 28, max: 48, step: 2 } },
+    onZoomChange: { control: false },
+    onTaskChange: { control: false },
   },
   decorators: [
     (Story) => (

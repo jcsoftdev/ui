@@ -38,7 +38,7 @@ const meta = {
     active: false,
   },
   argTypes: {
-    stats: { control: false },
+    stats: { control: "object" },
     map: { control: false },
     center: { control: { type: "range", min: 40, max: 200, step: 1 } },
     size: { control: { type: "range", min: 16, max: 120, step: 1 } },
@@ -47,7 +47,7 @@ const meta = {
     variant: { control: "inline-radio", options: ["box", "inner"] },
     showMean: { control: "boolean" },
     showOutliers: { control: "boolean" },
-    activeOutlier: { control: false },
+    activeOutlier: { control: "number" },
     dimmed: { control: "boolean" },
     active: { control: "boolean" },
   },

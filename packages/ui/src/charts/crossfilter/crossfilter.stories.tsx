@@ -13,6 +13,7 @@ import {
   CrossfilterHistogram,
   type CrossfilterLabels,
   CrossfilterProvider,
+  type CrossfilterProviderProps,
   CrossfilterScatter,
   CrossfilterSummary,
   useCrossfilter,
@@ -39,12 +40,31 @@ const dimensions: Accessors<Venta> = {
 
 const money = (value: number) => `S/ ${Math.round(value)}`;
 
-function Layout({ columns }: { columns: "wide" | "narrow" }) {
+/** Props of the parts the default story renders, editable next to the provider's own. */
+interface LayoutProps {
+  columns: "wide" | "narrow";
+  /** `noun` of `CrossfilterSummary`. */
+  noun?: string;
+  /** `bins` of the hour `CrossfilterHistogram`. */
+  bins?: number;
+  /** `orientation` of the service `CrossfilterBarChart`. */
+  serviceOrientation?: "vertical" | "horizontal";
+  /** `jitter` of `CrossfilterScatter`, in pixels. */
+  jitter?: number;
+}
+
+function Layout({
+  columns,
+  noun = "ventas",
+  bins = 11,
+  serviceOrientation = "horizontal",
+  jitter = 7,
+}: LayoutProps) {
   const xf = useCrossfilter<Venta>();
   const rows = useMemo(() => xf.filtered.slice(), [xf.filtered]);
   return (
     <div className="@container/xf flex min-w-0 flex-col gap-4">
-      <CrossfilterSummary noun="ventas" labels={spanish} />
+      <CrossfilterSummary noun={noun} labels={spanish} />
       <div
         className={
           columns === "wide"
@@ -63,7 +83,7 @@ function Layout({ columns }: { columns: "wide" | "narrow" }) {
           title="Ventas por servicio"
           dimension="servicio"
           keys={SERVICIOS.map((service) => service.name)}
-          orientation="horizontal"
+          orientation={serviceOrientation}
           height={240}
           labels={spanish}
         />
@@ -71,7 +91,7 @@ function Layout({ columns }: { columns: "wide" | "narrow" }) {
           title="Ventas por hora"
           dimension="hora"
           domain={[9, 20]}
-          bins={11}
+          bins={bins}
           edgeFormat={(hour) => `${Math.round(hour)} h`}
           height={200}
           labels={spanish}
@@ -80,7 +100,7 @@ function Layout({ columns }: { columns: "wide" | "narrow" }) {
           title="Hora y ticket"
           x="hora"
           y="ticket"
-          jitter={7}
+          jitter={jitter}
           xFormat={(hour) => `${Math.round(hour)} h`}
           yFormat={money}
           pointLabel={(sale: Venta) => `${sale.cliente} · ${sale.servicio}`}
@@ -107,6 +127,8 @@ function SalesCrossfilter({ columns }: { columns: "wide" | "narrow" }) {
   );
 }
 
+type CrossfilterStoryArgs = CrossfilterProviderProps<unknown> & LayoutProps;
+
 const storyArgs = {
   data: sales,
   dimensions: dimensions as unknown as Accessors<unknown>,
@@ -118,16 +140,29 @@ const meta = {
   component: CrossfilterProvider,
   tags: ["autodocs"],
   parameters: { layout: "padded" },
+  args: {
+    columns: "wide",
+    noun: "ventas",
+    bins: 11,
+    serviceOrientation: "horizontal",
+    jitter: 7,
+  },
   argTypes: {
+    // Records hold `Date` values that the JSON editor would turn into strings, and the accessors are functions.
     data: { control: false },
     dimensions: { control: false },
-    initialFilters: { control: false },
+    initialFilters: { control: "object" },
     children: { control: false },
+    columns: { control: "inline-radio", options: ["wide", "narrow"] },
+    noun: { control: "text" },
+    bins: { control: { type: "range", min: 2, max: 22, step: 1 } },
+    serviceOrientation: { control: "inline-radio", options: ["vertical", "horizontal"] },
+    jitter: { control: { type: "range", min: 0, max: 16, step: 1 } },
   },
-} satisfies Meta<typeof CrossfilterProvider>;
+} satisfies Meta<CrossfilterStoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<CrossfilterStoryArgs>;
 
 /**
  * Ventas cruzadas: haz clic en una barra (barbero, servicio) o arrastra sobre las horas; los demás
@@ -136,7 +171,17 @@ type Story = StoryObj<typeof meta>;
  */
 export const VentasCruzadas: Story = {
   args: storyArgs,
-  render: () => <SalesCrossfilter columns="wide" />,
+  render: ({ data, dimensions, initialFilters, children, ...layout }) => (
+    // `initialFilters` seeds state on mount; the key remounts the provider when the control changes.
+    <CrossfilterProvider
+      key={JSON.stringify(initialFilters ?? null)}
+      data={data}
+      dimensions={dimensions}
+      initialFilters={initialFilters}
+    >
+      <Layout {...layout} />
+    </CrossfilterProvider>
+  ),
 };
 
 /** Un filtro activo desde el inicio: Ana, entre las 14 y las 17 h. */

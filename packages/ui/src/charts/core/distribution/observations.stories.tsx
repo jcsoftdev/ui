@@ -19,7 +19,7 @@ const meta = {
     radius: 2.6,
   },
   argTypes: {
-    points: { control: false },
+    points: { control: "object" },
     map: { control: false },
     coloring: { control: "inline-radio", options: ["series", "value"] },
     horizontal: { control: "boolean" },

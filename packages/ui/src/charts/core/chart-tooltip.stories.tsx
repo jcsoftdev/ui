@@ -19,11 +19,11 @@ const meta = {
   title: "Charts/Primitives/ChartTooltip",
   component: ChartTooltip,
   tags: ["autodocs"],
-  args: { x: 120, y: 80, containerWidth: 420, title: "Sábado 4 oct", rows },
+  args: { x: 120, y: 80, containerWidth: 420, title: "Sábado 4 oct", rows, dock: "auto" },
   argTypes: {
     x: { control: { type: "range", min: 0, max: 420 } },
     y: { control: { type: "range", min: 0, max: 200 } },
-    containerWidth: { control: false },
+    containerWidth: { control: "number" },
     title: { control: "text" },
     rows: { control: "object" },
   },

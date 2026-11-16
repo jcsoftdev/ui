@@ -60,6 +60,7 @@ const meta = {
     loading: false,
     animate: true,
     labels: spanishLabels,
+    distributed: false,
   },
   argTypes: {
     orientation: { control: "inline-radio", options: ["vertical", "horizontal"] },
@@ -67,6 +68,88 @@ const meta = {
     barRadius: { control: { type: "range", min: 0, max: 16, step: 1 } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 160, max: 520, step: 10 } },
+    description: {
+      control: "text",
+      description: "Extra sentence for the hidden data table caption.",
+    },
+    aspectRatio: {
+      control: "number",
+      description:
+        "Width / height ratio; sizes the plot from the container width (wins over a pixel `height`).",
+    },
+    lineGradient: {
+      control: "boolean",
+      description:
+        "Strokes lines with a gradient from each series color to the next palette color.",
+    },
+    transition: {
+      control: "boolean",
+      description: "Eases lines and areas between data updates (live data); off by default.",
+    },
+    maxPoints: {
+      control: "number",
+      description:
+        "Series with more points than this are reduced with LTTB, 2000 by default; `false` draws every point.",
+    },
+    syncId: {
+      control: "text",
+      description:
+        "Charts with the same id share hover (crosshair and tooltip) and the zoom window.",
+    },
+    onPointClick: {
+      control: false,
+      description:
+        "Called with the category (and nearest series) under the pointer when the plot is clicked or Enter is pressed.",
+    },
+    xFormat: {
+      control: false,
+      description:
+        "Label of a category on the axis and in the tooltip (dates get Spanish defaults).",
+    },
+    yAxis: { control: "object" },
+    axes: { control: "object", description: "Any number of value axes." },
+    dock: {
+      control: "inline-radio",
+      options: ["auto", "always", "never"],
+      description:
+        "Where the tooltip's details go: `auto` (default) docks them in a panel under the chart on containers 480px wide or less and on coarse pointers, `always` / `never` force it.",
+    },
+    tooltipRows: {
+      control: false,
+      description:
+        "Customises the tooltip content of a category: replace the title or rows, or add a footer.",
+    },
+    annotations: { control: "object" },
+    categoryLabelRotation: {
+      control: "number",
+      description:
+        "Tilts the category labels (degrees, e.g. -45) so long names fit; vertical charts only.",
+    },
+    categoryTickEvery: {
+      control: "number",
+      description:
+        "Shows every n-th category label, or those the predicate accepts; replaces the automatic thinning.",
+    },
+    categoryGroups: {
+      control: "object",
+      description:
+        "Second tier of labels under the category axis (vertical charts); counts must add up to the categories.",
+    },
+    onCategoryClick: {
+      control: false,
+      description:
+        "Click (or Enter on the focused plot) on a category; receives its index in `categories`.",
+    },
+    overlay: {
+      control: false,
+      description: "Extra layers over the plot, e.g. the ruler and ink tools of `useChartInk`.",
+    },
+    rangeSelect: { control: false },
+    initialHidden: {
+      control: "object",
+      description: "Series hidden at first; the legend can show them.",
+    },
+    className: { control: "text" },
   },
   decorators: [
     (Story) => (

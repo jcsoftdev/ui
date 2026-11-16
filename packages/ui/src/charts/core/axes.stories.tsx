@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { AxisBottom, AxisLeft, AxisRight, type AxisTick, GridLines } from "./axes.js";
+import {
+  AxisBottom,
+  AxisLeft,
+  type AxisProps,
+  AxisRight,
+  type AxisTick,
+  GridLines,
+} from "./axes.js";
 
 const WIDTH = 480;
 const HEIGHT = 200;
@@ -31,9 +38,13 @@ interface AxesDemoProps {
   rightTitle: string;
   showRight: boolean;
   showGrid: boolean;
+  /** Props of the bottom axis (the story's component), from the Controls panel. */
+  bottom?: Partial<AxisProps>;
+  /** Label color of the left value axis. */
+  color?: string;
 }
 
-function AxesDemo({ title, rightTitle, showRight, showGrid }: AxesDemoProps) {
+function AxesDemo({ title, rightTitle, showRight, showGrid, bottom, color }: AxesDemoProps) {
   return (
     <svg
       width={WIDTH}
@@ -52,9 +63,9 @@ function AxesDemo({ title, rightTitle, showRight, showGrid }: AxesDemoProps) {
             zero={plotHeight}
           />
         ) : null}
-        <AxisLeft ticks={salesTicks} offset={0} title={title} />
+        <AxisLeft ticks={salesTicks} offset={0} title={title} color={color} />
         {showRight ? <AxisRight ticks={cutsTicks} offset={plotWidth} title={rightTitle} /> : null}
-        <AxisBottom ticks={dayTicks} offset={plotHeight} />
+        <AxisBottom ticks={dayTicks} offset={plotHeight} {...bottom} />
       </g>
     </svg>
   );
@@ -64,11 +75,19 @@ const meta = {
   title: "Charts/Primitives/Axes",
   component: AxisBottom,
   tags: ["autodocs"],
-  args: { ticks: dayTicks, offset: plotHeight },
+  args: { ticks: dayTicks, offset: plotHeight, title: "Ventas", rotate: 0 },
   argTypes: {
-    ticks: { control: false },
-    offset: { control: false },
-    title: { control: false },
+    ticks: { control: "object" },
+    offset: { control: { type: "range", min: 0, max: plotHeight, step: 4 } },
+    title: {
+      control: "text",
+      description: "Title of the value axis; the default story shows it on the left axis.",
+    },
+    color: {
+      control: "color",
+      description: "Label color; the default story applies it to the left axis.",
+    },
+    rotate: { control: { type: "range", min: -90, max: 90, step: 5 } },
   },
 } satisfies Meta<typeof AxisBottom>;
 
@@ -77,7 +96,16 @@ type Story = StoryObj<typeof meta>;
 
 /** `GridLines`, `AxisLeft` and `AxisBottom` composed inside a plot group. */
 export const Default: Story = {
-  render: () => <AxesDemo title="Ventas" rightTitle="Cortes" showRight={false} showGrid />,
+  render: ({ title, color, ...bottom }) => (
+    <AxesDemo
+      title={title ?? "Ventas"}
+      color={color}
+      bottom={bottom}
+      rightTitle="Cortes"
+      showRight={false}
+      showGrid
+    />
+  ),
 };
 
 /** A second value axis on the right with its own scale. */

@@ -65,14 +65,21 @@ const meta = {
     loading: false,
     animate: true,
     labels: spanishLabels,
+    showPoints: false,
+    jitter: 0.7,
+    pointColor: "series",
+    seed: 11,
   },
   argTypes: {
     orientation: { control: "inline-radio", options: ["vertical", "horizontal"] },
     whisker: { control: { type: "range", min: 0.5, max: 3, step: 0.5 } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 200, max: 520, step: 10 } },
-    valueFormat: { control: false },
-    series: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    series: { control: "object" },
   },
   decorators: [
     (Story) => (
