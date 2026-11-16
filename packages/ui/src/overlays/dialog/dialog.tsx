@@ -124,16 +124,21 @@ export function DialogContent({
       >
         {children}
         {!blocking && (
-          <DialogPrimitive.Close
-            aria-label={closeLabel ?? strings.close}
-            className={cn(
-              // A 30px square (44px under touch) centred where the 24px button was, so the glyph stays put.
-              "absolute top-[calc(0.5625rem-0.4375rem*var(--touch))] right-[calc(0.5625rem-0.4375rem*var(--touch))] flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink",
-              classNames?.close,
-            )}
-          >
-            <X aria-hidden="true" className="size-4" />
-          </DialogPrimitive.Close>
+          // Zero-height sticky anchor: content that scrolls inside the dialog (anything not wrapped
+          // in `DialogBody`) cannot carry the close button away. `order-first` is visual only; the
+          // button stays last in the DOM and in the tab order.
+          <div className="pointer-events-none sticky top-0 z-10 order-first h-0 shrink-0">
+            <DialogPrimitive.Close
+              aria-label={closeLabel ?? strings.close}
+              className={cn(
+                // A 30px square (44px under touch) centred where the 24px button was, so the glyph stays put.
+                "pointer-events-auto absolute top-[calc(0.5625rem-0.4375rem*var(--touch))] right-[calc(0.5625rem-0.4375rem*var(--touch))] flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink",
+                classNames?.close,
+              )}
+            >
+              <X aria-hidden="true" className="size-4" />
+            </DialogPrimitive.Close>
+          </div>
         )}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
