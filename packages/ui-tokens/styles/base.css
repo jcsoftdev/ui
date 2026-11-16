@@ -33,6 +33,11 @@ body {
   outline-offset: var(--focus-ring-offset, 2px);
 }
 
+/* Tabs flags a clicked tab; intent outlines stay. */
+[data-pointer-focus]:focus-visible:not([data-intent-highlight], [data-intent-changed]) {
+  outline-color: transparent;
+}
+
 @keyframes intent-highlight {
   from {
     background-color: var(--intent-highlight-tint, var(--accent-soft));

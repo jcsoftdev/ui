@@ -282,3 +282,45 @@ export const SegmentedOptionsKeepSelection: Story = {
     await expect(mes).toHaveAttribute("data-state", "on");
   },
 };
+
+export const TabsPointerFocusKeepsKeyboardRing: Story = {
+  render: () => (
+    <Tabs defaultValue="caja">
+      <button type="button">Antes</button>
+      <TabsList aria-label="Secciones" style={{ width: 480 }}>
+        <TabsTrigger value="citas">Citas</TabsTrigger>
+        <TabsTrigger value="clientes">Clientes</TabsTrigger>
+        <TabsTrigger value="caja">Caja</TabsTrigger>
+      </TabsList>
+      <TabsContent value="citas">Panel de citas</TabsContent>
+      <TabsContent value="clientes">Panel de clientes</TabsContent>
+      <TabsContent value="caja">Panel de caja</TabsContent>
+    </Tabs>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [citas, clientes, caja] = canvas.getAllByRole("tab");
+    const before = canvas.getByRole("button", { name: "Antes" });
+    before.focus();
+    await userEvent.keyboard("{Shift}");
+    // A click on the strip's empty space neither moves focus nor selects the first tab.
+    await userEvent.click(canvas.getByRole("tablist"));
+    await expect(before).toHaveFocus();
+    await expect(caja).toHaveAttribute("aria-selected", "true");
+    for (const tab of [citas, clientes, caja]) {
+      await expect(tab).not.toHaveAttribute("data-pointer-focus");
+    }
+    // Keyboard focus that follows keeps its ring.
+    await userEvent.tab();
+    await expect(caja).toHaveFocus();
+    await expect(caja).not.toHaveAttribute("data-pointer-focus");
+    // A clicked tab is flagged, and the flag is gone once the keyboard takes over.
+    await userEvent.click(clientes as HTMLElement);
+    await expect(clientes).toHaveFocus();
+    await expect(clientes).toHaveAttribute("data-pointer-focus");
+    await userEvent.keyboard("{ArrowRight}");
+    await expect(caja).toHaveFocus();
+    await expect(clientes).not.toHaveAttribute("data-pointer-focus");
+    await expect(caja).not.toHaveAttribute("data-pointer-focus");
+  },
+};

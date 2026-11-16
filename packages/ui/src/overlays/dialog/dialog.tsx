@@ -64,6 +64,11 @@ export interface DialogContentProps extends DialogPrimitive.DialogContentProps, 
   container?: HTMLElement | null;
 }
 
+/**
+ * Keep it a flex column (the default): the sticky close anchor and the pinned `DialogHeader` and
+ * `DialogFooter` rely on it. A wrapper between them and this element, such as a `<form>`, needs
+ * `flex min-h-0 flex-col` too.
+ */
 export function DialogContent({
   className,
   classNames,
@@ -124,16 +129,21 @@ export function DialogContent({
       >
         {children}
         {!blocking && (
-          <DialogPrimitive.Close
-            aria-label={closeLabel ?? strings.close}
-            className={cn(
-              // A 30px square (44px under touch) centred where the 24px button was, so the glyph stays put.
-              "absolute top-[calc(0.5625rem-0.4375rem*var(--touch))] right-[calc(0.5625rem-0.4375rem*var(--touch))] flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink",
-              classNames?.close,
-            )}
-          >
-            <X aria-hidden="true" className="size-4" />
-          </DialogPrimitive.Close>
+          // Zero-height sticky anchor: content that scrolls inside the dialog (anything not wrapped
+          // in `DialogBody`) cannot carry the close button away. `order-first` is visual only; the
+          // button stays last in the DOM and in the tab order.
+          <div className="pointer-events-none sticky top-0 z-10 order-first h-0 shrink-0">
+            <DialogPrimitive.Close
+              aria-label={closeLabel ?? strings.close}
+              className={cn(
+                // A 30px square (44px under touch) centred where the 24px button was, so the glyph stays put.
+                "pointer-events-auto absolute top-[calc(0.5625rem-0.4375rem*var(--touch))] right-[calc(0.5625rem-0.4375rem*var(--touch))] flex size-control-sm items-center justify-center rounded-event text-ink-3 hover:text-ink",
+                classNames?.close,
+              )}
+            >
+              <X aria-hidden="true" className="size-4" />
+            </DialogPrimitive.Close>
+          </div>
         )}
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
@@ -144,7 +154,7 @@ export function DialogContent({
 export function DialogHeader({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1 border-b-divider py-3.5 pr-10 pl-4.5", className)}
+      className={cn("flex shrink-0 flex-col gap-1 border-b-divider py-3.5 pr-10 pl-4.5", className)}
       {...props}
     />
   );
@@ -170,14 +180,22 @@ export function DialogDescription({
 }
 
 export function DialogBody({ className, ...props }: ComponentPropsWithRef<"div">) {
-  return <div className={cn("flex flex-col gap-4 p-4.5", className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4.5",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function DialogFooter({ className, ...props }: ComponentPropsWithRef<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 border-t-divider px-4.5 py-3",
+        "flex shrink-0 flex-wrap items-center gap-2 border-t-divider px-4.5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
         "@max-sm/dialog:flex-col-reverse @max-sm/dialog:items-stretch @max-sm/dialog:[&>*]:w-full",
         className,
       )}

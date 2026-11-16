@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- **Dialog keeps its actions and its close button in view.** `DialogHeader` and `DialogFooter` no longer shrink away (`shrink-0`) and `DialogBody` scrolls on its own (`min-h-0 flex-1 overflow-y-auto overscroll-contain`), so a long form keeps the title and the actions reachable. The footer pads for the bottom safe-area inset. The close button now sits in a zero-height sticky anchor, so it stays visible when content placed straight into `DialogContent` scrolls (it used to be absolutely positioned inside the scrolling element and scrolled away). It keeps its tab order, its `aria-label`, its `close` class part and its size, but it is now wrapped in a `div`, so a `[role=dialog] > button` selector no longer reaches it. Both rely on `DialogContent` staying a flex column (the default): a `grid` or `block` override, a `gap` or padding on it moves the anchor. Header and footer stay pinned when they are direct children of `DialogContent`, or of a wrapper such as a `<form>` that is itself `flex min-h-0 flex-col`. Content placed straight into `DialogContent` still scrolls as before.
+- **Tabs: no stray focus ring after a click.** A tab focused by a click no longer shows the ring a previous keyboard focus carried over (`data-pointer-focus`, silenced in `@jcsoftdev/ui-tokens` `base.css` and cleared on the next key press or blur). Keyboard focus keeps its ring. A click on the tab strip's empty space no longer moves focus to the first tab or selects it.
+- **Topbar buttons reach 44px under touch.** The menu button and the search button use `min-h-(--touch-target)` (and `min-w-(--touch-target)` in the collapsed search), so they follow `data-density="touch"` and `data-density="auto"` on coarse pointers like the other controls.
+
 ## 0.10.0 (2026-11-15)
 
 ### Intent-aware components and accessibility

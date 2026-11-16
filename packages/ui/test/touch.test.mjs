@@ -67,3 +67,32 @@ test("checkbox dims and blocks the cursor when disabled, and draws a dash when i
   assert.match(html.checkboxIndeterminate(), /aria-checked="mixed"/);
   assert.notEqual(html.checkboxIndeterminate(), html.checkboxChecked());
 });
+
+test("topbar menu and search buttons reach 44px under touch through --touch-target", () => {
+  assert.match(html.topbarMenu(), /min-h-\(--touch-target\) min-w-\(--touch-target\)/);
+  assert.match(html.topbarFull(), /h-8\.5 min-h-\(--touch-target\)/);
+});
+
+test("dialog header and footer stay put while the body scrolls", () => {
+  const markup = html.dialogParts();
+  assert.match(markup, /<div class="flex shrink-0[^"]*border-b-divider[^"]*">h</);
+  assert.match(markup, /<div class="[^"]*min-h-0 flex-1[^"]*overflow-y-auto[^"]*">b</);
+  assert.match(
+    markup,
+    /<div class="flex shrink-0[^"]*border-t-divider[^"]*safe-area-inset-bottom[^"]*">f</,
+  );
+});
+
+test("the dialog close button sits in a sticky anchor so scrolling content cannot carry it away", () => {
+  const source = readFileSync(
+    new URL("../src/overlays/dialog/dialog.tsx", import.meta.url),
+    "utf8",
+  );
+  const anchor = source.match(/<div className="([^"]*)">\s*<DialogPrimitive\.Close/);
+  assert.ok(anchor, "the close button is wrapped in an anchor");
+  assert.match(anchor[1], /\bsticky\b/);
+  assert.match(anchor[1], /\btop-0\b/);
+  assert.match(anchor[1], /\bh-0\b/);
+  assert.match(anchor[1], /\border-first\b/);
+  assert.match(source, /"pointer-events-auto absolute top-\[calc/);
+});

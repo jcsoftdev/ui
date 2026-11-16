@@ -120,7 +120,7 @@ export function Topbar({
             aria-label={menuLabel}
             onClick={onOpenMenu}
             className={cn(
-              "hidden size-8.5 shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink @max-[900px]/app:inline-flex",
+              "hidden size-8.5 min-h-(--touch-target) min-w-(--touch-target) shrink-0 items-center justify-center rounded-control text-ink-2 hover:bg-surface-2 hover:text-ink @max-[900px]/app:inline-flex",
               classNames?.menuButton,
             )}
           >
@@ -169,7 +169,7 @@ export function Topbar({
             aria-label={searchLabel ?? searchPlaceholder}
             onClick={onSearch}
             className={cn(
-              "ml-auto flex h-8.5 w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
+              "ml-auto flex h-8.5 min-h-(--touch-target) w-[min(320px,38cqw)] shrink-0 items-center gap-2 rounded-input border-control bg-surface-control pr-2 pl-2.5 text-ink-3 text-meta @max-[700px]/topbar:w-8.5 @max-[700px]/topbar:min-w-(--touch-target) @max-[700px]/topbar:justify-center @max-[700px]/topbar:px-0",
               classNames?.search,
             )}
           >
