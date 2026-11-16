@@ -52,6 +52,10 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     startAngle: { control: { type: "range", min: -180, max: 180, step: 5 } },
     endAngle: { control: { type: "range", min: 90, max: 360, step: 5 } },
     thickness: { control: { type: "range", min: 6, max: 40, step: 1 } },
@@ -62,8 +66,8 @@ const meta = {
     ringLabels: { control: "boolean" },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 220, max: 560, step: 10 } },
-    data: { control: false },
-    labels: { control: false },
+    data: { control: "object" },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (

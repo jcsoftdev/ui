@@ -176,7 +176,7 @@ const meta = {
     height: { control: { type: "range", min: 200, max: 560, step: 10 } },
     gap: { control: { type: "range", min: 0, max: 8, step: 1 } },
     radius: { control: { type: "range", min: 0, max: 14, step: 1 } },
-    data: { control: false },
+    data: { control: "object" },
     onFocusChange: { control: false },
     onNodeClick: { control: false },
   },

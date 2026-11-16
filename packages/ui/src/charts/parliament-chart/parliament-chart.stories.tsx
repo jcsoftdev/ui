@@ -46,7 +46,7 @@ const meta = {
     rows: { control: { type: "number", min: 1, max: 20, step: 1 } },
     innerRatio: { control: { type: "range", min: 0, max: 0.8, step: 0.05 } },
     height: { control: { type: "range", min: 140, max: 420, step: 10 } },
-    data: { control: false },
+    data: { control: "object" },
   },
   decorators: [
     (Story) => (

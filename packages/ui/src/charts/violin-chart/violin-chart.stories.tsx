@@ -77,8 +77,11 @@ const meta = {
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     bandwidth: { control: { type: "number", min: 0.5, max: 10, step: 0.5 } },
     height: { control: { type: "range", min: 200, max: 520, step: 10 } },
-    valueFormat: { control: false },
-    series: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    series: { control: "object" },
   },
   decorators: [
     (Story) => (

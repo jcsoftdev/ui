@@ -43,7 +43,7 @@ const meta = {
   argTypes: {
     colorBy: { control: "inline-radio", options: ["direction", "series"] },
     valueFormat: { control: "select", options: ["number", "integer", "currency", "compact"] },
-    items: { control: false },
+    items: { control: "object" },
     height: { control: { type: "range", min: 220, max: 640, step: 10 } },
   },
   decorators: [

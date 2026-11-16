@@ -39,6 +39,10 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     gridShape: { control: "inline-radio", options: ["polygon", "circle"] },
     levels: { control: { type: "range", min: 2, max: 8, step: 1 } },
     fillOpacity: { control: { type: "range", min: 0, max: 0.6, step: 0.02 } },
@@ -46,9 +50,9 @@ const meta = {
     max: { control: { type: "number" } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 240, max: 560, step: 10 } },
-    axes: { control: false },
-    series: { control: false },
-    labels: { control: false },
+    axes: { control: "object" },
+    series: { control: "object" },
+    labels: { control: "object" },
   },
   decorators: [
     (Story) => (

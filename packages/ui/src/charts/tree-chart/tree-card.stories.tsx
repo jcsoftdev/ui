@@ -28,7 +28,7 @@ const meta = {
   tags: ["autodocs"],
   args: { node: root, state: idle },
   argTypes: {
-    node: { control: false },
+    node: { control: "object" },
     state: { control: "object" },
   },
   decorators: [

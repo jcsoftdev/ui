@@ -53,6 +53,10 @@ const meta = {
     animate: true,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     type: { control: "inline-radio", options: ["line", "area", "bar"] },
     color: {
       control: "select",

@@ -67,8 +67,11 @@ const meta = {
     seed: { control: { type: "number" } },
     legend: { control: "select", options: [true, false, "top", "bottom"] },
     height: { control: { type: "range", min: 200, max: 720, step: 10 } },
-    valueFormat: { control: false },
-    series: { control: false },
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
+    series: { control: "object" },
   },
   decorators: [
     (Story) => (

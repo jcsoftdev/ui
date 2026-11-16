@@ -42,15 +42,24 @@ const meta = {
     labels: spanishLabels,
   },
   argTypes: {
+    valueFormat: {
+      control: "select",
+      options: ["number", "integer", "currency", "percent", "compact"],
+    },
     icon: {
       control: "select",
       options: Object.keys(UNIT_ICONS),
     },
     colorMode: { control: "inline-radio", options: ["single", "category"] },
+    height: {
+      control: "inline-radio",
+      options: ["content", "fill"],
+      mapping: { content: undefined, fill: "fill" },
+    },
     perIcon: { control: { type: "number", min: 1, step: 1 } },
     rowHeight: { control: { type: "range", min: 20, max: 60, step: 2 } },
     gap: { control: { type: "range", min: 0, max: 0.6, step: 0.02 } },
-    data: { control: false },
+    data: { control: "object" },
   },
   decorators: [
     (Story) => (

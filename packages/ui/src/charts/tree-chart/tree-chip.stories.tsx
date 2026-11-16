@@ -26,7 +26,7 @@ const meta = {
   component: TreeChip,
   tags: ["autodocs"],
   args: { node: root, state: idle },
-  argTypes: { node: { control: false }, state: { control: "object" } },
+  argTypes: { node: { control: "object" }, state: { control: "object" } },
   decorators: [
     (Story) => (
       <div className="h-[28px] w-[180px]">
