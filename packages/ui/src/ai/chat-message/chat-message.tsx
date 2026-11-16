@@ -1,6 +1,8 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import { CircleAlert } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { Loader } from "../loader/loader.js";
@@ -11,7 +13,9 @@ export type ChatMessageStatus = "sending" | "streaming" | "done" | "error";
 
 export type ChatMessagePart = "root" | "avatar" | "content" | "bubble" | "error" | "time";
 
-export interface ChatMessageProps extends Omit<ComponentPropsWithoutRef<"article">, "content"> {
+export interface ChatMessageProps
+  extends Omit<ComponentPropsWithRef<"article">, "content">,
+    IntentProps {
   author: ChatRole;
   /** Display name, also the avatar's accessible name. */
   name?: string;
@@ -45,6 +49,8 @@ export function ChatMessage({
   errorText = "No se pudo enviar el mensaje.",
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: ChatMessageProps) {
   const streaming = status === "streaming";
@@ -52,6 +58,7 @@ export function ChatMessage({
   if (author === "system") {
     return (
       <article
+        {...intentAttributes({ intent, intentKey })}
         className={cn("flex justify-center", classNames?.root, className)}
         aria-label={name ?? "Sistema"}
         {...props}
@@ -80,6 +87,7 @@ export function ChatMessage({
 
   return (
     <article
+      {...intentAttributes({ intent, intentKey })}
       aria-label={name ?? (user ? "Tú" : "Asistente")}
       aria-busy={streaming || status === "sending" ? "true" : undefined}
       className={cn(

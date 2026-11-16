@@ -28,6 +28,10 @@ export interface UiStrings {
   elapsedMinutes: string;
   /** Visible text of an `ElapsedTime` with `format="minutes"`; `{count}` is replaced. */
   minutesShort: string;
+  hoursShort: string;
+  hoursMinutesShort: string;
+  elapsedHoursOne: string;
+  elapsedHours: string;
   /** Accessible text of a countdown `ElapsedTime`; `{time}` is the remaining time. */
   countdownLeft: string;
   /** Accessible text of a countdown `ElapsedTime` past its target; `{time}` is the overrun. */
@@ -45,6 +49,7 @@ export interface UiStrings {
   /** Keyboard help of an editable `FloorPlan`. */
   floorPlanEditHint: string;
   orderTicketNumber: string;
+  orderTicketTableAndNumber: string;
   orderTicketGuests: string;
   orderTicketGuestsOne: string;
   orderTicketPart: string;
@@ -55,6 +60,7 @@ export interface UiStrings {
   orderTicketLateBy: string;
   orderTicketProgress: string;
   orderTicketProgressValue: string;
+  orderTicketProgressDuration: string;
   orderTicketItems: string;
   orderTicketPending: string;
   orderTicketInProgress: string;
@@ -207,6 +213,10 @@ export const uiStrings = {
     elapsedMinutesOne: "{count} minute",
     elapsedMinutes: "{count} minutes",
     minutesShort: "{count} min",
+    hoursShort: "{hours} h",
+    hoursMinutesShort: "{hours} h {minutes} min",
+    elapsedHoursOne: "{count} hour",
+    elapsedHours: "{count} hours",
     countdownLeft: "{time} left",
     countdownOver: "{time} over",
     seats: "{count} seats",
@@ -216,6 +226,7 @@ export const uiStrings = {
     rotate: "Rotate 90°",
     floorPlanEditHint: "Alt with arrows moves, Alt and Shift with arrows resizes, R rotates.",
     orderTicketNumber: "No. {number}",
+    orderTicketTableAndNumber: "{table} · No. {number}",
     orderTicketGuests: "{count} guests",
     orderTicketGuestsOne: "{count} guest",
     orderTicketPart: "({index} of {count})",
@@ -226,6 +237,7 @@ export const uiStrings = {
     orderTicketLateBy: "Late +{time}",
     orderTicketProgress: "Time against the {target} min target",
     orderTicketProgressValue: "{elapsed} of {target} min",
+    orderTicketProgressDuration: "{elapsed} of {target}",
     orderTicketItems: "Items",
     orderTicketPending: "Queued",
     orderTicketInProgress: "Preparing",
@@ -328,6 +340,10 @@ export const uiStrings = {
     elapsedMinutesOne: "{count} minuto",
     elapsedMinutes: "{count} minutos",
     minutesShort: "{count} min",
+    hoursShort: "{hours} h",
+    hoursMinutesShort: "{hours} h {minutes} min",
+    elapsedHoursOne: "{count} hora",
+    elapsedHours: "{count} horas",
     countdownLeft: "faltan {time}",
     countdownOver: "{time} de retraso",
     seats: "{count} asientos",
@@ -337,6 +353,7 @@ export const uiStrings = {
     rotate: "Girar 90°",
     floorPlanEditHint: "Alt con flechas mueve, Alt y Mayús con flechas cambia el tamaño, R gira.",
     orderTicketNumber: "N.º {number}",
+    orderTicketTableAndNumber: "{table} · N.º {number}",
     orderTicketGuests: "{count} personas",
     orderTicketGuestsOne: "{count} persona",
     orderTicketPart: "({index} de {count})",
@@ -347,6 +364,7 @@ export const uiStrings = {
     orderTicketLateBy: "Demorada +{time}",
     orderTicketProgress: "Tiempo contra los {target} min objetivo",
     orderTicketProgressValue: "{elapsed} de {target} min",
+    orderTicketProgressDuration: "{elapsed} de {target}",
     orderTicketItems: "Platos",
     orderTicketPending: "En cola",
     orderTicketInProgress: "Preparando",

@@ -2,6 +2,9 @@
 
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Check } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget, useIntentTargets } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useComposedRefs } from "../../utils/compose.js";
@@ -16,11 +19,13 @@ export interface ChipGroupOption {
   /** Decorative glyph before the label (replaced by a check while selected in a multiple group). */
   icon?: ReactNode;
   disabled?: boolean;
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export type ChipGroupPart = "root" | "chip" | "label" | "count" | "check";
 
-interface ChipGroupCommon {
+interface ChipGroupCommon extends IntentProps {
   options: readonly ChipGroupOption[];
   disabled?: boolean | undefined;
   /** Form field name: a hidden input per selected value. */
@@ -83,6 +88,8 @@ export function ChipGroup(props: ChipGroupProps) {
     "aria-labelledby": ariaLabelledBy,
     "aria-describedby": ariaDescribedBy,
     "aria-invalid": ariaInvalid,
+    intent,
+    intentKey,
   } = props;
   const single = props.type === "single";
   const generated = useId();
@@ -117,7 +124,12 @@ export function ChipGroup(props: ChipGroupProps) {
   });
   const { ref: rovingRef, onFocus: rovingOnFocus, tabIndex } = roving.rootProps;
   const localRef = useRef<HTMLFieldSetElement | null>(null);
-  const composedRef = useComposedRefs<HTMLFieldSetElement>(rovingRef, localRef);
+  const composedRef = useComposedRefs<HTMLFieldSetElement>(
+    rovingRef,
+    localRef,
+    useIntentTarget({ intent, intentKey }),
+  );
+  const bindOption = useIntentTargets();
 
   // A group is not a labelable element, so `Field`'s <label for> cannot name it: read its text.
   const [fieldLabel, setFieldLabel] = useState<string | undefined>();
@@ -133,6 +145,7 @@ export function ChipGroup(props: ChipGroupProps) {
 
   return (
     <fieldset
+      {...intentAttributes({ intent, intentKey })}
       ref={composedRef}
       id={baseId}
       tabIndex={tabIndex}
@@ -159,6 +172,14 @@ export function ChipGroup(props: ChipGroupProps) {
             type="button"
             aria-pressed={pressed}
             disabled={off}
+            {...intentAttributes({
+              intent: option.intent,
+              intentKey: option.intentKey ?? option.value,
+            })}
+            ref={bindOption({
+              intent: option.intent,
+              intentKey: option.intentKey ?? option.value,
+            })}
             {...item}
             onClick={() => toggle(option.value)}
             className={cn(

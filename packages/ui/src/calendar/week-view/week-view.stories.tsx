@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor } from "storybook/test";
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import type { CalendarEvent, CalendarMarker } from "../internal/types.js";
 import { WeekView } from "./week-view.js";
@@ -254,4 +255,16 @@ export const Narrow: Story = {
       </div>
     ),
   ],
+};
+
+export const Keyboard: Story = {
+  args: { events: [], markers: [] },
+  play: async ({ canvasElement }) => {
+    await userEvent.tab();
+    const allDayToday = canvasElement.querySelectorAll('[role="gridcell"]')[3];
+    await expect(allDayToday).toHaveFocus();
+    await userEvent.keyboard("{ArrowRight}{ArrowDown}");
+    const target = canvasElement.querySelector('[data-hours-column][data-date="2026-10-09"]');
+    await waitFor(() => expect(target).toHaveFocus());
+  },
 };

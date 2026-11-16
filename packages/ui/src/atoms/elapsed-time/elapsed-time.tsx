@@ -1,16 +1,24 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useSyncExternalStore } from "react";
+import { type ComponentPropsWithRef, useSyncExternalStore } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
-import { type ElapsedTone, formatClock, isoDuration, readElapsed, toneFor } from "./model.js";
+import {
+  type ElapsedTone,
+  formatClockText,
+  formatMinutesText,
+  isoDuration,
+  readElapsed,
+  spokenDuration,
+  toneFor,
+} from "./model.js";
 import { getTickerSnapshot, subscribeTicker } from "./ticker.js";
 
 export type ElapsedTimePart = "root" | "text";
 
-export interface ElapsedTimeProps extends Omit<ComponentPropsWithoutRef<"time">, "children"> {
+export interface ElapsedTimeProps extends Omit<ComponentPropsWithRef<"time">, "children"> {
   /** Moment the timer counts from. */
   since: Date | string;
   /** Server clock minus the client clock in ms, so a skewed device still shows the server's elapsed time. */
@@ -66,13 +74,9 @@ export function ElapsedTime({
   const minutes = Math.floor(reading.seconds / 60);
   const asClock = format === "mm:ss" && !reducedMotion;
   const visible = asClock
-    ? formatClock(reading.seconds)
-    : fill(strings.minutesShort, "count", String(minutes));
-  const spoken = fill(
-    minutes === 1 ? strings.elapsedMinutesOne : strings.elapsedMinutes,
-    "count",
-    String(minutes),
-  );
+    ? formatClockText(reading.seconds, strings)
+    : formatMinutesText(minutes, strings);
+  const spoken = spokenDuration(minutes, strings);
   const announced = countdown
     ? fill(reading.over ? strings.countdownOver : strings.countdownLeft, "time", spoken)
     : spoken;

@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
-export interface LabelProps extends ComponentPropsWithoutRef<"label"> {}
+export interface LabelProps extends ComponentPropsWithRef<"label"> {}
 
 export function Label({ className, ...props }: LabelProps) {
   return (

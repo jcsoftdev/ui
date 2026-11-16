@@ -8,6 +8,7 @@ import {
   useContext,
   useId,
 } from "react";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import {
@@ -121,7 +122,9 @@ export function TabsList({ className, loop = true, ref, onFocus, ...props }: Tab
   );
 }
 
-export interface TabsTriggerProps extends Omit<ComponentPropsWithRef<"button">, "value"> {
+export interface TabsTriggerProps
+  extends Omit<ComponentPropsWithRef<"button">, "value">,
+    IntentProps {
   value: string;
   /** Optional record count shown after the label. */
   count?: number;
@@ -136,9 +139,16 @@ export function TabsTrigger({
   onMouseDown,
   onKeyDown,
   onFocus,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: TabsTriggerProps) {
   const context = useTabsContext("TabsTrigger");
+  const composedRef = useComposedRefs<HTMLButtonElement>(
+    ref,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "tab" }),
+  );
   const getItemProps = useContext(TabsListContext);
   if (!getItemProps) throw new Error("`TabsTrigger` must be used within `TabsList`");
   const selected = value === context.value;
@@ -165,8 +175,10 @@ export function TabsTrigger({
       data-disabled={disabled ? "" : undefined}
       disabled={disabled}
       id={triggerId(context.baseId, value)}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
       {...item}
+      ref={composedRef}
       onMouseDown={composeHandlers(onMouseDown, (event: MouseEvent<HTMLButtonElement>) => {
         if (!disabled && event.button === 0 && !event.ctrlKey) {
           event.currentTarget.focus();
@@ -186,7 +198,7 @@ export function TabsTrigger({
   );
 }
 
-export interface TabsContentProps extends Omit<ComponentPropsWithRef<"div">, "value"> {
+export interface TabsContentProps extends Omit<ComponentPropsWithRef<"div">, "value">, IntentProps {
   value: string;
   /** Keeps the panel mounted (hidden) while inactive. */
   forceMount?: boolean | undefined;
@@ -197,9 +209,16 @@ export function TabsContent({
   value,
   forceMount,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: TabsContentProps) {
   const context = useTabsContext("TabsContent");
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "tabpanel" }),
+  );
   const selected = value === context.value;
   const present = forceMount || selected;
   if (!present) return null;
@@ -213,7 +232,9 @@ export function TabsContent({
       id={contentId(context.baseId, value)}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: WAI-ARIA tabpanels are focusable so keyboard users can reach the content
       tabIndex={0}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
       className={cn(className)}
     >
       {children}

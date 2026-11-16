@@ -1,10 +1,10 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type DividerPart = "root" | "line" | "label";
 
-export interface DividerProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface DividerProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** Text centered on the rule. Without it the divider is a plain hairline. */
   children?: ReactNode;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */

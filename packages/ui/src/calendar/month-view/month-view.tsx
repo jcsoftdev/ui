@@ -1,22 +1,16 @@
 import type { ClassNames } from "../../utils/class-names.js";
-import { cn } from "../../utils/cn.js";
-import { DayChip } from "../day-chip/index.js";
-import { EventBlock } from "../event-block/index.js";
-import { formatWeekday, monthGrid, parseDate, type WeekStart } from "../internal/date-utils.js";
-import { SHADED_DAY_CLASS } from "../internal/styles.js";
-import type { CalendarEvent, CalendarMarker, CalendarTone } from "../internal/types.js";
+import {
+  formatFullDate,
+  formatMonthTitle,
+  formatWeekday,
+  monthGrid,
+  type WeekStart,
+} from "../internal/date-utils.js";
+import { hiddenCount, itemsOnDate } from "../internal/month-model.js";
+import type { CalendarEvent, CalendarMarker } from "../internal/types.js";
+import { MonthGrid, type MonthGridLabels } from "./month-grid.js";
 
-const MAX_VISIBLE_ITEMS = 3;
-
-const DOT_TONE: Record<CalendarTone, string> = {
-  accent: "bg-accent",
-  neutral: "bg-ink-3",
-  success: "bg-success",
-  danger: "bg-danger",
-  warning: "bg-warning",
-};
-
-type DayItem = { kind: "marker"; item: CalendarMarker } | { kind: "event"; item: CalendarEvent };
+const DAYS_PER_WEEK = 7;
 
 export type MonthViewPart =
   | "root"
@@ -47,142 +41,32 @@ export interface MonthViewProps {
   onOpenMarker?: (id: string) => void;
   /** Called with the day's date when the overflow button is clicked. */
   onSelectDate?: (date: string) => void;
+  dayIntent?: string;
+  "aria-label"?: string;
   className?: string;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<MonthViewPart>;
 }
 
-export function MonthView({
-  month,
-  today,
-  events,
-  markers = [],
-  shadedDates = [],
-  locale,
-  weekStartsOn = 1,
-  formatMore,
-  onOpenEvent,
-  onOpenMarker,
-  onSelectDate,
-  className,
-  classNames,
-}: MonthViewProps) {
-  const monthIndex = parseDate(month).getUTCMonth();
+function monthLabels(props: MonthViewProps): MonthGridLabels {
+  const { month, locale, weekStartsOn = 1, formatMore, markers = [], events } = props;
   const days = monthGrid(month, weekStartsOn);
-  const shaded = new Set(shadedDates);
+  const more: Record<string, string> = {};
+  const fullDates: Record<string, string> = {};
+  for (const date of days) {
+    fullDates[date] = formatFullDate(date, locale);
+    const hidden = hiddenCount(itemsOnDate(date, markers, events));
+    if (hidden > 0) more[date] = formatMore(hidden);
+  }
+  return {
+    title: formatMonthTitle(month, locale),
+    weekdays: days.slice(0, DAYS_PER_WEEK).map((date) => formatWeekday(date, locale)),
+    fullDates,
+    more,
+  };
+}
 
-  return (
-    <div className={cn("@container/month grid min-w-0 grid-cols-7", classNames?.root, className)}>
-      {days.slice(0, 7).map((date) => (
-        <div
-          key={date}
-          className={cn(
-            "min-w-0 truncate border-b-divider px-2.5 py-2 text-overline text-ink-3 @max-[40rem]/month:px-0.5 @max-[40rem]/month:text-center",
-            classNames?.weekday,
-          )}
-        >
-          {formatWeekday(date, locale)}
-        </div>
-      ))}
-      {days.map((date) => {
-        const parsed = parseDate(date);
-        const outside = parsed.getUTCMonth() !== monthIndex;
-        const isToday = date === today;
-        const items: DayItem[] = [
-          ...markers
-            .filter((marker) => marker.date === date)
-            .map((item): DayItem => ({ kind: "marker", item })),
-          ...events
-            .filter((event) => event.date === date)
-            .map((item): DayItem => ({ kind: "event", item })),
-        ];
-        const visible = items.slice(0, MAX_VISIBLE_ITEMS);
-        const hidden = items.length - visible.length;
-
-        return (
-          <div
-            key={date}
-            data-date={date}
-            data-today={isToday || undefined}
-            data-outside-month={outside || undefined}
-            data-shaded={shaded.has(date) || undefined}
-            className={cn(
-              "flex min-h-30 min-w-0 flex-col gap-0.75 border-b-divider border-l-divider p-1.5 @max-[40rem]/month:min-h-16 @max-[40rem]/month:items-center @max-[40rem]/month:p-0.5",
-              shaded.has(date) && SHADED_DAY_CLASS,
-              outside && "bg-surface-2/50",
-              classNames?.day,
-            )}
-          >
-            <span
-              className={cn(
-                "grid h-5.5 min-w-6 place-items-center self-start rounded-xs font-mono text-chip-text text-ink-2",
-                isToday && "bg-accent text-on-accent",
-                outside && "text-ink-3",
-                classNames?.dayNumber,
-              )}
-            >
-              {parsed.getUTCDate()}
-            </span>
-            <div
-              className={cn(
-                "flex min-w-0 flex-col gap-0.75 @max-[40rem]/month:hidden",
-                classNames?.items,
-              )}
-            >
-              {visible.map(({ kind, item }) =>
-                kind === "marker" ? (
-                  <DayChip key={item.id} marker={item} onOpen={onOpenMarker} />
-                ) : (
-                  <EventBlock key={item.id} event={item} variant="compact" onOpen={onOpenEvent} />
-                ),
-              )}
-              {hidden > 0 ? (
-                <button
-                  type="button"
-                  onClick={onSelectDate ? () => onSelectDate(date) : undefined}
-                  className={cn("px-1.5 text-left text-chip-text text-ink-3", classNames?.more)}
-                >
-                  {formatMore(hidden)}
-                </button>
-              ) : null}
-            </div>
-            {items.length > 0 ? (
-              <div
-                className={cn(
-                  "hidden flex-wrap justify-center gap-0.5 @max-[40rem]/month:flex",
-                  classNames?.dots,
-                )}
-              >
-                {items.map(({ kind, item }) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-label={item.title}
-                    onClick={
-                      kind === "marker"
-                        ? onOpenMarker
-                          ? () => onOpenMarker(item.id)
-                          : undefined
-                        : onOpenEvent
-                          ? () => onOpenEvent(item.id)
-                          : undefined
-                    }
-                    className={cn(
-                      "size-2 rounded-avatar p-0",
-                      kind === "marker"
-                        ? item.tone === "danger"
-                          ? DOT_TONE.danger
-                          : DOT_TONE.accent
-                        : DOT_TONE[item.tone ?? "accent"],
-                      classNames?.dot,
-                    )}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-    </div>
-  );
+export function MonthView(props: MonthViewProps) {
+  const { locale: _locale, formatMore: _formatMore, ...gridProps } = props;
+  return <MonthGrid {...gridProps} labels={monthLabels(props)} />;
 }

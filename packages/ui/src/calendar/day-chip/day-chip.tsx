@@ -1,6 +1,8 @@
 import type { ComponentPropsWithRef } from "react";
+import { type IntentProps, intentAttributes } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { calendarItemIntent } from "../internal/intent.js";
 import type { CalendarMarker } from "../internal/types.js";
 
 /** Class map behind each marker `tone`; exported so apps can extend or reuse it. */
@@ -12,7 +14,8 @@ export const dayChipToneClasses: Readonly<Record<NonNullable<CalendarMarker["ton
 export type DayChipPart = "root" | "subtitle";
 
 export interface DayChipProps
-  extends Omit<ComponentPropsWithRef<"button">, "children" | "title" | "onClick"> {
+  extends Omit<ComponentPropsWithRef<"button">, "children" | "title" | "onClick">,
+    IntentProps {
   marker: CalendarMarker;
   onOpen?: (id: string) => void;
   className?: string;
@@ -21,11 +24,20 @@ export interface DayChipProps
 }
 
 /** Compact single-line chip for a day marker. */
-export function DayChip({ marker, onOpen, className, classNames, ...props }: DayChipProps) {
+export function DayChip({
+  marker,
+  onOpen,
+  className,
+  classNames,
+  intent,
+  intentKey,
+  ...props
+}: DayChipProps) {
   return (
     <button
       type="button"
       onClick={onOpen ? () => onOpen(marker.id) : undefined}
+      {...intentAttributes(calendarItemIntent(marker, { intent, intentKey }))}
       {...props}
       className={cn(
         "block w-full truncate rounded-xs px-1.5 py-0.5 text-left text-chip-text",

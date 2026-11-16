@@ -2,22 +2,34 @@
 
 import { type ComponentProps, type ReactNode, useId, useRef } from "react";
 import { Check, Minus } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { touchHitArea } from "../internal/hit-area.js";
+import { describedByProps, LabelledControl } from "../internal/labelled-control.js";
 
 export type CheckedState = boolean | "indeterminate";
 
-export type CheckboxPart = "root" | "box" | "indicator" | "icon" | "wrapper" | "label";
+export type CheckboxPart =
+  | "root"
+  | "box"
+  | "indicator"
+  | "icon"
+  | "wrapper"
+  | "label"
+  | "description";
 
 export interface CheckboxProps
   extends Omit<
-    ComponentProps<"button">,
-    "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
-  > {
+      ComponentProps<"button">,
+      "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
+    >,
+    IntentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<CheckboxPart>;
   checked?: CheckedState;
@@ -33,6 +45,7 @@ export interface CheckboxProps
    * assistive tech and a click on it toggles. Without it the checkbox is bare and needs `aria-label`.
    */
   label?: ReactNode;
+  description?: ReactNode;
 }
 
 function getState(checked: CheckedState) {
@@ -51,9 +64,12 @@ export function Checkbox({
   value = "on",
   form,
   label,
+  description,
   id,
   onClick,
   onKeyDown,
+  intent,
+  intentKey,
   ref,
   ...props
 }: CheckboxProps) {
@@ -65,11 +81,16 @@ export function Checkbox({
   const bubble = useFormBubble(form);
   const initialRef = useRef(checked);
   useFormReset(bubble.control, form, () => setChecked(initialRef.current));
-  const composedRef = useComposedRefs(ref, bubble.setControl);
+  const composedRef = useComposedRefs(
+    ref,
+    bubble.setControl,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "checkbox" }),
+  );
   const state = getState(checked);
   const disabledAttr = disabled ? "" : undefined;
   const generatedId = useId();
   const controlId = label === undefined ? id : (id ?? generatedId);
+  const descriptionId = `${generatedId}-description`;
 
   const control = (
     <>
@@ -84,7 +105,9 @@ export function Checkbox({
         disabled={disabled}
         value={value}
         id={controlId}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        {...describedByProps(props["aria-describedby"], descriptionId, description)}
         ref={composedRef}
         className={cn(
           touchHitArea,
@@ -144,20 +167,16 @@ export function Checkbox({
     </>
   );
 
-  if (label === undefined) return control;
+  if (label === undefined && description === undefined) return control;
   return (
-    <span className={cn("inline-flex items-center", classNames?.wrapper)}>
-      {control}
-      <label
-        htmlFor={controlId}
-        data-disabled={disabledAttr}
-        className={cn(
-          "cursor-pointer select-none text-control text-ink data-disabled:cursor-not-allowed data-disabled:opacity-50",
-          classNames?.label,
-        )}
-      >
-        {label}
-      </label>
-    </span>
+    <LabelledControl
+      control={control}
+      controlId={controlId}
+      label={label}
+      description={description}
+      descriptionId={descriptionId}
+      disabled={disabled}
+      classNames={classNames}
+    />
   );
 }

@@ -1,8 +1,11 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 
 export interface PromptSuggestionProps
-  extends Omit<ComponentPropsWithoutRef<"button">, "onSelect" | "children"> {
+  extends Omit<ComponentPropsWithRef<"button">, "onSelect" | "children">,
+    IntentProps {
   /** Receives the suggestion text when pressed (the visible label is the text). */
   onSelect?: (text: string) => void;
   children: string;
@@ -14,11 +17,14 @@ export function PromptSuggestion({
   children,
   className,
   onClick,
+  intent,
+  intentKey,
   ...props
 }: PromptSuggestionProps) {
   return (
     <button
       type="button"
+      {...intentAttributes({ intent, intentKey })}
       onClick={(event) => {
         onClick?.(event);
         onSelect?.(children);
@@ -34,7 +40,7 @@ export function PromptSuggestion({
   );
 }
 
-export interface PromptSuggestionListProps extends ComponentPropsWithoutRef<"fieldset"> {
+export interface PromptSuggestionListProps extends ComponentPropsWithRef<"fieldset"> {
   label?: string;
 }
 

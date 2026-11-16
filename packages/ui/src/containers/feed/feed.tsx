@@ -1,12 +1,16 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { useUiStrings } from "../../i18n/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type FeedTimeOptions, formatFeedTime, toDateTimeAttribute } from "./model.js";
 
-export type FeedProps = ComponentPropsWithoutRef<"ol">;
+export type FeedProps = ComponentPropsWithRef<"ol">;
 
 /** Compact activity list: an outlined mark per event, a rail between them, a timestamp under each. Flush. */
 export function Feed({ className, ...props }: FeedProps) {
@@ -15,7 +19,7 @@ export function Feed({ className, ...props }: FeedProps) {
 
 export type FeedEventPart = "mark" | "rail" | "body" | "text" | "meta" | "time";
 
-export interface FeedEventProps extends ComponentPropsWithoutRef<"li">, FeedTimeOptions {
+export interface FeedEventProps extends ComponentPropsWithRef<"li">, FeedTimeOptions, IntentProps {
   /** Decorative glyph inside the mark (`aria-hidden`). Without it the mark is a dot. */
   icon?: ReactNode;
   /**
@@ -43,8 +47,15 @@ export function FeedEvent({
   className,
   classNames,
   children,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: FeedEventProps) {
+  const targetRef = useComposedRefs(
+    ref,
+    useIntentTarget<HTMLLIElement>({ intent, intentKey }, { requireName: false }),
+  );
   const strings = useUiStrings();
   const text =
     timeLabel ??
@@ -53,11 +64,13 @@ export function FeedEvent({
       : formatFeedTime(time, { locale: locale ?? strings.locale, timeZone, relative, now }));
   return (
     <li
+      {...intentAttributes({ intent, intentKey })}
       className={cn(
         "group/ev relative grid grid-cols-[1.25rem_minmax(0,1fr)] gap-2.5 py-2",
         className,
       )}
       {...props}
+      ref={targetRef}
     >
       <span
         aria-hidden="true"

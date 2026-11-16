@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type StackDirection = "column" | "row";
@@ -22,7 +22,7 @@ const alignClasses: Record<StackAlign, string> = {
   baseline: "items-baseline",
 };
 
-export interface StackProps extends ComponentPropsWithoutRef<"div"> {
+export interface StackProps extends ComponentPropsWithRef<"div"> {
   /** `column` stacks children vertically, `row` lays them out inline and wraps. Defaults to `column`. */
   direction?: StackDirection;
   /** Space between children. Defaults to `md`. */

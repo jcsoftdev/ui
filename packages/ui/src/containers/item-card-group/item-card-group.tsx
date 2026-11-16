@@ -1,5 +1,6 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { ChevronRight } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
@@ -14,6 +15,8 @@ export interface ItemCardGroupItem {
   /** Makes the row a button; the chevron shows it is navigable. */
   onSelect?: () => void;
   disabled?: boolean;
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export type ItemCardGroupPart =
@@ -31,7 +34,7 @@ export type ItemCardGroupPart =
   | "trailing"
   | "chevron";
 
-export interface ItemCardGroupProps extends Omit<ComponentPropsWithoutRef<"section">, "title"> {
+export interface ItemCardGroupProps extends Omit<ComponentPropsWithRef<"section">, "title"> {
   title?: ReactNode;
   description?: ReactNode;
   items: ItemCardGroupItem[];
@@ -40,6 +43,9 @@ export interface ItemCardGroupProps extends Omit<ComponentPropsWithoutRef<"secti
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ItemCardGroupPart>;
 }
+
+const itemIntent = (item: ItemCardGroupItem) =>
+  intentAttributes({ intent: item.intent, intentKey: item.intentKey ?? item.id });
 
 /** Rows grouped inside a single card (settings, clients, services), with an optional heading. */
 export function ItemCardGroup({
@@ -131,6 +137,7 @@ export function ItemCardGroup({
               {item.onSelect ? (
                 <button
                   type="button"
+                  {...itemIntent(item)}
                   disabled={item.disabled}
                   aria-current={selected ? "true" : undefined}
                   onClick={item.onSelect}
@@ -143,6 +150,7 @@ export function ItemCardGroup({
                 </button>
               ) : (
                 <div
+                  {...itemIntent(item)}
                   aria-current={selected ? "true" : undefined}
                   className={cn(rowClass, item.disabled && "opacity-50")}
                 >

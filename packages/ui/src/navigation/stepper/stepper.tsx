@@ -1,12 +1,14 @@
-import type { ComponentPropsWithRef } from "react";
+import type { ComponentPropsWithRef, Ref } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { Check, X } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type StepStatus = "done" | "current" | "error" | "pending";
 
-export interface Step {
+export interface Step extends IntentProps {
   id: string;
   label: string;
   /**
@@ -16,6 +18,7 @@ export interface Step {
    * `aria-current="step"` whatever its status.
    */
   status?: StepStatus;
+  ref?: Ref<HTMLLIElement> | undefined;
 }
 
 const markerStatusClasses: Record<StepStatus, string> = {
@@ -53,6 +56,8 @@ export function Stepper({ steps, currentStepId, className, classNames, ...props 
         return (
           <li
             key={step.id}
+            {...intentAttributes({ intent: step.intent, intentKey: step.intentKey ?? step.id })}
+            ref={step.ref}
             data-status={status}
             className={cn("flex min-w-0 items-center gap-1.5", classNames?.step)}
           >

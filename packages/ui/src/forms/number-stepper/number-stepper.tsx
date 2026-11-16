@@ -11,8 +11,12 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { Minus, Plus } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { snapToStep } from "../slider/model.js";
 import { canStep, parseNumber, stepText } from "./model.js";
 
@@ -25,7 +29,7 @@ const sizeClasses: Readonly<Record<NumberStepperSize, { root: string; button: st
   md: { root: "h-input", button: "w-9" },
 };
 
-interface NumberStepperBaseProps {
+interface NumberStepperBaseProps extends IntentProps {
   /** `sm` (30px) matches a small `Button` or `Input` for dense rows; `md` (default) is the regular field height. */
   size?: NumberStepperSize;
   /** Accessible name of the plus button. Defaults to the localized verb followed by the field label. */
@@ -102,6 +106,8 @@ export function NumberStepper(props: NumberStepperProps) {
     "aria-labelledby": ariaLabelledBy,
     "aria-describedby": ariaDescribedBy,
     "aria-invalid": ariaInvalid,
+    intent,
+    intentKey,
   } = props;
   const strings = useUiStrings();
   const autoId = useId();
@@ -110,6 +116,10 @@ export function NumberStepper(props: NumberStepperProps) {
   const incrementId = `${autoId}-increment`;
   const [fieldLabel, setFieldLabel] = useState("");
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputTargetRef = useComposedRefs<HTMLInputElement>(
+    inputRef,
+    useIntentTarget({ intent, intentKey }, { role: "spinbutton" }),
+  );
 
   useEffect(() => {
     if (ariaLabel || ariaLabelledBy) return;
@@ -217,7 +227,8 @@ export function NumberStepper(props: NumberStepperProps) {
         <Minus aria-hidden="true" className="size-3.5" />
       </button>
       <input
-        ref={inputRef}
+        {...intentAttributes({ intent, intentKey })}
+        ref={inputTargetRef}
         id={id}
         name={name}
         role="spinbutton"

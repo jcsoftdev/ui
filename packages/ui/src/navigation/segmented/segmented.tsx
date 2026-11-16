@@ -1,6 +1,7 @@
 "use client";
 
 import { type ComponentPropsWithRef, createContext, type ReactNode, useContext } from "react";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import {
@@ -117,7 +118,9 @@ export function Segmented({
   );
 }
 
-export interface SegmentedItemProps extends Omit<ComponentPropsWithRef<"button">, "value"> {
+export interface SegmentedItemProps
+  extends Omit<ComponentPropsWithRef<"button">, "value">,
+    IntentProps {
   value: string;
 }
 
@@ -126,9 +129,16 @@ export function SegmentedItem({
   value,
   disabled: disabledProp,
   onClick,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: SegmentedItemProps) {
   const context = useContext(SegmentedContext);
+  const composedRef = useComposedRefs<HTMLButtonElement>(
+    ref,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "radio" }),
+  );
   if (!context) throw new Error("`SegmentedItem` must be used within `Segmented`");
   const pressed = context.value === value;
   const disabled = context.disabled || disabledProp;
@@ -147,8 +157,10 @@ export function SegmentedItem({
       data-state={pressed ? "on" : "off"}
       data-disabled={disabled ? "" : undefined}
       disabled={disabled}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
       {...item}
+      ref={composedRef}
       onClick={composeHandlers(onClick, () => {
         if (!disabled)
           context.setValue(nextSegmentedValue(context.value, value, context.allowDeselect));

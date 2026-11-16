@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   cloneElement,
   Fragment,
   isValidElement,
@@ -33,7 +33,7 @@ const FALLBACK_CONTROL = 'button:not([tabindex="-1"]), [tabindex]:not([tabindex=
 
 export type FieldPart = "root" | "label" | "optional" | "required" | "hint" | "error";
 
-export interface FieldProps extends Omit<ComponentPropsWithoutRef<"div">, "children" | "id"> {
+export interface FieldProps extends Omit<ComponentPropsWithRef<"div">, "children" | "id"> {
   /** The label content: text or any node (an icon, a tooltip trigger). */
   label: ReactNode;
   hint?: string;

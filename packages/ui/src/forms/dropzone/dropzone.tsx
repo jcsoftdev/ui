@@ -12,8 +12,12 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { Upload, X } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 
 export type DropzoneRejectionReason = "type" | "size";
 
@@ -24,7 +28,7 @@ export interface DropzoneRejection {
 
 export type DropzonePart = "root" | "icon" | "title" | "hint" | "browse" | "list" | "file";
 
-export interface DropzoneProps {
+export interface DropzoneProps extends IntentProps {
   onFiles: (files: File[]) => void;
   /** Called with the rejected files; the caller composes the user-facing message. */
   onReject?: (rejections: DropzoneRejection[]) => void;
@@ -133,9 +137,13 @@ export function Dropzone({
   "aria-invalid": ariaInvalid,
   className,
   classNames,
+  intent,
+  intentKey,
 }: DropzoneProps) {
   const strings = useUiStrings();
   const inputRef = useRef<HTMLInputElement>(null);
+  const targetRef = useIntentTarget({ intent, intentKey });
+  const fieldInputRef = useComposedRefs<HTMLInputElement>(inputRef, targetRef);
   const [dragging, setDragging] = useState(false);
   const [selected, setSelected] = useState<File[]>([]);
   const autoId = useId();
@@ -259,7 +267,13 @@ export function Dropzone({
           {browseLabel}
         </span>
       ) : (
-        <button type="button" className={browse} onClick={() => inputRef.current?.click()}>
+        <button
+          type="button"
+          {...intentAttributes({ intent, intentKey })}
+          ref={targetRef}
+          className={browse}
+          onClick={() => inputRef.current?.click()}
+        >
           {browseLabel}
         </button>
       )}
@@ -296,7 +310,8 @@ export function Dropzone({
       ) : null}
       {field ? (
         <input
-          ref={inputRef}
+          {...intentAttributes({ intent, intentKey })}
+          ref={fieldInputRef}
           id={inputId}
           name={name}
           type="file"

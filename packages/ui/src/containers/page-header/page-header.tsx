@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithRef, CSSProperties, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
-export interface PageHeaderProps extends ComponentPropsWithoutRef<"header"> {
+export interface PageHeaderProps extends ComponentPropsWithRef<"header"> {
   /** Trail shown on its own row above the title, usually a `Breadcrumbs`. */
   breadcrumbs?: ReactNode;
   /** Tighter, centred header with a smaller title and a body-size lede. */
@@ -82,7 +82,7 @@ export function PageHeader({
   );
 }
 
-export type PageHeaderEyebrowProps = ComponentPropsWithoutRef<"div">;
+export type PageHeaderEyebrowProps = ComponentPropsWithRef<"div">;
 
 export function PageHeaderEyebrow({ className, ...props }: PageHeaderEyebrowProps) {
   return (
@@ -93,7 +93,7 @@ export function PageHeaderEyebrow({ className, ...props }: PageHeaderEyebrowProp
   );
 }
 
-export type PageHeaderTitleProps = ComponentPropsWithoutRef<"h1">;
+export type PageHeaderTitleProps = ComponentPropsWithRef<"h1">;
 
 /** Page title. Wrap a word in `<span className="text-accent-word">` to accent it. */
 export function PageHeaderTitle({ className, ...props }: PageHeaderTitleProps) {
@@ -108,7 +108,7 @@ export function PageHeaderTitle({ className, ...props }: PageHeaderTitleProps) {
   );
 }
 
-export type PageHeaderLedeProps = ComponentPropsWithoutRef<"p">;
+export type PageHeaderLedeProps = ComponentPropsWithRef<"p">;
 
 export function PageHeaderLede({ className, ...props }: PageHeaderLedeProps) {
   return (
@@ -122,7 +122,7 @@ export function PageHeaderLede({ className, ...props }: PageHeaderLedeProps) {
   );
 }
 
-export type PageHeaderActionsProps = ComponentPropsWithoutRef<"div">;
+export type PageHeaderActionsProps = ComponentPropsWithRef<"div">;
 
 export function PageHeaderActions({ className, ...props }: PageHeaderActionsProps) {
   return <div className={cn("flex flex-wrap items-center gap-2", className)} {...props} />;

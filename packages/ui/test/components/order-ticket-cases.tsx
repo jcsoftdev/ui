@@ -4,6 +4,7 @@ import { UiStringsProvider } from "../../src/i18n/index.js";
 import { Truck } from "../../src/icons/index.js";
 export {
   orderTicketState,
+  orderTicketTitle,
   splitTicketLines,
   ticketLineCost,
   warnLeadSeconds,
@@ -32,6 +33,12 @@ export const html = {
     renderToStaticMarkup(
       <UiStringsProvider locale="es">
         <OrderTicket {...base} since={since(20 * 60 + 75)} />
+      </UiStringsProvider>,
+    ),
+  lateLong: () =>
+    renderToStaticMarkup(
+      <UiStringsProvider locale="es">
+        <OrderTicket {...base} since={since(20 * 60 + 22 * 3600 + 15 * 60 + 11)} />
       </UiStringsProvider>,
     ),
   takeaway: () =>

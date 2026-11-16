@@ -18,6 +18,8 @@ export interface CalendarEvent {
   allDay?: boolean;
   /** Optional node rendered at the end of the detailed block (e.g. an avatar). */
   trailing?: ReactNode;
+  intent?: string;
+  intentKey?: string;
 }
 
 /** A single-day marker rendered as a chip (deadline, reminder, holiday...). */
@@ -29,4 +31,6 @@ export interface CalendarMarker {
   tone?: "danger" | "accent";
   /** Screen-reader-only text announced before the title. */
   srLabel?: string;
+  intent?: string;
+  intentKey?: string;
 }

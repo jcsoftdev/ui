@@ -1,20 +1,25 @@
 "use client";
 
-import { type ComponentProps, useRef } from "react";
+import { type ComponentProps, type ReactNode, useId, useRef } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { BubbleInput, useFormBubble, useFormReset } from "../../utils/form-bubble.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { touchHitArea } from "../internal/hit-area.js";
+import { describedByProps, LabelledControl } from "../internal/labelled-control.js";
 
-export type SwitchPart = "root" | "track" | "thumb";
+export type SwitchPart = "root" | "track" | "thumb" | "wrapper" | "label" | "description";
 
 export interface SwitchProps
   extends Omit<
-    ComponentProps<"button">,
-    "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
-  > {
+      ComponentProps<"button">,
+      "value" | "defaultValue" | "checked" | "defaultChecked" | "children"
+    >,
+    IntentProps {
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<SwitchPart>;
   checked?: boolean;
@@ -25,6 +30,8 @@ export interface SwitchProps
   value?: string;
   /** Id of the `<form>` the switch belongs to when it is rendered outside it. */
   form?: string;
+  label?: ReactNode;
+  description?: ReactNode;
 }
 
 export function Switch({
@@ -38,7 +45,11 @@ export function Switch({
   name,
   value = "on",
   form,
+  label,
+  description,
   onClick,
+  intent,
+  intentKey,
   ref,
   ...props
 }: SwitchProps) {
@@ -50,11 +61,18 @@ export function Switch({
   const bubble = useFormBubble(form);
   const initialRef = useRef(checked);
   useFormReset(bubble.control, form, () => setChecked(initialRef.current));
-  const composedRef = useComposedRefs(ref, bubble.setControl);
+  const composedRef = useComposedRefs(
+    ref,
+    bubble.setControl,
+    useIntentTarget<HTMLButtonElement>({ intent, intentKey }, { role: "switch" }),
+  );
   const state = checked ? "checked" : "unchecked";
   const disabledAttr = disabled ? "" : undefined;
+  const generatedId = useId();
+  const controlId = label === undefined ? props.id : (props.id ?? generatedId);
+  const descriptionId = `${generatedId}-description`;
 
-  return (
+  const control = (
     <>
       {/* biome-ignore lint/a11y/useSemanticElements: custom control; the hidden input carries the native form value */}
       <button
@@ -66,7 +84,10 @@ export function Switch({
         data-disabled={disabledAttr}
         disabled={disabled}
         value={value}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        {...(label === undefined ? {} : { id: controlId })}
+        {...describedByProps(props["aria-describedby"], descriptionId, description)}
         ref={composedRef}
         className={cn(
           touchHitArea,
@@ -108,5 +129,18 @@ export function Switch({
         />
       ) : null}
     </>
+  );
+
+  if (label === undefined && description === undefined) return control;
+  return (
+    <LabelledControl
+      control={control}
+      controlId={controlId}
+      label={label}
+      description={description}
+      descriptionId={descriptionId}
+      disabled={disabled}
+      classNames={classNames}
+    />
   );
 }

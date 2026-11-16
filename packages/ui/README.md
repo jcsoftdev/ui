@@ -191,10 +191,10 @@ https://ui.jcsoftdev.com/docs/blocks/
 | `DueChip` | `atoms` | Due-date chip: overdue, soon (`soonDays`) and ok states with a glyph and sr-only suffix; time-zone safe. |
 | `ElapsedTime` | `atoms` | Live `<time>` timer on one shared 1 s ticker: `since`, `serverOffsetMs`, `format`, `warnAt`, `dangerAt`, `countdownTo`; no `aria-live`. |
 | `TableGlyph` | `atoms` | SVG table with chairs placed from `shape` (`round`, `square`, `rect`, `bar`) and `seats`; `occupied`, `size`, `pattern`. |
-| `FloorPlan` | `containers` | Read-only salon plan on a grid-unit canvas: items as roving-focus buttons, landmarks, group outlines, `late`/`selected` rings. |
-| `OrderTicket` | `containers` | Paper kitchen ticket: table or channel + number title, `ElapsedTime`, progress against `targetMinutes`, ok/warn/late state (late is a filled band), lines with `aria-pressed` toggles, `readOnly`, `part`/`parts` continuation; `orderTicketState` and `splitTicketLines` helpers. |
+| `FloorPlan` | `containers` | Read-only salon plan on a grid-unit canvas: items as roving-focus buttons named with their status and seats (`floorPlanItemName`), item `intent`s, landmarks, group outlines, `late`/`selected` rings. |
+| `OrderTicket` | `containers` | Paper kitchen ticket: title from the table, the channel and number, or both ("Mesa 1 · N.º 4" when `table` and `number` are passed; see `orderTicketTitle`), `ElapsedTime`, progress against `targetMinutes`, ok/warn/late state (late is a filled band), lines with `aria-pressed` toggles, `readOnly`, `part`/`parts` continuation; `orderTicketState` and `splitTicketLines` helpers. |
 | `Seal` | `atoms` | Stamp mark: `title`, `icon`, `tone`, optional named `label`. |
-| `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. |
+| `Tooltip` | `overlays` | Hover and focus tip: `content`, `shortcut`, `side`, `openDelay`, `closeDelay`; `role="tooltip"`. `describeTrigger="always"` keeps the content as a hidden description of the trigger even while closed (default `"whileOpen"`); the trigger's own `aria-describedby` is always kept. |
 | `AlertDialog` | `overlays` | `role="alertdialog"` with cancel and confirm, `tone="danger"`, async `onConfirm` with a pending state. |
 | `SelectMenu` | `forms` | Custom listbox select over `options` (groups, disabled options, typeahead, hidden `name` input). |
 | `Combobox` | `forms` | Filterable, async-friendly (`onSearchChange`, `loading`), `clearable`, `emptyText`. |
@@ -277,6 +277,25 @@ import { ResponsiveList } from "@jcsoftdev/ui/containers/responsive-list";
 A table from `md` up (library `Table` styling) and a stack of cards below it; the `primary` column
 (default: the first) titles each card and the other columns become label/value rows. Every row
 carries `data-row-key`; `rowClassName` applies to both layouts.
+
+## Intent targets
+
+Components accept optional `intent` and `intentKey` props. When `intent` is a non-empty string the component renders `data-intent="<intent>"`, and `data-intent-key="<key>"` when `intentKey` is also non-empty; with no `intent` nothing is rendered or registered, even if `intentKey` is set. The attributes sit on the element that carries the component's role and accessible name, which is the element that receives the rest props. `DataGrid` is the exception: root props go on the wrapper while the intent goes on `table[role=grid]`. For `DateTimePicker` and `CopyField` the attributes sit on the inner input. `MessageActions` takes `actionIntents` to target each action by name.
+
+```tsx
+<Button intent="order-save">Save</Button>
+<DataGrid data={orders} getRowId={(row) => row.id} rowIntent="order-row" columns={columns} />
+```
+
+`@jcsoftdev/ui/intent` exports `IntentBridge`, `{ registerTarget(ref, element, expectation): () => void }`, and `IntentBridgeProvider`. Without a provider the bridge is a no-op (`noopIntentBridge`), so nothing changes for apps that do not use it. `ref` is `{ intent, key? }` and `expectation` is `{ role, requireName }`.
+
+Client components register through the bridge. Server-safe components (`Input`, `Textarea`, `Select`, `NativeSelect`, `Form`, `Card`, `DayChip`, `EventBlock` and similar) render the attributes but do not register, so a consumer must also be able to find them by `[data-intent][data-intent-key]`.
+
+`rowIntent` on `DataGrid` needs `getRowId`: rows then carry `data-row-id` and cells `data-col-id`. `data-col-id` is always rendered, except on the select and tools columns. Without `getRowId` (or under pivot), index-based ids are unstable, so `rowIntent` is ignored and a development `console.error` is logged.
+
+An unregister runs one microtask after the element detaches, and a re-attach of the same element with the same role in that window reuses the registration. A ref forwarder that passes only non-null nodes leaks one registration on unmount, so forward `null` too. In development a duplicate live intent and key logs one warning.
+
+Highlights are driven by `data-intent-highlight` (a pulse) and `data-intent-changed` (a dashed outline), styled by the base stylesheet. Tune them with `--intent-highlight-color`, `--intent-highlight-width`, `--intent-highlight-offset`, `--intent-highlight-duration` and `--intent-highlight-tint`. Apps that vendor `base.css` must regenerate it to get them.
 
 ## Install a single component (tree shaking)
 

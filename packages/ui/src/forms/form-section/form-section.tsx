@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
-export interface FormSectionProps extends Omit<ComponentPropsWithoutRef<"section">, "title"> {
+export interface FormSectionProps extends Omit<ComponentPropsWithRef<"section">, "title"> {
   title: ReactNode;
   description?: ReactNode;
   /** The fields; usually a `FormGrid`. */

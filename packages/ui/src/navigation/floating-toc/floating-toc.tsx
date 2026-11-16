@@ -1,6 +1,7 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type RefObject, useEffect, useRef, useState } from "react";
+import { type ComponentPropsWithRef, type RefObject, useEffect, useRef, useState } from "react";
+import { intentAttributes, useIntentTargets } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
@@ -8,7 +9,7 @@ import { pickActive, type TocItem } from "./model.js";
 
 export type FloatingTocPart = "root" | "title" | "list" | "item" | "link" | "label";
 
-export interface FloatingTocProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+export interface FloatingTocProps extends Omit<ComponentPropsWithRef<"nav">, "children"> {
   items: TocItem[];
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<FloatingTocPart>;
@@ -42,6 +43,7 @@ export function FloatingToc({
   ...props
 }: FloatingTocProps) {
   const reduced = usePrefersReducedMotion();
+  const bind = useIntentTargets();
   const [active, setActive] = useState<string | null>(items[0]?.id ?? null);
   const visible = useRef(new Set<string>());
   const activeRef = useRef(active);
@@ -104,9 +106,12 @@ export function FloatingToc({
       >
         {items.map((item) => {
           const current = item.id === active;
+          const target = { intent: item.intent, intentKey: item.intentKey ?? item.id };
           return (
             <li key={item.id} className={cn("min-w-0", classNames?.item)}>
               <a
+                {...intentAttributes(target)}
+                ref={bind<HTMLAnchorElement>(target)}
                 href={`#${item.id}`}
                 aria-current={current ? "location" : undefined}
                 onClick={(event) => {

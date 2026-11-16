@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useCallback, useEffect, useRef, useState } from "react";
+import { type ComponentPropsWithRef, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown } from "../../icons/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -9,7 +9,7 @@ import { nextStuck, showJumpToLatest } from "./stick.js";
 
 export type ConversationPart = "root" | "scroller" | "content" | "jump";
 
-export interface ConversationProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
+export interface ConversationProps extends Omit<ComponentPropsWithRef<"div">, "role"> {
   /** Accessible name of the message log. */
   label?: string;
   /** Label of the "jump to latest" button. */

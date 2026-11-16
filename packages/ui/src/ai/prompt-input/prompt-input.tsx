@@ -9,8 +9,12 @@ import {
   useState,
 } from "react";
 import { ArrowUp, Square } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { shouldSubmit } from "./keys.js";
 
 export type PromptInputPart =
@@ -24,7 +28,7 @@ export type PromptInputPart =
   | "stop"
   | "hint";
 
-export interface PromptInputProps {
+export interface PromptInputProps extends IntentProps {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
@@ -70,10 +74,16 @@ export function PromptInput({
   hint,
   className,
   classNames,
+  intent,
+  intentKey,
 }: PromptInputProps) {
   const [state, setState] = useState(defaultValue);
   const value = valueProp ?? state;
   const area = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useComposedRefs(
+    area,
+    useIntentTarget<HTMLTextAreaElement>({ intent, intentKey }),
+  );
 
   useLayoutEffect(() => {
     const el = area.current;
@@ -137,7 +147,8 @@ export function PromptInput({
           </div>
         ) : null}
         <textarea
-          ref={area}
+          {...intentAttributes({ intent, intentKey })}
+          ref={textareaRef}
           rows={1}
           value={value}
           disabled={disabled}

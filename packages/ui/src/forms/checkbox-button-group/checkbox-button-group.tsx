@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget, useIntentTargets } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
@@ -14,7 +17,7 @@ export type CheckboxButtonOption = ButtonOption;
 
 export type CheckboxButtonGroupPart = "root" | ButtonOptionPart;
 
-export interface CheckboxButtonGroupProps {
+export interface CheckboxButtonGroupProps extends IntentProps {
   options: CheckboxButtonOption[];
   value?: string[];
   defaultValue?: string[];
@@ -39,8 +42,12 @@ export function CheckboxButtonGroup({
   disabled,
   className,
   classNames,
+  intent,
+  intentKey,
   ...aria
 }: CheckboxButtonGroupProps) {
+  const rootRef = useIntentTarget<HTMLFieldSetElement>({ intent, intentKey });
+  const bindOption = useIntentTargets();
   const [inner, setInner] = useState(defaultValue);
   const value = valueProp ?? inner;
 
@@ -58,7 +65,9 @@ export function CheckboxButtonGroup({
         classNames?.root,
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...aria}
+      ref={rootRef}
     >
       {options.map((option) => (
         <OptionShell
@@ -67,6 +76,14 @@ export function CheckboxButtonGroup({
           classNames={classNames}
           input={
             <input
+              {...intentAttributes({
+                intent: option.intent,
+                intentKey: option.intentKey ?? option.value,
+              })}
+              ref={bindOption({
+                intent: option.intent,
+                intentKey: option.intentKey ?? option.value,
+              })}
               type="checkbox"
               name={name}
               value={option.value}

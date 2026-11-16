@@ -1,5 +1,6 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { CircleAlert, FileText, X } from "../../icons/index.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { IconAction } from "../internal/icon-action.js";
@@ -16,7 +17,9 @@ export type AttachmentPart =
   | "progress"
   | "remove";
 
-export interface AttachmentProps extends Omit<ComponentPropsWithoutRef<"fieldset">, "children"> {
+export interface AttachmentProps
+  extends Omit<ComponentPropsWithRef<"fieldset">, "children">,
+    IntentProps {
   name: string;
   /** Pre-formatted size, e.g. `240 KB`. */
   size?: string;
@@ -44,6 +47,8 @@ export function Attachment({
   onRemove,
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: AttachmentProps) {
   const preview = variant === "preview";
@@ -119,6 +124,8 @@ export function Attachment({
       {onRemove ? (
         <IconAction
           label={`Quitar ${name}`}
+          intent={intent}
+          intentKey={intentKey}
           onClick={onRemove}
           className={cn(
             "size-6",

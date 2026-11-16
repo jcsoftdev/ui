@@ -1,10 +1,10 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
 
-export type AsideProps = ComponentPropsWithoutRef<"aside">;
+export type AsideProps = ComponentPropsWithRef<"aside">;
 
 /**
  * Complementary column content (`<aside>`), named "Related information" unless given an
@@ -22,7 +22,7 @@ export function Aside({ className, "aria-label": ariaLabel, ...props }: AsidePro
   );
 }
 
-export interface AsideHeaderProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface AsideHeaderProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   title: ReactNode;
   /** End slot, usually a link. */
   action?: ReactNode;

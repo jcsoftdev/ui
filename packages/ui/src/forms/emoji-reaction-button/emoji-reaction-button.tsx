@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { SmilePlus } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -9,7 +12,7 @@ import { EmojiPicker } from "../emoji-picker/emoji-picker.js";
 
 export type EmojiReactionButtonPart = "root" | "emoji" | "count";
 
-export interface EmojiReactionButtonProps {
+export interface EmojiReactionButtonProps extends IntentProps {
   emoji: string;
   count: number;
   /** Whether the current user has used this reaction. */
@@ -30,9 +33,14 @@ export function EmojiReactionButton({
   disabled,
   className,
   classNames,
+  intent,
+  intentKey,
 }: EmojiReactionButtonProps) {
+  const buttonRef = useIntentTarget<HTMLButtonElement>({ intent, intentKey });
   return (
     <button
+      {...intentAttributes({ intent, intentKey })}
+      ref={buttonRef}
       type="button"
       aria-pressed={reacted}
       aria-label={`${emoji} ${count}`}

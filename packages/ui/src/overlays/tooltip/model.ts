@@ -16,3 +16,11 @@ export function opensOnFocus({
 }): boolean {
   return focusVisible && !pressed;
 }
+
+export function joinIds(...ids: Array<string | undefined>): string | undefined {
+  const unique = new Set<string>();
+  for (const value of ids) {
+    for (const id of (value ?? "").trim().split(/\s+/)) if (id) unique.add(id);
+  }
+  return unique.size > 0 ? [...unique].join(" ") : undefined;
+}

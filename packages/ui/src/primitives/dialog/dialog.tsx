@@ -12,6 +12,7 @@ import {
   useRef,
 } from "react";
 import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
+import { isProduction } from "../../utils/is-production.js";
 import { Slot } from "../../utils/slot.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { hideOthers } from "../hide-others.js";
@@ -50,10 +51,6 @@ function useDialogContext(part: string): DialogContextValue {
   const context = useContext(DialogContext);
   if (!context) throw new Error(`<${part}> must be rendered inside <Dialog>`);
   return context;
-}
-
-function isProduction(): boolean {
-  return typeof process !== "undefined" && process.env?.NODE_ENV === "production";
 }
 
 const stateOf = (open: boolean) => (open ? "open" : "closed");

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type KeyboardEvent,
   type ReactNode,
   useEffect,
@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Button, type ButtonSize } from "../../atoms/button/button.js";
 import { useUiStrings } from "../../i18n/index.js";
+import { type IntentProps, useIntentTargets } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
@@ -18,7 +19,7 @@ import { clampIndex, evaluateGates, formatStepOf, isAdvanceKey, type WizardGate 
 
 export type { WizardGate } from "./model.js";
 
-export interface WizardStep {
+export interface WizardStep extends IntentProps {
   id: string;
   label: string;
   content: ReactNode;
@@ -40,7 +41,7 @@ export type WizardPart =
   | "next";
 
 export interface WizardProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "defaultValue" | "onChange"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children" | "defaultValue" | "onChange"> {
   steps: readonly WizardStep[];
   /** Controlled current step id. */
   value?: string | undefined;
@@ -88,6 +89,7 @@ export function Wizard({
   ...props
 }: WizardProps) {
   const strings = useUiStrings();
+  const bind = useIntentTargets();
   const [stepId, setStepId] = useControllableState<string>({
     prop: valueProp,
     defaultProp: defaultValue ?? steps[0]?.id ?? "",
@@ -164,7 +166,13 @@ export function Wizard({
     >
       <Stepper
         aria-label={strings.steps}
-        steps={steps.map(({ id, label: stepLabel }) => ({ id, label: stepLabel }))}
+        steps={steps.map(({ id, label: stepLabel, intent, intentKey }) => ({
+          id,
+          label: stepLabel,
+          intent,
+          intentKey: intentKey ?? id,
+          ref: bind<HTMLLIElement>({ intent, intentKey: intentKey ?? id }, { requireName: false }),
+        }))}
         currentStepId={current.id}
         className={classNames?.stepper}
       />

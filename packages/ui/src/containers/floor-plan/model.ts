@@ -1,4 +1,6 @@
 import type { TableShape } from "../../atoms/table-glyph/layout.js";
+import type { UiStrings } from "../../i18n/index.js";
+import type { FloorPlanItem } from "./floor-plan.js";
 
 export interface Box {
   x: number;
@@ -78,4 +80,18 @@ export function groupOutlines(
     });
   }
   return outlines;
+}
+
+function seatText(template: string, count: number): string {
+  return template.replace("{count}", String(count));
+}
+
+export function floorPlanItemName(
+  item: Pick<FloorPlanItem, "label" | "statusLabel" | "seats" | "ring">,
+  strings: Pick<UiStrings, "seats" | "seatsOne" | "late">,
+): string {
+  const seats = seatText(item.seats === 1 ? strings.seatsOne : strings.seats, item.seats);
+  return [item.label, item.statusLabel, seats, item.ring === "late" ? strings.late : undefined]
+    .filter((part): part is string => part !== undefined && part !== "")
+    .join(", ");
 }

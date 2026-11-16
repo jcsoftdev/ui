@@ -1,13 +1,22 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import {
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useRef,
+} from "react";
 import { Search } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTargets } from "../../intent/index.js";
 import * as Command from "../../primitives/command/command.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
+import { shouldSubmitQuery } from "./model.js";
 
-export interface CommandPaletteItem {
+export interface CommandPaletteItem extends IntentProps {
   id: string;
   label: string;
   group: string;
@@ -25,6 +34,7 @@ export type CommandPalettePart =
   | "header"
   | "searchIcon"
   | "input"
+  | "inputEnd"
   | "closeKey"
   | "list"
   | "empty"
@@ -49,6 +59,9 @@ export interface CommandPaletteProps {
   /** Controlled query, so the parent can react to typing (e.g. debounced remote search). */
   query?: string;
   onQueryChange?: (query: string) => void;
+  onSubmitQuery?: (query: string) => void;
+  inputEnd?: ReactNode;
+  keepOpenOnSelect?: boolean;
   /**
    * Surface material. Omitted keeps the default for this layer; `"glass"` and `"glass-clear"`
    * are frosted glass, `"liquid"` and `"liquid-clear"` Liquid Glass (with its fallbacks), `"solid"`
@@ -73,6 +86,23 @@ function groupItems(items: CommandPaletteItem[]): [string, CommandPaletteItem[]]
   return [...groups.entries()];
 }
 
+interface PaletteState {
+  search: string;
+  highlighted: string;
+}
+
+function StateMirror({ target }: { target: RefObject<PaletteState> }) {
+  const search = Command.useCommandState((state) => state.search);
+  const highlighted = Command.useCommandState((state) => state.value);
+  useEffect(() => {
+    target.current = { search, highlighted };
+  }, [target, search, highlighted]);
+  return null;
+}
+
+const isComposing = (event: KeyboardEvent): boolean =>
+  event.nativeEvent.isComposing || event.keyCode === 229;
+
 function ResultCount({ format }: { format: (count: number) => string }) {
   const count = Command.useCommandState((state) => state.filtered.count);
   return (
@@ -94,13 +124,31 @@ export function CommandPalette({
   closeKeyLabel = "Esc",
   query,
   onQueryChange,
+  onSubmitQuery,
+  inputEnd,
+  keepOpenOnSelect = false,
   material,
   className,
   style,
   classNames,
 }: CommandPaletteProps) {
+  const bindIntent = useIntentTargets();
+  const state = useRef<PaletteState>({ search: "", highlighted: "" });
+  const submitOnEnter = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onSubmitQuery) return;
+    if (event.target instanceof Element && event.target.closest("[data-part='inputEnd']")) return;
+    const submit = shouldSubmitQuery({
+      key: event.key,
+      isComposing: isComposing(event),
+      ...state.current,
+    });
+    if (!submit) return;
+    event.preventDefault();
+    onSubmitQuery(state.current.search);
+  };
   return (
     <Command.Dialog
+      onKeyDown={submitOnEnter}
       open={open}
       onOpenChange={(next) => {
         if (!next) onClose();
@@ -134,6 +182,15 @@ export function CommandPalette({
           )}
           {...(onQueryChange ? { value: query ?? "", onValueChange: onQueryChange } : {})}
         />
+        {inputEnd === undefined ? null : (
+          <span
+            data-part="inputEnd"
+            data-ui-command-skip-keys=""
+            className={cn("shrink-0", classNames?.inputEnd)}
+          >
+            {inputEnd}
+          </span>
+        )}
         <span
           className={cn(
             "shrink-0 rounded-xs border-divider bg-surface-2 px-1.25 py-1 font-mono @max-[360px]/palette:hidden text-count text-ink-2",
@@ -143,6 +200,7 @@ export function CommandPalette({
           {closeKeyLabel}
         </span>
       </div>
+      <StateMirror target={state} />
       <ResultCount format={formatResultCount} />
       <Command.List
         className={cn("overflow-y-auto p-1.5 @min-[420px]/palette:p-2", classNames?.list)}
@@ -166,8 +224,13 @@ export function CommandPalette({
                 keywords={[item.label, item.hint ?? "", ...(item.keywords ?? [])]}
                 onSelect={() => {
                   item.onSelect();
-                  onClose();
+                  if (!keepOpenOnSelect) onClose();
                 }}
+                {...intentAttributes({ intent: item.intent, intentKey: item.intentKey ?? item.id })}
+                ref={bindIntent(
+                  { intent: item.intent, intentKey: item.intentKey ?? item.id },
+                  { role: "option" },
+                )}
                 className={cn(
                   "flex w-full cursor-pointer items-center gap-2.5 rounded-control px-2.5 py-2 text-ink text-meta data-[selected=true]:bg-surface-2 [&_svg]:size-4 [&_svg]:text-ink-3",
                   classNames?.item,

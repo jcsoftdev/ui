@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type NoteTone = "neutral" | "info" | "success" | "warning" | "danger";
@@ -11,7 +11,7 @@ const toneClasses: Record<NoteTone, string> = {
   danger: "text-danger",
 };
 
-export interface NoteProps extends ComponentPropsWithoutRef<"p"> {
+export interface NoteProps extends ComponentPropsWithRef<"p"> {
   /** Colors the text. Defaults to `neutral`. */
   tone?: NoteTone;
   /** Hairline above the note, to hang it under a block it explains. */

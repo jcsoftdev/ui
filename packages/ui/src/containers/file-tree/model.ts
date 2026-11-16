@@ -3,6 +3,8 @@ export interface FileTreeNode {
   name: string;
   /** Present (even empty) for folders. */
   children?: FileTreeNode[];
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export interface FlatRow {

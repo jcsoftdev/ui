@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   Fragment,
   type KeyboardEvent,
   type MouseEvent,
@@ -9,6 +9,9 @@ import {
 } from "react";
 import { IconButton } from "../../atoms/icon-button/icon-button.js";
 import { EllipsisVertical } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +34,8 @@ export interface RowActionItem {
 }
 
 export interface RowActionsProps
-  extends Omit<ComponentPropsWithoutRef<"span">, "children" | "onClick" | "onKeyDown"> {
+  extends Omit<ComponentPropsWithRef<"span">, "children" | "onClick" | "onKeyDown">,
+    IntentProps {
   /** Accessible name of the overflow trigger. Name the row: "Actions for Ana Quispe". */
   label: string;
   /** At most one inline action, typically a `Button size="sm"`: the one thing the row is mostly for. */
@@ -53,7 +57,16 @@ function contain(event: MouseEvent | KeyboardEvent): void {
  * 30px "more" button. It never wraps, so the row keeps its height; destructive items sort last,
  * behind a separator. The menu is a WAI-ARIA menu: arrows, Home/End, typeahead, Escape.
  */
-export function RowActions({ label, primary, items, className, ...props }: RowActionsProps) {
+export function RowActions({
+  label,
+  primary,
+  items,
+  className,
+  intent,
+  intentKey,
+  ...props
+}: RowActionsProps) {
+  const triggerRef = useIntentTarget<HTMLButtonElement>({ intent, intentKey });
   const regular = items.filter((item) => item.tone !== "danger");
   const destructive = items.filter((item) => item.tone === "danger");
   return (
@@ -73,6 +86,8 @@ export function RowActions({ label, primary, items, className, ...props }: RowAc
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <IconButton
+              {...intentAttributes({ intent, intentKey })}
+              ref={triggerRef}
               size="sm"
               variant="secondary"
               label={label}

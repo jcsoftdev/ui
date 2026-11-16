@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type ReactNode, useMemo } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useMemo } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import { ChipGroup, type ChipGroupOption } from "../../forms/chip-group/chip-group.js";
@@ -41,7 +41,7 @@ export interface FilterBarLabels {
   resultMany: string;
 }
 
-export interface FilterBarProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface FilterBarProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   /** Controlled search text. Pair it with `onSearchChange`. */
   search?: string;
   defaultSearch?: string;

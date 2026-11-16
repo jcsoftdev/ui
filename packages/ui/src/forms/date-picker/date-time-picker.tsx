@@ -3,6 +3,7 @@
 import { type ComponentProps, useEffect, useId, useMemo, useState } from "react";
 import { isIsoDate, type WeekStart } from "../../calendar/internal/date-utils.js";
 import { useUiStrings } from "../../i18n/index.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import type { Material } from "../../utils/material.js";
@@ -28,9 +29,10 @@ export type DateTimePickerPart =
 
 export interface DateTimePickerProps
   extends Omit<
-    ComponentProps<"div">,
-    "defaultValue" | "onChange" | "children" | "role" | "id" | "aria-label" | "aria-labelledby"
-  > {
+      ComponentProps<"div">,
+      "defaultValue" | "onChange" | "children" | "role" | "id" | "aria-label" | "aria-labelledby"
+    >,
+    IntentProps {
   /**
    * "YYYY-MM-DDTHH:mm" (controlled), a wall-clock date and time with no zone: the component never
    * converts it, so "2026-09-07T09:30" stays that string whatever the browser's time zone is.
@@ -96,6 +98,8 @@ export function DateTimePicker({
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
   "aria-invalid": ariaInvalid,
+  intent,
+  intentKey,
   ...props
 }: DateTimePickerProps) {
   const strings = useUiStrings();
@@ -161,6 +165,8 @@ export function DateTimePicker({
     >
       <DatePicker
         {...shared}
+        intent={intent}
+        intentKey={intentKey}
         id={dateId}
         value={parts.date}
         onValueChange={(date) => update({ ...parts, date })}

@@ -1,4 +1,6 @@
-export interface TocItem {
+import type { IntentProps } from "../../intent/types.js";
+
+export interface TocItem extends IntentProps {
   /** DOM id of the heading element. */
   id: string;
   label: string;

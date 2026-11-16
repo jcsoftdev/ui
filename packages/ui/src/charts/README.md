@@ -176,6 +176,16 @@ Every chart must keep these, so all families behave the same:
 - Leaving a mark: clear through `useLeaveGrace` (60ms) so the gutter between two marks never shows an empty frame, and
   keep a category over the gaps between its units.
 
+## Accessible data table
+
+Every chart family renders a `ChartDataTable` with the same numbers as the drawing: a `<table>` with a caption, a column header per series (or per measure) and a row header per category. It is visually hidden (`sr-only`), so screen readers and copy/paste reach the data without relying on color or hover. The drawing is `role="img"`, and the table is its text alternative: the label names the chart, the table carries the values.
+
+- Charts render the table through the `table` slot of `ChartFrame`. There is no prop to remove it from the accessibility tree.
+- `ChoroplethMap` takes `dataTable`: `"hidden"` (default) keeps the table for screen readers only, `"visible"` swaps the drawing for a sortable table and `"toggle"` adds a button to switch. `GlobeChart` accepts only `"hidden"`.
+- `ChartGrid` is a layout: each panel renders its own chart, so each panel brings its own table.
+- `Sparkline` is the one exception. It is a decorative inline mark with no axes, so it keeps `role="img"` with a non-empty `aria-label` (its `label` prop, a one-sentence summary) and renders no table. Put the number it summarizes next to it in text.
+- `test/charts-data-table.test.mjs` renders the chart families with a two-point dataset and fails if one stops rendering a `<table`.
+
 ## Hierarchy and matrix charts
 
 ```tsx

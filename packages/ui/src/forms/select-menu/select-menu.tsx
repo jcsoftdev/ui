@@ -11,6 +11,9 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { ChevronDown } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -36,9 +39,10 @@ export type SelectMenuPart = "trigger" | "value" | "icon" | "content" | "option"
 
 export interface SelectMenuProps
   extends Omit<
-    ComponentProps<"button">,
-    "value" | "defaultValue" | "onChange" | "children" | "type" | "role" | "size"
-  > {
+      ComponentProps<"button">,
+      "value" | "defaultValue" | "onChange" | "children" | "type" | "role" | "size"
+    >,
+    IntentProps {
   /** Options, optionally nested in labelled groups. A `value` of `""` is a real option, not "nothing". */
   options: readonly (SelectMenuOption | SelectMenuGroup)[];
   /** Selected value (controlled). An unknown value or `undefined` shows the placeholder. */
@@ -89,6 +93,8 @@ export function SelectMenu({
   onClick,
   ref,
   id,
+  intent,
+  intentKey,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   "aria-invalid": ariaInvalid,
@@ -97,7 +103,11 @@ export function SelectMenu({
   const strings = useUiStrings();
   const listId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const composedRef = useComposedRefs<HTMLButtonElement>(ref, triggerRef);
+  const composedRef = useComposedRefs<HTMLButtonElement>(
+    ref,
+    triggerRef,
+    useIntentTarget({ intent, intentKey }, { role: "combobox" }),
+  );
   const typeahead = useRef({ buffer: "", at: 0 });
   const [value, setValue] = useControllableState<string | undefined>({
     prop: valueProp,
@@ -209,6 +219,7 @@ export function SelectMenu({
         aria-labelledby={ariaLabelledBy}
         disabled={disabled}
         data-placeholder={showPlaceholder ? "" : undefined}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
         onClick={(event) => {
           onClick?.(event);

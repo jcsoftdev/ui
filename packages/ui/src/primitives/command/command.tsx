@@ -144,6 +144,8 @@ export function Root({
   const keyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
     if (event.defaultPrevented) return;
+    if (event.target instanceof Element && event.target.closest("[data-ui-command-skip-keys]"))
+      return;
     if (event.nativeEvent.isComposing || event.keyCode === 229) return;
     const navigator = createNavigator(context);
     const key = event.key;
@@ -415,7 +417,8 @@ export function Item({
     onSelectRef.current = onSelect;
   });
   useLayoutEffect(() => {
-    if (valueProp === undefined) setDerived(elementRef.current?.textContent?.trim() ?? "");
+    const text = elementRef.current?.textContent?.trim();
+    if (valueProp === undefined && text !== undefined) setDerived(text);
   });
   useLayoutEffect(() => () => store.removeItem(id), [store, id]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: keywordsKey stands for keywords

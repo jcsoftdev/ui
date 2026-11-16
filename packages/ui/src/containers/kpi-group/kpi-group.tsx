@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import type { NumberFormatConfig } from "../../atoms/number-value/format.js";
 import { NumberValue } from "../../atoms/number-value/number-value.js";
 import { TrendChip } from "../../atoms/trend-chip/trend-chip.js";
@@ -23,7 +23,7 @@ export type KpiGroupLayout = "divided" | "auto-fit";
 
 export type KpiGroupPart = "root" | "list" | "item" | "label" | "value" | "trend" | "description";
 
-export interface KpiGroupProps extends Omit<ComponentPropsWithoutRef<"dl">, "children"> {
+export interface KpiGroupProps extends Omit<ComponentPropsWithRef<"dl">, "children"> {
   items: KpiGroupItem[];
   /**
    * `divided` (default): one card, 1, 2 or 4 columns by container width. `auto-fit`: separate

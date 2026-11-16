@@ -1,12 +1,15 @@
 "use client";
 
 import { type ChangeEvent, useId, useState } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
 export type PinInputPart = "root" | "dots" | "dot" | "input";
 
-export interface PinInputProps {
+export interface PinInputProps extends IntentProps {
   length?: number;
   value?: string;
   defaultValue?: string;
@@ -36,7 +39,10 @@ export function PinInput({
   statusLabel = defaultStatusLabel,
   className,
   classNames,
+  intent,
+  intentKey,
 }: PinInputProps) {
+  const inputRef = useIntentTarget<HTMLInputElement>({ intent, intentKey });
   const statusId = useId();
   const [internal, setInternal] = useState(defaultValue);
   const current = value ?? internal;
@@ -81,6 +87,8 @@ export function PinInput({
           "h-input w-full min-w-0 rounded-input border-control bg-surface-control px-2 text-center font-mono text-control text-ink tracking-[0.15em] @min-[240px]/pin:px-3 @min-[240px]/pin:tracking-[0.3em] focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1",
           classNames?.input,
         )}
+        {...intentAttributes({ intent, intentKey })}
+        ref={inputRef}
         type="password"
         inputMode="numeric"
         maxLength={length}

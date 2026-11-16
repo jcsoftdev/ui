@@ -1,7 +1,9 @@
 "use client";
 
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { type Material, materialClass } from "../../utils/material.js";
 import { POPPER_MOTION } from "../../utils/overlay-motion.js";
 
@@ -11,7 +13,7 @@ export const PopoverClose = PopoverPrimitive.Close;
 export const PopoverAnchor = PopoverPrimitive.Anchor;
 export const PopoverArrow = PopoverPrimitive.Arrow;
 
-export interface PopoverContentProps extends PopoverPrimitive.PopoverContentProps {
+export interface PopoverContentProps extends PopoverPrimitive.PopoverContentProps, IntentProps {
   /** Portal target. Defaults to `document.body`; pass an element to keep a scoped `data-style`. */
   container?: HTMLElement | null;
   /**
@@ -30,8 +32,15 @@ export function PopoverContent({
   collisionPadding = 8,
   container,
   material,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: PopoverContentProps) {
+  const composedRef = useComposedRefs<HTMLDivElement>(
+    ref,
+    useIntentTarget<HTMLDivElement>({ intent, intentKey }, { role: "dialog" }),
+  );
   return (
     <PopoverPrimitive.Portal container={container}>
       <PopoverPrimitive.Content
@@ -43,7 +52,9 @@ export function PopoverContent({
           materialClass(material, "surface-solid"),
           className,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
+        ref={composedRef}
       />
     </PopoverPrimitive.Portal>
   );

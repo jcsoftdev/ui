@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
-import { Calendar, Package, Scissors, UserRound } from "../../icons/index.js";
+import { IconButton } from "../../atoms/icon-button/icon-button.js";
+import { Calendar, Package, Scissors, Sparkles, UserRound } from "../../icons/index.js";
 import { CommandPalette, type CommandPaletteItem } from "./command-palette.js";
 
 const items: CommandPaletteItem[] = [
@@ -139,5 +140,89 @@ export const EscapeCloses: Story = {
     await screen.findByRole("combobox");
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+  },
+};
+
+function SubmitQueryDemo({
+  onSubmitQuery,
+  onClose,
+}: {
+  onSubmitQuery: (query: string) => void;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  return (
+    <CommandPalette
+      open
+      onClose={onClose}
+      items={items}
+      label="Buscar en la barbería"
+      placeholder="Buscar o pedir..."
+      emptyLabel="Sin resultados"
+      formatResultCount={(count) => `${count} resultados`}
+      query={query}
+      onQueryChange={setQuery}
+      onSubmitQuery={(submitted) => {
+        onSubmitQuery(submitted);
+        setQuery("");
+      }}
+    />
+  );
+}
+
+export const SubmitQuery: Story = {
+  args: { onClose: fn(), onSubmitQuery: fn() },
+  render: (args) => (
+    <SubmitQueryDemo
+      onSubmitQuery={args.onSubmitQuery ?? (() => undefined)}
+      onClose={args.onClose}
+    />
+  ),
+  play: async ({ args }) => {
+    const box = await screen.findByRole("combobox");
+    await userEvent.type(box, "pedido para la mesa 3");
+    await waitFor(() => expect(screen.queryAllByRole("option")).toHaveLength(0));
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(args.onSubmitQuery).toHaveBeenCalledWith("pedido para la mesa 3"));
+    await expect(args.onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.getAllByRole("option").length).toBeGreaterThan(0));
+  },
+};
+
+const micClicks = fn();
+
+export const InputEnd: Story = {
+  args: {
+    onClose: fn(),
+    onSubmitQuery: fn(),
+    inputEnd: (
+      <IconButton label="Dictar" onClick={micClicks}>
+        <Sparkles />
+      </IconButton>
+    ),
+  },
+  play: async ({ args }) => {
+    const box = await screen.findByRole("combobox");
+    await userEvent.click(box);
+    await userEvent.tab();
+    const mic = screen.getByRole("button", { name: "Dictar" });
+    await expect(mic).toHaveFocus();
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(micClicks).toHaveBeenCalledTimes(1));
+    await expect(items[0]?.onSelect).not.toHaveBeenCalled();
+    await expect(args.onSubmitQuery).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
+  },
+};
+
+export const KeepOpen: Story = {
+  args: { onClose: fn(), keepOpenOnSelect: true },
+  play: async ({ args }) => {
+    const box = await screen.findByRole("combobox");
+    await userEvent.type(box, "pomada");
+    await waitFor(() => expect(screen.getAllByRole("option")).toHaveLength(1));
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(items[4]?.onSelect).toHaveBeenCalled());
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };

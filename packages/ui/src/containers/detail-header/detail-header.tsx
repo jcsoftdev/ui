@@ -1,9 +1,9 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type DetailHeaderLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
-export interface DetailHeaderProps extends Omit<ComponentPropsWithoutRef<"header">, "title"> {
+export interface DetailHeaderProps extends Omit<ComponentPropsWithRef<"header">, "title"> {
   /** The record's name: the heading of the header. */
   name: ReactNode;
   /** Picture slot before the name, usually an `Avatar` (pass `className="size-14"` for a larger one). */

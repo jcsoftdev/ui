@@ -1,11 +1,12 @@
-import type { ComponentPropsWithoutRef, ReactNode, Ref } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import { cn } from "../../utils/cn.js";
 import { type Material, materialClass } from "../../utils/material.js";
 
-export type CardProps = ComponentPropsWithoutRef<"div">;
+export type CardProps = ComponentPropsWithRef<"div">;
 
-export interface CardRootProps extends CardProps {
-  ref?: Ref<HTMLDivElement>;
+export interface CardRootProps extends CardProps, IntentProps {
   /**
    * Cards are content, so they are opaque by default. `"glass"` and `"glass-clear"` opt one into
    * frosted glass, `"liquid"` and `"liquid-clear"` into Liquid Glass (use sparingly, over imagery,
@@ -15,9 +16,10 @@ export interface CardRootProps extends CardProps {
   material?: Material;
 }
 
-export function Card({ className, material, ...props }: CardRootProps) {
+export function Card({ className, material, intent, intentKey, ...props }: CardRootProps) {
   return (
     <div
+      {...intentAttributes({ intent, intentKey })}
       className={cn(
         "min-w-0 rounded-card border-card shadow-card surface-card @container/card",
         materialClass(material, "surface-card"),

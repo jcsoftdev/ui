@@ -27,14 +27,32 @@ export function composeRefs<T>(...refs: Array<Ref<T> | undefined>): RefCallback<
     const cleanups: Array<() => void> = [];
     for (const ref of refs) {
       const result = typeof ref === "function" ? (ref as RefCallback<T>)(node) : undefined;
-      if (typeof ref !== "function") setRef(ref, node);
-      else if (typeof result === "function") cleanups.push(result as () => void);
+      if (typeof ref !== "function") {
+        setRef(ref, node);
+        cleanups.push(() => setRef(ref, null));
+      } else if (typeof result === "function") cleanups.push(result as () => void);
       else cleanups.push(() => setRef(ref, null));
     }
     return () => {
       for (const cleanup of cleanups) cleanup();
     };
   };
+}
+
+type ComposedCache = WeakMap<object, RefCallback<never>>;
+
+const pairCache = new WeakMap<object, ComposedCache>();
+
+function composePair<T>(first: NonNullable<Ref<T>>, second: Ref<T> | undefined): Ref<T> {
+  if (second === undefined || second === null) return first;
+  const existing = pairCache.get(first);
+  const inner = existing ?? new WeakMap();
+  if (!existing) pairCache.set(first, inner);
+  const cached = inner.get(second);
+  if (cached) return cached as RefCallback<T>;
+  const composed = composeRefs(first, second);
+  inner.set(second, composed as RefCallback<never>);
+  return composed;
 }
 
 function mergeProps(slotProps: AnyProps, childProps: AnyProps): AnyProps {
@@ -85,7 +103,7 @@ export function Slot({ children, ref, ...slotProps }: SlotProps) {
   const child = children as ReactElement<AnyProps & { ref?: Ref<HTMLElement> }>;
   const merged = mergeProps(slotProps, child.props);
   if (child.type !== Fragment) {
-    merged.ref = ref ? composeRefs(ref, child.props.ref) : child.props.ref;
+    merged.ref = ref ? composePair(ref, child.props.ref) : child.props.ref;
   }
   return cloneElement(child, merged);
 }

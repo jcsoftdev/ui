@@ -1,10 +1,14 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type PointerEvent, useRef } from "react";
+import { type ComponentPropsWithRef, type PointerEvent, useRef } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 
-export interface PressableFeedbackProps extends ComponentPropsWithoutRef<"span"> {
+export interface PressableFeedbackProps extends ComponentPropsWithRef<"span">, IntentProps {
   /** Draws an expanding ripple from the pointer position. */
   ripple?: boolean;
   /** Scales the content down while pressed (uses the preset's `--press-scale`). */
@@ -24,9 +28,17 @@ export function PressableFeedback({
   className,
   children,
   onPointerDown,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: PressableFeedbackProps) {
   const host = useRef<HTMLSpanElement>(null);
+  const composedRef = useComposedRefs<HTMLSpanElement>(
+    ref,
+    host,
+    useIntentTarget({ intent, intentKey }),
+  );
   const reduced = usePrefersReducedMotion();
 
   const spawn = (event: PointerEvent<HTMLSpanElement>) => {
@@ -62,7 +74,7 @@ export function PressableFeedback({
 
   return (
     <span
-      ref={host}
+      ref={composedRef}
       data-disabled={disabled || undefined}
       onPointerDown={spawn}
       className={cn(
@@ -71,6 +83,7 @@ export function PressableFeedback({
         disabled && "pointer-events-none opacity-60",
         className,
       )}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
     >
       {children}

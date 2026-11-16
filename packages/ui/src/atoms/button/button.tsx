@@ -9,7 +9,11 @@ import {
   type ReactNode,
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { Slot } from "../../utils/slot.js";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -66,7 +70,7 @@ export function buttonClasses({
   );
 }
 
-export interface ButtonProps extends ComponentPropsWithRef<"button"> {
+export interface ButtonProps extends ComponentPropsWithRef<"button">, IntentProps {
   variant?: ButtonVariant;
   /** `sm` is 30px and `md` (default) 38px, the heights every form control shares; `lg` is 52px. */
   size?: ButtonSize;
@@ -100,9 +104,13 @@ export function Button({
   className,
   children,
   onClick,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: ButtonProps) {
   const strings = useUiStrings();
+  const composedRef = useComposedRefs<HTMLElement>(ref, useIntentTarget({ intent, intentKey }));
   // Natively disabled wins; a busy button stays focusable and swallows its activation instead.
   const busy = Boolean(loading) && !disabled;
   const Comp = asChild ? Slot : "button";
@@ -121,7 +129,9 @@ export function Button({
       aria-disabled={busy || undefined}
       disabled={disabled}
       className={buttonClasses({ variant, size, block, className })}
+      {...intentAttributes({ intent, intentKey })}
       {...props}
+      ref={composedRef}
       onClick={busy ? ignoreClick : onClick}
     >
       {content}

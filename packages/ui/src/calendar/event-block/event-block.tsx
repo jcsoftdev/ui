@@ -1,6 +1,8 @@
 import type { ComponentPropsWithRef } from "react";
+import { type IntentProps, intentAttributes } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { calendarItemIntent } from "../internal/intent.js";
 import type { CalendarEvent, CalendarTone } from "../internal/types.js";
 
 /** Class map behind each event `tone`; exported so apps can extend or reuse it. */
@@ -22,7 +24,8 @@ export type EventBlockPart =
   | "trailing";
 
 export interface EventBlockProps
-  extends Omit<ComponentPropsWithRef<"button">, "children" | "title" | "onClick"> {
+  extends Omit<ComponentPropsWithRef<"button">, "children" | "title" | "onClick">,
+    IntentProps {
   event: CalendarEvent;
   /** "detailed": time range, title and subtitle. "compact": one "time title" line. */
   variant?: "detailed" | "compact";
@@ -38,8 +41,11 @@ export function EventBlock({
   onOpen,
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: EventBlockProps) {
+  const intentProps = intentAttributes(calendarItemIntent(event, { intent, intentKey }));
   const tone = eventToneClasses[event.tone ?? "accent"];
   const range = event.end ? `${event.start}–${event.end}` : event.start;
   const srLabel = event.srLabel ? <span className="sr-only">{event.srLabel} </span> : null;
@@ -50,6 +56,7 @@ export function EventBlock({
       <button
         type="button"
         onClick={handleClick}
+        {...intentProps}
         {...props}
         className={cn(
           "block w-full truncate rounded-xs border px-1.5 py-0.5 text-left text-chip-text text-ink",
@@ -68,6 +75,7 @@ export function EventBlock({
     <button
       type="button"
       onClick={handleClick}
+      {...intentProps}
       {...props}
       className={cn(
         "@container/event block w-full min-w-0 overflow-hidden rounded-event border px-2.5 py-2 text-left",

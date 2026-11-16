@@ -10,6 +10,8 @@ export interface ButtonOption {
   description?: ReactNode;
   icon?: ReactNode;
   disabled?: boolean;
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export const optionGridClass =

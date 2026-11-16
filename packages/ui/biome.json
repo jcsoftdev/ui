@@ -16,5 +16,18 @@
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "linter": { "enabled": true },
+  "overrides": [
+    {
+      "includes": [
+        "src/calendar/month-view/month-grid.tsx",
+        "src/calendar/week-view/week-view.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": { "useSemanticElements": "off", "useFocusableInteractive": "off" }
+        }
+      }
+    }
+  ],
   "assist": { "actions": { "source": { "organizeImports": "on" } } }
 }

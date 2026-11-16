@@ -11,6 +11,9 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { X } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import * as PopoverPrimitive from "../../primitives/popover/popover.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -34,9 +37,10 @@ export type ComboboxPart = "root" | "input" | "clear" | "content" | "option" | "
 
 export interface ComboboxProps
   extends Omit<
-    ComponentProps<"input">,
-    "value" | "defaultValue" | "onChange" | "type" | "role" | "size"
-  > {
+      ComponentProps<"input">,
+      "value" | "defaultValue" | "onChange" | "type" | "role" | "size"
+    >,
+    IntentProps {
   /** Options, optionally nested in labelled groups. For async search, pass the current results. */
   options: readonly (ComboboxOption | ComboboxGroup)[];
   /** Selected option value (controlled). `""` means nothing is selected. */
@@ -115,6 +119,8 @@ export function Combobox({
   classNames,
   ref,
   id,
+  intent,
+  intentKey,
   onFocus,
   onClick,
   onBlur,
@@ -130,7 +136,11 @@ export function Combobox({
   const listId = `${inputId}-listbox`;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const composedRef = useComposedRefs<HTMLInputElement>(ref, inputRef);
+  const composedRef = useComposedRefs<HTMLInputElement>(
+    ref,
+    inputRef,
+    useIntentTarget({ intent, intentKey }, { role: "combobox" }),
+  );
   const allOptions = useMemo(() => flattenItems(options), [options]);
   const [value, setValue] = useControllableState<string>({
     prop: valueProp,
@@ -229,6 +239,7 @@ export function Combobox({
           className={cn("relative flex w-full min-w-0", classNames?.root, className)}
         >
           <input
+            {...intentAttributes({ intent, intentKey })}
             {...props}
             ref={composedRef}
             id={inputId}

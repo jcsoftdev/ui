@@ -4,6 +4,7 @@ import {
   type ComponentProps,
   createContext,
   type ReactNode,
+  useCallback,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -35,7 +36,7 @@ import {
 
 interface PopperContextValue {
   anchor: HTMLElement | null;
-  setAnchor: (node: HTMLElement | null) => void;
+  registerAnchor: (node: HTMLElement) => () => void;
   arrow: ArrowGeometry | null;
   setArrow: (arrow: ArrowGeometry | null) => void;
 }
@@ -49,9 +50,17 @@ function usePopperContext(part: string): PopperContextValue {
 }
 
 export function Root({ children }: { children?: ReactNode }) {
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [anchors, setAnchors] = useState<HTMLElement[]>([]);
   const [arrow, setArrow] = useState<ArrowGeometry | null>(null);
-  const value = useMemo(() => ({ anchor, setAnchor, arrow, setArrow }), [anchor, arrow]);
+  const registerAnchor = useCallback((node: HTMLElement) => {
+    setAnchors((current) => [...current.filter((candidate) => candidate !== node), node]);
+    return () => setAnchors((current) => current.filter((candidate) => candidate !== node));
+  }, []);
+  const anchor = anchors.at(-1) ?? null;
+  const value = useMemo(
+    () => ({ anchor, registerAnchor, arrow, setArrow }),
+    [anchor, registerAnchor, arrow],
+  );
   return <PopperContext.Provider value={value}>{children}</PopperContext.Provider>;
 }
 
@@ -61,8 +70,10 @@ export interface PopperAnchorProps extends ComponentProps<"div"> {
 
 /** The element the content is positioned against. */
 export function Anchor({ asChild, ref, ...props }: PopperAnchorProps) {
-  const { setAnchor } = usePopperContext("PopperAnchor");
-  const composedRef = useComposedRefs<HTMLDivElement>(ref, setAnchor);
+  const { registerAnchor } = usePopperContext("PopperAnchor");
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const composedRef = useComposedRefs<HTMLDivElement>(ref, setNode);
+  useLayoutEffect(() => (node ? registerAnchor(node) : undefined), [node, registerAnchor]);
   const Comp = asChild ? Slot : "div";
   return <Comp {...props} ref={composedRef as never} />;
 }

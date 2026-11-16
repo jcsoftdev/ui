@@ -1,6 +1,6 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, useMemo } from "react";
+import { type ComponentPropsWithRef, useMemo } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { cn } from "../../utils/cn.js";
@@ -15,7 +15,7 @@ export interface CursorPaginationLabels {
 }
 
 export interface CursorPaginationProps
-  extends Omit<ComponentPropsWithoutRef<"nav">, "children" | "onChange"> {
+  extends Omit<ComponentPropsWithRef<"nav">, "children" | "onChange"> {
   /** 1-based page the cursor trail is on. */
   page: number;
   /** Rows on this page. */

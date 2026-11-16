@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { glyphLayout, type TableShape, UNIT } from "./layout.js";
@@ -9,7 +9,7 @@ export type TableGlyphPattern = "dashed" | "solid" | "soft" | "strong";
 
 export type TableGlyphPart = "root" | "body" | "chair";
 
-export interface TableGlyphProps extends Omit<ComponentPropsWithoutRef<"svg">, "children"> {
+export interface TableGlyphProps extends Omit<ComponentPropsWithRef<"svg">, "children"> {
   shape: TableShape;
   /** Chairs drawn around the table. */
   seats: number;

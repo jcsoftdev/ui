@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { loadCases } from "./components/render.mjs";
 
 const { html } = await loadCases("cases.tsx");
@@ -39,11 +41,12 @@ test("nav-like lists reach 44px under touch through --touch-target", () => {
 });
 
 test("no component reads data-density=touch directly, so data-density=auto reaches them", () => {
-  const offenders = readdirSync(new URL("../src", import.meta.url), { recursive: true })
+  const sourceRoot = fileURLToPath(new URL("../src", import.meta.url));
+  const offenders = readdirSync(sourceRoot, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => relative(sourceRoot, join(entry.parentPath, entry.name)))
     .filter((file) => /\.tsx?$/.test(file) && !/\.stories\.tsx$/.test(file))
-    .filter((file) =>
-      readFileSync(new URL(`../src/${file}`, import.meta.url), "utf8").includes("density=touch"),
-    );
+    .filter((file) => readFileSync(join(sourceRoot, file), "utf8").includes("density=touch"));
   assert.deepEqual(offenders, []);
 });
 

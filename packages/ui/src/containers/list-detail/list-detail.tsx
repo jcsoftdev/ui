@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type CSSProperties,
   createContext,
   type ReactNode,
@@ -16,8 +16,11 @@ import {
 } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { ChevronLeft } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
-import { composeHandlers } from "../../utils/compose.js";
+import { composeHandlers, useComposedRefs } from "../../utils/compose.js";
 import { useFocusRescue } from "../../utils/focus-rescue.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 
@@ -58,7 +61,7 @@ function cssLength(value: number | string): string {
 }
 
 export interface ListDetailProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "defaultValue" | "onChange"> {
+  extends Omit<ComponentPropsWithRef<"div">, "defaultValue" | "onChange"> {
   /** Controlled selected item id; `null` means none (the single-pane view then shows the list). */
   value?: string | null | undefined;
   defaultValue?: string | null | undefined;
@@ -188,7 +191,7 @@ export function ListDetail({
   );
 }
 
-export interface ListDetailListProps extends Omit<ComponentPropsWithoutRef<"ul">, "aria-label"> {
+export interface ListDetailListProps extends Omit<ComponentPropsWithRef<"ul">, "aria-label"> {
   /** Sits above the items and stays put while they scroll: a `ListDetailHeader` with search, filters and a count. */
   header?: ReactNode;
 }
@@ -225,7 +228,7 @@ export function ListDetailList({ header, className, ...props }: ListDetailListPr
   );
 }
 
-export interface ListDetailHeaderProps extends ComponentPropsWithoutRef<"div"> {
+export interface ListDetailHeaderProps extends ComponentPropsWithRef<"div"> {
   /** End slot showing how many items match, e.g. `12`. Announced politely when it changes. */
   count?: ReactNode;
 }
@@ -250,7 +253,9 @@ export function ListDetailHeader({ count, className, children, ...props }: ListD
   );
 }
 
-export interface ListDetailItemProps extends Omit<ComponentPropsWithoutRef<"button">, "value"> {
+export interface ListDetailItemProps
+  extends Omit<ComponentPropsWithRef<"button">, "value">,
+    IntentProps {
   value: string;
   /** End slot: a count, a status chip, a time. */
   trailing?: ReactNode;
@@ -262,14 +267,19 @@ export function ListDetailItem({
   className,
   children,
   onClick,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: ListDetailItemProps) {
+  const targetRef = useComposedRefs(ref, useIntentTarget<HTMLButtonElement>({ intent, intentKey }));
   const { value: selected, select } = useListDetailContext("ListDetailItem");
   const isSelected = selected === value;
   return (
     <li>
       <button
         type="button"
+        {...intentAttributes({ intent, intentKey })}
         data-list-detail-item={value}
         aria-current={isSelected ? "true" : undefined}
         onClick={composeHandlers(onClick, () => select(value))}
@@ -279,6 +289,7 @@ export function ListDetailItem({
           className,
         )}
         {...props}
+        ref={targetRef}
       >
         <span className="min-w-0">{children}</span>
         {trailing !== undefined ? (
@@ -289,11 +300,11 @@ export function ListDetailItem({
   );
 }
 
-export function ListDetailTitle({ className, ...props }: ComponentPropsWithoutRef<"span">) {
+export function ListDetailTitle({ className, ...props }: ComponentPropsWithRef<"span">) {
   return <span className={cn("block font-medium text-ink", className)} {...props} />;
 }
 
-export function ListDetailMeta({ className, ...props }: ComponentPropsWithoutRef<"span">) {
+export function ListDetailMeta({ className, ...props }: ComponentPropsWithRef<"span">) {
   return <span className={cn("block text-meta text-ink-3", className)} {...props} />;
 }
 
@@ -304,7 +315,7 @@ interface DetailTitleValue {
 
 const DetailTitleContext = createContext<DetailTitleValue | null>(null);
 
-export interface ListDetailDetailProps extends ComponentPropsWithoutRef<"section"> {
+export interface ListDetailDetailProps extends ComponentPropsWithRef<"section"> {
   /** Label of the back action shown in the single-pane view. Defaults to the localized "Back to list". */
   backLabel?: string;
   /** Hides the back action (the consumer then provides its own way back). */
@@ -362,8 +373,7 @@ export function ListDetailDetail({
   );
 }
 
-export interface ListDetailDetailHeaderProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface ListDetailDetailHeaderProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
@@ -397,7 +407,7 @@ export function ListDetailDetailHeader({
   );
 }
 
-export interface ListDetailEmptyProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface ListDetailEmptyProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   /** Decorative icon; hidden from screen readers. */
   icon?: ReactNode;
   title: ReactNode;

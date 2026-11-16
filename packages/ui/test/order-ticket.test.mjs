@@ -2,8 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
-const { html, orderTicketState, splitTicketLines, ticketLineCost, warnLeadSeconds } =
-  await loadCases("order-ticket-cases.tsx");
+const {
+  html,
+  orderTicketState,
+  orderTicketTitle,
+  splitTicketLines,
+  ticketLineCost,
+  warnLeadSeconds,
+} = await loadCases("order-ticket-cases.tsx");
 
 test("the state warns max(2 min, 25% of the target) ahead and is late only past the target", () => {
   const cases = [
@@ -47,8 +53,26 @@ test("a late ticket fills its band and says how late with an alarm, never a stri
   assert.match(markup, /data-state="late"/);
   assert.match(markup, /data-part="band" class="[^"]*bg-danger text-surface/);
   assert.match(markup, /Demorada \+1:1[0-9]/);
-  assert.match(markup, /, demorada</);
+  assert.match(markup, />demorada</);
   assert.doesNotMatch(markup, /border-l-|border-s-|ring-2/);
+});
+
+test("a ticket open for hours reads the overrun in hours", () => {
+  const markup = html.lateLong();
+  assert.match(markup, /Demorada \+22 h 15 min/);
+  assert.match(markup, />22 h 35 min</);
+  assert.doesNotMatch(markup, /\d{3,}:\d\d/);
+  assert.match(markup, /aria-valuetext="22 h 35 min de 20 min"/);
+  assert.doesNotMatch(markup, /\d{3,} de/);
+});
+
+test("the progress value keeps minutes under an hour and reads the target in hours too", () => {
+  const minutesAgo = (minutes) => new Date(Date.now() - minutes * 60000 - 30000);
+  assert.match(html.ticketEs({ since: minutesAgo(5) }), /aria-valuetext="5 min de 20 min"/);
+  assert.match(
+    html.ticketEs({ since: minutesAgo(61), targetMinutes: 90 }),
+    /aria-valuetext="1 h 1 min de 1 h 30 min"/,
+  );
 });
 
 test("a ticket without a table titles itself with the channel icon and number", () => {
@@ -89,4 +113,51 @@ test("the view transition name lands on the root and nothing spins", () => {
     /<article[^>]*style="view-transition-name:ticket-7"/,
   );
   assert.doesNotMatch(html.ticket(), /animate-spin|role="status"/);
+});
+
+const titleStrings = {
+  orderTicketNumber: "N.º {number}",
+  orderTicketTableAndNumber: "{table} · N.º {number}",
+};
+
+test("orderTicketTitle puts the number beside the table, zero included", () => {
+  const cases = [
+    [{ table: "Mesa 1", number: 4 }, "Mesa 1 · N.º 4"],
+    [{ table: "Mesa 1" }, "Mesa 1"],
+    [{ number: 7 }, "N.º 7"],
+    [{ table: "Mesa 1", number: 0 }, "Mesa 1 · N.º 0"],
+  ];
+  for (const [input, expected] of cases) {
+    assert.equal(orderTicketTitle(input, titleStrings), expected);
+  }
+});
+
+test("the heading holds only the title", () => {
+  const heading = html.ticket({ table: "Mesa 1" }).match(/<h3[^>]*>(.*?)<\/h3>/)?.[1] ?? "";
+  assert.doesNotMatch(heading, /on time/);
+  assert.doesNotMatch(heading, /, /);
+  assert.match(html.ticketEs({ table: "Mesa 1" }), /<h3[^>]*><span>Mesa 1<\/span><\/h3>/);
+});
+
+test("the state describes the article", () => {
+  const markup = html.ticketEs({ table: "Mesa 1" });
+  const describedBy = markup.match(/<article[^>]*aria-describedby="([^"]+)"/)?.[1] ?? "";
+  const [stateId] = describedBy.split(" ");
+  assert.match(markup, new RegExp(`id="${stateId}" class="sr-only">a tiempo<`));
+});
+
+test("a consumer describedby is kept", () => {
+  const markup = html.ticket({ "aria-describedby": "mine" });
+  assert.match(markup, /<article[^>]*aria-describedby="[^" ]+ mine"/);
+});
+
+test("table and number render together", () => {
+  assert.match(html.ticketEs({ table: "Mesa 1", number: 4 }), /<span>Mesa 1 · N\.º 4<\/span>/);
+});
+
+test("the ticket carries its intent attributes", () => {
+  assert.match(
+    html.ticket({ intent: "order", intentKey: "o1" }),
+    /data-intent="order" data-intent-key="o1"/,
+  );
 });

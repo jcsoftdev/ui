@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { loadCases } from "./components/render.mjs";
 
 const editCases = await loadCases("floor-plan-cases.tsx");
-const { html, labelPlacement, groupOutlines } = editCases;
+const { html, labelPlacement, groupOutlines, floorPlanItemName } = editCases;
 
 test("table surface patterns map to classes", () => {
   assert.match(
@@ -48,13 +48,84 @@ test("the state is text and an icon slot, and the plan is a named group", () => 
   assert.match(markup, /Seated/);
   assert.match(markup, /role="group"[^>]*aria-label="Floor plan"/);
   assert.match(html.planEs(), /aria-label="Plano de sala"/);
-  assert.match(markup, /4 seats/);
+  assert.match(markup, /aria-label="T1, Seated, 4 seats"/);
   assert.match(
     html.plan({
       items: [{ id: "x", x: 0, y: 0, width: 1, height: 1, shape: "round", seats: 1, label: "X" }],
     }),
-    /1 seat</,
+    /aria-label="X, 1 seat"/,
   );
+});
+
+const nameStrings = { seats: "{count} seats", seatsOne: "{count} seat", late: "late" };
+const nameStringsEs = {
+  seats: "{count} asientos",
+  seatsOne: "{count} asiento",
+  late: "con retraso",
+};
+
+test("floorPlanItemName joins label, status, seats and late", () => {
+  const cases = [
+    [
+      { label: "Mesa 3", statusLabel: "ocupada", seats: 4 },
+      nameStringsEs,
+      "Mesa 3, ocupada, 4 asientos",
+    ],
+    [{ label: "T2", seats: 2 }, nameStrings, "T2, 2 seats"],
+    [{ label: "X", seats: 1 }, nameStrings, "X, 1 seat"],
+    [{ label: "T2", seats: 2, ring: "late" }, nameStrings, "T2, 2 seats, late"],
+  ];
+  for (const [item, strings, expected] of cases) {
+    assert.equal(floorPlanItemName(item, strings), expected);
+  }
+});
+
+test("items are named with label, status and seats", () => {
+  assert.match(html.plan(), /data-item="t1"[^>]*aria-label="T1, Seated, 4 seats"/);
+});
+
+test("item intents default their key to the id", () => {
+  const markup = html.plan({
+    items: [
+      {
+        id: "t1",
+        x: 1,
+        y: 1,
+        width: 1,
+        height: 1,
+        shape: "square",
+        seats: 2,
+        label: "T1",
+        intent: "table",
+      },
+      {
+        id: "t2",
+        x: 3,
+        y: 1,
+        width: 1,
+        height: 1,
+        shape: "square",
+        seats: 2,
+        label: "T2",
+        intent: "table",
+        intentKey: "k2",
+      },
+      {
+        id: "t3",
+        x: 5,
+        y: 1,
+        width: 1,
+        height: 1,
+        shape: "square",
+        seats: 2,
+        label: "T3",
+        intentKey: "k3",
+      },
+    ],
+  });
+  assert.match(markup, /data-intent="table" data-intent-key="t1"/);
+  assert.match(markup, /data-intent="table" data-intent-key="k2"/);
+  assert.doesNotMatch(markup, /k3/);
 });
 
 test("the canvas keeps its aspect ratio and places everything in percentages", () => {

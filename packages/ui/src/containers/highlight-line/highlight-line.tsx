@@ -1,7 +1,7 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { cn } from "../../utils/cn.js";
 
-export type HighlightLineProps = ComponentPropsWithoutRef<"p">;
+export type HighlightLineProps = ComponentPropsWithRef<"p">;
 
 /**
  * Focus sentence at the top of a card; wrap the key phrase in `<strong>` to

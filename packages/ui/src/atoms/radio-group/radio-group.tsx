@@ -15,6 +15,8 @@ export interface RadioOption {
   label: string;
   description?: string;
   disabled?: boolean;
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export type RadioGroupPart =
@@ -61,6 +63,8 @@ export function RadioGroup({ options, className, classNames, ...props }: RadioGr
               id={id}
               value={option.value}
               disabled={option.disabled}
+              intent={option.intent}
+              intentKey={option.intentKey ?? option.value}
               aria-labelledby={labelId}
               aria-describedby={option.description ? descriptionId : undefined}
               className={cn(

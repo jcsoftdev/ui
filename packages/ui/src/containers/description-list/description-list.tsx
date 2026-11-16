@@ -1,9 +1,9 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import { cn } from "../../utils/cn.js";
 
 export type DescriptionListLayout = "auto" | "inline" | "stacked";
 
-export interface DescriptionListProps extends ComponentPropsWithoutRef<"dl"> {
+export interface DescriptionListProps extends ComponentPropsWithRef<"dl"> {
   /**
    * `auto` (default) puts the term beside the value and stacks them when the list's own container
    * is narrower than 24rem; `inline` never stacks; `stacked` always puts the term over the value.

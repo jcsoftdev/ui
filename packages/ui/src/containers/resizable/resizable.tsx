@@ -2,7 +2,7 @@
 
 import {
   Children,
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   createContext,
   isValidElement,
   type KeyboardEvent,
@@ -39,7 +39,7 @@ function useGroup(): GroupContextValue {
   return value;
 }
 
-export interface ResizablePanelProps extends Omit<ComponentPropsWithoutRef<"div">, "id"> {
+export interface ResizablePanelProps extends Omit<ComponentPropsWithRef<"div">, "id"> {
   /** Initial size in percent. Panels without one share what is left. */
   defaultSize?: number;
   /** Percent, default 0. */
@@ -71,7 +71,7 @@ export function ResizablePanel({
   );
 }
 
-export interface ResizableHandleProps extends Omit<ComponentPropsWithoutRef<"div">, "role"> {
+export interface ResizableHandleProps extends Omit<ComponentPropsWithRef<"div">, "role"> {
   /** Accessible name; the default describes the two neighbouring panels. */
   label?: string;
 }
@@ -143,7 +143,7 @@ export function ResizableHandle({ label, className, ...props }: ResizableHandleP
   );
 }
 
-export interface ResizablePanelGroupProps extends ComponentPropsWithoutRef<"div"> {
+export interface ResizablePanelGroupProps extends ComponentPropsWithRef<"div"> {
   direction?: Direction;
   /** Called with the layout in percent after every change. */
   onLayout?: (sizes: number[]) => void;

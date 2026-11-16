@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { customToneStyle, isCustomTone } from "../../utils/tone.js";
@@ -25,7 +25,7 @@ const DEFAULT_MAX = 100;
 
 export type ProgressPart = "root" | "indicator";
 
-export interface ProgressProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
+export interface ProgressProps extends Omit<ComponentPropsWithRef<"div">, "children"> {
   value: number;
   /** Per-part classes merged with `cn`; consumer classes win. `className` still targets the root and is merged last. */
   classNames?: ClassNames<ProgressPart>;

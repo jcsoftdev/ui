@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
   type CSSProperties,
   createContext,
   type ReactNode,
@@ -23,7 +23,11 @@ import {
   ChevronsUpDown,
   PinOff,
 } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { CELL_PY } from "./cell-padding.js";
 import {
@@ -130,7 +134,7 @@ const STICKY_EDGE = "[&_:is(th,td):last-child]:[--sticky-edge:var(--shadow-pinne
 const STICKY_HEADER =
   "[&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-2 [&_thead_th]:bg-surface [&_thead_th]:shadow-[inset_0_-1px_0_var(--border-color-divider)]";
 
-export interface TableProps extends ComponentPropsWithoutRef<"table"> {
+export interface TableProps extends ComponentPropsWithRef<"table"> {
   /** Controlled pinned columns (ids of `columnId`). Pair it with `onPinnedColumnsChange`. */
   pinnedColumns?: PinnedColumns;
   /** Initial pins when uncontrolled. */
@@ -398,11 +402,11 @@ export function Table({
   );
 }
 
-export function TableHead(props: ComponentPropsWithoutRef<"thead">) {
+export function TableHead(props: ComponentPropsWithRef<"thead">) {
   return <thead {...props} />;
 }
 
-export function TableBody(props: ComponentPropsWithoutRef<"tbody">) {
+export function TableBody(props: ComponentPropsWithRef<"tbody">) {
   return <tbody {...props} />;
 }
 
@@ -520,7 +524,7 @@ export function TableHeaderCell({
   children,
   style,
   ...props
-}: ComponentPropsWithoutRef<"th"> &
+}: ComponentPropsWithRef<"th"> &
   AlignProps & {
     pinnable?: boolean;
     /**
@@ -567,7 +571,7 @@ export function TableHeaderCell({
   );
 }
 
-export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
+export interface TableRowProps extends ComponentPropsWithRef<"tr">, IntentProps {
   /**
    * Identifies the row for selection. In a table with selection the row reports `aria-selected`
    * and highlights when its key is selected.
@@ -575,12 +579,17 @@ export interface TableRowProps extends ComponentPropsWithoutRef<"tr"> {
   rowKey?: string;
 }
 
-export function TableRow({ className, rowKey, ...props }: TableRowProps) {
+export function TableRow({ className, rowKey, intent, intentKey, ref, ...props }: TableRowProps) {
+  const targetRef = useComposedRefs(
+    ref,
+    useIntentTarget<HTMLTableRowElement>({ intent, intentKey }, { requireName: false }),
+  );
   const selection = useContext(SelectionContext);
   const isSelected =
     selection && rowKey !== undefined ? selection.selected.includes(rowKey) : undefined;
   return (
     <tr
+      {...intentAttributes({ intent, intentKey })}
       aria-selected={isSelected}
       data-selected={isSelected || undefined}
       className={cn(
@@ -589,11 +598,12 @@ export function TableRow({ className, rowKey, ...props }: TableRowProps) {
         className,
       )}
       {...props}
+      ref={targetRef}
     />
   );
 }
 
-export interface TableSelectCellProps extends ComponentPropsWithoutRef<"td"> {
+export interface TableSelectCellProps extends ComponentPropsWithRef<"td"> {
   /** Key of the row, the same as the row's `rowKey`. */
   rowKey: string;
   /** Names the checkbox: "Select {label}". Defaults to the key. */
@@ -619,7 +629,7 @@ export function TableSelectCell({ rowKey, label, className, ...props }: TableSel
   );
 }
 
-export interface TableSelectAllCellProps extends ComponentPropsWithoutRef<"th"> {
+export interface TableSelectAllCellProps extends ComponentPropsWithRef<"th"> {
   /** Keys of the rows on screen. The box is checked when all are selected, mixed when some are. */
   rowKeys: readonly string[];
 }
@@ -648,7 +658,7 @@ export function TableSelectAllCell({ rowKeys, className, ...props }: TableSelect
   );
 }
 
-export interface TableActionsCellProps extends ComponentPropsWithoutRef<"td"> {
+export interface TableActionsCellProps extends ComponentPropsWithRef<"td"> {
   /**
    * An overflow menu (a `DropdownMenu` with a trigger, say). When set, it replaces the inline
    * actions under a narrow table container (under 48rem of the wrapper's own width), so the
@@ -689,7 +699,7 @@ export function TableCell({
   columnId,
   style,
   ...props
-}: ComponentPropsWithoutRef<"td"> & AlignProps) {
+}: ComponentPropsWithRef<"td"> & AlignProps) {
   const pinned = usePinnedCell(columnId, false);
   const hiddenIds = useContext(HiddenContext);
   if (columnId && hiddenIds.has(columnId)) return null;
@@ -709,7 +719,9 @@ export function TableCell({
   );
 }
 
-export interface TableLinkRowProps extends Omit<ComponentPropsWithoutRef<"tr">, "children"> {
+export interface TableLinkRowProps
+  extends Omit<ComponentPropsWithRef<"tr">, "children">,
+    IntentProps {
   /** Row destination: rendered as a real `<a href>` in the first cell. */
   href: string;
   /** Content of the first cell, wrapped by the anchor. */
@@ -734,8 +746,15 @@ export function TableLinkRow({
   rowKey,
   children,
   className,
+  intent,
+  intentKey,
+  ref,
   ...props
 }: TableLinkRowProps) {
+  const targetRef = useComposedRefs(
+    ref,
+    useIntentTarget<HTMLTableRowElement>({ intent, intentKey }, { requireName: false }),
+  );
   const pinned = usePinnedCell(primaryColumnId, false);
   const hiddenIds = useContext(HiddenContext);
   const selection = useContext(SelectionContext);
@@ -743,6 +762,7 @@ export function TableLinkRow({
     selection && rowKey !== undefined ? selection.selected.includes(rowKey) : undefined;
   return (
     <tr
+      {...intentAttributes({ intent, intentKey })}
       aria-selected={isSelected}
       data-selected={isSelected || undefined}
       className={cn(
@@ -751,6 +771,7 @@ export function TableLinkRow({
         className,
       )}
       {...props}
+      ref={targetRef}
     >
       {primaryColumnId && hiddenIds.has(primaryColumnId) ? null : (
         <td

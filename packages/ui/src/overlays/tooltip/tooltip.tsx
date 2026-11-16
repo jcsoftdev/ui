@@ -19,7 +19,7 @@ import { type Material, materialClass } from "../../utils/material.js";
 import { POPPER_MOTION } from "../../utils/overlay-motion.js";
 import { Slot } from "../../utils/slot.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
-import { opensOnFocus, opensOnHover } from "./model.js";
+import { joinIds, opensOnFocus, opensOnHover } from "./model.js";
 
 export type TooltipPart = "content" | "shortcut";
 
@@ -51,6 +51,7 @@ export interface TooltipProps {
   classNames?: ClassNames<TooltipPart>;
   /** The element that gets the tooltip. It receives `aria-describedby` while the tooltip is open. */
   children: ReactElement;
+  describeTrigger?: "whileOpen" | "always";
 }
 
 function focusIsVisible(element: Element): boolean {
@@ -83,6 +84,7 @@ export function Tooltip({
   material,
   className,
   classNames,
+  describeTrigger = "whileOpen",
   children,
 }: TooltipProps) {
   const [openState, setOpen] = useControllableState({
@@ -92,6 +94,12 @@ export function Tooltip({
   });
   const open = openState && !disabled;
   const contentId = useId();
+  const descriptionId = useId();
+  const persistent = describeTrigger === "always";
+  const ownDescribedBy = (children.props as { "aria-describedby"?: string })["aria-describedby"];
+  const describedBy = persistent
+    ? joinIds(ownDescribedBy, descriptionId)
+    : joinIds(ownDescribedBy, open ? contentId : undefined);
   const timer = useRef<number | undefined>(undefined);
   const pressed = useRef(false);
 
@@ -108,7 +116,7 @@ export function Tooltip({
 
   const trigger = (
     <Slot
-      aria-describedby={open ? contentId : undefined}
+      aria-describedby={describedBy}
       onPointerEnter={(event: PointerEvent<HTMLElement>) => {
         if (opensOnHover(event.pointerType)) schedule(true, openDelay);
       }}
@@ -137,6 +145,11 @@ export function Tooltip({
 
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+      {persistent ? (
+        <span id={descriptionId} hidden>
+          {content}
+        </span>
+      ) : null}
       <PopoverPrimitive.Anchor asChild>{trigger}</PopoverPrimitive.Anchor>
       <PopoverPrimitive.Portal container={container}>
         <PopoverPrimitive.Content

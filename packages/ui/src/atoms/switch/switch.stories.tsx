@@ -82,3 +82,19 @@ export const TouchHitArea: Story = {
     await expect(Math.round(Number.parseFloat(hit.height))).toBe(44);
   },
 };
+
+export const WithLabelAndDescription: Story = {
+  args: {
+    "aria-label": undefined,
+    label: "Recordatorios",
+    description: "Te avisamos un día antes",
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const control = canvas.getByRole("switch", { name: "Recordatorios" });
+    await expect(control).toHaveAccessibleDescription("Te avisamos un día antes");
+    await expect(control).toHaveAttribute("aria-checked", "false");
+    await userEvent.click(canvas.getByText("Recordatorios"));
+    await expect(control).toHaveAttribute("aria-checked", "true");
+  },
+};

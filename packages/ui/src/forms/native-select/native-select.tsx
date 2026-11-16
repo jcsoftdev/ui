@@ -1,5 +1,7 @@
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { ChevronDown } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 
@@ -16,7 +18,9 @@ export interface NativeSelectGroup {
 
 export type NativeSelectPart = "root" | "select" | "icon";
 
-export interface NativeSelectProps extends Omit<ComponentPropsWithoutRef<"select">, "size"> {
+export interface NativeSelectProps
+  extends Omit<ComponentPropsWithRef<"select">, "size">,
+    IntentProps {
   /** Data-driven alternative to `<option>` children; groups render as `<optgroup>`. */
   options?: (NativeSelectOption | NativeSelectGroup)[];
   /** Disabled first option shown while nothing is chosen. */
@@ -45,6 +49,8 @@ export function NativeSelect({
   children,
   defaultValue,
   value,
+  intent,
+  intentKey,
   ...props
 }: NativeSelectProps) {
   const fallbackDefault =
@@ -61,6 +67,7 @@ export function NativeSelect({
           classNames?.select,
           className,
         )}
+        {...intentAttributes({ intent, intentKey })}
         {...props}
       >
         {placeholder ? (

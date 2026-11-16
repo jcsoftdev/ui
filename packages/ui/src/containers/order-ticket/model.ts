@@ -1,3 +1,5 @@
+import type { UiStrings } from "../../i18n/index.js";
+
 export type OrderTicketState = "ok" | "warn" | "late";
 
 export type OrderTicketLineStatus = "pending" | "in-progress" | "done";
@@ -52,4 +54,23 @@ export function splitTicketLines<Line extends LineShape>(
     }
   }
   return parts;
+}
+
+export interface OrderTicketTitleInput {
+  table?: string | undefined;
+  number?: string | number | undefined;
+}
+
+export function orderTicketTitle(
+  input: OrderTicketTitleInput,
+  strings: Pick<UiStrings, "orderTicketNumber" | "orderTicketTableAndNumber">,
+): string {
+  const number = input.number === undefined ? undefined : String(input.number);
+  if (input.table !== undefined && number !== undefined) {
+    return strings.orderTicketTableAndNumber
+      .replace("{table}", input.table)
+      .replace("{number}", number);
+  }
+  if (input.table !== undefined) return input.table;
+  return strings.orderTicketNumber.replace("{number}", number ?? "");
 }

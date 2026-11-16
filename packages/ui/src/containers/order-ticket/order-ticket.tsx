@@ -1,10 +1,14 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type ReactNode, useId, useSyncExternalStore } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId, useSyncExternalStore } from "react";
 import { Button } from "../../atoms/button/button.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import { ElapsedTime } from "../../atoms/elapsed-time/elapsed-time.js";
-import { readElapsed } from "../../atoms/elapsed-time/model.js";
+import {
+  formatMinutesText,
+  formatOverrunText,
+  readElapsed,
+} from "../../atoms/elapsed-time/model.js";
 import { getTickerSnapshot, subscribeTicker } from "../../atoms/elapsed-time/ticker.js";
 import { Progress, type ProgressBuiltinTone } from "../../atoms/progress/progress.js";
 import { type UiStrings, useUiStrings } from "../../i18n/index.js";
@@ -18,14 +22,17 @@ import {
   Square,
   TriangleAlert,
 } from "../../icons/index.js";
+import { type IntentProps, intentAttributes, useIntentTarget } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { usePrefersReducedMotion } from "../../utils/reduced-motion.js";
 import {
   type OrderTicketLine,
   type OrderTicketLineStatus,
   type OrderTicketState,
   orderTicketState,
+  orderTicketTitle,
 } from "./model.js";
 
 export type OrderTicketPart =
@@ -46,7 +53,8 @@ export interface OrderTicketChannel {
 }
 
 export interface OrderTicketProps
-  extends Omit<ComponentPropsWithoutRef<"article">, "title" | "children"> {
+  extends Omit<ComponentPropsWithRef<"article">, "title" | "children">,
+    IntentProps {
   table?: string | undefined;
   number?: string | number | undefined;
   channel?: OrderTicketChannel | undefined;
@@ -131,9 +139,6 @@ const fill = (template: string, values: Record<string, string | number>) =>
     (text, [key, value]) => text.replace(`{${key}}`, String(value)),
     template,
   );
-
-const clock = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 const noteClasses =
   "inline-flex max-w-full items-start gap-1 self-start rounded-chip px-1.5 py-0.5 text-meta font-medium [&_svg]:mt-0.5 [&_svg]:shrink-0";
@@ -273,11 +278,18 @@ export function OrderTicket({
   classNames,
   className,
   style,
+  intent,
+  intentKey,
+  ref,
+  "aria-describedby": describedBy,
   ...props
 }: OrderTicketProps) {
   const strings = useUiStrings();
   const reducedMotion = usePrefersReducedMotion();
   const headingId = useId();
+  const stateId = useId();
+  const intentRef = useIntentTarget<HTMLElement>({ intent, intentKey }, { role: "article" });
+  const articleRef = useComposedRefs<HTMLElement>(ref, intentRef);
   const now = useSyncExternalStore(subscribeTicker, getTickerSnapshot, getTickerSnapshot);
   const { seconds } = readElapsed({ since, now, serverOffsetMs });
   const targetSeconds = Math.max(1, targetMinutes * 60);
@@ -285,7 +297,7 @@ export function OrderTicket({
   const late = state === "late";
   const overrun = Math.max(0, seconds - targetSeconds);
   const Heading = `h${headingLevel}` as const;
-  const title = table ?? fill(strings.orderTicketNumber, { number: number ?? "" });
+  const title = orderTicketTitle({ table, number }, strings);
   const titleIcon = table ? null : channel?.icon;
   const guestsText =
     guests === undefined
@@ -302,13 +314,16 @@ export function OrderTicket({
       ? strings.orderTicketContinued
       : fill(strings.orderTicketPart, { index: 1, count: partCount ?? 1 });
   const overrunText = reducedMotion
-    ? fill(strings.minutesShort, { count: Math.ceil(overrun / 60) })
-    : clock(overrun);
+    ? formatMinutesText(Math.ceil(overrun / 60), strings)
+    : formatOverrunText(overrun, strings);
   const showActions = !readOnly && Boolean(actions || onStartAll || onReadyAll);
 
   return (
     <article
+      ref={articleRef}
       aria-labelledby={headingId}
+      aria-describedby={[stateId, describedBy].filter(Boolean).join(" ")}
+      {...intentAttributes({ intent, intentKey })}
       data-state={state}
       data-read-only={readOnly ? "" : undefined}
       data-part-index={split ? (partIndex ?? 1) : undefined}
@@ -352,8 +367,10 @@ export function OrderTicket({
                 {titleIcon}
                 <span>{title}</span>
                 {split && <span className="text-control">{partLabel}</span>}
-                <span className="sr-only">{`, ${strings[stateWord[state]]}`}</span>
               </Heading>
+              <span id={stateId} className="sr-only">
+                {strings[stateWord[state]]}
+              </span>
               {meta && (
                 <span
                   className={cn(
@@ -394,9 +411,9 @@ export function OrderTicket({
           tone={progressTone[state]}
           aria-label={fill(strings.orderTicketProgress, { target: targetMinutes })}
           getValueLabel={() =>
-            fill(strings.orderTicketProgressValue, {
-              elapsed: Math.floor(seconds / 60),
-              target: targetMinutes,
+            fill(strings.orderTicketProgressDuration, {
+              elapsed: formatMinutesText(Math.floor(seconds / 60), strings),
+              target: formatMinutesText(targetMinutes, strings),
             })
           }
           className={classNames?.progress}

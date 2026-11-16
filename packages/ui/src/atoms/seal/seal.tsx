@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithRef, ReactNode } from "react";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { customToneStyle, isCustomTone } from "../../utils/tone.js";
@@ -27,7 +27,7 @@ const builtinTones = new Set<string>(Object.keys(toneClasses));
 
 export type SealPart = "root" | "icon" | "title" | "body";
 
-export interface SealProps extends Omit<ComponentPropsWithoutRef<"div">, "title"> {
+export interface SealProps extends Omit<ComponentPropsWithRef<"div">, "title"> {
   /** Heading of the stamp, set in small caps-style capitals. */
   title?: ReactNode;
   /** Decorative glyph before the title (`aria-hidden`). */

@@ -3,6 +3,7 @@
 import { type ReactNode, useState } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { Menu } from "../../icons/index.js";
+import { intentAttributes, useIntentTargets } from "../../intent/index.js";
 import { Drawer, DrawerContent, DrawerTitle } from "../../overlays/drawer/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
@@ -114,6 +115,7 @@ export function BottomNav({
   classNames,
 }: BottomNavProps) {
   const strings = useUiStrings();
+  const bind = useIntentTargets();
   const [moreOpen, setMoreOpen] = useState(false);
   const { visible, overflow } = splitBottomNavItems(items, maxSlots);
   const more = moreLabel ?? strings.more;
@@ -149,34 +151,39 @@ export function BottomNav({
             classNames?.list,
           )}
         >
-          {visible.map((item) => (
-            <li key={item.id} className={classNames?.item}>
-              {renderLink({
-                href: item.href,
-                "aria-current": item.active ? "page" : undefined,
-                className: slotClasses,
-                children: (
-                  <>
-                    <span className="relative">
-                      {item.icon}
-                      {item.badge !== undefined ? (
-                        <>
-                          <BadgeMark
-                            count={numericBadge(item.badge)}
-                            danger={item.badgeTone === "danger"}
-                            asDot={badgeStyle === "dot"}
-                            className={classNames?.badge}
-                          />
-                          <span className="sr-only">{item.badgeLabel ?? item.badge}</span>
-                        </>
-                      ) : null}
-                    </span>
-                    <span className="max-w-full truncate">{item.label}</span>
-                  </>
-                ),
-              })}
-            </li>
-          ))}
+          {visible.map((item) => {
+            const target = { intent: item.intent, intentKey: item.intentKey ?? item.id };
+            return (
+              <li key={item.id} className={classNames?.item}>
+                {renderLink({
+                  ...intentAttributes(target),
+                  ref: bind<HTMLElement>(target),
+                  href: item.href,
+                  "aria-current": item.active ? "page" : undefined,
+                  className: slotClasses,
+                  children: (
+                    <>
+                      <span className="relative">
+                        {item.icon}
+                        {item.badge !== undefined ? (
+                          <>
+                            <BadgeMark
+                              count={numericBadge(item.badge)}
+                              danger={item.badgeTone === "danger"}
+                              asDot={badgeStyle === "dot"}
+                              className={classNames?.badge}
+                            />
+                            <span className="sr-only">{item.badgeLabel ?? item.badge}</span>
+                          </>
+                        ) : null}
+                      </span>
+                      <span className="max-w-full truncate">{item.label}</span>
+                    </>
+                  ),
+                })}
+              </li>
+            );
+          })}
           {overflow.length > 0 ? (
             <li className={classNames?.item}>
               <button
@@ -216,33 +223,38 @@ export function BottomNav({
           >
             <DrawerTitle className="font-semibold text-lede">{more}</DrawerTitle>
             <nav aria-label={more} className="flex flex-col gap-px">
-              {overflow.map((item) => (
-                <div key={item.id}>
-                  {renderLink({
-                    href: item.href,
-                    "aria-current": item.active ? "page" : undefined,
-                    onClick: () => setMoreOpen(false),
-                    className: cn(
-                      "flex min-h-11 items-center gap-2.5 rounded-control px-2.5 py-2 text-control text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:focus-ring aria-[current=page]:bg-accent-soft aria-[current=page]:font-bold aria-[current=page]:text-accent-ink [&_svg]:size-4.25 [&_svg]:shrink-0",
-                      classNames?.moreLink,
-                    ),
-                    children: (
-                      <>
-                        {item.icon}
-                        <span className="min-w-0 truncate">{item.label}</span>
-                        {item.badge !== undefined ? (
-                          <span className="ml-auto shrink-0 rounded-chip bg-surface-2 px-1.5 py-0.75 text-count text-ink-2">
-                            {item.badge}
-                            {item.badgeLabel ? (
-                              <span className="sr-only"> {item.badgeLabel}</span>
-                            ) : null}
-                          </span>
-                        ) : null}
-                      </>
-                    ),
-                  })}
-                </div>
-              ))}
+              {overflow.map((item) => {
+                const target = { intent: item.intent, intentKey: item.intentKey ?? item.id };
+                return (
+                  <div key={item.id}>
+                    {renderLink({
+                      ...intentAttributes(target),
+                      ref: bind<HTMLElement>(target),
+                      href: item.href,
+                      "aria-current": item.active ? "page" : undefined,
+                      onClick: () => setMoreOpen(false),
+                      className: cn(
+                        "flex min-h-11 items-center gap-2.5 rounded-control px-2.5 py-2 text-control text-ink-2 hover:bg-surface-2 hover:text-ink focus-visible:focus-ring aria-[current=page]:bg-accent-soft aria-[current=page]:font-bold aria-[current=page]:text-accent-ink [&_svg]:size-4.25 [&_svg]:shrink-0",
+                        classNames?.moreLink,
+                      ),
+                      children: (
+                        <>
+                          {item.icon}
+                          <span className="min-w-0 truncate">{item.label}</span>
+                          {item.badge !== undefined ? (
+                            <span className="ml-auto shrink-0 rounded-chip bg-surface-2 px-1.5 py-0.75 text-count text-ink-2">
+                              {item.badge}
+                              {item.badgeLabel ? (
+                                <span className="sr-only"> {item.badgeLabel}</span>
+                              ) : null}
+                            </span>
+                          ) : null}
+                        </>
+                      ),
+                    })}
+                  </div>
+                );
+              })}
             </nav>
             {moreFooter ? (
               <div className={cn("mt-auto border-t-divider pt-3", classNames?.moreFooter)}>

@@ -14,6 +14,8 @@ import {
 import { Avatar } from "../../atoms/avatar/avatar.js";
 import { Chip } from "../../atoms/chip/chip.js";
 import { GripVertical } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import { useIntentTargets } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useFocusRescue } from "../../utils/focus-rescue.js";
@@ -154,6 +156,11 @@ export function Kanban({
   const columnsRef = useRef(columns);
   columnsRef.current = columns;
   const instructionsId = useId();
+  const bind = useIntentTargets();
+  const cardIntent = (card: KanbanCardData) => ({
+    intent: card.intent,
+    intentKey: card.intentKey ?? card.id,
+  });
 
   const shown = draft ?? columns;
 
@@ -364,6 +371,8 @@ export function Kanban({
               <li key={card.id} className="min-w-0">
                 {cardActions ? (
                   <div
+                    {...intentAttributes(cardIntent(card))}
+                    ref={bind(cardIntent(card), { requireName: false })}
                     data-card-id={card.id}
                     onPointerDown={(e) => {
                       if (draggable) startPointerDrag(e, card);
@@ -412,6 +421,8 @@ export function Kanban({
                 ) : draggable ? (
                   // biome-ignore lint/a11y/useSemanticElements: draggable card is a custom widget
                   <div
+                    {...intentAttributes(cardIntent(card))}
+                    ref={bind(cardIntent(card), { role: "button" })}
                     role="button"
                     tabIndex={0}
                     data-card-id={card.id}
@@ -443,6 +454,8 @@ export function Kanban({
                   </div>
                 ) : (
                   <div
+                    {...intentAttributes(cardIntent(card))}
+                    ref={bind(cardIntent(card), { requireName: false })}
                     data-card-id={card.id}
                     className={cn(
                       "relative flex gap-1 rounded-input border-card surface-card p-density shadow-card",

@@ -1,6 +1,9 @@
 "use client";
 
 import { type KeyboardEvent, type PointerEvent, useCallback, useRef, useState } from "react";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTargets } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import {
@@ -11,6 +14,7 @@ import {
   ratioOf,
   setRangeThumb,
   snapToStep,
+  thumbKey,
   valueFromRatio,
 } from "./model.js";
 
@@ -29,7 +33,7 @@ export type SliderPart =
   | "mark"
   | "markLabel";
 
-interface SliderBaseProps {
+interface SliderBaseProps extends IntentProps {
   min?: number;
   max?: number;
   step?: number;
@@ -85,6 +89,8 @@ export function Slider(props: SliderProps) {
     name,
     className,
     classNames,
+    intent,
+    intentKey,
   } = props;
   const seed = props.value ?? props.defaultValue;
   const range = Array.isArray(seed);
@@ -92,6 +98,7 @@ export function Slider(props: SliderProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef<0 | 1 | null>(null);
   const [active, setActive] = useState<0 | 1 | null>(null);
+  const bindIntent = useIntentTargets();
 
   const toPair = (v: number | RangeValue | undefined): RangeValue =>
     Array.isArray(v)
@@ -162,9 +169,12 @@ export function Slider(props: SliderProps) {
       range && baseLabel ? `${baseLabel} (${index === 0 ? "mínimo" : "máximo"})` : baseLabel;
     const lo = range && index === 1 ? current[0] + minGap : min;
     const hi = range && index === 0 ? current[1] - minGap : max;
+    const thumbIntentKey = range ? thumbKey(intentKey, index) : intentKey;
     return (
       <span
         key={index}
+        {...intentAttributes({ intent, intentKey: thumbIntentKey })}
+        ref={bindIntent({ intent, intentKey: thumbIntentKey }, { role: "slider" })}
         data-thumb={index}
         data-active={active === index}
         role="slider"

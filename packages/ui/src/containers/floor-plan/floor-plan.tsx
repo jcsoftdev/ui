@@ -5,6 +5,7 @@ import type { TableShape } from "../../atoms/table-glyph/layout.js";
 import { TableGlyph, type TableGlyphPattern } from "../../atoms/table-glyph/table-glyph.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { RotateCcw } from "../../icons/index.js";
+import { intentAttributes, useIntentTargets } from "../../intent/index.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useComposedRefs } from "../../utils/compose.js";
@@ -12,7 +13,13 @@ import { useRovingFocus } from "../../utils/roving-focus.js";
 import { customToneStyle, isCustomTone } from "../../utils/tone.js";
 import { useContainerWidth } from "../../utils/use-container-width.js";
 import type { ResizeHandle } from "./edit-model.js";
-import { DEFAULT_PX_PER_UNIT, groupOutlines, labelPlacement, percentBox } from "./model.js";
+import {
+  DEFAULT_PX_PER_UNIT,
+  floorPlanItemName,
+  groupOutlines,
+  labelPlacement,
+  percentBox,
+} from "./model.js";
 import { useFloorPlanEdit } from "./use-floor-plan-edit.js";
 
 export type FloorPlanBuiltinTone = "neutral" | "accent" | "success" | "warning" | "danger" | "info";
@@ -47,6 +54,8 @@ export interface FloorPlanItem {
   ring?: FloorPlanRing | undefined;
   /** Items sharing a `groupId` (merged tables) get one outline around the group. */
   groupId?: string | undefined;
+  intent?: string | undefined;
+  intentKey?: string | undefined;
 }
 
 export interface FloorPlanLandmark {
@@ -132,10 +141,6 @@ const handleClasses: Partial<Record<ResizeHandle, string>> = {
 const hatch =
   "bg-[repeating-linear-gradient(135deg,var(--line-strong)_0_1px,transparent_1px_7px)] border border-line-strong";
 
-function format(template: string, count: number): string {
-  return template.replace("{count}", String(count));
-}
-
 /**
  * A salon plan on a logical-unit canvas, read-only unless `editable`. The canvas fills its container and keeps the
  * `width` x `height` aspect ratio, and every item is placed in percentages of it, so hit areas
@@ -159,6 +164,7 @@ export function FloorPlan({
   classNames,
 }: FloorPlanProps) {
   const strings = useUiStrings();
+  const bindIntent = useIntentTargets();
   const canvasRef = useRef<HTMLDivElement>(null);
   const measured = useContainerWidth(canvasRef);
   const pxPerUnit = measured === null ? DEFAULT_PX_PER_UNIT : measured / width;
@@ -288,6 +294,12 @@ export function FloorPlan({
               key={item.id}
               type="button"
               data-item={item.id}
+              {...intentAttributes({ intent: item.intent, intentKey: item.intentKey ?? item.id })}
+              ref={bindIntent(
+                { intent: item.intent, intentKey: item.intentKey ?? item.id },
+                { role: "button" },
+              )}
+              aria-label={floorPlanItemName(item, strings)}
               data-shape={item.shape}
               data-tone={tone === "neutral" ? undefined : tone}
               data-ring={ring === "none" ? undefined : ring}
@@ -331,7 +343,7 @@ export function FloorPlan({
                   classNames?.label,
                 )}
               >
-                <span className="whitespace-nowrap font-bold text-ink text-meta">{item.label}</span>
+                <span className="whitespace-nowrap font-bold text-ink text-meta">{item.label}</span>{" "}
                 {hasStatus ? (
                   <span
                     className={cn(
@@ -347,10 +359,6 @@ export function FloorPlan({
                     {item.statusLabel}
                   </span>
                 ) : null}
-              </span>
-              <span className="sr-only">
-                {format(item.seats === 1 ? strings.seatsOne : strings.seats, item.seats)}
-                {item.ring === "late" ? `, ${strings.late}` : ""}
               </span>
             </button>
           );

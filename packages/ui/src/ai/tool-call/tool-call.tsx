@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { Check, CircleAlert, Clock, LoaderCircle, Wrench } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { CodeBlock } from "../code-block/code-block.js";
@@ -34,7 +36,7 @@ export type ToolCallPart =
   | "code"
   | "error";
 
-export interface ToolCallProps {
+export interface ToolCallProps extends IntentProps {
   /** Tool identifier, e.g. `buscar_turnos`. */
   name: string;
   status?: ToolCallStatus;
@@ -66,6 +68,8 @@ export function ToolCall({
   defaultOpen = false,
   className,
   classNames,
+  intent,
+  intentKey,
 }: ToolCallProps) {
   const info = STATUS[status];
   const argsText = useMemo(() => (args === undefined ? null : pretty(args)), [args]);
@@ -73,6 +77,7 @@ export function ToolCall({
 
   return (
     <div
+      {...intentAttributes({ intent, intentKey })}
       className={cn(
         "@container/tool min-w-0 rounded-card bg-surface-card p-2 text-ink border-card shadow-card",
         classNames?.root,

@@ -3,6 +3,8 @@
 import { IconButton } from "../../atoms/icon-button/icon-button.js";
 import { useUiStrings } from "../../i18n/index.js";
 import { Eye, EyeOff } from "../../icons/index.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { useControllableState } from "../../utils/use-controllable-state.js";
 import { Input, type InputProps } from "../input/input.js";
 
@@ -27,9 +29,16 @@ export function PasswordInput({
   onRevealedChange,
   revealLabel,
   autoComplete = "current-password",
+  intent,
+  intentKey,
+  ref,
   ...props
 }: PasswordInputProps) {
   const strings = useUiStrings();
+  const composedRef = useComposedRefs<HTMLInputElement>(
+    ref,
+    useIntentTarget({ intent, intentKey }),
+  );
   const [revealed, setRevealed] = useControllableState({
     prop: revealedProp,
     defaultProp: defaultRevealed,
@@ -38,6 +47,9 @@ export function PasswordInput({
   return (
     <Input
       {...props}
+      ref={composedRef}
+      intent={intent}
+      intentKey={intentKey}
       type={revealed ? "text" : "password"}
       autoComplete={autoComplete}
       end={

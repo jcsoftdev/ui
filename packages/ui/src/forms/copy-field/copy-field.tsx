@@ -1,8 +1,11 @@
 "use client";
 
-import { type ComponentPropsWithoutRef, type ReactNode, useId } from "react";
+import { type ComponentPropsWithRef, type ReactNode, useId } from "react";
 import { useUiStrings } from "../../i18n/index.js";
 import { Check, Copy } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
 import { useCopy } from "../../utils/use-copy.js";
@@ -10,7 +13,8 @@ import { useCopy } from "../../utils/use-copy.js";
 export type CopyFieldPart = "root" | "label" | "box" | "value" | "button";
 
 export interface CopyFieldProps
-  extends Omit<ComponentPropsWithoutRef<"div">, "children" | "onCopy"> {
+  extends Omit<ComponentPropsWithRef<"div">, "children" | "onCopy">,
+    IntentProps {
   label: ReactNode;
   /** Text shown in monospace and written to the clipboard. */
   value: string;
@@ -32,8 +36,11 @@ export function CopyField({
   copiedLabel,
   className,
   classNames,
+  intent,
+  intentKey,
   ...props
 }: CopyFieldProps) {
+  const inputRef = useIntentTarget<HTMLInputElement>({ intent, intentKey });
   const strings = useUiStrings();
   const id = useId();
   const { copied, copy } = useCopy(1500);
@@ -51,6 +58,8 @@ export function CopyField({
         )}
       >
         <input
+          {...intentAttributes({ intent, intentKey })}
+          ref={inputRef}
           id={id}
           readOnly
           value={value}

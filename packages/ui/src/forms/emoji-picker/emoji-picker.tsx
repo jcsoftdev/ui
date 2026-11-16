@@ -2,8 +2,12 @@
 
 import { type KeyboardEvent, useId, useMemo, useRef, useState } from "react";
 import { Search } from "../../icons/index.js";
+import { intentAttributes } from "../../intent/attributes.js";
+import type { IntentProps } from "../../intent/types.js";
+import { useIntentTarget } from "../../intent/use-intent-target.js";
 import type { ClassNames } from "../../utils/class-names.js";
 import { cn } from "../../utils/cn.js";
+import { useComposedRefs } from "../../utils/compose.js";
 import { EMOJI_CATEGORIES, type EmojiCategory, type EmojiEntry } from "./emoji-data.js";
 import { gridMove, searchEmojis } from "./model.js";
 
@@ -19,7 +23,7 @@ export type EmojiPickerPart =
   | "emoji"
   | "empty";
 
-export interface EmojiPickerProps {
+export interface EmojiPickerProps extends IntentProps {
   onSelect?: (emoji: string) => void;
   /** Replaces the built-in dataset (`EMOJI_CATEGORIES`). */
   categories?: EmojiCategory[];
@@ -43,9 +47,12 @@ export function EmojiPicker({
   searchPlaceholder = "Buscar emoji",
   className,
   classNames,
+  intent,
+  intentKey,
 }: EmojiPickerProps) {
   const baseId = useId();
   const grid = useRef<HTMLDivElement>(null);
+  const gridRef = useComposedRefs<HTMLDivElement>(grid, useIntentTarget({ intent, intentKey }));
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState(defaultCategory ?? categories[0]?.id);
   const [active, setActive] = useState(0);
@@ -142,7 +149,8 @@ export function EmojiPicker({
 
       {/* biome-ignore lint/a11y/useSemanticElements: arrow-key grid of buttons with a roving tabindex */}
       <div
-        ref={grid}
+        {...intentAttributes({ intent, intentKey })}
+        ref={gridRef}
         role="group"
         aria-labelledby={`${baseId}-title`}
         onKeyDown={onKeyDown}
