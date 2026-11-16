@@ -5,6 +5,10 @@ was extracted on 2026-10-12 (already at 0.2.0 in `package.json`) and its version
 so everything before that is listed under 0.4.0. Versions 0.5.0, 0.7.0, 0.7.1 and 0.8.0 have no
 user-facing change to this package. Entries come from `git log` of `packages/ui-tokens`.
 
+## 0.10.1 (2026-11-16)
+
+- **License: proprietary.** From this version the package is no longer MIT: all rights are reserved by jcsoftdev and `package.json` declares `UNLICENSED`. Versions up to 0.10.0 were published under MIT.
+
 ## 0.9.0 (2026-11-04)
 
 No changes to this package.

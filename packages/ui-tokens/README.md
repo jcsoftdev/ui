@@ -47,4 +47,4 @@ ui-theme generate --brand "#6d28d9" --out <dir>     # also writes tokens.json
 
 Full guide: https://ui.jcsoftdev.com/docs/theming/theme-generator
 
-MIT. Author: jcsoftdev.
+Proprietary. Copyright © 2026 jcsoftdev. All rights reserved. See [LICENSE](./LICENSE).

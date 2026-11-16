@@ -4,7 +4,7 @@
   "private": true,
   "description": "Landing page and documentation (people and LLMs) for @jcsoftdev/ui.",
   "author": "jcsoftdev",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "docs": "node scripts/build-docs.mjs",

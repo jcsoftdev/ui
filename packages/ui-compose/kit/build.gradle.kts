@@ -162,8 +162,8 @@ mavenPublishing {
         url.set("https://github.com/jcsoftdev/ui")
         licenses {
             license {
-                name.set("MIT License")
-                url.set("https://opensource.org/licenses/MIT")
+                name.set("Proprietary - All rights reserved")
+                url.set("https://github.com/jcsoftdev/ui/blob/main/LICENSE")
                 distribution.set("repo")
             }
         }

@@ -44,4 +44,4 @@ The npm packages (`ui-tokens`, `ui-core`, `ui-elements`, `ui`) share one version
 
 ## License
 
-MIT (c) 2026 jcsoftdev
+Proprietary. Copyright © 2026 jcsoftdev. All rights reserved. See [LICENSE](./LICENSE).
