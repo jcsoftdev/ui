@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.10.1 (2026-11-16)
+
+### License
+
+- **License: proprietary.** From this version the package is no longer MIT: all rights are reserved by jcsoftdev and `package.json` declares `UNLICENSED`. Versions up to 0.10.0 were published under MIT.
 
 ### Fixes
 

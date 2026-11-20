@@ -2,6 +2,10 @@
 
 ## 0.2.0 (Unreleased)
 
+### License
+
+- **Proprietary.** The kit and its BOM are no longer MIT: all rights are reserved by jcsoftdev and the published POM declares the proprietary license.
+
 ### Accessibility and UX defaults
 
 Fixes the kit-level defaults an accessibility audit of a production app found in 0.1.0, and adds the app-level components it was missing.

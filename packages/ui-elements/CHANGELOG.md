@@ -6,6 +6,10 @@ everything before that is listed under 0.4.0. Versions 0.5.0 (one fix) to 0.8.0 
 user-facing change to this package. Entries come from `git log` of `packages/ui-elements` (about 135
 feat, fix and perf commits), summarized by theme.
 
+## 0.10.1 (2026-11-16)
+
+- **License: proprietary.** From this version the package is no longer MIT: all rights are reserved by jcsoftdev and `package.json` declares `UNLICENSED`. Versions up to 0.10.0 were published under MIT.
+
 ## 0.9.0 (2026-11-04)
 
 ### Added

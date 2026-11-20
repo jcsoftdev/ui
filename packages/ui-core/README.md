@@ -56,4 +56,4 @@ function close() {
 }
 ```
 
-MIT, by jcsoftdev.
+Proprietary. Copyright © 2026 jcsoftdev. All rights reserved. See [LICENSE](./LICENSE).

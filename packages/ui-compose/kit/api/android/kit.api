@@ -912,6 +912,10 @@ public final class com/jcsoftdev/ui/glass/SurfaceMaterialKt {
 	public static final fun getLocalGlassState ()Landroidx/compose/runtime/ProvidableCompositionLocal;
 }
 
+public final class com/jcsoftdev/ui/icons/AlarmClockKt {
+	public static final fun getAlarmClock (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/AlertTriangleKt {
 	public static final fun getAlertTriangle (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -1128,6 +1132,10 @@ public final class com/jcsoftdev/ui/icons/ExternalLinkKt {
 	public static final fun getExternalLink (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
+public final class com/jcsoftdev/ui/icons/EyeKt {
+	public static final fun getEye (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/EyeOffKt {
 	public static final fun getEyeOff (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
@@ -1176,12 +1184,24 @@ public final class com/jcsoftdev/ui/icons/FunnelKt {
 	public static final fun getFunnel (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
+public final class com/jcsoftdev/ui/icons/GraduationCapKt {
+	public static final fun getGraduationCap (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
 public final class com/jcsoftdev/ui/icons/GripVerticalKt {
 	public static final fun getGripVertical (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
 public final class com/jcsoftdev/ui/icons/Heading2Kt {
 	public static final fun getHeading2 (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/HourglassKt {
+	public static final fun getHourglass (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/HouseKt {
+	public static final fun getHouse (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
 public final class com/jcsoftdev/ui/icons/IconKt {
@@ -1255,6 +1275,10 @@ public final class com/jcsoftdev/ui/icons/LockKt {
 
 public final class com/jcsoftdev/ui/icons/LogOutKt {
 	public static final fun getLogOut (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
+}
+
+public final class com/jcsoftdev/ui/icons/MailKt {
+	public static final fun getMail (Lcom/jcsoftdev/ui/icons/Icons;)Landroidx/compose/ui/graphics/vector/ImageVector;
 }
 
 public final class com/jcsoftdev/ui/icons/MapPinKt {
@@ -2305,6 +2329,7 @@ public final class com/jcsoftdev/ui/theme/UiSizes {
 	public final fun getAgendaHour-D9Ej5fM ()F
 	public final fun getControlHeight-D9Ej5fM ()F
 	public final fun getControlHeightLg-D9Ej5fM ()F
+	public final fun getControlHeightMd-D9Ej5fM ()F
 	public final fun getControlHeightSm-D9Ej5fM ()F
 	public final fun getInputHeight-D9Ej5fM ()F
 	public final fun getMButton-D9Ej5fM ()F
