@@ -34,6 +34,10 @@ const TEXT = "min-w-0 text-control text-ink placeholder:text-ink-3";
 const RING =
   "focus:border-transparent focus:outline-2 focus:outline-accent-ink focus:-outline-offset-1";
 const INVALID = "aria-[invalid=true]:border-danger";
+const READ_ONLY =
+  "[&[readonly]]:cursor-default [&[readonly]]:border-transparent [&[readonly]]:bg-surface-sunken [&[readonly]]:text-ink-2";
+const READ_ONLY_WRAPPER =
+  "has-[input[readonly]]:border-transparent has-[input[readonly]]:bg-surface-sunken has-[input[readonly]]:text-ink-2";
 
 export interface InputProps extends Omit<ComponentPropsWithRef<"input">, "size">, IntentProps {
   /**
@@ -80,7 +84,7 @@ export function Input({
                 height[size],
                 "bg-transparent outline-none focus-visible:outline-2 focus-visible:outline-accent-ink",
               ]
-            : [CHROME, RING, INVALID, inputSizeClasses[size]],
+            : [CHROME, RING, INVALID, READ_ONLY, inputSizeClasses[size]],
           classNames?.input,
           className,
         )}
@@ -102,6 +106,7 @@ export function Input({
               CHROME,
               paddingX[size],
               "focus-within:border-transparent focus-within:outline-2 focus-within:outline-accent-ink focus-within:-outline-offset-1 has-[input[aria-invalid=true]]:border-danger",
+              READ_ONLY_WRAPPER,
             ],
         "has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50",
         classNames?.root,
